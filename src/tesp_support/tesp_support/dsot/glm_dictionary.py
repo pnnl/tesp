@@ -565,7 +565,7 @@ def glm_dict(name_root, config=None, ercot=False):  # , te30=False):
         mtr['children'].append(key)
     for key, val in ev.items():
         mtr = billingmeters[val['billingmeter_id']]
-        mtr['children'].append(key)
+        mtr['children'].append(val['name'])
 
     climate = {'name': climateName, 'interpolation': climateInterpolate, 'latitude': climateLatitude,
                'longitude': climateLongitude}

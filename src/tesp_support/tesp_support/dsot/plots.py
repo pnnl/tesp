@@ -150,7 +150,7 @@ def customer_meta_data(glm_meta, agent_meta, dso_metadata_path):
 
 
 def load_gen_data(dir_path, gen_name, day_range):
-    """ Utility to open h5 files for agent data.
+    """ Utility to open h5 files for generator data.
 
     Args:
         dir_path (str): path of parent directory where DSO folders live
@@ -180,10 +180,11 @@ def load_gen_data(dir_path, gen_name, day_range):
 
         # For Day Ahead quantities need to layout 24-hour 10 am commitments
         # to actual real time to match real time format.
-        if gen_name in ['da_q', 'da_lmp', 'da_line']:
+        if gen_name in ['da_q', 'da_lmp', 'da_line', 'da_gen']:
             clear_time = start_time - timedelta(hours=14)
             column_key = {'da_q': 'ClearQ_',
                           'da_lmp': 'LMP_',
+                          'da_gen': 'ClearQ_',
                           'da_line': 'Line_'}
             dso_list = data_df.loc[(clear_time), :].index.tolist()
             # Reduce raw data to day range of interest and reshape/flatten
@@ -486,13 +487,12 @@ def load_agent_data(dir_path, folder_prefix, dso_num, day_num, agent_name):
         folder_prefix (str): prefix of DSO folder name (e.g. '/TE_base_s')
         dso_num (str): number of the DSO folder to be opened
         day_num (str): simulation day number (1 = first day of simulation)
-        agent_name (str): name of agent data to load (e.g. 'house', 'substation', 'inverter' etc)
+        agent_name (str): name of agent data to load (e.g. 'house', 'substation', 'inverter', 'retail site' etc)
     Returns:
         agent_meta_df : dataframe of system metadata
         agent_df: dataframe of agent timeseries data
         """
-    # os.chdir(dir_path + folder_prefix + dso_num)
-    # daystr = '_' + str(int(day_num)) + '_'
+
     if agent_name in ['bill', 'energy', 'amenity']:
         os.chdir(dir_path)
         hdf5filenames = [f for f in os.listdir('.') if ('_' + dso_num) in f and f.startswith(agent_name)]
@@ -1849,6 +1849,7 @@ def dso_market_plot(dso_range, day, case, dso_metadata_file, ercot_dir):
             rt_retail_congest_df = RT_retail_df[['congestion_surcharge_RT']]
             da_retail_price_df = DA_retail_df[['cleared_price_da']]
             da_dso_price_df = DA_dso_df[['trial_cleared_price_da']]
+            da_dso_q_df = DA_dso_df[['trial_cleared_quantity_da']]
             da_retail_q_df = DA_retail_df[['cleared_quantity_da']] / 1e3
             da_retail_congest_df = DA_retail_df[['congestion_surcharge_DA']]
 
@@ -1864,6 +1865,7 @@ def dso_market_plot(dso_range, day, case, dso_metadata_file, ercot_dir):
             rt_retail_congest_df = rt_retail_congest_df.join(RT_retail_df[['congestion_surcharge_RT']])
             da_retail_price_df = da_retail_price_df.join(DA_retail_df[['cleared_price_da']])
             da_dso_price_df = da_dso_price_df.join(DA_dso_df[['trial_cleared_price_da']])
+            da_dso_q_df = da_dso_q_df.join(DA_dso_df[['trial_cleared_quantity_da']])
             da_retail_q_df = da_retail_q_df.join(DA_retail_df[['cleared_quantity_da']] / 1e3)
             da_retail_congest_df = da_retail_congest_df.join(DA_retail_df[['congestion_surcharge_DA']])
             q_max_df['DSO ' + str(dso)] = np.ones(len(q_max_df)) * FNCS[dso - 1][3]
@@ -1875,6 +1877,7 @@ def dso_market_plot(dso_range, day, case, dso_metadata_file, ercot_dir):
         rt_retail_congest_df = rt_retail_congest_df.rename(columns={'congestion_surcharge_RT': 'DSO ' + str(dso)})
         da_retail_price_df = da_retail_price_df.rename(columns={'cleared_price_da': 'DSO ' + str(dso)})
         da_dso_price_df = da_dso_price_df.rename(columns={'trial_cleared_price_da': 'DSO ' + str(dso)})
+        da_dso_q_df = da_dso_q_df.rename(columns={'trial_cleared_quantity_da': 'DSO ' + str(dso)})
         da_retail_q_df = da_retail_q_df.rename(columns={'cleared_quantity_da': 'DSO ' + str(dso)})
         da_retail_congest_df = da_retail_congest_df.rename(columns={'congestion_surcharge_DA': 'DSO ' + str(dso)})
 
@@ -1886,8 +1889,9 @@ def dso_market_plot(dso_range, day, case, dso_metadata_file, ercot_dir):
     ames_da_lmp_df = load_gen_data(case, 'da_lmp', range(int(day), int(day) + 1))
     ames_da_lmp_df = ames_da_lmp_df.unstack(level=1)
     ames_da_lmp_df.columns = ames_da_lmp_df.columns.droplevel()
+    ames_da_gen_df = load_gen_data(case, 'da_gen', range(int(day), int(day) + 1))
     # TODO: Need to check - think this is PyPower results.
-    ames_da_gen_df = load_gen_data(case, 'gen', range(int(day), int(day) + 1))
+    PyPower_rt_gen_df = load_gen_data(case, 'gen', range(int(day), int(day) + 1))
 
     substation_df = substation_df.set_index(ercot_df.index)
 
@@ -1903,12 +1907,14 @@ def dso_market_plot(dso_range, day, case, dso_metadata_file, ercot_dir):
     plt.figure()
     plt.plot(rt_q_df.sum(axis=1), label='DSO Market RT Q', marker='.')
     plt.plot(substation_df.sum(axis=1), label='Actual Substation+Ind. Power', marker='.')
-    # plt.plot(ercot_df.sum(axis=1), label='ERCOT 2106 Load', marker='.')
-    plt.plot(da_retail_q_df.sum(axis=1), label='DSO DA Retail Q', marker='.')
+    # plt.plot(ercot_df.sum(axis=1), label='ERCOT 2016 Load', marker='.')
+    plt.plot(da_retail_q_df.sum(axis=1), label='DA Retail Q', marker='.')
+    plt.plot(da_dso_q_df.sum(axis=1)/1000, label='DA DSO Q', marker='.')
     plt.plot(ames_rt_df[' TotalLoad'], label='AMES RT Total Load', marker='.')
     plt.plot(ames_rt_df[' TotalGen'], label='AMES RT Total Gen', marker='.')
     plt.plot(ames_da_q_df.sum(axis=1), label='DA Cleared Q', marker='.')
-    plt.plot(ames_da_gen_df.groupby(level=0)['Pgen'].sum(), label='PyPower Generation', marker='.')
+    plt.plot(ames_da_gen_df.groupby(level=0)['ClearQ'].sum(), label='DA Gen Q Generation', marker='.')
+    plt.plot(PyPower_rt_gen_df.groupby(level=0)['Pgen'].sum(), label='PyPower Generation', marker='.')
     plt.legend()
     plt.title('DSO Market Quantity Comparison (all DSOs; Day ' + date.strftime("%m-%d") + ')')
     plt.xlabel('Time')
@@ -2031,6 +2037,7 @@ def dso_forecast_stats(dso_range, day_range, case, dso_metadata_file, ercot_dir)
 
             # Load RT quantities values
             dsomarket_data_df, dsomarket_bid_df = load_agent_data(case, '/DSO_', str(dso), str(day), 'dso_market')
+            dso_tso_data_df, dso_tso_bid_df = load_agent_data(case, '/DSO_', str(dso), str(day), 'dso_tso')
             dsomarket_data_df = dsomarket_data_df.droplevel(1, axis=0)
             RT_retail_df, RT_bid_df = load_agent_data(case, '/DSO_', str(dso), str(day), 'retail_market')
             RT_retail_df = RT_retail_df.droplevel(level=1)
@@ -4683,29 +4690,41 @@ def run_plots():
 
     tic()
     # ------------ Selection of DSO and Day  ---------------------------------
-    dso_num = '2'  # Needs to be non-zero integer
+    dso_num = '1'  # Needs to be non-zero integer
     day_num = '9'  # Needs to be non-zero integer
     # Set day range of interest (1 = day 1)
-    day_range = range(2, 3)  # 1 = Day 1. Starting at day two as agent data is missing first hour of run.
+    day_range = range(3, 10)  # 1 = Day 1. Starting at day two as agent data is missing first hour of run.
     dso_range = range(1, 9)  # 1 = DSO 1 (end range should be last DSO +1)
 
     #  ------------ Select folder locations for different cases ---------
+    # Load System Case Config
+    system_case = 'generate_case_config.json'
+    config_path = os.getcwd()
+    case_config = load_json(config_path, system_case)
 
-    data_path = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/V1.1-1317-gfbf326a2/MR-Batt/lean_8_bt'
-    # data_path = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2'
-    metadata_path = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/analysis/dsot/data'
-    ercot_path = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/analysis/dsot/data'
-    base_case = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/V1.1-1317-gfbf326a2/MR-Batt/lean_8_bt'
-    trans_case = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/V1.1-1317-gfbf326a2/MR-Flex/lean_8_fl'
-    config_path = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/dsot_v3'
-    case_config_name = '200_system_case_config.json'
-
-    case_config_file = config_path + '/' + case_config_name
+    # case_path = os.path.dirname(os.path.abspath(__file__)) + '/' + case_config['caseName']
+    # Set current working directory to location of case folder.
+    data_path = os.getcwd()
+    metadata_path = "../" + case_config['dataPath']
+    dso_metadata_file = case_config['dsoPopulationFile']
+    base_case = data_path
     agent_prefix = '/DSO_'
     GLD_prefix = '/Substation_'
-    case_config = load_json(config_path, case_config_name)
-    metadata_file = case_config['dsoPopulationFile']
-    dso_meta_file = metadata_path + '/' + metadata_file
+
+    # data_path = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/V1.1-1317-gfbf326a2/MR-Batt/lean_8_bt'
+    # ercot_path = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/analysis/dsot/data'
+    # base_case = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/V1.1-1317-gfbf326a2/MR-Batt/lean_8_bt'
+    # trans_case = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/V1.1-1317-gfbf326a2/MR-Flex/lean_8_fl'
+    # config_path = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/dsot_v3'
+    # case_config_name = '200_system_case_config.json'
+    #
+    # case_config_file = config_path + '/' + case_config_name
+    # agent_prefix = '/DSO_'
+    # GLD_prefix = '/Substation_'
+    # case_config = load_json(config_path, case_config_name)
+    # metadata_file = case_config['dsoPopulationFile']
+
+    dso_meta_file = metadata_path + '/' + dso_metadata_file
 
     # Check if there is a plots folder - create if not.
     check_folder = os.path.isdir(data_path + '/plots')
@@ -4719,37 +4738,22 @@ def run_plots():
         ['May', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/May/Base_858c4e40/2016_05', 2, 6],
         ['Aug', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/May/Base_858c4e40/2016_08', 2, 6]]
 
-    # month_def = [
-    #             ['Jan', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_1', 2, 31],
-    #             # ['Jan', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_1', 2, 31],
-    #             # ['Feb', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_2', 2, 30],
-    #             # ['March', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_3', 2, 31],
-    #             # ['April', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_4', 2, 31],
-    #             # ['May', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_5', 2, 31],
-    #             # ['June', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_6', 2, 30],
-    #             ['July', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_7', 2, 31]
-    #             # ['August', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_8', 2, 7],
-    #             # ['Sept', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_9', 2, 30],
-    #             # ['Oct', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_10', 2, 31],
-    #             # ['Nov', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_11', 2, 30],
-    #             #['Dec', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_12', 2, 7]
-    #     ]
 
     # ---------- Flags to turn on and off plot types etc
     LoadExData = False  # load example data frames of GLD and agent data
     DictUpdate = False
     EdgeCases = False
-    DailyProfilePlots = False  # plot daily load profiles
+    DailyProfilePlots = True  # plot daily load profiles
     LoadDurationPlots = False  # plot load duration for substation loads (and other loads as desired)
     DailySummaryPlots = False  # plot single summary static for each day of a day range
     PlotDSOComp = False  # Plot daily profile of parameter across a range of DSOs
-    PlotHeatMaps = False  # Plot heatmaps for key variables across a day range
+    PlotHeatMaps = True  # Plot heatmaps for key variables across a day range
     amenity = False  # Calculate the loss of amenity metrics for HVAC and WH etc.
     PlotPopDist = False  # Plot a histogram of a population distribution
     OutLierCheck = False  # Create log of values that exceed
     HouseCheck = False  # Calculate the loss of amenity metrics for HVAC and WH etc.
     gen_plots = False  # Plot generation
-    transmission_plots = True  # Plot transmission
+    transmission_plots = False  # Plot transmission
     LMP_check = False
     dso_plots = False  # Plot dso items such as RT and DA quantities and loads
     BidCurve3D = False  # Work in progress plot of bid and supply curves for an entire day.
@@ -4980,7 +4984,7 @@ def run_plots():
         edge_days, edge_dict, edge_df = find_edge_cases(dso_num=dso_num, day_range=day_range, base_case=base_case,
                                                         agent_prefix=agent_prefix, gld_prefix=GLD_prefix)
 
-    # 1 ----------- Daily Load Profiles Plots ------------------
+    # 1 ----------- Daily Parameter Profiles Plots ------------------
     #  Provide parameters for system, subsystem, variable, base case, anc comparison case (optional)
     if DailyProfilePlots:
         params = [
@@ -5039,21 +5043,25 @@ def run_plots():
             #     ['hvac_agent', 'mean', 'DA_price', base_case, None],
             #     ['hvac_agent', 'mean', 'DA_temp', base_case, None],
             #     ['hvac_agent', 'mean', 'cooling_setpoint', base_case, None],
-            ['house', DSO_Houses['DSO_' + dso_num][0], 'air_temperature_setpoint_cooling', base_case, trans_case],
-            ['house', DSO_Houses['DSO_' + dso_num][0], 'hvac_load_avg', base_case, trans_case],
-            ['hvac_agent', DSO_Houses['DSO_' + dso_num][0], 'RT_bid_quantity', base_case, None],
-            ['hvac_agent', DSO_Houses['DSO_' + dso_num][0], 'DA_bid_quantity', base_case, None],
-            ['hvac_agent', DSO_Houses['DSO_' + dso_num][0], 'cleared_price', base_case, None],
-            ['house', DSO_Houses['DSO_' + dso_num][1], 'air_temperature_setpoint_cooling', base_case, trans_case],
-            ['house', DSO_Houses['DSO_' + dso_num][1], 'hvac_load_avg', base_case, trans_case],
-            ['hvac_agent', DSO_Houses['DSO_' + dso_num][1], 'RT_bid_quantity', base_case, None],
-            ['hvac_agent', DSO_Houses['DSO_' + dso_num][1], 'DA_bid_quantity', base_case, None],
-            ['hvac_agent', DSO_Houses['DSO_' + dso_num][1], 'cleared_price', base_case, None],
-            ['house', DSO_Houses['DSO_' + dso_num][2], 'air_temperature_setpoint_cooling', base_case, trans_case],
-            ['house', DSO_Houses['DSO_' + dso_num][2], 'hvac_load_avg', base_case, trans_case],
-            ['hvac_agent', DSO_Houses['DSO_' + dso_num][2], 'RT_bid_quantity', base_case, None],
-            ['hvac_agent', DSO_Houses['DSO_' + dso_num][2], 'DA_bid_quantity', base_case, None],
-            ['hvac_agent', DSO_Houses['DSO_' + dso_num][2], 'cleared_price', base_case, None]
+            ['house', 'mean', 'waterheater_setpoint_avg', base_case, None],
+            ['house', 'mean', 'air_temperature_avg', base_case, None],
+            ['house', 'sum', 'waterheater_load_avg', base_case, None],
+            ['house', 'sum', 'hvac_load_avg', base_case, None],
+            ['house', 'mean', 'air_temperature_setpoint_cooling', base_case, None]
+            # ['house', DSO_Houses['DSO_' + dso_num][0], 'hvac_load_avg', base_case, trans_case],
+            # ['hvac_agent', DSO_Houses['DSO_' + dso_num][0], 'RT_bid_quantity', base_case, None],
+            # ['hvac_agent', DSO_Houses['DSO_' + dso_num][0], 'DA_bid_quantity', base_case, None],
+            # ['hvac_agent', DSO_Houses['DSO_' + dso_num][0], 'cleared_price', base_case, None],
+            # ['house', DSO_Houses['DSO_' + dso_num][1], 'air_temperature_setpoint_cooling', base_case, trans_case],
+            # ['house', DSO_Houses['DSO_' + dso_num][1], 'hvac_load_avg', base_case, trans_case],
+            # ['hvac_agent', DSO_Houses['DSO_' + dso_num][1], 'RT_bid_quantity', base_case, None],
+            # ['hvac_agent', DSO_Houses['DSO_' + dso_num][1], 'DA_bid_quantity', base_case, None],
+            # ['hvac_agent', DSO_Houses['DSO_' + dso_num][1], 'cleared_price', base_case, None],
+            # ['house', DSO_Houses['DSO_' + dso_num][2], 'air_temperature_setpoint_cooling', base_case, trans_case],
+            # ['house', DSO_Houses['DSO_' + dso_num][2], 'hvac_load_avg', base_case, trans_case],
+            # ['hvac_agent', DSO_Houses['DSO_' + dso_num][2], 'RT_bid_quantity', base_case, None],
+            # ['hvac_agent', DSO_Houses['DSO_' + dso_num][2], 'DA_bid_quantity', base_case, None],
+            # ['hvac_agent', DSO_Houses['DSO_' + dso_num][2], 'cleared_price', base_case, None]
         ]
 
         # params = [
@@ -5161,6 +5169,8 @@ def run_plots():
             # ['house', 'R3_12_47_2_load_16_bldg_410_zone_all', 'hvac_load_avg'],
             # ['house', DSO_Houses['DSO_'+dso_num][4], 'air_temperature_avg'],
             # ['house', DSO_Houses['DSO_' + dso_num][4], 'total_load_avg']
+            ['house', 'sum', 'hvac_load_avg'],
+            ['house', 'mean', 'air_temperature_setpoint_cooling'],
             ['house', 'mean', 'air_temperature_avg'],
             ['house', 'mean', 'total_load_avg']
             # ['house', DSO_Houses['DSO_'+dso_num][1], 'zip_loads'],
@@ -5179,7 +5189,7 @@ def run_plots():
         ]
 
         for para in params:
-            heatmap_plots(dso_num=dso_num, system=para[0], subsystem=para[1], variable=para[2], day_range=day_range,
+            heatmap_plots(dso=dso_num, system=para[0], subsystem=para[1], variable=para[2], day_range=day_range,
                           case=base_case, agent_prefix=agent_prefix, gld_prefix=GLD_prefix)
 
     # 5b -----------------   Loss of Amenity Metric Calculation   ---------------------------------

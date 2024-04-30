@@ -50,7 +50,8 @@ def generate_case(case_name, port, pv=None, bt=None, fl=None, ev=None):
 node = "8"
 # node = "200"
 
-generate_case(node + "_system_case_config", 5570, pv=0, bt=0, fl=0, ev=0)
+generate_case(node + "_system_case_config", 5570, pv=1, bt=1, fl=1, ev=1)
+# generate_case(node + "_system_case_config", 5570, pv=0, bt=0, fl=0, ev=0)
 # generate_case(node + "_system_case_config", 5570, pv=0, bt=1, fl=0, ev=0)
 # generate_case(node + "_system_case_config", 5570, pv=0, bt=0, fl=1, ev=0)
 # generate_case(node + "_hi_system_case_config", 5570, pv=1, bt=0, fl=0, ev=0)
