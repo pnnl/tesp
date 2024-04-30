@@ -1,15 +1,13 @@
 # Copyright (C) 2019-2023 Battelle Memorial Institute
 # file: commercial_feeder_glm.py
-import sys
 import math
+import sys
+
 import numpy as np
 
 from tesp_support.api.helpers import gld_strict_name
-import tesp_support.api.modify_GLM as glmmod
-sys.path.append('./')
-import residential_feeder_glm as res_FG
 
-
+import gld_residential_feeder as res_FG
 
 def define_comm_bldg(bldg_metadata, dso_type, num_bldgs):
     """ Randomly selects a set number of buildings by type and size (sq. ft.)
@@ -34,7 +32,7 @@ def define_comm_bldg(bldg_metadata, dso_type, num_bldgs):
     return bldgs
 
 
-def define_comm_loads(bldg_type, bldg_size, dso_type, climate, bldg_metadata):
+def define_comm_loads(feeder, bldg_type, bldg_size, dso_type, climate, bldg_metadata):
     """ Determines building parameters based on building type, dso type, and (ASHRAE) climate zone
 
     Args:
@@ -86,7 +84,11 @@ def define_comm_loads(bldg_type, bldg_size, dso_type, climate, bldg_metadata):
         bldg['os_rand'] = np.random.normal(bldg_metadata['general']['HVAC']['oversizing_factor']['mean'],
                                            bldg_metadata['general']['HVAC']['oversizing_factor']['std_dev'])
         bldg['os_rand'] = min(bldg_metadata['general']['HVAC']['oversizing_factor']['upper_bound'], max(bldg['os_rand'],
-                              bldg_metadata['general']['HVAC']['oversizing_factor']['lower_bound']))
+                                                                                                        bldg_metadata[
+                                                                                                            'general'][
+                                                                                                            'HVAC'][
+                                                                                                            'oversizing_factor'][
+                                                                                                            'lower_bound']))
 
         # Set form of the building
         bldg['floor_area'] = bldg_size
@@ -191,13 +193,13 @@ def define_comm_loads(bldg_type, bldg_size, dso_type, climate, bldg_metadata):
             bldg['skew_value'] = 0
         elif bldg_type in ['office', 'warehouse_storage', 'education']:
             bldg['base_schedule'] = 'office'
-            bldg['skew_value'] = res_FG.randomize_commercial_skew()
+            bldg['skew_value'] = feeder.glm.randomize_commercial_skew()
         elif bldg_type in ['big_box', 'strip_mall', 'food_service', 'food_sales']:
             bldg['base_schedule'] = 'retail'
-            bldg['skew_value'] = res_FG.randomize_commercial_skew()
+            bldg['skew_value'] = feeder.glm.randomize_commercial_skew()
         elif bldg_type == 'low_occupancy':
             bldg['base_schedule'] = 'lowocc'
-            bldg['skew_value'] = res_FG.randomize_commercial_skew()
+            bldg['skew_value'] = feeder.glm.randomize_commercial_skew()
 
         # randomize 10# then convert W/sf -> kW
         floor_area = bldg['floor_area']
@@ -219,8 +221,9 @@ def define_comm_loads(bldg_type, bldg_size, dso_type, climate, bldg_metadata):
 
     return bldg
 
-def add_comm_zones(glm_modifier, bldg, comm_loads, key, batt_metadata, storage_percentage, ev_metadata, ev_percentage,
-                      solar_percentage, pv_rating_MW, solar_Q_player, case_type, metrics, metrics_interval, mode=None):
+
+def add_comm_zones(glm, bldg, comm_loads, key, batt_metadata, storage_percentage, ev_metadata, ev_percentage,
+                   solar_percentage, pv_rating_MW, solar_Q_player, case_type, mode=None):
     """ For large buildings, breaks building up into multiple zones.
 
     For all buildings sends definition dictionary to function that writes out building definition to GLD file format.
@@ -238,8 +241,6 @@ def add_comm_zones(glm_modifier, bldg, comm_loads, key, batt_metadata, storage_p
         pv_rating_MW:
         solar_Q_player:
         case_type:
-        metrics:
-        metrics_interval:
         mode (str): if 'test' will ensure that GLD output function does not set parent - allows buildings to be run in GLD without feeder info
     """
     mtr = comm_loads[key][0]
@@ -268,9 +269,9 @@ def add_comm_zones(glm_modifier, bldg, comm_loads, key, batt_metadata, storage_p
 
         # Need to create a buffer version of bldg so zip loads do not get overridden in the multi-zone for loops
         buff = bldg.copy()
-        #Need to wait until the modify_GLM class is upated with an add comment method
-#        print('// load', key, 'parent', bldg['mtr'], 'type', comm_type, 'sqft', comm_size, 'kva', '{:.3f}'.format(kva),
-#              'nphs', nphs, 'phases', phases, 'vln', '{:.3f}'.format(vln), file=op)
+        # Need to wait until the modify_GLM class is upated with an add comment method
+        #        print('// load', key, 'parent', bldg['mtr'], 'type', comm_type, 'sqft', comm_size, 'kva', '{:.3f}'.format(kva),
+        #              'nphs', nphs, 'phases', phases, 'vln', '{:.3f}'.format(vln), file=op)
 
         #  ---------- Subdivide into zones for large buildings  -------------------
         if bldg_size < 10000:
@@ -283,7 +284,7 @@ def add_comm_zones(glm_modifier, bldg, comm_loads, key, batt_metadata, storage_p
             bldg['init_temp'] = 68. + 4. * np.random.random()
             zone = 'all'
             bldg['zonename'] = gld_strict_name(key + '_' + comm_name + '_zone_' + str(zone))
-            add_one_commercial_zone(glm_modifier, bldg, metrics, metrics_interval, mode)
+            add_one_commercial_zone(glm, bldg, mode)
 
         # For buildings between 10k and 30k sq. ft. break into six zones using method for big box store in previous work
         elif bldg_size < 30000:
@@ -320,7 +321,7 @@ def add_comm_zones(glm_modifier, bldg, comm_loads, key, batt_metadata, storage_p
                 bldg['int_gains'] = buff['int_gains'] * floor_area / bldg_size
 
                 bldg['zonename'] = gld_strict_name(key + '_' + comm_name + '_zone_' + str(zone))
-                add_one_commercial_zone(glm_modifier,bldg, metrics, metrics_interval, mode)
+                add_one_commercial_zone(glm, bldg, mode)
         elif bldg_size > 30000:
             floor_area_choose = bldg_size
             bldg['no_of_stories'] = 1
@@ -375,7 +376,7 @@ def add_comm_zones(glm_modifier, bldg, comm_loads, key, batt_metadata, storage_p
 
                     bldg['zonename'] = gld_strict_name(
                         key + '_' + comm_name + '_floor_' + str(floor) + '_zone_' + str(zone))
-                    add_one_commercial_zone(glm_modifier, bldg, metrics, metrics_interval, mode)
+                    add_one_commercial_zone(glm, bldg, mode)
 
         if np.random.uniform(0, 1) <= storage_percentage:
             # TODO: Review battery results to see if one battery per 10000 sq ft. is appropriate.
@@ -400,46 +401,35 @@ def add_comm_zones(glm_modifier, bldg, comm_loads, key, batt_metadata, storage_p
 
             if case_type['bt']:
                 # battery_count += 1
+                params = {"parent": mtr,
+                          "phases": "phases",
+                          "nominal_voltage": str(vln)}
+                glm.add_object("meter", bat_m_name, params)
 
-                params = dict()
-                params["parent"] = mtr
-                params["phases"] = "phases"
-                params["nominal_voltage"] = str(vln)
-                glm_modifier.add_object("meter", bat_m_name, params)
+                params = {"phases": phases,
+                          "groupid": "batt_inverter",
+                          "generator_status": "ONLINE",
+                          "generator_mode": "CONSTANT_PQ",
+                          "inverter_type": "FOUR_QUADRANT",
+                          "four_quadrant_control_mode": storage_inv_mode,
+                          "charge_lockout_time": "1",
+                          "discharge_lockout_time": "1",
+                          "rated_power": '{:.2f}'.format(rated_power),
+                          "max_charge_rate": '{:.2f}'.format(max_charge_rate),
+                          "max_discharge_rate": '{:.2f}'.format(max_discharge_rate),
+                          "sense_object": mtr,
+                          "inverter_efficiency": '{:.2f}'.format(inverter_efficiency),
+                          "power_factor": "1.0"}
+                glm.add_object("inverter", bat_i_name, params)
 
-                params2 = dict()
-                params2["phases"] = phases
-                params2["groupid"] = "batt_inverter"
-                params2["generator_status"] = "ONLINE"
-                params2["generator_mode"] = "CONSTANT_PQ"
-                params2["inverter_type"] = "FOUR_QUADRANT"
-                params2["four_quadrant_control_mode"] = storage_inv_mode
-                params2["charge_lockout_time"] = "1"
-                params2["discharge_lockout_time"] = "1"
-                params2["rated_power"] = '{:.2f}'.format(rated_power)
-                params2["max_charge_rate"] = '{:.2f}'.format(max_charge_rate)
-                params2["max_discharge_rate"] = '{:.2f}'.format(max_discharge_rate)
-                params2["sense_object"] = mtr
-                params2["inverter_efficiency"] = '{:.2f}'.format(inverter_efficiency)
-                params2["power_factor"] = "1.0"
-                glm_modifier.add_object("inverter", bat_i_name, params2)
-
-
-
-                params3 = dict()
-                params3["use_internal_battery_model"] = "true"
-                params3["battery_type"] = "LI_ION"
-                params3["nominal_voltage"] = "480"
-                params3["battery_capacity"] = '{:.2f}'.format(battery_capacity)
-                params3["round_trip_efficiency"] = '{:.2f}'.format(round_trip_efficiency)
-                params3["state_of_charge"] = "0.50"
-                glm_modifier.add_object("battery", batname, params3)
-
-                if metrics_interval > 0 and "meter" in metrics:
-                    params4 = dict()
-                    params4["parent"] = batname
-                    params4["interval"] = str(metrics_interval)
-                    glm_modifier.add_object("metrics_collector", batname, params4)
+                params = {"use_internal_battery_model": "true",
+                          "battery_type": "LI_ION",
+                          "nominal_voltage": "480",
+                          "battery_capacity": '{:.2f}'.format(battery_capacity),
+                          "round_trip_efficiency": '{:.2f}'.format(round_trip_efficiency),
+                          "state_of_charge": "0.50"}
+                glm.add_object("battery", batname, params)
+                glm.add_collector(batname, "meter")
 
         if np.random.uniform(0, 1) <= solar_percentage:
             # typical PV panel is 350 Watts and avg home has 5kW installed.
@@ -459,38 +449,30 @@ def add_comm_zones(glm_modifier, bldg, comm_loads, key, batt_metadata, storage_p
             if case_type['pv']:
                 # solar_count += 1
                 # solar_kw += 0.001 * inv_power
-                params5 = dict()
-                params5["parent"] = basenode
-                params5["phases"] = phases
-                params5["nominal_voltage"] = "str(vln)"
-                glm_modifier.add_object("meter", sol_m_name, params5)
+                params = {"parent": basenode,
+                          "phases": phases,
+                          "nominal_voltage": str(vln)}
+                glm.add_object("meter", sol_m_name, params)
 
-                params6 = dict()
-                params6["phases"] = phases
-                params6["groupid"] = "sol_inverter"
-                params6["generator_status"] = "ONLINE"
-                params6["inverter_type"] = "FOUR_QUADRANT"
-                params6["inverter_efficiency"] = "1"
-                params6["rated_power"] = '{:.0f}'.format(inv_power)
-                params6["generator_mode"] = solar_inv_mode
-                params6["four_quadrant_control_mode"] = solar_inv_mode
-                params6["P_Out"] = "'P_out_inj.value * {}'.format(pv_scaling_factor)"
+                params = {"phases": phases,
+                          "groupid": "sol_inverter",
+                          "generator_status": "ONLINE",
+                          "inverter_type": "FOUR_QUADRANT",
+                          "inverter_efficiency": "1",
+                          "rated_power": '{:.0f}'.format(inv_power),
+                          "generator_mode": solar_inv_mode,
+                          "four_quadrant_control_mode": solar_inv_mode,
+                          "P_Out": 'P_out_inj.value * {}'.format(pv_scaling_factor)}
                 if 'no_file' not in solar_Q_player:
-                    params6["Q_Out"] = "Q_out_inj.value * 0.00"
+                    params["Q_Out"] = "Q_out_inj.value * 0.0"
                 else:
-                    params6["Q_Out"] = "0"
+                    params["Q_Out"] = "0"
                 # Instead of solar object, write a fake V_in and I_in sufficient high so
                 # that it doesn't limit the player output
-                params6["V_In"] = "10000000"
-                params6["I_In"] = "10000000"
-                glm_modifier.add_object("inverter", sol_i_name, params6)
-
-
-                if metrics_interval > 0:
-                    params7 = dict()
-                    params7["parent"] = sol_i_name
-                    params7["interval"] = str(metrics_interval)
-                    glm_modifier.add_object("metrics_collector", sol_i_name, params7)
+                params["V_In"] = "10000000"
+                params["I_In"] = "10000000"
+                glm.add_object("inverter", sol_i_name, params)
+                glm.add_collector(sol_i_name, "inverter")
 
         if np.random.uniform(0, 1) <= ev_percentage:
             # first lets select an ev model:
@@ -528,58 +510,48 @@ def add_comm_zones(glm_modifier, bldg, comm_loads, key, batt_metadata, storage_p
             hsename = gld_strict_name(basenode + '_ev_hse')
             parent_zone = bldg['zonename']
             if case_type['pv']:  # all pvCases(HR) have ev populated
-                params8 = dict()
-                params8["parent"] = parent_zone
-                params8["configuration"] = volt_conf
-                params8["breaker_amps"] = "1000"
-                params8["battery_SOC"] = "100.0"
-                params8["travel_distance"] = '{};'.format(drive_sch['daily_miles'])
-                params8["arrival_at_work"] = '{};'.format(drive_sch['work_arr_time'])
-                params8["duration_at_work"] = '{}; // (secs)'.format(drive_sch['work_duration'])
-                params8["arrival_at_home"] = '{};'.format(drive_sch['home_arr_time'])
-                params8["duration_at_home"] = '{}; // (secs)'.format(drive_sch['home_duration'])
-                params8["work_charging_available"] = "FALSE"
-                params8["maximum_charge_rate"] = '{:.2f}; //(watts)'.format(ev_max_charge * 1000)
-                params8["mileage_efficiency"] = '{:.3f}; // miles per kWh'.format(ev_mileage)
-                params8["mileage_classification"] = '{:.3f}; // range in miles'.format(ev_range)
-                params8["charging_efficiency"] = '{:.3f};'.format(ev_charge_eff)
-                glm_modifier.add_object("evcharger_det", evname, params8)
-
-                if metrics_interval > 0:
-                    params9 = dict()
-                    params9["parent"] = evname
-                    params9["interval"] = str(metrics_interval)
-                    glm_modifier.add_object("metrics_collector", evname, params9)
+                params = {"parent": parent_zone,
+                          "configuration": volt_conf,
+                          "breaker_amps": "1000",
+                          "battery_SOC": "100.0",
+                          "travel_distance": '{};'.format(drive_sch['daily_miles']),
+                          "arrival_at_work": '{};'.format(drive_sch['work_arr_time']),
+                          "duration_at_work": '{}; // (secs)'.format(drive_sch['work_duration']),
+                          "arrival_at_home": '{};'.format(drive_sch['home_arr_time']),
+                          "duration_at_home": '{}; // (secs)'.format(drive_sch['home_duration']),
+                          "work_charging_available": "FALSE",
+                          "maximum_charge_rate": '{:.2f}; //(watts)'.format(ev_max_charge * 1000),
+                          "mileage_efficiency": '{:.3f}; // miles per kWh'.format(ev_mileage),
+                          "mileage_classification": '{:.3f}; // range in miles'.format(ev_range),
+                          "charging_efficiency": '{:.3f};'.format(ev_charge_eff)}
+                glm.add_object("evcharger_det", evname, params)
+                glm.add_collector(evname, "house")
 
     elif comm_type == 'ZIPLOAD':
         phsva = 1000.0 * kva / nphs
-        params10 = dict()
-        params10["parent"] = '{:s}'.format(mtr)
-        params10["groupid"] = "STREETLIGHTS"
-        params10["nominal_voltage"] = '{:2f}'.format(vln)
-        params10["phases"] = '{:s};'.format(phases)
+        params = {"parent": '{:s}'.format(mtr),
+                  "groupid": "STREETLIGHTS",
+                  "nominal_voltage": '{:2f}'.format(vln),
+                  "phases": '{:s};'.format(phases)}
         for phs in ['A', 'B', 'C']:
             if phs in phases:
-                params10["impedance_fraction_" + phs] = '{:f}'.format( c_z_frac)
-                params10["current_fraction_" + phs] = '{:f}'.format(c_i_frac)
-                params10["power_fraction_" + phs] = '{:f}'.format(c_p_frac)
-                params10["impedance_pf_" + phs] = '{:f}'.format(c_z_pf)
-                params10["current_pf_" + phs] = '{:f}'.format(c_i_pf)
-                params10["power_pf_" + phs] = ""
-                params10["base_power_" + phs] = 'street_lighting*{:.2f};'.format(light_scalar_comm * phsva)
-        glm_modifier.add_object("load", '{:s};'.format(key + '_streetlights', params10))
+                params["impedance_fraction_" + phs] = '{:f}'.format(c_z_frac)
+                params["current_fraction_" + phs] = '{:f}'.format(c_i_frac)
+                params["power_fraction_" + phs] = '{:f}'.format(c_p_frac)
+                params["impedance_pf_" + phs] = '{:f}'.format(c_z_pf)
+                params["current_pf_" + phs] = '{:f}'.format(c_i_pf)
+                params["power_pf_" + phs] = ""
+                params["base_power_" + phs] = 'street_lighting*{:.2f};'.format(light_scalar_comm * phsva)
+        glm.add_object("load", '{:s};'.format(key + '_streetlights', params))
 
     else:
-        params11 = dict()
-        params11["parent"] = '{:s}'.format(mtr)
-        params11["groupid"] = '{:s}'.format(comm_type)
-        params11["nominal_voltage"] = '{:2f}'.format(vln)
-        params11["phases"] = '{:s}'.format(phases)
-        glm_modifier.add_object("load", '{:s}'.format(key), params11)
+        params = {"parent": '{:s}'.format(mtr),
+                  "groupid": '{:s}'.format(comm_type),
+                  "nominal_voltage": '{:2f}'.format(vln),
+                  "phases": '{:s}'.format(phases)}
+        glm.add_object("load", '{:s}'.format(key), params)
 
-
-#***********************************************************************************************************************
-#***********************************************************************************************************************
+# ***********************************************************************************************************************
 
 def find_envelope_prop(prop, age, env_data, climate):
     """ Returns the envelope value for a given type of property based on the age and (ASHRAE) climate zone of the
@@ -700,139 +672,121 @@ def sub_bin_select(_bin, _type, _prob):
         val = int(val)
     return val
 
-def add_one_commercial_zone(glm_modifier, bldg, metrics, metrics_interval, mode=None):
+
+def add_one_commercial_zone(glm, bldg, mode=None):
     """ Write one pre-configured commercial zone as a house
 
     Args:
        bldg: dictionary of GridLAB-D house and zipload attributes
        op (file): open file to write to
-       metrics (list):
-       metrics_interval (int):
        mode (str): if in 'test' mode will not write out parent info.
     """
-    params = dict()
-    params[""] = ""
-    #Have to wait until the add comment method is added to the modifier class
-#    print('//  type', bldg['type'] + ';', file=op)
+    # Have to wait until the add comment method is added to the modifier class
+    #    print('//  type', bldg['type'] + ';', file=op)
 
+    params = {"groupid": bldg['groupid'],
+              "motor_model": "BASIC",
+              "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
+              "floor_area": '{:.0f}'.format(bldg['floor_area']),
+              "design_internal_gains": '{:.2f}'.format(bldg['int_gains'] * 1000 * 3.413),
+              "number_of_doors": '{:.0f}'.format(bldg['no_of_doors']),
+              "aspect_ratio": '{:.2f}'.format(bldg['aspect_ratio']),
+              "total_thermal_mass_per_floor_area": '{:1.2f}'.format(bldg['thermal_mass_per_floor_area']),
+              "interior_exterior_wall_ratio": '{:.2f}'.format(bldg['interior_exterior_wall_ratio']),
+              "exterior_floor_fraction": '{:.3f}'.format(bldg['exterior_floor_fraction']),
+              "exterior_ceiling_fraction": '{:.3f}'.format(bldg['exterior_ceiling_fraction']),
+              "Rwall": '{:3.2f}'.format(bldg['Rwall']),
+              "Rroof": '{:3.2f}'.format(bldg['Rroof']),
+              "Rfloor": '{:.2f}'.format(bldg['Rfloor']),
+              "Rdoors": '{:2.1f}'.format(bldg['Rdoors']),
+              "exterior_wall_fraction": '{:.2f}'.format(bldg['exterior_wall_fraction']),
+              "Rwindows": '{:.2f}'.format(bldg['Rwindows']),
+              "window_shading": '{:.2f}'.format(bldg['glazing_shgc']),
+              "window_exterior_transmission_coefficient": '{:.2f}'.format(bldg['window_exterior_transmission_coefficient']),
+              "airchange_per_hour": '{:.2f}'.format(bldg['airchange_per_hour']),
+              "window_wall_ratio": '{:0.3f}'.format(bldg['window_wall_ratio']),
+              "heating_system_type": '{:s}'.format(bldg['heating_system_type']),
+              "auxiliary_system_type": '{:s}'.format(bldg['aux_type']),
+              "fan_type": '{:s}'.format(bldg['fan_type']),
+              "cooling_system_type": '{:s}'.format(bldg['cool_type']),
+              "air_temperature": '{:.2f}'.format(bldg['init_temp']),
+              "mass_temperature": '{:.2f}'.format(bldg['init_temp']),
+              "over_sizing_factor": '{:.2f}'.format(bldg['os_rand']),
+              "cooling_COP": '{:2.2f}'.format(bldg['COP_A']),
+              "cooling_setpoint": "80.0", "heating_setpoint": "60.0"}
     if mode != 'test':
         params["parent"] = bldg['mtr']
-    params["groupid"] = bldg['groupid']
-    params["motor_model"] = "BASIC"
-    params["schedule_skew"] = '{:.0f}'.format(bldg['skew_value'])
-    params["floor_area"] = '{:.0f}'.format(bldg['floor_area'])
+
     # Internal gains need to be converted from kW to BTU-hr.
-    params["design_internal_gains"] = '{:.2f}'.format(bldg['int_gains'] * 1000 * 3.413)
-    params["number_of_doors"] = '{:.0f}'.format(bldg['no_of_doors'])
-    params["aspect_ratio"] = '{:.2f}'.format(bldg['aspect_ratio'])
-    params["total_thermal_mass_per_floor_area"] = '{:1.2f}'.format(bldg['thermal_mass_per_floor_area'])
-    params["interior_exterior_wall_ratio"] = '{:.2f}'.format(bldg['interior_exterior_wall_ratio'])
-    params["exterior_floor_fraction"] = '{:.3f}'.format(bldg['exterior_floor_fraction'])
-    params["exterior_ceiling_fraction"] = '{:.3f}'.format(bldg['exterior_ceiling_fraction'])
-    params["Rwall"] = '{:3.2f}'.format(bldg['Rwall'])
-    params["Rroof"] = '{:3.2f}'.format(bldg['Rroof'])
-    params["Rfloor"] = '{:.2f}'.format(bldg['Rfloor'])
-    params["Rdoors"] = '{:2.1f}'.format(bldg['Rdoors'])
-    params["exterior_wall_fraction"] = '{:.2f}'.format(bldg['exterior_wall_fraction'])
-    params["Rwindows"] = '{:.2f}'.format(bldg['Rwindows'])
     #  GLD uses the term window_sharing to assign 'glazing_shgc'
-    params["window_shading"] = '{:.2f}'.format(bldg['glazing_shgc'])
-    params["window_exterior_transmission_coefficient"] = '{:.2f}'.format(bldg['window_exterior_transmission_coefficient'])
-    params["airchange_per_hour"] = '{:.2f}'.format(bldg['airchange_per_hour'])
-    params["window_wall_ratio"] = '{:0.3f}'.format(bldg['window_wall_ratio'])
-    params["heating_system_type"] = '{:s}'.format(bldg['heating_system_type'])
-    params["auxiliary_system_type"] = '{:s}'.format(bldg['aux_type'])
-    params["fan_type"] = '{:s}'.format(bldg['fan_type'])
-    params["cooling_system_type"] = '{:s}'.format(bldg['cool_type'])
-    params["air_temperature"] = '{:.2f}'.format(bldg['init_temp'])
-    params["mass_temperature"] = '{:.2f}'.format(bldg['init_temp'])
-    params["over_sizing_factor"] = '{:.2f}'.format(bldg['os_rand'])
-    params["cooling_COP"] = '{:2.2f}'.format(bldg['COP_A'])
-    params["cooling_setpoint"] = "80.0"
-    params["heating_setpoint"] = "60.0"
-    glm_modifier.add_object("house",bldg['zonename'],params)
+    glm.add_object("house", bldg['zonename'], params)
+    glm.add_collector(bldg['zonename'], "house")
 
-    params1 = dict()
-    params1["parent"] = bldg['zonename']
-    params1["schedule_skew"] = '{:.0f}'.format(bldg['skew_value'])
-    params1["heatgain_fraction"] = "0.8"
-    params1["power_fraction"] = '{:.2f}'.format(bldg['c_p_frac'])
-    params1["impedance_fraction"] = '{:.2f}'.format(bldg['c_z_frac'])
-    params1["current_fraction"] = '{:.2f}'.format(bldg['c_i_frac'])
-    params1["power_pf"] = '{:.2f}'.format(bldg['c_p_pf'])
-    params1["current_pf"] = '{:.2f}'.format(bldg['c_i_pf'])
-    params1["impedance_pf"] = '{:.2f}'.format(bldg['c_z_pf'])
-    params1["base_power"] = '{:s}_lights*{:.2f}'.format(bldg['adj_lights'])
-    glm_modifier.add_object("ZIPload","lights",params1)
+    params = {"parent": bldg['zonename'],
+              "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
+              "heatgain_fraction": "0.8",
+              "power_fraction": '{:.2f}'.format(bldg['c_p_frac']),
+              "impedance_fraction": '{:.2f}'.format(bldg['c_z_frac']),
+              "current_fraction": '{:.2f}'.format(bldg['c_i_frac']),
+              "power_pf": '{:.2f}'.format(bldg['c_p_pf']),
+              "current_pf": '{:.2f}'.format(bldg['c_i_pf']),
+              "impedance_pf": '{:.2f}'.format(bldg['c_z_pf']),
+              "base_power": '{:s}_lights*{:.2f}'.format(bldg['base_schedule'], bldg['adj_lights'])}
+    glm.add_object("ZIPload", "lights", params)
 
-    params2 = dict()
-    params2["parent"] = bldg['zonename']
-    params2["schedule_skew"] = '{:.0f}'.format(bldg['skew_value'])
-    params2["heatgain_fraction"] = "0.9"
-    params2["power_fraction"] = '{:.2f}'.format(bldg['c_p_frac'])
-    params2["impedance_fraction"] = '{:.2f}'.format(bldg['c_z_frac'])
-    params2["current_fraction"] = '{:.2f};'.format(bldg['c_i_frac'])
-    params2["power_pf"] =' {:.2f}'.format(bldg['c_p_pf'])
-    params2["current_pf "] = '{:.2f}'.format(bldg['c_i_pf'])
-    params2["impedance_pf"] = '{:.2f}'.format(bldg['c_z_pf'])
-    params2["base_power"] = '{:s}_plugs*{:.2f}'.format(bldg['base_schedule'], bldg['adj_plugs'])
-    glm_modifier.add_object("ZIPload","loads",params2)
+    params = {"parent": bldg['zonename'],
+              "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
+              "heatgain_fraction": "0.9",
+              "power_fraction": '{:.2f}'.format(bldg['c_p_frac']),
+              "impedance_fraction": '{:.2f}'.format(bldg['c_z_frac']),
+              "current_fraction": '{:.2f};'.format(bldg['c_i_frac']),
+              "power_pf": ' {:.2f}'.format(bldg['c_p_pf']),
+              "current_pf ": '{:.2f}'.format(bldg['c_i_pf']),
+              "impedance_pf": '{:.2f}'.format(bldg['c_z_pf']),
+              "base_power": '{:s}_plugs*{:.2f}'.format(bldg['base_schedule'], bldg['adj_plugs'])}
+    glm.add_object("ZIPload", "loads", params)
 
-    params3 = dict()
-    params3["parent"] = bldg['zonename']
-    params3["schedule_skew"] = '{:.0f}'.format(bldg['skew_value'])
-    params3["heatgain_fraction"] = "1.0"
-    params3["power_fraction"] = "0"
-    params3["impedance_fraction"] = "0"
-    params3["current_fraction"] = "0"
-    params3["power_pf"] = "1"
-    params3["base_power"] = '{:s}_gas*{:.2f}'.format(bldg['base_schedule'], bldg['adj_gas'])
-    glm_modifier.add_object("ZIPload","gas waterheater",params3)
+    params = {"parent": bldg['zonename'],
+              "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
+              "heatgain_fraction": "1.0",
+              "power_fraction": "0",
+              "impedance_fraction": "0",
+              "current_fraction": "0",
+              "power_pf": "1", "base_power": '{:s}_gas*{:.2f}'.format(bldg['base_schedule'], bldg['adj_gas'])}
+    glm.add_object("ZIPload", "gas waterheater", params)
 
-    params4 = dict()
-    params4["parent"] = bldg['zonename']
-    params4["schedule_skew"] = '{:.0f}'.format(bldg['skew_value'])
-    params4["heatgain_fraction"] = "0.0"
-    params4["power_fraction"] = '{:.2f}'.format(bldg['c_p_frac'])
-    params4["impedance_fraction"] = '{:.2f}'.format(bldg['c_z_frac'])
-    params4["current_fraction"] = '{:.2f}'.format(bldg['c_i_frac'])
-    params4["power_pf"] = '{:.2f}'.format(bldg['c_p_pf'])
-    params4["current_pf"] = '{:.2f}'.format(bldg['c_i_pf'])
-    params4["impedance_pf"] = '{:.2f}'.format(bldg['c_z_pf'])
-    params4["base_power"] = '{:s}_exterior*{:.2f};'.format(bldg['base_schedule'], bldg['adj_ext'])
-    glm_modifier.add_object("ZIPload","exterior lights",params4)
+    params = {"parent": bldg['zonename'],
+              "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
+              "heatgain_fraction": "0.0",
+              "power_fraction": '{:.2f}'.format(bldg['c_p_frac']),
+              "impedance_fraction": '{:.2f}'.format(bldg['c_z_frac']),
+              "current_fraction": '{:.2f}'.format(bldg['c_i_frac']),
+              "power_pf": '{:.2f}'.format(bldg['c_p_pf']),
+              "current_pf": '{:.2f}'.format(bldg['c_i_pf']),
+              "impedance_pf": '{:.2f}'.format(bldg['c_z_pf']),
+              "base_power": '{:s}_exterior*{:.2f};'.format(bldg['base_schedule'], bldg['adj_ext'])}
+    glm.add_object("ZIPload", "exterior lights", params)
 
-    params5 = dict()
-    params5["parent"] = bldg['zonename']
-    params5["schedule_skew"] = '{:.0f}'.format(bldg['skew_value'])
-    params5["heatgain_fraction"] = "1.0"
-    params5["power_fraction"] = "0"
-    params5["impedance_fraction"] = "0"
-    params5["current_fraction"] = "0"
-    params5["power_pf"] = "1"
-    params5["base_power"] = '{:s}_occupancy*{:.2f}'.format(bldg['base_schedule'], bldg['adj_occ'])
-    glm_modifier.add_object("ZIPload","occupancy",params5)
+    params = {"parent": bldg['zonename'],
+              "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
+              "heatgain_fraction": "1.0",
+              "power_fraction": "0",
+              "impedance_fraction": "0",
+              "current_fraction": "0",
+              "power_pf": "1",
+              "base_power": '{:s}_occupancy*{:.2f}'.format(bldg['base_schedule'], bldg['adj_occ'])}
+    glm.add_object("ZIPload", "occupancy", params)
 
     if bldg['adj_refrig'] != 0:
-        params6 = dict()
         # TODO: set to 0.01 to avoid a divide by zero issue in the agent code.
         #  Should be set to zero after that is fixed.
-        params6["parent"] = bldg['zonename']
-        params6["heatgain_fraction"] = "0.01"
-        params6["power_fraction"] = '{:.2f}'.format(bldg['c_p_frac'])
-        params6["impedance_fraction"] = '{:.2f}'.format(bldg['c_z_frac'])
-        params6["current_fraction"] = '{:.2f}'.format(bldg['c_i_frac'])
-        params6["power_pf"] = '{:.2f}'.format(bldg['c_p_pf'])
-        params6["current_pf"] = '{:.2f};'.format(bldg['c_i_pf'])
-        params6["impedance_pf"] = '{:.2f}'.format(bldg['c_z_pf'])
-        params6["base_power"] = '{:.2f}'.format(bldg['adj_refrig'])
-        glm_modifier.add_object("ZIPload","large refrigeration electrical load",params6)
-
-    if metrics_interval > 0 and "house" in metrics:
-        params7 = dict()
-        params7["parent"] = bldg['zonename']
-        params7["interval"] = str(metrics_interval)
-        glm_modifier.add_object("metrics_collector",bldg['zonename'],params7)
-
-
-
+        params = {"parent": bldg['zonename'],
+                  "heatgain_fraction": "0.01",
+                  "power_fraction": '{:.2f}'.format(bldg['c_p_frac']),
+                  "impedance_fraction": '{:.2f}'.format(bldg['c_z_frac']),
+                  "current_fraction": '{:.2f}'.format(bldg['c_i_frac']),
+                  "power_pf": '{:.2f}'.format(bldg['c_p_pf']),
+                  "current_pf": '{:.2f};'.format(bldg['c_i_pf']),
+                  "impedance_pf": '{:.2f}'.format(bldg['c_z_pf']),
+                  "base_power": '{:.2f}'.format(bldg['adj_refrig'])}
+        glm.add_object("ZIPload", "large refrigeration electrical load", params)

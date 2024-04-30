@@ -97,6 +97,7 @@ class GLModel:
         #     self.objects = json.load(json_file)
         #     for name in self.objects:
         #         self.object_entities[name] = Entity(name, self.objects[name])
+        self.hash = None
         self.root = None
         self.in_file = ""
         self.out_file = ""
@@ -829,6 +830,7 @@ class GLModel:
                         self.outside_comments[name] = outside_comments
                     outside_comments = []
                     name = ""
+            self.hash = h
             return True
         else:
             raise FileNotFoundError(f"{filename} not found")
@@ -947,8 +949,11 @@ class GLModel:
         nc = []
         nlb = {}
         for u, v in G.nodes(data=True):
-            nc.append(self.node_classes[v['nclass']])
-            nlb[u] = u
+            try:
+                nc.append(self.node_classes[v['nclass']])
+                nlb[u] = u
+            except:
+                continue
 
         # Edges colors and attributes
         ec = []

@@ -2768,7 +2768,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
                 print('  name P_out_inj;', file=op)
                 print('  file "' + solar_path + solar_P_player + '";', file=op)
                 print('}', file=op)
-                if solar_Q_player != "":
+                if 'no_file' not in solar_Q_player:
                     print('object player {', file=op)
                     print('  name Q_out_inj;', file=op)
                     print('  file "' + solar_path + solar_Q_player + '";', file=op)
@@ -3097,7 +3097,7 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
     case_type = config['SimulationConfig']['caseType']
 
     # -------- create cop lookup table by vintage bin-----------
-    # (Laurentiu MArinovici 11/18/2019) moving the cop_lookup inside this function as it requires
+    # (Laurentiu Marinovici 11/18/2019) moving the cop_lookup inside this function as it requires
     # residential building metadata
     cop_mat = res_bldg_metadata['COP_average']
     years_bin = [range(1945, 1950), range(1950, 1960), range(1960, 1970), range(1970, 1980),
