@@ -46,8 +46,8 @@ def startWeatherAgent(file):
                 publishTimeAhead = conf['PublishTimeAhead']
                 forecastPeriod = conf['forecastPeriod']
                 forecastParameters = conf['parameters']
-            except ValueError as ex:
-                print(ex)
+            except:
+                pass
     else:
         print('could not open WEATHER_CONFIG file for FNCS or HELICS')
         sys.exit()
@@ -185,7 +185,7 @@ def convertTimeToSeconds(time):
     else:
         raise Exception("unrecognized time unit '" + unit + "' in " + time + ".")
 
-def deltaTimeToResmapleFreq(time):
+def deltaTimeToResampleFreq(time):
     """ Convert time unit to a resampling frequency that can be recognized by pandas.DataFrame.resample()
 
     Parses unit in day, hour, minute and second. It won't recognize week, month, year, millisecond,

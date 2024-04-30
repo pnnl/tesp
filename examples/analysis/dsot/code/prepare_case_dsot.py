@@ -89,7 +89,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
     # record aggregated hvac_setpoint_data from survey:
     # In this implementation individual house set point schedule may not
     # make sense but aggregated behavior will do.
-    with open(os.path.join(data_Path, sys_config['hvacSetPoint']), 'r', encoding='utf-8') as json_file:
+    with open(os.path.join(data_Path, sys_config['hvac' + rcs + 'SetPoint']), 'r', encoding='utf-8') as json_file:
         hvac_setpt = json.load(json_file)
 
     # print(json.dumps(sys_config, sort_keys = True, indent = 2))
