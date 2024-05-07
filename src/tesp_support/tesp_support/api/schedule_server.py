@@ -1,5 +1,18 @@
 # Copyright (C) 2021-2023 Battelle Memorial Institute
 # file: schedule_server.py
+"""Implements simple server for providing access to common data to many agents
+
+This is a simple server that provides access to many commonly used data, 
+typically in files on disk. Traditionally each software entity that needed
+them would load the entire file from disk and store it for local use. In cases
+where a large number of entities would be instantiated, storing all this data
+in memory lead to an untenably large memory footprint. To solve this problem,
+this simple server was implemented; it reads in the data from disk once and
+provides two simple APIs for other entities to extract the data.
+
+
+
+"""
 
 import json
 import numpy as np

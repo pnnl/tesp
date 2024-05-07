@@ -2,7 +2,10 @@
 # file: forecasting.py
 """Class responsible for forecasting 
 
-Implements the substation level DA price forecast and load forecast
+Implements the substation level DA price forecast and load forecast. Accesses
+forecast data using the schedule server; see "schedule_server.py" for further
+implementation details.
+
 
 """
 
