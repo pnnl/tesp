@@ -124,7 +124,7 @@ Generally, breaking longer functions up into smaller functional blocks tends to 
 
 Docstrings and Type-Hinting
 ---------------------------
-Every module (file) class, and function/method needs a docstring at it's beginning. `PEP 257_` provides guidance. Additionally, we use `PEP 484_` to provide type hinting in the function signature; this allows to omit them as an explicit portion of the docstring. We use a parser that reads the function/method signature and docstring to auto-generate API documentation 
+Every module (file) class, and function/method needs a docstring at it's beginning. `PEP 257`_ provides guidance. Additionally, we use `PEP 484`_ to provide type hinting in the function signature; this allows to omit them as an explicit portion of the docstring. We use a parser that reads the function/method signature and docstring to auto-generate API documentation 
 
 The docstring should provide users of the function/method sufficient understanding to allow them to use it effectively. They also help developers who need to maintain or trouble-shoot the code at some future time. 
 

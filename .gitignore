@@ -76,3 +76,4 @@ fabric.properties
 .idea/caches/build_file_checksums.ser
 src/tesp_support/tesp_support/.idea
 TESP_demo-checkpoint.ipynb
+tesp.code-workspace
