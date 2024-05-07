@@ -369,7 +369,7 @@ def tso_psst_loop(casename):
 
                 row = []
                 for z in range(TAU):
-                   row.append(ld)
+                    row.append(ld)
                 pub = getPub('cleared_q_rt_' + str(bus_num))
                 helics.helicsPublicationPublishString(pub, json.dumps(row[0]))
                 rt_q_store.append_data(
@@ -1597,6 +1597,7 @@ def tso_psst_loop(casename):
                         sum_w += gen[idx, 1]
                         sum_hr += float(row[2][hour])
 
+            # seconds, OPFconverged, TotalLoad, TotalGen, SwingGen
             line = str(ts) + ', ' + "True" + ','
             line += '{: .2f}'.format(bus[:, 2].sum()) + ','
             line += '{: .2f}'.format(gen[:, 1].sum()) + ','
@@ -1617,10 +1618,13 @@ def tso_psst_loop(casename):
                 if notUsed:
                     line += ' 0,'
 
+            # TotRenGen, TotRenGenHr, TotalGLDLoad
             line += '{: .2f}'.format(sum_w) + ',' + '{: .2f}'.format(sum_hr) + ',' + \
                     '{: .2f}'.format(sum(nobid_unresp_rt)) + ','
 
+            # DALoad
             line += '{: .2f}'.format(da_sum) + ','
+            # DAGen
             if len(last_dispatch) > 0:
                 da_sum = 0
                 for key, row in last_dispatch.items():
@@ -1628,6 +1632,7 @@ def tso_psst_loop(casename):
                 line += '{: .2f}'.format(da_sum) + ','
             else:
                 line += ' 0,'
+            # TotRenGenHR
             line += '{: .2f}'.format(da_sum + sum_hr) + ','
             line += '{: .2f}'.format(rt_percent) + ', ' + str(rt_status)
 

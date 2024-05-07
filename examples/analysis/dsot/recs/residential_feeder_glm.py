@@ -37,17 +37,18 @@ import json
 import os.path
 import re
 import sys
+from math import sqrt
+
 import networkx as nx
 import numpy as np
 import pandas as pd
-from math import sqrt
+import recs.commercial_feeder_glm as comm_FG
 
 from tesp_support.api.data import feeders_path, weather_path
 from tesp_support.api.helpers import gld_strict_name, random_norm_trunc
 from tesp_support.api.parse_helpers import parse_kva
-from tesp_support.api.time_helpers import is_hhmm_valid, subtract_hhmm_secs, add_hhmm_secs
 from tesp_support.api.time_helpers import get_secs_from_hhmm, get_hhmm_from_secs, get_duration, get_dist
-import recs.commercial_feeder_glm as comm_FG
+from tesp_support.api.time_helpers import is_hhmm_valid, subtract_hhmm_secs, add_hhmm_secs
 
 forERCOT = False
 port = 5570
@@ -94,7 +95,7 @@ Eplus_Bus = ''
 Eplus_Volts = 480.0
 Eplus_kVA = 150.0
 
-# electric_cooling_percentage = 0.0  # if not provided in JSON config, use a regional default
+electric_cooling_percentage = 0.0  # if not provided in JSON config, use a regional default
 solar_percentage = 0.2
 storage_percentage = 0.5
 water_heater_percentage = 0.0  # if not provided in JSON config, use a regional default
@@ -119,6 +120,7 @@ dso_type = ''
 res_dso_type = ''
 income_level = ''
 state = ''
+
 
 # EV population functions
 def process_nhts_data(data_file):
@@ -229,7 +231,8 @@ def is_drive_time_valid(drive_sch):
     commute_secs = min(3600, 24 * 3600 - drive_sch['home_duration'])
     work_arr_time = add_hhmm_secs(home_leave_time, commute_secs / 2)
     work_duration = 24 * 3600 - drive_sch['home_duration'] - commute_secs
-    if work_arr_time != drive_sch['work_arr_time'] or round(work_duration/60) != round(drive_sch['work_duration']/60):
+    if (work_arr_time != drive_sch['work_arr_time'] or
+            round(work_duration / 60) != round(drive_sch['work_duration'] / 60)):
         return False
     return True
 
@@ -317,8 +320,17 @@ rgnName = ['West_Coast',
            'Southeast_Coast']
 rgnTimeZone = ['PST+8PDT', 'EST+5EDT', 'MST+7MDT', 'CST+6CDT', 'EST+5EDT']
 rgnWeather = ['CA-San_francisco', 'OH-Cleveland', 'AZ-Phoenix', 'TN-Nashville', 'FL-Miami']
-vint_type = ['pre_1950', '1950-1959', '1960-1969', '1970-1979', '1980-1989', '1990-1999', '2000-2009', '2010-2015', '2016-2020']
+vint_type = ['pre_1950',
+             '1950-1959',
+             '1960-1969',
+             '1970-1979',
+             '1980-1989',
+             '1990-1999',
+             '2000-2009',
+             '2010-2015',
+             '2016-2020']
 dsoThermalPct = []
+
 
 # -----------fraction of vintage type by home type in a given dso type---------
 # index 0 is the home type:
@@ -371,13 +383,15 @@ def selectResidentialBuilding(rgnTable, prob):
 # -----------fraction of income level in a given dso type and state---------
 # index 0 is the income level:
 #   0 = Low
-#   1 = Middle - No longer using Moderate
+#   1 = Middle
 #   2 = Upper
 def getDsoIncomeLevelTable():
     income_mat = res_bldg_metadata['income_level'][state][res_dso_type]
-    dsoIncomePct = {key: income_mat[key] for key in income_level} # Create new dictionary only with income levels of interest
+    # Create new dictionary only with income levels of interest
+    dsoIncomePct = {key: income_mat[key] for key in income_level}
     dsoIncomePct = list(dsoIncomePct.values())
-    dsoIncomePct = [round(i/sum(dsoIncomePct),4) for i in dsoIncomePct] # Normalize so array adds up to 1
+    # Normalize so array adds up to 1
+    dsoIncomePct = [round(i / sum(dsoIncomePct), 4) for i in dsoIncomePct]
     # now check if the sum of all values is 1
     total = 0
     for row in range(len(dsoIncomePct)):
@@ -391,7 +405,7 @@ def selectIncomeLevel(incTable, prob):
     """ Selects the income level with region and probability
 
     Args:
-        rgnTable:
+        incTable:
         prob:
     """
     total = 0
@@ -1275,7 +1289,10 @@ def identify_ercot_houses(model, h, t, avgHouse, rgn):
         rgn (int): the region number, 1..5
     """
     # let's get the vintage table for dso_type
-    dsoThermalPct = getDsoThermalTable()
+    dsoIncomePct = getDsoIncomeLevelTable()
+    inc_lev = selectIncomeLevel(dsoIncomePct, np.random.uniform(0, 1))
+    # let's get the vintage table for dso_type, state, and income level
+    dsoThermalPct = getDsoThermalTable(income_level[inc_lev])
     print('Average ERCOT House', avgHouse, rgn)
     total_houses = {'A': 0, 'B': 0, 'C': 0}
     total_small = {'A': 0, 'B': 0, 'C': 0}
@@ -1469,7 +1486,8 @@ def identify_xfmr_houses(model, h, t, seg_loads, avgHouse, rgn):
         avgHouse (float): the average house load in kva
         rgn (int): the region number, 1..5
     """
-
+    # let's get the income level for the dso_type and state
+    dsoIncomePct = getDsoIncomeLevelTable()
     print('Average House', avgHouse)
     total_houses = 0
     total_sf = 0
@@ -1492,9 +1510,7 @@ def identify_xfmr_houses(model, h, t, seg_loads, avgHouse, rgn):
                     else:
                         total_houses += nhouse
                         lg_v_sm = tkva / avgHouse - nhouse  # >0 if we rounded down the number of houses
-                        # let's get the income level for the dso_type and state
-                        dsoIncomePct = getDsoIncomeLevelTable()
-                        inc_lev = selectIncomeLevel(dsoIncomePct, np.random.uniform(0,1))
+                        inc_lev = selectIncomeLevel(dsoIncomePct, np.random.uniform(0, 1))
                         # let's get the vintage table for dso_type, state, and income level
                         dsoThermalPct = getDsoThermalTable(income_level[inc_lev])
                         bldg, ti = selectResidentialBuilding(dsoThermalPct, np.random.uniform(0, 1))
@@ -1606,9 +1622,8 @@ def write_houses(basenode, op, vnom):
     else:
         vstart = format(-0.5 * vnom, '.2f') + '+' + format(0.866025 * vnom, '.2f') + 'j'
 
-    if "_Low" in basenode or "_Moderate" in basenode or "_Middle" in basenode or "_Upper" in basenode:
+    if "_Low" in basenode or "_Middle" in basenode or "_Upper" in basenode:
         basenode = basenode.replace("_Low", "")
-        basenode = basenode.replace("_Moderate", "")
         basenode = basenode.replace("_Middle", "")
         basenode = basenode.replace("_Upper", "")
     if forERCOT:
@@ -1648,7 +1663,7 @@ def write_houses(basenode, op, vnom):
                 print('    interval', str(metrics_interval) + ';', file=op)
                 print('  };', file=op)
             print('}', file=op)
-        # LAurentiu MArinovici - 03/05/2020
+        # Laurentiu Marinovici - 03/05/2020
         else:
             mtrname1 = gld_strict_name(basenode + '_mtr_' + str(i + 1))
             print('object triplex_meter {', file=op)
@@ -1702,10 +1717,12 @@ def write_houses(basenode, op, vnom):
         income = income_level[inc_lev]
         if bldg == 0:  # SF
             fa_bldg = 'single_family_detached'  # then pick single_Family_detached values for floor_area
-            if np.random.uniform(0, 1) > res_bldg_metadata['num_stories'][state][res_dso_type][income][fa_bldg][vint]['one_story']:
+            if (np.random.uniform(0, 1) >
+                    res_bldg_metadata['num_stories'][state][res_dso_type][income][fa_bldg][vint]['one_story']):
                 stories = 2  # all SF homes which are not single story are 2 stories
-            if np.random.uniform(0,1) <= res_bldg_metadata['high_ceilings'][state][res_dso_type][income][fa_bldg][vint]:
-                ceiling_height = 10 # all SF homes that have high ceilings are 10 ft
+            if (np.random.uniform(0, 1) <=
+                    res_bldg_metadata['high_ceilings'][state][res_dso_type][income][fa_bldg][vint]):
+                ceiling_height = 10  # all SF homes that have high ceilings are 10 ft
             ceiling_height += np.random.randint(0, 2)
         elif bldg == 1:  # apartments
             fa_bldg = 'apartment_2_4_units'  # then pick apartment_2_4_units for floor area
@@ -1717,19 +1734,15 @@ def write_houses(basenode, op, vnom):
         # creating distribution array for floor_area
         for ind in ['min', 'max', 'mean', 'standard_deviation']:
             fa_array[ind] = res_bldg_metadata['floor_area'][state][res_dso_type][income][fa_bldg][ind]
-            # next_ti = ti
-            # while not fa_array[ind]:  # if value is null/None, check the next vintage bin
-            #     next_ti += 1
-            #     fa_array[ind] = res_bldg_metadata['floor_area'][ind][fa_bldg][vint_type[next_ti]]
         # print(i)
         # print(nhouse)
         floor_area = random_norm_trunc(fa_array)  # truncated normal distribution
         floor_area = (1 + lg_v_sm) * floor_area  # adjustment depends on whether nhouses rounded up or down
         fa_rand = np.random.uniform(0, 1)
-        if floor_area > min(fa_array['max'],6000):  # TODO: do we need this condition ? it was originally 4000
-            floor_area = min(fa_array['max'],6000) + fa_rand * 200
+        if floor_area > fa_array['max']:
+            floor_area = fa_array['max'] - (fa_rand * 200)
         elif floor_area < fa_array['min']:
-            floor_area = fa_array['min'] + fa_rand * 100
+            floor_area = fa_array['min'] + (fa_rand * 100)
 
         # ********** residential skew and scalar for schedule files **********
         scalar1 = 324.9 / 8907 * floor_area ** 0.442
@@ -1792,11 +1805,6 @@ def write_houses(basenode, op, vnom):
         else:  # bldg == 2  # Mobile Homes
             # select between single and double wide
             wwr = (res_bldg_metadata['window_wall_ratio']['mobile_home']['mean'])  # window wall ratio
-            # sw_pct = res_bldg_metadata['mobile_home_single_wide'][state][res_dso_type][income]  # single wide percentage for given vintage bin
-            # next_ti = ti
-            # while not sw_pct:  # if the value is null or 'None', check the next vintage bin
-            #     next_ti += 1
-            #     sw_pct = res_bldg_metadata['mobile_home_single_wide'][vint_type[next_ti]]
             if floor_area <= 1080:  # Single wide
                 aspect_ratio = random_norm_trunc(res_bldg_metadata['aspect_ratio']['mobile_home_single_wide'])
             else:  # double wide
@@ -1865,10 +1873,11 @@ def write_houses(basenode, op, vnom):
         heat_rand = np.random.uniform(0, 1)
         cool_rand = np.random.uniform(0, 1)
         house_fuel_type = 'electric'
-        heat_pump_prob = res_bldg_metadata['space_heating_type'][state][res_dso_type][income][fa_bldg][vint]['gas_heating'] + res_bldg_metadata['space_heating_type'][state][res_dso_type][income][fa_bldg][vint]['heat_pump']
+        properties = res_bldg_metadata['space_heating_type'][state][res_dso_type][income][fa_bldg][vint]
+        heat_pump_prob = properties['gas_heating'] + properties['heat_pump']
         # Get the air conditioning percentage for homes that don't have heat pumps
         electric_cooling_percentage = res_bldg_metadata['air_conditioning'][state][res_dso_type][income][fa_bldg]
-        if heat_rand <= res_bldg_metadata['space_heating_type'][state][res_dso_type][income][fa_bldg][vint]['gas_heating']:
+        if heat_rand <= properties['gas_heating']:
             house_fuel_type = 'gas'
             print('  heating_system_type GAS;', file=op)
             if cool_rand <= electric_cooling_percentage:
@@ -1927,16 +1936,15 @@ def write_houses(basenode, op, vnom):
         print('    current_fraction', '{:.2f}'.format(techdata[5]) + ';', file=op)
         print('    power_fraction', '{:.2f}'.format(techdata[6]) + ';', file=op)
         print('  };', file=op)
-        # if np.random.uniform(0, 1) <= water_heater_percentage:  # rgnPenElecWH[rgn-1]:
+
         # Determine house water heating fuel type based on space heating fuel type
         wh_fuel_type = 'gas'
-        # if np.random.uniform(0, 1) <= res_bldg_metadata['water_heating_type'][state][res_dso_type][income][fa_bldg]:
-        #     wh_fuel_type = house_fuel_type
+        properties = res_bldg_metadata['water_heating_fuel'][state][res_dso_type][income][fa_bldg]
         if house_fuel_type == 'gas':
-            if np.random.uniform(0, 1) <= res_bldg_metadata['water_heating_fuel'][state][res_dso_type][income][fa_bldg]['sh_gas']['electric']:            
+            if np.random.uniform(0, 1) <= properties['sh_gas']['electric']:
                 wh_fuel_type = 'electric'
         elif house_fuel_type == 'electric':
-            if np.random.uniform(0, 1) <= res_bldg_metadata['water_heating_fuel'][state][res_dso_type][income][fa_bldg]['sh_electric']['electric']:            
+            if np.random.uniform(0, 1) <= properties['sh_electric']['electric']:
                 wh_fuel_type = 'electric'
         if wh_fuel_type == 'electric':  # if the water heater fuel type is electric, install wh
             heat_element = 3.0 + 0.5 * np.random.randint(1, 6)  # numpy randint (lo, hi) returns lo..(hi-1)
@@ -1946,38 +1954,23 @@ def write_houses(basenode, op, vnom):
             water_sch = np.ceil(waterHeaterScheduleNumber * np.random.uniform(0, 1))
             water_var = 0.95 + np.random.uniform(0, 1) * 0.1  # +/-5% variability
             wh_demand_type = 'large_'
-            # sizeIncr = np.random.randint(0, 3)  # MATLAB randi(imax) returns 1..imax
-            # sizeProb = np.random.uniform(0, 1)
-            # old wh size implementation
-            # if sizeProb <= rgnWHSize[rgn - 1][0]:
-            #     wh_size = 20 + sizeIncr * 5
-            #     wh_demand_type = 'small_'
-            # elif sizeProb <= (rgnWHSize[rgn - 1][0] + rgnWHSize[rgn - 1][1]):
-            #     wh_size = 30 + sizeIncr * 10
-            #     if floor_area < 2000.0:
-            #         wh_demand_type = 'small_'
-            # else:
-            #     if floor_area < 2000.0:
-            #         wh_size = 30 + sizeIncr * 10
-            #     else:
-            #         wh_size = 50 + sizeIncr * 10
 
             # new wh size implementation
             wh_data = res_bldg_metadata['water_heater_tank_size']
             if floor_area <= wh_data['floor_area']['1_2_people']['floor_area_max']:
                 size_array = range(wh_data['tank_size']['1_2_people']['min'],
-                                    wh_data['tank_size']['1_2_people']['max'] + 1, 5)
+                                   wh_data['tank_size']['1_2_people']['max'] + 1, 5)
                 wh_demand_type = 'small_'
             elif floor_area <= wh_data['floor_area']['2_3_people']['floor_area_max']:
                 size_array = range(wh_data['tank_size']['2_3_people']['min'],
-                                    wh_data['tank_size']['2_3_people']['max'] + 1, 5)
+                                   wh_data['tank_size']['2_3_people']['max'] + 1, 5)
                 wh_demand_type = 'small_'
             elif floor_area <= wh_data['floor_area']['3_4_people']['floor_area_max']:
                 size_array = range(wh_data['tank_size']['3_4_people']['min'],
-                                    wh_data['tank_size']['3_4_people']['max'] + 1, 10)
+                                   wh_data['tank_size']['3_4_people']['max'] + 1, 10)
             else:
                 size_array = range(wh_data['tank_size']['5_plus_people']['min'],
-                                    wh_data['tank_size']['5_plus_people']['max'] + 1, 10)
+                                   wh_data['tank_size']['5_plus_people']['max'] + 1, 10)
             wh_size = np.random.choice(size_array)
 
             wh_demand_str = wh_demand_type + '{:.0f}'.format(water_sch) + '*' + '{:.2f}'.format(water_var)
@@ -2024,19 +2017,20 @@ def write_houses(basenode, op, vnom):
         # Calculate the solar, storage, and ev percentage based on the income level
         # Chain rule for conditional probabilities
         # P(solar and income and SF)
-        p_sol_inc_sf = solar_percentage*res_bldg_metadata['solar_percentage'][income]
+        p_sol_inc_sf = solar_percentage * res_bldg_metadata['solar_percentage'][income]
         # P(SF|income)
-        p_sf_g_inc = res_bldg_metadata['housing_type'][state][res_dso_type][income]['single_family_detached']+res_bldg_metadata['housing_type'][state][res_dso_type][income]['single_family_attached']
+        p_sf_g_inc = res_bldg_metadata['housing_type'][state][res_dso_type][income]['single_family_detached'] + \
+                     res_bldg_metadata['housing_type'][state][res_dso_type][income]['single_family_attached']
         # P(income)
         il_percentage = res_bldg_metadata['income_level'][state][res_dso_type][income]
         # P(solar|income and SF)
-        sol_g_inc_sf = p_sol_inc_sf/(p_sf_g_inc*il_percentage)
+        sol_g_inc_sf = p_sol_inc_sf / (p_sf_g_inc * il_percentage)
         # P(battery and solar and SF and income)
-        p_bat_sol_sf_inc = storage_percentage*res_bldg_metadata['battery_percentage'][income]
+        p_bat_sol_sf_inc = storage_percentage * res_bldg_metadata['battery_percentage'][income]
         # P(battery|solar and SF and income)
-        bat_g_sol_sf_inc = p_bat_sol_sf_inc/(sol_g_inc_sf*p_sf_g_inc*il_percentage)
+        bat_g_sol_sf_inc = p_bat_sol_sf_inc / (sol_g_inc_sf * p_sf_g_inc * il_percentage)
         # P(ev|income)
-        ev_percentage_il = (ev_percentage * res_bldg_metadata['ev_percentage'][income])/il_percentage    
+        ev_percentage_il = (ev_percentage * res_bldg_metadata['ev_percentage'][income]) / il_percentage
 
         if bldg == 0:  # Single-family homes
             if sol_g_inc_sf > 0.0:
@@ -2107,13 +2101,13 @@ def write_houses(basenode, op, vnom):
                     print('}', file=op)
                 if np.random.uniform(0, 1) <= bat_g_sol_sf_inc:
                     battery_capacity = get_dist(batt_metadata['capacity(kWh)']['mean'],
-                                            batt_metadata['capacity(kWh)']['deviation_range_per']) * 1000
+                                                batt_metadata['capacity(kWh)']['deviation_range_per']) * 1000
                     max_charge_rate = get_dist(batt_metadata['rated_charging_power(kW)']['mean'],
-                                            batt_metadata['rated_charging_power(kW)']['deviation_range_per']) * 1000
+                                               batt_metadata['rated_charging_power(kW)']['deviation_range_per']) * 1000
                     max_discharge_rate = max_charge_rate
                     inverter_efficiency = batt_metadata['inv_efficiency(per)'] / 100
                     charging_loss = get_dist(batt_metadata['rated_charging_loss(per)']['mean'],
-                                            batt_metadata['rated_charging_loss(per)']['deviation_range_per']) / 100
+                                             batt_metadata['rated_charging_loss(per)']['deviation_range_per']) / 100
                     discharging_loss = charging_loss
                     round_trip_efficiency = charging_loss * discharging_loss
                     rated_power = max(max_charge_rate, max_discharge_rate)
@@ -2569,7 +2563,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
         avgcommercial (float): the average commercial load in kVA, not used
     """
     global solar_count, solar_kw, battery_count, ev_count, base_feeder_name
-    global storage_percentage, solar_percentage, ev_percentage # removed electric cooling percentage; defined by house
+    global storage_percentage, solar_percentage, ev_percentage  # removed electric cooling percentage; defined by house
     global water_heater_percentage, water_heater_participation
 
     solar_count = 0
@@ -2592,19 +2586,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
         rgn = 4
     elif 'R5' in rootname:
         rgn = 5
-    # TODO: Modify if defined by income level
-    print('using', solar_percentage, 'solar and', storage_percentage, 'storage penetration')
-    # electric_cooling_pecentage now defined by house
-    # if electric_cooling_percentage <= 0.0:
-    #     electric_cooling_percentage = rgnPenElecCool[rgn - 1]
-    #     print('using regional default', electric_cooling_percentage, 'air conditioning penetration')
-    # else:
-    #     print('using', electric_cooling_percentage, 'air conditioning penetration from JSON config')
-    # if water_heater_percentage <= 0.0:
-    #     water_heater_percentage = rgnPenElecWH[rgn-1]
-    #     print('using regional default', water_heater_percentage, 'water heater penetration')
-    # else:
-    #     print('using', water_heater_percentage, 'water heater penetration from JSON config')
+
     if os.path.isfile(fname):
         ip = open(fname, 'r')
         lines = []
@@ -2909,11 +2891,11 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
             for key in comm_loads:
                 # write_commercial_loads (rgn, key, op)
                 bldg_definition = comm_FG.define_comm_loads(comm_loads[key][1], comm_loads[key][2],
-                                                    dso_type, ashrae_zone, comm_bldg_metadata)
+                                                            dso_type, ashrae_zone, comm_bldg_metadata)
                 comm_FG.create_comm_zones(bldg_definition, comm_loads, key, op, batt_metadata,
-                                  storage_percentage, ev_metadata, ev_percentage,
-                                  solar_percentage, pv_rating_MW, solar_Q_player,
-                                  case_type, metrics, metrics_interval, None)
+                                          storage_percentage, ev_metadata, ev_percentage,
+                                          solar_percentage, pv_rating_MW, solar_Q_player,
+                                          case_type, metrics, metrics_interval, None)
 
         else:
             replace_commercial_loads(model, h, 'load', 0.001 * avgcommercial)
@@ -2925,11 +2907,11 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
             for key in comm_loads:
                 # write_commercial_loads (rgn, key, op)
                 bldg_definition = comm_FG.define_comm_loads(comm_loads[key][1], comm_loads[key][2],
-                                                    dso_type, ashrae_zone, comm_bldg_metadata)
+                                                            dso_type, ashrae_zone, comm_bldg_metadata)
                 comm_FG.create_comm_zones(bldg_definition, comm_loads, key, op, batt_metadata,
-                                  storage_percentage, ev_metadata, ev_percentage,
-                                  solar_percentage, pv_rating_MW, solar_Q_player,
-                                  case_type, metrics, metrics_interval, None)
+                                          storage_percentage, ev_metadata, ev_percentage,
+                                          solar_percentage, pv_rating_MW, solar_Q_player,
+                                          case_type, metrics, metrics_interval, None)
 
         write_voltage_class(model, h, 'node', op, vln, vll, secnode)
         write_voltage_class(model, h, 'meter', op, vln, vll, secnode)
@@ -3012,13 +2994,13 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
     global storage_inv_mode, solar_inv_mode, solar_percentage, storage_percentage, ev_percentage
     global work_path, weather_file
     global timezone, starttime, endtime, timestep
-    global metrics, metrics_type, metrics_interval, metrics_interim  # removed electric_cooling_percentage; now defined by house
+    global metrics, metrics_type, metrics_interval, metrics_interim
     global water_heater_percentage, water_heater_participation
     global case_name, name_prefix, port, forERCOT, substation_name
     global house_nodes, small_nodes, comm_loads
     # global inverter_efficiency, round_trip_efficiency
     global latitude, longitude, time_zone_offset, weather_name, feeder_commercial_building_number
-    global state, dso_type, res_dso_type, income_level, gld_scaling_factor, pv_rating_MW
+    global dso_type, res_dso_type, income_level, state, gld_scaling_factor, pv_rating_MW
     global case_type
     global ashrae_zone, comm_bldg_metadata, comm_bldgs_pop
     # (Laurentiu Marinovici 11/18/2019)
@@ -3056,12 +3038,13 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
     metrics_type = config['FeederGenerator']['MetricsType']
     metrics_interval = int(config['FeederGenerator']['MetricsInterval'])
     metrics_interim = int(config['FeederGenerator']['MetricsInterim'])
+    # ToDo: Comment out percentage if defining by income level
     # electric_cooling_percentage = 0.01 * float(config['FeederGenerator']['ElectricCoolingPercentage'])
     # water_heater_percentage = 0.01 * float(config['FeederGenerator']['WaterHeaterPercentage'])
     # water_heater_participation = 0.01 * float(config['FeederGenerator']['WaterHeaterParticipation'])
-    solar_percentage = 0.01 * float(config['FeederGenerator']['SolarPercentage']) # ToDo: Comment out if defining by income level
+    solar_percentage = 0.01 * float(config['FeederGenerator']['SolarPercentage'])
     storage_percentage = 0.01 * float(config['FeederGenerator']['StoragePercentage'])
-    ev_percentage = 0.01 * float(config['FeederGenerator']['EVPercentage']) # ToDo: Comment out if defining by income level
+    ev_percentage = 0.01 * float(config['FeederGenerator']['EVPercentage'])
     solar_inv_mode = config['FeederGenerator']['SolarInverterMode']
     storage_inv_mode = config['FeederGenerator']['StorageInverterMode']
     weather_file = config['WeatherPrep']['DataSource']
@@ -3083,11 +3066,12 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
     latitude = float(config['WeatherPrep']['Latitude'])
     longitude = float(config['WeatherPrep']['Longitude'])
     time_zone_offset = float(config['WeatherPrep']['TimeZoneOffset'])
-    state = config['SimulationConfig']['state']
     dso_type = config['SimulationConfig']['DSO_type']
     res_dso_type = 'No_DSO_Type'
     # res_dso_type = dso_type  # use if RECS data filtered by DSO type
-    income_level = config['SimulationConfig']['income_level'] # Should be a list of income levels for the DSO being tested
+    # Should be a list of income levels for the DSO being tested
+    income_level = config['SimulationConfig']['income_level']
+    state = config['SimulationConfig']['state']
     gld_scaling_factor = config['SimulationConfig']['scaling_factor']
     pv_rating_MW = config['SimulationConfig']['rooftop_pv_rating_MW']
     res_bldg_metadata = config['BuildingPrep']['ResBldgMetaData']
@@ -3099,15 +3083,15 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
     solar_path = config['BuildingPrep']['SolarDataPath']
     solar_P_player = config['BuildingPrep']['SolarPPlayerFile']
     solar_Q_player = config['BuildingPrep']['SolarQPlayerFile']
+    # TODO: use this later
     # if not provided in JSON config, use a regional default
-    # electric_cooling_percentage = res_bldg_metadata['air_conditioning']  # TODO: This shouldn't be defined here anymore - should be defined in write_houses()
-    ashrae_zone = config['BuildingPrep']['ASHRAEZone']  # TODO: use this later
+    ashrae_zone = config['BuildingPrep']['ASHRAEZone']
     comm_bldg_metadata = config['BuildingPrep']['CommBldgMetaData']
     comm_bldgs_pop = config['BuildingPrep']['CommBldgPopulation']
     case_type = config['SimulationConfig']['caseType']
 
     # -------- create cop lookup table by vintage bin-----------
-    # (Laurentiu MArinovici 11/18/2019) moving the cop_lookup inside this function as it requires
+    # (Laurentiu Marinovici 11/18/2019) moving the cop_lookup inside this function as it requires
     # residential building metadata
     cop_mat = res_bldg_metadata['COP_average']
     years_bin = [range(1945, 1950), range(1950, 1960), range(1960, 1970), range(1970, 1980),
@@ -3149,15 +3133,14 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
         print(rootname, 'to', work_path, 'using', weather_file)
         print('times', starttime, endtime)
         print('steps', timestep, metrics_interval)
-        # print('hvac', electric_cooling_percentage)
-        print('pv', solar_percentage, solar_inv_mode)
-        print('storage', storage_percentage, storage_inv_mode)
+        print('hvac', electric_cooling_percentage)
+        print('pv', solar_percentage, 'mode', solar_inv_mode)
+        print('storage', storage_percentage, 'mode', storage_inv_mode)
         print('billing', kwh_price, monthly_fee)
         for c in taxchoice:
             if c[0] in rootname:
                 case_name = config['SimulationConfig']['CaseName']
                 ProcessTaxonomyFeeder(case_name, rootname, c[1], c[2], c[3], c[4])
-#                quit()
 
 
 def populate_all_feeders():

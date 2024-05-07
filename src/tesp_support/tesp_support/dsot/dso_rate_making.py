@@ -12,7 +12,7 @@ from os.path import dirname, abspath
 
 import pandas as pd
 
-sys.path.insert(0, dirname(abspath(__file__)))
+# sys.path.insert(0, dirname(abspath(__file__)))
 
 from .plots import load_da_retail_price, customer_meta_data, load_json, load_agent_data, \
     load_system_data, get_date, tic, toc, load_retail_data, load_ames_data, load_gen_data, load_indust_data
@@ -44,19 +44,12 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
     variable = []
     month = []
 
+    fixed_variable_list = ['kw-hr', 'max_kw', 'avg_load', 'load_factor']
     for each in metadata['billingmeters']:
-        meter.append(each)
-        variable.append('kw-hr')
-        month.append(0)
-        meter.append(each)
-        variable.append('max_kw')
-        month.append(0)
-        meter.append(each)
-        variable.append('avg_load')
-        month.append(0)
-        meter.append(each)
-        variable.append('load_factor')
-        month.append(0)
+        for var in fixed_variable_list:
+            meter.append(each)
+            variable.append(var)
+            month.append(0)
 
     meter_df = pd.DataFrame(month,
                             index=[meter, variable],
@@ -67,26 +60,17 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
     variable = []
     month = []
 
+    dynamic_variable_list = ['DA_Q', 'DA_cost', 'RT_Q', 'RT_cost', 'Congestion_Q', 'Congestion_cost']
     for each in metadata['billingmeters']:
-        if metadata['billingmeters'][each]['cust_participating']:
+        # if metadata['billingmeters'][each]['cust_participating']:
+        for var in dynamic_variable_list:
             trans.append(each)
-            variable.append('DA_Q')
+            variable.append(var)
             month.append(0)
-            trans.append(each)
-            variable.append('DA_cost')
-            month.append(0)
-            trans.append(each)
-            variable.append('RT_Q')
-            month.append(0)
-            trans.append(each)
-            variable.append('RT_cost')
-            month.append(0)
-            trans.append(each)
-            variable.append('Congestion_Q')
-            month.append(0)
-            trans.append(each)
-            variable.append('Congestion_cost')
-            month.append(0)
+    for var in dynamic_variable_list:
+        trans.append('Industrial')
+        variable.append(var)
+        month.append(0)
 
     trans_df = pd.DataFrame(month,
                             index=[trans, variable],
@@ -97,26 +81,13 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
     variable = []
     loads = []
     loadtype = ['residential', 'commercial', 'industrial', 'total']
+    load_list = ['kw-hr', 'demand_quantity', 'da_q', 'rt_q', 'congest_$', 'congest_q']
 
     for each in loadtype:
-        loads.append(each)
-        variable.append('kw-hr')
-        month.append(0)
-        loads.append(each)
-        variable.append('demand_quantity')
-        month.append(0)
-        loads.append(each)
-        variable.append('da_q')
-        month.append(0)
-        loads.append(each)
-        variable.append('rt_q')
-        month.append(0)
-        loads.append(each)
-        variable.append('congest_$')
-        month.append(0)
-        loads.append(each)
-        variable.append('congest_q')
-        month.append(0)
+        for var in load_list:
+            loads.append(each)
+            variable.append(var)
+            month.append(0)
         if each == 'total':
             loads.append(each)
             variable.append('dist_loss_$')
@@ -157,7 +128,9 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
         meter_data_df['date'] = meter_data_df['date'].str.replace('CDT', '', regex=True)
         meter_data_df['date'] = pd.to_datetime(meter_data_df['date'])  #, infer_datetime_format=True)
         meter_data_df = meter_data_df.set_index(['time', 'name'])
-
+        RThourprice = RT_price_df[' LMP' + dso_num].resample('H').mean() / 1000
+        RThourcongestionprice = RT_retail_df['congestion_surcharge_RT'].resample('H').mean() / 1000
+        RThourcleartype = RT_retail_df['clear_type_rt'].resample('H').mean() / 1000
         for each in metadata['billingmeters']:
             # Calculate standard customer energy consumption metrics used for all customers (including baseline)
             # temp = meter_data_df[meter_data_df['name'].str.contains(each)]
@@ -175,32 +148,27 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
             else:
                 meter_df.loc[(each, 'load_factor'), day_name] = 0
             # Calculate transactive customer energy consumption metrics
-            if metadata['billingmeters'][each]['cust_participating']:
-                temp2 = cust_trans_df[cust_trans_df.meter == each]
-                trans_df.loc[(each, 'DA_Q'), day_name] = temp2.loc[:, 'total_cleared_quantity'].sum()
-                trans_df.loc[(each, 'RT_Q'), day_name] = meter_df.loc[(each, 'kw-hr'), day_name] - \
-                                                         trans_df.loc[(each, 'DA_Q'), day_name]
-                # TODO:  Need to interpolate day ahead Q to make RT summation every
-                #  5 minutes rather than one hour average
-                RTonehour = temp.set_index('date').resample('H').mean() / 1000
-                RThourprice = RT_price_df[' LMP' + dso_num].resample('H').mean() / 1000
-                RThourcongestionprice = RT_retail_df['congestion_surcharge_RT'].resample('H').mean() / 1000
-                RThourcleartype = RT_retail_df['clear_type_rt'].resample('H').mean() / 1000
-                # test = temp2.resample('5min').ffill()
-                trans_df.loc[(each, 'DA_cost'), day_name] = (temp2['total_cleared_quantity'] *
-                                                             DA_price_df['da_lmp' + dso_num] / 1000).sum()
-                Real_time_purchase = (RTonehour['real_power_avg'] - temp2['total_cleared_quantity']) * RThourprice
-                trans_df.loc[(each, 'RT_cost'), day_name] = Real_time_purchase.sum()
-                #  Calculate Congestion Quantities and costs for each customer
-                trans_df.loc[(each, 'Congestion_cost'), day_name] = (temp2['total_cleared_quantity'] *
-                                                                     DA_retail_df['congestion_surcharge_DA']).sum() + \
-                                                                    ((RTonehour['real_power_avg'] - temp2[
-                                                                        'total_cleared_quantity']) * RThourcongestionprice).sum()
-                # TODO: Need to check or verify that clear_type is never 2 or 3 (inefficient or failure)...
-                trans_df.loc[(each, 'Congestion_Q'), day_name] = (temp2['total_cleared_quantity'] *
-                                                                  DA_retail_df['clear_type_da']).sum() + \
-                                                                 ((RTonehour['real_power_avg'] - temp2[
-                                                                     'total_cleared_quantity']) * RThourcleartype).sum()
+            temp2 = cust_trans_df[cust_trans_df.meter == each]
+            trans_df.loc[(each, 'DA_Q'), day_name] = temp2.loc[:, 'total_cleared_quantity'].sum()
+            trans_df.loc[(each, 'RT_Q'), day_name] = meter_df.loc[(each, 'kw-hr'), day_name] - \
+                                                     trans_df.loc[(each, 'DA_Q'), day_name]
+            # TODO:  Need to interpolate day ahead Q to make RT summation every
+            #  5 minutes rather than one hour average
+            RTonehour = temp.set_index('date').resample('H').mean() / 1000
+            trans_df.loc[(each, 'DA_cost'), day_name] = (temp2['total_cleared_quantity'] *
+                                                         DA_price_df['da_lmp' + dso_num] / 1000).sum()
+            Real_time_purchase = (RTonehour['real_power_avg'] - temp2['total_cleared_quantity']) * RThourprice
+            trans_df.loc[(each, 'RT_cost'), day_name] = Real_time_purchase.sum()
+            #  Calculate Congestion Quantities and costs for each customer
+            trans_df.loc[(each, 'Congestion_cost'), day_name] = (temp2['total_cleared_quantity'] *
+                                                                 DA_retail_df['congestion_surcharge_DA']).sum() + \
+                                                                ((RTonehour['real_power_avg'] - temp2[
+                                                                    'total_cleared_quantity']) * RThourcongestionprice).sum()
+            # TODO: Need to check or verify that clear_type is never 2 or 3 (inefficient or failure)...
+            trans_df.loc[(each, 'Congestion_Q'), day_name] = (temp2['total_cleared_quantity'] *
+                                                              DA_retail_df['clear_type_da']).sum() + \
+                                                             ((RTonehour['real_power_avg'] - temp2[
+                                                                 'total_cleared_quantity']) * RThourcleartype).sum()
 
         # Calculate total energy consumption for each customer class (aka load type)
         for each in metadata['billingmeters']:
@@ -655,7 +623,8 @@ def calc_cust_bill(metadata, meter_df, trans_df, energy_sum_df, tariff, dso_num,
     # Connection Charge
 
 
-def DSO_rate_making(case, dso_num, metadata, dso_expenses, tariff_path, dso_scaling_factor, num_indust_cust):
+def DSO_rate_making(case, dso_num, metadata, dso_expenses, tariff_path, dso_scaling_factor, num_indust_cust,
+                    case_name='', iterate=False):
     """ Main function to call for calculating the customer energy consumption, monthly bills, and tariff adjustments to
     ensure revenue matches expenses.  Saves meter and bill dataframes to a hdf5 file.
     Args:
@@ -666,6 +635,8 @@ def DSO_rate_making(case, dso_num, metadata, dso_expenses, tariff_path, dso_scal
         tariff_path:
         dso_scaling factor (float): multiplier on customer bills to reflect the total number of customers in the DSO
         num_indust_cust (int): number of industrial customers
+        case_name (str): name of the case ('MR-BAU', 'MR-Batt', 'MR-Flex', 'MR-BAU', 'MR-Batt', 'MR-Flex')
+        iterate (Boolean): If True will iterate once to square up revenue.
     Returns:
         meter_df : dataframe of energy consumption and max 15 minute power consumption for each month and total
         bill_df : dataframe of monthly and total bill for each house broken out by each element (energy, demand,
@@ -674,8 +645,22 @@ def DSO_rate_making(case, dso_num, metadata, dso_expenses, tariff_path, dso_scal
         surplus: dollar value difference between dso revenue and expenses.  When converged should be tiny (e.g. 1e-12)
         """
 
+    counter_factual = False
+
     # Load Tariff structure:
-    file_name = 'rate_case_inputs.json'
+    if counter_factual:
+        if case_name in ['8-MR-BAU', '8-MR-Batt', '8-MR-Flex']:
+            file_name = 'rate_case_values_8-MR-BAU.json'
+        elif case_name in ['8-HR-BAU', '8-HR-Batt', '8-HR-Flex']:
+            file_name = 'rate_case_values_8-HR-BAU.json'
+        elif case_name in ['200-MR-BAU', '200-MR-Batt', '200-MR-Flex']:
+            file_name = 'rate_case_values_200-MR-BAU.json'
+        elif case_name in ['200-HR-BAU', '200-HR-Batt', '200-HR-Flex']:
+            file_name = 'rate_case_values_200-HR-BAU.json'
+        else:
+            raise Exception("Tariff rate case does not exist for case " + case_name + '.')
+    else:
+        file_name = 'rate_case_values_' + case_name + '.json'
     tariff = load_json(tariff_path, file_name)
     # Load in transactive A values from simulation settings to ensure consistency
     default_config = load_json(tariff_path, 'default_case_config.json')
@@ -688,19 +673,84 @@ def DSO_rate_making(case, dso_num, metadata, dso_expenses, tariff_path, dso_scal
     year_energysum_df = pd.read_hdf(energy_file, key='energy_sums', mode='r')
     year_trans_df = pd.read_hdf(trans_file, key='trans_data', mode='r')
 
+    if not counter_factual:
+        if case_name not in ['8-MR-BAU', '8-HR-BAU', '200-MR-BAU', '200-HR-BAU']:
+            # Calculate the transactive volumetric rate as if all customers were participating:
+
+            DA_Sales = year_trans_df.loc[(slice(None), 'DA_cost'), 'sum'].sum() * dso_scaling_factor * \
+                       default_config['MarketPrep']['DSO']['dso_retail_scaling']
+            RT_Sales = year_trans_df.loc[(slice(None), 'RT_cost'), 'sum'].sum() * dso_scaling_factor * \
+                       default_config['MarketPrep']['DSO']['dso_retail_scaling']
+
+            # Load in bulk industrial loads
+            case_config = load_json(case, 'generate_case_config.json')
+            industrial_file = os.path.join(tariff_path, case_config['indLoad'][5].split('/')[-1])
+            indust_df = load_indust_data(industrial_file, range(1, 2))
+            da_lmp_stats = pd.read_csv(case + '\\' + 'Annual_DA_LMP_Load_data.csv', index_col=0)
+            Indust_Sales = indust_df.loc[0, 'Bus' + str(dso_num)] * da_lmp_stats.loc[:, 'da_lmp' + str(dso_num)].sum()
+            Customer_Count = 0
+            for meter in metadata['billingmeters']:
+                if metadata['billingmeters'][meter]['tariff_class'] in ['residential', 'commercial']:
+                    Customer_Count += 1
+            Connection_fees = tariff['DSO_' + str(dso_num)]['base_connection_charge'] * (
+                        num_indust_cust + dso_scaling_factor * Customer_Count)
+
+            transactive_dist_rate = (dso_expenses - (DA_Sales + RT_Sales + Indust_Sales + Connection_fees)) / \
+                                    year_energysum_df.loc[('total', 'kw-hr'), 'sum']
+
+            tariff['DSO_' + str(dso_num)]['transactive_dist_rate'] = transactive_dist_rate
+
+            # Calculate the required revenue to be collected from non-participating customers.
+
+            NP_Customer_Count = 0
+            NP_DA_Sales = 0
+            NP_RT_Sales = 0
+            NP_Energy = 0
+            for meter in metadata['billingmeters']:
+                if metadata['billingmeters'][meter]['tariff_class'] in ['residential', 'commercial'] and not \
+                metadata['billingmeters'][meter]['cust_participating']:
+                    NP_Customer_Count += 1
+                    NP_DA_Sales += year_trans_df.loc[(meter, 'DA_cost'), 'sum'].sum() * dso_scaling_factor * \
+                                   default_config['MarketPrep']['DSO']['dso_retail_scaling']
+                    NP_RT_Sales += year_trans_df.loc[(meter, 'RT_cost'), 'sum'].sum() * dso_scaling_factor * \
+                                   default_config['MarketPrep']['DSO']['dso_retail_scaling']
+                    NP_Energy += year_meter_df.loc[(meter, 'kw-hr'), 'sum'].sum() * dso_scaling_factor * \
+                                 default_config['MarketPrep']['DSO']['dso_retail_scaling']
+
+            NP_Energy += indust_df.loc[0, 'Bus' + str(dso_num)] * 1000 * len(
+                da_lmp_stats.loc[:, 'da_lmp' + str(dso_num)])
+            NP_connection_fees = tariff['DSO_' + str(dso_num)]['base_connection_charge'] * (
+                        num_indust_cust + dso_scaling_factor * NP_Customer_Count)
+            Non_participating_revenue_req = Indust_Sales + NP_DA_Sales + NP_RT_Sales + NP_connection_fees + NP_Energy * transactive_dist_rate
+
     #  Calculate data frame of month customer bills
-    tic()
+    # tic()
     cust_bill_df, billsum_df = calc_cust_bill(metadata, year_meter_df, year_trans_df, year_energysum_df, tariff,
                                               str(dso_num), dso_scaling_factor, num_indust_cust)
-    toc()
+    # toc()
 
     surplus = (billsum_df.loc[('total', 'fix_total'), 'sum'] + billsum_df.loc[
         ('total', 'trans_total'), 'sum']) - dso_expenses
-    rebate = surplus / year_energysum_df.loc[('total', 'kw-hr'), 'sum']
-    # TODO: Clean up implementation of iterate flag.
-    iterate = True
+
+    if case_name in ['8-MR-BAU', '8-HR-BAU', '200-MR-BAU', '200-HR-BAU']:
+        rebate = surplus / year_energysum_df.loc[('total', 'kw-hr'), 'sum']
+    elif case_name in ['8-MR-Batt', '8-MR-Flex', '8-HR-Batt', '8-HR-Flex', '200-MR-Batt', '200-MR-Flex', '200-HR-Batt',
+                       '200-HR-Flex']:
+        if counter_factual:
+            rebate = surplus / (year_energysum_df.loc[('total', 'da_q'), 'sum'] + year_energysum_df.loc[
+                ('total', 'rt_q'), 'sum'])
+        else:
+            rebate = surplus / NP_Energy
     if iterate:
-        tariff['DSO_' + str(dso_num)]['flat_rate'] = tariff['DSO_' + str(dso_num)]['flat_rate'] - rebate
+        if counter_factual:
+            if case_name in ['8-MR-BAU', '8-HR-BAU', '200-MR-BAU', '200-HR-BAU', '200-MR-Batt', '200-MR-Flex',
+                             '200-HR-Batt', '200-HR-Flex']:
+                tariff['DSO_' + str(dso_num)]['flat_rate'] = tariff['DSO_' + str(dso_num)]['flat_rate'] - rebate
+            elif case_name in ['8-MR-Batt', '8-MR-Flex', '8-HR-Batt', '8-HR-Flex']:
+                tariff['DSO_' + str(dso_num)]['transactive_dist_rate'] = tariff['DSO_' + str(dso_num)][
+                                                                             'transactive_dist_rate'] - rebate
+        else:
+            tariff['DSO_' + str(dso_num)]['flat_rate'] = tariff['DSO_' + str(dso_num)]['flat_rate'] - rebate
 
         cust_bill_df, billsum_df = calc_cust_bill(metadata, year_meter_df, year_trans_df, year_energysum_df, tariff,
                                                   str(dso_num), dso_scaling_factor, num_indust_cust)
@@ -716,8 +766,8 @@ def DSO_rate_making(case, dso_num, metadata, dso_expenses, tariff_path, dso_scal
     cust_bill_df.to_csv(path_or_buf=case + '/cust_bill_dso_' + str(dso_num) + '_data.csv')
     billsum_df.to_csv(path_or_buf=case + '/billsum_dso_' + str(dso_num) + '_data.csv')
 
-    with open(os.path.join(tariff_path, 'rate_case_outputs.json'), 'w') as out_file:
-        json.dump(tariff, out_file)
+    with open(os.path.join(tariff_path, 'rate_case_values_' + case_name + '.json'), 'w') as out_file:
+        json.dump(tariff, out_file, indent=2)
 
     # Calculate congestion averages and catch for zero values
     if year_energysum_df.loc[('residential', 'congest_q'), 'sum'] == 0:
