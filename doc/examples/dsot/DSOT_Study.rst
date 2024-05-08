@@ -14,7 +14,7 @@ The Pacific Northwest National Laboratory completed a multi-year study where a t
 For this study, an ERCOT-spanning electrical power system model was constructed that reached in scope from bulk power system generation to individual customer loads. This included modeling 10,000s of thousands of customers with unique residential, load, and market-participating device models, as shown in Figure :numref: `fig_dsot_scope_scale`.
 
 .. _fig_dsot_scope_scale:
-.. figure:: ../media/dsot/dsot_scope_scale.png
+.. figure:: ../../media/dsot/dsot_scope_scale.png
 	:name: dsot_scope_scale
 
 	DSO+T modeled infrastructure
@@ -27,10 +27,11 @@ An entire calendar year was simulated to capture the effects of peak loads that 
 
 The documentation of the system provided here is a summary of the extensive documentation produced by the DSO+T analysis team. The version of codebase included here in TESP is similar to but not identical to that used to perform the study. Results produced by this codebase will likewise be similar but not identical. Comprehensive documentation of the study can be found in the following reports:
 
-*  `Distribution System Operator with Transactive (DSO+T) Study Volume 1: Main Report.`_
+* `Distribution System Operator with Transactive (DSO+T) Study Volume 1: Main Report.`_
 * `DSO+T: Integrated System Simulation DSO+T Study: Volume 2`_
 * `DSO+T: Transactive Energy Coordination Framework DSO+T Study: Volume 3`_
 * `DSO+T: Valuation Methodology and Economic Metrics DSO+T Study: Volume 4`_
+* `DSO+T Expanded Study Results; DSO+T Study: Volume 5`_
 
 
 
@@ -39,7 +40,7 @@ Software Architecture
 The DSO+T analysis, though run on a single local compute node, has a relatively complex software architecture. There are a number of software entities that interact through a variety of means, as shown in Figure :numref:`fig_dsot_architecture`.
 
 .. _fig_dsot_architecture:
-.. figure:: ../media/dsot/dsot_software_architecture.png
+.. figure:: ../../media/dsot/dsot_software_architecture.png
 	:name: dsot_software_architecture
 
 	High-level DSO+T software architecture diagram
@@ -55,7 +56,7 @@ Market Structure and Interactions
 The market structure for the transactive system implemented for the DSO+T was split into two portions: wholesale and retail. The DSO+T study had as a design requirement that the design of the retail market could not require changes to the wholesale market architecture or operation patterns. Thus the market architecture shown in Figure :numref:`fig_dsot_wholesale_market_structure` was used as representative of many of the wholesale market structures in the United States.
 
 .. _fig_dsot_wholesale_market_structure:
-.. figure:: ../media/dsot/dsot_wholesale_market_structure.png
+.. figure:: ../../media/dsot/dsot_wholesale_market_structure.png
 	:name: dsot_wholesale_market_structure
 
 	Overview of the wholesale market architecture in the DSO+T study.
@@ -65,7 +66,7 @@ The DSO provided load forecasts to the wholesale market (from the retail market 
 The retail market was designed specifically for the DSO+T study and its structure can be see in Figure :numref:`fig_dsot_retail_market_structure`
 
 .. _fig_dsot_retail_market_structure:
-.. figure:: ../media/dsot/dsot_retail_market_structure.png
+.. figure:: ../../media/dsot/dsot_retail_market_structure.png
     :name: dsot_retail_market_structure
 
     Overview of the retail market architecture in the DSO+T study
@@ -82,7 +83,7 @@ A simplified 8-bus transmission model was used for the analysis, as shown in Fig
 and 21.3 GW of rooftop solar were added (though the rooftop-solar was implemented in the distribution system models). The generation mix for both scenarios are shown in :numref:`table_dsot_generation_mix`.
 
 .. _fig_dsot_ercot_8_bus:
-.. figure:: ../media/dsot/dsot_ercot_8_bus.png
+.. figure:: ../../media/dsot/dsot_ercot_8_bus.png
     :name: dsot_ercot_8_bus
 
     Topology of the simplified 8-bus bulk power system model utilized.
@@ -117,13 +118,13 @@ Each GridLAB-D model at a given transmission bus used a corresponding TMY3 weath
 Figures :numref:`fig_dsot_peak_load_correlation` and :numref:`fig_dsot_min_load_correlation` show the results for a representative weeks with maximum and minimum load. The gray dashed line shows the actual historic load as measured by ERCOT and the solid black line shows the total simulated load. (The gap between the itemized color load and the black total system load represents system losses.) Though not perfect, the correlation is reasonable and shows that the loads being modeled in the distribution system are generally capturing the behavior of the customer's they represent.
 
 .. _fig_dsot_peak_load_correlation:
-.. figure:: ../media/dsot/dsot_peak_load_correlation.png
+.. figure:: ../../media/dsot/dsot_peak_load_correlation.png
     :name: dsot_peak_load_correlation
     
     Modeled and historical peak load for ERCOT
 
 .. _fig_dsot_min_load_correlation:
-.. figure:: ../media/dsot/dsot_min_load_correlation.png
+.. figure:: ../../media/dsot/dsot_min_load_correlation.png
     :name: dsot_min_load_correlation
     
     Modeled and historical minimum load for ERCOT
@@ -155,25 +156,25 @@ Results
 Below are a sample of the standard plots that are created using the built-in post-processing scripts for this case.  These scripts are designed to work on one calendar month of data though the simulation can be configured to run on much shorter periods of time; to process those results custom post-processing scripts will need to be created. 
 
 .. _fig_dsot_results_base_fuel_mix:
-.. figure:: ../media/dsot/20210716_AMES_2016_fuelmix_profiles_base.png
+.. figure:: ../../media/dsot/20210716_AMES_2016_fuelmix_profiles_base.png
     :name: dsot_results_base_fuel_mix
     
     Fuel source for bulk power system generation for the month of August.
     
 .. _fig_dsot_results_battery_fuel_mix:
-.. figure:: ../media/dsot/20210719_AMES_2016_fuelmix_profiles_bt.png
+.. figure:: ../../media/dsot/20210719_AMES_2016_fuelmix_profiles_bt.png
     :name: dsot_results_battery_fuel_mix
     
     Fuel source for bulk power system generation for the month of August when batteries are installed in the distribution system and participate in a transactive system.
     
 .. _fig_dsot_results_base_energy_quantity:
-.. figure:: ../media/dsot/20210716compare_DSO_market_Quantity_Day_08-01_base.png
+.. figure:: ../../media/dsot/20210716compare_DSO_market_Quantity_Day_08-01_base.png
     :name: dsot_results_base_energy_quantity
     
     Quantity of energy purchased by each of the eight modeled DSOs in the month of August in the base case.
     
 .. _fig_dsot_results_battery_energy_quantity:
-.. figure:: ../media/dsot/20210719compare_DSO_market_Quantity_Day_08-01_bt.png
+.. figure:: ../../media/dsot/20210719compare_DSO_market_Quantity_Day_08-01_bt.png
     :name: dsot_results_battery_energy_quantity
     
     Quantity of energy purchased by each of the eight modeled DSOs in the month of August when batteries are installed in the distribution system and participate in a transactive system.
@@ -198,6 +199,7 @@ Below are a sample of the standard plots that are created using the built-in pos
 .. _`DSO+T: Integrated System Simulation DSO+T Study: Volume 2`: https://doi.org/10.2172/1842488
 .. _`DSO+T: Transactive Energy Coordination Framework DSO+T Study: Volume 3`: https://doi.org/10.2172/1842489
 .. _`DSO+T: Valuation Methodology and Economic Metrics DSO+T Study: Volume 4`: https://doi.org/10.2172/1842491
+.. _`DSO+T Expanded Study Results; DSO+T Study: Volume 5`: https://doi.org/10.2172/1984526
 
 .. _`HELICS co-simulation platform`: https://helics.org
 .. _`Github feeder repository`: https://github.com/gridlab-d/Taxonomy_Feeders
