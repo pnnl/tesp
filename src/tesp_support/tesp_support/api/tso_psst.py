@@ -1603,6 +1603,7 @@ def tso_psst_loop(casename):
             line += '{: .2f}'.format(gen[:, 1].sum()) + ','
             line += '{: .2f}'.format(Pswing) + ','
             da_sum = 0
+            # LMP for each bus
             for idx in range(bus.shape[0]):
                 line += '{: .2f}'.format(bus[idx, 13]) + ','
                 da_sum += last_unRespMW[idx][hour] + last_respMaxMW[idx][hour]
@@ -1865,6 +1866,7 @@ def tso_psst_loop(casename):
     vp.close()
     log.info('finalizing HELICS tso federate')
     helics.helicsFederateDestroy(hFed)
+
 
 if __name__ == "__main__":
     tso_psst_loop('./generate_case_config')

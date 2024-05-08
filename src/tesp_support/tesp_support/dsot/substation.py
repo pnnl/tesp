@@ -455,6 +455,7 @@ def inner_substation_loop(metrics_root, with_market):
                 name_units_pairs=[
                     ('meters', ['meterName'] * len(site_da_meter)),
                     ('status', ['[0..1]=[PARTICIPATION,NONPARTICIPATION]'] * len(site_da_meter)),
+                    ('site_quantities', [[retail_unit] * int(dso_market_obj.windowLength / 2)] * len(site_da_meter)),
                     ('non_transactive_hvac', [[retail_unit] * retail_market_obj.windowLength] * len(site_da_meter)),
                     ('non_transactive_wh', [[retail_unit] * retail_market_obj.windowLength] * len(site_da_meter)),
                     ('non_transactive_zip', [[retail_unit] * retail_market_obj.windowLength] * len(site_da_meter)),
@@ -1317,6 +1318,7 @@ def inner_substation_loop(metrics_root, with_market):
                         retail_market_obj.name,
                         site_da_meter,
                         site_da_status,
+                        site_total_quantities,
                         site_da_hvac_uncntrl.tolist(),
                         site_da_wh_uncntrl.tolist(),
                         site_da_zip_loads.tolist(),
