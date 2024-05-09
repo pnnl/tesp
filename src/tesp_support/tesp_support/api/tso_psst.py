@@ -1628,8 +1628,8 @@ def tso_psst_loop(casename):
             # DAGen
             if len(last_dispatch) > 0:
                 da_sum = 0
-                for key, row in last_dispatch.items():
-                    da_sum += row[hour]
+                for key in last_dispatch:
+                    da_sum += last_dispatch[key][hour]
                 line += '{: .2f}'.format(da_sum) + ','
             else:
                 line += ' 0,'
