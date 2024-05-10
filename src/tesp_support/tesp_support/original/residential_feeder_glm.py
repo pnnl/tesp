@@ -2603,7 +2603,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
                 print('  name P_out_inj;', file=op)
                 print('  file "' + solar_path + solar_P_player + '";', file=op)
                 print('}', file=op)
-                if solar_Q_player != "":
+                if 'no_file' not in solar_Q_player:
                     print('object player {', file=op)
                     print('  name Q_out_inj;', file=op)
                     print('  file "' + solar_path + solar_Q_player + '";', file=op)
