@@ -1,0 +1,34 @@
+<mxfile host="65bd71144e">
+    <diagram id="_6Ilw0Izg3SpaSWdrWHD" name="Page-1">
+        <mxGraphModel dx="721" dy="542" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="10000" pageHeight="10000" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="2" value="Feeder" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" parent="1" vertex="1">
+                    <mxGeometry x="160" y="140" width="630" height="420" as="geometry"/>
+                </mxCell>
+                <mxCell id="3" value="+ config: dict&#10;+ glm_path: str&#10;+ modifer: GLMModifer&#10;+ zip_loads_to_convert: ConvertableZipLoad&#10;+ residential_houses: dict&#10;+ commercial_houses: dict&#10;+ remainder_zips: dict&#10;+ solar_additions: dict&#10;+ ES_additions: dict&#10;+ EV_additions: dict" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="2" vertex="1">
+                    <mxGeometry y="26" width="630" height="174" as="geometry"/>
+                </mxCell>
+                <mxCell id="4" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" parent="2" vertex="1">
+                    <mxGeometry y="200" width="630" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="5" value="+ read_config(self) -&gt;  None&#10;+ find_loads_to_convert(self.GLMModifier) -&gt; self.zip_loads_to_convert&#10;+ convert_ZIP_to residential(self.zip_loads_to_convert) -&gt; self.residential_houses, self. remainder_loads&#10;+ install_remainder_loads(self.remainder_loads) -&gt;  self.remainder_zips&#10;+ convert_ZIP_to_commercial(self.zip_load_to_convert) -&gt; self.commercial_houses: dict&#10;+ create_list_of_solar_additions(self.residential_hosues, self.commercial_houses) -&gt; self.solar_additions&#10;+ add_solar(self.solar_additions)&#10;+ create_list_ES_additions(self.residential_hosues, self.commercial_houses)&#10;+ add_ES(self.ES_additions)&#10;+ create_list_of_EV_additions(self.residential_hosues, self.commercial_houses)&#10;+ add_EV(self.EV_additions)&#10;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="2" vertex="1">
+                    <mxGeometry y="208" width="630" height="212" as="geometry"/>
+                </mxCell>
+                <mxCell id="9" value="ConvertableZipLoad" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" parent="1" vertex="1">
+                    <mxGeometry x="960" y="130" width="370" height="164" as="geometry"/>
+                </mxCell>
+                <mxCell id="10" value="+ residential_loads: dict&#10;+ commercial_loads: CommLoad&#10;+ remainder_loads: RemainderLoad" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="9" vertex="1">
+                    <mxGeometry y="26" width="370" height="104" as="geometry"/>
+                </mxCell>
+                <mxCell id="11" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" parent="9" vertex="1">
+                    <mxGeometry y="130" width="370" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="12" value="+ method(type): type" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="9" vertex="1">
+                    <mxGeometry y="138" width="370" height="26" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
