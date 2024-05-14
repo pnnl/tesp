@@ -1,5 +1,5 @@
 # Build runtime image
-FROM cosim-library:latest AS cosim-production
+FROM cosim-library:tesp_22.04.1 AS cosim-production
 
 ARG COSIM_USER
 ENV COSIM_HOME=/home/$COSIM_USER
@@ -42,12 +42,16 @@ RUN echo "===== Building CoSim Build =====" && \
   git config --global credential.helper store && \
   echo "Directory structure for build" && \
   mkdir -p tenv && \
-  mkdir -p build && \
+#  mkdir -p build && \
   mkdir -p repo
 
 # Copy the build instructions
 COPY . ${BUILD_DIR}
+USER root
+RUN chown -hR $COSIM_USER:$COSIM_USER ${BUILD_DIR}
 
+USER $COSIM_USER
+WORKDIR $COSIM_HOME
 RUN echo "Cloning or download all relevant repositories..." && \
   cd "${REPO_DIR}" || exit && \
   echo ++++++++++++++ TESP && \
@@ -107,6 +111,12 @@ RUN echo "Cloning or download all relevant repositories..." && \
   echo "Compiling and Installing TESP EnergyPlus agents and TMY converter..." && \
   ./tesp_b.sh clean > tesp.log 2>&1 && \
   /bin/rm -r ${REPO_DIR}/tesp && \
+  echo "Install Python Libraries..." && \
+  pip install --upgrade pip > "pypi.log" && \
+  pip install --no-cache-dir helics >> "pypi.log" && \
+  pip install --no-cache-dir helics[cli] >> "pypi.log" && \
+  cd /home/worker/psst/psst || exit && \
+  pip install --no-cache-dir -e .  >> "/home/worker/pypi.log" && \
   echo "${COSIM_USER}" | sudo -S ldconfig && \
   cd ${BUILD_DIR} || exit && \
   ./versions.sh

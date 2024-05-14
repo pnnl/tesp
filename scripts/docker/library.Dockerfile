@@ -1,5 +1,5 @@
 # Build runtime image
-FROM cosim-ubuntu:latest AS cosim-library
+FROM cosim-ubuntu:tesp_1_22.04 AS cosim-library
 
 ARG SIM_UID
 ARG COSIM_USER
