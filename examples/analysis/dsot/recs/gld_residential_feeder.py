@@ -31,6 +31,18 @@ Todo:
     * Verify the level zero mobile home thermal integrity properties; 
         these were copied from the MATLAB feeder generator
 
+    * TODO - JK - Find parameters in this model and migrate them to a JSON5 file
+    * TODO - FR - Add method to read in JSON5 config
+    * TODO - JK - Edit and expand docstrings and type hinting for each method in method call
+                and external list in docstring
+    * TODO - FR - Create definitions for new higher-level methods Trevor called out in 
+                class diagram and add calls to existing methods as appropriate
+    * TODO - JK - Apply style guide to existing code
+    * TODO - JK - Rename all 1, 2, or 3 letter variables to be more descriptive 
+                OK - "v_an" = "voltage from phase a to neutral"
+                NOT OK - "sub" = "substation"? "substitute"?
+
+
 """
 import json
 import math
