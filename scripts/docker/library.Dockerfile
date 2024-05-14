@@ -1,5 +1,7 @@
+ARG DOCKER_VER
+
 # Build runtime image
-FROM cosim-ubuntu:tesp_1_22.04 AS cosim-library
+FROM cosim-ubuntu:$DOCKER_VER AS cosim-library
 
 ARG SIM_UID
 ARG COSIM_USER

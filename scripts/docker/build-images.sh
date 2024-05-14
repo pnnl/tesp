@@ -37,7 +37,7 @@ export BUILDKIT_PROGRESS=plain
 
 for i in "${!names[@]}"; do
   CONTEXT="${paths[$i]}"
-  IMAGE_NAME="cosim-${names[$i]}:$ver"
+  IMAGE_NAME="cosim-${names[$i]}:${ver}"
   DOCKERFILE="${names[$i]}.Dockerfile"
 
   if [ "${builds[$i]}" -eq 1 ]; then
@@ -45,6 +45,7 @@ for i in "${!names[@]}"; do
     echo "Creating ${IMAGE_NAME} from ${DOCKERFILE}"
     image1=$(docker images -q "${IMAGE_NAME}")
     docker build --no-cache --rm \
+                 --build-arg DOCKER_VER="${ver}" \
                  --build-arg COSIM_USER="${DOCKER_USER}" \
                  --build-arg SIM_HOST="${SIM_HOST}" \
                  --build-arg SIM_USER="${SIM_USER}" \

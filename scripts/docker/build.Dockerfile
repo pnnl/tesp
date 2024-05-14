@@ -1,5 +1,7 @@
+ARG DOCKER_VER
+
 # Build runtime image
-FROM cosim-library:tesp_22.04.1 AS cosim-production
+FROM cosim-library:$DOCKER_VER AS cosim-build
 
 ARG COSIM_USER
 ENV COSIM_HOME=/home/$COSIM_USER
