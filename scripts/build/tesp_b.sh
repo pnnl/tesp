@@ -6,10 +6,11 @@ if [[ -z ${INSTDIR} ]]; then
   exit
 fi
 
-# fix TESP path for docker when compiling
-TESP_PATH=${TESPDIR}
-if [[ $2 == "docker" ]]; then
-  TESP_PATH=$REPO_DIR/tesp
+# fix TESP directory when compiling in docker
+if [[ -z ${TESPDIR} ]]; then
+  TESP_PATH=${REPO_DIR}/tesp
+else
+  TESP_PATH=${TESPDIR}
 fi
 
 # Compile TESP energyplus agents

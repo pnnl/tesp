@@ -9,7 +9,6 @@ fi
 echo
 echo "Grid applications software installed are:"
 echo
-echo "TESP $(cat "${TESPDIR}/src/tesp_support/version")"
 
 FILE="${INSTDIR}/bin/fncs_broker"
 if [[ -f "${FILE}" ]]; then
