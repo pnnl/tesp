@@ -87,7 +87,7 @@ class EVDSOT:
     def __init__(self, ev_dict, inv_properties, key, model_diag_level, sim_time, solver):
         # initialize from Args:
         self.name = key
-        self.houseName = ev_dict['houseName']
+        # self.houseName = ev_dict['houseName']
         self.solver = solver
         self.participating = ev_dict['participating']
         self.Rc = float(ev_dict['max_charge']) * 0.001  # kW

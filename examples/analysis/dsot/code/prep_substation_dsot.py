@@ -106,7 +106,7 @@ def select_setpt_night(wakeup_set, daylight_set, mode):
         return night_set
 
 
-def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
+def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, unique_port_for_simulation):
     """ Helper function that processes one GridLAB-D file
 
     Reads fileroot.glm and writes:
@@ -189,6 +189,8 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                     ineligible_cust += 1
                 else:
                     eligible_cust += 1
+        if  ineligible_cust == 0 and eligible_cust == 0:
+            eligible_cust = 1
         inelig_per = ineligible_cust / (ineligible_cust + eligible_cust) * 100
 
         # 2. Now check how much % is remaining of requested non participating (transactive) houses
@@ -250,6 +252,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                                                'P_e_envelope': 0.08,
                                                'Lower_e_bound': 0.5}
 
+            wconfig["broker_port"] = str(unique_port_for_simulation)
             wp = open(weatherfileroot + 'weather_Config.json', 'w')
             print(json.dumps(wconfig), file=wp)
             wp.close()
@@ -918,7 +921,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
 
 
 def prep_substation(gldfileroot, substationfileroot, weatherfileroot, feedercnt,
-                    config=None, hvacSetpt=None, jsonfile='', Q_forecast=None, Q_dso_key=None):
+                    config=None, hvacSetpt=None, jsonfile='', Q_forecast=None, Q_dso_key=None,unique_port_for_simulation=None):
     """ Process a base GridLAB-D file with supplemental JSON configuration data
 
     Always reads gldfileroot.glm and writes:
@@ -958,4 +961,4 @@ def prep_substation(gldfileroot, substationfileroot, weatherfileroot, feedercnt,
         print('WARNING: neither configuration dictionary or json file provided')
 
     hvac_setpt = hvacSetpt
-    process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt)
+    process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, unique_port_for_simulation)

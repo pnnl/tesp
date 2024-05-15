@@ -1,0 +1,644 @@
+{
+    "DSO_1": {
+        "DSO_system_energy_fraction": 0.11,
+        "MVA_growth_rate": 0.01,
+        "RCI customer count mix": {
+            "commercial": 0.7,
+            "industrial": 0,
+            "residential": 0.3
+        },
+        "RCI energy mix": {
+            "commercial": 0.3,
+            "industrial": 0,
+            "residential": 0.7
+        },
+        "ashrae_zone": "3A",
+        "average_load_MW": 11011.906849315068,
+        "bilaterals": {
+            "load_fraction": 0.11,
+            "price": 11.11
+        },
+        "blm_zone": 7,
+        "bus_number": 1,
+        "capacity_limit_MW": 0,
+        "climate_zone": 4,
+        "comm_customers_per_bldg": 2.09,
+        "county": "Dallas",
+        "feeders": {
+            "feeder1": {
+                "ercot": false,
+                "name": "R2-12.47-1"
+            },
+            "feeder2": {
+                "ercot": false,
+                "name": "R4-12.47-1"
+            }
+        },
+        "latitude": 47.47,
+        "longitude": -111.38,
+        "name": "Northeast",
+        "number_of_customers": 3843475,
+        "number_of_gld_homes": 893,
+        "number_of_substations": 1,
+        "ownership_type": "Investor-owned",
+        "peak_season": "Dual",
+        "random_seed": 1,
+        "rooftop_pv_rating_MW": 8448.49118235445,
+        "scaling_factor": 3816.926091825308,
+        "substation": "Substation_1",
+        "summer_peak_MW": 0,
+        "time_zone_offset": -6,
+        "total_other_O&M": 0,
+        "used": true,
+        "utility_type": "Urban",
+        "weather_file": "weather_MT_Greatfalls__.dat",
+        "winter_peak_MW": 0
+    },
+    "general": {
+        "ACCF": {
+            "commercial": {
+                "PV_total": {
+                    "big_box": 0.0785,
+                    "education": 0.0728,
+                    "food_sales": 0.0788,
+                    "food_service": 0.0785,
+                    "healthcare_inpatient": 0.0758,
+                    "lodging": 0.0775,
+                    "low_occupancy": 0.0791,
+                    "office": 0.0785,
+                    "small_medium_office": 0.0728,
+                    "strip_mall": 0.0785,
+                    "warehouse_storage": 0.0791
+                },
+                "battery_total": {
+                    "big_box": 0.0711,
+                    "education": 0.0615,
+                    "food_sales": 0.0716,
+                    "food_service": 0.0711,
+                    "healthcare_inpatient": 0.0666,
+                    "lodging": 0.0694,
+                    "low_occupancy": 0.0722,
+                    "office": 0.0711,
+                    "small_medium_office": 0.0615,
+                    "strip_mall": 0.0711,
+                    "warehouse_storage": 0.0722
+                },
+                "smart_large_HVAC_marginal": {
+                    "big_box": 0.0942,
+                    "education": 0.076,
+                    "food_sales": 0.0953,
+                    "food_service": 0.0942,
+                    "healthcare_inpatient": 0.0856,
+                    "lodging": 0.091,
+                    "low_occupancy": 0.0964,
+                    "office": 0.0942,
+                    "small_medium_office": 0.076,
+                    "strip_mall": 0.0942,
+                    "warehouse_storage": 0.0964
+                },
+                "smart_thermostat_marginal": {
+                    "big_box": 0.0467,
+                    "education": 0.0517,
+                    "food_sales": 0.0464,
+                    "food_service": 0.0467,
+                    "healthcare_inpatient": 0.049,
+                    "lodging": 0.0476,
+                    "low_occupancy": 0.0461,
+                    "office": 0.0467,
+                    "small_medium_office": 0.0517,
+                    "strip_mall": 0.0467,
+                    "warehouse_storage": 0.0461
+                }
+            },
+            "grid_assets": {
+                "distribution_owner": {
+                    "Rural": {
+                        "controls_and_software": 0.1059,
+                        "distribution_infrastructure": 0.059
+                    },
+                    "Suburban": {
+                        "controls_and_software": 0.1114,
+                        "distribution_infrastructure": 0.0772
+                    },
+                    "Urban": {
+                        "controls_and_software": 0.1136,
+                        "distribution_infrastructure": 0.0874
+                    }
+                },
+                "generation_owner": {
+                    "controls_and_software": 0.1258,
+                    "generator": 0.0913
+                },
+                "transmission_owner": {
+                    "controls_and_software": 0.1119,
+                    "transmission_infrastructure": 0.0825
+                }
+            },
+            "residential": {
+                "PV_total": {
+                    "mobile_home": 0.0926,
+                    "multi_family": 0.0657,
+                    "single_family": 0.0965
+                },
+                "battery_total": {
+                    "mobile_home": 0.0889,
+                    "multi_family": 0.0681,
+                    "single_family": 0.0919
+                },
+                "smart_EV_charger_marginal": {
+                    "mobile_home": 0.0821,
+                    "multi_family": 0.0504,
+                    "single_family": 0.0866
+                },
+                "smart_EV_inverter_marginal": {
+                    "mobile_home": 0.0839,
+                    "multi_family": 0.0587,
+                    "single_family": 0.0875
+                },
+                "smart_thermostat_marginal": {
+                    "mobile_home": 0.0783,
+                    "multi_family": 0.05,
+                    "single_family": 0.0823
+                },
+                "smart_water_heater_marginal": {
+                    "mobile_home": 0.0783,
+                    "multi_family": 0.05,
+                    "single_family": 0.0823
+                }
+            }
+        },
+        "AMI_DER_network": {
+            "Rural": 350,
+            "Suburban": 120,
+            "Urban": 120
+        },
+        "DA_network": {
+            "upfront_DA_network_capital_costs": 25
+        },
+        "DER_network_transactive_increase": 0.25,
+        "O&M_material_cost_per_kWh": 0.02,
+        "PV": {
+            "installed_price_per_kW": {
+                "commercial": {
+                    "10-20": 2907.59,
+                    "100-250": 2502.61,
+                    "20-50": 2820.45,
+                    "250-500": 2315.12,
+                    "50-100": 2609.46,
+                    "500-1000": 2056.91,
+                    "<10": 3290.54,
+                    ">1000": 1921.63
+                },
+                "residential": {
+                    "10-11": 3310.37,
+                    "11-12": 3164.24,
+                    "2-3": 4087.66,
+                    "3-4": 4045.48,
+                    "4-5": 3873.16,
+                    "5-6": 3656.66,
+                    "6-7": 3590.61,
+                    "7-8": 3458.45,
+                    "8-9": 3401.38,
+                    "9-10": 3302.57,
+                    "<2": 4033.58,
+                    ">12": 3132.19
+                }
+            },
+            "operating_expenses": {
+                "commercial": 17.62,
+                "residential": 23.5
+            }
+        },
+        "RCI_customer_growth_rates": {
+            "commercial": 0.11,
+            "industrial": 0.11,
+            "residential": 0.11
+        },
+        "V1G": {
+            "marginal_installation_capital": 0,
+            "marginal_installation_time": 0,
+            "marginal_purchase_price": 253.93
+        },
+        "V2G": {
+            "marginal_installation_capital": 0,
+            "marginal_installation_time": 0,
+            "marginal_purchase_price": 693.97
+        },
+        "battery": {
+            "fixed_O&M_costs": 9.56,
+            "installed_system_first_costs": 83,
+            "variable_O&M_costs": 0.00029
+        },
+        "billing_software_transactive_increase": 0.25,
+        "brownfield_growth_new_meters_frac": 0.5,
+        "comm_customers_per_bldg": 2.09,
+        "distribution_automation_network_costs_per_customer": 2,
+        "dso_transaction_fee_per_KWh": 0,
+        "effective_income_tax_rate": {
+            "Rural": 0.021,
+            "Suburban": 0.105,
+            "Urban": 0.1575
+        },
+        "fed_corporate_income_tax": 0.21,
+        "feeder_capital_cost_per_MVA": {
+            "Rural": 200000,
+            "Suburban": 200000,
+            "Urban": 200000
+        },
+        "generation_capacity_fee_per_kW": 75,
+        "generation_capacity_price_elast_factor": 5,
+        "generation_capacity_reserve": 1.15,
+        "hours_per_year": 2080,
+        "iso_energy_fee": 0.555,
+        "labor": {
+            "DER_recruiter": {
+                "DER_recruiter_hourly_rate": {
+                    "Rural": 14.43,
+                    "Suburban": 14.62,
+                    "Urban": 14.78
+                },
+                "DER_recruiter_labor_ratios": {
+                    "constant": 0,
+                    "per_customer": 0.25,
+                    "per_customer^1/2": 0.05,
+                    "per_substation": 0
+                }
+            },
+            "accounting": {
+                "accounting_hourly_rate": {
+                    "Rural": 34.34,
+                    "Suburban": 34.62,
+                    "Urban": 34.69
+                },
+                "accounting_labor_ratios": {
+                    "constant": 0,
+                    "per_customer": 0.04,
+                    "per_customer^1/2": 0.3,
+                    "per_substation": 0
+                }
+            },
+            "admin": {
+                "admin_hourly_rate": {
+                    "Rural": 14.81,
+                    "Suburban": 15.64,
+                    "Urban": 15.66
+                },
+                "admin_labor_ratios": {
+                    "constant": 0,
+                    "per_customer": 0,
+                    "per_customer^1/2": 0.05,
+                    "per_substation": 0
+                }
+            },
+            "billing": {
+                "billing_hourly_rate": {
+                    "Rural": 16.31,
+                    "Suburban": 16.31,
+                    "Urban": 16.69
+                },
+                "billing_labor_ratios": {
+                    "constant": 0,
+                    "per_customer": 0.1,
+                    "per_customer^1/2": 0.01,
+                    "per_substation": 0,
+                    "transactive_increase": 0.25
+                }
+            },
+            "corporate_lawyer": {
+                "corporate_lawyer_hourly_rate": {
+                    "Rural": 105,
+                    "Suburban": 210,
+                    "Urban": 280
+                },
+                "corporate_lawyer_labor_ratios": {
+                    "constant": 0.1,
+                    "per_customer": 0,
+                    "per_customer^1/2": 0.3,
+                    "per_substation": 0
+                }
+            },
+            "customer_service_agent": {
+                "customer_service_agent_hourly_rate": {
+                    "Rural": 14.43,
+                    "Suburban": 14.62,
+                    "Urban": 14.78
+                },
+                "customer_service_agent_labor_ratios": {
+                    "constant": 0,
+                    "per_customer": 1.33,
+                    "per_customer^1/2": -1.073,
+                    "per_substation": 0
+                }
+            },
+            "economist": {
+                "economist_hourly_rate": {
+                    "Rural": 47.68,
+                    "Suburban": 51.19,
+                    "Urban": 51.57
+                },
+                "economist_labor_ratios": {
+                    "constant": 0,
+                    "per_customer": 0,
+                    "per_customer^1/2": 0.6,
+                    "per_substation": 0
+                }
+            },
+            "electrician": {
+                "average_hourly_labor_cost": 30.97
+            },
+            "human_resources": {
+                "human_resources_hourly_rate": {
+                    "Rural": 26.71,
+                    "Suburban": 27.64,
+                    "Urban": 27.86
+                },
+                "human_resources_labor_ratios": {
+                    "constant": 0,
+                    "per_customer": 0.01,
+                    "per_customer^1/2": 0.2,
+                    "per_substation": 0
+                }
+            },
+            "linemen": {
+                "linemen_hourly_rate": {
+                    "Rural": 27.62,
+                    "Suburban": 27.6,
+                    "Urban": 27.6
+                },
+                "linemen_labor_ratios": {
+                    "constant": 2,
+                    "per_customer": 0.935,
+                    "per_customer^1/2": -1.597,
+                    "per_substation": 0
+                }
+            },
+            "maintenance_repair": {
+                "average_hourly_labor_cost": 22.6
+            },
+            "market_operations": {
+                "market_operations_hourly_rate": {
+                    "Rural": 31.63,
+                    "Suburban": 33.96,
+                    "Urban": 34.21
+                },
+                "market_operations_labor_ratios": {
+                    "constant": 1,
+                    "per_customer": 0,
+                    "per_customer^1/2": 0.01,
+                    "per_substation": 0.2
+                }
+            },
+            "metering": {
+                "metering_hourly_rate": {
+                    "Rural": 46.69,
+                    "Suburban": 46.88,
+                    "Urban": 46.93
+                },
+                "metering_labor_ratios": {
+                    "constant": 0,
+                    "per_customer": 0.05,
+                    "per_customer^1/2": 0.01,
+                    "per_substation": 0
+                }
+            },
+            "network_admin": {
+                "AMI_cyber_labor_ratios": {
+                    "constant": 0,
+                    "per_customer": 0.01,
+                    "per_customer^1/2": 0.1,
+                    "per_substation": 0,
+                    "transactive_increase": 0.05
+                },
+                "AMI_network_labor_ratios": {
+                    "constant": 0,
+                    "per_customer": 0.01,
+                    "per_customer^1/2": 0.3,
+                    "per_substation": 0,
+                    "transactive_increase": 0.25
+                },
+                "DER_cyber_labor_ratios": {
+                    "constant": 0,
+                    "per_customer": 0.003,
+                    "per_customer^1/2": 0.03,
+                    "per_substation": 0
+                },
+                "DER_network_labor_ratios": {
+                    "constant": 0,
+                    "per_customer": 0.003,
+                    "per_customer^1/2": 0.09,
+                    "per_substation": 0
+                },
+                "DMS_cyber_labor_ratios": {
+                    "constant": 0,
+                    "per_customer": 0.005,
+                    "per_customer^1/2": 0.1,
+                    "per_substation": 0
+                },
+                "DMS_network_labor_ratios": {
+                    "constant": 0,
+                    "per_customer": 0.01,
+                    "per_customer^1/2": 0.1,
+                    "per_substation": 0
+                },
+                "cyber_analyst_hourly_rate": {
+                    "Rural": 41.38,
+                    "Suburban": 44.42,
+                    "Urban": 44.75
+                },
+                "network_admin_hourly_rate": {
+                    "Rural": 53.05,
+                    "Suburban": 62.07,
+                    "Urban": 62.7
+                }
+            },
+            "operator": {
+                "operator_hourly_rate": {
+                    "Rural": 31.63,
+                    "Suburban": 33.96,
+                    "Urban": 34.21
+                },
+                "operator_labor_ratios": {
+                    "constant": 0,
+                    "per_customer": 0.02,
+                    "per_customer^1/2": 0.2,
+                    "per_substation": 0
+                }
+            },
+            "planning": {
+                "planning_hourly_rate": {
+                    "Rural": 46.69,
+                    "Suburban": 46.88,
+                    "Urban": 46.93
+                },
+                "planning_labor_ratios": {
+                    "constant": 0,
+                    "per_customer": 0.02,
+                    "per_customer^1/2": 0,
+                    "per_substation": 0
+                }
+            },
+            "plumber": {
+                "average_hourly_labor_cost": 28.9
+            },
+            "public_relations": {
+                "public_relations_hourly_rate": {
+                    "Rural": 20,
+                    "Suburban": 35,
+                    "Urban": 45
+                },
+                "public_relations_labor_ratios": {
+                    "constant": 0,
+                    "per_customer": 0,
+                    "per_customer^1/2": 0.2,
+                    "per_substation": 0
+                }
+            },
+            "salary_to_total_compensation_ratio": 0.7,
+            "team_salary_escalation_1": 1.3
+        },
+        "market_operations": {
+            "hardware": {
+                "constant": 0,
+                "per_customer": 100,
+                "per_substation": 250
+            },
+            "software": {
+                "constant": 30000,
+                "per_customer": 100,
+                "per_customer^1/2": 1,
+                "per_substation": 20000
+            }
+        },
+        "meter_cost": {
+            "commercial": 520,
+            "industrial": 1500,
+            "residential": 170
+        },
+        "power_factor_peak": 0.9,
+        "reserve": {
+            "non_spinning_reserve_cost": 3.91,
+            "regulation_cost": 7.34,
+            "regulation_fraction": 0.01,
+            "spinning_reserve_cost": 11.1
+        },
+        "sales_tax_rate": 0.088,
+        "software": {
+            "CIS_software": {
+                "constant": 10000,
+                "per_customer": 4000,
+                "per_customer^1/2": 0,
+                "per_substation": 0
+            },
+            "DMS_software": {
+                "constant": 50000,
+                "per_customer": 0,
+                "per_customer^1/2": 0,
+                "per_substation": 25000
+            },
+            "OMS_software": {
+                "constant": 10000,
+                "per_customer": 1000,
+                "per_customer^1/2": 0,
+                "per_substation": 10000
+            },
+            "billing_software": {
+                "constant": 30000,
+                "per_customer": 50,
+                "per_customer^1/2": 0,
+                "per_substation": 10000
+            }
+        },
+        "state_income_tax": 0.0884,
+        "sub_pop_MVA_growth": {
+            "brownfield": 0,
+            "greenfield": 0
+        },
+        "substation_costs": {
+            "brownfield_growth_rate_dso_total": {
+                "Rural": 0.005,
+                "Suburban": 0.01,
+                "Urban": 0.02
+            },
+            "frac_exist_sub_built_new": 0.2,
+            "greenfield_growth_rate_dso_total": {
+                "Rural": 0.01,
+                "Suburban": 0.1,
+                "Urban": 0.01
+            },
+            "greenfield_growth_rate_local_substation": 2.56,
+            "peak_demand_density_normalized": {
+                "fully-developed": 1,
+                "undeveloped": 0.006
+            },
+            "service_area_share_fully_developed": {
+                "Rural": 0.1,
+                "Suburban": 0.63,
+                "Urban": 0.9
+            },
+            "substation_capacity_avg": {
+                "fully-developed": 90,
+                "greenfield": 40,
+                "undeveloped": 8
+            },
+            "substation_new_cost_per_kVA": {
+                "Rural": 939,
+                "Suburban": 223,
+                "Urban": 186
+            },
+            "substation_upgrade_cost_per_kVA": {
+                "Rural": 362,
+                "Suburban": 109,
+                "Urban": 109
+            },
+            "years_greenfield": 4,
+            "years_sub_design_life": 20
+        },
+        "tax_bill_deduction": {
+            "commercial": {
+                "big_box": 0.252,
+                "education": 0.014,
+                "food_sales": 0.266,
+                "food_service": 0.252,
+                "healthcare_inpatient": 0.14,
+                "lodging": 0.21,
+                "low_occupancy": 0.28,
+                "office": 0.252,
+                "small_medium_office": 0.014,
+                "strip_mall": 0.252,
+                "warehouse_storage": 0.28
+            },
+            "residential": {
+                "mobile_home": 0,
+                "multi_family": 0,
+                "single_family": 0
+            }
+        },
+        "thermostat": {
+            "marginal_installation_capital": 13.14,
+            "marginal_installation_time_hrs": 0.7,
+            "marginal_purchase_price": 154.9
+        },
+        "transmission_access_fee_per_MWh": 12.38,
+        "transmission_capital_benefit_factor": 0.5,
+        "transmission_capital_cost_per_kW": 169,
+        "water_heater": {
+            "controller_purchase_price": 141.76,
+            "mixing_valve_installation_time_hrs": 3,
+            "mixing_valve_purchase_price": 90.48
+        },
+        "workspace_costs": {
+            "industrial_workspace_costs": {
+                "Rural": 6.44,
+                "Suburban": 6.54,
+                "Urban": 7.52
+            },
+            "linemen_sqft_employee": 600,
+            "office_sqft_employee": 200,
+            "office_workspace_costs": {
+                "Rural": 16.13,
+                "Suburban": 30.31,
+                "Urban": 38.88
+            }
+        }
+    }
+}

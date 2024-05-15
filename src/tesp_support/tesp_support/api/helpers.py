@@ -125,18 +125,25 @@ def gld_strict_name(val):
 
 class HelicsMsg(object):
 
-    def __init__(self, name, period):
+    def __init__(self, name, period, **kwargs):
         # change logging to debug, warning, error
         self._subs = []
         self._pubs = []
-        self._cnfg = {"name": name,
-                      "period": period,
-                      "logging": "warning",
-                      }
+        if "broker_port" in kwargs:
+            self._cnfg = {"name": name,
+                          "broker_port": str(kwargs["broker_port"]),
+                          "period": period,
+                          "logging": "warning",
+                          }
+        else:
+            self._cnfg = {"name": name,
+                          "period": period,
+                          "logging": "warning",
+                          }
         pass
 
     def write_file(self, _fn):
-        self.config("publications", self._pubs)
+        # self.config("publications", self._pubs)
         self.config("subscriptions", self._subs)
         op = open(_fn, 'w', encoding='utf-8')
         json.dump(self._cnfg, op, ensure_ascii=False, indent=2)

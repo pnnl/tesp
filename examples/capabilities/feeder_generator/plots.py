@@ -15,7 +15,7 @@ import tesp_support.api.process_voltages as pv
 # import tesp_support.api.process_pypower as pp
 
 if __name__ == '__main__':
-    name_root = sys.argv[1]
+    name_root = "test"  # sys.argv[1]
 
     # Comment out if don't you want power metrics plot
     # pmetrics = pp.read_pypower_metrics(os.getcwd(), name_root)
@@ -25,7 +25,7 @@ if __name__ == '__main__':
         ametrics = pa.read_agent_metrics(os.getcwd(), name_root, f'{name_root}_agent_dict.json')
         pa.plot_agents(ametrics)
 
-    gmetrics = pg.read_gld_metrics(os.getcwd(), name_root, f'{name_root}_glm_dict.json')
+    gmetrics = pg.read_gld_metrics(os.getcwd()+'/test', name_root)
     pg.plot_gld(gmetrics)
     ph.plot_houses(gmetrics)
     pv.plot_voltages(gmetrics)

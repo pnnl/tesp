@@ -2104,7 +2104,7 @@ def write_houses(basenode, op, vnom):
             # ['daily_miles','home_arr_time','home_duration','work_arr_time','work_duration']
 
             # Should be able to turn off ev entirely using ev_percentage, definitely in debugging
-            if case_type['pv']:  # evs are populated when its pvCase i.e. high renewable case
+            if case_type['ev']:  # evs are populated when its pvCase i.e. high renewable case
                 # few sanity checks
                 if drive_sch['daily_miles'] > ev_range:
                     raise UserWarning('daily travel miles for EV can not be more than range of the vehicle!')
@@ -2121,8 +2121,8 @@ def write_houses(basenode, op, vnom):
                 print('object evcharger_det {', file=op)
                 print('    name', evname + ';', file=op)
                 print('    parent', hsename + ';', file=op)
-                print('    configuration', volt_conf + ';', file=op)  #
-                print('    breaker_amps 1000;', file=op)
+                # print('    configuration', volt_conf + ';', file=op)  #
+                # print('    breaker_amps 1000;', file=op)
                 print('    battery_SOC 100.0; // initial soc', file=op)
                 print('    travel_distance', '{};'.format(drive_sch['daily_miles']), file=op)
                 print('    arrival_at_work', '{};'.format(drive_sch['work_arr_time']), file=op)
@@ -2134,10 +2134,10 @@ def write_houses(basenode, op, vnom):
                 print('    mileage_efficiency', '{:.3f}; // miles per kWh'.format(ev_mileage), file=op)
                 print('    mileage_classification', '{:.3f}; // range in miles'.format(ev_range), file=op)
                 print('    charging_efficiency', '{:.3f};'.format(ev_charge_eff), file=op)
-                if metrics_interval > 0:
-                    print('    object metrics_collector {', file=op)
-                    print('      interval', str(metrics_interval) + ';', file=op)
-                    print('    };', file=op)
+                # if metrics_interval > 0:
+                #     print('    object metrics_collector {', file=op)
+                #     print('      interval', str(metrics_interval) + ';', file=op)
+                #     print('    };', file=op)
                 print('}', file=op)
 
 
@@ -2920,6 +2920,8 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
         print(solar_count, 'pv totaling', '{:.1f}'.format(solar_kw), 'kw with', battery_count, 'batteries and',
               ev_count, 'electric vehicles')
         op.close()
+
+        k = 1
 
 
 def populate_feeder(configfile=None, config=None, taxconfig=None):
