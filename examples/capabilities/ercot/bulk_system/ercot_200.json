@@ -1,5 +1,5 @@
 {
-  "version": "2",
+  "version": 2,
   "baseMVA": 100.0,
   "pf_dc": 0,
   "opf_dc": 1,

@@ -198,7 +198,7 @@
   "outputPath": "",
   "myoutputPath": "/home/osboxes/grid/repository/tesp-private/examples/dsot_v2/output",
   "archivePath": "/mnt/simdata/done",
-  "version": "2",
+  "version": 2,
   "baseMVA": 100.0,
   "genPower": true,
   "renewables": [
