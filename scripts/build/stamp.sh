@@ -6,7 +6,6 @@ if [[ -z ${INSTDIR} ]]; then
   exit
 fi
 
-ver="22.04.1"
 tesp_ver="1.3.5"
 
 echo
@@ -66,7 +65,6 @@ pip list > "${BUILD_DIR}/tesp_pypi.id"
 
 echo "Stamping grid applications software $ver and TESP $tesp_ver for install"
 cd "${TESPDIR}" || exit
-echo "$ver" > "scripts/grid_version"
 echo "$tesp_ver" > "src/tesp_support/version"
 
 # un-comment for final version

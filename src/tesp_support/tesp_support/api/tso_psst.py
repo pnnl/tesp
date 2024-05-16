@@ -1540,6 +1540,17 @@ def tso_psst_loop(casename):
                     # get the schedule for this hour
                     rt_schedule = write_rtm_schedule(schedule)
 
+                    # Turn on all generators at start up
+                    if day == 2 and hour == 0 and not priceSensLoad:
+                        log.info("Start up " + print_time)
+                        for igen in range(numGen):
+                            if genFuel[igen][0] not in renewables:
+                                name = 'GenCo' + str(igen + 1)
+                                gen[igen, 1] = gen[igen, 9] + ((gen[igen, 8] - gen[igen, 9]) * power_level)
+                                genFuel[igen][3] = 1  # turn on generator
+                                if name in rt_schedule.keys():
+                                    rt_schedule[name] = '1'
+
                     # unplanned outage implementation on the hour
                     if outagesUnplanned:
                         # convert day and hour to 0-8760

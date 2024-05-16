@@ -43,29 +43,6 @@ while true; do
     esac
 done
 
-# repo for git
-# sudo add-apt-repository ppa:git-core/ppa
-
-# Some support depends on linux version
-lv=( $(cat /etc/issue) )
-lv=( ${lv[1]//./ } )
-#if [[ ${lv[0]} -eq 18 ]]; then
-#  sudo apt-get update
-#  tk="python3-tk"
-#elif [[ ${lv[0]} -eq 20 ]]; then
-#  sudo apt-get update
-#  tk="python3-tk"
-#elif [[ ${lv[0]} -eq 22 ]]; then
-#  sudo add-apt-repository ppa:deadsnakes/ppa -y
-#  sudo apt-get update
-#  tk="python3.8-tk"
-#else
-#  echo "**************************************************"
-#  echo "$(cat /etc/issue), not supported for TESP"
-#  echo "**************************************************"
-#  exit
-#fi
-
 # add build tools for compiling
 sudo apt-get -y upgrade
 sudo apt-get -y install pkgconf \
@@ -96,11 +73,6 @@ python3-venv \
 python3-pip \
 python3-tk \
 python3-pil.imagetk
-#sudo apt-get -y install python3.8
-#sudo apt-get -y install python3.8-venv
-#sudo apt-get -y install python3-pip
-#sudo apt-get -y install ${tk}
-#sudo apt-get -y install python3-pil.imagetk
 
 sudo ln -sf /usr/lib/jvm/java-11-openjdk-amd64 /usr/lib/jvm/default-java
 
@@ -128,21 +100,6 @@ python3 -m pip install virtualenv
 echo
 echo "Install executables environment to $HOME/grid/tenv"
 mkdir -p tenv
-
-if [[ ${lv[0]} -eq 18 ]]; then
-  if [[ $binaries == "develop" ]]; then
-    # To compile with helics>=3.1 gridlabd>=5.0 need to upgrade cmake and g++-9 for ubuntu 18.04
-    wget --no-check-certificate https://github.com/Kitware/CMake/releases/download/v3.24.2/cmake-3.24.2-linux-x86_64.sh
-    chmod 755 cmake-3.24.2-linux-x86_64.sh
-    ./cmake-3.24.2-linux-x86_64.sh --skip-license --prefix="$HOME/grid/tenv"
-    rm -f cmake-3.24.2-linux-x86_64.sh
-  fi
-  sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
-  sudo apt-get update
-  sudo apt-get -y install gcc-9 g++-9
-  sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 60 --slave /usr/bin/g++ g++ /usr/bin/g++-9
-  sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 60 --slave /usr/bin/g++ g++ /usr/bin/g++-7
-fi
 
 echo "Clone directory structure for TESP"
 echo ++++++++++++++ TESP

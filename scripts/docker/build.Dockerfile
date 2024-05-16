@@ -1,5 +1,7 @@
+ARG DOCKER_VER
+
 # Build runtime image
-FROM cosim-library:latest AS cosim-production
+FROM cosim-library:$DOCKER_VER AS cosim-build
 
 ARG COSIM_USER
 ENV COSIM_HOME=/home/$COSIM_USER
@@ -42,12 +44,16 @@ RUN echo "===== Building CoSim Build =====" && \
   git config --global credential.helper store && \
   echo "Directory structure for build" && \
   mkdir -p tenv && \
-  mkdir -p build && \
+#  mkdir -p build && \
   mkdir -p repo
 
 # Copy the build instructions
 COPY . ${BUILD_DIR}
+USER root
+RUN chown -hR $COSIM_USER:$COSIM_USER ${BUILD_DIR}
 
+USER $COSIM_USER
+WORKDIR $COSIM_HOME
 RUN echo "Cloning or download all relevant repositories..." && \
   cd "${REPO_DIR}" || exit && \
   echo ++++++++++++++ TESP && \
@@ -55,8 +61,10 @@ RUN echo "Cloning or download all relevant repositories..." && \
 #  ${BUILD_DIR}/patch.sh tesp tesp && \
   echo "++++++++++++++ PSST" && \
   git clone -b master https://github.com/ames-market/AMES-V5.0.git && \
-  echo "Applying the patch for AMES...... from ${BUILD_DIR}" && \
   ${BUILD_DIR}/patch.sh AMES-V5.0 AMES-V5.0 && \
+  mv AMES-V5.0/README.rst . && \
+  mv AMES-V5.0/psst . && \
+  rm -rf AMES-V5.0 && \
   echo "++++++++++++++ FNCS" && \
   git clone -b feature/opendss https://github.com/FNCS/fncs.git && \
   ${BUILD_DIR}/patch.sh fncs fncs && \
@@ -106,7 +114,11 @@ RUN echo "Cloning or download all relevant repositories..." && \
   /bin/rm -r ${REPO_DIR}/ThirdParty-Mumps && \
   echo "Compiling and Installing TESP EnergyPlus agents and TMY converter..." && \
   ./tesp_b.sh clean > tesp.log 2>&1 && \
+  echo "Install Misc Python Libraries..." && \
+  pip install --upgrade pip > "pypi.log" && \
+  pip install --no-cache-dir -r ${REPO_DIR}/tesp/requirements.txt >> "pypi.log" && \
+  pip install --no-cache-dir helics[cli] >> "pypi.log" && \
+  pip install --no-cache-dir -e ${REPO_DIR}/psst  >> "pypi.log" && \
   /bin/rm -r ${REPO_DIR}/tesp && \
   echo "${COSIM_USER}" | sudo -S ldconfig && \
-  cd ${BUILD_DIR} || exit && \
   ./versions.sh

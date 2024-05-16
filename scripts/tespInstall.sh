@@ -31,7 +31,7 @@ cat > "$HOME/grid/tesp.env" << EOF
 export GRID_DIR=$WORKDIR
 export TESPDIR=$WORKDIR
 export INSTDIR=\$GRID_DIR/tenv
-export REPODIR=\$GRID_DIR/repo
+export REPO_DIR=\$GRID_DIR/repo
 export BUILD_DIR=\$TESPDIR/scripts/build
 
 # COMPILE exports
