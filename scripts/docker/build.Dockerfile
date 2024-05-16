@@ -62,7 +62,9 @@ RUN echo "Cloning or download all relevant repositories..." && \
   echo "++++++++++++++ PSST" && \
   git clone -b master https://github.com/ames-market/AMES-V5.0.git && \
   ${BUILD_DIR}/patch.sh AMES-V5.0 AMES-V5.0 && \
-  mv AMES-V5.0/psst psst && \
+  mv AMES-V5.0/README.rst . && \
+  mv AMES-V5.0/psst . && \
+  rm -rf AMES-V5.0 && \
   echo "++++++++++++++ FNCS" && \
   git clone -b feature/opendss https://github.com/FNCS/fncs.git && \
   ${BUILD_DIR}/patch.sh fncs fncs && \
@@ -112,12 +114,11 @@ RUN echo "Cloning or download all relevant repositories..." && \
   /bin/rm -r ${REPO_DIR}/ThirdParty-Mumps && \
   echo "Compiling and Installing TESP EnergyPlus agents and TMY converter..." && \
   ./tesp_b.sh clean > tesp.log 2>&1 && \
-  /bin/rm -r ${REPO_DIR}/tesp && \
   echo "Install Misc Python Libraries..." && \
   pip install --upgrade pip > "pypi.log" && \
-  pip install --no-cache-dir helics >> "pypi.log" && \
+  pip install --no-cache-dir -r ${REPO_DIR}/tesp/requirements.txt >> "pypi.log" && \
   pip install --no-cache-dir helics[cli] >> "pypi.log" && \
-  cd ${REPO_DIR}/AMES-V5.0/psst || exit && \
-  pip install --no-cache-dir -e .  >> "${BUILD_DIR}/pypi.log" && \
+  pip install --no-cache-dir -e ${REPO_DIR}/psst  >> "pypi.log" && \
+  /bin/rm -r ${REPO_DIR}/tesp && \
   echo "${COSIM_USER}" | sudo -S ldconfig && \
   ./versions.sh

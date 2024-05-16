@@ -1541,7 +1541,7 @@ def tso_psst_loop(casename):
                     rt_schedule = write_rtm_schedule(schedule)
 
                     # Turn on all generators at start up
-                    if day == 2 and mn == 0 and not priceSensLoad:
+                    if day == 2 and hour == 0 and not priceSensLoad:
                         log.info("Start up " + print_time)
                         for igen in range(numGen):
                             if genFuel[igen][0] not in renewables:
