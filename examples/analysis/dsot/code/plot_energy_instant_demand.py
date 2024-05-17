@@ -15,9 +15,11 @@ if __name__ == '__main__':
 
     grid_forecast_filename = 'AZ_Tucson_Large_grid_forecast.csv'
 
+    savfilename = "BatteryStoredEnergy_EVScm_GridDemand.html"
+
     year = 2040
     month = 7
-    day = 10
+    day = 11
 
     energy_df = pd.read_csv(energy_filename)
     ev_demand_df = pd.read_csv(ev_demand_filename)
@@ -63,8 +65,9 @@ if __name__ == '__main__':
         x=x_values,
         y=energy_y_values,
         name="Aggregated Stored Energy in EVs (MWh)",
-        mode='lines+markers',
-        marker=dict(color='rgb(31, 119, 180)')
+        mode='lines',
+        marker=dict(color='rgb(31, 119, 180)'),
+        showlegend=False
     ))
 
     fig.add_trace(go.Scatter(
@@ -72,8 +75,9 @@ if __name__ == '__main__':
         y=ev_demand_y_values,
         name="Aggregated EV Charging (MW)",
         yaxis="y2",
-        mode='lines+markers',
-        marker=dict(color='rgb(255, 127, 14)')
+        mode='lines',
+        marker=dict(color='rgb(255, 127, 14)'),
+        showlegend=False
     ))
 
     fig.add_trace(go.Scatter(
@@ -81,8 +85,9 @@ if __name__ == '__main__':
         y=grid_demand_y_values,
         name="Total Grid Demand (EV+Base) (MW)",
         yaxis="y3",
-        mode='lines+markers',
-        line=dict(color='rgb(44, 160, 44)')
+        mode='lines',
+        line=dict(color='rgb(44, 160, 44)'),
+        showlegend=False
     ))
 
     fig.update_layout(
@@ -146,7 +151,11 @@ if __name__ == '__main__':
     )
     fig.update_xaxes(showline=True, linewidth=2, linecolor='black')
     fig.update_yaxes(showline=True, linewidth=2, linecolor='black')
-    fig.show()
+    # fig.show()
+
+    plotly.offline.plot(fig,
+                        filename=savfilename,
+                        auto_open=False)
 
     # # -------------------------------------
     #

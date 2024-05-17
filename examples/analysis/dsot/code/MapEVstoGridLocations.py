@@ -4,6 +4,226 @@ import pandas as pd
 import DSOT_post_processing_aggregated_folders
 import json
 import random
+import math
+
+def get_xfrmr_info_from_all_substations_subfolders(subfolder_count, idx, network_size, customsuffix, main_path):
+    xfmr_size_name_mapping = {}
+    for i in range(subfolder_count[idx]):
+        folder_name = f"AZ_Tucson_{network_size}_{customsuffix}_{i + 1}_fl"
+        path = main_path + folder_name + '/Substation_1/'
+        # config_to_power_rating_map_dict has ratings in kva!
+        load_to_xfrmr_config_map_dict, config_to_power_rating_map_dict, load_to_xfrmr_name, xfrmr_name_to_size = (
+            DSOT_post_processing_aggregated_folders.transformer_map(path))
+        for key, value in xfrmr_name_to_size.items():
+            modified_key = key + f"_set{i + 1}"
+            xfmr_size_name_mapping[modified_key] = value
+
+    # convert json info to dataframe
+    xfmr_size_map_df = pd.DataFrame(xfmr_size_name_mapping.items(), columns=['Name', 'Size'])
+
+    return xfmr_size_map_df
+
+def assign_vehicles(list_of_vehicleIDs, vehicles_to_add_at_a_location, possible_xfrmrs, df, map_given_size):
+    xfrmr_added_idx = 0
+    xfrmr_df_indices_to_delete = []
+    for batch in range(0, len(list_of_vehicleIDs), vehicles_to_add_at_a_location):
+        xfrmr_to_assign_for_current_batch = possible_xfrmrs.iloc[xfrmr_added_idx]["Name"]
+        xfrmr_df_indices_to_delete.append(possible_xfrmrs.index[xfrmr_added_idx])
+        # for k in xfmr_loading_df.columns.tolist():
+        min_id = batch
+        max_id = min(batch + vehicles_to_add_at_a_location, len(list_of_vehicleIDs))
+
+        vehicles_in_current_batch = list_of_vehicleIDs[min_id:max_id]
+
+        # update xfrmr assignment
+        mask_current_batch = df["Vehicle ID"].isin(vehicles_in_current_batch)
+        df.loc[mask_current_batch, "Location"] = map_given_size[xfrmr_to_assign_for_current_batch]
+
+        # move to next possible xfrmr
+        xfrmr_added_idx += 1
+
+    return df, xfrmr_df_indices_to_delete
+
+def perform_commonsense_check(possible_xfrmrs, vehicles_to_add_at_a_location, network_size, xfmr_size_map_df, type_l,
+                              df_vehicles):
+    vehicle_batches = math.ceil(
+        len(possible_xfrmrs) / vehicles_to_add_at_a_location)  # number of xfrmrs required to assign all
+
+    if len(possible_xfrmrs) < vehicle_batches:
+        print("Too many vehicles per charging location, not enough xfrmrs to assign EVs. Reduce the vehicles per"
+              " port or max ports. Suggestion, reduce max ports. Exiting..")
+        exit()
+    else:
+        print(f"Grid size = {network_size}. Available xfrmrs with right sizes/ selected xfrmrs ="
+              f" {len(possible_xfrmrs)}/{len(xfmr_size_map_df)}. Vehicle assignment to grid possible, proceeding"
+              f" to next steps. Number of vehicles per xfrmr with {type_l} = {vehicles_to_add_at_a_location}. Total "
+              f"vehicles to assign on grid = {len(df_vehicles)}")
+def main_cyclic_selective_locs_for_chargers(Years, Networks, subfolder_count, main_path, xfrmrrating_evshare,
+         custom_suffix_sim_run_uncontrolled, vehicle_inventory_path, no_of_charging_locations, final_year, vehicles_per_port, max_ports):
+    # need to know which xfrmrs are down selected for placement of EVs
+    # TODO: I will shortlist xfrmrs at the end, first I will finish rest of the logic and get back to the top.
+
+    # use user input that says how many charging locations are available on grid for commercial side of course
+
+    # 2 to 2.5 vehicles per port and 5 ports at a location. NOTE: make number of chargers at a location as user input
+
+    # level 3 chargers may have their own transformers
+
+    # keep the size option still open, but it can be turned off, it will be a simple check.
+
+    #---------------------
+    # Loop through Size followed by years and generate the location mapping. This location mapping remains constant for
+    # all climate zones given a specific Size and year!
+    os.makedirs(f"final_vehicle_inventory_{custom_suffix_sim_run_uncontrolled}", exist_ok=True)
+    collect_no_EV_data_important = []
+    random.seed(42)
+    df_struct = pd.DataFrame()
+    for idx, network_size in enumerate(Networks):
+
+        xfmrs_assigned_for_current_grid_names = []
+
+        if network_size == "Large":
+            customsuffix = "feb12_runs"
+        else:
+            customsuffix = "feb24_runs"
+
+        # Load the commercial transformers and their sizes from all subfolders for a given size.
+        # Create subfolder location paths (assume arizona as references - it maybe an issue if other climate zones have
+        # 16 subfolders instead of 17 subfolders, right now, it's fine because all success cases have 17 subfolders)
+        xfmr_size_map_df = get_xfrmr_info_from_all_substations_subfolders(subfolder_count, idx, network_size,
+                                                                          customsuffix, main_path)
+
+        # create xfrmr to dummy location mapping
+        list_xfrmr = list(xfmr_size_map_df["Name"].unique())
+        map_given_size = {}
+        for idxxxr, xfrmr_name in enumerate(list_xfrmr):
+            map_given_size[xfrmr_name] = idxxxr + 1
+
+        # take the 2040 vehicle inventory and assign vehicles as per the logic
+            # Load the corresponding vehicle inventory
+        filename = f"{vehicle_inventory_path}/vehicle_master_{network_size}_Year_{final_year}.csv"
+        df = pd.read_csv(filename)
+        df["Location"] = 99999
+
+        # perform cyclic assignment
+            # number of vehicles at a charging location that can charge at given point = max_ports
+        vehicles_max_at_a_location = max_ports
+
+
+        # assign type of charger needed for each vehicleId first
+        df["chargertype"] = 2
+        # https://www.power-sonic.com/blog/levels-of-ev-charging/
+        mask_level_3 = df["Size of the charger (kw)"] > 30
+        df.loc[mask_level_3, "chargertype"] = 3
+
+        # perform a common sense check with user inputs
+        if xfrmrrating_evshare == None:
+            # EVs will occupy 100% of the xfrmr or less
+            required_rough_kva = vehicles_max_at_a_location*20  # 20 is 20kw of a L2 charger
+        else:  # just an option if needed when SCM fails lots of xfrmrs
+            # EVs will occupy xfrmrrating_evshare of the xfrmr rating
+            required_rough_kva = (vehicles_max_at_a_location * 20)/(xfrmrrating_evshare/100)
+        # ensuring there is buffer for base demand
+        # # as well. otherwise its a problem with SCM optimization (no feasible solution). UPDATE: not including this
+        # # because SCM should handle different times and charge all vehicles as needed.
+
+        # separate L2 and L3 vehicles
+        df_L2 = df[df["chargertype"] == 2]
+        df_L3 = df[df["chargertype"] == 3]
+
+            # find number of xfrmrs whos kva rating satisfies required rough kva
+        possible_xfrmrs = xfmr_size_map_df[xfmr_size_map_df["Size"] >= required_rough_kva]
+        # L2 charger required vehicles
+        type_l = "L2"
+        perform_commonsense_check(possible_xfrmrs, vehicles_max_at_a_location, network_size, xfmr_size_map_df,
+                                  type_l, df_L2)
+        # if len(possible_xfrmrs) < vehicle_batches:
+        #     print("Too many vehicles per charging location, not enough xfrmrs to assign EVs. Reduce the vehicles per"
+        #           " port or max ports. Suggestion, reduce max ports. Exiting..")
+        #     exit()
+        # else:
+        #     print(f"Grid size = {network_size}. Available xfrmrs with right sizes/ selected xfrmrs ="
+        #           f" {len(possible_xfrmrs)}/{len(xfmr_size_map_df)}. Vehicle assignment to grid possible, proceeding"
+        #           f" to next steps. Number of vehicles per xfrmr with {type_l} = {vehicles_max_at_a_location}")
+
+        # for every location in a cyclic manner. First assign all level 2 charging type vehicles and then assign
+        # all level 3 charging vehicles
+
+
+        # For a given network, go through all years
+
+
+        list_of_vehicleIDs = list(df_L2["Vehicle ID"])
+        df, xfrmr_df_indices_to_delete1 = assign_vehicles(list_of_vehicleIDs, vehicles_max_at_a_location,
+                                                         possible_xfrmrs, df, map_given_size)
+        names1 = list(possible_xfrmrs.loc[xfrmr_df_indices_to_delete1]["Name"])
+        xfmrs_assigned_for_current_grid_names.extend(names1)
+
+        # assign vehicles that require L3 chargers. Each L3 charger gets a dedicated xfrmr. Continue from xfrmr left
+        # off by the L2 charger assignments from above. as move through possible xfrmrs one by one in cyclic manner.
+        possible_xfrmrs = possible_xfrmrs.drop(xfrmr_df_indices_to_delete1)  # remove already assigned xfrmrs
+        # make sure the possible xfrmrs have atleast the size requested by the charger in vehicle inventory
+        if xfrmrrating_evshare == None:
+            # EVs will occupy 100% of the xfrmr or less
+            required_rough_kva = df_L3["Size of the charger (kw)"].min()*2  # times 2 because there are 2 ports at one L3 charger
+        else:  # just an option if needed when SCM fails lots of xfrmrs
+            # EVs will occupy xfrmrrating_evshare of the xfrmr rating
+            required_rough_kva = (df_L3["Size of the charger (kw)"].min())/(xfrmrrating_evshare/100)
+        # ensuring there is buffer for base demand
+        # # as well. otherwise its a problem with SCM optimization (no feasible solution). UPDATE: not including this
+        # # because SCM should handle different times and charge all vehicles as needed.
+        possible_xfrmrs = possible_xfrmrs[possible_xfrmrs["Size"] >= required_rough_kva]
+        type_l = "L3"
+        # second argument in below function call is 2 because there will be two vehicles maximum that can charge at
+        # any given point at a single L3 charger. We also have an assumption that L3 charger gets its own xfrmrs so we
+        # assigned only one L3 charger at a location.
+        perform_commonsense_check(possible_xfrmrs, 2, network_size, xfmr_size_map_df,
+                                  type_l, df_L3)
+        list_of_vehicleIDs = list(df_L3["Vehicle ID"])
+        df, xfrmr_df_indices_to_delete = assign_vehicles(list_of_vehicleIDs, 2,
+                                                         possible_xfrmrs, df, map_given_size)
+        names2 = list(possible_xfrmrs.loc[xfrmr_df_indices_to_delete]["Name"])
+        xfmrs_assigned_for_current_grid_names.extend(names2)
+
+        # now all vehicles are assigned to a transformer. Generate the vehicle inventory for different years with
+        # desired formatting. generate the new vehicle inventory files with ports and other information as
+        # needed for the follow up process in the project/study.
+        for current_year in Years:
+            filename = f"{vehicle_inventory_path}/vehicle_master_{network_size}_Year_{current_year}.csv"
+            str_print = f"{network_size} and {current_year}"
+            try:
+                df_current_year_vinfo = pd.read_csv(filename)
+                nodataflag = False
+            except pd.errors.EmptyDataError:
+                print(f"{str_print} --> has no EVs to add.")
+                collect_no_EV_data_important.append(str_print)
+                nodataflag = True
+
+            if not nodataflag:
+                updated_df_current_year = df[df["Vehicle ID"].isin(df_current_year_vinfo["Vehicle ID"])]
+                sav_df = updated_df_current_year.copy(deep=True)
+                sav_df["Year of adoption"] = int(float(current_year))
+                sav_df["Grid size"] = network_size
+                df_struct = pd.concat([df_struct, sav_df])
+                loc_p_port_df = pd.DataFrame({"Location": list(updated_df_current_year["Location"].unique()),
+                                                                            "NumberofPorts": max_ports})
+                with pd.ExcelWriter(
+                        f"final_vehicle_inventory_{custom_suffix_sim_run_uncontrolled}/vehicle_master_{network_size}_Year_{current_year}.xlsx") as writer:
+                    updated_df_current_year.to_excel(writer, sheet_name='main_info', index=False)
+                    loc_p_port_df.to_excel(writer, sheet_name='locationAndPorts', index=False)
+
+
+            # loc_p_port_df = pd.DataFrame({"LocationName": all_xfrmr_names_current_year_nonempty,
+            #                               "NumberofPorts": all_ports_info})
+            # loc_p_port_df["Location"] = loc_p_port_df["LocationName"].map(map_given_size)
+            # loc_p_port_df = loc_p_port_df.drop('LocationName', axis=1)
+            # with pd.ExcelWriter(
+            #         f"final_vehicle_inventory_{custom_suffix_sim_run_uncontrolled}/vehicle_master_{network_size}_Year_{current_year}.xlsx") as writer:
+            #     df_inventory_to_update.to_excel(writer, sheet_name='main_info', index=False)
+            #     loc_p_port_df.to_excel(writer, sheet_name='locationAndPorts', index=False)
+    df_struct.to_csv(f"final_vehicle_inventory_{custom_suffix_sim_run_uncontrolled}/ConsolidatedAllYearsInventory.csv", index=False)
+
+    return f"final_vehicle_inventory_{custom_suffix_sim_run_uncontrolled}"
 
 def main(Years, Networks, subfolder_count, main_path, xfrmrrating_evshare, EV_placement_on_grid, date_name,
          custom_suffix_sim_run_uncontrolled, vehicle_inventory_path):
@@ -340,9 +560,20 @@ if __name__ == '__main__':
     # subfolder_count = [10]
     vehicle_inventory_path = "new_output_data"
     main_path = r"/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/code/"
-    xfrmrrating_evshare = 70  # percent
-    EV_placement_on_grid = "random"  # "ascen", "descen", "random"
+    xfrmrrating_evshare = None  # 70  # percent
+    EV_placement_on_grid = "ascen"  # "ascen", "descen", "random"
     date_name = "mar31"
-    custom_suffix_sim_run = "delete_this"
-    output_file_save_loc = main(Years, Networks, subfolder_count, main_path, xfrmrrating_evshare, EV_placement_on_grid,
-                                date_name, custom_suffix_sim_run, vehicle_inventory_path)
+    custom_suffix_sim_run = "delete_this2"
+    no_of_chargers = 3
+    max_ports2 =no_of_chargers*2
+    # # this function adds xfrms to the grid based on size of xfrmr. This function works for ascending and
+    # # descending order of xfrmr assignments but not for random assignments.
+    # output_file_save_loc = main(Years, Networks, subfolder_count, main_path, xfrmrrating_evshare, EV_placement_on_grid,
+    #                             date_name, custom_suffix_sim_run, vehicle_inventory_path)
+
+    # assign logic of cyclic version instead of size based option like above function. This function adds xfrmrs
+    # based on selected locations and number of charging locations available in a cyclic manner.
+    output_file_save_loc = main_cyclic_selective_locs_for_chargers(Years, Networks, subfolder_count, main_path,
+                                                                   xfrmrrating_evshare, custom_suffix_sim_run, vehicle_inventory_path,
+                                                                   no_of_charging_locations = 300, final_year=2040,
+                                                                   vehicles_per_port=2, max_ports=max_ports2)

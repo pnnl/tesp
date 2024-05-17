@@ -53,16 +53,40 @@ def main(date_name, EV_preprocess_localization_skip, EV_placement_on_grid, extra
         subfolder_count = [subfolder_count_dic[value] for value in Networks]  # [2, 10, 17]
         main_path = r"/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/code/"
 
-        # my_main_loc = os.getcwd()
-        # os.chdir(f"{output_path}/")
-        # all_files = glob.glob('./*.csv')
-        # Networks_updt = [x.split("_")[2] for x in all_files]
-        # Years_updt = [x.split("_")[4].split(".")[0] for x in all_files]
-        # os.chdir(my_main_loc)
-        # this function not only adds xfrms to the grid but it also create the load forecast files for SCM
-        output_file_save_loc = MapEVstoGridLocations.main(Years, Networks, subfolder_count, main_path,
-                                                          xfrmrrating_evshare, EV_placement_on_grid, date_name,
-                                                          custom_suffix_sim_run_uncontrolled, vehicle_inventory_path = output_path)
+        # TODO: in EV assignment code below, the code assigns EVs to AZ grid topology, if other regions are needed then
+        #  inside each function below, the folder access name needs to be changed. Eventually this should be brought out
+        #  as a user input that way, we can generate EV assignments to any grid.
+
+        # # my_main_loc = os.getcwd()
+        # # os.chdir(f"{output_path}/")
+        # # all_files = glob.glob('./*.csv')
+        # # Networks_updt = [x.split("_")[2] for x in all_files]
+        # # Years_updt = [x.split("_")[4].split(".")[0] for x in all_files]
+        # # os.chdir(my_main_loc)
+        # # this function adds xfrms to the grid based on size of xfrmr. This function works for ascending and
+        # # descending order of xfrmr assignments but not for random assignments.
+        # output_file_save_loc = MapEVstoGridLocations.main(Years, Networks, subfolder_count, main_path,
+        #                                                   xfrmrrating_evshare, EV_placement_on_grid, date_name,
+        #                                                   custom_suffix_sim_run_uncontrolled,
+        #                                                   vehicle_inventory_path = output_path)
+
+        # assign logic of cyclic version instead of size based option like above function. This function adds xfrmrs
+        # based on selected locations and number of charging locations available in a cyclic manner.
+        no_of_charging_locations = 300
+        xfrmrrating_evshare = None
+        final_year = 2040
+        vehicles_per_port = 2
+        no_of_chargers = 3
+        max_ports2 = no_of_chargers*2
+        output_file_save_loc = MapEVstoGridLocations.main_cyclic_selective_locs_for_chargers(Years, Networks,
+                                                                                             subfolder_count, main_path,
+                                                          xfrmrrating_evshare,
+                                                          custom_suffix_sim_run_uncontrolled, output_path,
+                                                                                             no_of_charging_locations,
+                                                                                             final_year,
+                                                                                             vehicles_per_port,
+                                                                                             max_ports2)
+
     else:
         output_file_save_loc = f"final_vehicle_inventory_{custom_suffix_sim_run_uncontrolled}"
 
