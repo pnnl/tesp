@@ -645,22 +645,6 @@ def calculate_consumer_bills(
         load sector.
     """
 
-    # Specify a conversion between month name abbreviations and month numbers
-    month_name_to_num = {
-        "Jan": 1,
-        "Feb": 1,
-        "Mar": 3,
-        "Apr": 4,
-        "May": 5,
-        "Jun": 6,
-        "Jul": 7,
-        "Aug": 8,
-        "Sep": 9,
-        "Oct": 10,
-        "Nov": 11,
-        "Dec": 12,
-    }
-
     # Load in necessary data for the defined rate scenario
     if rate_scenario == "time-of-use":
         # Note: this assumes each month has the same number of time-of-use periods
@@ -741,10 +725,10 @@ def calculate_consumer_bills(
                 if rate_scenario == "time-of-use":
                     # Calculate the consumer's energy charge under the time-of-use tariff
                     bill_df.loc[(each, "tou_energy_charge"), m] = sum(
-                        tou_params[month_name_to_num[m]]["price"]
-                        * tou_params[month_name_to_num[m]]["periods"][k]["ratio"]
+                        tou_params[m]["price"]
+                        * tou_params[m]["periods"][k]["ratio"]
                         * meter_df.loc[(each, k + "_kwh"), m]
-                        for k in tou_params[month_name_to_num[m]]["periods"].keys()
+                        for k in tou_params[m]["periods"].keys()
                     ) + calculate_tier_credit(
                         metadata["billingmeters"][each]["tariff_class"],
                         tariff,
@@ -752,10 +736,10 @@ def calculate_consumer_bills(
                     )
 
                     # Calculate the consumer's energy charge for each time-of-use period
-                    for k in tou_params[month_name_to_num[m]]["periods"].keys():
+                    for k in tou_params[m]["periods"].keys():
                         bill_df.loc[(each, "tou_" + k + "_energy_charge"), m] = (
-                            tou_params[month_name_to_num[m]]["price"]
-                            * tou_params[month_name_to_num[m]]["periods"][k]["ratio"]
+                            tou_params[m]["price"]
+                            * tou_params[m]["periods"][k]["ratio"]
                             * meter_df.loc[(each, k + "_kwh"), m]
                         )
 
@@ -780,7 +764,7 @@ def calculate_consumer_bills(
                     ]
 
                     # Store the total energy purchased during each time-of-use period
-                    for k in tou_params[month_name_to_num[m]]["periods"].keys():
+                    for k in tou_params[m]["periods"].keys():
                         bill_df.loc[
                             (each, "tou_" + k + "_energy_purchased"), m
                         ] = meter_df.loc[(each, k + "_kwh"), m]
