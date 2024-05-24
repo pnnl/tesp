@@ -77,3 +77,15 @@ fabric.properties
 src/tesp_support/tesp_support/.idea
 TESP_demo-checkpoint.ipynb
 tesp.code-workspace
+
+# Ignore individual run folders
+examples/analysis/dsot/code/*/
+
+# Ignore data download
+examples/analysis/dsot/data/
+
+# Ignore installation files
+repository/
+scripts/build/
+tenv/
+.vscode/
