@@ -721,8 +721,8 @@ def inner_substation_loop(metrics_root, with_market):
 
         # portion that sets the time-of-day thermostat schedule for HVACs
         for key, obj in hvac_agent_objs.items():
-            obj.change_solargain(minute_of_hour, hour_of_day, day_of_week)  # need to be replaced by Qi and Qs calculations
-            if obj.change_basepoint(minute_of_hour, hour_of_day, day_of_week, 11, current_time):
+            obj.set_time(minute_of_hour, hour_of_day, day_of_week)  # need to be replaced by Qi and Qs calculations
+            if obj.change_basepoint(11, current_time):
                 # publish setpoint for participating and basepoint for non-participating
                 if obj.participating and with_market:
                     publish(obj.name + '/cooling_setpoint', obj.cooling_setpoint)
@@ -730,12 +730,10 @@ def inner_substation_loop(metrics_root, with_market):
                 else:
                     publish(obj.name + '/cooling_setpoint', obj.basepoint_cooling)
                     publish(obj.name + '/heating_setpoint', obj.basepoint_heating)
-                # else:
-                #    continue
 
         # portion that updates the time in the water heater agents
         for key, obj in water_heater_agent_objs.items():
-            obj.set_time(hour_of_day, minute_of_hour)
+            obj.set_time(minute_of_hour, hour_of_day)
 
         for t in range(subCount):
             try:
@@ -817,8 +815,8 @@ def inner_substation_loop(metrics_root, with_market):
                 timing(proc[3], True)
                 for key, obj in hvac_agent_objs.items():
                     if obj.participating:
-                        # set the nominal solargain
-                        obj.solar_heatgain = obj.get_solargain(config_glm['climate'], current_retail_time)
+                        # set the nominal solar gain
+                        obj.get_solargain(config_glm['climate'], current_retail_time)
                         # formulate the real-time bid
                         bid = obj.formulate_bid_rt(11, current_time)
                         # add real-time bid to the retail market

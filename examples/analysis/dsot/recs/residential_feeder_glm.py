@@ -45,7 +45,7 @@ import pandas as pd
 import recs.commercial_feeder_glm as comm_FG
 
 from tesp_support.api.data import feeders_path, weather_path
-from tesp_support.api.helpers import gld_strict_name, random_norm_trunc
+from tesp_support.api.helpers import gld_strict_name, random_norm_trunc, randomize_residential_skew
 from tesp_support.api.parse_helpers import parse_kva
 from tesp_support.api.time_helpers import get_secs_from_hhmm, get_hhmm_from_secs, get_duration, get_dist
 from tesp_support.api.time_helpers import is_hhmm_valid, subtract_hhmm_secs, add_hhmm_secs
@@ -579,30 +579,6 @@ rgnWHSize = [[0.0000, 0.3333, 0.6667],
 coolingScheduleNumber = 8
 heatingScheduleNumber = 6
 waterHeaterScheduleNumber = 6
-
-# these are in seconds
-commercial_skew_max = 8100
-commercial_skew_std = 2700
-residential_skew_max = 8100
-residential_skew_std = 2700
-
-
-def randomize_skew(value, skew_max):
-    sk = value * np.random.randn()
-    if sk < -skew_max:
-        sk = -skew_max
-    elif sk > skew_max:
-        sk = skew_max
-    return sk
-
-
-def randomize_commercial_skew():
-    return randomize_skew(commercial_skew_std, commercial_skew_max)
-
-
-def randomize_residential_skew():
-    return randomize_skew(residential_skew_std, residential_skew_max)
-
 
 # commercial configuration data; over_sizing_factor is by region
 c_z_pf = 0.97
@@ -1972,13 +1948,9 @@ def write_houses(basenode, op, vnom):
                 size_array = range(wh_data['tank_size']['5_plus_people']['min'],
                                    wh_data['tank_size']['5_plus_people']['max'] + 1, 10)
             wh_size = np.random.choice(size_array)
-
             wh_demand_str = wh_demand_type + '{:.0f}'.format(water_sch) + '*' + '{:.2f}'.format(water_var)
-            wh_skew_value = 3 * residential_skew_std * np.random.randn()
-            if wh_skew_value < -6 * residential_skew_max:
-                wh_skew_value = -6 * residential_skew_max
-            elif wh_skew_value > 6 * residential_skew_max:
-                wh_skew_value = 6 * residential_skew_max
+            wh_skew_value = randomize_residential_skew(True)
+
             print('  object waterheater {', file=op)
             print('    name', whname + ';', file=op)
             print('    schedule_skew', '{:.0f}'.format(wh_skew_value) + ';', file=op)
@@ -2999,7 +2971,7 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
     global case_name, name_prefix, port, forERCOT, substation_name
     global house_nodes, small_nodes, comm_loads
     # global inverter_efficiency, round_trip_efficiency
-    global latitude, longitude, time_zone_offset, weather_name, feeder_commercial_building_number
+    global latitude, longitude, time_zone_offset, weather_name
     global dso_type, res_dso_type, income_level, state, gld_scaling_factor, pv_rating_MW
     global case_type
     global ashrae_zone, comm_bldg_metadata, comm_bldgs_pop

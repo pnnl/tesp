@@ -57,7 +57,7 @@ class WaterHeaterDSOT:
         weight_comfort (float): weight of the user comfort in the DA quantity optimization objective, falls into range [0, 1]
         ProfitMargin_intercept (float): specified in % and used to modify slope of bid curve. Set to 0 to disable
         ProfitMargin_slope (float): specified in % to generate a small dead band (i.e., change in price does not affect quantity). Set to 0 to disable
-        Participating (bool): equals to 1 when participate in the price-responsive biddings
+        participating (bool): equals to 1 when participate in the price-responsive biddings
         price_cap (float): the maximum price that is allowed in the retail market, in $/kWh
         H_tank (float): height of the water tank, in ft
         A_tank (float): area of the layer of tank, in ft2
@@ -153,8 +153,8 @@ class WaterHeaterDSOT:
         self.Setpoint_bottom = 0.0
         self.SOHC = 100
         self.SOHC_desired = 100
-        self.SOHC_max = (self.Tmax -self.Tcold) / (self.Tdesired -self.Tcold) * 100
-        self.SOHC_min = (self.Tmin -self.Tcold) / (self.Tdesired -self.Tcold) * 100
+        self.SOHC_max = (self.Tmax - self.Tcold) / (self.Tdesired - self.Tcold) * 100
+        self.SOHC_min = (self.Tmin - self.Tcold) / (self.Tdesired - self.Tcold) * 100
         self.SOHC_ambient = (self.Tambient - self.Tcold) / (self.Tdesired - self.Tcold) * 100  ## NEW unitless
         self.hour = 0
         self.minute = 0
@@ -252,7 +252,7 @@ class WaterHeaterDSOT:
         # Multiple cores
         self.optimized_Quantity = [[]] * self.windowLength
         self.QTY_agent = []
-        self.SOHC_agent = [0 for i in range(self.windowLength)]
+        self.SOHC_agent = [0 for _ in range(self.windowLength)]
         
         # Sanity checks:
         Tcold_lower = 40
@@ -646,9 +646,9 @@ class WaterHeaterDSOT:
 
         # Decision variables
         model = pyo.ConcreteModel()
-        model.E_bottom = pyo.Var(self.TIME, bounds=(0, self.Phw))#, initialize=self.Phw)
-        model.E_upper = pyo.Var(self.TIME, bounds=(0, self.Phw))#, initialize=self.Phw)
-        model.SOHC = pyo.Var(self.TIME, bounds=(self.SOHC_min, self.SOHC_max))#, initialize=self.SOHC_max)
+        model.E_bottom = pyo.Var(self.TIME, bounds=(0, self.Phw))
+        model.E_upper = pyo.Var(self.TIME, bounds=(0, self.Phw))
+        model.SOHC = pyo.Var(self.TIME, bounds=(self.SOHC_min, self.SOHC_max))
 
         # Objective of the problem
         model.obj = pyo.Objective(rule=self.obj_rule, sense=pyo.minimize)
@@ -658,10 +658,10 @@ class WaterHeaterDSOT:
 
         results = get_run_solver("wh_" + self.name, pyo, model, self.solver)
 
-        Quantity = [0 for i in self.TIME]
-        SC = [0 for i in self.TIME]
-        E_u = [0 for i in self.TIME]
-        E_b = [0 for i in self.TIME]
+        Quantity = [0 for _ in self.TIME]
+        SC = [0 for _ in self.TIME]
+        E_u = [0 for _ in self.TIME]
+        E_b = [0 for _ in self.TIME]
 
         # TOL = 0.00001 # Tolerance for checking bid
         for t in self.TIME:
@@ -1036,15 +1036,15 @@ class WaterHeaterDSOT:
         else:
             return True
 
-    def set_time(self, hour, minute):
+    def set_time(self, minute, hour):
         """ Sets the current hour and minute
 
         Args:
-            hour (int): current hour
-            minute (int): current minute
+            minute (int): the minute of the hour from 0 to 59
+            hour (int): the hour of the day, from 0 to 23
         """
-        self.hour = hour
         self.minute = minute
+        self.hour = hour
 
     def set_wh_lower_temperature(self, fncs_str, model_diag_level, sim_time):
         """ Sets the lower tank temperature attribute

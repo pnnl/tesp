@@ -289,7 +289,6 @@ class HVACDSOT:  # TODO: update class name
         self.mass_internal_gain_fraction = 0.
         self.mass_solar_gain_fraction = 0.
         self.solar_heatgain_factor = 0.
-        self.solar_heatgain = 0.0
         self.solar_gain = 0.0
 
         self.calc_thermostat_settings(model_diag_level, sim_time)
@@ -1223,41 +1222,31 @@ class HVACDSOT:  # TODO: update class name
         #     print("bid",self.bid_rt)
         return returnflag
 
-    def change_solargain(self, moh, hod, dow):
-        """ Updates the pre-recorder solar gain
+    def set_time(self, minute, hour, day):
+        """ Sets the current hour and minute
 
         Args:
-            moh (int): the minute of the hour from 0 to 59
-            hod (int): the hour of the day, from 0 to 23
-            dow (int): the day of the week, zero being Monday
-
-        Updates:
-            solar_gain
+            minute (int): the minute of the hour from 0 to 59
+            hour (int): the hour of the day, from 0 to 23
+            day (int): the day of the week, zero being Monday
         """
-        # we will use this function to update time
-        # will be removed later
-        self.minute = moh
-        self.hour = hod
-        self.day = dow
+        self.minute = minute
+        self.hour = hour
+        self.day = day
 
-        self.solar_heatgain = 0.0  # we need to record the value first without error here
-
-    def change_basepoint(self, moh, hod, dow, model_diag_level, sim_time):
+    def change_basepoint(self, model_diag_level, sim_time):
         """ Updates the time-scheduled thermostat setting
 
         Args:
-            moh (int): the minute of the hour from 0 to 59
-            hod (int): the hour of the day, from 0 to 23
-            dow (int): the day of the week, zero being Monday
             model_diag_level (int): Specific level for logging errors; set to 11
             sim_time (str): Current time in the simulation; should be human-readable
 
         Returns:
             bool: True if the setting changed, False if not
         """
-        hod = hod + moh / 60
+        hod = self.hour
 
-        if dow > 4:  # a weekend
+        if self.day > 4:  # a weekend
             val_cool = self.weekend_night_set_cool
             val_heat = self.weekend_night_set_heat
             if self.weekend_day_start <= hod < self.weekend_night_start:
@@ -2207,7 +2196,7 @@ def test():
     sim_time = datetime.strptime(start_time, time_format)
     obj = HVACDSOT(hvac_dict, hvac_properties, 'abc', 11, sim_time, 'ipopt')
     # obj.set_solargain_forecast(forecast_solargain)
-    # if obj.change_basepoint(sim_time.minute, sim_time.hour, sim_time.weekday(), 11, start_time):
+    # if obj.change_basepoint(11, start_time):
     #     pass
     obj.DA_model_parameters(sim_time.minute, sim_time.hour, sim_time.weekday())
 

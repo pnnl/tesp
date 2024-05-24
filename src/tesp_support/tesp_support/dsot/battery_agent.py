@@ -32,7 +32,6 @@ logger = log.getLogger()
 
 
 class BatteryDSOT:
-    # TODO: update inputs for this agent
     """
     This agent manages the battery/inverter
 

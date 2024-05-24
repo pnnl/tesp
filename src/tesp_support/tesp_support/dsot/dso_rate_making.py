@@ -915,12 +915,13 @@ def DSO_rate_making(case, dso_num, metadata, dso_expenses, tariff_path, dso_scal
     return DSO_Cash_Flows, DSO_Revenues_and_Energy_Sales, tariff, surplus
 
 
-def get_cust_bill(cust, bill_df, bill_metadata):
+def get_cust_bill(cust, bill_df, bill_metadata, energy_df):
     """ Populates dictionary of individual customer's annual bill.
     Args:
         cust (str): customer name (meter name from GLD dictionary)
         bill_df (dataframe): dataframe of annual and monthly customer bills
         bill_metadata (dict): dictionary of GLD metadata including tarrif and building type for each meter
+        energy_df:
     Returns:
         customer_annual_bill (dict): dictionary of customers annual energy bill
         """
@@ -944,6 +945,8 @@ def get_cust_bill(cust, bill_df, bill_metadata):
             'TotalDyn': bill_df.loc[(cust, 'trans_total'), 'sum'],
         },
         'EnergyQuantity': bill_df.loc[(cust, 'quantity_purchased'), 'sum'],
+        'MaxLoad': energy_df.loc[(cust, 'max_kw'), 'sum'],
+        'LoadFactor': energy_df.loc[(cust, 'load_factor'), 'sum'],
         'BlendedRate': bill_df.loc[(cust, 'blended_rate'), 'sum'],
         'CustomerType': {
             'BuildingType': bill_metadata['billingmeters'][cust]['building_type'],
@@ -968,12 +971,12 @@ if __name__ == '__main__':
 
     sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
 
-    data_path = 'C:\\Users\\reev057\PycharmProjects\\DSO+T\\Data\\Simdata\\DER2\\V1.1-1336-gb74f2d99\lean_8'
-    base_case = 'C:\\Users\\reev057\PycharmProjects\\DSO+T\\Data\Simdata\DER2\\V1.1-1336-gb74f2d99\lean_8'
+    data_path = 'C:/Users/reev057\PycharmProjects/DSO+T/Data/Simdata/DER2/V1.1-1336-gb74f2d99/lean_8'
+    base_case = 'C:/Users/reev057\PycharmProjects/DSO+T/Data/Simdata/DER2/V1.1-1336-gb74f2d99/lean_8'
     agent_prefix = '/DSO_'
     GLD_prefix = '/Substation_'
-    tariff_path = 'C:\\Users\\reev057\\PycharmProjects\\TESP\\src\\examples\\analysis\\dsot\\data'
-    metadata_path = 'C:\\Users\\reev057\\PycharmProjects\\TESP\\src\\examples\\analysis\\dsot\\data'
+    tariff_path = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/analysis/dsot/data'
+    metadata_path = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/analysis/dsot/data'
 
     # ------  For each DSO determine the scaling factor and update the metadata
     for dso_num in dso_range:
@@ -998,19 +1001,19 @@ if __name__ == '__main__':
 
         # List of month names, data paths, and day ranges to be used for energy bill creation
         # month_def = [
-        #             ['Jan', 'C:\\Users\\reev057\\PycharmProjects\\DSO+T\Data\\Slim2\\case_slim_1', 2, 31],
-        #             ['Feb', 'C:\\Users\\reev057\\PycharmProjects\\DSO+T\\Data\\Slim2\\case_slim_2', 2, 30],
-        #             ['March', 'C:\\Users\\reev057\\PycharmProjects\\DSO+T\\Data\\Slim2\\case_slim_3', 2, 31],
-        #             ['April', 'C:\\Users\\reev057\\PycharmProjects\\DSO+T\\Data\\Slim2\\case_slim_4', 2, 31],
-        #             ['May', 'C:\\Users\\reev057\\PycharmProjects\\DSO+T\\Data\\Slim2\\case_slim_5', 2, 31],
-        #             ['June', 'C:\\Users\\reev057\\PycharmProjects\\DSO+T\\Data\\Slim2\\case_slim_6', 2, 30],
-        #             ['July', 'C:\\Users\\reev057\\PycharmProjects\\DSO+T\\Data\\Slim2\\case_slim_7', 2, 31],
-        #             ['August', 'C:\\Users\\reev057\\PycharmProjects\\DSO+T\\Data\\Slim2\\case_slim_8', 2, 7],
-        #             ['Sept', 'C:\\Users\\reev057\\PycharmProjects\\DSO+T\\Data\\Slim2\\case_slim_9', 2, 30],
-        #             ['Oct', 'C:\\Users\\reev057\\PycharmProjects\\DSO+T\\Data\\Slim2\\case_slim_10', 2, 31],
-        #             ['Nov', 'C:\\Users\\reev057\\PycharmProjects\\DSO+T\\Data\\Slim2\\case_slim_11', 2, 30],
-        #             ['Dec', 'C:\\Users\\reev057\\PycharmProjects\\DSO+T\\Data\\Slim2\\case_slim_12', 2, 7]]
-        month_def = [['Jan', 'C:\\Users\\reev057\\PycharmProjects\\DSO+T\\Data\\Simdata\DER2\\V1.1-1336-gb74f2d99\\lean_8', 2, 4]]
+        #             ['Jan', 'C:/Users/reev057/PycharmProjects/DSO+T\Data/Slim2/case_slim_1', 2, 31],
+        #             ['Feb', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_2', 2, 30],
+        #             ['March', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_3', 2, 31],
+        #             ['April', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_4', 2, 31],
+        #             ['May', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_5', 2, 31],
+        #             ['June', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_6', 2, 30],
+        #             ['July', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_7', 2, 31],
+        #             ['August', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_8', 2, 7],
+        #             ['Sept', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_9', 2, 30],
+        #             ['Oct', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_10', 2, 31],
+        #             ['Nov', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_11', 2, 30],
+        #             ['Dec', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_12', 2, 7]]
+        month_def = [['Jan', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata\DER2/V1.1-1336-gb74f2d99/lean_8', 2, 4]]
 
         #  -------------- Calculate dataframe of monthly power consumption and peak power demand ---------
         process_meters = True
@@ -1045,9 +1048,10 @@ if __name__ == '__main__':
 
         # Example of getting an annual customer bill in dictionary form:
         customer = list(metadata['billingmeters'].keys())[0]
-        cust_bill_file = data_path + '\\bill_dso_' + str(dso_num) + '_data.h5'
+        cust_bill_file = data_path + '/bill_dso_' + str(dso_num) + '_data.h5'
         cust_bills = pd.read_hdf(cust_bill_file, key='cust_bill_data', mode='r')
-        customer_bill = get_cust_bill(customer, cust_bills, metadata)
+        cust_energy = pd.read_hdf(data_path + '/energy_dso_' + str(dso_num) + '_data.h5', key='energy_data', mode='r')
+        customer_bill = get_cust_bill(customer, cust_bills, metadata, cust_energy)
 
         print(DSO_Cash_Flows)
         print(DSO_Revenues_and_Energy_Sales)

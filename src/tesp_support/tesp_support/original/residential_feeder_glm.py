@@ -39,7 +39,7 @@ import networkx as nx
 import numpy as np
 
 from tesp_support.api.data import feeders_path, weather_path
-from tesp_support.api.helpers import gld_strict_name
+from tesp_support.api.helpers import gld_strict_name, randomize_commercial_skew, randomize_residential_skew
 from tesp_support.api.parse_helpers import parse_kva
 
 forERCOT = False
@@ -67,7 +67,6 @@ fuseMargin = 2.50
 starttime = '2010-06-01 00:00:00'
 endtime = '2010-06-03 00:00:00'
 timestep = 15
-timezone = ''
 metrics_interval = 300
 metrics_interim = 7200
 metrics_type = "json"
@@ -405,30 +404,6 @@ rgnWHSize = [[0.0000, 0.3333, 0.6667],
 coolingScheduleNumber = 8
 heatingScheduleNumber = 6
 waterHeaterScheduleNumber = 6
-
-# these are in seconds
-commercial_skew_max = 5400
-commercial_skew_std = 1800
-residential_skew_max = 8100
-residential_skew_std = 2700
-
-
-def randomize_skew(value, skew_max):
-    sk = value * np.random.randn()
-    if sk < -skew_max:
-        sk = -skew_max
-    elif sk > skew_max:
-        sk = skew_max
-    return sk
-
-
-def randomize_commercial_skew():
-    return randomize_skew(commercial_skew_std, commercial_skew_max)
-
-
-def randomize_residential_skew():
-    return randomize_skew(residential_skew_std, residential_skew_max)
-
 
 # commercial configuration data; over_sizing_factor is by region
 c_z_pf = 0.97
@@ -884,7 +859,6 @@ comm_loads = {}  # keyed on load name, [parent, comm_type, nzones, kva, nphs, ph
 solar_count = 0
 solar_kw = 0
 battery_count = 0
-ev_count = 0
 
 # write single-phase transformers for houses and small loads
 tpxR11 = 2.1645
@@ -1435,31 +1409,29 @@ def write_commercial_loads(rgn, key, op):
     vln = float(comm_loads[key][6])
     loadnum = int(comm_loads[key][7])
 
-    bldg = {}
-    bldg['parent'] = key
-    bldg['mtr'] = mtr
-    bldg['groupid'] = comm_type + '_' + str(loadnum)
+    bldg = {'parent': key,
+            'mtr': mtr,
+            'groupid': comm_type + '_' + str(loadnum),
+            'fan_type': 'ONE_SPEED',
+            'heat_type': 'GAS',
+            'cool_type': 'ELECTRIC',
+            'aux_type': 'NONE',
+            'no_of_stories': 1,
+            'surface_heat_trans_coeff': 0.59,
+            'oversize': over_sizing_factor[rgn - 1],
+            'glazing_layers': 'TWO',
+            'glass_type': 'GLASS',
+            'glazing_treatment': 'LOW_S',
+            'window_frame': 'NONE',
+            'c_z_frac': c_z_frac,
+            'c_i_frac': c_i_frac,
+            'c_p_frac': c_p_frac,
+            'c_z_pf': c_z_pf,
+            'c_i_pf': c_i_pf,
+            'c_p_pf': c_p_pf}
 
     print('// load', key, 'mtr', bldg['mtr'], 'type', comm_type, 'nz', nz, 'kva', '{:.3f}'.format(kva),
           'nphs', nphs, 'phases', phases, 'vln', '{:.3f}'.format(vln), file=op)
-
-    bldg['fan_type'] = 'ONE_SPEED'
-    bldg['heat_type'] = 'GAS'
-    bldg['cool_type'] = 'ELECTRIC'
-    bldg['aux_type'] = 'NONE'
-    bldg['no_of_stories'] = 1
-    bldg['surface_heat_trans_coeff'] = 0.59
-    bldg['oversize'] = over_sizing_factor[rgn - 1]
-    bldg['glazing_layers'] = 'TWO'
-    bldg['glass_type'] = 'GLASS'
-    bldg['glazing_treatment'] = 'LOW_S'
-    bldg['window_frame'] = 'NONE'
-    bldg['c_z_frac'] = c_z_frac
-    bldg['c_i_frac'] = c_i_frac
-    bldg['c_p_frac'] = c_p_frac
-    bldg['c_z_pf'] = c_z_pf
-    bldg['c_i_pf'] = c_i_pf
-    bldg['c_p_pf'] = c_p_pf
 
     if comm_type == 'OFFICE':
         bldg['ceiling_height'] = 13.
@@ -1876,8 +1848,8 @@ def write_houses(basenode, op, vnom, bIgnoreThermostatSchedule=True, bWriteServi
         # default heating and cooling setpoints are 70 and 75 degrees in GridLAB-D
         # we need more separation to assure no overlaps during transactive simulations
         if bIgnoreThermostatSchedule == True:
-            print('  cooling_setpoint 80.0; // ', cooling_str + ';', file=op)
-            print('  heating_setpoint 60.0; // ', heating_str + ';', file=op)
+            print('  cooling_setpoint 80.0;', file=op)
+            print('  heating_setpoint 60.0;', file=op)
         else:
             print('  cooling_setpoint {:s};'.format(cooling_str), file=op)
             print('  heating_setpoint {:s};'.format(heating_str), file=op)
@@ -1928,11 +1900,8 @@ def write_houses(basenode, op, vnom, bIgnoreThermostatSchedule=True, bWriteServi
                 else:
                     wh_size = 50 + sizeIncr * 10
             wh_demand_str = wh_demand_type + '{:.0f}'.format(water_sch) + '*' + '{:.2f}'.format(water_var)
-            wh_skew_value = 3 * residential_skew_std * np.random.randn()
-            if wh_skew_value < -6 * residential_skew_max:
-                wh_skew_value = -6 * residential_skew_max
-            elif wh_skew_value > 6 * residential_skew_max:
-                wh_skew_value = 6 * residential_skew_max
+            wh_skew_value = randomize_residential_skew(True)
+
             print('  object waterheater {', file=op)
             print('    name', whname + ';', file=op)
             print('    schedule_skew', '{:.0f}'.format(wh_skew_value) + ';', file=op)
@@ -2404,14 +2373,13 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
         avghouse (float): the average house load in kVA
         avgcommercial (float): the average commercial load in kVA, not used
     """
-    global solar_count, solar_kw, battery_count, ev_count, base_feeder_name
-    global electric_cooling_percentage, storage_percentage, solar_percentage, ev_percentage
+    global solar_count, solar_kw, battery_count, base_feeder_name
+    global electric_cooling_percentage, storage_percentage, solar_percentage
     global water_heater_percentage, water_heater_participation
 
     solar_count = 0
     solar_kw = 0
     battery_count = 0
-    ev_count = 0
 
     base_feeder_name = gld_strict_name(rootname)
     fname = feeders_path + rootname + '.glm'
@@ -2811,6 +2779,11 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
         op.close()
 
 
+"""
+The following four procedures are use in the examples/capabilities/houses
+"""
+
+
 def write_kersting_triplex(fp, kva):
     """ Writes a triplex_line_configuration based on 1/0 AA example from Kersting's book
 
@@ -3056,7 +3029,7 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
     global water_heater_percentage, water_heater_participation
     global case_name, name_prefix, forERCOT
     global house_nodes, small_nodes, comm_loads
-    global latitude, longitude, altitude, tz_meridian, weather_name, feeder_commercial_building_number
+    global latitude, longitude, altitude, tz_meridian, weather_name
 
     if configfile is not None:
         checkResidentialBuildingTable()

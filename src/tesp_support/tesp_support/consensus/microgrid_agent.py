@@ -674,9 +674,8 @@ def inner_substation_loop(configfile, metrics_root, with_market):
 
         # portion that sets the time-of-day thermostat schedule for HVACs
         for key, obj in hvac_agent_objs.items():
-            obj.change_solargain(minute_of_hour, hour_of_day,
-                                 day_of_week)  # need to be replaced by Qi and Qs calculations
-            if obj.change_basepoint(minute_of_hour, hour_of_day, day_of_week, 11, current_time):
+            obj.set_time(minute_of_hour, hour_of_day, day_of_week)  # need to be replaced by Qi and Qs calculations
+            if obj.change_basepoint(day_of_week, 11, current_time):
                 # publish setpoint for participating and basepoint for non-participating
                 if obj.participating and with_market:
                     pub_csp = h.helicsFederateGetPublication(fed, str(fed_name + '/' + obj.name + '/cooling_setpoint'))
@@ -693,7 +692,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
 
         # portion that updates the time in the water heater agents
         for key, obj in water_heater_agent_objs.items():
-            obj.set_time(hour_of_day, minute_of_hour)
+            obj.set_time(minute_of_hour, hour_of_day)
 
         # portion that gets current events from HELICS.
         subkeys_count = h.helicsFederateGetInputCount(fed)
@@ -783,7 +782,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
             for key, obj in hvac_agent_objs.items():
                 if obj.participating and with_market:
                     # set the nominal solargain
-                    obj.solar_heatgain = obj.get_solargain(config_glm['climate'], current_retail_time)
+                    obj.get_solargain(config_glm['climate'], current_retail_time)
                     # formulate the real-time bid
                     bid = obj.formulate_bid_rt(11, current_time)
                     # add real-time bid to the retail market
