@@ -730,6 +730,7 @@ def calculate_consumer_bills(
                         * meter_df.loc[(each, k + "_kwh"), m]
                         for k in tou_params[m]["periods"].keys()
                     ) + calculate_tier_credit(
+                        dso_num,
                         metadata["billingmeters"][each]["tariff_class"],
                         tariff,
                         meter_df.loc[(each, "kw-hr"), m],
@@ -786,6 +787,7 @@ def calculate_consumer_bills(
                 bill_df.loc[(each, "flat_energy_charge"), m] = flat_rate * meter_df.loc[
                     (each, "kw-hr"), m
                 ] + calculate_tier_credit(
+                    dso_num,
                     metadata["billingmeters"][each]["tariff_class"],
                     tariff,
                     meter_df.loc[(each, "kw-hr"), m],
@@ -882,10 +884,11 @@ def calculate_consumer_bills(
     return bill_df, billsum_df
 
 
-def calculate_tier_credit(tariff_class, tariff, total_energy):
+def calculate_tier_credit(dso_num, tariff_class, tariff, total_energy):
     """Calculate the tier credit added to the consumers' bills from the declining-block 
     rate.
     Args:
+        dso_num (str): A string specifying the number of the DSO being considered.
         tariff_class (str): Indicates the type of consumer that is under consideration.
         tariff (dict): A dictionary of pertinant tariff information. Includes information 
         for the volumetric rates (i.e., flat and time-of-use).
@@ -933,7 +936,7 @@ def calculate_tariff_prices(
         meter_df (pandas.DataFrame): DataFrame containing consumers' consumption information.
         tariff (dict): A dictionary of pertinant tariff information. Includes information 
         for the volumetric rates (i.e., flat and time-of-use).
-        dso_num (str): A string specifying the number of the DSo being considered.
+        dso_num (str): A string specifying the number of the DSO being considered.
         sf (float): Scaling factor to scale the GridLAB-D results to TSO scale.
         rate_scenario (str): A str specifying the rate scenario under investigation: flat,
         time-of-use, subscription, or transactive.
@@ -955,7 +958,7 @@ def calculate_tariff_prices(
     # expenses for each rate considered in the respective Rate Scenario
     if rate_scenario == "flat":
         # Obtain the DSO expenses (e.g., operational expenditures, capital expenditures)
-        dso_expenses = get_total_dso_costs(dso_num, rate_scenario)
+        dso_expenses = get_total_dso_costs(case_path, dso_num, rate_scenario)
 
         # Initialize some of the closed-form solution components
         total_consumption = 0
@@ -975,12 +978,13 @@ def calculate_tariff_prices(
 
             # Update total revenue from demand charges
             rev_demand_charge += demand_charge * sum(
-                meter_df.loc[(each, "max-kw"), m] for m in months
+                meter_df.loc[(each, "max_kw"), m] for m in months
             )
 
             # Update the total tier credit
             total_tier_credit += sum(
                 calculate_tier_credit(
+                    dso_num,
                     metadata["billingmeters"][each]["tariff_class"],
                     tariff,
                     meter_df.loc[(each, "kw-hr"), m],
@@ -1010,7 +1014,7 @@ def calculate_tariff_prices(
                 seasons_dict[tou_params[m]["season"]] = [m]
 
         # Obtain the DSO expenses (e.g., operational expenditures, capital expenditures)
-        dso_expenses = get_total_dso_costs(dso_num, rate_scenario)
+        dso_expenses = get_total_dso_costs(case_path, dso_num, rate_scenario)
 
         # Initialize some of the closed-form solution components
         total_consumption_flat = 0
@@ -1042,7 +1046,7 @@ def calculate_tariff_prices(
                 # Update total revenue from demand charges for each consumer during each
                 # season
                 rev_demand_charge_tou[s] += demand_charge * sum(
-                    meter_df.loc[(each, "max-kw"), m] for m in seasons_dict[s]
+                    meter_df.loc[(each, "max_kw"), m] for m in seasons_dict[s]
                 )
 
                 # Update total revenue from fixed charges for each consumer during each 
@@ -1052,6 +1056,7 @@ def calculate_tariff_prices(
                 # Update the total tier credit for each consumer during each season
                 total_tier_credit_tou[s] += sum(
                     calculate_tier_credit(
+                        dso_num,
                         metadata["billingmeters"][each]["tariff_class"],
                         tariff,
                         meter_df.loc[(each, "kw-hr"), m],
@@ -1085,6 +1090,7 @@ def calculate_tariff_prices(
                             * tou_params[m]["periods"][k]["ratio"]
                             * meter_df.loc[(each, k + "_kwh"), m]
                             + calculate_tier_credit(
+                                dso_num,
                                 metadata["billingmeters"][each]["tariff_class"],
                                 tariff,
                                 meter_df.loc[(each, "kw-hr"), m],
@@ -1100,7 +1106,7 @@ def calculate_tariff_prices(
                     # Update total revenue from demand charges for time-of-use consumers 
                     # during each season
                     rev_demand_charge_tou[s] += demand_charge * sum(
-                        meter_df.loc[(each, "max-kw"), m] for m in seasons_dict[s]
+                        meter_df.loc[(each, "max_kw"), m] for m in seasons_dict[s]
                     )
 
                     # Update total revenue from fixed charges for time-of-use consumers 
@@ -1117,7 +1123,7 @@ def calculate_tariff_prices(
 
                 # Update total revenue from demand charges for the flat rate consumers
                 rev_demand_charge_flat += demand_charge * sum(
-                    meter_df.loc[(each, "max-kw"), m] for m in months
+                    meter_df.loc[(each, "max_kw"), m] for m in months
                 )
 
                 # Update total revenue from fixed charges for the flat rate consumers
@@ -1126,6 +1132,7 @@ def calculate_tariff_prices(
                 # Update the total tier credit for the flat rate consumers
                 total_tier_credit_flat += sum(
                     calculate_tier_credit(
+                        dso_num,
                         metadata["billingmeters"][each]["tariff_class"],
                         tariff,
                         meter_df.loc[(each, "kw-hr"), m],
@@ -1181,7 +1188,9 @@ def get_total_dso_costs(case_path, dso_num, rate_scenario, seasons_dict=None):
 
     # Try to read in the DSO CFS summary data
     try:
-        dso_df = pd.read_csv(os.path.join(case_path, "DSO_CFS_Summary.csv"))
+        dso_df = pd.read_csv(
+            os.path.join(case_path, "DSO_CFS_Summary.csv"), index_col=0
+        )
     except FileNotFoundError:
         print(
             "The DSO CFS summary data is not available. Will default to an arbitrarily "
