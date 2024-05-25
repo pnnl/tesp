@@ -704,7 +704,7 @@ def calculate_consumer_bills(
 
     # Specify price components that do not vary in time or by consumer type
     flat_rate = tariff["DSO_" + dso_num]["flat_rate"]
-    fixed_charge = tariff["DSO_" + dso_num]["flat_rate"]
+    fixed_charge = tariff["DSO_" + dso_num]["base_connection_charge"]
     
     # Cycle through each month for which there is energy data and calculate customer bill
     months = list(meter_df.columns[~meter_df.columns.str.contains('sum')])
@@ -822,15 +822,19 @@ def calculate_consumer_bills(
                         / meter_df.loc[(each, "kw-hr"), m]
                     )
 
-        # Calculate the totals for each consumer class for the flat rate
+        # Calculate the totals for each consumer class
         for each in metadata["billingmeters"]:
             for load in ["residential", "commercial", "industrial"]:
                 if metadata["billingmeters"][each]["tariff_class"] == load:
                     for component in bill_components:
-                        if "average_price" not in component:
+                        if "charge" in component:
                             billsum_df.loc[(load, component), m] += (
                                 bill_df.loc[(each, component), m] * sf
                             )
+                        elif "purchased" in component:
+                            billsum_df.loc[(load, component), m] += bill_df.loc[
+                                (each, component), m
+                            ]
 
         # Calculate the totals across all consumer classes
         for component in bill_components:
@@ -949,7 +953,7 @@ def calculate_tariff_prices(
     months = list(meter_df.columns[~meter_df.columns.str.contains("sum")])
 
     # Specify price components that do not vary in time or by consumer type
-    fixed_charge = tariff["DSO_" + dso_num]["flat_rate"]
+    fixed_charge = tariff["DSO_" + dso_num]["base_connection_charge"]
 
     # Initialize the prices dictionary
     prices = {}
