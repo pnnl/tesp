@@ -836,53 +836,53 @@ def calculate_consumer_bills(
                                 (each, component), m
                             ]
 
-        # Calculate the totals across all consumer classes
-        for component in bill_components:
-            if "average_price" not in component:
-                for load in ["residential", "commercial", "industrial"]:
-                    billsum_df.loc[("total", component), :] += billsum_df.loc[
-                        (load, component), :
-                    ]
+    # Calculate the totals across all consumer classes
+    for component in bill_components:
+        if "average_price" not in component:
+            for load in ["residential", "commercial", "industrial"]:
+                billsum_df.loc[("total", component), :] += billsum_df.loc[
+                    (load, component), :
+                ]
 
-        # Calculate the annual sums
-        bill_df["sum"] = bill_df.loc[
-            :, bill_df.columns[~bill_df.columns.str.contains("sum")]
-        ].sum(axis=1)
-        billsum_df["sum"] = billsum_df.loc[
-            :, billsum_df.columns[~billsum_df.columns.str.contains("sum")]
-        ].sum(axis=1)
+    # Calculate the annual sums
+    bill_df["sum"] = bill_df.loc[
+        :, bill_df.columns[~bill_df.columns.str.contains("sum")]
+    ].sum(axis=1)
+    billsum_df["sum"] = billsum_df.loc[
+        :, billsum_df.columns[~billsum_df.columns.str.contains("sum")]
+    ].sum(axis=1)
 
-        # Calculate the average prices at the meter level
-        for each in metadata["billingmeters"]:
-            bill_df.loc[(each, "flat_average_price"), "sum"] = (
-                bill_df.loc[(each, "flat_total_charge"), "sum"]
-                / bill_df.loc[(each, "flat_energy_purchased"), "sum"]
+    # Calculate the average prices at the meter level
+    for each in metadata["billingmeters"]:
+        bill_df.loc[(each, "flat_average_price"), "sum"] = (
+            bill_df.loc[(each, "flat_total_charge"), "sum"]
+            / bill_df.loc[(each, "flat_energy_purchased"), "sum"]
+        )
+        if rate_scenario == "time-of-use":
+            bill_df.loc[(each, "tou_average_price"), "sum"] = (
+                bill_df.loc[(each, "tou_total_charge"), "sum"]
+                / bill_df.loc[(each, "tou_energy_purchased"), "sum"]
             )
-            if rate_scenario == "time-of-use":
-                bill_df.loc[(each, "tou_average_price"), "sum"] = (
-                    bill_df.loc[(each, "tou_total_charge"), "sum"]
-                    / bill_df.loc[(each, "tou_energy_purchased"), "sum"]
-                )
-            elif rate_scenario == "subscription":
-                None
-            elif rate_scenario == "transactive":
-                None
+        elif rate_scenario == "subscription":
+            None
+        elif rate_scenario == "transactive":
+            None
         
-        # Calculate the average prices at the sector level
-        for load in ["residential", "commercial", "industrial", "total"]:
-            billsum_df.loc[(load, "flat_average_price")] = (
-                billsum_df.loc[(load, "flat_total_charge")]
-                / billsum_df.loc[(load, "flat_energy_purchased")]
+    # Calculate the average prices at the sector level
+    for load in ["residential", "commercial", "industrial", "total"]:
+        billsum_df.loc[(load, "flat_average_price")] = (
+            billsum_df.loc[(load, "flat_total_charge")]
+            / billsum_df.loc[(load, "flat_energy_purchased")]
+        )
+        if rate_scenario == "time-of-use":
+            billsum_df.loc[(load, "tou_average_price")] = (
+                billsum_df.loc[(load, "tou_total_charge")]
+                / billsum_df.loc[(load, "tou_energy_purchased")]
             )
-            if rate_scenario == "time-of-use":
-                billsum_df.loc[(load, "tou_average_price")] = (
-                    billsum_df.loc[(load, "tou_total_charge")]
-                    / billsum_df.loc[(load, "tou_energy_purchased")]
-                )
-            elif rate_scenario == "subscription":
-                None
-            elif rate_scenario == "transactive":
-                None
+        elif rate_scenario == "subscription":
+            None
+        elif rate_scenario == "transactive":
+            None
 
     # Return the bill DataFrames
     return bill_df, billsum_df
