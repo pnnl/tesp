@@ -87,9 +87,9 @@ def randomize_residential_skew(wh_skew=False):
     residential_skew_max = 8100
     residential_skew_std = 2700
     if wh_skew:
-        return randomize_skew(residential_skew_std, residential_skew_max)
-    else:
         return randomize_skew(3*residential_skew_std, 6*residential_skew_max)
+    else:
+        return randomize_skew(residential_skew_std, residential_skew_max)
 
 
 def get_run_solver(name, pyo, model, solver):
