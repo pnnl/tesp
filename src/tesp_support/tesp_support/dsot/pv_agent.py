@@ -52,6 +52,7 @@ def test():
     import pandas as pd
     from tesp_support.api.data import tesp_test
 
+    # a = pd.read_csv('solar/auto_run/solar_pv_power_profiles/8-node_dist_hourly_forecast_power.csv',index_col=0, header=None)
     a = pd.read_csv(tesp_test + 'dsot/pv_hourly_forecast_power.csv', index_col=0, header=None)
     a.index = pd.to_datetime(a.index)
     sim_time = 7200

@@ -37,7 +37,6 @@ def load_hourly_data(dir_path, dso_num, simdata):
         data_df.rename(columns={'time': 'date_time'}, inplace=True)
         data_df.rename(columns={'da_q' + '{}'.format(dso_num): 'Bus' + '{}'.format(dso_num)}, inplace=True)
     else:
-        # os.chdir(dir_path)
         data_df = pd.read_csv('2016_ERCOT_Hourly_Load_Data.csv', index_col='Hour_End')
         data_df.reset_index(inplace=True)
         data_df.rename(columns={'Hour_End': 'date_time'}, inplace=True)
@@ -300,27 +299,29 @@ def Wh_Energy_Purchases(dir_path, dso_num, simdata=False, h1=5, h2=16, h3=20, pl
 
     # TO DO: Change the following path for the monthly purchases csv to the desired location
     # Monthly_Purchases.to_csv(r'C:/Users/mayh819/PycharmProjects/tesp-private/tesp-private/{}_DSO_{}_Monthly_Purchases.csv'.format(place,dso_num))
-    MarketPurchases = {'WhEnergyPurchases': {
-        'WhDAPurchases': {
-            'WhDACosts': WhDAPurchases / 1000,  # Day-ahead energy cost in $k
-            'WhDAEnergy': WhDAEnergy,  # Day-ahead energy purchased in MWh
-            'WhDAPrice': WhDAPurchases / WhDAEnergy  # Day-ahead average price in $/MWh
+    MarketPurchases = {
+        'WhEnergyPurchases': {
+            'WhDAPurchases': {
+                'WhDACosts': WhDAPurchases / 1000,  # Day-ahead energy cost in $k
+                'WhDAEnergy': WhDAEnergy,  # Day-ahead energy purchased in MWh
+                'WhDAPrice': WhDAPurchases / WhDAEnergy  # Day-ahead average price in $/MWh
+            },
+            'WhRTPurchases': {
+                'WhRTCosts': WhRTPurchases / 1000,  # Real-time energy cost in $k
+                'WhRTEnergy': WhRTEnergy,  # Real-time energy purchased in MWh
+                'WhRTPrice': WhRTPurchases / WhRTEnergy  # Real-time average price in $/MWh
+            },
+            'WhBLPurchases': {
+                'WhBLCosts': WhBLPurchases / 1000,  # Bilateral energy cost in $k
+                'WhBLEnergy': WhBLEnergy,  # Bilateral energy purchased in MWh
+                'WhBLPrice': WhBLPurchases / WhBLEnergy  # Bilateral average price in $/MWh
+            },
+            'WholesalePeakLoadRate': WholesalePeakLoadRate  # peak capacity in MW
         },
-        'WhRTPurchases': {
-            'WhRTCosts': WhRTPurchases / 1000,  # Real-time energy cost in $k
-            'WhRTEnergy': WhRTEnergy,  # Real-time energy purchased in MWh
-            'WhRTPrice': WhRTPurchases / WhRTEnergy  # Real-time average price in $/MWh
-        },
-        'WhBLPurchases': {
-            'WhBLCosts': WhBLPurchases / 1000,  # Bilateral energy cost in $k
-            'WhBLEnergy': WhBLEnergy,  # Bilateral energy purchased in MWh
-            'WhBLPrice': WhBLPurchases / WhBLEnergy  # Bilateral average price in $/MWh
-        },
-        'WholesalePeakLoadRate': WholesalePeakLoadRate  # peak capacity in MW
-    },
         'OtherWholesale': {
-            'WhLosses': 0  # DSO specific ISO losses are zero for now (not calculated by DC power flow equation).
-        }}
+                'WhLosses': 0  # DSO specific ISO losses are zero for now (not calculated by DC power flow equation).
+        }
+    }
 
     return MarketPurchases
 

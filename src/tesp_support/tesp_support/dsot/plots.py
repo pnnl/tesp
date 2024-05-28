@@ -118,6 +118,11 @@ def customer_meta_data(glm_meta, agent_meta, dso_metadata_path):
         if 'isol' in inverter:
             meter = glm_meta['inverters'][inverter]['billingmeter_id']
             glm_meta['billingmeters'][meter]['pv_capacity'] = glm_meta['inverters'][inverter]['rated_W'] / 1000
+            glm_meta['billingmeters'][meter]['pv_participating'] = True
+
+    for ev in agent_meta['ev']:
+        meter = agent_meta['ev'][ev]['meterName']
+        glm_meta['billingmeters'][meter]['ev_participating'] = agent_meta['ev'][ev]['participating']
 
     for meter in agent_meta['site_agent']:
         glm_meta['billingmeters'][meter]['cust_participating'] = agent_meta['site_agent'][meter]['participating']
@@ -1568,7 +1573,7 @@ def der_stack_plot(dso_range, day_range, metadata_path, case, comp=None):
                 y.append(temp[col].values.tolist())
 
     # Plot Building Stacked Chart with ERCOT and Substation loads for reference
-    plt.figure(figsize=(20, 10))
+    plt.figure(figsize=(15, 10))
     label_list = temp.columns.tolist()
     label_list.remove('Substation')
     label_list.remove('Battery')
@@ -1583,33 +1588,46 @@ def der_stack_plot(dso_range, day_range, metadata_path, case, comp=None):
     #     plt.plot(temp.index, ames_rt_df[' TotalGen'] , label='Total Generation', color='green',
     #          linestyle='-')
     if battery_case:
-        plt.plot(temp.index,
-                 temp[['Industrial Loads', 'Plug Loads', 'HVAC Loads', 'WH Loads', 'EV']].sum(axis=1) - temp['PV'] -
-                 temp['Battery']
-                 , label='Battery Load', color='red', linestyle=':')
+        if pv_case:
+            plt.plot(temp.index, temp[['Industrial Loads', 'Plug Loads', 'HVAC Loads', 'WH Loads', 'EV']].sum(axis=1) -temp['PV'] -temp['Battery']
+                     , label='Load net Battery+PV', color='red', linestyle=':', linewidth=3)
+        else:
+            plt.plot(temp.index, temp[['Industrial Loads', 'Plug Loads', 'HVAC Loads', 'WH Loads', 'EV']].sum(axis=1) -temp['PV'] -temp['Battery']
+                     , label='Load net Battery', color='red', linestyle=':', linewidth=3)
     if pv_case:
         plt.plot(temp.index, temp[['Industrial Loads', 'Plug Loads', 'HVAC Loads', 'WH Loads', 'EV']].sum(axis=1)
-                 - temp['PV'], label='Rooftop PV', color='brown', linestyle=':')
+                -temp['PV'], label='Load net PV', color='brown', linestyle=':', linewidth=3)
     if comp is not None:
-        plt.plot(compare_df.index, compare_df['Substation'] + compare_df['Industrial Loads'], label='Reference Load',
+        plt.plot(compare_df.index, compare_df['Substation'] + compare_df['Industrial Loads'], label='BAU Total Load',
                  color='grey', linestyle='--', linewidth=3)
-        if flexload_case:
-            plt.plot(compare_df.index, compare_df[['Industrial Loads', 'Plug Loads', 'HVAC Loads']].sum(axis=1)
-                     , label='HVAC Reference', color='darkorange', linestyle='-.')
-            plt.plot(compare_df.index,
-                     compare_df[['Industrial Loads', 'Plug Loads', 'HVAC Loads', 'WH Loads']].sum(axis=1)
-                     , label='WH Reference', color='mediumblue', linestyle='-.')
+        # if flexload_case:
+        #     plt.plot(compare_df.index, compare_df[['Industrial Loads', 'Plug Loads', 'HVAC Loads']].sum(axis=1)
+        #              , label='BAU HVAC Load', color='darkorange', linestyle='-.')
+        #     plt.plot(compare_df.index, compare_df[['Industrial Loads', 'Plug Loads', 'HVAC Loads', 'WH Loads']].sum(axis=1)
+        #              , label='BAU WH Load', color='mediumblue', linestyle='-.')
     else:
-        bus_cols = [col for col in ercot_df.columns if 'Bus' in col]
-        plt.plot(ercot_df.index, ercot_df[bus_cols].sum(axis=1), label='ERCOT Load', color='black', linestyle='--',
-                 linewidth=3)
+        plot_ercot = True
+        if not pv_case and plot_ercot:
+            bus_cols = [col for col in ercot_df.columns if 'Bus' in col]
+            plt.plot(ercot_df.index, ercot_df[bus_cols].sum(axis=1), label='ERCOT Load', color='grey', linestyle='--', linewidth=3)
 
-    plt.legend(loc='lower left', prop={'size': 17})
-    plt.xlabel('Time', size=25)
-    plt.ylabel('Load (MW)', size=25)
+    large_font = True
+    if large_font:
+        tick_font = 17
+        label_font = 32
+        legend_font = 24
+    else:
+        tick_font = 17
+        label_font = 25
+        legend_font = 17
+
+    plt.legend(loc='lower left', prop={'size': legend_font})
+    # plt.legend(loc='lower left', prop={'size': legend_font}, ncol=2)
+    plt.xlabel('Time', size=label_font)
+    plt.ylabel('Load (MW)', size=label_font)
     plt.ylim(top=80000, bottom=0)
     ax = plt.gca()
-    ax.tick_params(axis='both', which='major', labelsize=17)
+    ax.tick_params(axis='both', which='major', labelsize=tick_font)
     # plt.title('DSO load profile by end-load type (ALL DSOs)', size=20)
     plot_filename = datetime.now().strftime(
         '%Y%m%d') + 'DERLoadStackGraph_All_DSOs_' + temp.index[0].strftime('%m-%d') + '.png'
@@ -1790,7 +1808,7 @@ def dso_comparison_plot(dso_range, system, subsystem, variable, day, case, agent
     plt.savefig(file_path_fig, bbox_inches='tight')
 
 
-def dso_market_plot(dso_range, day, case, dso_metadata_file, ercot_dir):
+def dso_market_plot(dso_range, day, case, dso_metadata_file, ercot_dir, comp_case=None):
     """ For a specified dso range and day this function will load in the required data, plot standard market price and
     quantity values all for DSOs and save the plots to file.
     Args:
@@ -1839,6 +1857,8 @@ def dso_market_plot(dso_range, day, case, dso_metadata_file, ercot_dir):
         RT_retail_df = RT_retail_df.droplevel(level=1)
         DA_retail_df = load_da_retail_price(case, '/DSO_', str(dso), day)
         DA_dso_df = load_da_retail_price(case, '/DSO_', str(dso), day, False)
+        if comp_case is not None:
+            DA_retail_comp_df = load_da_retail_price(comp_case, '/DSO_', str(dso), day)
 
         if dso == dso_range[0]:
             rt_q_df = dsomarket_data_df[['cleared_quantity_rt']] / 1e3
@@ -1852,7 +1872,10 @@ def dso_market_plot(dso_range, day, case, dso_metadata_file, ercot_dir):
             da_dso_q_df = DA_dso_df[['trial_cleared_quantity_da']]
             da_retail_q_df = DA_retail_df[['cleared_quantity_da']] / 1e3
             da_retail_congest_df = DA_retail_df[['congestion_surcharge_DA']]
-
+            if comp_case is not None:
+                da_retail_price_comp_df = DA_retail_comp_df[['cleared_price_da']]
+                da_retail_q_comp_df = DA_retail_comp_df[['cleared_quantity_da']] / 1e3
+                da_retail_congest_comp_df = DA_retail_comp_df[['congestion_surcharge_DA']]
             q_max_df = pd.DataFrame(np.ones(len(da_retail_q_df.index)) * FNCS[dso - 1][3],
                                     index=da_retail_q_df.index,
                                     columns=['DSO ' + str(dso)])
@@ -1869,6 +1892,10 @@ def dso_market_plot(dso_range, day, case, dso_metadata_file, ercot_dir):
             da_retail_q_df = da_retail_q_df.join(DA_retail_df[['cleared_quantity_da']] / 1e3)
             da_retail_congest_df = da_retail_congest_df.join(DA_retail_df[['congestion_surcharge_DA']])
             q_max_df['DSO ' + str(dso)] = np.ones(len(q_max_df)) * FNCS[dso - 1][3]
+            if comp_case is not None:
+                da_retail_price_comp_df = da_retail_price_comp_df.join(DA_retail_comp_df[['cleared_price_da']])
+                da_retail_q_comp_df = da_retail_q_comp_df.join(DA_retail_comp_df[['cleared_quantity_da']] / 1e3)
+                da_retail_congest_comp_df = da_retail_congest_comp_df.join(DA_retail_comp_df[['congestion_surcharge_DA']])
         rt_q_df = rt_q_df.rename(columns={'cleared_quantity_rt': 'DSO ' + str(dso)})
         rt_price_df = rt_price_df.rename(columns={'cleared_price_rt': 'DSO ' + str(dso)})
         rt_retail_price_df = rt_retail_price_df.rename(columns={'cleared_price_rt': 'DSO ' + str(dso)})
@@ -1880,6 +1907,10 @@ def dso_market_plot(dso_range, day, case, dso_metadata_file, ercot_dir):
         da_dso_q_df = da_dso_q_df.rename(columns={'trial_cleared_quantity_da': 'DSO ' + str(dso)})
         da_retail_q_df = da_retail_q_df.rename(columns={'cleared_quantity_da': 'DSO ' + str(dso)})
         da_retail_congest_df = da_retail_congest_df.rename(columns={'congestion_surcharge_DA': 'DSO ' + str(dso)})
+        if comp_case is not None:
+            da_retail_price_comp_df = da_retail_price_comp_df.rename(columns={'cleared_price_da': 'DSO ' + str(dso)})
+            da_retail_q_comp_df = da_retail_q_comp_df.rename(columns={'cleared_quantity_da': 'DSO ' + str(dso)})
+            da_retail_congest_comp_df = da_retail_congest_comp_df.rename(columns={'congestion_surcharge_DA': 'DSO ' + str(dso)})
 
     # Load da_q and da_lmp
     ames_da_q_df = load_gen_data(case, 'da_q', range(int(day), int(day) + 1))
@@ -1926,6 +1957,41 @@ def dso_market_plot(dso_range, day, case, dso_metadata_file, ercot_dir):
                     + date.strftime("%m-%d") + '.png'
     file_path_fig = os.path.join(case, 'plots', plot_filename)
     plt.savefig(file_path_fig, bbox_inches='tight')
+
+    # RT and DA Q Plot
+    if comp_case is not None:
+        dso = 2
+        fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 6))
+        plt.figure()
+        fig.suptitle('DSO DA Market Quantity Comparison (DSO '+str(dso)+'; Day ' + date.strftime("%m-%d") + ')')
+        axes[0].plot(da_retail_q_df['DSO ' + str(dso)], label='MR BAU Case', marker='.')
+        axes[0].plot(da_retail_q_comp_df['DSO ' + str(dso)], label='MR Battery Case', marker='.')
+        axes[0].plot(q_max_df['DSO ' + str(dso)], label='Q Max', linestyle=':')
+        axes[0].legend()
+        axes[0].set_xlabel('Time')
+        axes[0].set_ylabel('Power Quantity (MW)')
+        # axes[0].xaxis_date()
+        axes[0].set_xticks(axes[0].get_xticks()[::2])
+        axes[0].set_title(label='DSO DA Quantity Forecast')
+
+        axes[1].plot(da_retail_price_df['DSO ' + str(dso)], label='MR BAU Case (w/ congestion)', marker='.')
+        axes[1].plot(da_retail_price_comp_df['DSO ' + str(dso)], label='MR Battery Case (w/ congestion)', marker='.')
+        axes[1].plot(da_retail_price_df['DSO ' + str(dso)] - da_retail_congest_df['DSO ' + str(dso)],
+                label='MR BAU Case (w/o congestion)', marker='.', linestyle='-.')
+
+        axes[1].plot(da_retail_price_comp_df['DSO ' + str(dso)] - da_retail_congest_comp_df['DSO ' + str(dso)],
+                label='MR Battery Case (w/o congestion)', marker='.', linestyle='-.')
+        axes[1].legend()
+        axes[1].set_xlabel('Time')
+        axes[1].set_ylabel('Retail Price ($/kW-hr)')
+        # axes[1].xaxis_date()
+        axes[1].set_xticks(axes[1].get_xticks()[::2])
+        axes[1].set_title(label='DSO DA Retail Price')
+
+        plot_filename = datetime.now().strftime('%Y%m%d') + '_DSO_Comp_'  \
+                        + date.strftime("%m-%d") + '.png'
+        file_path_fig = os.path.join(case, 'plots', plot_filename)
+        fig.savefig(file_path_fig, bbox_inches='tight')
 
     # Subplots of quantity for each DSO in dso_range
     if len(dso_range) == 8:
@@ -2340,10 +2406,16 @@ def dso_load_stats(dso_range, month_list, data_path, metadata_path, plot=False):
         else:
             dso_loads_df = pd.concat([dso_loads_df, der_loads_df])
             ercot_loads_df = pd.concat([ercot_loads_df, ercot_sum_df])
+
+    np_dso_loads = non_participating_dso_loads(dso_range, data_path, metadata_path)
+
     dso_loads_df['Total Load'] = dso_loads_df['Substation'] + dso_loads_df['Industrial Loads']
     ercot_loads_df['Month'] = ercot_loads_df.index.month
 
     dso_total_df = dso_loads_df.groupby(level=0).sum()
+
+    dso_total_df = pd.merge(dso_total_df, np_dso_loads['np_dso_loads'], left_index=True, right_index=True)
+    dso_total_df['Total Load'] = dso_total_df['Total Load'] + dso_total_df['np_dso_loads']
     dso_total_df['Month'] = dso_total_df.index.month
     dso_total_df.to_csv(path_or_buf=data_path + '/DSO_Total_Loads.csv')
 
@@ -2381,6 +2453,10 @@ def dso_load_stats(dso_range, month_list, data_path, metadata_path, plot=False):
     for dso in dso_range:
         Qmax['DSO_' + str(dso)] = [dso_loads_df.loc[(slice(None), 'dso' + str(dso)), 'Total Load'].max(),
                                    dso_loads_df.loc[(slice(None), 'dso' + str(dso)), 'Total Load'].idxmax()[0]]
+    Qmax['DSO_Total'] = [dso_load_stats.loc['Max', 'Substation'] + dso_load_stats.loc['Max', 'Industrial Loads'], dso_load_stats.loc['Max Index', 'Substation']]
+    for dso in dso_range:
+        Qmax['DSO_'+str(dso)+'_coincident'] = [dso_loads_df.loc[(dso_load_stats.loc['Max Index', 'Substation'], 'dso'+str(dso)),'Total Load'].max(),
+                                                dso_load_stats.loc['Max Index', 'Substation']]
 
     Qmax_df = pd.DataFrame.from_dict(Qmax, orient='index', columns=['Qmax (MW)', 'Time of Peak'])
 
@@ -2478,7 +2554,42 @@ def dso_load_stats(dso_range, month_list, data_path, metadata_path, plot=False):
         plt.savefig(file_path_fig, bbox_inches='tight')
 
 
-def dso_lmp_stats(month_list, output_path, renew_forecast_file):
+def non_participating_dso_loads(dso_range, case, metadata_path):
+    """For a specified dso range and list of month path information this function will load in the required data,
+    and summarize DSO LMPs versus loads for all months, and plot comparisons.
+    Arguments:
+        month_list (list): list of lists.  Each sub list has month name (str), directory path (str)
+        output_path (str): path of the location where output (plots, csv) should be saved
+        renew_forecast_file (str): path and name of ercot renewable generation forecast csv file
+        dso_range (list): List of DSOs that are being modeled in the system
+    Returns:
+        saves dso load comparison plots to file
+        """
+
+    case_config = load_json(case, 'generate_case_config.json')
+    # Load ERCOT load profile data
+    dso_load_file = os.path.join(metadata_path, case_config['refLoadMn'][5].split('/')[-1])
+    dso_load_profiles = pd.read_csv(dso_load_file, index_col='Seconds', parse_dates=True)
+
+    start_time = datetime.strptime("2015-12-29 00:00:00", '%Y-%m-%d %H:%M:%S')
+    arr = np.array([start_time + timedelta(seconds=float(i)) for i in dso_load_profiles.index.values])
+    dso_load_profiles.set_index(arr, inplace=True)
+
+    # Load DSO MetaData
+    DSOmetadata = load_json(metadata_path, case_config['dsoPopulationFile'])
+
+    np_dsos = []
+    for dso in DSOmetadata:
+        if 'DSO' in dso:
+            if int(dso.split('_')[-1]) not in dso_range:
+                np_dsos.append('Bus'+dso.split('_')[-1])
+
+    np_dso_loads = dso_load_profiles[np_dsos].sum(axis=1).to_frame().rename(columns={0: "np_dso_loads"})
+    np_dso_loads.index.rename(name='time', inplace=True)
+
+    return np_dso_loads
+
+def dso_lmp_stats(month_list, output_path, renew_forecast_file, dso_range):
     """ For a specified dso range and list of month path information this function will load in the required data,
     and summarize DSO LMPs versus loads for all months, and plot comparisons.
     Args:
@@ -2537,11 +2648,40 @@ def dso_lmp_stats(month_list, output_path, renew_forecast_file):
     da_load_cols = [col for col in da_lmps_df.columns if 'da_q' in col]
     da_lmps_df[' TotalLoad'] = da_lmps_df[da_load_cols].sum(axis=1)
     # renew_forecast_file = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/data/mod_renew_forecast.csv'
-    renew_forecast = pd.read_csv(renew_forecast_file, index_col='time')
+    renew_forecast = pd.read_csv(renew_forecast_file, index_col='time', parse_dates=True)
     renew_forecast['TotalRenewGen'] = renew_forecast.sum(axis=1)
     da_lmps_df = pd.merge(da_lmps_df, renew_forecast[['TotalRenewGen']], left_index=True, right_index=True)
     da_lmps_df['NetLoad'] = da_lmps_df[' TotalLoad'] - da_lmps_df['TotalRenewGen']
-    da_lmps_df.to_csv(path_or_buf=output_path + '/Annual_DA_LMP_Load_data.csv')
+    # narrow down to only modeled DSOs + system load data
+    dso_cols = ['da_lmp'+str(dso) for dso in dso_range] + ['da_q'+str(dso) for dso in dso_range] \
+               + [' TotalLoad', 'TotalRenewGen', 'NetLoad']
+    da_lmps_df[dso_cols].to_csv(path_or_buf=output_path + '/Annual_DA_LMP_Load_data.csv')
+
+    # Determine Annual RT LMP Stats
+    rt_lmp_range_df = dso_lmps_df.groupby(pd.Grouper(freq='D')).max()-dso_lmps_df.groupby(pd.Grouper(freq='D')).min()
+
+    rt_lmp_stats = pd.DataFrame(index=['Average', 'Max', 'Min', 'Average Daily Range'],
+                            columns=dso_lmps_df.columns)
+    rt_lmp_stats.loc['Average', :] = dso_lmps_df.mean()
+    rt_lmp_stats.loc['Max', :] = dso_lmps_df.max()
+    rt_lmp_stats.loc['Min', :] = dso_lmps_df.min()
+
+    rt_lmp_stats.loc['Average Daily Range', :] = rt_lmp_range_df.mean()
+
+    rt_lmp_stats.to_csv(path_or_buf=output_path + '/Annual_RT_LMP_stats.csv')
+
+    # Determine Annual DA LMP Stats
+    da_lmp_range_df = da_lmps_df.groupby(pd.Grouper(freq='D')).max()-da_lmps_df.groupby(pd.Grouper(freq='D')).min()
+
+    da_lmp_stats = pd.DataFrame(index=['Average', 'Max', 'Min', 'Average Daily Range'],
+                            columns=da_lmps_df.columns)
+    da_lmp_stats.loc['Average', :] = da_lmps_df.mean()
+    da_lmp_stats.loc['Max', :] = da_lmps_df.max()
+    da_lmp_stats.loc['Min', :] = da_lmps_df.min()
+
+    da_lmp_stats.loc['Average Daily Range', :] = da_lmp_range_df.mean()
+
+    da_lmp_stats.to_csv(path_or_buf=output_path + '/Annual_DA_LMP_stats.csv')
 
 
 def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
@@ -2707,24 +2847,24 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
 
     rangelmp_comparison_df = da_lmps_daily_df[['da_lmp' + dso_num, 'Month']]
     rangelmp_comparison_df.rename(columns={'da_lmp' + dso_num: 'DA LMP'}, inplace=True)
-    rangelmp_comparison_df['DA LMP STD'] = da_lmps_daily_df['stdev']
+    # rangelmp_comparison_df['DA LMP STD'] = da_lmps_daily_df['stdev']
     rangelmp_comparison_df['Case'] = 'DSO+T'
     rangeERCOTcompare_df = ERCOTDApricerange[['Houston $_mwh', 'Month']]
-    rangeERCOTcompare_df['DA LMP STD'] = ERCOTDApricerange['stdev']
+    # rangeERCOTcompare_df['DA LMP STD'] = ERCOTDApricerange['stdev']
     rangeERCOTcompare_df['Case'] = 'ERCOT'
     rangeERCOTcompare_df.rename(columns={'Houston $_mwh': 'DA LMP'}, inplace=True)
     rangePJMcompare_df = PJMDApricerange[['total_lmp_da', 'Month']]
-    rangePJMcompare_df['DA LMP STD'] = PJMDApricerange['stdev']
+    # rangePJMcompare_df['DA LMP STD'] = PJMDApricerange['stdev']
     rangePJMcompare_df['Case'] = 'PJM'
     rangePJMcompare_df.rename(columns={'total_lmp_da': 'DA LMP'}, inplace=True)
     rangeCALISOcompare_df = CAISODApricerange[['LMP_PRC', 'Month']]
-    rangeCALISOcompare_df['DA LMP STD'] = CAISODApricerange['stdev']
+    # rangeCALISOcompare_df['DA LMP STD'] = CAISODApricerange['stdev']
     rangeCALISOcompare_df['Case'] = 'CAISO'
     rangeCALISOcompare_df.rename(columns={'LMP_PRC': 'DA LMP'}, inplace=True)
     rangelmp_comparison_df = pd.concat(
         [rangeCALISOcompare_df, rangePJMcompare_df, rangeERCOTcompare_df, rangelmp_comparison_df])
 
-    fig, axes = plt.subplots(3, 1, figsize=(11, 10), sharex=True)
+    fig, axes = plt.subplots(2, 1, figsize=(11, 10), sharex=True)
     pal = ['violet'] + ['lightgreen'] + ["gold"] + ['skyblue']
 
     upper_limit = 100
@@ -2746,13 +2886,13 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
     handles, labels = axes[1].get_legend_handles_labels()
     axes[1].legend(handles=handles, labels=labels, framealpha=1)
 
-    sns.boxplot(data=rangelmp_comparison_df, x='Month', y='DA LMP STD', hue='Case', ax=axes[2], palette=pal)
-    axes[2].set_ylabel('$/MW-hr')
-    axes[2].set_title('Standard Deviation of Daily Day-Ahead LMP over the Year')
-    axes[2].set_xlabel('Month')
-    axes[2].set_ylim(top=30, bottom=lower_limit)
-    handles, labels = axes[2].get_legend_handles_labels()
-    axes[2].legend(handles=handles, labels=labels, framealpha=1)
+    # sns.boxplot(data=rangelmp_comparison_df, x='Month', y='DA LMP STD', hue='Case', ax=axes[2], palette=pal)
+    # axes[2].set_ylabel('$/MW-hr')
+    # axes[2].set_title('Standard Deviation of Daily Day-Ahead LMP over the Year')
+    # axes[2].set_xlabel('Month')
+    # axes[2].set_ylim(top=30, bottom=lower_limit)
+    # handles, labels = axes[2].get_legend_handles_labels()
+    # axes[2].legend(handles=handles, labels=labels, framealpha=1)
 
     plot_filename = datetime.now().strftime(
         '%Y%m%d') + 'ISO_DA_LMP_Annual_Box_Plots-focused-SBS.png'
@@ -2775,16 +2915,16 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
 
     range_rt_lmp_comparison_df = rt_lmps_daily_df[[' LMP' + dso_num, 'Month']]
     range_rt_lmp_comparison_df.rename(columns={' LMP' + dso_num: 'RT LMP'}, inplace=True)
-    range_rt_lmp_comparison_df['RT LMP STD'] = rt_lmps_daily_df['stdev']
+    # range_rt_lmp_comparison_df['RT LMP STD'] = rt_lmps_daily_df['stdev']
     range_rt_lmp_comparison_df['Case'] = 'DSO+T'
     range_rt_ERCOTcompare_df = ERCOTRTpricerange[['Houston $_mwh', 'Month']]
     range_rt_ERCOTcompare_df['Case'] = 'ERCOT'
-    range_rt_ERCOTcompare_df['RT LMP STD'] = ERCOTRTpricerange['stdev']
+    # range_rt_ERCOTcompare_df['RT LMP STD'] = ERCOTRTpricerange['stdev']
     range_rt_ERCOTcompare_df.rename(columns={'Houston $_mwh': 'RT LMP'}, inplace=True)
     range_rt_PJMcompare_df = PJMRTpricerange[['total_lmp_rt', 'Month']]
     range_rt_PJMcompare_df['Case'] = 'PJM'
     range_rt_PJMcompare_df.rename(columns={'total_lmp_rt': 'RT LMP'}, inplace=True)
-    range_rt_PJMcompare_df['RT LMP STD'] = PJMRTpricerange['stdev']
+    # range_rt_PJMcompare_df['RT LMP STD'] = PJMRTpricerange['stdev']
     range_rt_lmp_comparison_df = pd.concat(
         [range_rt_PJMcompare_df, range_rt_ERCOTcompare_df, range_rt_lmp_comparison_df])
 
@@ -2889,71 +3029,6 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
     file_path_fig = os.path.join(output_path, 'plots', plot_filename)
     plt.savefig(file_path_fig, bbox_inches='tight')
 
-    # =========== Create load duration plot 1B - DA STDEV ===========================
-
-    #  Power generation load duration curve
-    ERCOTLDC_data = ERCOTDApricerange['stdev'].values.tolist()
-    ERCOTLDC_data.sort(reverse=False)
-    ERCOTLDC_data = np.array(ERCOTLDC_data)
-
-    CAISOLDC_data = CAISODApricerange['stdev'].values.tolist()
-    CAISOLDC_data.sort(reverse=False)
-    CAISOLDC_data = np.array(CAISOLDC_data)
-
-    PJMLDC_data = PJMDApricerange['stdev'].values.tolist()
-    PJMLDC_data.sort(reverse=False)
-    PJMLDC_data = np.array(PJMLDC_data)
-
-    DSOT_data = da_lmps_daily_df['stdev'].values.tolist()
-    DSOT_data.sort(reverse=False)
-    DSOT_data = np.array(DSOT_data)
-
-    if stats:
-        ERCOTmean = np.mean(ERCOTLDC_data)
-        ERCOTmedian = np.median(ERCOTLDC_data)
-        CAISOmean = np.mean(CAISOLDC_data[~np.isnan(CAISOLDC_data)])
-        CAISOmedian = np.median(CAISOLDC_data[~np.isnan(CAISOLDC_data)])
-        PJMmean = np.mean(PJMLDC_data[~np.isnan(PJMLDC_data)])
-        PJMmedian = np.median(PJMLDC_data[~np.isnan(PJMLDC_data)])
-        DSOTmean = np.mean(DSOT_data)
-        DSOTmedian = np.median(DSOT_data)
-
-    l = len(ERCOTLDC_data)
-    index = np.array(range(0, l)) * 100 / l
-
-    l = len(DSOT_data)
-    dsot_index = np.array(range(0, l)) * 100 / l
-
-    plt.clf()
-    plt.plot(index, ERCOTLDC_data, label='ERCOT STDEV DA LMP')
-    plt.plot(dsot_index, DSOT_data, label='DSO+T STDEV DA LMP')
-    plt.plot(index, PJMLDC_data, label='PJM Delta STDEV LMP')
-    plt.plot(index, CAISOLDC_data, label='CAISO STDEV DA LMP')
-    plt.legend()
-
-    plt.title('Duration vs. Daily Standard Deviation in DA LMP', size=label_size)
-    plt.xlabel('Duration (%)', size=label_size)
-    plt.xlim(0, 100)
-    plt.ylabel('$/Mw-hr', size=label_size)
-    plt.yscale('log')
-    plt.grid(b=True, which='both', color='k', linestyle=':')
-    plt.minorticks_on()
-    ax = plt.gca()
-    ax.tick_params(axis='both', which='major', labelsize=17)
-    plt.legend(loc='upper left', prop={'size': 17})
-
-    if stats:
-        text = "               Mean    Median \n" + \
-               "ERCOT = " + str(round(ERCOTmean)) + "     " + str(round(ERCOTmedian)) + "\n" + \
-               "DSO+T     = " + str(round(DSOTmean)) + "     " + str(round(DSOTmedian)) + "\n" + \
-               "PJM      = " + str(round(PJMmean)) + "     " + str(round(PJMmedian)) + "\n" + \
-               "CAISO  = " + str(round(CAISOmean)) + "     " + str(round(CAISOmedian))
-        plt.text(0.3, 0.7, text, size=15, horizontalalignment='left',
-                 verticalalignment='center', transform=ax.transAxes, bbox=dict(fc="white"))
-
-    plot_filename = datetime.now().strftime('%Y%m%d') + 'ISO_Daily_STDEV_DA_LMP_Duration_Curve.png'
-    file_path_fig = os.path.join(output_path, 'plots', plot_filename)
-    plt.savefig(file_path_fig, bbox_inches='tight')
 
     # =========== Create load duration plot 2 - DA LMP ===========================
 
@@ -3528,6 +3603,16 @@ def generation_load_profiles(dir_path, metadata_path, data_path, day_range, use_
         ercot_sum_df[fuel] = fuel_df[gen_cols].sum(axis=1)
         y.append(ercot_sum_df[fuel].values.tolist())
 
+    large_font = True
+    if large_font:
+        tick_font = 23
+        label_font = 32
+        legend_font = 24
+    else:
+        tick_font = 17
+        label_font = 25
+        legend_font = 17
+
     plt.figure(figsize=(20, 10))
     plt.stackplot(ercot_sum_df.index, y, colors=colors, labels=fuel_labels)
     if comp is not None:
@@ -3535,15 +3620,15 @@ def generation_load_profiles(dir_path, metadata_path, data_path, day_range, use_
         plt.plot(ercot_sum_df.index, compare_df[' TotalLoad'], label='Reference Load', color='grey', linestyle='--',
                  linewidth=3)
     else:
-        plt.plot(ercot_sum_df.index, ercot_sum_df['Net Load'], label='ERCOT Load', color='black', linestyle='--',
+        plt.plot(ercot_sum_df.index, ercot_sum_df['Net Load'], label='ERCOT Load', color='grey', linestyle='--',
                  linewidth=3)
     if not use_ercot_fuel_mix_data:
         plt.plot(ercot_sum_df.index, ercot_sum_df['AMES Load'], label='Total Load', color='black')
-    plt.legend(loc='upper left', prop={'size': 17})
-    plt.xlabel('Time', size=25)
-    plt.ylabel('Generation (MW)', size=25)
+    plt.legend(loc='upper left', prop={'size': legend_font})
+    plt.xlabel('Time', size=label_font)
+    plt.ylabel('Generation (MW)', size=label_font)
     ax = plt.gca()
-    ax.tick_params(axis='both', which='major', labelsize=17)
+    ax.tick_params(axis='both', which='major', labelsize=tick_font)
     if use_ercot_fuel_mix_data:
         plot_filename = datetime.now().strftime('%Y%m%d') + '_ERCOT_fuelmix_profiles.png'
     else:
@@ -4095,9 +4180,7 @@ def amenity_loss(gld_metadata, dir_path, folder_prefix, dso_num, day_range):
         variable.append('WH_galF-hrs')
         month.append(0)
 
-    amenity_df = pd.DataFrame(month,
-                              index=[amenity, variable],
-                              columns=['sum'])
+    amenity_df = pd.DataFrame(month, index=[amenity, variable], columns=['sum'])
 
     agent_metadata = load_json(dir_path + '/DSO_' + dso_num, 'Substation_' + dso_num + '_agent_dict.json')
 
@@ -4698,33 +4781,24 @@ def run_plots():
 
     #  ------------ Select folder locations for different cases ---------
     # Load System Case Config
-    system_case = 'generate_case_config.json'
-    config_path = os.getcwd()
-    case_config = load_json(config_path, system_case)
-
-    # case_path = os.path.dirname(os.path.abspath(__file__)) + '/' + case_config['caseName']
     # Set current working directory to location of case folder.
     data_path = os.getcwd()
-    metadata_path = "../" + case_config['dataPath']
-    dso_metadata_file = case_config['dsoPopulationFile']
-    base_case = data_path
+    config_path = os.getcwd()
+    # you should always use 'generate_case_config.json' as it is copied when case is created
+    system_case = 'generate_case_config.json'
+    case_config = load_json(config_path, system_case)
+    case_config_file = config_path + '/' + system_case
+
     agent_prefix = '/DSO_'
     GLD_prefix = '/Substation_'
 
-    # data_path = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/V1.1-1317-gfbf326a2/MR-Batt/lean_8_bt'
-    # ercot_path = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/analysis/dsot/data'
-    # base_case = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/V1.1-1317-gfbf326a2/MR-Batt/lean_8_bt'
-    # trans_case = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/V1.1-1317-gfbf326a2/MR-Flex/lean_8_fl'
-    # config_path = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/dsot_v3'
-    # case_config_name = '200_system_case_config.json'
-    #
-    # case_config_file = config_path + '/' + case_config_name
-    # agent_prefix = '/DSO_'
-    # GLD_prefix = '/Substation_'
-    # case_config = load_json(config_path, case_config_name)
-    # metadata_file = case_config['dsoPopulationFile']
+    metadata_path = "../" + case_config['dataPath']
+    metadata_file = case_config['dsoPopulationFile']
+    dso_meta_file = metadata_path + '/' + metadata_file
 
-    dso_meta_file = metadata_path + '/' + dso_metadata_file
+    # base_case = os.getcwd()
+    base_case = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/V1.1-1317-gfbf326a2/MR-Batt/lean_8_bt'
+    trans_case = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/V1.1-1317-gfbf326a2/MR-Flex/lean_8_fl'
 
     # Check if there is a plots folder - create if not.
     check_folder = os.path.isdir(data_path + '/plots')
@@ -4740,7 +4814,7 @@ def run_plots():
 
 
     # ---------- Flags to turn on and off plot types etc
-    LoadExData = False  # load example data frames of GLD and agent data
+    LoadExData = True  # load example data frames of GLD and agent data
     DictUpdate = False
     EdgeCases = False
     DailyProfilePlots = True  # plot daily load profiles
@@ -5299,9 +5373,9 @@ def run_plots():
 
         generation_load_profiles(base_case, metadata_path, data_path, day_range, False)
 
-        GenAMES_df = generation_statistics(base_case, config_path, case_config_name, day_range, False)
+        GenAMES_df = generation_statistics(base_case, config_path, system_case, day_range, False)
 
-        GenPYPower_df = generation_statistics(base_case, config_path, case_config_name, day_range, True)
+        GenPYPower_df = generation_statistics(base_case, config_path, system_case, day_range, True)
 
     # ------------
     if transmission_plots:

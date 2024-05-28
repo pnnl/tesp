@@ -10,56 +10,7 @@
 import numpy as np
 
 import tesp_support.dsot.dso_helper_functions as dso_helper
-from .plots import load_json
 
-
-def get_DSO_df(dso_range, case_config, DSOmetadata, case_path, base_case_path):
-    DSO_df = dso_helper.pd.DataFrame([])
-    CapitalCosts_dict_list = []
-    Expenses_dict_list = []
-    Revenues_dict_list = []
-    DSO_Cash_Flows_dict_list = []
-    for dso_num in dso_range:
-        Market_Purchases = load_json(case_path, 'DSO' + str(dso_num) + '_Market_Purchases.json')
-        Market_Purchases_base_case = load_json(base_case_path, 'DSO' + str(dso_num) + '_Market_Purchases.json')
-
-        DSO_Cash_Flows = load_json(case_path, 'DSO' + str(dso_num) + '_Cash_Flows.json')
-        DSO_Revenues_and_Energy_Sales = load_json(case_path, 'DSO' + str(dso_num) + '_Revenues_and_Energy_Sales.json')
-
-        DSO_peak_demand = Market_Purchases['WhEnergyPurchases']['WholesalePeakLoadRate']
-        DSO_base_case_peak_demand = Market_Purchases_base_case['WhEnergyPurchases']['WholesalePeakLoadRate']
-
-        CapitalCosts_dict, Expenses_dict, Revenues_dict, \
-        DSO_Cash_Flows_dict, DSO_Wholesale_Energy_Purchase_Summary, DSO_Cash_Flows_composite = \
-            dso_CFS(case_config, DSOmetadata, str(dso_num),
-                    DSO_peak_demand, DSO_base_case_peak_demand,
-                    DSO_Cash_Flows, DSO_Revenues_and_Energy_Sales, Market_Purchases,
-                    Market_Purchases_base_case)
-        CapitalCosts_dict_list.append(CapitalCosts_dict)
-        Expenses_dict_list.append(Expenses_dict)
-        Revenues_dict_list.append(Revenues_dict)
-        DSO_Cash_Flows_dict_list.append(DSO_Cash_Flows_dict)
-        DSO_col = {
-            "name": DSOmetadata['DSO_' + str(dso_num)]["name"],
-            "utility_type": DSOmetadata['DSO_' + str(dso_num)]["utility_type"],
-            "ownership_type": DSOmetadata['DSO_' + str(dso_num)]["ownership_type"],
-            "climate_zone": DSOmetadata['DSO_' + str(dso_num)]["climate_zone"],
-            "ASHRAE_zone": DSOmetadata['DSO_' + str(dso_num)]["ashrae_zone"],
-            "peak_season": DSOmetadata['DSO_' + str(dso_num)]["peak_season"],
-            "number_of_customers": DSOmetadata['DSO_' + str(dso_num)]["number_of_customers"],
-            "scaling_factor": DSOmetadata['DSO_' + str(dso_num)]["scaling_factor"],
-            "DSO_peak_demand": Market_Purchases['WhEnergyPurchases']['WholesalePeakLoadRate'],
-            "DSO_base_case_peak_demand": Market_Purchases_base_case['WhEnergyPurchases']['WholesalePeakLoadRate'],
-            "energy_sold_MWh": DSO_Revenues_and_Energy_Sales['EnergySold'],
-            "energy_purchased_MWh": Market_Purchases['WhEnergyPurchases']['WhDAPurchases']['WhDAEnergy']
-                                    + Market_Purchases['WhEnergyPurchases']['WhRTPurchases']['WhRTEnergy']
-                                    + Market_Purchases['WhEnergyPurchases']['WhBLPurchases']['WhBLEnergy'],
-            'EffectiveCostRetailEnergy': DSO_Revenues_and_Energy_Sales['EffectiveCostRetailEnergy']
-        }
-        DSO_col.update(DSO_Cash_Flows_composite)
-        DSO_col = dso_helper.pd.Series(DSO_col)
-        DSO_df['DSO_' + str(dso_num)] = DSO_col
-    return DSO_df, CapitalCosts_dict_list, Expenses_dict_list, Revenues_dict_list, DSO_Cash_Flows_dict_list
 
 # This dso_CFS function calculates cash flow statement ...
 
@@ -80,10 +31,12 @@ def dso_CFS(case_config,
             dso_num,
             DSO_peak_demand,
             DSO_base_case_peak_demand,
+            System_peak_fraction,
             DSO_Cash_Flows,
             DSO_Revenues_and_Energy_Sales,
             Market_Purchases,
             Market_Purchases_base_case):
+
     # reading json data
     # with open(os.path.join(metadata_path, '8-node-metadata.json')) as json_file:
     #    metadata_8_node = json.load(json_file)
@@ -251,8 +204,8 @@ def dso_CFS(case_config,
     BillingSoft = software('billing_software')
 
     # Calculate the change in capacity market price due to load reduction and then the total capacity payment
-    CapacityPriceFactor = 1 - (metadata_general['generation_capacity_price_elast_factor'] *
-                               (DSO_base_case_peak_demand - DSO_peak_demand) / DSO_base_case_peak_demand)
+    CapacityPriceFactor = max(0, 1 - (metadata_general['generation_capacity_price_elast_factor'] *
+                                      (1 - System_peak_fraction)))
     PeakCapacity = metadata_general['generation_capacity_fee_per_kW'] * CapacityPriceFactor * DSO_peak_demand * \
                    metadata_general['generation_capacity_reserve'] * 1000 / 1000
 
@@ -453,9 +406,10 @@ def dso_CFS(case_config,
             'Meters': Meters
         },
         'InfoTech': {
-            'MktSoftHdw': {'MktSoft': MktSoft,
-                           'MktHdw': MktHdw
-                           },
+            'MktSoftHdw': {
+                'MktSoft': MktSoft,
+                'MktHdw': MktHdw
+            },
             'AMIDERNetwork': {
                 'AmiNetwork': AmiNetwork,
                 'DerNetwork': DerNetwork
@@ -474,17 +428,18 @@ def dso_CFS(case_config,
 
     Revenues_dict = {
         'RetailSales': DSO_Cash_Flows['Revenues']['RetailSales'],
-
         'TransactFees': TransactFees,
-        'TransTo': {'TransToMO': {
+        'TransTo': {
+            'TransToMO': {
             'MOtoDO': MOtoDO,
             'MOtoRSP': MOtoRSP
-        },
+            },
             'TransToDO': {
                 'DOtoRSP': DOtoRSP
             }
         }
     }
+
 
     RSPtoDO = 0  # dso_helper.returnDictSum(Revenues_dict) - (MktSoft + MktHdw + MktOpsLabor)
 
@@ -492,55 +447,55 @@ def dso_CFS(case_config,
     # TaxesRevenues = Revenues * metadata_general['effective_income_tax_rate'][utility_type]
 
     # a separate function?
-    OperatingExpenses_dict = {'PeakCapacity': PeakCapacity,
-                              'TransCharges': TransCharges,
-                              'WhEnergyPurchases': {
-                                  'WhDAPurchases': WhDAPurchases,
-                                  'WhRTPurchases': WhRTPurchases,
-                                  'WhBLPurchases': WhBLPurchases
-                              },
-                              'OtherWholesale': {
-                                  'WhReserves': WhReserves,
-                                  'WhLosses': WhLosses,
-                                  'WhISO': WhISO
-                              },
-                              'O&mMaterials': O_and_M_Materials,
-                              'O&mLabor': {
-                                  'Linemen': Linemen,
-                                  'Operators': Operators,
-                                  'Planning': Planning,
-                                  'Metering': Metering
-                              },
-                              'MktOpsLabor': MktOpsLabor,
-                              'AmiCustOps': {
-                                  'AmiOps': {
-                                      'AmiNetworkLabor': AmiNetworkLabor,
-                                      'AmiCyberLabor': AmiCyberLabor
-                                  },
-                                  'CustOps': {
-                                      'CustNetworkLabor': CustNetworkLabor,
-                                      'CustCyberLabor': CustCyberLabor
-                                  },
-                                  'DmsOps': {
-                                      'DmsNetworkLabor': DmsNetworkLabor,
-                                      'DmsCyberLabor': DmsCyberLabor
-                                  }
-                              },
-                              'RetailOps': {
-                                  'CustomerService': CustomerServiceAgent,
-                                  'AssetR&R': AssetR_R,
-                                  'Billing': Billing
-                              },
-                              'Admin': Admin,
-                              'Space': Space,
-                              'TransFrom': {
-                                  'TransFromDO':
-                                      {'DOtoMO': DOtoMO},
-                                  'TransFromRSP':
-                                      {'RSPtoMO': RSPtoMO,
-                                       'RSPtoDO': RSPtoDO}
-                              }
-                              }
+    OperatingExpenses_dict = {
+        'PeakCapacity': PeakCapacity,
+        'TransCharges': TransCharges,
+        'WhEnergyPurchases': {
+            'WhDAPurchases': WhDAPurchases,
+            'WhRTPurchases': WhRTPurchases,
+            'WhBLPurchases': WhBLPurchases
+        },
+        'OtherWholesale': {
+            'WhReserves': WhReserves,
+            'WhLosses': WhLosses,
+            'WhISO': WhISO
+        },
+        'O&mMaterials': O_and_M_Materials,
+        'O&mLabor': {
+            'Linemen': Linemen,
+            'Operators': Operators,
+            'Planning': Planning,
+            'Metering': Metering
+        },
+        'MktOpsLabor': MktOpsLabor,
+        'AmiCustOps': {
+            'AmiOps': {
+                'AmiNetworkLabor': AmiNetworkLabor,
+                'AmiCyberLabor': AmiCyberLabor
+            },
+            'CustOps': {
+                'CustNetworkLabor': CustNetworkLabor,
+                'CustCyberLabor': CustCyberLabor
+            },
+            'DmsOps': {
+                'DmsNetworkLabor': DmsNetworkLabor,
+                'DmsCyberLabor': DmsCyberLabor
+            }
+        },
+        'RetailOps': {
+            'CustomerService': CustomerServiceAgent,
+            'AssetR&R': AssetR_R,
+            'Billing': Billing
+        },
+        'Admin': Admin,
+        'Space': Space,
+        'TransFrom': {
+            'TransFromDO': {'DOtoMO': DOtoMO},
+            'TransFromRSP': {
+                'RSPtoMO': RSPtoMO,
+                'RSPtoDO': RSPtoDO}
+            }
+        }
 
     OperatingExpenses = dso_helper.returnDictSum(OperatingExpenses_dict)
     # TaxExpDeduct = Expenses * metadata_general['effective_income_tax_rate'][utility_type]
@@ -598,87 +553,87 @@ def dso_CFS(case_config,
     Revenues = RetailSales  # + TransactFees +
 
     DSO_Cash_Flows_composite = {
-        'CapitalExpenses': CapitalExpenses,
-        'DistPlant': DistPlant,
+        'CapitalExpenses': CapitalExpenses,  # Capital Expenses
+        'DistPlant': DistPlant,  # Distribution Plant
         'Substations': Substations,
         'Feeders': Feeders,
         'Meters': Meters,
-        'InfoTech': InfoTech,
-        'MktSoftHdw': MktSoftHdw,
-        'MktSoft': MktSoft,
-        'MktHdw': MktHdw,
-        'AmiDerNetwork': AmiDerNetwork,
+        'InfoTech': InfoTech,  # IT Systems
+        'MktSoftHdw': MktSoftHdw,  # Retail Market Software & Hardware
+        'MktSoft': MktSoft,  # Retail Market Software
+        'MktHdw': MktHdw,  # Retail Market Hardware
+        'AmiDerNetwork': AmiDerNetwork,  # AMI/DER Network
         'AmiNetwork': AmiNetwork,
         'DerNetwork': DerNetwork,
-        'DaNetwork': DaNetwork,
-        'DmsSoft': DmsSoft,
-        'OmsSoft': OmsSoft,
-        'CisSoft': CisSoft,
-        'BillingSoft': BillingSoft,
-        'OperatingExpenses': OperatingExpenses,
-        'PeakCapacity': PeakCapacity,
-        'TransCharges': TransCharges,
-        'WhEnergyPurchases': WhEnergyPurchases,
-        'WhDAPurchases': WhDAPurchases,
-        'WhRTPurchases': WhRTPurchases,
-        'WhBLPurchases': WhBLPurchases,
-        'OtherWholesale': OtherWholesale,
-        'WhReserves': WhReserves,
-        'WhLosses': WhLosses,
-        'WhISO': WhISO,
-        'O&mMaterials': O_and_M_Materials,
-        'O&mLabor': O_M_Labor,
+        'DaNetwork': DaNetwork,  # DA Network
+        'DmsSoft': DmsSoft,  # Distribution Management System Software
+        'OmsSoft': OmsSoft,  # Outage Management System Software
+        'CisSoft': CisSoft,  # Customer Information System Software
+        'BillingSoft': BillingSoft,  # Billing Software
+        'OperatingExpenses': OperatingExpenses,  # Operating Expenses
+        'PeakCapacity': PeakCapacity,  # Peak Capacity Charges
+        'TransCharges': TransCharges,  # Transmission Access Fees
+        'WhEnergyPurchases': WhEnergyPurchases,  # Wholesale Energy Purchases
+        'WhDAPurchases': WhDAPurchases,  # Day Ahead Energy Costs
+        'WhRTPurchases': WhRTPurchases,  # Real Time Energy Costs
+        'WhBLPurchases': WhBLPurchases,  # Bilateral Energy Costs
+        'OtherWholesale': OtherWholesale,  # Other Wholesale Costs
+        'WhReserves': WhReserves,  # ISO Reserves
+        'WhLosses': WhLosses,  # ISO Losses
+        'WhISO': WhISO,  # ISO Fees
+        'O&mMaterials': O_and_M_Materials,  # Operations and Maintenance Materials
+        'O&mLabor': O_M_Labor,  # Operations and Maintenance Labor
         'Linemen': Linemen,
         'Operators': Operators,
         'Planning': Planning,
         'Metering': Metering,
-        'MktOpsLabor': MktOpsLabor,
-        'AmiCustOps': AmiCustOps,
-        'AmiOps': AmiOps,
-        'AmiNetworkLabor': AmiNetworkLabor,
-        'AmiCyberLabor': AmiCyberLabor,
-        'CustOps': CustOps,
-        'CustNetworkLabor': CustNetworkLabor,
-        'CustCyberLabor': CustCyberLabor,
-        'DmsOps': DmsOps,
-        'DmsNetworkLabor': DmsNetworkLabor,
-        'DmsCyberLabor': DmsCyberLabor,
-        'RetailOps': RetailOps,
-        'CustomerService': CustomerServiceAgent,
-        'AssetR&R': AssetR_R,
-        'Billing': Billing,
-        'Admin': Admin,
-        'AdminDO': 0,
-        'AdminMO': 0,
-        'AdminRSP': 0,
-        'Space': Space,
-        'SpaceDO': 0,
-        'SpaceMO': 0,
-        'SpaceRSP': 0,
-        'TransFrom': TransFrom,
-        'TransFromDO': TransFromDO,
-        'DOtoMO': DOtoMO,
-        'TransFromRSP': TransFromRSP,
-        'RSPtoMO': RSPtoMO,
-        'RSPtoDO': RSPtoDO,
+        'MktOpsLabor': MktOpsLabor,  # Market Operations Labor
+        'AmiCustOps': AmiCustOps,  # AMI and Customer Network Operations
+        'AmiOps': AmiOps,  # AMI Operations Labor
+        'AmiNetworkLabor': AmiNetworkLabor,  # AMI Network Labor
+        'AmiCyberLabor': AmiCyberLabor,  # AMI Cybersecurity Labor
+        'CustOps': CustOps,  # Customer Network Operations Labor
+        'CustNetworkLabor': CustNetworkLabor,  # Customer Network Network Labor
+        'CustCyberLabor': CustCyberLabor,  # Customer Network Cybersecurity Labor
+        'DmsOps': DmsOps,  # DMS Operations
+        'DmsNetworkLabor': DmsNetworkLabor,  # DMS Network Labor
+        'DmsCyberLabor': DmsCyberLabor,  # DMS Cybersecurity Labor
+        'RetailOps': RetailOps,  # Retail Operations
+        'CustomerService': CustomerServiceAgent,  # Customer Service Labor
+        'AssetR&R': AssetR_R,  # Asset Recruitment & Retention Labor
+        'Billing': Billing,  # Billing Labor
+        'Admin': Admin,  # Administration
+        'AdminDO': 0,  # DO Administration
+        'AdminMO': 0,  # MO Administration
+        'AdminRSP': 0,  # RSP Administration
+        'Space': Space,  # Workspace
+        'SpaceDO': 0,  # DO Workspace
+        'SpaceMO': 0,  # MO Workspace
+        'SpaceRSP': 0,  # RSP Workspace
+        'TransFrom': TransFrom,  # Transfers Sent Within DSO
+        'TransFromDO': TransFromDO,  # Transfers from DO
+        'DOtoMO': DOtoMO,  # Sent by DO to MO
+        'TransFromRSP': TransFromRSP,  # Transfers from RSP
+        'RSPtoMO': RSPtoMO,  # Sent by RSP to MO
+        'RSPtoDO': RSPtoDO,  # Sent by RSP to DO
         'Revenues': Revenues,
-        'RetailSales': RetailSales,
-        'FixedSales': FixedSales,
-        'FixedEnergyCharges': DSO_Cash_Flows['Revenues']['RetailSales']['FixedSales']['FixedEnergyCharges'],
-        'DemandCharges': DSO_Cash_Flows['Revenues']['RetailSales']['FixedSales']['DemandCharges'],
-        'ConnectChargesFix': DSO_Cash_Flows['Revenues']['RetailSales']['FixedSales']['ConnectChargesFix'],
-        'TransactiveSales': TransactiveSales,
-        'RetailDACharges': DSO_Cash_Flows['Revenues']['RetailSales']['TransactiveSales']['RetailDACharges'],
-        'RetailRTCharges': DSO_Cash_Flows['Revenues']['RetailSales']['TransactiveSales']['RetailRTCharges'],
-        'DistCharges': DSO_Cash_Flows['Revenues']['RetailSales']['TransactiveSales']['DistCharges'],
-        'ConnectChargesDyn': DSO_Cash_Flows['Revenues']['RetailSales']['TransactiveSales']['ConnectChargesDyn'],
-        'TransactFees': TransactFees,
-        'TransTo': TransTo,
-        'TransToMO': TransToMO,
-        'MOtoDO': MOtoDO,
-        'MOtoRSP': MOtoRSP,
-        'TransToDO': TransToDO,
-        'DOtoRSP': DOtoRSP,
+        'RetailSales': RetailSales,  # Retail Sales
+        'FixedSales': FixedSales,  # Fixed-Rate Sales
+        'FixedEnergyCharges': DSO_Cash_Flows['Revenues']['RetailSales']['FixedSales']['FixedEnergyCharges'],  # Fixed-Rate energy charges
+        'DemandCharges': DSO_Cash_Flows['Revenues']['RetailSales']['FixedSales']['DemandCharges'],  # Demand charges (C & I)
+        'ConnectChargesFix': DSO_Cash_Flows['Revenues']['RetailSales']['FixedSales']['ConnectChargesFix'],  # Connect charges (fixed-price)
+        'TransactiveSales': TransactiveSales,  # Transactive-Rate Sales
+        'RetailDACharges': DSO_Cash_Flows['Revenues']['RetailSales']['TransactiveSales']['RetailDACharges'],  # Day-ahead energy charges
+        'RetailRTCharges': DSO_Cash_Flows['Revenues']['RetailSales']['TransactiveSales']['RetailRTCharges'],  # Real-time energy charges
+        'DistCharges': DSO_Cash_Flows['Revenues']['RetailSales']['TransactiveSales']['DistCharges'],  # Distribution charges
+        'ConnectChargesDyn': DSO_Cash_Flows['Revenues']['RetailSales']['TransactiveSales']['ConnectChargesDyn'],  # Connect charges (dynamic rate)
+        'TransactFees': TransactFees,  # Transaction Fees
+        'TransTo': TransTo,  # Transfers Received Within DSO
+        'TransToMO': TransToMO,  # Transfers to MO
+        'MOtoDO': MOtoDO,  # Received by MO from DO
+        'MOtoRSP': MOtoRSP,  # Received by MO from RSP
+        'TransToDO': TransToDO,  # Transfers to DO
+        'DOtoRSP': DOtoRSP,  # Received by DO from RSP
         'Balance': 0
     }
 
@@ -731,9 +686,8 @@ if __name__ == '__main__':
     transactive = True
     # path_to_write
     # save_path
-
     CapitalExpenses_dict, OperatingExpenses_dict, Revenues_dict, \
         DSO_Cash_Flows_dict, DSO_Wholesale_Energy_Purchase_Summary, DSO_Cash_Flows_composite = \
         dso_CFS(config_path, DSOmetadata, dso_num, DSO_base_case_peak_demand,
                 DSO_Cash_Flows, DSO_Revenues_and_Energy_Sales)
-'''
+    '''

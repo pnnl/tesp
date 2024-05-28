@@ -130,7 +130,7 @@
   "coolingScheduleNumber": 8,
   "heatingScheduleNumber": 6,
   "waterHeaterScheduleNumber": 6,
-  "commercial_skew_max": 8100,
+  "commercial_skew_max": 5400,
   "commercial_skew_std": 2700,
   "residential_skew_max": 8100,
   "residential_skew_std": 2700,
