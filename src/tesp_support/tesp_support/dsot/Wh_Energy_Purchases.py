@@ -141,7 +141,7 @@ def load_price_data(dir_path, market_type, dso_num, simdata, place):
     return prices_data
 
 
-def Wh_Energy_Purchases(dir_path, dso_num, simdata=False, h1=5, h2=16, h3=20, place='Houston', monthly_data=False):
+def Wh_Energy_Purchases(dir_path, dso_num, simdata=False, h1=5, h2=16, h3=20, place='Houston'):
     """ Computes the total costs, total energy purchases and average price annually for bilateral,
     day-ahead and real-time markets from hourly and 5 min ERCOT energy and price data.
 
@@ -294,22 +294,18 @@ def Wh_Energy_Purchases(dir_path, dso_num, simdata=False, h1=5, h2=16, h3=20, pl
 
     Monthly_Purchases.rename(
         columns={
-            "Fixed Quantity (MW)": "Bilateral Energy (MWh)",
-            "Day-ahead (MWh)": "Day-Ahead Energy (MWh)",
-            0: "Real-Time Energy (MWh)",
-            1: "Bilateral Purchases ($)",
-            2: "Day-Ahead Purchases ($)",
-            3: "Real-Time Purchases ($)",
-            4: "Bilateral Average Price ($/MWh)",
-            5: "Day-Ahead Average Price ($/MWh)",
-            6: "Real-Time Average Price ($/MWh)",
+            "Fixed Quantity (MW)": "WhBLEnergy",
+            "Day-ahead (MWh)": "WhDAEnergy",
+            0: "WhRTEnergy",
+            1: "WhBLCosts",
+            2: "WhDACosts",
+            3: "WhRTCosts",
+            4: "WhBLPrice",
+            5: "WhDAPrice",
+            6: "WhRTPrice",
         },
         inplace=True,
     )
-
-    # Return the monthly data instead of the annual data, if prompted by the user
-    if monthly_data:
-        return Monthly_Purchases
 
     # TO DO: Change the following path for the monthly purchases csv to the desired location
     # Monthly_Purchases.to_csv(r'C:/Users/mayh819/PycharmProjects/tesp-private/tesp-private/{}_DSO_{}_Monthly_Purchases.csv'.format(place,dso_num))
@@ -336,6 +332,35 @@ def Wh_Energy_Purchases(dir_path, dso_num, simdata=False, h1=5, h2=16, h3=20, pl
                 'WhLosses': 0  # DSO specific ISO losses are zero for now (not calculated by DC power flow equation).
         }
     }
+
+    # Adjust the monthly cost metrics to be in $k
+    Monthly_Purchases.loc[:, "WhBLCosts"] /= 1000
+    Monthly_Purchases.loc[:, "WhDACosts"] /= 1000
+    Monthly_Purchases.loc[:, "WhRTCosts"] /= 1000
+
+    # Change the index from time stamps to month numbers
+    months = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+    ]
+    Monthly_Purchases.set_index(pd.Index(months), inplace=True)
+
+    # Update MarketPurchases to also include monthly metrics
+    for i in ["DA", "RT", "BL"]:
+        MarketPurchases["WhEnergyPurchases"]["Wh" + i + "PurchasesMonthly"] = {
+            "Wh" + i + j: {m: Monthly_Purchases.loc[m, "Wh" + i + j] for m in months}
+            for j in ["Costs", "Energy", "Price"]
+        }
 
     return MarketPurchases
 
