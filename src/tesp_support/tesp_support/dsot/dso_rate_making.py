@@ -18,7 +18,7 @@ from .plots import load_da_retail_price, customer_meta_data, load_json, load_age
     load_system_data, get_date, tic, toc, load_retail_data, load_ames_data, load_gen_data, load_indust_data
 
 
-def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_data_path, tou_params=None):
+def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_data_path, rate_scenario):
     """ Determines the total energy consumed and max power consumption for all meters within a DSO for a series of days.
     Also collects information on day ahead and real time quantities consumed by transactive customers.
     Creates summation of these statistics by customer class.
@@ -29,8 +29,8 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
         dso_num (str): number of the DSO folder to be opened
         day_range (list): range of days to be summed (for example a month).
         SF (float): Scaling factor to scale GLD results to TSO scale (e.g. 1743)
-        tou_params (dict): Parameters relevant to the time-of-use rate. Defaults to None, which indicates that a
-        time-of-use rate is not being considered.
+        rate_scenario (str): A str specifying the rate scenario under investigation: flat,
+        time-of-use, subscription, or transactive.
     Returns:
         meter_df: dataframe of energy consumption and max 15 minute power consumption for each month and total
         energysum_df: dataframe of energy consumption summations by customer class (residential, commercial, and industial)
@@ -40,6 +40,14 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
     case_config = load_json(dir_path, 'generate_case_config.json')
     industrial_file = os.path.join("../" + dso_data_path, case_config['indLoad'][5].split('/')[-1])
     indust_df = load_indust_data(industrial_file, day_range)
+
+    # Load in necessary data for the defined rate scenario
+    if rate_scenario == "time-of-use":
+        # Note: this assumes each month has the same number of time-of-use periods
+        tou_params = load_json(
+            dir_path,
+            "time_of_use_parameters_dso_" + dso_num + ".json",
+        )
 
     # Create empty dataframe structure for all meters.
     meter = []
@@ -54,7 +62,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
             month.append(0)
 
         # Add consumtpion during time-of-use periods, if applicable
-        if tou_params is not None:
+        if rate_scenario == "time-of-use":
             for k in tou_params["periods"].keys():
                 meter.append(each)
                 variable.append(k + "_kwh")
@@ -106,7 +114,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
             month.append(0)
         
         # Add consumtpion during time-of-use periods, if applicable
-        if tou_params is not None:
+        if rate_scenario == "time-of-use":
             for k in tou_params["periods"].keys():
                 loads.append(each)
                 variable.append(k + "_kwh")
@@ -165,7 +173,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
                 meter_df.loc[(each, 'load_factor'), day_name] = 0
             
             # Calculate each consumer's time-of-use-related consumption metrics, if applicable
-            if tou_params is not None:
+            if rate_scenario == "time-of-use":
                 for k in tou_params["periods"].keys():
                     for t in range(len(tou_params["periods"][k]["hour_start"])):
                         meter_df.loc[(each, k + "_kwh"), day_name] += (
@@ -232,7 +240,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
                                                                                      (each, 'max_kw'), day_name] * SF
                     
                     # Calculate the time-of-use-related metrics, if applicable
-                    if tou_params is not None:
+                    if rate_scenario == "time-of-use":
                         for k in tou_params["periods"].keys():
                             energysum_df.loc[(load, k + "_kwh"), day_name] += (
                                 meter_df.loc[(each, k + "_kwh"), day_name] * SF
@@ -258,7 +266,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
 
     # Create totals for energy metrics
     energysum_metrics = ['kw-hr', 'demand_quantity', 'da_q', 'rt_q', 'congest_$', 'congest_q']
-    if tou_params is not None:
+    if rate_scenario == "time-of-use":
         for k in tou_params["periods"].keys():
             energysum_metrics.append(k + "_kwh")
     for item in energysum_metrics:
@@ -280,7 +288,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
         else:
             meter_df.loc[(each, 'load_factor'), 'sum'] = 0
     
-    if tou_params is not None:
+    if rate_scenario == "time-of-use":
         for k in tou_params["periods"].keys():
             meter_df.loc[(slice(None), k + "_kwh"), ["sum"]] = meter_df.loc[
                 (slice(None), k + "_kwh"),
@@ -1494,6 +1502,9 @@ def DSO_rate_making(
         )
     #toc()
 
+    # Initialize surplus for export purposes when rate_scenario is not None
+    surplus = 0 
+
     if rate_scenario is None:
         surplus = (
             billsum_df.loc[("total", "fix_total"), "sum"]
@@ -1702,9 +1713,31 @@ def DSO_rate_making(
     else:
         # Initialize the DSO_Revenues_and_Energy_Sales and DSO_Cash_Flows dicts
         DSO_Revenues_and_Energy_Sales = {
+            "RetailSales": {},
             "EnergySold": year_energysum_df.loc[("total", "kw-hr"), "sum"] / 1000,  # Energy Sold in MW-hr
+            "EnergySoldMonthly": {
+                m: year_energysum_df.loc[("total", "kw-hr"), m] / 1000
+                for m in year_energysum_df
+                if m != "sum"
+            }, # Energy Sold in MW-hr
+            "RequiredRevenue": 0, # Energy charges in $k
+            "EffectiveCostRetailEnergy": 0, #$/kW-hr
+            "DistLosses": {
+                "DistLossesCost": year_energysum_df.loc[("total", "dist_loss_$"), "sum"] / 1000,  # DSO Losses in $k
+                "DistLossesEnergy": year_energysum_df.loc[("total", "dist_loss_q"), "sum"] / 1000,  # DSO Losses in MW-hrs
+            },
         }
-        DSO_Cash_Flows = {}
+        DSO_Cash_Flows = {"Revenues": {"RetailSales": {}}}
+        
+        # Assign information based on the rate scenario
+        if rate_scenario == "flat":
+            None
+        elif rate_scenario == "time-of-use":
+            None
+        elif rate_scenario == "subscription":
+            None
+        elif rate_scenario == "transactive":
+            None
 
     return DSO_Cash_Flows, DSO_Revenues_and_Energy_Sales, tariff, surplus
 
