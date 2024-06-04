@@ -906,21 +906,38 @@ def calculate_tier_credit(dso_num, tariff_class, tariff, total_energy):
     """
 
     # Specify the parameters of the declining-block tiers of the tiered rate
-    tier2 = 0
-    tier3 = 0
-    t1p = tariff["DSO_" + dso_num][tariff_class]["tier_1"]["price"]
-    t1q = tariff["DSO_" + dso_num][tariff_class]["tier_1"]["max_quantity"]
-    t2p = tariff["DSO_" + dso_num][tariff_class]["tier_2"]["price"]
-    t2q = tariff["DSO_" + dso_num][tariff_class]["tier_2"]["max_quantity"]
+    tier_info = {
+        1: {
+            "price": 0,
+            "threshold": tariff["DSO_" + dso_num][tariff_class]["tier_1"]["max_quantity"],
+        },
+        2: {
+            "price": tariff["DSO_" + dso_num][tariff_class]["tier_1"]["price"],
+            "threshold": tariff["DSO_" + dso_num][tariff_class]["tier_2"]["max_quantity"],
+        },
+        3: {
+            "price": sum(
+                tariff["DSO_" + dso_num][tariff_class]["tier_" + str(i)]["price"]
+                for i in range(1, 3)
+            ),
+            "threshold": tariff["DSO_" + dso_num][tariff_class]["tier_3"]["max_quantity"],
+        },
+    }
 
-    # Determine if the consumer's demand places them in either of the tiers
-    if total_energy >= t1q:
-        tier2 = 1
-    if total_energy >= t2q:
-        tier3 = 1
-    
     # Calculate the tier credit
-    tier_credit = t1p * tier2 * (total_energy - t1q) + t2p * tier3 * (total_energy - t2q)
+    tier_credit = 0
+    for b in tier_info:
+        if b == 1:
+            prev_threshold = 0
+        else:
+            prev_threshold = tier_info[b - 1]["threshold"]
+        tier_credit += tier_info[b]["price"] * max(
+            min(
+                total_energy - prev_threshold,
+                tier_info[b]["threshold"] - prev_threshold,
+            ),
+            0,
+        )
 
     # Return the tier credit
     return tier_credit
