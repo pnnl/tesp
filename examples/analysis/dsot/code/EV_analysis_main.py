@@ -32,7 +32,8 @@ def implement_assumptions_on_vehicle_inventory(randomsoc, output_file_save_loc, 
 def main(date_name, EV_preprocess_localization_skip, EV_placement_on_grid, extract_load_forecast, uncontrolled,
          xfrmrrating_evshare, num_days, num_hours, depletionassumption, sens_flag, size_of_batch, randomsoc,
          customsuffix_list, size_name_list, zone_name_list_list, state_list_list, folder_list_list,
-         custom_suffix_sim_run, custom_suffix_sim_run_uncontrolled, controlled, threshold_cutoff, smooth):
+         custom_suffix_sim_run, custom_suffix_sim_run_uncontrolled, controlled, threshold_cutoff, smooth,
+         offset_evtimes_main_logic):
 
     if not EV_preprocess_localization_skip:
         # generate the EV inventory based on adaption data. This will create a folder "output_data" that will have vehicle
@@ -45,8 +46,8 @@ def main(date_name, EV_preprocess_localization_skip, EV_placement_on_grid, extra
         # charging time such that it follows NREL's fleet DNA data.
         output_path = "new_" + output_path
         os.makedirs(output_path, exist_ok=True)
-        offset_main_logic = True  # impact peak EV demand significantly.
-        ev_times.main(offset_main_logic)
+        # offset_evtimes_main_logic = True  # impact peak EV demand significantly.
+        ev_times.main(offset_evtimes_main_logic)
 
         # Add location and port information to each vehicle inventory file and keep it consistent across years (a vehicle if
         # introduced in 2030 goes to location A then it always goes to location A until year 2040).
@@ -57,6 +58,7 @@ def main(date_name, EV_preprocess_localization_skip, EV_placement_on_grid, extra
         #  inside each function below, the folder access name needs to be changed. Eventually this should be brought out
         #  as a user input that way, we can generate EV assignments to any grid.
 
+        #---------------------------------------------------------------------------------------------------------------
         # # my_main_loc = os.getcwd()
         # # os.chdir(f"{output_path}/")
         # # all_files = glob.glob('./*.csv')
@@ -69,23 +71,23 @@ def main(date_name, EV_preprocess_localization_skip, EV_placement_on_grid, extra
         #                                                   xfrmrrating_evshare, EV_placement_on_grid, date_name,
         #                                                   custom_suffix_sim_run_uncontrolled,
         #                                                   vehicle_inventory_path = output_path)
+        #---------------------------------------------------------------------------------------------------------------
 
         # assign logic of cyclic version instead of size based option like above function. This function adds xfrmrs
         # based on selected locations and number of charging locations available in a cyclic manner.
-        no_of_charging_locations = 300
         xfrmrrating_evshare = None
-        final_year = 2040
+        final_year = 2040  # todo: need to update this when pov results are included!!! final year will be 2042 then!!!
         vehicles_per_port = 2
         no_of_chargers = 3
-        max_ports2 = no_of_chargers*2
-        output_file_save_loc = MapEVstoGridLocations.main_cyclic_selective_locs_for_chargers(Years, Networks,
-                                                                                             subfolder_count, main_path,
-                                                          xfrmrrating_evshare,
-                                                          custom_suffix_sim_run_uncontrolled, output_path,
-                                                                                             no_of_charging_locations,
-                                                                                             final_year,
-                                                                                             vehicles_per_port,
-                                                                                             max_ports2)
+        no_of_ports_per_charger = 2
+        vehicle_at_a_location = no_of_chargers*no_of_ports_per_charger*vehicles_per_port
+        load_existing_mapping_bldg_no_to_manually_selected_EVbldgs = True
+        output_file_save_loc =\
+            MapEVstoGridLocations.main_cyclic_selective_locs_for_chargers(vehicles_per_port, Years, Networks, subfolder_count, main_path,
+                                                          xfrmrrating_evshare, custom_suffix_sim_run_uncontrolled,
+                                                                          output_path, final_year,
+                                                                          vehicle_at_a_location,
+                                                                          load_existing_mapping_bldg_no_to_manually_selected_EVbldgs)
 
     else:
         output_file_save_loc = f"final_vehicle_inventory_{custom_suffix_sim_run_uncontrolled}"
@@ -153,6 +155,10 @@ def main(date_name, EV_preprocess_localization_skip, EV_placement_on_grid, extra
                 map_filename_here = f"{output_file_save_loc}/xfrmr_map_{size_here}_Year_2040.json"
                 with open(os.getcwd() + '/' + map_filename_here, 'r') as fp:
                     real_to_dummy_mapping = json.load(fp)
+
+                # # There are xfrmrs without EVs, these xfrmr demand does not need to be saved in load forecast
+                # nonEVxfrmrs_names_to_drop = list(set(list(consolidated_df_in_va.columns)) - set(list(real_to_dummy_mapping.keys())))
+                # consolidated_df_in_va = consolidated_df_in_va.drop(columns=nonEVxfrmrs_names_to_drop)
 
                 consolidated_df_in_va = consolidated_df_in_va.rename(columns=real_to_dummy_mapping)
                 # base load has one extra time stamp at the end, need to drop it
@@ -293,13 +299,15 @@ if __name__ == '__main__':
 
     threshold_list = [1]
 
+    offset_evtimes_main_logic = True
+
     for sens_flag2 in sens_flag_list:
         # sens_flag2 = "tight"
         # idx_loop = 0
         for idx_loop, threshold_cutoff in enumerate(threshold_list):
 
             # ------------------------ parameters ---------------------------------------------------
-            date_name = f"april21_{sens_flag2}"
+            date_name = f"may22_{sens_flag2}"
             # ------------------------- vehicle inventory and EV placement on grid parameters ------------------------------
             subfolder_count_dic = {"Small": 2, "Medium": 10, "Large": 17}  # vehicle inventory
             if idx_loop == 0:
@@ -307,7 +315,13 @@ if __name__ == '__main__':
             else:
                 EV_preprocess_localization_skip = True
 
-            EV_placement_on_grid = "ascen"  # "ascen", "descen", "random"
+            # EV_placement_on_grid = "ascen"  # "ascen", "descen", "random"
+
+            if offset_evtimes_main_logic:
+                EV_placement_on_grid = "cyclic_evtimes_6pm8am"
+            else:
+                EV_placement_on_grid = "cyclic_nrel_fleet_data"
+
             # -------------------------- load forecast from gridlabd parameters -------------------------
             if idx_loop == 0:
                 extract_load_forecast = True  # NOTE: make sure the length of timestamp column is same for uncontroleld and SCM!
@@ -380,5 +394,6 @@ if __name__ == '__main__':
             main(date_name, EV_preprocess_localization_skip, EV_placement_on_grid, extract_load_forecast, uncontrolled,
                  xfrmrrating_evshare, num_days, num_hours, depletionassumption, sens_flag, size_of_batch, randomsoc,
                  customsuffix_list, size_name_list, zone_name_list_list, state_list_list, folder_list_list,
-                 custom_suffix_sim_run, custom_suffix_sim_run_uncontrolled, controlled, threshold_cutoff, smooth)
+                 custom_suffix_sim_run, custom_suffix_sim_run_uncontrolled, controlled, threshold_cutoff, smooth,
+                 offset_evtimes_main_logic)
 

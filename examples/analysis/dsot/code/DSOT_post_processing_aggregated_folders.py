@@ -812,7 +812,7 @@ def work_with_uncontrolled_and_controlled_ev_load(value, xfrmr_name_to_size, fla
                     print("failed xfrmr found in controlled even before assignment, bug if found, exiting...")
                     exit()
                 else:
-                    df_current_year_uncontrolled_ev[x] = list(required_df[str(current_year_xfrmr_map["feeder1_R2_12_47_1_xfmr_101_set11"])])
+                    df_current_year_uncontrolled_ev[x] = list(required_df[str(current_year_xfrmr_map[x])])
 
         df_current_year_uncontrolled_ev["Year"] = each_year
         all_year_ev_uncontrolled_laod = pd.concat(
@@ -1764,8 +1764,17 @@ def plot_histogram_plotly(plots_folder_name, basecase_peak_demand_all_folders, u
                outsidetextfont=dict(size=size_val, color=colot_val), constraintext='none'))
 
     if evxfrmrcount != 'dont care':
+        if "Large" in plots_folder_name:
+            tot_cm_xfmr = 2501
+        elif "Medium" in plots_folder_name:
+            tot_cm_xfmr = 1549
+        elif "Small" in plots_folder_name:
+            tot_cm_xfmr = 187
+        else:
+            print("something wrong hereeeeee....exiting...")
+            exit()
         fig.add_annotation(x=5, y=max(uncontrolled_peak_demand_all_folders)+10,
-                           text=f"Total EV transformers = {evxfrmrcount}/2501",
+                           text=f"Total EV transformers = {evxfrmrcount}/{tot_cm_xfmr}",
                            showarrow=False,
                            yshift=10)
     fig.update_layout(
@@ -1795,6 +1804,45 @@ def plot_histogram_plotly(plots_folder_name, basecase_peak_demand_all_folders, u
 
     k = 1
 
+def plot_stacked_plot_for_uncontrolled_ev(years_list, base_demand_list, ev_demand_list, size_val, file_to_save, grid_peak_demand_value, y_title, x_title):
+    position_val = "auto"
+    # size_val = 28
+    colot_val = "black"
+    fig = go.Figure(data=[
+        go.Bar(name='Base Demand', x=years_list, y=base_demand_list, marker_color="grey",
+               text=[int(x) for x in base_demand_list],
+               textposition=position_val, outsidetextfont=dict(size=size_val, color=colot_val), constraintext='none'),
+        go.Bar(name='Uncontrolled EV Demand', x=years_list, y=ev_demand_list, marker_color='#EF553B',
+               text=[int(x) for x in ev_demand_list],
+               textposition=position_val, outsidetextfont=dict(size=size_val, color=colot_val), constraintext='none')
+    ])
+    fig.add_hline(y=grid_peak_demand_value / 1000, line_width=4, line_color="black")
+    # Change the bar mode
+    fig.update_layout(barmode='stack',
+                      yaxis=dict(
+                          title=y_title,
+                          titlefont_size=30,
+                          tickfont_size=28,
+                      ),
+                      xaxis=dict(
+                          title=x_title,
+                          titlefont_size=30,
+                          tickfont_size=28,
+                      ),
+                      font=dict(
+                          family="Courier New, monospace",
+                          size=30,
+                          color="RebeccaPurple"
+                      ),
+                      paper_bgcolor='rgba(255,255,255,1)',
+                      plot_bgcolor='rgba(255,255,255,1)'
+                      )
+    fig.update_xaxes(showline=True, linewidth=4, linecolor='black')
+    fig.update_yaxes(showline=True, linewidth=4, linecolor='black')
+    # fig.show()
+    plotly.offline.plot(fig,
+                        filename=file_to_save, auto_open=False)
+
 def extract_demand_forecast_from_gld(path, subfolder_num):
     # config_to_power_rating_map_dict has ratings in kva!
     (load_to_xfrmr_config_map_dict, config_to_power_rating_map_dict, load_to_xfrmr_name,
@@ -1808,7 +1856,7 @@ def extract_demand_forecast_from_gld(path, subfolder_num):
     dup = u[c>1]
 
     if dup.size != 0:
-        print("found multiple commercial loads at one transformer. this should be possible as per tesp, exiting "
+        print("found multiple commercial loads at one transformer. this should not be possible as per tesp, exiting "
               "code...verify/debug..")
         exit()
 
@@ -1923,10 +1971,19 @@ if __name__ == '__main__':
 
     randomsoc = True
     xfrmrrating_evshare = 70
-    EV_placement_on_grid = "ascen"
+
+
+    # EV_placement_on_grid = "ascen"
+
+    offset_evtimes_main_logic = True
+    if offset_evtimes_main_logic:
+        EV_placement_on_grid = "cyclic_evtimes_6pm8am"
+    else:
+        EV_placement_on_grid = "cyclic_nrel_fleet_data"
+
     sens_flag = "tight"
     sensitivity_suffix = f"scm_{sens_flag}"
-    date_name = f"april21_{sens_flag}"
+    date_name = f"may22_{sens_flag}"  # f"april21_{sens_flag}"
     threshold_cutoff = 1
     custom_suffix_sim_run = (f"randsoc{randomsoc}_sensflag{sens_flag}_evongrid{xfrmrrating_evshare}"
                              f"{EV_placement_on_grid}_threshold{threshold_cutoff}_{date_name}")
@@ -1939,29 +1996,29 @@ if __name__ == '__main__':
     size_name_l = "large"
     size_name_m = "medium"
     size_name_s = "small"
-    zone_name_list_l = ["AZ_Tucson_Large", "WA_Tacoma_Large", "AL_Dothan_Large", "LA_Alexandria_Large"]
-    zone_name_list_s = ["AZ_Tucson_Small", "WA_Tacoma_Small", "AL_Dothan_Small", "IA_Johnston_Small",
-                      "LA_Alexandria_Small", "AK_Anchorage_Small", "MT_Greatfalls_Small"]
-    zone_name_list_m = ["AZ_Tucson_Medium", "WA_Tacoma_Medium", "AL_Dothan_Medium", "IA_Johnston_Medium", "LA_Alexandria_Medium", "AK_Anchorage_Medium", "MT_Greatfalls_Medium"]  # ["AZ_Tucson_Medium", "WA_Tacoma_Medium"]
+    # zone_name_list_l = ["AZ_Tucson_Large", "WA_Tacoma_Large", "AL_Dothan_Large", "LA_Alexandria_Large"]
+    # zone_name_list_s = ["AZ_Tucson_Small", "WA_Tacoma_Small", "AL_Dothan_Small", "IA_Johnston_Small",
+    #                   "LA_Alexandria_Small", "AK_Anchorage_Small", "MT_Greatfalls_Small"]
+    # zone_name_list_m = ["AZ_Tucson_Medium", "WA_Tacoma_Medium", "AL_Dothan_Medium", "IA_Johnston_Medium", "LA_Alexandria_Medium", "AK_Anchorage_Medium", "MT_Greatfalls_Medium"]  # ["AZ_Tucson_Medium", "WA_Tacoma_Medium"]
 
-    # zone_name_list_l = ["AZ_Tucson_Large"]
-    # zone_name_list_s = ["AZ_Tucson_Small"]
-    # zone_name_list_m = ["AZ_Tucson_Medium"]
+    zone_name_list_l = ["AZ_Tucson_Large"]
+    zone_name_list_s = ["AZ_Tucson_Small"]
+    zone_name_list_m = ["AZ_Tucson_Medium"]
 
-    state_list_l = ["az", "wa", "al", "la"]
-    state_list_m = ["az", "wa", "al", "ia", "la", "ak", "mt"]
-    state_list_s = ["az", "wa", "al", "ia", "la", "ak", "mt"]
+    # state_list_l = ["az", "wa", "al", "la"]
+    # state_list_m = ["az", "wa", "al", "ia", "la", "ak", "mt"]
+    # state_list_s = ["az", "wa", "al", "ia", "la", "ak", "mt"]
 
-    # state_list_l = ["az"]
-    # state_list_m = ["az"]
-    # state_list_s = ["az"]
-    folder_list_l = [17, 17, 17, 17]
-    folder_list_s = [2, 2, 2, 2, 2, 2, 2]
-    folder_list_m = [10, 10, 10, 10, 10, 10, 10]
+    state_list_l = ["az"]
+    state_list_m = ["az"]
+    state_list_s = ["az"]
+    # folder_list_l = [17, 17, 17, 17]
+    # folder_list_s = [2, 2, 2, 2, 2, 2, 2]
+    # folder_list_m = [10, 10, 10, 10, 10, 10, 10]
 
-    # folder_list_l = [17]
-    # folder_list_s = [2]
-    # folder_list_m = [10]
+    folder_list_l = [17]
+    folder_list_s = [2]
+    folder_list_m = [10]
 
 
     customsuffix_list = [customsuffix_l, customsuffix_m, customsuffix_s]
@@ -2015,7 +2072,7 @@ if __name__ == '__main__':
             state = state_list[iiidxx]
             total_folders = folder_list[iiidxx]
             folder_names = [f"{zone_name}_{customsuffix}_{ji+1}_fl" for ji in range(0, total_folders)]
-            folder_name = f"aggregated_data_{zone_name}_{state}_{customsuffix}_{sensitivity_suffix}_threshold{threshold_cutoff}_{date_name}"
+            folder_name = f"aggregated_data_{zone_name}_{state}_{customsuffix}_{sensitivity_suffix}_threshold{threshold_cutoff}_{date_name}_v2"
             # folder_name = f"aggregated_data_{zone_name}_{state}_{customsuffix}_{sensitivity_suffix}"
             input_1a = f"{zone_name}_{customsuffix}"
 
@@ -2076,6 +2133,9 @@ if __name__ == '__main__':
 
             # df_final=overload_calculation(base_case_list,GLD_prefix,plots_folder_name)
 
+            # Plot the xfrmr overloading here
+            # (columns=["# timestamp", "month", "year_i", "day", "hour"])
+
 
             ###########################################################################
             ####################### Load DER stack data ###############################
@@ -2121,6 +2181,18 @@ if __name__ == '__main__':
             x_title = "Years"
             year_list = [int(x) for x in year_list]
             size_val = 18
+
+
+            plot_histogram_plotly(plots_folder_name, total_basecase_vios,
+                                  total_uncontrolled_vios, total_controlled_vios,
+                                  year_list, title, x_title, file_to_save, size_val, total_basecase_xfrmrs_with_evs[0])
+
+            # below piece code of written to remove the base case violations from the plot results based on feedback
+            # received.
+            total_uncontrolled_vios = [x-total_basecase_vios[ixxx] for ixxx, x in enumerate(total_uncontrolled_vios)]
+            total_controlled_vios = [x-total_basecase_vios[ixxx] for ixxx, x in enumerate(total_controlled_vios)]
+            total_basecase_vios = [0]*len(total_uncontrolled_vios)
+            file_to_save = f"/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/code/{plots_folder_name}/Multiyear_barplot_EVxfmrviolation_count_{plots_folder_name}_v2.html"
             plot_histogram_plotly(plots_folder_name, total_basecase_vios,
                                   total_uncontrolled_vios, total_controlled_vios,
                                   year_list, title, x_title, file_to_save, size_val, total_basecase_xfrmrs_with_evs[0])
@@ -2307,6 +2379,16 @@ if __name__ == '__main__':
             coincident_peak = False  # IMPORTANT FLAG TO MODIFYING THE BELOW PLOT
             df1_uncontrolled = pd.DataFrame(uncontrolled_np, index=[str(x) for x in year_list], columns=["Base Load", "EV Demand"])
             df2_controlled = pd.DataFrame(controlled_np, index=[str(x) for x in year_list], columns=["Base Load", "EV Demand"])
+            base_building_peak_demand = df_final_divided_inkws_hourly.sum(axis=1).max()
+            # bs_ld = [base_building_peak_demand]*controlled_np.shape[0]
+            # ev_ld = [0]*controlled_np.shape[0]
+            # desrd_np = np.column_stack((bs_ld, ev_ld))
+
+            title = "Demand in MWs"
+            x_title = "Years"
+            file_to_save = f"/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/code/{plots_folder_name}/Uncontrolled_stack_plot_with_baseload_line_{plots_folder_name}.html"
+            plot_stacked_plot_for_uncontrolled_ev(year_list, list(df1_uncontrolled["Base Load"]), list(df1_uncontrolled["EV Demand"]), size_val, file_to_save,
+                                                  base_building_peak_demand, title, x_title)
 
             if not coincident_peak:
                 base_building_peak_demand = df_final_divided_inkws_hourly.sum(axis=1).max()

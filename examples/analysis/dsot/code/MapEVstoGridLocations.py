@@ -5,6 +5,12 @@ import DSOT_post_processing_aggregated_folders
 import json
 import random
 import math
+import sys
+import ingest_bld_data
+if os.path.abspath("/home/gudd172/tesp/repository/tesp/src/tesp_support/tesp_support/weather") not in sys.path:
+    sys.path.append("/home/gudd172/tesp/repository/tesp/src/tesp_support/tesp_support/weather")
+import EPWtoDAT
+from glm import GLMManager
 
 def get_xfrmr_info_from_all_substations_subfolders(subfolder_count, idx, network_size, customsuffix, main_path):
     xfmr_size_name_mapping = {}
@@ -22,6 +28,48 @@ def get_xfrmr_info_from_all_substations_subfolders(subfolder_count, idx, network
     xfmr_size_map_df = pd.DataFrame(xfmr_size_name_mapping.items(), columns=['Name', 'Size'])
 
     return xfmr_size_map_df
+
+def get_xfrmr_info_from_all_substations_subfoldersv2(subfolder_count, idx, network_size, customsuffix, main_path,
+                                                     weather_folder_names, weather_mappings_bldg_name,
+                                                     weather_mappings_bldg_count):
+    xfmr_size_name_mapping_withEVs = {}
+    xfmr_size_name_mapping_allxfrmrs = {}
+    for i in range(subfolder_count[idx]):
+        folder_name = f"AZ_Tucson_{network_size}_{customsuffix}_{i + 1}_fl"
+        path = main_path + folder_name + '/Substation_1/'
+        # config_to_power_rating_map_dict has ratings in kva!
+        load_to_xfrmr_config_map_dict, config_to_power_rating_map_dict, load_to_xfrmr_name, xfrmr_name_to_size = (
+            DSOT_post_processing_aggregated_folders.transformer_map(path))
+
+        # find the blg dummy name mapped to the commercial load or even better to a commercial transformer.
+        # using the glm manager to read glm file
+        glm_mgr = GLMManager(os.path.join(path, "Substation_1.glm"),
+                             model_is_path=True)
+        # # parse through glm info to find the commercial xfrmr and its bldg name to it
+        desired_xfrmr_list = []
+        for key_gt, value_gt in glm_mgr.model_map["object"]["load"].items():
+            load_info = value_gt[1]
+            for k_h, v_h in load_info.items():
+                if "base_power" in k_h:
+                    bldg_name_found_in_glm = v_h.split(".")[0]
+                    # find bldgs from shortlisted buildings
+                    if bldg_name_found_in_glm in weather_mappings_bldg_name["AZ_Tucson"][network_size].keys():
+                        load_to_which_bldg_is_assigned = load_info["name"].split("_streetlights")[0]
+                        xfrmr_connected_to_bldg = load_to_xfrmr_name[load_to_which_bldg_is_assigned]
+                        desired_xfrmr_list.append(xfrmr_connected_to_bldg)
+
+
+        for key, value in xfrmr_name_to_size.items():
+            modified_key = key + f"_set{i + 1}"
+            xfmr_size_name_mapping_allxfrmrs[modified_key] = value
+            if key in desired_xfrmr_list:  # only add xfrmrs that have desired bldgs from the manual selection. The rest
+                # of the code will work based on the selected xfrmrs.
+                xfmr_size_name_mapping_withEVs[modified_key] = value
+
+    # convert json info to dataframe
+    xfmr_size_map_df_withEVs = pd.DataFrame(xfmr_size_name_mapping_withEVs.items(), columns=['Name', 'Size'])
+    xfmr_size_map_df_allxfrmrs = pd.DataFrame(xfmr_size_name_mapping_allxfrmrs.items(), columns=['Name', 'Size'])
+    return xfmr_size_map_df_withEVs, xfmr_size_map_df_allxfrmrs
 
 def assign_vehicles(list_of_vehicleIDs, vehicles_to_add_at_a_location, possible_xfrmrs, df, map_given_size):
     xfrmr_added_idx = 0
@@ -58,10 +106,28 @@ def perform_commonsense_check(possible_xfrmrs, vehicles_to_add_at_a_location, ne
               f" {len(possible_xfrmrs)}/{len(xfmr_size_map_df)}. Vehicle assignment to grid possible, proceeding"
               f" to next steps. Number of vehicles per xfrmr with {type_l} = {vehicles_to_add_at_a_location}. Total "
               f"vehicles to assign on grid = {len(df_vehicles)}")
-def main_cyclic_selective_locs_for_chargers(Years, Networks, subfolder_count, main_path, xfrmrrating_evshare,
-         custom_suffix_sim_run_uncontrolled, vehicle_inventory_path, no_of_charging_locations, final_year, vehicles_per_port, max_ports):
+def main_cyclic_selective_locs_for_chargers(vehicles_per_port, Years, Networks, subfolder_count,
+                                            main_path, xfrmrrating_evshare,
+         custom_suffix_sim_run_uncontrolled, vehicle_inventory_path, final_year, max_ports,
+                                            load_existing_mapping_bldg_no_to_manually_selected_EVbldgs):
+    # PART 1:
+    # Shortlist location of transformers where EVs will be placed. The names of the buildings are selected manually.
+    # Now:
+    # 1) Names of buildings in glm need to be found based on building names that got shortlisted
+    # 2) Need to find the transformer names or transformer identifier that the identified transformer bldg numbers
+    # 3) This information need to be used when loading the transformer locations to assign EVs in the next step.
+
+    # item (1):
+    weather_folder_names, weather_mappings_bldg_name, weather_mappings_bldg_count = \
+        find_bldg_map_names(load_existing_mapping_data=load_existing_mapping_bldg_no_to_manually_selected_EVbldgs)
+
+    # PART 2:
+    # assign logic of cyclic version instead of size based option like above function. This function adds xfrmrs
+    # based on selected locations and number of charging locations available in a cyclic manner.
+    #----------------------------------------------------------------------------------------------------------
+
+
     # need to know which xfrmrs are down selected for placement of EVs
-    # TODO: I will shortlist xfrmrs at the end, first I will finish rest of the logic and get back to the top.
 
     # use user input that says how many charging locations are available on grid for commercial side of course
 
@@ -87,17 +153,27 @@ def main_cyclic_selective_locs_for_chargers(Years, Networks, subfolder_count, ma
         else:
             customsuffix = "feb24_runs"
 
-        # Load the commercial transformers and their sizes from all subfolders for a given size.
-        # Create subfolder location paths (assume arizona as references - it maybe an issue if other climate zones have
-        # 16 subfolders instead of 17 subfolders, right now, it's fine because all success cases have 17 subfolders)
-        xfmr_size_map_df = get_xfrmr_info_from_all_substations_subfolders(subfolder_count, idx, network_size,
-                                                                          customsuffix, main_path)
+        # # Load the commercial transformers and their sizes from all subfolders for a given size.
+        # # Create subfolder location paths (assume arizona as references - it maybe an issue if other climate zones have
+        # # 16 subfolders instead of 17 subfolders, right now, it's fine because all success cases have 17 subfolders)
+        # xfmr_size_map_df = get_xfrmr_info_from_all_substations_subfolders(subfolder_count, idx, network_size,
+        #                                                                   customsuffix, main_path)
+        # func v2 update: this function not only loads the commercial xfrms like above commented function but it also
+        # uses the bldg map to short list the xfrmrs those bldgs are connected to, which is the step one requirement of
+        # cyclic ev assignment logic.
+        # NOTE: "xfmr_size_map_df" has xfrmrs that can potentially have EVs. The actual xfrmrs that have EVs are
+        # dependent on the charging infrastructure inputs and it is done in below code later in this function.
+        xfmr_size_map_df, xfmr_size_map_df_allxfrmrs = get_xfrmr_info_from_all_substations_subfoldersv2(subfolder_count, idx, network_size,
+                                                                          customsuffix, main_path, weather_folder_names,
+                                                                            weather_mappings_bldg_name,
+                                                                            weather_mappings_bldg_count)
 
         # create xfrmr to dummy location mapping
-        list_xfrmr = list(xfmr_size_map_df["Name"].unique())
+        list_xfrmr = list(xfmr_size_map_df_allxfrmrs["Name"].unique())
         map_given_size = {}
         for idxxxr, xfrmr_name in enumerate(list_xfrmr):
             map_given_size[xfrmr_name] = idxxxr + 1
+
 
         # take the 2040 vehicle inventory and assign vehicles as per the logic
             # Load the corresponding vehicle inventory
@@ -206,21 +282,15 @@ def main_cyclic_selective_locs_for_chargers(Years, Networks, subfolder_count, ma
                 sav_df["Grid size"] = network_size
                 df_struct = pd.concat([df_struct, sav_df])
                 loc_p_port_df = pd.DataFrame({"Location": list(updated_df_current_year["Location"].unique()),
-                                                                            "NumberofPorts": max_ports})
+                                                                            "NumberofPorts": max_ports/vehicles_per_port})
                 with pd.ExcelWriter(
                         f"final_vehicle_inventory_{custom_suffix_sim_run_uncontrolled}/vehicle_master_{network_size}_Year_{current_year}.xlsx") as writer:
                     updated_df_current_year.to_excel(writer, sheet_name='main_info', index=False)
                     loc_p_port_df.to_excel(writer, sheet_name='locationAndPorts', index=False)
 
+                with open(f"final_vehicle_inventory_{custom_suffix_sim_run_uncontrolled}/xfrmr_map_{network_size}_Year_{current_year}.json", 'w', encoding='utf-8') as f:
+                    json.dump(map_given_size, f, ensure_ascii=False, indent=4)
 
-            # loc_p_port_df = pd.DataFrame({"LocationName": all_xfrmr_names_current_year_nonempty,
-            #                               "NumberofPorts": all_ports_info})
-            # loc_p_port_df["Location"] = loc_p_port_df["LocationName"].map(map_given_size)
-            # loc_p_port_df = loc_p_port_df.drop('LocationName', axis=1)
-            # with pd.ExcelWriter(
-            #         f"final_vehicle_inventory_{custom_suffix_sim_run_uncontrolled}/vehicle_master_{network_size}_Year_{current_year}.xlsx") as writer:
-            #     df_inventory_to_update.to_excel(writer, sheet_name='main_info', index=False)
-            #     loc_p_port_df.to_excel(writer, sheet_name='locationAndPorts', index=False)
     df_struct.to_csv(f"final_vehicle_inventory_{custom_suffix_sim_run_uncontrolled}/ConsolidatedAllYearsInventory.csv", index=False)
 
     return f"final_vehicle_inventory_{custom_suffix_sim_run_uncontrolled}"
@@ -549,8 +619,116 @@ def add_two_numbers(a, b):
     return float(a)+b
 
 
+def saveintojson(data_to_save, filename_to_be_saved_as, data_Path):
+    with open(os.path.join(data_Path, filename_to_be_saved_as), 'w') as fp:
+        json.dump(data_to_save, fp, sort_keys=True, indent=4)
+
+def loadjson(filename_to_load, data_path):
+    with open(os.path.join(data_path, filename_to_load)) as f:
+        return json.load(f)
+def find_bldg_map_names(load_existing_mapping_data):
+    if not load_existing_mapping_data:
+        file_name_dict1 = {'AZ_Tucson': 'Largesite_az.xlsx',
+                           'WA_Tacoma': 'Largesite_wa.xlsx',
+                           'AL_Dothan': 'Largesite_al.xlsx',
+                           'IA_Johnston': 'Largesite_ia.xlsx',
+                           'LA_Alexandria': 'Largesite_la.xlsx',
+                           'AK_Anchorage': 'Largesite_ak.xlsx',
+                           'MT_Greatfalls': 'Largesite_mt.xlsx'}
+        file_name_dict2 = {'AZ_Tucson': 'Mediumsite_az.xlsx',
+                           'WA_Tacoma': 'Mediumsite_wa.xlsx',
+                           'AL_Dothan': 'Mediumsite_al.xlsx',
+                           'IA_Johnston': 'Mediumsite_ia.xlsx',
+                           'LA_Alexandria': 'Mediumsite_la.xlsx',
+                           'AK_Anchorage': 'Mediumsite_ak.xlsx',
+                           'MT_Greatfalls': 'Mediumsite_mt.xlsx'}
+        file_name_dict3 = {'AZ_Tucson': 'Smallsite_az.xlsx',
+                           'WA_Tacoma': 'Smallsite_wa.xlsx',
+                           'AL_Dothan': 'Smallsite_al.xlsx',
+                           'IA_Johnston': 'Smallsite_ia.xlsx',
+                           'LA_Alexandria': 'Smallsite_la.xlsx',
+                           'AK_Anchorage': 'Smallsite_ak.xlsx',
+                           'MT_Greatfalls': 'Smallsite_mt.xlsx'}
+        list_of_names = [file_name_dict1, file_name_dict2, file_name_dict3]
+
+        weather_path_inputs = "/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/data/8-node data/"
+        bus_loc = {'AZ_Tucson': ['AZ_file', '_'],
+                   'WA_Tacoma': ['WA_file', '_'],
+                   'AL_Dothan': ['AL_file', '_'],
+                   'IA_Johnston': ['IA_file', '_'],
+                   'LA_Alexandria': ['LA_file', '_'],
+                   'AK_Anchorage': ['AK_file', '_'],
+                   'MT_Greatfalls': ['MT_file', '_']}
+
+        weatherdat_filenames = EPWtoDAT.main(weather_path_inputs, bus_loc, extract=False, getnames=True,
+                                             YYYY_MM_DD="")
+
+        weather_folder_names = {}
+        weather_mappings_bldg_name = {}
+        weather_mappings_bldg_count = {}
+        for list_idx, file_name_dict in enumerate(list_of_names):
+
+            for weather_zone_idx, each_weather_zone in enumerate(weatherdat_filenames):
+                t1 = each_weather_zone.split("_")[1] + "_" + each_weather_zone.split("_")[2]
+                t1_h = each_weather_zone.split("_")[1] + "_" + each_weather_zone.split("_")[2]
+                if t1 not in weather_folder_names.keys():
+                    weather_folder_names[t1] = {}
+                    weather_mappings_bldg_name[t1] = {}
+                    weather_mappings_bldg_count[t1] = {}
+
+                file_name = file_name_dict[t1_h]
+
+                site_folder_names, mappings_bldg_name, mappings_bldg_count = ingest_bld_data.main(
+                    "", "",
+                    os.getcwd() + '/',
+                    weather_loc='FilesfromFEDS',
+                    file_name=file_name,
+                    weather_header=t1_h, extract=False, mapping=True)
+
+                for key_p, value_p in mappings_bldg_name.items():
+                    weather_folder_names[t1][key_p] = site_folder_names
+                    weather_mappings_bldg_name[t1][key_p] = value_p
+                    weather_mappings_bldg_count[t1][key_p] = mappings_bldg_count[key_p]
+
+        saveintojson(weather_folder_names, "weather_folder_names.json", os.getcwd())
+        saveintojson(weather_mappings_bldg_name, "weather_mappings_bldg_name.json", os.getcwd())
+        saveintojson(weather_mappings_bldg_count, "weather_mappings_bldg_count.json", os.getcwd())
+
+
+
+    else:
+        weather_folder_names = loadjson("weather_folder_names.json", os.getcwd())
+        weather_mappings_bldg_name = loadjson("weather_mappings_bldg_name.json", os.getcwd())
+        weather_mappings_bldg_count = loadjson("weather_mappings_bldg_count.json", os.getcwd())
+
+    return weather_folder_names, weather_mappings_bldg_name, weather_mappings_bldg_count
+
+
 
 if __name__ == '__main__':
+    # Years = [2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038,
+    #          2039, 2040]
+    # # Years = [2040]
+    # Networks = ["Small", "Medium", "Large"]
+    # # Networks = ["Medium"]
+    # subfolder_count = [2, 10, 17]
+    # # subfolder_count = [10]
+    # vehicle_inventory_path = "new_output_data"
+    # main_path = r"/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/code/"
+    # xfrmrrating_evshare = None  # 70  # percent
+    # EV_placement_on_grid = "ascen"  # "ascen", "descen", "random"
+    # date_name = "mar31"
+    # custom_suffix_sim_run = "delete_this2"
+    # Approach based on transformer sizes
+    #-------------------------------------------------------------------------------------------------------------------
+    # # this function adds xfrms to the grid based on size of xfrmr. This function works for ascending and
+    # # descending order of xfrmr assignments but not for random assignments.
+    # output_file_save_loc = main(Years, Networks, subfolder_count, main_path, xfrmrrating_evshare, EV_placement_on_grid,
+    #                             date_name, custom_suffix_sim_run, vehicle_inventory_path)
+
+
+
+    #-------------------------------------------------------------------------------------------------------------------
     Years = [2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038,
              2039, 2040]
     # Years = [2040]
@@ -560,20 +738,21 @@ if __name__ == '__main__':
     # subfolder_count = [10]
     vehicle_inventory_path = "new_output_data"
     main_path = r"/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/code/"
-    xfrmrrating_evshare = None  # 70  # percent
-    EV_placement_on_grid = "ascen"  # "ascen", "descen", "random"
-    date_name = "mar31"
     custom_suffix_sim_run = "delete_this2"
+    xfrmrrating_evshare = None
+    final_year = 2040
+    vehicles_per_port = 2
     no_of_chargers = 3
-    max_ports2 =no_of_chargers*2
-    # # this function adds xfrms to the grid based on size of xfrmr. This function works for ascending and
-    # # descending order of xfrmr assignments but not for random assignments.
-    # output_file_save_loc = main(Years, Networks, subfolder_count, main_path, xfrmrrating_evshare, EV_placement_on_grid,
-    #                             date_name, custom_suffix_sim_run, vehicle_inventory_path)
+    no_of_ports_per_charger = 2
+    vehicle_at_a_location = no_of_chargers * no_of_ports_per_charger * vehicles_per_port
+    load_existing_mapping_bldg_no_to_manually_selected_EVbldgs = True
 
-    # assign logic of cyclic version instead of size based option like above function. This function adds xfrmrs
-    # based on selected locations and number of charging locations available in a cyclic manner.
-    output_file_save_loc = main_cyclic_selective_locs_for_chargers(Years, Networks, subfolder_count, main_path,
-                                                                   xfrmrrating_evshare, custom_suffix_sim_run, vehicle_inventory_path,
-                                                                   no_of_charging_locations = 300, final_year=2040,
-                                                                   vehicles_per_port=2, max_ports=max_ports2)
+
+    # Approach based on cyclic assignment of EVs at selected transformer locations with a knob to adjust infrastructure
+    # at each EV charging location (transformer).
+
+    output_file_save_loc = main_cyclic_selective_locs_for_chargers(vehicles_per_port, Years, Networks,
+                                                                   subfolder_count, main_path,
+                                                                   xfrmrrating_evshare, custom_suffix_sim_run,
+                                                                   vehicle_inventory_path, final_year=final_year,
+                                                                   max_ports=vehicle_at_a_location, load_existing_mapping_bldg_no_to_manually_selected_EVbldgs= load_existing_mapping_bldg_no_to_manually_selected_EVbldgs)
