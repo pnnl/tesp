@@ -1692,24 +1692,24 @@ def write_houses(basenode, op, vnom):
         vint = vint_type[ti]
         income = income_level[inc_lev]
         if bldg == 0:  # SF
-            fa_bldg = 'single_family_detached'  # then pick single_Family_detached values for floor_area
+            bldg_type = 'single_family'  # then pick single_family values for floor_area
             if (np.random.uniform(0, 1) >
-                    res_bldg_metadata['num_stories'][state][res_dso_type][income][fa_bldg][vint]['one_story']):
+                    res_bldg_metadata['num_stories'][state][res_dso_type][income][bldg_type][vint]['one_story']):
                 stories = 2  # all SF homes which are not single story are 2 stories
             if (np.random.uniform(0, 1) <=
-                    res_bldg_metadata['high_ceilings'][state][res_dso_type][income][fa_bldg][vint]):
+                    res_bldg_metadata['high_ceilings'][state][res_dso_type][income][bldg_type][vint]):
                 ceiling_height = 10  # all SF homes that have high ceilings are 10 ft
             ceiling_height += np.random.randint(0, 2)
         elif bldg == 1:  # apartments
-            fa_bldg = 'apartment_2_4_units'  # then pick apartment_2_4_units for floor area
+            bldg_type = 'apartments'  # then pick apartment_2_4_units for floor area
         elif bldg == 2:  # mh
-            fa_bldg = 'mobile_home'
+            bldg_type = 'mobile_home'
         else:
             raise ValueError("Wrong building type chosen !")
         vint = vint_type[ti]
         # creating distribution array for floor_area
         for ind in ['min', 'max', 'mean', 'standard_deviation']:
-            fa_array[ind] = res_bldg_metadata['floor_area'][state][res_dso_type][income][fa_bldg][ind]
+            fa_array[ind] = res_bldg_metadata['floor_area'][state][res_dso_type][income][bldg_type][ind]
         # print(i)
         # print(nhouse)
         floor_area = random_norm_trunc(fa_array)  # truncated normal distribution
@@ -1849,10 +1849,10 @@ def write_houses(basenode, op, vnom):
         heat_rand = np.random.uniform(0, 1)
         cool_rand = np.random.uniform(0, 1)
         house_fuel_type = 'electric'
-        properties = res_bldg_metadata['space_heating_type'][state][res_dso_type][income][fa_bldg][vint]
+        properties = res_bldg_metadata['space_heating_type'][state][res_dso_type][income][bldg_type][vint]
         heat_pump_prob = properties['gas_heating'] + properties['heat_pump']
         # Get the air conditioning percentage for homes that don't have heat pumps
-        electric_cooling_percentage = res_bldg_metadata['air_conditioning'][state][res_dso_type][income][fa_bldg]
+        electric_cooling_percentage = res_bldg_metadata['air_conditioning'][state][res_dso_type][income][bldg_type]
         if heat_rand <= properties['gas_heating']:
             house_fuel_type = 'gas'
             print('  heating_system_type GAS;', file=op)
@@ -1915,7 +1915,7 @@ def write_houses(basenode, op, vnom):
 
         # Determine house water heating fuel type based on space heating fuel type
         wh_fuel_type = 'gas'
-        properties = res_bldg_metadata['water_heating_fuel'][state][res_dso_type][income][fa_bldg]
+        properties = res_bldg_metadata['water_heating_fuel'][state][res_dso_type][income][bldg_type]
         if house_fuel_type == 'gas':
             if np.random.uniform(0, 1) <= properties['sh_gas']['electric']:
                 wh_fuel_type = 'electric'
