@@ -28,6 +28,7 @@ if recs_data:
     import recs.copperplate_feeder_glm as cp_FG
     import recs.residential_feeder_glm as res_FG
     import recs.prep_substation_recs as prep
+    import pandas as pd
 else:
     rcs = ""
     import tesp_support.original.commercial_feeder_glm as com_FG
@@ -70,6 +71,11 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
     # loading default agent data
     with open(os.path.join(data_Path, sys_config['dsoAgentFile']), 'r', encoding='utf-8') as json_file:
         case_config = json.load(json_file)
+        if recs_data:
+            # Overwriting default_case_config.json
+            case_config['FeederGenerator']['SolarPercentage'] = 11
+            case_config['FeederGenerator']['StoragePercentage'] = 3
+            case_config['FeederGenerator']['EVPercentage'] = 8
     # loading building and DSO metadata
     with open(os.path.join(data_Path, sys_config['dso' + rcs + 'PopulationFile']), 'r', encoding='utf-8') as json_file:
         dso_config = json.load(json_file)
@@ -192,6 +198,10 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
                         tso.subs_n(player[0] + "player/" + player[0] + "_power_" + idx, "string")
                     if player[7] and not player[8]:
                         tso.subs_n(player[0] + "player/" + player[0] + "_pwr_hist_" + idx, "string")
+
+    # Create empty list for glm dictionary files
+    if recs_data:
+        glm_dict_list = {}
 
     # First step is to create the dso folders and populate the feeders
     for dso_key, dso_val in dso_config.items():
@@ -439,6 +449,8 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
 
         print("\n=== MERGING/WRITING THE FEEDERS GLM DICTIONARIES =====")
         cm.merge_glm_dict(os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '_glm_dict.json'), list(dso_val['feeders'].keys()), 20)
+        if recs_data:
+            glm_dict_list[dso_key] = caseName + '/' + dso_key + '/' + sub_key + '_glm_dict.json'
 
         print("\n=== MERGING/WRITING THE SUBSTATION AGENT DICTIONARIES =====")
         cm.merge_agent_dict(os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '_agent_dict.json'), list(dso_val['feeders'].keys()))
@@ -458,6 +470,46 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         print("=== Removing the following files: {0} for {1}. ===".format(filesToDelete, dso_key))
         [os.remove(os.path.join(os.path.abspath(caseName + '/' + dso_key), fileName)) for fileName in filesToDelete]
 
+    # Residential population summary
+    if recs_data:
+        hse_df = pd.DataFrame()
+        # Get house parameters from each DSO glm_dict
+        for dso_k, f_str in glm_dict_list.items():
+            with open(f_str) as f:
+                glm_dict = json.load(f)
+            temp_df = pd.DataFrame.from_dict(glm_dict['houses'],orient='index')
+            temp_df = temp_df.reset_index()
+            temp_df['DSO'] = dso_k # add a column for DSO number
+            # Add columns to distinguish houses and each DER
+            for inc in ['Low', 'Middle', 'Upper']:
+                for k, v in {'house':inc,'battery':'bat','solar':'sol','ev':'ev'}.items():
+                    for val in glm_dict['billingmeters'].values():
+                        children = val['children']
+                        if len([s for s in children if inc in s]) > 0:
+                            if len([s for s in children if v in s]) > 0:
+                                temp_df.loc[temp_df['index']==[s for s in children if inc in s][0],k] = 'Yes'
+                            else:
+                                temp_df.loc[temp_df['index']==[s for s in children if inc in s][0],k] = 'No'
+            # Merge all DSO house parameters into one dataframe
+            hse_df = pd.concat([hse_df,temp_df],ignore_index=True)
+        # Save for later analysis
+        hse_df.to_csv('house_parameters.csv') # Not sure where this should be saved
+        tot_hses = len(hse_df.loc[hse_df['house']=='Yes'])
+        low_hses = len(hse_df.loc[(hse_df['income_level']=='Low')])
+        middle_hses = len(hse_df.loc[(hse_df['income_level']=='Middle')])
+        upper_hses = len(hse_df.loc[(hse_df['income_level']=='Upper')])
+        sol_hses = len(hse_df.loc[(hse_df['house']=='Yes') & (hse_df['solar']=='Yes')])
+        ev_hses = len(hse_df.loc[(hse_df['house']=='Yes') & (hse_df['ev']=='Yes')])
+        bat_hses = len(hse_df.loc[(hse_df['house']=='Yes') & (hse_df['battery']=='Yes')])
+        elec_wh_hses = len(hse_df.loc[(hse_df['house']=='Yes') & (hse_df['wh_gallons']!=0)])
+        elec_sh_hses = len(hse_df.loc[(hse_df['house']=='Yes') & (hse_df['fuel_type']=='electric')])
+        print(f"=== RESIDENTIAL POPULATION SUMMARY ===")
+        print(f"=== Income (Percent of all homes) ===")
+        print(f"=== Low: {round(100*low_hses/tot_hses,2)}%, Middle: {round(100*middle_hses/tot_hses,2)}%, Upper: {round(100*upper_hses/tot_hses,2)}%. ===")
+        print(f"=== DERs (Percent of all homes) ===")
+        print(f"=== Solar: {round(100*sol_hses/tot_hses,2)}%, EVs: {round(100*ev_hses/tot_hses,2)}%, Batteries: {round(100*bat_hses/tot_hses,2)}%. ===")
+        print(f"=== Electric Water Heating/Space Heating (Percent of all homes) ===")
+        print(f"=== Water Heating: {round(100*elec_wh_hses/tot_hses,2)}%, Space Heating: {round(100*elec_sh_hses/tot_hses,2)}%. ===")
     tso.write_file(caseName + '/tso_h.json')
 
     # Also create the launch, kill and clean scripts for this case
