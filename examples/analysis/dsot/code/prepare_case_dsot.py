@@ -450,7 +450,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         print("\n=== MERGING/WRITING THE FEEDERS GLM DICTIONARIES =====")
         cm.merge_glm_dict(os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '_glm_dict.json'), list(dso_val['feeders'].keys()), 20)
         if recs_data:
-            glm_dict_list[dso_key] = caseName + '/' + dso_key + '/' + sub_key + '_glm_dict.json'
+            glm_dict_list[dso_key] = os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '_glm_dict.json')
 
         print("\n=== MERGING/WRITING THE SUBSTATION AGENT DICTIONARIES =====")
         cm.merge_agent_dict(os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '_agent_dict.json'), list(dso_val['feeders'].keys()))
@@ -493,7 +493,8 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
             # Merge all DSO house parameters into one dataframe
             hse_df = pd.concat([hse_df,temp_df],ignore_index=True)
         # Save for later analysis
-        hse_df.to_csv('house_parameters.csv') # Not sure where this should be saved
+        hse_df.to_csv(os.path.abspath(caseName + '/' + 'house_parameters.csv'))
+        # Get totals
         tot_hses = len(hse_df.loc[hse_df['house']=='Yes'])
         low_hses = len(hse_df.loc[(hse_df['income_level']=='Low')])
         middle_hses = len(hse_df.loc[(hse_df['income_level']=='Middle')])
