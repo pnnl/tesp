@@ -104,7 +104,7 @@ mkdir -p tenv
 echo "Clone directory structure for TESP"
 echo ++++++++++++++ TESP
 if [[ ! -d "$HOME/grid/tesp" ]]; then
-  git clone -b main https://github.com/pnnl/tesp.git
+  git clone -b develop https://github.com/pnnl/tesp.git
 fi
 
 echo "Activate Virtual Environment..."
