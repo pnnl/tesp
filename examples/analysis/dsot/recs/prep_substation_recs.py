@@ -19,10 +19,6 @@ from tesp_support.api.helpers import random_norm_trunc
 # write txt for gridlabd to subscribe house setpoints and meter price; publish meter voltages
 # write the json agent dictionary for post-processing, and run-time configuration of substation.py
 
-# we want the same pseudo-random thermostat schedules each time, for repeatability
-np.random.seed(0)
-
-
 def select_setpt_occ(prob, mode, st, hd, inc_lev):
     if 'No_DSO_Type' in list(hvac_setpt['occ_' + mode][st].keys()):
         hd = 'No_DSO_Type'
@@ -405,9 +401,9 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, sta
                         if n_tw_days > 0:
                             daylight_set_cool = wakeup_set_cool
                             daylight_set_heat = wakeup_set_heat
-                        # highest heating setpoint must be less than (lowest cooling setpoint - margin of 4 degree)
-                        if max(wakeup_set_heat, night_set_heat) > min(wakeup_set_cool, night_set_cool) - 4:
-                            offset = max(wakeup_set_heat, night_set_heat) - (min(wakeup_set_cool, night_set_cool) - 4)
+                        # highest heating setpoint must be less than (lowest cooling setpoint - margin of 3 degree)
+                        if max(wakeup_set_heat, night_set_heat) > min(wakeup_set_cool, night_set_cool) - 3:
+                            offset = max(wakeup_set_heat, night_set_heat) - (min(wakeup_set_cool, night_set_cool) - 3)
                             # shift the all cooling setpoints up and heating setpoints down to avoid this condition
                             wakeup_set_cool += offset / 2
                             daylight_set_cool += offset / 2
