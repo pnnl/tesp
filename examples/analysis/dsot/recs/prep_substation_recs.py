@@ -405,9 +405,9 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, sta
                         if n_tw_days > 0:
                             daylight_set_cool = wakeup_set_cool
                             daylight_set_heat = wakeup_set_heat
-                        # highest heating setpoint must be less than (lowest cooling setpoint - margin of 6 degree)
-                        if max(wakeup_set_heat, night_set_heat) > min(wakeup_set_cool, night_set_cool) - 6:
-                            offset = max(wakeup_set_heat, night_set_heat) - (min(wakeup_set_cool, night_set_cool) - 6)
+                        # highest heating setpoint must be less than (lowest cooling setpoint - margin of 4 degree)
+                        if max(wakeup_set_heat, night_set_heat) > min(wakeup_set_cool, night_set_cool) - 4:
+                            offset = max(wakeup_set_heat, night_set_heat) - (min(wakeup_set_cool, night_set_cool) - 4)
                             # shift the all cooling setpoints up and heating setpoints down to avoid this condition
                             wakeup_set_cool += offset / 2
                             daylight_set_cool += offset / 2
