@@ -202,6 +202,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
     # Create empty list for glm dictionary files
     if recs_data:
         glm_dict_list = {}
+        agent_dict_list = {}
 
     # First step is to create the dso folders and populate the feeders
     for dso_key, dso_val in dso_config.items():
@@ -454,6 +455,8 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
 
         print("\n=== MERGING/WRITING THE SUBSTATION AGENT DICTIONARIES =====")
         cm.merge_agent_dict(os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '_agent_dict.json'), list(dso_val['feeders'].keys()))
+        if recs_data:
+            agent_dict_list[dso_key] = os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '_agent_dict.json')
 
         print("\n=== MERGING/WRITING THE DSO MESSAGE FILE =====")
         HelicsMsg.dso.write_file(os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '.json'))
@@ -473,6 +476,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
     # Residential population summary
     if recs_data:
         hse_df = pd.DataFrame()
+        hvac_agent_df = pd.DataFrame()
         # Get house parameters from each DSO glm_dict
         for dso_k, f_str in glm_dict_list.items():
             with open(f_str) as f:
@@ -492,8 +496,17 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
                                 temp_df.loc[temp_df['index']==[s for s in children if inc in s][0],k] = 'No'
             # Merge all DSO house parameters into one dataframe
             hse_df = pd.concat([hse_df,temp_df],ignore_index=True)
+        # Get HVAC agent data
+        for dso_k, f_str in agent_dict_list.items():
+            with open(f_str) as f:
+                agent_dict = json.load(f)
+            temp_df2 = pd.DataFrame.from_dict(agent_dict['hvacs'],orient='index')
+            temp_df2 = temp_df2.reset_index()
+            temp_df2['DSO'] = dso_k # add a column for DSO number
+            hvac_agent_df = pd.concat([hvac_agent_df,temp_df2],ignore_index=True)
         # Save for later analysis
         hse_df.to_csv(os.path.abspath(caseName + '/' + 'house_parameters.csv'))
+        hvac_agent_df.to_csv(os.path.abspath(caseName + '/' + 'hvac_agents.csv'))
         # Get totals
         tot_hses = len(hse_df.loc[hse_df['house']=='Yes'])
         low_hses = len(hse_df.loc[(hse_df['income_level']=='Low')])
