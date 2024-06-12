@@ -756,4 +756,4 @@ def add_tesp_feeder(cfgfile):
     write_tesp_case(config, cfgfile, freshdir=False)
 
 if __name__ == "__main__":
-    make_tesp_case('~/tesp/repository/tesp/examples/capabilities/ttest/test.json')
+    make_tesp_case('~/grid/tesp/examples/capabilities/ttest/test.json')

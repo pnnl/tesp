@@ -188,6 +188,8 @@ if __name__ == '__main__':
         if sys.argv[1] == "FNCS":
             b_helics = False
 
+    # tr.run_test = tr.run_docker_test
+
     tr.init_tests()
     tesp_path = os.path.expandvars('$TESPDIR/examples')
     os.chdir(tesp_path)

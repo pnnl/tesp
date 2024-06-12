@@ -3,7 +3,7 @@
 docker images -q docker.artifactory.pnnl.gov/gpiq/gpiq_python:tesp_emissions_calc > docker_version
 hostname > hostname
 
-LOCAL_TESP="$HOME/tesp/repository/tesp/examples/capabilities/dsostub/code"
+LOCAL_TESP="~/grid/tesp/examples/capabilities/dsostub/code"
 
 docker run \
        -it \

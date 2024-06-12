@@ -5,47 +5,11 @@
 """
 @author: yint392
 """
-# individual customer
 
 import json
 import os
 
 import tesp_support.dsot.dso_helper_functions as dso_helper
-from tesp_support.dsot.plots import load_json
-from tesp_support.dsot.dso_rate_making import get_cust_bill
-
-
-def get_customer_df(dso_range, case_path, metadata_path):
-    customer_df = dso_helper.pd.DataFrame([])
-    for dso_num in dso_range:
-        GLD_metadata = load_json(case_path, 'DSO' + str(dso_num) + '_Customer_Metadata.json')
-        cust_bill_file = case_path + '/bill_dso_' + str(dso_num) + '_data.h5'
-        cust_bills = dso_helper.pd.read_hdf(cust_bill_file, key='cust_bill_data', mode='r')
-        for i in range(len(GLD_metadata['billingmeters'].keys())):
-            customer = list(GLD_metadata['billingmeters'].keys())[i]
-            if GLD_metadata['billingmeters'][customer]['tariff_class'] != 'industrial':
-                customer_bill = get_cust_bill(customer, cust_bills, GLD_metadata)
-                customer_metadata = GLD_metadata['billingmeters'][customer]
-                Customer_Cash_Flows_dict, Customer_Cash_Flows_csv = customer_CFS(
-                    GLD_metadata, metadata_path, customer, customer_bill)
-                customer_row = {
-                    "Customer ID": 'DSO' + str(dso_num) + '_' + customer,
-                    "dso": dso_num,
-                    "meter ID": customer
-                }
-                customer_row.update(customer_metadata)
-                customer_row.update(Customer_Cash_Flows_csv)
-                customer_row = dso_helper.pd.DataFrame(customer_row.items())
-                customer_row = customer_row.transpose()
-                customer_row.columns = customer_row.iloc[0]
-                customer_row = customer_row.drop(customer_row.index[[0]])
-                customer_df = customer_df.append(customer_row)
-    return customer_df
-
-
-# This function calculates ...
-# inputs: customer_name, paths
-# outputs:
 
 
 def customer_CFS(GLD_metadata,
@@ -132,9 +96,9 @@ def customer_CFS(GLD_metadata,
         battery_present = 1 if Rated_Battery_Size > 0 else 0
         Participant = 1 if batt_participating else 0
         Battery = (Participant * ACCF_Battery *
-                   ((metadata_battery['installed_system_first_costs'] * Rated_Battery_Size) +
+                   (metadata_battery['installed_system_first_costs'] * Rated_Battery_Size) +
                     metadata_battery['fixed_O&M_costs'] * battery_present +
-                    metadata_battery['variable_O&M_costs'] * Rated_Battery_Size))
+                    metadata_battery['variable_O&M_costs'] * Rated_Battery_Size)
 
         Participant = 1 if ev_participating else 0
         V1G = (Participant * ACCF_V1G *
@@ -191,8 +155,8 @@ def customer_CFS(GLD_metadata,
                 installed_price_per_kW = metadata_PV['installed_price_per_kW'][Customer_class]['>1000']
 
         PV_present = 1 if Rated_System_Size > 0 else 0
-        PV = (Participant * ACCF_PV * ((installed_price_per_kW * Rated_System_Size) +
-                                       (PV_present * metadata_PV['operating_expenses'][Customer_class])))
+        PV = (Participant * ACCF_PV * (installed_price_per_kW * Rated_System_Size) +
+                                      (PV_present * metadata_PV['operating_expenses'][Customer_class]))
 
         UnitaryHVAC = 0
         LgHVAC = 0
@@ -254,7 +218,7 @@ def customer_CFS(GLD_metadata,
                 'PerformancePayments': 0,
                 'DSOShare': 0  # customer_metadata['DSO_rebate']
             },
-            'Taxes': {
+            'TaxSavings': {
                 # 'Depreciation': Depreciation,
                 # 'Deductions': Deductions,
                 'ElectricityExpense': ElectricityExpense,
@@ -265,7 +229,7 @@ def customer_CFS(GLD_metadata,
             'EffectiveCostEnergy': 0
         }
 
-        Investment = UnitaryHVAC + WaterHeater + LgHVAC + Battery + V1G + V2G
+        Investment = UnitaryHVAC + WaterHeater + LgHVAC + Battery + V1G #+ V2G
         Capital = Investment + PV
         Expenses = Bills  # ?
         Revenues = 0  # Incentives + DSOShare
@@ -283,8 +247,8 @@ def customer_CFS(GLD_metadata,
         ConnChargesDyn = customer_bill['BillsTransactive']['ConnChargesDyn']
         BillsTransactive = customer_bill['BillsTransactive']['TotalDyn']
         Bills = BillsFix + BillsTransactive
-        Taxes = ElectricityExpense - TaxCredits
-        NetEnergyCost = Capital + Expenses + Taxes - Revenues
+        TaxSavings = ElectricityExpense + TaxCredits
+        NetEnergyCost = Capital + Expenses - TaxSavings - Revenues
         EnergyPurchased = customer_bill['EnergyQuantity']
         EffectiveCostEnergy = NetEnergyCost / EnergyPurchased
 
@@ -312,11 +276,13 @@ def customer_CFS(GLD_metadata,
             'IncomeAllocation': IncomeAllocation,
             'PerformancePayments': 0,
             'DSOShare': 0,
-            'Taxes': 0,
+            'TaxSavings': 0,
             'ElectricityExpense': ElectricityExpense,
             'TaxCredits': 0,
             'NetEnergyCost': NetEnergyCost,
             'EnergyPurchased': EnergyPurchased,
+            'PeakLoad': customer_bill['MaxLoad'],
+            'LoadFactor': customer_bill['LoadFactor'],
             'BlendedRate': customer_bill['BlendedRate'],
             'EffectiveCostEnergy': EffectiveCostEnergy
         }

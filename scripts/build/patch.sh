@@ -1,11 +1,13 @@
 #!/bin/bash
 
 if [[ -z ${INSTDIR} ]]; then
-  . "${HOME}/tespEnv"
+  echo "Edit tesp.env in the TESP home directory"
+  echo "Run 'source tesp.env' in that same directory"
+  exit
 fi
 
-id="${TESPBUILD}/${2}.id"
-patch="${TESPBUILD}/${2}.patch"
+id="${BUILD_DIR}/${2}.id"
+patch="${BUILD_DIR}/${2}.patch"
 
 a=$(cat "$id")
 cd "${1}" || exit

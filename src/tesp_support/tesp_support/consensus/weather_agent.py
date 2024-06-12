@@ -133,11 +133,11 @@ def startWeatherAgent(file):
     # doing average of the forecast quantities to give more accurate representation of the hour
     hourlyWeatherData = weatherData.resample('60min').mean()
     # try:
-    #     timeDeltaResample = deltaTimeToResmapleFreq(timeDeltaStr)
+    #     timeDeltaResample = deltaTimeToResampleFreq(timeDeltaStr)
     # except Exception as ex:
     #     print("Error in time_delta", ex)
     # try:
-    #     timeStopUniformUnit = deltaTimeToResmapleFreq(timeStop)
+    #     timeStopUniformUnit = deltaTimeToResampleFreq(timeStop)
     # except Exception as ex:
     #     print("Error in time_stop", ex)
     # timeStopUnit = ''.join(filter(str.isalpha, timeStopUniformUnit))
@@ -361,7 +361,7 @@ def convertTimeToSeconds(time):
         raise Exception("unrecognized time unit '" + unit + "'.")
 
 
-def deltaTimeToResmapleFreq(time):
+def deltaTimeToResampleFreq(time):
     """ Convert time unit to a resampling frequency that can be recognized by pandas.DataFrame.resample()
 
     It only parse unit in day, hour, minute and second.

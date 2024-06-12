@@ -1,10 +1,12 @@
 #!/bin/bash
 
 if [[ -z ${INSTDIR} ]]; then
-  . "${HOME}/tespEnv"
+  echo "Edit tesp.env in the TESP home directory"
+  echo "Run 'source tesp.env' in that same directory"
+  exit
 fi
 
-cd "${REPODIR}/HELICS-src" || exit
+cd "${REPO_DIR}/HELICS-src" || exit
 if [[ $1 == "clean" ]]; then
   rm -rf build
   git submodule update --init
@@ -24,7 +26,7 @@ cmake -DHELICS_BUILD_JAVA_INTERFACE=ON -DBUILD_SHARED_LIBS=ON -DHELICS_BUILD_CXX
 
 if [[ $1 == "clean" ]]; then
   make clean
-  pip3 uninstall -y helics
+  pip uninstall -y helics
 fi
 make -j "$(grep -c "^processor" /proc/cpuinfo)"
 make install

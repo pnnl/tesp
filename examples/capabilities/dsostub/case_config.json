@@ -10,7 +10,7 @@
   "splitCase": true,
   "caseStartYear": 2016,
   "caseEndYear": 2016,
-  "gridPIQ": true,
+  "gridPIQ": false,
   "ames": true,
   "solver": "cbc",
   "numCore": 12,
@@ -31,6 +31,7 @@
   "archivePath": ".",
   "version": "2",
   "baseMVA": 100.0,
+  "genPowerLevel": 0.60,
   "genPower": true,
   "renewables": [
     "wind"

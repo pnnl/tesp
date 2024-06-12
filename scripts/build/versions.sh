@@ -1,13 +1,14 @@
 #!/bin/bash
 
 if [[ -z ${INSTDIR} ]]; then
-  . "${HOME}/tespEnv"
+  echo "Edit tesp.env in the TESP home directory"
+  echo "Run 'source tesp.env' in that same directory"
+  exit
 fi
 
 echo
-echo "TESP software modules installed are:"
+echo "Grid applications software installed are:"
 echo
-echo "TESP $(cat ${TESPDIR}/scripts/version)"
 
 FILE="${INSTDIR}/bin/fncs_broker"
 if [[ -f "${FILE}" ]]; then
@@ -18,7 +19,7 @@ fi
 
 echo "HELICS $(helics_broker --version)"
 
-echo $("${TESPBUILD}/test_helics_java")
+"${BUILD_DIR}/test_helics_java.sh"
 
 gridlabd --version
 
@@ -27,7 +28,7 @@ energyplus --version
 message="NS-3 not installed"
 for file in "${INSTDIR}"/bin/ns3-dev-* ; do
   lst=( ${file// / } )
-  for a in "${lst}" ; do
+  for a in ${lst} ; do
     if [[ -f "${a}" ]]; then
       message="NS-3 installed"
       break

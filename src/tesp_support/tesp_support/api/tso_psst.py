@@ -369,7 +369,7 @@ def tso_psst_loop(casename):
 
                 row = []
                 for z in range(TAU):
-                   row.append(ld)
+                    row.append(ld)
                 pub = getPub('cleared_q_rt_' + str(bus_num))
                 helics.helicsPublicationPublishString(pub, json.dumps(row[0]))
                 rt_q_store.append_data(
@@ -1541,7 +1541,7 @@ def tso_psst_loop(casename):
                     rt_schedule = write_rtm_schedule(schedule)
 
                     # Turn on all generators at start up
-                    if day <= 2 and mn == 0 and not priceSensLoad:
+                    if day == 2 and hour == 0 and not priceSensLoad:
                         log.info("Start up " + print_time)
                         for igen in range(numGen):
                             if genFuel[igen][0] not in renewables:
@@ -1597,11 +1597,13 @@ def tso_psst_loop(casename):
                         sum_w += gen[idx, 1]
                         sum_hr += float(row[2][hour])
 
+            # seconds, OPFconverged, TotalLoad, TotalGen, SwingGen
             line = str(ts) + ', ' + "True" + ','
             line += '{: .2f}'.format(bus[:, 2].sum()) + ','
             line += '{: .2f}'.format(gen[:, 1].sum()) + ','
             line += '{: .2f}'.format(Pswing) + ','
             da_sum = 0
+            # LMP for each bus
             for idx in range(bus.shape[0]):
                 line += '{: .2f}'.format(bus[idx, 13]) + ','
                 da_sum += last_unRespMW[idx][hour] + last_respMaxMW[idx][hour]
@@ -1617,17 +1619,21 @@ def tso_psst_loop(casename):
                 if notUsed:
                     line += ' 0,'
 
+            # TotRenGen, TotRenGenHr, TotalGLDLoad
             line += '{: .2f}'.format(sum_w) + ',' + '{: .2f}'.format(sum_hr) + ',' + \
                     '{: .2f}'.format(sum(nobid_unresp_rt)) + ','
 
+            # DALoad
             line += '{: .2f}'.format(da_sum) + ','
+            # DAGen
             if len(last_dispatch) > 0:
                 da_sum = 0
-                for key, row in last_dispatch.items():
-                    da_sum += row[hour]
+                for key in last_dispatch:
+                    da_sum += last_dispatch[key][hour]
                 line += '{: .2f}'.format(da_sum) + ','
             else:
                 line += ' 0,'
+            # TotRenGenHR
             line += '{: .2f}'.format(da_sum + sum_hr) + ','
             line += '{: .2f}'.format(rt_percent) + ', ' + str(rt_status)
 
@@ -1860,6 +1866,7 @@ def tso_psst_loop(casename):
     vp.close()
     log.info('finalizing HELICS tso federate')
     helics.helicsFederateDestroy(hFed)
+
 
 if __name__ == "__main__":
     tso_psst_loop('./generate_case_config')
