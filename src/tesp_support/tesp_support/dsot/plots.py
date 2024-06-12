@@ -4727,7 +4727,7 @@ def run_plots():
 
 
     # ---------- Flags to turn on and off plot types etc
-    LoadExData = False  # load example data frames of GLD and agent data
+    LoadExData = False # load example data frames of GLD and agent data
     DictUpdate = False
     EdgeCases = False
     DailyProfilePlots = True  # plot daily load profiles
