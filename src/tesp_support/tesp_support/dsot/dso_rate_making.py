@@ -366,6 +366,156 @@ def annual_energy(month_list, folder_prefix, dso_num, metadata):
     return year_meter_df, year_energysum_df, year_trans_sum_df
 
 
+def create_demand_profiles_for_each_meter(
+    meter_data_file_path,
+    number_of_nodes,
+    substation_number,
+    year,
+    month,
+    day_range,
+    save=False,
+):
+    """Creates a .h5 file that contains hourly time-series data of the hourly energy
+    conumption and hourly maximum demands (demand is metered at five-minute
+    intervals and maximum demand charges are determined at fifteen-minute intervals,
+    so we cannot just rely on hourly energy consumption to later identify maximum
+    demand); these two time-series data sets are maintained within separate keys.
+    Arguments:
+        meter_data_file_path (str): Contains file path of daily power and voltage
+            information for each meter in five-minute time steps.
+        number_of_nodes (int): The number of nodes in the system model.
+        substation_number (int): The number of a valid substation in the system model.
+        year (int): The year under consideration.
+        month (int): The month under consideration.
+        day_range (list): List of day numbers in a month to be considered.
+        save (bool): Indicates whether or not the output data should be saved in a .h5
+            file. If True, data is saved to the same location as what is provided in
+            `meter_data_file_path'.
+    Returns:
+        demand_df (pandas.DataFrame): Monthly five-minute demand data for each meter.
+    """
+    # Make sure day_range is sorted
+    day_range.sort()
+
+    # Validate first and last days in day_range
+    if day_range[0] < 1:
+        raise ValueError("The first day in day_range is not valid. Please try again.")
+    if (
+        ((day_range[-1] > 31) and (month in [1, 3, 5, 7, 8, 10, 12]))
+        or ((day_range[-1] > 30) and (month in [4, 6, 9, 11]))
+        or (
+            (month == 2)
+            and (
+                ((day_range[-1] > 29) and (year % 4 == 0))
+                or ((day_range[-1] > 28) and (year % 4 != 0))
+            )
+        )
+    ):
+        raise ValueError("The last day in day_range is not valid. Please try again.")
+
+    # Check the month
+    if not isinstance(month, int):
+        raise TypeError("The month needs to be provided as an int. Please try again.")
+    if (month < 1) or (month > 12):
+        raise ValueError(
+            "Provided month integers must fall between 1 and 12, inclusive. Please "
+            + "try again."
+        )
+
+    # Iterate through the days to access the demand data
+    demand_dict = {}
+    for day in day_range:
+        # Load the meter data from the specified day
+        meter_data_df = pd.read_hdf(
+            os.path.join(
+                meter_data_file_path,
+                str(number_of_nodes)
+                + "_"
+                + str(year)
+                + "_"
+                + (str(month) if len(str(month)) > 1 else "0" + str(month)),
+                "Substation_" + str(substation_number),
+                "Substation_" + str(substation_number) + "_metrics_billing_meter.h5",
+            ),
+            key="/index" + str(day),
+            mode="r",
+        )
+        meter_data_df["date"] = pd.to_datetime(
+            meter_data_df["date"], infer_datetime_format=True
+        )
+
+        # Distribute demand data from meter_data_df to demand_df
+        for meter in meter_data_df["name"].unique():
+            if day == day_range[0]:
+                demand_dict[meter] = list(
+                    meter_data_df.loc[
+                        meter_data_df["name"] == meter, "real_power_avg"
+                    ].values
+                )
+            else:
+                demand_dict[meter].extend(
+                    list(
+                        meter_data_df.loc[
+                            meter_data_df["name"] == meter, "real_power_avg"
+                        ].values
+                    )
+                )
+
+    # Identify the end index
+    if (
+        ((day_range[-1] == 31) and (month in [1, 3, 5, 7, 8, 10, 12]))
+        or ((day_range[-1] == 30) and (month in [4, 6, 9, 11]))
+        or (
+            (month == 2)
+            and (
+                ((day_range[-1] == 29) and (year % 4 == 0))
+                or ((day_range[-1] == 28) and (year % 4 != 0))
+            )
+        )
+    ):
+        if month == 12:
+            end_index = "01/01/" + str(year + 1)
+        else:
+            end_index = str(month + 1) + "/01/" + str(year)
+    else:
+        end_index = str(month) + "/" + str(day_range[-1] + 1) + "/" + str(year)
+
+    # Identify the timestamp index that will be used in the time-series demand DataFrame
+    index = pd.date_range(
+        start=str(month) + "/" + str(day_range[0]) + "/" + str(year),
+        end=end_index,
+        freq="5min",
+        inclusive="left",
+    )
+
+    # Create DataFrame from demand_dict
+    demand_df = pd.DataFrame.from_dict(demand_dict)
+    demand_df.set_index(index, inplace=True)
+
+    # Convert to an hourly profile
+    demand_df = demand_df.resample("H").sum().div(12)
+
+    # Save the demand data, if specified
+    if save:
+        demand_df.to_hdf(
+            os.path.join(
+                meter_data_file_path,
+                str(number_of_nodes)
+                + "_"
+                + str(year)
+                + "_"
+                + (str(month) if len(str(month)) > 1 else "0" + str(month)),
+                "Substation_" + str(substation_number),
+                "Substation_" + str(substation_number) + "_demand_by_meter.h5",
+            ),
+            key="demand",
+            mode="w",
+        )
+
+    # Return the monthly five-minute demand data for each meter
+    return demand_df
+
+
 def calc_cust_bill(metadata, meter_df, trans_df, energy_sum_df, tariff, dso_num, SF, ind_cust):
     """ Calculate the customer bill using summary meter data and fixed tariff structure.
     Args:
