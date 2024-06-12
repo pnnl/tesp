@@ -121,7 +121,7 @@ RUN echo "Cloning or download all relevant repositories..." && \
   pip install --no-warn-script-location --no-cache-dir -e ${REPO_DIR}/psst  >> "pypi.log" && \
   cp -r ${REPO_DIR}/tesp/src ${COSIM_HOME}/tesp && \
   cp -r ${REPO_DIR}/tesp/data ${COSIM_HOME}/tesp && \
-  pip install --no-warn-script-location --no-cache-dir -e ${$COSIM_HOME}/tesp/src/tesp_support  >> "pypi.log" && \
+  pip install --no-warn-script-location --no-cache-dir -e ${COSIM_HOME}/tesp/src/tesp_support  >> "pypi.log" && \
   /bin/rm -r ${REPO_DIR}/tesp && \
   echo "${COSIM_USER}" | sudo -S ldconfig && \
   ./versions.sh

@@ -537,16 +537,15 @@ ARCHIVE_DIR="%s"
 
 docker run \\
        -e LOCAL_USER_ID=$SIM_UID \\
+       -e TESPDIR=$DOCKER_HOME/tesp \
        -itd \\
        --rm \\
        --network=none \\%s
        --mount type=bind,source="$TESPDIR",destination="$DOCKER_HOME/tesp" \\
-       --mount type=bind,source="$ARCHIVE_DIR",destination="%s" \\
        -w=${WORKING_DIR} \\
        ${IMAGE} \\
-       /bin/bash -c "export TESPDIR=$DOCKER_HOME/tesp; \\
-       pip install --user -e ${DOCKER_HOME}/tesp/src/tesp_support; ./clean.sh; ./run.sh; ./monitor.sh"
-        """ % (path.basename(out_folder), archive_folder, gdb_extra, archive_folder))
+       /bin/bash -c "./run.sh; ./monitor.sh"
+        """ % (path.basename(out_folder), archive_folder, gdb_extra))
 
     with open(out_folder + '/postprocess.sh', 'w') as outfile:
         if run_post == 1:
