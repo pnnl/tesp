@@ -1653,7 +1653,8 @@ def daily_load_plots(dso, system, subsystem, variable, day, case, comp, agent_pr
     if subsystem is None:
         subsystem = ''
     plt.figure()
-    plt.plot(case_df, label=case.split('/')[-1], marker='.')
+    case = case.replace('/', '\\')
+    plt.plot(case_df, label=case.split('\\')[-1], marker='.')
     if plot_min_max:
         if 'real_power_avg' in variable:
             min_df = get_day_df(dso, system, subsystem, variable.replace('avg', 'min'), day, case, agent_prefix,
@@ -1664,6 +1665,7 @@ def daily_load_plots(dso, system, subsystem, variable, day, case, comp, agent_pr
             plt.plot(max_df, label=case.split('/')[-1] + '-Max', marker='.')
 
     if comp is not None:
+        comp = comp.replace('/', '\\')
         plt.plot(comp_df, label=comp.split('/')[-1])
 
     if variable == 'air_temperature_avg':
@@ -1674,8 +1676,8 @@ def daily_load_plots(dso, system, subsystem, variable, day, case, comp, agent_pr
         if plot_weather:
             heatsetpoint_df = heatsetpoint_df.set_index(weather_df.index)
             coolsetpoint_df = coolsetpoint_df.set_index(weather_df.index)
-        plt.plot(coolsetpoint_df, label='air_temperature_setpoint_cooling')
-        plt.plot(heatsetpoint_df, label='air_temperature_setpoint_heating')
+        plt.plot(coolsetpoint_df, label='cooling setpoint')
+        plt.plot(heatsetpoint_df, label='heating setpoint')
         if plot_weather:
             color = 'tab:red'
             plt.plot(weather_df['temperature'], color=color, linestyle=':', label='out door air temp')
