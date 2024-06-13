@@ -491,7 +491,7 @@ def create_demand_profiles_for_each_meter(
     demand_df.set_index(index, inplace=True)
 
     # Convert to an hourly profile
-    demand_df = demand_df.resample("H").sum().div(12)
+    demand_df = demand_df.resample("H").sum().div(1000).div(12)
 
     # Save the demand data, if specified
     if save:
