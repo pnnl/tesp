@@ -1671,7 +1671,8 @@ def daily_load_plots(dso, system, subsystem, variable, day, case, comp, agent_pr
     if subsystem is None:
         subsystem = ''
     plt.figure()
-    plt.plot(case_df, label=case.split('/')[-1], marker='.')
+    case = case.replace('/', '\\')
+    plt.plot(case_df, label=case.split('\\')[-1], marker='.')
     if plot_min_max:
         if 'real_power_avg' in variable:
             min_df = get_day_df(dso, system, subsystem, variable.replace('avg', 'min'), day, case, agent_prefix,
@@ -1682,6 +1683,7 @@ def daily_load_plots(dso, system, subsystem, variable, day, case, comp, agent_pr
             plt.plot(max_df, label=case.split('/')[-1] + '-Max', marker='.')
 
     if comp is not None:
+        comp = comp.replace('/', '\\')
         plt.plot(comp_df, label=comp.split('/')[-1])
 
     if variable == 'air_temperature_avg':
@@ -1692,8 +1694,8 @@ def daily_load_plots(dso, system, subsystem, variable, day, case, comp, agent_pr
         if plot_weather:
             heatsetpoint_df = heatsetpoint_df.set_index(weather_df.index)
             coolsetpoint_df = coolsetpoint_df.set_index(weather_df.index)
-        plt.plot(coolsetpoint_df, label='air_temperature_setpoint_cooling')
-        plt.plot(heatsetpoint_df, label='air_temperature_setpoint_heating')
+        plt.plot(coolsetpoint_df, label='cooling setpoint')
+        plt.plot(heatsetpoint_df, label='heating setpoint')
         if plot_weather:
             color = 'tab:red'
             plt.plot(weather_df['temperature'], color=color, linestyle=':', label='out door air temp')
@@ -4774,9 +4776,9 @@ def run_plots():
     tic()
     # ------------ Selection of DSO and Day  ---------------------------------
     dso_num = '1'  # Needs to be non-zero integer
-    day_num = '9'  # Needs to be non-zero integer
+    day_num = '4'  # Needs to be non-zero integer
     # Set day range of interest (1 = day 1)
-    day_range = range(3, 10)  # 1 = Day 1. Starting at day two as agent data is missing first hour of run.
+    day_range = range(3, 5)  # 1 = Day 1. Starting at day two as agent data is missing first hour of run.
     dso_range = range(1, 9)  # 1 = DSO 1 (end range should be last DSO +1)
 
     #  ------------ Select folder locations for different cases ---------
@@ -4796,9 +4798,8 @@ def run_plots():
     metadata_file = case_config['dsoPopulationFile']
     dso_meta_file = metadata_path + '/' + metadata_file
 
-    # base_case = os.getcwd()
-    base_case = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/V1.1-1317-gfbf326a2/MR-Batt/lean_8_bt'
-    trans_case = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/V1.1-1317-gfbf326a2/MR-Flex/lean_8_fl'
+    base_case = os.getcwd()
+    trans_case = base_case
 
     # Check if there is a plots folder - create if not.
     check_folder = os.path.isdir(data_path + '/plots')
@@ -4814,14 +4815,14 @@ def run_plots():
 
 
     # ---------- Flags to turn on and off plot types etc
-    LoadExData = True  # load example data frames of GLD and agent data
+    LoadExData = False # load example data frames of GLD and agent data
     DictUpdate = False
     EdgeCases = False
     DailyProfilePlots = True  # plot daily load profiles
     LoadDurationPlots = False  # plot load duration for substation loads (and other loads as desired)
     DailySummaryPlots = False  # plot single summary static for each day of a day range
     PlotDSOComp = False  # Plot daily profile of parameter across a range of DSOs
-    PlotHeatMaps = True  # Plot heatmaps for key variables across a day range
+    PlotHeatMaps = False  # Plot heatmaps for key variables across a day range
     amenity = False  # Calculate the loss of amenity metrics for HVAC and WH etc.
     PlotPopDist = False  # Plot a histogram of a population distribution
     OutLierCheck = False  # Create log of values that exceed
@@ -4858,32 +4859,18 @@ def run_plots():
     #     DSO_meters.append(metadata['houses'][house]['billingmeter_id'])
 
     if LoadExData:
-        # df = pd.read_csv(data_path+'/stats.log', sep='\t', parse_dates=['time'])
-        # t0 = df['time'].min()
-        # df['time_hr'] = df['time'].map(lambda t: (t - t0).total_seconds() / 3600)
-        # df.describe()
+        # Examples of loading data files
 
-        # os.chdir(base_case)
-        # filename = 'Building_profiles.h5'
-        # store = h5py.File(filename)
-        # list(store.keys())
-        # bldg_stack_data_df = pd.read_hdf(filename, key='Bldg_Profiles', mode='r')
-        # bldg_stack_data_df.to_csv(path_or_buf=data_path + '/buildingstack_data.csv')
-        # temp = bldg_stack_data_df.groupby(['time']).sum()
-        # temp.to_csv(path_or_buf=data_path + '/buildingstack_data_allDSOs.csv')
-        # ------------- Load GLM DICT JSON METADATA Baseline ----------------------
-        # file_name = 'TE_Base_s' + dso_num +'_glm_dict.json'
-        day_range = range(3, 25)
-        # da_q_data_df = load_gen_data(data_path, 'da_q', day_range)
+        # Example loading system metadata (from GLM dictionary).
         file_name = 'Substation_' + dso_num + '_glm_dict.json'
-        metadata = load_json(base_case + agent_prefix + dso_num, file_name)
-        # file_name = 'TE_Base_s' + dso_num + '_glm_dict.json'
-        # metadata_TE = load_json(trans_case + agent_prefix + dso_num, file_name)
-        # rci_df = RCI_analysis(dso_range, base_case, data_path, metadata_path, False)
-        # agent_file_name = 'TE_Base_s' + dso_num +'_agent_dict.json'
+        sys_metadata = load_json(base_case + agent_prefix + dso_num, file_name)
+
+        # Example loading agent metadata (from agent dictionary).
         agent_file_name = 'Substation_' + dso_num + '_agent_dict.json'
         agent_metadata = load_json(base_case + agent_prefix + dso_num, agent_file_name)
-        # da_q_data_df = load_gen_data(base_case, 'da_q', day_range)
+
+        # Example loading
+        da_q_data_df = load_gen_data(base_case, 'da_q', day_range)
         # rt_q_data_df = load_gen_data(base_case, 'rt_q', day_range)
         rt_line_data_df = load_gen_data(base_case, 'rt_line', day_range)
         da_line_data_df = load_gen_data(base_case, 'da_line', day_range)
@@ -4915,6 +4902,8 @@ def run_plots():
         real_time = curve_time + timedelta(hours=forecast_hour - 3, minutes=30)
 
         retail_data_df, retail_bid_df = load_agent_data(base_case, agent_prefix, dso_num, day_num, 'retail_market')
+        retail_site_data_df, retail_site_bid_df = load_agent_data(base_case, agent_prefix, dso_num, day_num, 'retail_site')
+
         dso_data_df, dso_bid_df = load_agent_data(base_case, agent_prefix, dso_num, day_num, 'dso_market')
         dso_data_df = dso_data_df.droplevel(level=1)
         dso_bid_df = dso_bid_df.loc[real_time, :]
@@ -4942,7 +4931,7 @@ def run_plots():
         # battery_data_df, battery_bid_df = load_agent_data(trans_case, agent_prefix, dso_num, day_num, 'battery_agent')
         # dsomarket_data_df, dsomarket_bid_df = load_agent_data(base_case, agent_prefix, dso_num, day_num, 'dso_market')
         # inverter_meta_df, inverter_df = load_system_data(trans_case, GLD_prefix, dso_num, day_num, 'inverter')
-        ev_meta_df, ev_df = load_system_data(trans_case, GLD_prefix, dso_num, day_num, 'evchargerdet')
+        # ev_meta_df, ev_df = load_system_data(trans_case, GLD_prefix, dso_num, day_num, 'evchargerdet')
         tso_data_df, tso_bid_df = load_agent_data(base_case, agent_prefix, dso_num, day_num, 'dso_tso')
         retail_data_df, retail_bid_df = load_agent_data(base_case, agent_prefix, dso_num, day_num, 'retail_market')
         retail_data_df, retail_index_df = load_retail_data(base_case, agent_prefix, dso_num, day_num, 'retail_site')
@@ -5942,18 +5931,17 @@ def run_plots():
     if dso_plots:
         # Check population and ratios of Res Comm, and Indust customers and loads.
         # Bill = True if rate case has been run and energy df and bill df have been saved.
-        bill = False
-        rci_df = RCI_analysis(dso_range, base_case, data_path, metadata_path, dso_meta_file, bill)
-
-        dso_forecast_stats(dso_range, day_range, base_case, dso_meta_file, metadata_path)
-
-        der_load_stack(dso_range, day_range, base_case, GLD_prefix, metadata_path)
-
-        der_stack_plot(dso_range, day_range, metadata_path, base_case)
+        # bill = False
+        # rci_df = RCI_analysis(dso_range, base_case, data_path, metadata_path, dso_meta_file, bill)
+        #
+        # dso_forecast_stats(dso_range, day_range, base_case, dso_meta_file, metadata_path)
+        #
+        # der_load_stack(dso_range, day_range, base_case, GLD_prefix, metadata_path)
+        #
+        # der_stack_plot(dso_range, day_range, metadata_path, base_case)
 
         for day in day_range:
-            dso_market_plot(dso_range, str(day), base_case, dso_meta_file, case_config_file)
-
+            dso_market_plot(dso_range, str(day), base_case, metadata_file, metadata_path)
         # dso_load_stats(dso_range, month_def, data_path)
 
         # bldg_load_stack(dso_range, day_range, base_case, agent_prefix, GLD_prefix, dso_meta_file, metadata_path)

@@ -1,0 +1,11 @@
+#!/bin/bash
+
+IMAGE=cosim-build:tesp_22.04.1
+
+docker run -it --rm \
+       -e LOCAL_USER_ID=${SIM_UID} \
+       -e TESPDIR=$DOCKER_HOME/tesp \
+       --mount type=bind,source="$TESPDIR",destination="$DOCKER_HOME/tesp" \
+       -w=$DOCKER_HOME \
+       $IMAGE \
+       bash

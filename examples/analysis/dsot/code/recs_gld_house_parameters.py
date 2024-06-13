@@ -210,6 +210,11 @@ def get_residential_metadata(metadata, sample_data, state, hsdens_str, inc_lev, 
         1: 'mobile_home', 2: 'single_family_detached', 3: 'single_family_attached', 4: 'apartment_2_4_units',
         5: 'apartment_5_units'
     }
+    housing_type_consol_dict = {
+        'single_family':['single_family_detached','single_family_attached'],
+        'apartments':['apartment_2_4_units','apartment_5_units'],
+        'mobile_home':['mobile_home','mobile_home']
+    }
     housing_vintage_dict = {
         1: 'pre_1950', 2: '1950-1959', 3: '1960-1969', 4: '1970-1979', 5: '1980-1989', 6: '1990-1999', 7: '2000-2009',
         8: '2010-2015', 9: '2016-2020'
@@ -248,6 +253,7 @@ def get_residential_metadata(metadata, sample_data, state, hsdens_str, inc_lev, 
 
     # Define probability distribution for housing_type
     total_dict = {}
+    total_dict_consol = {}
     # Get house type distribution for triple
     for k, h in housing_type_dict.items():
         metadata['housing_type'][state][hsdens_str][inc_lev][h] = round(
@@ -265,36 +271,44 @@ def get_residential_metadata(metadata, sample_data, state, hsdens_str, inc_lev, 
             if total_dict[h][y] == 0:
                 total_dict[h][y] = 1
             metadata['housing_vintage'][state][hsdens_str][inc_lev][h][y] = round(total_dict[h][y] / total, 4)
-
+    
     # Get number of stories by house type and vintage
-    for k, h in housing_type_dict.items():
-        metadata['num_stories'][state][hsdens_str][inc_lev][h] = {}
+    for hc, l in housing_type_consol_dict.items():
+        metadata['num_stories'][state][hsdens_str][inc_lev][hc] = {}
+        k1 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[0])]
+        k2 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[1])]
+        total_dict_consol[hc] = {}
         for p, y in housing_vintage_dict.items():
-            metadata['num_stories'][state][hsdens_str][inc_lev][h][y] = {}
+            metadata['num_stories'][state][hsdens_str][inc_lev][hc][y] = {}
+            if k1==k2:
+                total_dict_consol[hc][y] = total_dict[l[0]][y]
+            else:
+                total_dict_consol[hc][y] = total_dict[l[0]][y]+total_dict[l[1]][y]
             for n, s in num_stories_dict.items():
-                metadata['num_stories'][state][hsdens_str][inc_lev][h][y][s] = round(sample_data.loc[((sample_data[house_type_str] == k) &
+                metadata['num_stories'][state][hsdens_str][inc_lev][hc][y][s] = round(sample_data.loc[((sample_data[house_type_str].isin([k1,k2])) &
                                                                                                     (sample_data[vintage_str] == p) &
-                                                                                                    (sample_data[n_stories_str] == n)),
-                                                                                                    'NWEIGHT'].sum()/total_dict[h][y], 4)
-
+                                                                                                   (sample_data[n_stories_str] == n)),
+                                                                                                    'NWEIGHT'].sum()/total_dict_consol[hc][y], 4)
     # Get floor_area distribution by house type and vintage
-    for k, h in housing_type_dict.items():
-        metadata['floor_area'][state][hsdens_str][inc_lev][h] = {}
+    for hc, l in housing_type_consol_dict.items():
+        metadata['floor_area'][state][hsdens_str][inc_lev][hc] = {}
+        k1 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[0])]
+        k2 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[1])]
         # for p, y in housing_vintage_dict.items():
-        values = sample_data.loc[(sample_data[house_type_str] == k), flr_area_str].values
-        weighting = sample_data.loc[(sample_data[house_type_str] == k), 'NWEIGHT'].values
+        values = sample_data.loc[(sample_data[house_type_str].isin([k1,k2])), flr_area_str].values
+        weighting = sample_data.loc[(sample_data[house_type_str].isin([k1,k2])), 'NWEIGHT'].values
         if values.size == 0:
-            metadata['floor_area'][state][hsdens_str][inc_lev][h]['mean'] = None
-            metadata['floor_area'][state][hsdens_str][inc_lev][h]['max'] = None
-            metadata['floor_area'][state][hsdens_str][inc_lev][h]['min'] = None
-            metadata['floor_area'][state][hsdens_str][inc_lev][h]['standard_deviation'] = None
+            metadata['floor_area'][state][hsdens_str][inc_lev][hc]['mean'] = None
+            metadata['floor_area'][state][hsdens_str][inc_lev][hc]['max'] = None
+            metadata['floor_area'][state][hsdens_str][inc_lev][hc]['min'] = None
+            metadata['floor_area'][state][hsdens_str][inc_lev][hc]['standard_deviation'] = None
         else:
             avg = np.average(values, weights=weighting)
             std_dev = math.sqrt(np.average((values - avg) ** 2, weights=weighting))
-            metadata['floor_area'][state][hsdens_str][inc_lev][h]['mean'] = round(avg, 4)
-            metadata['floor_area'][state][hsdens_str][inc_lev][h]['max'] = float(np.max(values))
-            metadata['floor_area'][state][hsdens_str][inc_lev][h]['min'] = float(np.min(values))
-            metadata['floor_area'][state][hsdens_str][inc_lev][h]['standard_deviation'] = round(std_dev, 4)
+            metadata['floor_area'][state][hsdens_str][inc_lev][hc]['mean'] = round(avg, 4)
+            metadata['floor_area'][state][hsdens_str][inc_lev][hc]['max'] = float(np.max(values))
+            metadata['floor_area'][state][hsdens_str][inc_lev][hc]['min'] = float(np.min(values))
+            metadata['floor_area'][state][hsdens_str][inc_lev][hc]['standard_deviation'] = round(std_dev, 4)
 
     # Get single wide mobile home by income level
     # for p, y in housing_vintage_dict.items():
@@ -304,33 +318,37 @@ def get_residential_metadata(metadata, sample_data, state, hsdens_str, inc_lev, 
     #                                                                                          'NWEIGHT'].sum()/sum(total_dict['mobile_home'].values()),4)
 
     # Get distribution for air conditioning for homes with gas or resistance heating by house type and vintage
-    for k, h in housing_type_dict.items():
-        total_gas_res_homes = sample_data.loc[((sample_data[house_type_str] == k) &
+    for hc, l in housing_type_consol_dict.items():
+        k1 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[0])]
+        k2 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[1])]
+        total_gas_res_homes = sample_data.loc[((sample_data[house_type_str].isin([k1,k2])) &
                                                (~sample_data[sh_equip_str].isin([4, 13]))), 'NWEIGHT'].sum()
-        metadata['air_conditioning'][state][hsdens_str][inc_lev][h] = round(sample_data.loc[((sample_data[house_type_str] == k) &
+        metadata['air_conditioning'][state][hsdens_str][inc_lev][hc] = round(sample_data.loc[((sample_data[house_type_str].isin([k1,k2])) &
                                                                                            (sample_data[ac_str] == 1) &
                                                                                            (~sample_data[sh_equip_str].isin([4, 13]))),
                                                                                            'NWEIGHT'].sum()/total_gas_res_homes, 4)
 
     # Get distribution for gas heating by house type and vintage
-    for k, h in housing_type_dict.items():
-        metadata['space_heating_type'][state][hsdens_str][inc_lev][h] = {}
+    for hc, l in housing_type_consol_dict.items():
+        metadata['space_heating_type'][state][hsdens_str][inc_lev][hc] = {}
+        k1 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[0])]
+        k2 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[1])]
         for p, y in housing_vintage_dict.items():
-            metadata['space_heating_type'][state][hsdens_str][inc_lev][h][y] = {}
+            metadata['space_heating_type'][state][hsdens_str][inc_lev][hc][y] = {}
             # Gas heating defined as all heating that is not electric
-            metadata['space_heating_type'][state][hsdens_str][inc_lev][h][y]['gas_heating'] = round(sample_data.loc[((sample_data[house_type_str] == k) &
+            metadata['space_heating_type'][state][hsdens_str][inc_lev][hc][y]['gas_heating'] = round(sample_data.loc[((sample_data[house_type_str].isin([k1,k2])) &
                                                                                                                    (sample_data[vintage_str] == p) &
                                                                                                                    (sample_data[sh_fuel_str].isin([1, 2, 3, 7, 99, -2]))),
-                                                                                                                   'NWEIGHT'].sum()/total_dict[h][y], 4)
-            metadata['space_heating_type'][state][hsdens_str][inc_lev][h][y]['heat_pump'] = round(sample_data.loc[((sample_data[house_type_str] == k) &
+                                                                                                                   'NWEIGHT'].sum()/total_dict_consol[hc][y], 4)
+            metadata['space_heating_type'][state][hsdens_str][inc_lev][hc][y]['heat_pump'] = round(sample_data.loc[((sample_data[house_type_str].isin([k1,k2])) &
                                                                                                                  (sample_data[vintage_str] == p) &
                                                                                                                  (sample_data[sh_equip_str].isin([4, 13]))),
-                                                                                                                 'NWEIGHT'].sum()/total_dict[h][y], 4)
-            metadata['space_heating_type'][state][hsdens_str][inc_lev][h][y]['resistance'] = round(sample_data.loc[((sample_data[house_type_str] == k) &
+                                                                                                                 'NWEIGHT'].sum()/total_dict_consol[hc][y], 4)
+            metadata['space_heating_type'][state][hsdens_str][inc_lev][hc][y]['resistance'] = round(sample_data.loc[((sample_data[house_type_str].isin([k1,k2])) &
                                                                                                                   (sample_data[vintage_str] == p) &
                                                                                                                   (sample_data[sh_fuel_str].isin([5, 10])) &
                                                                                                                   (~sample_data[sh_equip_str].isin([4, 13]))),
-                                                                                                                  'NWEIGHT'].sum()/total_dict[h][y], 4)
+                                                                                                                  'NWEIGHT'].sum()/total_dict_consol[hc][y], 4)
     
     # # Get distribution for if water heating matches space heating
     # for k, h in housing_type_dict.items():
@@ -347,77 +365,81 @@ def get_residential_metadata(metadata, sample_data, state, hsdens_str, inc_lev, 
     #                                          (sample_data[wh_fuel_str]==5)),'NWEIGHT'].sum()
     #         metadata['water_heating_type'][state][hsdens_str][inc_lev][h][y]=round((both_gas+both_electric)/total_dict[h][y],4)
 
-    for k, h in housing_type_dict.items():
-        metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h] = {}
-        metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas'] = {}
-        metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric'] = {}
-        metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['electric'] = round(sample_data.loc[((sample_data[house_type_str] == k) &
+    for hc, l in housing_type_consol_dict.items():
+        k1 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[0])]
+        k2 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[1])]
+        metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc] = {}
+        metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_gas'] = {}
+        metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_electric'] = {}
+        metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_gas']['electric'] = round(sample_data.loc[((sample_data[house_type_str].isin([k1,k2])) &
                                                                                                                      (sample_data[sh_fuel_str].isin([1, 2, 3, 7, 99, -2])) &
                                                                                                                      (sample_data[wh_fuel_str] == 5)),
-                                                                                                                     'NWEIGHT'].sum()/sum(total_dict[h].values()), 4)
-        metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['gas'] = round(sample_data.loc[((sample_data[house_type_str] == k) &
+                                                                                                                     'NWEIGHT'].sum()/sum(total_dict_consol[hc].values()), 4)
+        metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_gas']['gas'] = round(sample_data.loc[((sample_data[house_type_str].isin([k1,k2])) &
                                                                                                                 (sample_data[sh_fuel_str].isin([1, 2, 3, 7, 99, -2])) &
                                                                                                                 (sample_data[wh_fuel_str].isin([1, 2, 3, 7, 8, 99, -2]))),
-                                                                                                                'NWEIGHT'].sum()/sum(total_dict[h].values()), 4)
-        metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['electric'] = round(sample_data.loc[((sample_data[house_type_str] == k) &
+                                                                                                                'NWEIGHT'].sum()/sum(total_dict_consol[hc].values()), 4)
+        metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_electric']['electric'] = round(sample_data.loc[((sample_data[house_type_str].isin([k1,k2])) &
                                                                                                                           (sample_data[sh_fuel_str] == 5) &
                                                                                                                           (sample_data[wh_fuel_str] == 5)),
-                                                                                                                          'NWEIGHT'].sum()/sum(total_dict[h].values()), 4)
-        metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['gas'] = round(sample_data.loc[((sample_data[house_type_str] == k) &
+                                                                                                                          'NWEIGHT'].sum()/sum(total_dict_consol[hc].values()), 4)
+        metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_electric']['gas'] = round(sample_data.loc[((sample_data[house_type_str].isin([k1,k2])) &
                                                                                                                      (sample_data[sh_fuel_str] == 5) &
                                                                                                                      (sample_data[wh_fuel_str].isin([1, 2, 3, 7, 8, 99, -2]))),
-                                                                                                                     'NWEIGHT'].sum()/sum(total_dict[h].values()), 4)
+                                                                                                                     'NWEIGHT'].sum()/sum(total_dict_consol[hc].values()), 4)
         # Shifting some gas WH to electric to model increased electrification
         if wh_shift_per > 0:
             extra = 0
-            if metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['gas'] < (wh_shift_per / 2):
-                metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['electric'] += \
-                    metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['gas']
-                extra = (wh_shift_per / 2) - metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['gas']
-                metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['gas'] = 0
+            if metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_electric']['gas'] < (wh_shift_per / 2):
+                metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_electric']['electric'] += \
+                    metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_electric']['gas']
+                extra = (wh_shift_per / 2) - metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_electric']['gas']
+                metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_electric']['gas'] = 0
             else:
-                metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['electric'] += (
+                metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_electric']['electric'] += (
                             wh_shift_per / 2)
-                metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['gas'] -= (
+                metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_electric']['gas'] -= (
                             wh_shift_per / 2)
-            metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['electric'] = min(
-                metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['electric'], 1)
+            metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_electric']['electric'] = min(
+                metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_electric']['electric'], 1)
 
-            if metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['gas'] < (wh_shift_per / 2):
-                metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['electric'] += \
-                    metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['gas']
-                metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['gas'] = 0
+            if metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_gas']['gas'] < (wh_shift_per / 2):
+                metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_gas']['electric'] += \
+                    metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_gas']['gas']
+                metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_gas']['gas'] = 0
             else:
-                metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['electric'] += (
+                metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_gas']['electric'] += (
                             (wh_shift_per / 2) + extra)
-                metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['gas'] -= (
+                metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_gas']['gas'] -= (
                             (wh_shift_per / 2) + extra)
-            metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['electric'] = min(
-                metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['electric'], 1)
+            metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_gas']['electric'] = min(
+                metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_gas']['electric'], 1)
 
-            # sum_gas = sum(metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas'].values())
-        # sum_electric = sum(metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric'].values())
-        # if sum_gas>0:
-        #     metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['electric'] = round(metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['electric']/sum_gas,4)
-        #     metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['gas'] = round(metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['gas']/sum_gas,4)
-        # else:
-        #     metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['electric'] = 0
-        #     metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['gas'] = 0
-        # if sum_electric>0:
-        #     metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['electric'] = round(metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['electric']/sum_electric,4)
-        #     metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['gas'] = round(metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['gas']/sum_electric,4)
-        # else:
-        #     metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['gas'] = 0
-        #     metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['electric'] = 0
+        sum_gas = sum(metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_gas'].values())
+        sum_electric = sum(metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_electric'].values())
+        if sum_gas>0:
+            metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_gas']['electric'] = round(metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_gas']['electric']/sum_gas,4)
+            metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_gas']['gas'] = round(metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_gas']['gas']/sum_gas,4)
+        else:
+            metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_gas']['electric'] = 0
+            metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_gas']['gas'] = 0
+        if sum_electric>0:
+            metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_electric']['electric'] = round(metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_electric']['electric']/sum_electric,4)
+            metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_electric']['gas'] = round(metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_electric']['gas']/sum_electric,4)
+        else:
+            metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_electric']['gas'] = 0
+            metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_electric']['electric'] = 0
 
     # Get distribution for high ceilings by house type and vintage
-    for k, h in housing_type_dict.items():
-        metadata['high_ceilings'][state][hsdens_str][inc_lev][h] = {}
+    for hc, l in housing_type_consol_dict.items():
+        k1 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[0])]
+        k2 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[1])]
+        metadata['high_ceilings'][state][hsdens_str][inc_lev][hc] = {}
         for p, y in housing_vintage_dict.items():
-            metadata['high_ceilings'][state][hsdens_str][inc_lev][h][y] = round(
-                sample_data.loc[((sample_data[house_type_str] == k) &
+            metadata['high_ceilings'][state][hsdens_str][inc_lev][hc][y] = round(
+                sample_data.loc[((sample_data[house_type_str].isin([k1,k2])) &
                                  (sample_data[vintage_str] == p) &
-                                 (sample_data[hiceiling_str] == 1)), 'NWEIGHT'].sum() / total_dict[h][y], 4)
+                                 (sample_data[hiceiling_str] == 1)), 'NWEIGHT'].sum() / total_dict_consol[hc][y], 4)
 
     # Get distribution for number of occupants by house type and vintage
     # Not being used in feeder generator
@@ -560,7 +582,7 @@ def get_RECS_jsons(recs_data_file, dsot_metadata_file, output_file_resmeta, outp
     res_metadata['COP_average']['2017'] = 3.9359
     res_metadata['COP_average']['2018'] = 3.9359
     res_metadata['COP_average']['2019'] = 3.9359
-    res_metadata['COP_average']['2020'] = 3.2956
+    res_metadata['COP_average']['2020'] = 3.9359
     res_metadata['GLD_residential_house_classes'] = dsot_metadata['GLD_residential_house_classes']
     # Add income level dependent solar, storage, and ev percentages
     res_metadata['solar_percentage'] = {}

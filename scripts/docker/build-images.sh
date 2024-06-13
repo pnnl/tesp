@@ -6,6 +6,7 @@ ver="tesp_22.04.1"
 build_ubuntu=1
 build_library=1
 build_build=1
+build_cplex=1
 
 if [[ -z ${TESPDIR} ]]; then
   echo "Edit tesp.env in the TESP directory"
@@ -17,12 +18,14 @@ paths=(
   "./"
   "./"
   "${TESPDIR}/scripts/build/"
+  "./"
 )
 
 names=(
   "ubuntu"
   "library"
   "build"
+  "cplex"
 )
 
 # Dynamically build the 'builds' array based on the configuration

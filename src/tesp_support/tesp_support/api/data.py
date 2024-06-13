@@ -30,7 +30,7 @@ components = ["",
 if 'TESPDIR' in environ:
     tesp_path = environ['TESPDIR']
 else:
-    tesp_path = path.expanduser('~') + '/grid/repo/tesp'
+    tesp_path = path.expanduser('~') + '/grid/tesp'
 
 # uncomment for debug
 # tesp_path = path.expanduser('~') + '/tesp'
@@ -49,7 +49,7 @@ if path.isdir(tesp_path):
 else:
     # New instance
     try:
-        chdir(path.expanduser('~/grid/repo'))
+        chdir(path.expanduser('~/grid'))
         cmd = 'git clone --no-checkout https://github.com/pnnl/tesp'
         subprocess.Popen(cmd, shell=True).wait()
         chdir(tesp_path)
