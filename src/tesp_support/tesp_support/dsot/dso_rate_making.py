@@ -10,6 +10,7 @@ import os
 import sys
 from os.path import dirname, abspath
 
+import numpy as np
 import pandas as pd
 
 # sys.path.insert(0, dirname(abspath(__file__)))
@@ -375,11 +376,8 @@ def create_demand_profiles_for_each_meter(
     day_range,
     save=False,
 ):
-    """Creates a .h5 file that contains hourly time-series data of the hourly energy
-    conumption and hourly maximum demands (demand is metered at five-minute
-    intervals and maximum demand charges are determined at fifteen-minute intervals,
-    so we cannot just rely on hourly energy consumption to later identify maximum
-    demand); these two time-series data sets are maintained within separate keys.
+    """Creates a pandas DataFrame that contains hourly time-series data for each meter 
+    in a DSO. The resultant DataFrame can be saved to a .h5 file if desired.
     Arguments:
         meter_data_file_path (str): Contains file path of daily power and voltage
             information for each meter in five-minute time steps.
@@ -392,7 +390,7 @@ def create_demand_profiles_for_each_meter(
             file. If True, data is saved to the same location as what is provided in
             `meter_data_file_path'.
     Returns:
-        demand_df (pandas.DataFrame): Monthly five-minute demand data for each meter.
+        demand_df (pandas.DataFrame): Monthly hourly demand data for each meter.
     """
     # Make sure day_range is sorted
     day_range.sort()
@@ -514,6 +512,192 @@ def create_demand_profiles_for_each_meter(
 
     # Return the monthly five-minute demand data for each meter
     return demand_df
+
+
+def create_baseline_demand_profiles_for_each_meter(
+    demand_df,
+    number_of_nodes,
+    substation_number,
+    type_of_baseline,
+    demand_data_file_path=None,
+    save=False,
+):
+    """Creates a pandas DataFrame that contains hourly time-series data for each meter 
+    in a DSO. The data in this DataFrame is configured to be a baseline demand profile, 
+    determined according to a specified metric. The resultant DataFrame can be saved to 
+    a .h5 file if desired.
+    Arguments:
+        demand_df (pandas.DataFrame): Monthly hourly demand data for each meter.
+        number_of_nodes (int): The number of nodes in the system model.
+        substation_number (int): The number of a valid substation in the system model.
+        type_of_baseline (str): f
+        save (bool): Indicates whether or not the output data should be saved in a .h5
+            file. If True, data is saved to the location specified by 
+            'demand_data_file_path'.
+        demand_data_file_path (str): File path that indicates where the resultant 
+            baseline demand profile should be saved, if allowed by 'save'.
+    Returns:
+        bl_demand_df (pandas.DataFrame): Monthly hourly baseline demand data for each 
+            meter.
+    """
+
+    # Establish the day range
+    day_range = list(range(demand_df.index[0].day, demand_df.index[-1].day + 1))
+
+    # Establish the month
+    month = demand_df.index[0].month
+
+    # Establish the year
+    year = demand_df.index[0].year
+
+    # Determine the type of demand baseline to create based on type_of_baseline
+    type_of_baseline = type_of_baseline.lower()
+    if type_of_baseline == "daily":
+        # Establish the baseline to be the demand profile for each meter
+        bl_demand_df = demand_df.copy(deep=True)
+    elif type_of_baseline == "days_of_week":
+        # Find the average demand for each meter by day of the week and hour
+        demand_data_by_weekday_and_hour = demand_df.groupby(
+            [demand_df.index.dayofweek, demand_df.index.hour]
+        ).mean()
+
+        # Identify the days of the week for the first and last days of the month
+        first_day_of_month = pd.to_datetime(
+            str(month) + "/" + str(day_range[0]) + "/" + str(year)
+        ).dayofweek
+        last_day_of_month = pd.to_datetime(
+            str(month) + "/" + str(day_range[-1]) + "/" + str(year)
+        ).dayofweek
+
+        # Identify the number of full weeks, Monday through Sunday
+        num_full_weeks = int(
+            (len(day_range) - (7 - first_day_of_month) - (1 + last_day_of_month)) / 7
+        )
+
+        # Create the baseline demand data profile
+        bl_demand_data = demand_data_by_weekday_and_hour.loc[
+            first_day_of_month:6
+        ].values.tolist()
+        for w in range(num_full_weeks):
+            bl_demand_data.extend(demand_data_by_weekday_and_hour.values.tolist())
+        bl_demand_data.extend(
+            demand_data_by_weekday_and_hour.loc[0:last_day_of_month].values.tolist()
+        )
+
+        # Create the baseline demand DataFrame
+        bl_demand_df = pd.DataFrame(
+            data=bl_demand_data,
+            columns=demand_data_by_weekday_and_hour.columns.tolist(),
+        )
+        bl_demand_df.set_index(demand_df.index, inplace=True)
+    elif type_of_baseline == "weekdays_and_weekends":
+        # Find the average demand for each meter by weekday/weekend and hour
+        demand_data_by_weekday_and_hour = demand_df.groupby(
+            [
+                np.where(demand_df.index.dayofweek < 5, 0, 1),
+                demand_df.index.hour,
+            ]
+        ).mean()
+
+        # Identify the days of the week for the first and last days of the month
+        first_day_of_month = pd.to_datetime(
+            str(month) + "/" + str(day_range[0]) + "/" + str(year)
+        ).dayofweek
+        last_day_of_month = pd.to_datetime(
+            str(month) + "/" + str(day_range[-1]) + "/" + str(year)
+        ).dayofweek
+
+        # Identify the number of full weeks, Monday through Sunday
+        num_full_weeks = int(
+            (len(day_range) - (7 - first_day_of_month) - (1 + last_day_of_month)) / 7
+        )
+
+        # Create the baseline demand data profile
+        bl_demand_data = []
+        if (7 - first_day_of_month) > 2:
+            for d in range(7 - first_day_of_month - 2):
+                bl_demand_data.extend(
+                    demand_data_by_weekday_and_hour.loc[0].values.tolist()
+                )
+            for d in range(2):
+                bl_demand_data.extend(
+                    demand_data_by_weekday_and_hour.loc[1].values.tolist()
+                )
+        else:
+            for d in range(7 - first_day_of_month):
+                bl_demand_data.extend(
+                    demand_data_by_weekday_and_hour.loc[1].values.tolist()
+                )
+        for w in range(num_full_weeks):
+            for d in range(5):
+                bl_demand_data.extend(
+                    demand_data_by_weekday_and_hour.loc[0].values.tolist()
+                )
+            for d in range(2):
+                bl_demand_data.extend(
+                    demand_data_by_weekday_and_hour.loc[1].values.tolist()
+                )
+        if last_day_of_month < 5:
+            for d in range(last_day_of_month + 1):
+                bl_demand_data.extend(
+                    demand_data_by_weekday_and_hour.loc[0].values.tolist()
+                )
+        else:
+            for d in range(5):
+                bl_demand_data.extend(
+                    demand_data_by_weekday_and_hour.loc[0].values.tolist()
+                )
+            for d in range(last_day_of_month - 4):
+                bl_demand_data.extend(
+                    demand_data_by_weekday_and_hour.loc[1].values.tolist()
+                )
+
+        # Create the baseline demand DataFrame
+        bl_demand_df = pd.DataFrame(
+            data=bl_demand_data,
+            columns=demand_data_by_weekday_and_hour.columns.tolist(),
+        )
+        bl_demand_df.set_index(demand_df.index, inplace=True)
+    elif type_of_baseline == "monthly":
+        # Find the average demand for each meter by hour
+        demand_data_by_hour = demand_df.groupby([demand_df.index.hour]).mean()
+
+        # Create the baseline demand data profile
+        bl_demand_data = []
+        for d in range(len(day_range)):
+            bl_demand_data.extend(demand_data_by_hour.values.tolist())
+
+        # Create the baseline demand DataFrame
+        bl_demand_df = pd.DataFrame(
+            data=bl_demand_data,
+            columns=demand_data_by_hour.columns.tolist(),
+        )
+        bl_demand_df.set_index(demand_df.index, inplace=True)
+    else:
+        raise ValueError(
+            "The provided baseline type is not valid. The allowed types are 'daily', "
+            + "'day_of_week', 'weekdays_and_weekends', and 'monthly'. Please try again."
+        )
+
+    # Save the demand data, if specified
+    if save and demand_data_file_path is not None:
+        bl_demand_df.to_hdf(
+            os.path.join(
+                demand_data_file_path,
+                str(number_of_nodes)
+                + "_"
+                + str(year)
+                + "_"
+                + (str(month) if len(str(month)) > 1 else "0" + str(month)),
+                "Substation_" + str(substation_number),
+                "Substation_" + str(substation_number) + "_baseline_demand_by_meter.h5",
+            ),
+            key="demand",
+            mode="w",
+        )
+
+    # Return the monthly five-minute baseline demand data for each meter
+    return bl_demand_df
 
 
 def calc_cust_bill(metadata, meter_df, trans_df, energy_sum_df, tariff, dso_num, SF, ind_cust):
