@@ -1572,9 +1572,10 @@ def get_total_dso_costs(case_path, dso_num, rate_scenario, seasons_dict=None):
             if dso_df is None:
                 dso_expenses[s] = 1e10 / num_seasons
             else:
-                dso_expenses[s] = 1000 * (
-                    float(dso_df.loc["CapitalExpenses_" + s, "DSO_" + dso_num])
-                    + float(dso_df.loc["OperatingExpenses_" + s, "DSO_" + dso_num])
+                dso_expenses[s] = 1000 * sum(
+                    float(dso_df.loc["CapitalExpenses_" + m, "DSO_" + dso_num])
+                    + float(dso_df.loc["OperatingExpenses_" + m, "DSO_" + dso_num])
+                    for m in seasons_dict[s]
                 )
     elif rate_scenario == "subscription":
         # Note that this assumes the subscription price is based on a time-of-use rate
@@ -1584,9 +1585,10 @@ def get_total_dso_costs(case_path, dso_num, rate_scenario, seasons_dict=None):
             if dso_df is None:
                 dso_expenses[s] = 1e10 / num_seasons
             else:
-                dso_expenses[s] = 1000 * (
-                    float(dso_df.loc["CapitalExpenses_" + s, "DSO_" + dso_num])
-                    + float(dso_df.loc["OperatingExpenses_" + s, "DSO_" + dso_num])
+                dso_expenses[s] = 1000 * sum(
+                    float(dso_df.loc["CapitalExpenses_" + m, "DSO_" + dso_num])
+                    + float(dso_df.loc["OperatingExpenses_" + m, "DSO_" + dso_num])
+                    for m in seasons_dict[s]
                 )
     elif rate_scenario == "transactive":
         if dso_df is None:

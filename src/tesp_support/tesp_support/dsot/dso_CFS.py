@@ -955,6 +955,11 @@ def dso_CFS(
         'Balance': 0
     }
 
+    # Add the monthly DSO capital and operating expenses to the composite cash flows dict
+    for m in months:
+        DSO_Cash_Flows_composite["CapitalExpenses_" + m] = CapitalExpensesMonthly[m]
+        DSO_Cash_Flows_composite["OperatingExpenses_" + m] = OperatingExpensesMonthly[m]
+
     # DSO_Cash_Flows_DO
     # DSO_Cash_Flows_MO
     # DSO_Cash_Flows_RSP
