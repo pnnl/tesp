@@ -27,16 +27,19 @@ References:
 Public Functions:
     :populate_feeder: processes one GridLAB-D input file
 
-Todo:
+TODO:
     * Verify the level zero mobile home thermal integrity properties; 
         these were copied from the MATLAB feeder generator
 
-    * TODO - JK - Find parameters in this model and migrate them to a JSON5 file
+    * TODO - JK - Find parameters in this model and migrate them to a JSON5 file. This
+                should include comments on provenance if you know it and a TODO item if
+                you don't.
     * TODO - FR - Add method to read in JSON5 config
     * TODO - JK - Edit and expand docstrings and type hinting for each method in method call
                 and external list in docstring
     * TODO - FR - Create definitions for new higher-level methods Trevor called out in 
                 class diagram and add calls to existing methods as appropriate
+                (tesp/design/feeder_generator/feeder generator class diagram).
     * TODO - JK - Apply style guide to existing code
     * TODO - JK - Rename all 1, 2, or 3 letter variables to be more descriptive 
                 OK - "v_an" = "voltage from phase a to neutral"
