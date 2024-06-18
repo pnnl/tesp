@@ -36,7 +36,7 @@ ProfitMargin_intercept = 10
 price_std_dev = 100 # Assumed value; just has to be > 0
 hvac_kw = 5
 Topt_DA = 72
-my_quantity_curve = [0, 1.25, 2.5, 3.75, 5] # simplified vector showing the sensitivity of the HVAC load to air temperature
+
 
 class HVACDSOT: 
     def __init__(self):
@@ -490,13 +490,19 @@ class HVACDSOT:
             self.temp_curve.append(Topt_DA + (i - 2) / 4.0 * self.slider)
             self.quantity_curve.append(0.0)
 
+        # This is a proxy for a much more involved process to estimate the
+        # HVAC energy consumption for the upcoming real-time market period
+        # (see formulate_bid_rt in the hvac_agent.py in the for loop with
+        # index "itime"). This is a reasonable approximation where the HVAC
+        # runs for the entire five minutes. 
+        self.quantity_curve = [0, 1.25, 2.5, 3.75, 5]
 
         for itemp in range(npt):
             x = np.zeros([2, 1])
             x[0] = self.air_temp
             x[1] = self.mass_temp
-            Q_min = 0 # min(self.quantity_curve)
-            Q_max = self.hvac_kw # max(self.quantity_curve)
+            Q_min = min(self.quantity_curve)
+            Q_max = max(self.quantity_curve)
 
 
             # The original DSO+T HVAC agent 
@@ -515,7 +521,7 @@ class HVACDSOT:
             self.temp_curve.sort( reverse=True)
         # ----------- End non DSO+T code   --------------- #
 
-        self.quantity_curve = my_quantity_curve 
+        
         Qopt_DA = self.hvac_kw/2 # simplified value, assumes operating at 50% duty cycle
         Qmin = 0
         Qmax = self.hvac_kw
@@ -593,7 +599,7 @@ if __name__ == "__main__":
     init_delta_DA_price = 20
     init_ProfitMargin_intercept = 10
 
-    def run_model(slider, cleared_price, delta_DA_price, ProfitMargin_intercept) -> tuple[float, float]:
+    def run_agent_rt_market(slider, cleared_price, delta_DA_price, ProfitMargin_intercept) -> tuple[float, float]:
         hvac_agent.slider = slider
         hvac_agent.cleared_price = cleared_price
         hvac_agent.delta_DA_price = delta_DA_price
@@ -620,7 +626,7 @@ if __name__ == "__main__":
         setpoint_curve_y = []
         for clearing_price in range(min_price, max_price, 1):
             setpoint_curve_x.append(clearing_price)
-            bid_quantity, cooling_setpoint, heating_setpoint = run_model(slider, 
+            bid_quantity, cooling_setpoint, heating_setpoint = run_agent_rt_market(slider, 
                                                                     clearing_price, 
                                                                     delta_DA_price,
                                                                     ProfitMargin_intercept)
@@ -637,7 +643,7 @@ if __name__ == "__main__":
                                                                             max_price=100)
 
         # Run the model at the actual clearing price
-        bid_quantity, cooling_setpoint, heating_setpoint = run_model(slider_setting.val, 
+        bid_quantity, cooling_setpoint, heating_setpoint = run_agent_rt_market(slider_setting.val, 
                                                                     cleared_price_setting.val, 
                                                                     delta_DA_price_setting.val,
                                                                     ProfitMargin_intercept_setting.val)
@@ -682,7 +688,7 @@ if __name__ == "__main__":
                                                                         init_ProfitMargin_intercept,
                                                                         min_price=1, 
                                                                         max_price=100)
-    bid_quantity, cooling_setpoint, heating_setpoint = run_model(init_slider, 
+    bid_quantity, cooling_setpoint, heating_setpoint = run_agent_rt_market(init_slider, 
                                                    init_cleared_price, 
                                                    init_delta_DA_price, 
                                                    init_ProfitMargin_intercept)
