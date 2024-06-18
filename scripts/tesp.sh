@@ -52,8 +52,7 @@ autoconf \
 libtool \
 libjsoncpp-dev \
 gfortran \
-install cmake \
-subversion \
+cmake \
 unzip
 
 # add tools/libs for Java support, HELICS, FNCS, GridLAB-D, Ipopt/cbc

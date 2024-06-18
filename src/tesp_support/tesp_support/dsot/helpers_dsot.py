@@ -537,7 +537,6 @@ ARCHIVE_DIR="%s"
 
 docker run \\
        -e LOCAL_USER_ID=$SIM_UID \\
-       -e TESPDIR=$DOCKER_HOME/tesp \
        -itd \\
        --rm \\
        --network=none \\%s
@@ -573,7 +572,7 @@ docker run \\
         outfile.write('find . -name \\*metrics*.json* -type f -delete\n')
         outfile.write('find . -name \\*metrics*.h5 -type f -delete\n')
         outfile.write('find . -name \\*model_dict.json -type f -delete\n')
-        outfile.write('find . -name \\*diagnostics.txt -type f -delete\n')
+        outfile.write('find . -name \\*diag.txt -type f -delete\n')
         outfile.write('find . -name \\*log.txt -type f -delete\n')
         outfile.write('cd -\n')
 

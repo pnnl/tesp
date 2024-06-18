@@ -11,6 +11,7 @@ USER $COSIM_USER
 WORKDIR $COSIM_HOME
 
 # CoSim exports
+ENV TESPDIR=$COSIM_HOME/tesp
 ENV INSTDIR=$COSIM_HOME/tenv
 ENV BUILD_DIR=$COSIM_HOME/build
 ENV REPO_DIR=$COSIM_HOME/repo
@@ -119,9 +120,9 @@ RUN echo "Cloning or download all relevant repositories..." && \
   pip install --no-warn-script-location --no-cache-dir -r ${REPO_DIR}/tesp/requirements.txt  >> "pypi.log" && \
   pip install --no-warn-script-location --no-cache-dir helics[cli]  >> "pypi.log" && \
   pip install --no-warn-script-location --no-cache-dir -e ${REPO_DIR}/psst  >> "pypi.log" && \
-  cp -r ${REPO_DIR}/tesp/src ${COSIM_HOME}/tesp && \
-  cp -r ${REPO_DIR}/tesp/data ${COSIM_HOME}/tesp && \
-  pip install --no-warn-script-location --no-cache-dir -e ${COSIM_HOME}/tesp/src/tesp_support  >> "pypi.log" && \
+  cp -r ${REPO_DIR}/tesp/src ${TESPDIR} && \
+  cp -r ${REPO_DIR}/tesp/data ${TESPDIR} && \
+  pip install --no-warn-script-location --no-cache-dir -e ${TESPDIR}/src/tesp_support  >> "pypi.log" && \
   /bin/rm -r ${REPO_DIR}/tesp && \
   echo "${COSIM_USER}" | sudo -S ldconfig && \
   ./versions.sh
