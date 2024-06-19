@@ -1922,7 +1922,7 @@ def dso_market_plot(dso_range, day, case, dso_metadata_file, ercot_dir, comp_cas
     ames_da_lmp_df = load_gen_data(case, 'da_lmp', range(int(day), int(day) + 1))
     ames_da_lmp_df = ames_da_lmp_df.unstack(level=1)
     ames_da_lmp_df.columns = ames_da_lmp_df.columns.droplevel()
-    ames_da_gen_df = load_gen_data(case, 'da_gen', range(int(day), int(day) + 1))
+    # ames_da_gen_df = load_gen_data(case, 'da_gen', range(int(day), int(day) + 1))
     # TODO: Need to check - think this is PyPower results.
     PyPower_rt_gen_df = load_gen_data(case, 'gen', range(int(day), int(day) + 1))
 
@@ -1946,7 +1946,7 @@ def dso_market_plot(dso_range, day, case, dso_metadata_file, ercot_dir, comp_cas
     plt.plot(ames_rt_df[' TotalLoad'], label='AMES RT Total Load', marker='.')
     plt.plot(ames_rt_df[' TotalGen'], label='AMES RT Total Gen', marker='.')
     plt.plot(ames_da_q_df.sum(axis=1), label='DA Cleared Q', marker='.')
-    plt.plot(ames_da_gen_df.groupby(level=0)['ClearQ'].sum(), label='DA Gen Q Generation', marker='.')
+    # plt.plot(ames_da_gen_df.groupby(level=0)['ClearQ'].sum(), label='DA Gen Q Generation', marker='.')
     plt.plot(PyPower_rt_gen_df.groupby(level=0)['Pgen'].sum(), label='PyPower Generation', marker='.')
     plt.legend()
     plt.title('DSO Market Quantity Comparison (all DSOs; Day ' + date.strftime("%m-%d") + ')')
