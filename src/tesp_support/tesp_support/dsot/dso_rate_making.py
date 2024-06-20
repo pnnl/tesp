@@ -1099,12 +1099,23 @@ def calculate_consumer_bills(
                         * tou_params["DSO_" + dso_num][m]["periods"][k]["ratio"]
                         * meter_df.loc[(each, k + "_kwh"), m]
                         for k in tou_params["DSO_" + dso_num][m]["periods"].keys()
-                    ) + calculate_tier_credit(
-                        dso_num,
-                        metadata["billingmeters"][each]["tariff_class"],
-                        tariff,
-                        meter_df.loc[(each, "kw-hr"), m],
                     )
+
+                    # Calculate the consumer's tier credit (due to the declining block)
+                    # rate, if the consumer is eligible
+                    if metadata["billingmeters"][each]["tariff_class"] in [
+                        "residential",
+                        "commercial",
+                        "industrial",
+                    ]:
+                        bill_df.loc[
+                            (each, "tou_energy_charge"), m
+                        ] += calculate_tier_credit(
+                            dso_num,
+                            metadata["billingmeters"][each]["tariff_class"],
+                            tariff,
+                            meter_df.loc[(each, "kw-hr"), m],
+                        )
 
                     # Calculate the consumer's energy charge for each time-of-use period
                     for k in tou_params["DSO_" + dso_num][m]["periods"].keys():
@@ -1156,12 +1167,23 @@ def calculate_consumer_bills(
                 # Calculate the consumer's energy charge under the flat rate tariff
                 bill_df.loc[(each, "flat_energy_charge"), m] = flat_rate * meter_df.loc[
                     (each, "kw-hr"), m
-                ] + calculate_tier_credit(
-                    dso_num,
-                    metadata["billingmeters"][each]["tariff_class"],
-                    tariff,
-                    meter_df.loc[(each, "kw-hr"), m],
-                )
+                ]
+
+                # Calculate the consumer's tier credit (due to the declining block)
+                # rate, if the consumer is eligible
+                if metadata["billingmeters"][each]["tariff_class"] in [
+                    "residential",
+                    "commercial",
+                    "industrial",
+                ]:
+                    bill_df.loc[
+                        (each, "flat_energy_charge"), m
+                    ] += calculate_tier_credit(
+                        dso_num,
+                        metadata["billingmeters"][each]["tariff_class"],
+                        tariff,
+                        meter_df.loc[(each, "kw-hr"), m],
+                    )
 
                 # Calculate the consumer's demand charge under the flat rate tariff
                 bill_df.loc[(each, "flat_demand_charge"), m] = (
@@ -1367,16 +1389,21 @@ def calculate_tariff_prices(
                 meter_df.loc[(each, "max_kw"), m] for m in months
             )
 
-            # Update the total tier credit
-            total_tier_credit += sum(
-                calculate_tier_credit(
-                    dso_num,
-                    metadata["billingmeters"][each]["tariff_class"],
-                    tariff,
-                    meter_df.loc[(each, "kw-hr"), m],
+            # Update the total tier credit, if the consumer qualifies
+            if metadata["billingmeters"][each]["tariff_class"] in [
+                "residential",
+                "commercial",
+                "industrial",
+            ]:
+                total_tier_credit += sum(
+                    calculate_tier_credit(
+                        dso_num,
+                        metadata["billingmeters"][each]["tariff_class"],
+                        tariff,
+                        meter_df.loc[(each, "kw-hr"), m],
+                    )
+                    for m in months
                 )
-                for m in months
-            )
         
         # Find the energy price for the flat rate
         prices["flat_rate"] = (
@@ -1436,16 +1463,22 @@ def calculate_tariff_prices(
                 # season
                 rev_fixed_charge_tou[s] += fixed_charge * len(seasons_dict[s])
 
-                # Update the total tier credit for each consumer during each season
-                total_tier_credit_tou[s] += sum(
-                    calculate_tier_credit(
-                        dso_num,
-                        metadata["billingmeters"][each]["tariff_class"],
-                        tariff,
-                        meter_df.loc[(each, "kw-hr"), m],
+                # Update the total tier credit for each consumer during each season, if 
+                # the consumer qualifies
+                if metadata["billingmeters"][each]["tariff_class"] in [
+                    "residential",
+                    "commercial",
+                    "industrial",
+                ]:
+                    total_tier_credit_tou[s] += sum(
+                        calculate_tier_credit(
+                            dso_num,
+                            metadata["billingmeters"][each]["tariff_class"],
+                            tariff,
+                            meter_df.loc[(each, "kw-hr"), m],
+                        )
+                        for m in seasons_dict[s]
                     )
-                    for m in seasons_dict[s]
-                )
 
         # Find the off-peak energy price for each season for the time-of-use rate, 
         # assuming that each consumer is taking service under time-of-use
@@ -1472,14 +1505,25 @@ def calculate_tariff_prices(
                             prices["tou_rate_" + s]
                             * tou_params["DSO_" + dso_num][m]["periods"][k]["ratio"]
                             * meter_df.loc[(each, k + "_kwh"), m]
-                            + calculate_tier_credit(
-                                dso_num,
-                                metadata["billingmeters"][each]["tariff_class"],
-                                tariff,
-                                meter_df.loc[(each, "kw-hr"), m],
-                            )
                             for m in seasons_dict[s]
                         )
+
+                        # Calculate the consumer's tier credit (due to the declining 
+                        # block) rate, if the consumer is eligible
+                        if metadata["billingmeters"][each]["tariff_class"] in [
+                            "residential",
+                            "commercial",
+                            "industrial",
+                        ]:
+                            rev_energy_charge_tou[s] += sum(
+                                calculate_tier_credit(
+                                    dso_num,
+                                    metadata["billingmeters"][each]["tariff_class"],
+                                    tariff,
+                                    meter_df.loc[(each, "kw-hr"), m],
+                                )
+                                for m in seasons_dict[s]
+                            )
 
                     # Specify the demand charge based on the consumer's sector type
                     demand_charge = tariff["DSO_" + dso_num][
@@ -1512,16 +1556,22 @@ def calculate_tariff_prices(
                 # Update total revenue from fixed charges for the flat rate consumers
                 rev_fixed_charge_flat += fixed_charge * len(months)
 
-                # Update the total tier credit for the flat rate consumers
-                total_tier_credit_flat += sum(
-                    calculate_tier_credit(
-                        dso_num,
-                        metadata["billingmeters"][each]["tariff_class"],
-                        tariff,
-                        meter_df.loc[(each, "kw-hr"), m],
+                # Update the total tier credit for the flat rate consumers, if the 
+                # consumer qualifies
+                if metadata["billingmeters"][each]["tariff_class"] in [
+                    "residential",
+                    "commercial",
+                    "industrial",
+                ]:
+                    total_tier_credit_flat += sum(
+                        calculate_tier_credit(
+                            dso_num,
+                            metadata["billingmeters"][each]["tariff_class"],
+                            tariff,
+                            meter_df.loc[(each, "kw-hr"), m],
+                        )
+                        for m in months
                     )
-                    for m in months
-                )
 
         # Calculate the total revenue obtained from consumers taking service under the 
         # time-of-use rate
