@@ -17,7 +17,7 @@ The existing DSO+T study has four agents. Each of us on the development team wil
 * Trevor: [HVAC](https://github.com/pnnl/tesp/blob/62779f0ccaa38a7ec205d2a1a2c8748c5996a7be/src/tesp_support/tesp_support/dsot/hvac_agent.py)
 * Mitch: [Water Heater](https://github.com/pnnl/tesp/blob/62779f0ccaa38a7ec205d2a1a2c8748c5996a7be/src/tesp_support/tesp_support/dsot/water_heater_agent.py)
 * Fred: [Battery](https://github.com/pnnl/tesp/blob/62779f0ccaa38a7ec205d2a1a2c8748c5996a7be/src/tesp_support/tesp_support/dsot/battery_agent.py)
-* Jessice: [EV](https://github.com/pnnl/tesp/blob/62779f0ccaa38a7ec205d2a1a2c8748c5996a7be/src/tesp_support/tesp_support/dsot/ev_agent.py)
+* Jessica: [EV](https://github.com/pnnl/tesp/blob/62779f0ccaa38a7ec205d2a1a2c8748c5996a7be/src/tesp_support/tesp_support/dsot/ev_agent.py)
 
 ### Working Directory
 All work for this should take place in the "agent_design" branch. The repo has a top level folder called "design" and a sub-folder called "agent_redesign" that should be use for storing notes, code, diagrams, etc. This is also the location we'll keep our notes as a team when developing the new software architecture.
@@ -44,6 +44,17 @@ Each agent is responsible for forming a bid for the day-ahead market. This bid i
 
 ### Re-write guidelines
 Still have to figure out we need to do here. In addition to using the new software architecture, we'll need to implement unit tests and potentially integration tests. 
+
+### Deliverables for Seattle meeting
+* Class definition for your agent 
+  * Methods will be more important than attributes
+  * As necessary or helpful, a workflow or sequence diagram to show how the agen will use it's methods
+  * Any supporting classes that are particular to your agent. For example, the HVAC agent has a model of the house it is controlling that I'm thinking of spinning off into a separate class.
+* Comments on the prematurely-defined agent class diagram Trevor put together.
+* Thoughts on common classes that all the agents will need
+  * Bid class
+  * Device model class (provide the agent with some kind of model for the device it is controlling)
+
 
 ### Schedule
 This work will be started in FY24 and continue into FY25. The following is a preliminary schedule of deliverables:
