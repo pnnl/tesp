@@ -1799,8 +1799,8 @@ def DSO_rate_making(
         file_name = 'rate_case_values_' + case_name + '.json'
     
     # Specify the Tariff file name for scenarios related to the rates scenarios project
-    if (rate_scenario is None) and (case_name == ""):
-        case_name = "rate_case_values_" + rate_scenario + ".json"
+    if (rate_scenario is not None) and (case_name == ""):
+        file_name = "rate_case_values_" + rate_scenario + ".json"
 
     # Load Tariff structure
     tariff = load_json(tariff_path, file_name)
