@@ -381,10 +381,29 @@ def dso_CFS(
     for m in months:
         WhISOMonthly[m] = iso_energy_fee * EnergyQuantityPurchasedMonthly_base_case[m] / 1000
 
-    RetailDAEnergy = dso_helper.returnDictSum(
-        DSO_Revenues_and_Energy_Sales['RetailSales']['TransactiveSales']['RetailDAEnergy'])
-    RetailRTEnergy = dso_helper.returnDictSum(
-        DSO_Revenues_and_Energy_Sales['RetailSales']['TransactiveSales']['RetailRTEnergy'])
+    if rate_scenario is None:
+        RetailDAEnergy = dso_helper.returnDictSum(
+            DSO_Revenues_and_Energy_Sales['RetailSales']['TransactiveSales']['RetailDAEnergy'])
+        RetailRTEnergy = dso_helper.returnDictSum(
+            DSO_Revenues_and_Energy_Sales['RetailSales']['TransactiveSales']['RetailRTEnergy'])
+    else:
+        if rate_scenario == "transactive":
+            RetailDAEnergy = sum(
+                DSO_Revenues_and_Energy_Sales["RetailSales"]["TransactiveSales" + c][
+                    "RetailDAEnergy" + c
+                ]
+                for c in ["Res", "Comm", "Ind"]
+            )
+            RetailRTEnergy = sum(
+                DSO_Revenues_and_Energy_Sales["RetailSales"]["TransactiveSales" + c][
+                    "RetailRTEnergy" + c
+                ]
+                for c in ["Res", "Comm", "Ind"]
+            )
+        else:
+            RetailDAEnergy = 0
+            RetailRTEnergy = 0
+
     TransactFees = metadata_general['dso_transaction_fee_per_KWh'] * (RetailDAEnergy + RetailRTEnergy) / 1000 * 1000
 
     EnergySold = DSO_Revenues_and_Energy_Sales['EnergySold']
