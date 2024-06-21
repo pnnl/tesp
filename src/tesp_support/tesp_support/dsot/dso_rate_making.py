@@ -1755,7 +1755,7 @@ def DSO_rate_making(
         tariff_path,
         dso_scaling_factor,
         num_indust_cust,
-        case_name='',
+        case_name="",
         iterate=False,
         rate_scenario=None,
     ):
@@ -1783,7 +1783,7 @@ def DSO_rate_making(
 
     counter_factual = False
 
-    # Load Tariff structure:
+    # Specify the Tariff file name for DSO+T-related scenarios
     if counter_factual:
         if case_name in ['8-MR-BAU', '8-MR-Batt', '8-MR-Flex']:
             file_name = 'rate_case_values_8-MR-BAU.json'
@@ -1797,7 +1797,14 @@ def DSO_rate_making(
             raise Exception("Tariff rate case does not exist for case " + case_name + '.')
     else:
         file_name = 'rate_case_values_' + case_name + '.json'
+    
+    # Specify the Tariff file name for scenarios related to the rates scenarios project
+    if (rate_scenario is None) and (case_name == ""):
+        case_name = "rate_case_values_" + rate_scenario + ".json"
+
+    # Load Tariff structure
     tariff = load_json(tariff_path, file_name)
+
     # Load in transactive A values from simulation settings to ensure consistency
     default_config = load_json(tariff_path, 'default_case_config.json')
     for DSO in tariff:
@@ -1809,59 +1816,102 @@ def DSO_rate_making(
     year_energysum_df = pd.read_hdf(energy_file, key='energy_sums', mode='r')
     year_trans_df = pd.read_hdf(trans_file, key='trans_data', mode='r')
 
-    if not counter_factual:
-        if case_name not in ['8-MR-BAU', '8-HR-BAU', '200-MR-BAU', '200-HR-BAU']:
-            # Calculate the transactive volumetric rate as if all customers were participating:
-
-            DA_Sales = year_trans_df.loc[(slice(None), 'DA_cost'), 'sum'].sum() * dso_scaling_factor * \
-                       default_config['MarketPrep']['DSO']['dso_retail_scaling']
-            RT_Sales = year_trans_df.loc[(slice(None), 'RT_cost'), 'sum'].sum() * dso_scaling_factor * \
-                       default_config['MarketPrep']['DSO']['dso_retail_scaling']
-
-            # Load in bulk industrial loads
-            case_config = load_json(case, 'generate_case_config.json')
-            industrial_file = os.path.join(tariff_path, case_config['indLoad'][5].split('/')[-1])
-            indust_df = load_indust_data(industrial_file, range(1, 2))
-            da_lmp_stats = pd.read_csv(case + '\\' + 'Annual_DA_LMP_Load_data.csv', index_col=0)
-            Indust_Sales = indust_df.loc[0, 'Bus' + str(dso_num)] * da_lmp_stats.loc[:, 'da_lmp' + str(dso_num)].sum()
-            Customer_Count = 0
-            for meter in metadata['billingmeters']:
-                if metadata['billingmeters'][meter]['tariff_class'] in ['residential', 'commercial']:
-                    Customer_Count += 1
-            Connection_fees = tariff['DSO_' + str(dso_num)]['base_connection_charge'] * (
-                        num_indust_cust + dso_scaling_factor * Customer_Count)
-
-            transactive_dist_rate = (dso_expenses - (DA_Sales + RT_Sales + Indust_Sales + Connection_fees)) / \
-                                    year_energysum_df.loc[('total', 'kw-hr'), 'sum']
-
-            tariff['DSO_' + str(dso_num)]['transactive_dist_rate'] = transactive_dist_rate
-
-            # Calculate the required revenue to be collected from non-participating customers.
-
-            NP_Customer_Count = 0
-            NP_DA_Sales = 0
-            NP_RT_Sales = 0
-            NP_Energy = 0
-            for meter in metadata['billingmeters']:
-                if metadata['billingmeters'][meter]['tariff_class'] in ['residential', 'commercial'] and not \
-                metadata['billingmeters'][meter]['cust_participating']:
-                    NP_Customer_Count += 1
-                    NP_DA_Sales += year_trans_df.loc[(meter, 'DA_cost'), 'sum'].sum() * dso_scaling_factor * \
-                                   default_config['MarketPrep']['DSO']['dso_retail_scaling']
-                    NP_RT_Sales += year_trans_df.loc[(meter, 'RT_cost'), 'sum'].sum() * dso_scaling_factor * \
-                                   default_config['MarketPrep']['DSO']['dso_retail_scaling']
-                    NP_Energy += year_meter_df.loc[(meter, 'kw-hr'), 'sum'].sum() * dso_scaling_factor * \
-                                 default_config['MarketPrep']['DSO']['dso_retail_scaling']
-
-            NP_Energy += indust_df.loc[0, 'Bus' + str(dso_num)] * 1000 * len(
-                da_lmp_stats.loc[:, 'da_lmp' + str(dso_num)])
-            NP_connection_fees = tariff['DSO_' + str(dso_num)]['base_connection_charge'] * (
-                        num_indust_cust + dso_scaling_factor * NP_Customer_Count)
-            Non_participating_revenue_req = Indust_Sales + NP_DA_Sales + NP_RT_Sales + NP_connection_fees + NP_Energy * transactive_dist_rate
-
-    #  Calculate data frame of month customer bills
-    #tic()
     if rate_scenario is None:
+        if not counter_factual:
+            if case_name not in ["8-MR-BAU", "8-HR-BAU", "200-MR-BAU", "200-HR-BAU"]:
+                # Calculate the transactive volumetric rate as if all customers were participating:
+
+                DA_Sales = (
+                    year_trans_df.loc[(slice(None), "DA_cost"), "sum"].sum()
+                    * dso_scaling_factor
+                    * default_config["MarketPrep"]["DSO"]["dso_retail_scaling"]
+                )
+                RT_Sales = (
+                    year_trans_df.loc[(slice(None), "RT_cost"), "sum"].sum()
+                    * dso_scaling_factor
+                    * default_config["MarketPrep"]["DSO"]["dso_retail_scaling"]
+                )
+
+                # Load in bulk industrial loads
+                case_config = load_json(case, "generate_case_config.json")
+                industrial_file = os.path.join(
+                    tariff_path, case_config["indLoad"][5].split("/")[-1]
+                )
+                indust_df = load_indust_data(industrial_file, range(1, 2))
+                da_lmp_stats = pd.read_csv(
+                    case + "\\" + "Annual_DA_LMP_Load_data.csv", index_col=0
+                )
+                Indust_Sales = (
+                    indust_df.loc[0, "Bus" + str(dso_num)]
+                    * da_lmp_stats.loc[:, "da_lmp" + str(dso_num)].sum()
+                )
+                Customer_Count = 0
+                for meter in metadata["billingmeters"]:
+                    if metadata["billingmeters"][meter]["tariff_class"] in [
+                        "residential",
+                        "commercial",
+                    ]:
+                        Customer_Count += 1
+                Connection_fees = tariff["DSO_" + str(dso_num)][
+                    "base_connection_charge"
+                ] * (num_indust_cust + dso_scaling_factor * Customer_Count)
+
+                transactive_dist_rate = (
+                    dso_expenses
+                    - (DA_Sales + RT_Sales + Indust_Sales + Connection_fees)
+                ) / year_energysum_df.loc[("total", "kw-hr"), "sum"]
+
+                tariff["DSO_" + str(dso_num)][
+                    "transactive_dist_rate"
+                ] = transactive_dist_rate
+
+                # Calculate the required revenue to be collected from non-participating customers.
+
+                NP_Customer_Count = 0
+                NP_DA_Sales = 0
+                NP_RT_Sales = 0
+                NP_Energy = 0
+                for meter in metadata["billingmeters"]:
+                    if (
+                        metadata["billingmeters"][meter]["tariff_class"]
+                        in ["residential", "commercial"]
+                        and not metadata["billingmeters"][meter]["cust_participating"]
+                    ):
+                        NP_Customer_Count += 1
+                        NP_DA_Sales += (
+                            year_trans_df.loc[(meter, "DA_cost"), "sum"].sum()
+                            * dso_scaling_factor
+                            * default_config["MarketPrep"]["DSO"]["dso_retail_scaling"]
+                        )
+                        NP_RT_Sales += (
+                            year_trans_df.loc[(meter, "RT_cost"), "sum"].sum()
+                            * dso_scaling_factor
+                            * default_config["MarketPrep"]["DSO"]["dso_retail_scaling"]
+                        )
+                        NP_Energy += (
+                            year_meter_df.loc[(meter, "kw-hr"), "sum"].sum()
+                            * dso_scaling_factor
+                            * default_config["MarketPrep"]["DSO"]["dso_retail_scaling"]
+                        )
+
+                NP_Energy += (
+                    indust_df.loc[0, "Bus" + str(dso_num)]
+                    * 1000
+                    * len(da_lmp_stats.loc[:, "da_lmp" + str(dso_num)])
+                )
+                NP_connection_fees = tariff["DSO_" + str(dso_num)][
+                    "base_connection_charge"
+                ] * (num_indust_cust + dso_scaling_factor * NP_Customer_Count)
+                Non_participating_revenue_req = (
+                    Indust_Sales
+                    + NP_DA_Sales
+                    + NP_RT_Sales
+                    + NP_connection_fees
+                    + NP_Energy * transactive_dist_rate
+                )
+
+        #  Calculate data frame of month customer bills
+        #tic()
         # Legacy code used in DSO+T analysis
         cust_bill_df, billsum_df = calc_cust_bill(
             metadata,
@@ -1873,6 +1923,7 @@ def DSO_rate_making(
             dso_scaling_factor,
             num_indust_cust,
         )
+        #toc()
     else:
         # Calculate the prices the ensure enough revenue is collected to recover the  
         # DSO's expenses in the Rate Scenario analysis
@@ -1922,7 +1973,6 @@ def DSO_rate_making(
             dso_scaling_factor,
             rate_scenario,
         )
-    #toc()
 
     # Initialize surplus for export purposes when rate_scenario is not None
     surplus = 0 
