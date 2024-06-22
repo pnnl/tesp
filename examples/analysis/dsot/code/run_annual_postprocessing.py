@@ -45,6 +45,13 @@ retail = False
 customer_cfs = False
 # dso_cfs = False
 
+# Determine the rate scenario to investigate
+# rate_scenario = None
+# rate_scenario = "flat"
+rate_scenario = "time-of-use"
+# rate_scenario = "subscription"
+# rate_scenario = "transactive"
+
 # Only set to True if you have already run cfs once and want to update billing to match expenses.
 squareup_revenue = True
 
@@ -436,9 +443,18 @@ if retail:
             required_revenue = (float(dso_df.loc[13, 'DSO_' + str(dso_num)]) + float(dso_df.loc[30, 'DSO_' + str(dso_num)])) * 1000
         else:
             required_revenue = 4e6
-        DSO_Cash_Flows, DSO_Revenues_and_Energy_Sales, tariff, surplus = \
-            rm.DSO_rate_making(case_path, dso_num, GLD_metadata, required_revenue,
-                               metadata_path, dso_scaling_factor, num_ind_cust, case_name, squareup_revenue)
+        DSO_Cash_Flows, DSO_Revenues_and_Energy_Sales, tariff, surplus = rm.DSO_rate_making(
+            case_path,
+            dso_num,
+            GLD_metadata,
+            required_revenue,
+            metadata_path,
+            dso_scaling_factor,
+            num_ind_cust,
+            case_name,
+            squareup_revenue,
+            rate_scenario,
+        )
 
         # Example of getting an annual customer bill in dictionary form:
         customer = list(GLD_metadata['billingmeters'].keys())[0]
@@ -488,8 +504,20 @@ if customer_cfs:
     customer_mean_df.to_csv(path_or_buf=case_path + '/Customer_CFS_Summary.csv')
 
 if dso_cfs:
-    DSO_df, CapitalCosts_dict_list, Expenses_dict_list, Revenues_dict_list, DSO_Cash_Flows_dict_list = \
-        hf.get_DSO_df(dso_range, generate_case_config, DSOmetadata, case_path, base_case_path)
+    (
+        DSO_df,
+        CapitalCosts_dict_list,
+        Expenses_dict_list,
+        Revenues_dict_list,
+        DSO_Cash_Flows_dict_list,
+    ) = hf.get_DSO_df(
+        dso_range,
+        generate_case_config,
+        DSOmetadata,
+        case_path,
+        base_case_path,
+        rate_scenario,
+    )
 
     DSO_df.to_csv(path_or_buf=case_path + '/DSO_CFS_Summary.csv')
 
