@@ -986,9 +986,11 @@ def calculate_consumer_bills(
     case_path,
     metadata,
     meter_df,
+    energy_sum_df,
     tariff,
     dso_num,
     sf,
+    num_ind_cust,
     rate_scenario,
 ):
     """Calculates the consumers' bills for the four different scenarios considered in 
@@ -997,10 +999,13 @@ def calculate_consumer_bills(
         case_path (str): A string specifying the directory path of the case being analyzed.
         metadata (dict): A dictionary containing the metadata structure of the DSO.
         meter_df (pandas.DataFrame): DataFrame containing consumers' consumption information.
+        energy_sum_df (pandas.DataFrame): DataFrame containing consumption information for 
+        each consumer class.
         tariff (dict): A dictionary of pertinant tariff information. Includes information 
         for the volumetric rates (i.e., flat and time-of-use).
         dso_num (str): A string specifying the number of the DSo being considered.
         sf (float): Scaling factor to scale the GridLAB-D results to TSO scale.
+        num_ind_cust (int): Number of industrial consumers.
         rate_scenario (str): A str specifying the rate scenario under investigation: flat,
         time-of-use, subscription, or transactive.
     Returns:
@@ -1214,14 +1219,53 @@ def calculate_consumer_bills(
                         / meter_df.loc[(each, "kw-hr"), m]
                     )
 
-        # Calculate the totals for each consumer class
-        for each in metadata["billingmeters"]:
-            for load in ["residential", "commercial", "industrial"]:
-                if metadata["billingmeters"][each]["tariff_class"] == load:
-                    for component in bill_components:
-                        billsum_df.loc[(load, component), m] += (
+            # Calculate the totals for each consumer class except for industrial
+            # consumers, which are calculated separately below
+            if metadata["billingmeters"][each]["tariff_class"] in [
+                "residential",
+                "commercial",
+            ]:
+                for component in bill_components:
+                    if "average_price" not in component:
+                        billsum_df.loc[
+                            (
+                                metadata["billingmeters"][each]["tariff_class"],
+                                component,
+                            ),
+                            m,
+                        ] += (
                             bill_df.loc[(each, component), m] * sf
                         )
+
+        # Calculate totals for the industrial loads. As was done in DSO+T, all
+        # industrial loads are lumped into one entity that includes the individual-
+        # metered industrial loads considered above (generally small and representing
+        # street lights) and bulk industrial loads that are large and flat.
+        billsum_df.loc[
+            ("industrial", "flat_energy_charge"), m
+        ] = flat_rate * energy_sum_df.loc[
+            ("industrial", "kw-hr"), m
+        ] + calculate_tier_credit(
+            dso_num,
+            "industrial",
+            tariff,
+            energy_sum_df.loc[("industrial", "kw-hr"), m],
+        )
+        billsum_df.loc[("industrial", "flat_demand_charge"), m] = (
+            tariff["DSO_" + dso_num]["industrial"]["demand_charge"]
+            * energy_sum_df.loc[("industrial", "demand_quantity"), m]
+        )
+        billsum_df.loc[("industrial", "flat_fixed_charge"), m] = (
+            fixed_charge * num_ind_cust
+        )
+        billsum_df.loc[("industrial", "flat_total_charge"), m] = (
+            billsum_df.loc[("industrial", "flat_energy_charge"), m]
+            + billsum_df.loc[("industrial", "flat_demand_charge"), m]
+            + billsum_df.loc[("industrial", "flat_fixed_charge"), m]
+        )
+        billsum_df.loc[("industrial", "flat_energy_purchased"), m] = energy_sum_df.loc[
+            ("industrial", "kw-hr"), m
+        ]
 
     # Calculate the totals across all consumer classes
     for component in bill_components:
@@ -1331,9 +1375,11 @@ def calculate_tariff_prices(
     case_path,
     metadata,
     meter_df,
+    energy_sum_df,
     tariff,
     dso_num,
     sf,
+    num_ind_cust,
     rate_scenario,
 ):
     """Determines the prices that ensure enough revenue is collected to recover the 
@@ -1342,10 +1388,13 @@ def calculate_tariff_prices(
         case_path (str): A string specifying the directory path of the case being analyzed.
         metadata (dict): A dictionary containing the metadata structure of the DSO.
         meter_df (pandas.DataFrame): DataFrame containing consumers' consumption information.
+        energy_sum_df (pandas.DataFrame): DataFrame containing consumption information for 
+        each consumer class.
         tariff (dict): A dictionary of pertinant tariff information. Includes information 
         for the volumetric rates (i.e., flat and time-of-use).
         dso_num (str): A string specifying the number of the DSO being considered.
         sf (float): Scaling factor to scale the GridLAB-D results to TSO scale.
+        num_ind_cust (int): Number of industrial consumers.
         rate_scenario (str): A str specifying the rate scenario under investigation: flat,
         time-of-use, subscription, or transactive.
     Returns:
@@ -1369,47 +1418,74 @@ def calculate_tariff_prices(
         dso_expenses = get_total_dso_costs(case_path, dso_num, rate_scenario)
 
         # Initialize some of the closed-form solution components
-        total_consumption = 0
-        rev_demand_charge = 0
-        rev_fixed_charge = fixed_charge * len(months) * len(metadata["billingmeters"])
-        total_tier_credit = 0
+        total_consumption_rc = 0
+        rev_demand_charge_rc = 0
+        rev_fixed_charge_rc = 0
+        total_tier_credit_rc = 0
 
         # Iterate through each consumer to find certain components
         for each in metadata["billingmeters"]:
-            # Update total consumption
-            total_consumption += meter_df.loc[(each, "kw-hr"), "sum"]
-
-            # Specify the demand charge based on the consumer's sector type
-            demand_charge = tariff["DSO_" + dso_num][
-                metadata["billingmeters"][each]["tariff_class"]
-            ]["demand_charge"]
-
-            # Update total revenue from demand charges
-            rev_demand_charge += demand_charge * sum(
-                meter_df.loc[(each, "max_kw"), m] for m in months
-            )
-
-            # Update the total tier credit, if the consumer qualifies
+            # Calculate the necessary rate components for residential and commercial
+            # consumers
             if metadata["billingmeters"][each]["tariff_class"] in [
                 "residential",
                 "commercial",
-                "industrial",
             ]:
-                total_tier_credit += sum(
-                    calculate_tier_credit(
-                        dso_num,
-                        metadata["billingmeters"][each]["tariff_class"],
-                        tariff,
-                        meter_df.loc[(each, "kw-hr"), m],
-                    )
-                    for m in months
+                # Update total consumption
+                total_consumption_rc += meter_df.loc[(each, "kw-hr"), "sum"]
+
+                # Specify the demand charge based on the consumer's sector type
+                demand_charge = tariff["DSO_" + dso_num][
+                    metadata["billingmeters"][each]["tariff_class"]
+                ]["demand_charge"]
+
+                # Update total revenue from demand charges
+                rev_demand_charge_rc += demand_charge * sum(
+                    meter_df.loc[(each, "max_kw"), m] for m in months
                 )
+
+                # Update total revenue from fixed charges
+                rev_fixed_charge_rc += fixed_charge * len(months)
+
+                # Update the total tier credit, if the consumer qualifies
+                if metadata["billingmeters"][each]["tariff_class"] in [
+                    "residential",
+                    "commercial",
+                ]:
+                    total_tier_credit_rc += sum(
+                        calculate_tier_credit(
+                            dso_num,
+                            metadata["billingmeters"][each]["tariff_class"],
+                            tariff,
+                            meter_df.loc[(each, "kw-hr"), m],
+                        )
+                        for m in months
+                    )
+
+        # Calculate the necessary rate components for industrial consumers
+        total_consumption_i = energy_sum_df.loc[("industrial", "kw-hr"), "sum"]
+        rev_demand_charge_i = tariff["DSO_" + dso_num]["industrial"][
+            "demand_charge"
+        ] * sum(energy_sum_df.loc[("industrial", "demand_quantity"), m] for m in months)
+        rev_fixed_charge_i = fixed_charge * len(months) * num_ind_cust
+        total_tier_credit_i = sum(
+            calculate_tier_credit(
+                dso_num,
+                "industrial",
+                tariff,
+                energy_sum_df.loc[("industrial", "kw-hr"), m],
+            )
+            for m in months
+        )
         
         # Find the energy price for the flat rate
         prices["flat_rate"] = (
             dso_expenses
-            - sf * (rev_demand_charge + rev_fixed_charge + total_tier_credit)
-        ) / (sf * total_consumption)
+            - sf * (rev_demand_charge_rc + rev_fixed_charge_rc + total_tier_credit_rc)
+            - rev_demand_charge_i
+            - rev_fixed_charge_i
+            - total_tier_credit_i
+        ) / (sf * total_consumption_rc + total_consumption_i)
 
     elif rate_scenario == "time-of-use":
         # Load in necessary data for the time-of-use rate
@@ -1931,9 +2007,11 @@ def DSO_rate_making(
             case,
             metadata,
             year_meter_df,
+            year_energysum_df,
             tariff,
             str(dso_num),
             dso_scaling_factor,
+            num_indust_cust,
             rate_scenario,
         )
 
@@ -1968,9 +2046,11 @@ def DSO_rate_making(
             case,
             metadata,
             year_meter_df,
+            year_energysum_df,
             tariff,
             str(dso_num),
             dso_scaling_factor,
+            num_indust_cust,
             rate_scenario,
         )
 
