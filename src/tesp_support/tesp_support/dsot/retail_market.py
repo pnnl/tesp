@@ -32,6 +32,7 @@ from copy import deepcopy
 import numpy as np
 
 from tesp_support.dsot.helpers_dsot import Curve, get_intersect, MarketClearingType, resample_curve, resample_curve_for_price_only
+import tesp_support.dsot.tou as tou
 
 
 class RetailMarket:
@@ -243,6 +244,10 @@ class RetailMarket:
         cleared_price = 0.0
         cleared_quantity = 0.0
         clear_type = 0
+
+        rate = 'TOU'
+        if rate == 'TOU':
+            cleared_price = tou.main()
 
         if curve_buyer.uncontrollable_only:
             temp = curve_buyer.quantities[0]
