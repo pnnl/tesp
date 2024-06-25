@@ -1109,7 +1109,7 @@ def calculate_consumer_bills(
                     # Calculate the consumer's tier credit (due to the declining block)
                     # rate, if the consumer is eligible
                     if metadata["billingmeters"][each]["tariff_class"] in [
-                        "residential",
+                        #"residential",
                         "commercial",
                         "industrial",
                     ]:
@@ -1177,7 +1177,7 @@ def calculate_consumer_bills(
                 # Calculate the consumer's tier credit (due to the declining block)
                 # rate, if the consumer is eligible
                 if metadata["billingmeters"][each]["tariff_class"] in [
-                    "residential",
+                    #"residential",
                     "commercial",
                     "industrial",
                 ]:
@@ -1222,7 +1222,7 @@ def calculate_consumer_bills(
             # Calculate the totals for each consumer class except for industrial
             # consumers, which are calculated separately below
             if metadata["billingmeters"][each]["tariff_class"] in [
-                "residential",
+                #"residential",
                 "commercial",
             ]:
                 for component in bill_components:
@@ -1428,7 +1428,7 @@ def calculate_tariff_prices(
             # Calculate the necessary rate components for residential and commercial
             # consumers
             if metadata["billingmeters"][each]["tariff_class"] in [
-                "residential",
+                #"residential",
                 "commercial",
             ]:
                 # Update total consumption
@@ -1449,7 +1449,7 @@ def calculate_tariff_prices(
 
                 # Update the total tier credit, if the consumer qualifies
                 if metadata["billingmeters"][each]["tariff_class"] in [
-                    "residential",
+                    #"residential",
                     "commercial",
                 ]:
                     total_tier_credit_rc += sum(
@@ -1542,7 +1542,7 @@ def calculate_tariff_prices(
                 # Update the total tier credit for each consumer during each season, if 
                 # the consumer qualifies
                 if metadata["billingmeters"][each]["tariff_class"] in [
-                    "residential",
+                    #"residential",
                     "commercial",
                     "industrial",
                 ]:
@@ -1587,7 +1587,7 @@ def calculate_tariff_prices(
                         # Calculate the consumer's tier credit (due to the declining 
                         # block) rate, if the consumer is eligible
                         if metadata["billingmeters"][each]["tariff_class"] in [
-                            "residential",
+                            #"residential",
                             "commercial",
                             "industrial",
                         ]:
@@ -1635,7 +1635,7 @@ def calculate_tariff_prices(
                 # Update the total tier credit for the flat rate consumers, if the 
                 # consumer qualifies
                 if metadata["billingmeters"][each]["tariff_class"] in [
-                    "residential",
+                    #"residential",
                     "commercial",
                     "industrial",
                 ]:
