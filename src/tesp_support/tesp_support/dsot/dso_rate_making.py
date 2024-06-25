@@ -1222,7 +1222,7 @@ def calculate_consumer_bills(
             # Calculate the totals for each consumer class except for industrial
             # consumers, which are calculated separately below
             if metadata["billingmeters"][each]["tariff_class"] in [
-                #"residential",
+                "residential",
                 "commercial",
             ]:
                 for component in bill_components:
@@ -1380,6 +1380,7 @@ def calculate_tariff_prices(
     dso_num,
     sf,
     num_ind_cust,
+    year,
     rate_scenario,
 ):
     """Determines the prices that ensure enough revenue is collected to recover the 
@@ -1428,7 +1429,7 @@ def calculate_tariff_prices(
             # Calculate the necessary rate components for residential and commercial
             # consumers
             if metadata["billingmeters"][each]["tariff_class"] in [
-                #"residential",
+                "residential",
                 "commercial",
             ]:
                 # Update total consumption
@@ -1500,154 +1501,220 @@ def calculate_tariff_prices(
                 seasons_dict[tou_params["DSO_" + dso_num][m]["season"]] = [m]
 
         # Obtain the DSO expenses (e.g., operational expenditures, capital expenditures)
-        dso_expenses = get_total_dso_costs(case_path, dso_num, rate_scenario)
+        dso_expenses = get_total_dso_costs(
+            case_path, dso_num, rate_scenario, seasons_dict
+        )
 
         # Initialize some of the closed-form solution components
-        total_consumption_flat = 0
-        total_weighted_consumption_tou = {s: 0 for s in seasons_dict}
-        rev_energy_charge_tou = {s: 0 for s in seasons_dict}
-        rev_demand_charge_flat = 0
-        rev_demand_charge_tou = {s: 0 for s in seasons_dict}
-        rev_fixed_charge_flat = 0
-        rev_fixed_charge_tou = {s: 0 for s in seasons_dict}
-        total_tier_credit_flat = 0
-        total_tier_credit_tou = {s: 0 for s in seasons_dict}
+        total_weighted_consumption_tou_rc = {s: 0 for s in seasons_dict}
+        total_weighted_consumption_tou_i = {s: 0 for s in seasons_dict}
+        rev_demand_charge_tou_rc = {s: 0 for s in seasons_dict}
+        rev_demand_charge_tou_i = {s: 0 for s in seasons_dict}
+        rev_fixed_charge_tou_rc = {s: 0 for s in seasons_dict}
+        rev_fixed_charge_tou_i = {s: 0 for s in seasons_dict}
+        total_tier_credit_tou_rc = {s: 0 for s in seasons_dict}
+        total_tier_credit_tou_i = {s: 0 for s in seasons_dict}
 
-        # Iterate through each consumer as if they are all participating under time-of-use
-        for each in metadata["billingmeters"]:
-            for s in seasons_dict:
-                # Update the total consumption for each consumer during each season
-                for k in tou_params["DSO_" + dso_num]["periods"].keys():
-                    total_weighted_consumption_tou[s] += sum(
-                        tou_params["DSO_" + dso_num][m]["periods"][k]["ratio"]
-                        * meter_df.loc[(each, k + "_kwh"), m]
-                        for m in seasons_dict[s]
-                    )
-
-                # Specify the demand charge based on the consumer's sector type
-                demand_charge = tariff["DSO_" + dso_num][
-                    metadata["billingmeters"][each]["tariff_class"]
-                ]["demand_charge"]
-
-                # Update total revenue from demand charges for each consumer during each
-                # season
-                rev_demand_charge_tou[s] += demand_charge * sum(
-                    meter_df.loc[(each, "max_kw"), m] for m in seasons_dict[s]
-                )
-
-                # Update total revenue from fixed charges for each consumer during each 
-                # season
-                rev_fixed_charge_tou[s] += fixed_charge * len(seasons_dict[s])
-
-                # Update the total tier credit for each consumer during each season, if 
-                # the consumer qualifies
-                if metadata["billingmeters"][each]["tariff_class"] in [
-                    #"residential",
-                    "commercial",
-                    "industrial",
-                ]:
-                    total_tier_credit_tou[s] += sum(
-                        calculate_tier_credit(
-                            dso_num,
-                            metadata["billingmeters"][each]["tariff_class"],
-                            tariff,
-                            meter_df.loc[(each, "kw-hr"), m],
-                        )
-                        for m in seasons_dict[s]
-                    )
-
-        # Find the off-peak energy price for each season for the time-of-use rate, 
-        # assuming that each consumer is taking service under time-of-use
+        # Iterate through each consumer as if they are all participating under 
+        # time-of-use
         for s in seasons_dict:
-            prices["tou_rate_" + s] = (
-                dso_expenses[s]
-                - sf
-                * (
-                    rev_demand_charge_tou[s]
-                    + rev_fixed_charge_tou[s]
-                    + total_tier_credit_tou[s]
-                )
-            ) / (sf * total_weighted_consumption_tou[s])
-
-        # Iterate through each consumer to allocate costs according to the tariff under 
-        # which they take service
-        for each in metadata["billingmeters"]:
-            if metadata["billingmeters"][each]["cust_participating"]:
-                for s in seasons_dict:
-                    for k in tou_params["DSO_" + dso_num][m]["periods"].keys():
-                        # Update the total revenue from energy charges for time-of-use 
-                        # consumers during each season
-                        rev_energy_charge_tou[s] += sum(
-                            prices["tou_rate_" + s]
-                            * tou_params["DSO_" + dso_num][m]["periods"][k]["ratio"]
+            for each in metadata["billingmeters"]:
+                # Calculate the necessary rate components for residential and commercial
+                # consumers
+                if metadata["billingmeters"][each]["tariff_class"] in [
+                    "residential",
+                    "commercial",
+                ]:
+                    # Update the total consumption for each consumer during each season
+                    for k in tou_params["DSO_" + dso_num]["periods"].keys():
+                        total_weighted_consumption_tou_rc[s] += sum(
+                            tou_params["DSO_" + dso_num][m]["periods"][k]["ratio"]
                             * meter_df.loc[(each, k + "_kwh"), m]
                             for m in seasons_dict[s]
                         )
-
-                        # Calculate the consumer's tier credit (due to the declining 
-                        # block) rate, if the consumer is eligible
-                        if metadata["billingmeters"][each]["tariff_class"] in [
-                            #"residential",
-                            "commercial",
-                            "industrial",
-                        ]:
-                            rev_energy_charge_tou[s] += sum(
-                                calculate_tier_credit(
-                                    dso_num,
-                                    metadata["billingmeters"][each]["tariff_class"],
-                                    tariff,
-                                    meter_df.loc[(each, "kw-hr"), m],
-                                )
-                                for m in seasons_dict[s]
-                            )
 
                     # Specify the demand charge based on the consumer's sector type
                     demand_charge = tariff["DSO_" + dso_num][
                         metadata["billingmeters"][each]["tariff_class"]
                     ]["demand_charge"]
 
-                    # Update total revenue from demand charges for time-of-use consumers 
-                    # during each season
-                    rev_demand_charge_tou[s] += demand_charge * sum(
+                    # Update total revenue from demand charges for each consumer during 
+                    # each season
+                    rev_demand_charge_tou_rc[s] += demand_charge * sum(
                         meter_df.loc[(each, "max_kw"), m] for m in seasons_dict[s]
                     )
 
-                    # Update total revenue from fixed charges for time-of-use consumers 
-                    # during each season
-                    rev_fixed_charge_tou[s] += fixed_charge * len(seasons_dict[s])
-            else:
-                # Update total consumption for the flat rate consumers
-                total_consumption_flat += meter_df.loc[(each, "kw-hr"), "sum"]
+                    # Update total revenue from fixed charges for each consumer during 
+                    # each season
+                    rev_fixed_charge_tou_rc[s] += fixed_charge * len(seasons_dict[s])
 
-                # Specify the demand charge based on the consumer's sector type
-                demand_charge = tariff["DSO_" + dso_num][
-                    metadata["billingmeters"][each]["tariff_class"]
-                ]["demand_charge"]
-
-                # Update total revenue from demand charges for the flat rate consumers
-                rev_demand_charge_flat += demand_charge * sum(
-                    meter_df.loc[(each, "max_kw"), m] for m in months
-                )
-
-                # Update total revenue from fixed charges for the flat rate consumers
-                rev_fixed_charge_flat += fixed_charge * len(months)
-
-                # Update the total tier credit for the flat rate consumers, if the 
-                # consumer qualifies
-                if metadata["billingmeters"][each]["tariff_class"] in [
-                    #"residential",
-                    "commercial",
-                    "industrial",
-                ]:
-                    total_tier_credit_flat += sum(
-                        calculate_tier_credit(
-                            dso_num,
-                            metadata["billingmeters"][each]["tariff_class"],
-                            tariff,
-                            meter_df.loc[(each, "kw-hr"), m],
+                    # Update the total tier credit for each consumer during each season, 
+                    # if the consumer qualifies
+                    if metadata["billingmeters"][each]["tariff_class"] in [
+                        #"residential",
+                        "commercial",
+                    ]:
+                        total_tier_credit_tou_rc[s] += sum(
+                            calculate_tier_credit(
+                                dso_num,
+                                metadata["billingmeters"][each]["tariff_class"],
+                                tariff,
+                                meter_df.loc[(each, "kw-hr"), m],
+                            )
+                            for m in seasons_dict[s]
                         )
-                        for m in months
+
+            # Calculate the necessary rate components for industrial consumers
+            total_weighted_consumption_tou_i[s] = sum(
+                energy_sum_df.loc[("industrial", "kw-hr"), m] for m in seasons_dict[s]
+            )
+            rev_demand_charge_tou_i[s] = tariff["DSO_" + dso_num]["industrial"][
+                "demand_charge"
+            ] * sum(
+                energy_sum_df.loc[("industrial", "demand_quantity"), m]
+                for m in seasons_dict[s]
+            )
+            rev_fixed_charge_tou_i[s] = (
+                fixed_charge * len(seasons_dict[s]) * num_ind_cust
+            )
+            total_tier_credit_tou_i[s] = sum(
+                calculate_tier_credit(
+                    dso_num,
+                    "industrial",
+                    tariff,
+                    energy_sum_df.loc[("industrial", "kw-hr"), m],
+                )
+                for m in seasons_dict[s]
+            )
+
+            # Find the off-peak energy price for each season for the time-of-use rate,
+            # assuming that each consumer is taking service under time-of-use
+            prices["tou_rate_" + s] = (
+                dso_expenses[s]
+                - sf
+                * (
+                    rev_demand_charge_tou_rc[s]
+                    + rev_fixed_charge_tou_rc[s]
+                    + total_tier_credit_tou_rc[s]
+                )
+                - rev_demand_charge_tou_i[s]
+                - rev_fixed_charge_tou_i[s]
+                - total_tier_credit_tou_i[s]
+            ) / (
+                sf * total_weighted_consumption_tou_rc[s]
+                + total_weighted_consumption_tou_i[s]
+            )
+
+        # Initialize some of the closed-form solution components
+        total_consumption_flat_rc = 0
+        rev_energy_charge_tou = {s: 0 for s in seasons_dict}
+        rev_demand_charge_flat_rc = 0
+        rev_demand_charge_tou = {s: 0 for s in seasons_dict}
+        rev_fixed_charge_flat_rc = 0
+        rev_fixed_charge_tou = {s: 0 for s in seasons_dict}
+        total_tier_credit_flat_rc = 0
+
+        # Iterate through each consumer to allocate costs according to the tariff under 
+        # which they take service
+        for each in metadata["billingmeters"]:
+            # Calculate the necessary rate components for residential and commercial
+            # consumers
+            if metadata["billingmeters"][each]["tariff_class"] in [
+                "residential",
+                "commercial",
+            ]:
+                if metadata["billingmeters"][each]["cust_participating"]:
+                    for s in seasons_dict:
+                        for k in tou_params["DSO_" + dso_num][m]["periods"].keys():
+                            # Update the total revenue from energy charges for 
+                            # time-of-use consumers during each season
+                            rev_energy_charge_tou[s] += sum(
+                                prices["tou_rate_" + s]
+                                * tou_params["DSO_" + dso_num][m]["periods"][k]["ratio"]
+                                * meter_df.loc[(each, k + "_kwh"), m]
+                                for m in seasons_dict[s]
+                            )
+
+                            # Calculate the consumer's tier credit (due to the declining 
+                            # block) rate, if the consumer is eligible
+                            if metadata["billingmeters"][each]["tariff_class"] in [
+                                #"residential",
+                                "commercial",
+                            ]:
+                                rev_energy_charge_tou[s] += sum(
+                                    calculate_tier_credit(
+                                        dso_num,
+                                        metadata["billingmeters"][each]["tariff_class"],
+                                        tariff,
+                                        meter_df.loc[(each, "kw-hr"), m],
+                                    )
+                                    for m in seasons_dict[s]
+                                )
+
+                        # Specify the demand charge based on the consumer's sector type
+                        demand_charge = tariff["DSO_" + dso_num][
+                            metadata["billingmeters"][each]["tariff_class"]
+                        ]["demand_charge"]
+
+                        # Update total revenue from demand charges for time-of-use 
+                        # consumers during each season
+                        rev_demand_charge_tou[s] += demand_charge * sum(
+                            meter_df.loc[(each, "max_kw"), m] for m in seasons_dict[s]
+                        )
+
+                        # Update total revenue from fixed charges for time-of-use 
+                        # consumers during each season
+                        rev_fixed_charge_tou[s] += fixed_charge * len(seasons_dict[s])
+                else:
+                    # Update total consumption for the flat rate consumers
+                    total_consumption_flat_rc += meter_df.loc[(each, "kw-hr"), "sum"]
+
+                    # Specify the demand charge based on the consumer's sector type
+                    demand_charge = tariff["DSO_" + dso_num][
+                        metadata["billingmeters"][each]["tariff_class"]
+                    ]["demand_charge"]
+
+                    # Update total revenue from demand charges for the flat rate 
+                    # consumers
+                    rev_demand_charge_flat_rc += demand_charge * sum(
+                        meter_df.loc[(each, "max_kw"), m] for m in months
                     )
+
+                    # Update total revenue from fixed charges for the flat rate 
+                    # consumers
+                    rev_fixed_charge_flat_rc += fixed_charge * len(months)
+
+                    # Update the total tier credit for the flat rate consumers, if the 
+                    # consumer qualifies
+                    if metadata["billingmeters"][each]["tariff_class"] in [
+                        #"residential",
+                        "commercial",
+                    ]:
+                        total_tier_credit_flat_rc += sum(
+                            calculate_tier_credit(
+                                dso_num,
+                                metadata["billingmeters"][each]["tariff_class"],
+                                tariff,
+                                meter_df.loc[(each, "kw-hr"), m],
+                            )
+                            for m in months
+                        )
+
+        # Calculate the necessary rate components for industrial consumers
+        total_consumption_flat_i = energy_sum_df.loc[("industrial", "kw-hr"), "sum"]
+        rev_demand_charge_flat_i = tariff["DSO_" + dso_num]["industrial"][
+            "demand_charge"
+        ] * sum(energy_sum_df.loc[("industrial", "demand_quantity"), m] for m in months)
+        rev_fixed_charge_flat_i = fixed_charge * len(months) * num_ind_cust
+        total_tier_credit_flat_i = sum(
+            calculate_tier_credit(
+                dso_num,
+                "industrial",
+                tariff,
+                energy_sum_df.loc[("industrial", "kw-hr"), m],
+            )
+            for m in months
+        )
 
         # Calculate the total revenue obtained from consumers taking service under the 
         # time-of-use rate
@@ -1664,11 +1731,14 @@ def calculate_tariff_prices(
             - sf
             * (
                 rev_total_tou
-                + rev_demand_charge_flat
-                + rev_fixed_charge_flat
-                + total_tier_credit_flat
+                + rev_demand_charge_flat_rc
+                + rev_fixed_charge_flat_rc
+                + total_tier_credit_flat_rc
             )
-        ) / (sf * total_consumption_flat)
+            - rev_demand_charge_flat_i
+            - rev_fixed_charge_flat_i
+            - total_tier_credit_flat_i
+        ) / (sf * total_consumption_flat_rc + total_consumption_flat_i)
     elif rate_scenario == "subscription":
         None
     elif rate_scenario == "transactive":
