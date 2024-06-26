@@ -64,7 +64,9 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
         }
 
         # Identify the month name
-        month_name = month_num_to_abbrev[get_date(dir_path, dso_num, day_range[0])]
+        month_name = month_num_to_abbrev[
+            get_date(dir_path, dso_num, day_range[0]).month
+        ]
 
     # Create empty dataframe structure for all meters.
     meter = []
@@ -286,6 +288,33 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
         energysum_df.loc[('total', 'dist_loss_$'), day_name] += (
                     dso_losses * RT_price_df[' LMP' + dso_num].values / 1000).sum()
         energysum_df.loc[('total', 'dist_loss_q'), day_name] += dso_losses.sum()
+
+        # Calculate the time-of-use-related metrics, if applicable
+        if rate_scenario == "time-of-use":
+            for k in tou_params["DSO_" + dso_num][month_name]["periods"].keys():
+                num_hours = 0
+                for i in range(
+                    len(
+                        tou_params["DSO_" + dso_num][month_name]["periods"][k][
+                            "hour_start"
+                        ]
+                    )
+                ):
+                    num_hours += (
+                        tou_params["DSO_" + dso_num][month_name]["periods"][k][
+                            "hour_end"
+                        ][i]
+                        - tou_params["DSO_" + dso_num][month_name]["periods"][k][
+                            "hour_start"
+                        ][i]
+                    )
+                energysum_df.loc[("industrial", k + "_kwh"), day_name] += (
+                    indust_df.loc[start_time:end_time, "Bus" + dso_num].sum()
+                    / 12
+                    * 1000
+                    * num_hours
+                    / 24
+                )
 
     # Create totals for energy metrics
     energysum_metrics = ['kw-hr', 'demand_quantity', 'da_q', 'rt_q', 'congest_$', 'congest_q']
@@ -1565,9 +1594,12 @@ def calculate_tariff_prices(
                         )
 
             # Calculate the necessary rate components for industrial consumers
-            total_weighted_consumption_tou_i[s] = sum(
-                energy_sum_df.loc[("industrial", "kw-hr"), m] for m in seasons_dict[s]
-            )
+            for k in tou_params["DSO_" + dso_num]["periods"].keys():
+                total_weighted_consumption_tou_i[s] += sum(
+                    tou_params["DSO_" + dso_num][m]["periods"][k]["ratio"]
+                    * energy_sum_df.loc[("industrial", k + "_kwh"), m]\
+                    for m in seasons_dict[s]
+                )
             rev_demand_charge_tou_i[s] = tariff["DSO_" + dso_num]["industrial"][
                 "demand_charge"
             ] * sum(
