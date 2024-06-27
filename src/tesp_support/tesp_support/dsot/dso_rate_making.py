@@ -419,9 +419,8 @@ def annual_energy(month_list, folder_prefix, dso_num, metadata):
 
 
 def create_demand_profiles_for_each_meter(
-    meter_data_file_path,
-    number_of_nodes,
-    substation_number,
+    dir_path,
+    dso_num,
     year,
     month,
     day_range,
@@ -430,16 +429,15 @@ def create_demand_profiles_for_each_meter(
     """Creates a pandas DataFrame that contains hourly time-series data for each meter 
     in a DSO. The resultant DataFrame can be saved to a .h5 file if desired.
     Arguments:
-        meter_data_file_path (str): Contains file path of daily power and voltage
-            information for each meter in five-minute time steps.
-        number_of_nodes (int): The number of nodes in the system model.
-        substation_number (int): The number of a valid substation in the system model.
+        dir_path (str): Contains file path of daily power and voltage information for 
+        each meter in five-minute time steps.
+        dso_num (int): The number of a valid substation in the system model.
         year (int): The year under consideration.
         month (int): The month under consideration.
         day_range (list): List of day numbers in a month to be considered.
         save (bool): Indicates whether or not the output data should be saved in a .h5
-            file. If True, data is saved to the same location as what is provided in
-            `meter_data_file_path'.
+        file. If True, data is saved to the same location as what is provided in 
+        `dir_path'.
     Returns:
         demand_df (pandas.DataFrame): Monthly hourly demand data for each meter.
     """
@@ -475,37 +473,28 @@ def create_demand_profiles_for_each_meter(
     demand_dict = {}
     for day in day_range:
         # Load the meter data from the specified day
-        meter_data_df = pd.read_hdf(
-            os.path.join(
-                meter_data_file_path,
-                str(number_of_nodes)
-                + "_"
-                + str(year)
-                + "_"
-                + (str(month) if len(str(month)) > 1 else "0" + str(month)),
-                "Substation_" + str(substation_number),
-                "Substation_" + str(substation_number) + "_metrics_billing_meter.h5",
-            ),
-            key="/index" + str(day),
-            mode="r",
+        _, meter_data_df = load_system_data(
+            dir_path, "/Substation_", str(dso_num), str(day), "billing_meter"
         )
-        meter_data_df["date"] = pd.to_datetime(
-            meter_data_df["date"], infer_datetime_format=True
-        )
+        meter_data_df["date"] = meter_data_df["date"].str.replace("CDT", "", regex=True)
+        meter_data_df["date"] = pd.to_datetime(meter_data_df["date"])
+        meter_data_df = meter_data_df.set_index(["time", "name"])
 
         # Distribute demand data from meter_data_df to demand_df
-        for meter in meter_data_df["name"].unique():
+        for meter in meter_data_df.index.get_level_values("name").unique():
             if day == day_range[0]:
                 demand_dict[meter] = list(
                     meter_data_df.loc[
-                        meter_data_df["name"] == meter, "real_power_avg"
+                        meter_data_df.index.get_level_values("name") == meter,
+                        "real_power_avg",
                     ].values
                 )
             else:
                 demand_dict[meter].extend(
                     list(
                         meter_data_df.loc[
-                            meter_data_df["name"] == meter, "real_power_avg"
+                            meter_data_df.index.get_level_values("name") == meter,
+                            "real_power_avg",
                         ].values
                     )
                 )
@@ -548,30 +537,24 @@ def create_demand_profiles_for_each_meter(
     if save:
         demand_df.to_hdf(
             os.path.join(
-                meter_data_file_path,
-                str(number_of_nodes)
-                + "_"
-                + str(year)
-                + "_"
-                + (str(month) if len(str(month)) > 1 else "0" + str(month)),
-                "Substation_" + str(substation_number),
-                "Substation_" + str(substation_number) + "_demand_by_meter.h5",
+                dir_path,
+                "Substation_" + str(dso_num),
+                "Substation_" + str(dso_num) + "_demand_by_meter.h5",
             ),
             key="demand",
             mode="w",
         )
 
-    # Return the monthly five-minute demand data for each meter
+    # Return the monthly hourly demand data for each meter
     return demand_df
 
 
 def create_baseline_demand_profiles_for_each_meter(
     demand_df,
-    number_of_nodes,
-    substation_number,
+    dso_num,
     type_of_baseline,
-    demand_data_file_path=None,
     save=False,
+    save_path=None,
 ):
     """Creates a pandas DataFrame that contains hourly time-series data for each meter 
     in a DSO. The data in this DataFrame is configured to be a baseline demand profile, 
@@ -579,17 +562,17 @@ def create_baseline_demand_profiles_for_each_meter(
     a .h5 file if desired.
     Arguments:
         demand_df (pandas.DataFrame): Monthly hourly demand data for each meter.
-        number_of_nodes (int): The number of nodes in the system model.
-        substation_number (int): The number of a valid substation in the system model.
-        type_of_baseline (str): f
+        dso_num (int): The number of a valid substation in the system model.
+        type_of_baseline (str): The type of baseline demand that should be considered. 
+        There are four types of baselines supported by this function: `daily', 
+        `day_of_week', `weekdays_and_weekends', and `monthly'.
         save (bool): Indicates whether or not the output data should be saved in a .h5
-            file. If True, data is saved to the location specified by 
-            'demand_data_file_path'.
-        demand_data_file_path (str): File path that indicates where the resultant 
-            baseline demand profile should be saved, if allowed by 'save'.
+        file. If True, data is saved to the location specified by 'save_path'.
+        save_path (str): File path that indicates where the resultant baseline demand 
+        profile should be saved, if allowed by 'save'.
     Returns:
         bl_demand_df (pandas.DataFrame): Monthly hourly baseline demand data for each 
-            meter.
+        meter.
     """
 
     # Establish the day range
@@ -731,17 +714,12 @@ def create_baseline_demand_profiles_for_each_meter(
         )
 
     # Save the demand data, if specified
-    if save and demand_data_file_path is not None:
+    if save and (save_path is not None):
         bl_demand_df.to_hdf(
             os.path.join(
-                demand_data_file_path,
-                str(number_of_nodes)
-                + "_"
-                + str(year)
-                + "_"
-                + (str(month) if len(str(month)) > 1 else "0" + str(month)),
-                "Substation_" + str(substation_number),
-                "Substation_" + str(substation_number) + "_baseline_demand_by_meter.h5",
+                save_path,
+                "Substation_" + str(dso_num),
+                "Substation_" + str(dso_num) + "_baseline_demand_by_meter.h5",
             ),
             key="demand",
             mode="w",
