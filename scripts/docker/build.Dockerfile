@@ -11,6 +11,7 @@ USER $COSIM_USER
 WORKDIR $COSIM_HOME
 
 # CoSim exports
+ENV TESPDIR=$COSIM_HOME/tesp
 ENV INSTDIR=$COSIM_HOME/tenv
 ENV BUILD_DIR=$COSIM_HOME/build
 ENV REPO_DIR=$COSIM_HOME/repo
@@ -44,8 +45,8 @@ RUN echo "===== Building CoSim Build =====" && \
   git config --global credential.helper store && \
   echo "Directory structure for build" && \
   mkdir -p tenv && \
-#  mkdir -p build && \
-  mkdir -p repo
+  mkdir -p repo && \
+  mkdir -p tesp
 
 # Copy the build instructions
 COPY . ${BUILD_DIR}
@@ -115,10 +116,13 @@ RUN echo "Cloning or download all relevant repositories..." && \
   echo "Compiling and Installing TESP EnergyPlus agents and TMY converter..." && \
   ./tesp_b.sh clean > tesp.log 2>&1 && \
   echo "Install Misc Python Libraries..." && \
-  pip install --upgrade pip > "pypi.log" && \
-  pip install --no-cache-dir -r ${REPO_DIR}/tesp/requirements.txt >> "pypi.log" && \
-  pip install --no-cache-dir helics[cli] >> "pypi.log" && \
-  pip install --no-cache-dir -e ${REPO_DIR}/psst  >> "pypi.log" && \
+  pip install --no-warn-script-location --upgrade pip  > "pypi.log" && \
+  pip install --no-warn-script-location --no-cache-dir -r ${REPO_DIR}/tesp/requirements.txt  >> "pypi.log" && \
+  pip install --no-warn-script-location --no-cache-dir helics[cli]  >> "pypi.log" && \
+  pip install --no-warn-script-location --no-cache-dir -e ${REPO_DIR}/psst  >> "pypi.log" && \
+  cp -r ${REPO_DIR}/tesp/src ${TESPDIR} && \
+  cp -r ${REPO_DIR}/tesp/data ${TESPDIR} && \
+  pip install --no-warn-script-location --no-cache-dir -e ${TESPDIR}/src/tesp_support  >> "pypi.log" && \
   /bin/rm -r ${REPO_DIR}/tesp && \
   echo "${COSIM_USER}" | sudo -S ldconfig && \
   ./versions.sh

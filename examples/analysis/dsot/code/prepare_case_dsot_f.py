@@ -210,6 +210,8 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
 
         sub_key = dso_val['substation']
         bus = str(dso_val['bus_number'])
+        # seed the random number here
+        np.random.seed(dso_val['random_seed'])
 
         # write the tso connections for this substation
         print('  RT_BID_' + bus + ':', file=yp)
@@ -247,9 +249,6 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
 
         os.makedirs(caseName + '/' + dso_key)
 
-        # seed the random number here instead of in feedergenerator_dsot.py
-        np.random.seed(dso_val['random_seed'])
-
         # copy dso default config
         sim['DSO'] = dso_key
         sim[dso_key] = dso_val
@@ -257,7 +256,6 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         sim['Substation'] = sub_key
         sim['OutputPath'] = caseName + '/' + dso_key
         sim['BulkpowerBus'] = dso_val['bus_number']
-        # case_config['BackboneFiles']['RandomSeed'] = dso_val['random_seed']
         sim['DSO_type'] = dso_val['utility_type']
         sim['rooftop_pv_rating_MW'] = dso_val['rooftop_pv_rating_MW']
         sim['scaling_factor'] = dso_val['scaling_factor']

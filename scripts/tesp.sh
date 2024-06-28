@@ -52,8 +52,7 @@ autoconf \
 libtool \
 libjsoncpp-dev \
 gfortran \
-install cmake \
-subversion \
+cmake \
 unzip
 
 # add tools/libs for Java support, HELICS, FNCS, GridLAB-D, Ipopt/cbc
@@ -104,7 +103,7 @@ mkdir -p tenv
 echo "Clone directory structure for TESP"
 echo ++++++++++++++ TESP
 if [[ ! -d "$HOME/grid/tesp" ]]; then
-  git clone -b main https://github.com/pnnl/tesp.git
+  git clone -b develop https://github.com/pnnl/tesp.git
 fi
 
 echo "Activate Virtual Environment..."

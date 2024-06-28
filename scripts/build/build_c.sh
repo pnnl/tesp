@@ -63,9 +63,10 @@ else
   ver=$(cat ../grid_version)
   echo "Installing HELICS, FNCS, GridLabD, EnergyPlus, NS3, and solver binaries..."
   cd "${INSTDIR}" || exit
-  wget --no-check-certificate https://github.com/pnnl/tesp/releases/download/${ver}/tesp_binaries.zip
-  unzip tesp_binaries.zip > "${BUILD_DIR}/tesp_binaries.log" 2>&1
-  rm tesp_binaries.zip
+#  wget --no-check-certificate https://github.com/pnnl/tesp/releases/download/${ver}/grid_binaries_22.04.1.zip
+  wget --no-check-certificate https://mepas.pnnl.gov/FramesV1/Install/grid_binaries_22.04.1.zip
+  unzip grid_binaries_22.04.1.zip > "${BUILD_DIR}/grid_binaries_22.04.1.log" 2>&1
+  rm grid_binaries_22.04.1.zip
 fi
 
 cd "${REPO_DIR}/AMES-V5.0/psst" || exit
