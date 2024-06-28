@@ -767,6 +767,8 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, sta
             num_market_agents += 1
             market_name = market_config['Retail']['Name']
             markets[market_name] = {
+                'rate': simulation_config['rate'],
+                'serverPort': simulation_config['serverPort'],
                 'unit': market_config['Retail']['Unit'],
                 'pricecap': market_config['Retail']['PriceCap'],
                 'num_samples': market_config['Retail']['CurveSamples'],

@@ -230,7 +230,7 @@ def inner_substation_loop(metrics_root, with_market):
             retail_name = key
             retail_config['basecase'] = not with_market
             retail_config['load_flexibility'] = priceSensLoad
-            retail_market_obj = RetailMarket(retail_config, retail_name, port, dso_bus)
+            retail_market_obj = RetailMarket(retail_config, retail_name)
             retail_period_da = config['markets'][key]['period_da']
             retail_period_rt = config['markets'][key]['period_rt']
 

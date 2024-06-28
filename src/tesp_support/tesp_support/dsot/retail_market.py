@@ -93,11 +93,11 @@ class RetailMarket:
     """
 
 
-    def __init__(self, retail_dict, key, port, dso_bus):
+    def __init__(self, retail_dict, key):
         """ Initializes the class
         """
         self.name = key
-        self.dso_bus = dso_bus
+        self.dso_bus = int(key.replace("Retail_",""))
         self.rate = retail_dict['rate']
         self.basecase = retail_dict['basecase']
         self.load_flexibility = retail_dict['load_flexibility']
@@ -165,7 +165,7 @@ class RetailMarket:
         # self.AMES_RT_agent_prices = None
         # self.AMES_DA_agent_quantities = None
         # self.AMES_DA_agent_prices = None
-        self.gproxy = DataClient(port).proxy
+        self.gproxy = DataClient(retail_dict['serverPort']).proxy
         self.current_time = None
 
 
@@ -726,7 +726,7 @@ def test():
              "Base_Year": 20.54794520547945, "P_Rated": 2500000.0, "NLL_rate": 0.3, "LL_rate": 1.0, "Sec_V": 69000,
              "TOU_TOR": 75.0, "TOU_GR": 5, "Oil_n": 0.8, "Wind_m": 0.8, "delta_T_TOR": 55, "delta_T_ave_wind_R": 65,
              "distribution_charge_rate": 0.04}
-    market = RetailMarket(agent, 'test')
+    market = RetailMarket(agent, 'test', market.port, market.rate)
     market.clean_bids_DA()
     market.basecase = False
     # Retail agent collects DA bids from DERs
