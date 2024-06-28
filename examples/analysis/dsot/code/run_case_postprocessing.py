@@ -128,7 +128,7 @@ def post_process():
             dso_number,
             year_num,
             month_num,
-            day_range,
+            list(day_range),
             save=False,
         )
 
@@ -148,7 +148,7 @@ def post_process():
             dso_number,
             year_num,
             month_num,
-            day_range,
+            list(day_range),
             save=True,
         )
 
