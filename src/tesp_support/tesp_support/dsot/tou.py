@@ -4,17 +4,31 @@ import numpy as np
 import pandas as pd
 import json
 
+node = 8
+dso_name = []
+for idx in range(1,node+1):
+    dso_name.append(f'DSO_{idx}')
 
-def time_of_use_price_profile(tou_params, step_size, save_path=None):
-    """_summary_
+def time_of_use_price_profile(tou_params, step_size, dso_name, save_path=None):
+    """Creates a price profile that corresponds to parameters of a specified 
+   time-of-use rate.
 
-    Args:
-        tou_params (_type_): _description_
-        step_size (_type_): _description_
-        save_path (_type_, optional): _description_. Defaults to None.
+   Args:
+       tou_params (dict): A dictionary of relevant time-of-use rate parameters for 
+        each DSO. Includes time-of-use rate periods, off-peak price, scaling between 
+        off-peak price and specified time-of-use period, and seasonal membership for 
+        each month.
+       step_size (str): A string indicating the size of each time step in a format 
+        recognizable by pandas (e.g., "1h" corresponds to time steps of one hour, 
+        "5min" corresponds to time steps of five minutes).
+       dso_name (str): A string specifying the DSO's name.
+       save_path (str): A string specifying the directory to which the created 
+        time-of-use price profile should be saved. If no price profile should be saved, 
+        provide None. Defaults to not saving the created price profile.
 
-    Returns:
-        _type_: _description_
+   Reutrns:
+       tou_profile (pandas.DataFrame): A DataFrame specifying the price profile for 
+       each DSO in time steps of size `step_size`.
     """
     # Create mapping of month numbers to month abbreviations
     month_num_to_abbrev = {
@@ -34,22 +48,13 @@ def time_of_use_price_profile(tou_params, step_size, save_path=None):
 
     # Initialize the time stamp
     timestamp = pd.Series(
-        pd.date_range(start="2016-01-01", end="2016-12-31 23:59:00", freq=step_size)
+        pd.date_range(start="2015-12-29", end="2016-12-31 23:59:00", freq=step_size)
     )
 
     # Initialize the time-of-use price profile for each DSO
     tou_profile = pd.DataFrame(
-        data={
-            "Timestamp": timestamp,
-            "DSO_1": np.zeros(len(timestamp)),
-            "DSO_2": np.zeros(len(timestamp)),
-            "DSO_3": np.zeros(len(timestamp)),
-            "DSO_4": np.zeros(len(timestamp)),
-            "DSO_5": np.zeros(len(timestamp)),
-            "DSO_6": np.zeros(len(timestamp)),
-            "DSO_7": np.zeros(len(timestamp)),
-            "DSO_8": np.zeros(len(timestamp)),
-        }
+        data={"Timestamp": timestamp,
+              **{dso_name[idx]: np.zeros(len(timestamp)) for idx in range(len(dso_name))}}
     )
     tou_profile.set_index("Timestamp", inplace=True)
 
@@ -81,16 +86,18 @@ def time_of_use_price_profile(tou_params, step_size, save_path=None):
 
     # Save the file, if desired
     if save_path is not None:
-        tou_profile.to_csv(os.path.join(save_path, "time_of_use_price_profile.csv"))
+        tou_profile.to_csv(os.path.join(save_path, "time_of_use_price_profile.csv"), header=None)
 
     # Return the time-of-use price profile
     return tou_profile
 
 
-def main():
+def main(dso_name, method):
     # Create or load time-of-use parameters
-    #method = "create"
-    method = "load"
+    # Specify the path to which the price profile should be saved, if desired
+    #save_path = None
+    save_path = "../../../../examples/analysis/dsot/data"
+
     if method == "create":
         # Specify the rate parameters for winter months
         winter_dict = {
@@ -145,35 +152,28 @@ def main():
         }
 
         # Create the time-of-use rate structure for each DSO
-        tou_params = {
-            "DSO_1": single_dso_params,
-            "DSO_2": single_dso_params,
-            "DSO_3": single_dso_params,
-            "DSO_4": single_dso_params,
-            "DSO_5": single_dso_params,
-            "DSO_6": single_dso_params,
-            "DSO_7": single_dso_params,
-            "DSO_8": single_dso_params,
-        }
+        tou_params = {}
+        for name in dso_name:
+            tou_params[name] = single_dso_params
+
     elif method == "load":
-        with open("time_of_use_parameters.json", "r") as fp:
+        with open(os.path.join(save_path, "time_of_use_price_profile.csv"),"r") as fp:
             tou_params = json.load(fp)
     else:
         raise ValueError(
             f"{method} is not a viable method for specifying a time-of-use profile. "
             + "Please try again."
         )
-
-if __name__ == "__main__":
-    main()
     
     # Specify the step size between each time stamp in the time-of-use price profile
     #step_size = "5min"
     step_size = "1h"
 
-    # Specify the path to which the price profile should be saved, if desired
-    #save_path = None
-    save_path = "../../../../examples/analysis/dsot/data"
 
     # Create the time-of-use price profile
-    tou_profile = time_of_use_price_profile(tou_params, step_size, save_path)
+    tou_profile = time_of_use_price_profile(tou_params, step_size, dso_name, save_path)
+
+if __name__ == "__main__":
+    # method = "create" or "load" time-of-use parameters
+    main(dso_name, "create")
+    

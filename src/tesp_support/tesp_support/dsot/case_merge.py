@@ -163,12 +163,13 @@ def merge_agent_dict(target, sources):
                'site_agent': {},
                'StartTime': "",
                'EndTime': "",
+               'rate': "",
                'LogLevel': ""}
     for fdr in sources:
         lp = open(path.dirname(target) + '/' + fdr + '_agent_dict.json').read()
         cfg = json.loads(lp)
         for key in cfg.keys():
-            if key in ["StartTime", "EndTime", "LogLevel", "solver", "numCore", "priceSensLoad", "serverPort",
+            if key in ["StartTime", "EndTime", "rate", "LogLevel", "solver", "numCore", "priceSensLoad", "serverPort",
                        "Metrics", "MetricsType", "MetricsInterval"]:
                 diction[key] = cfg[key]
             else:

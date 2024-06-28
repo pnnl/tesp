@@ -33,6 +33,7 @@ import numpy as np
 
 from tesp_support.dsot.helpers_dsot import Curve, get_intersect, MarketClearingType, resample_curve, resample_curve_for_price_only
 import tesp_support.dsot.tou as tou
+from tesp_support.api.schedule_client import *
 
 
 class RetailMarket:
@@ -91,10 +92,13 @@ class RetailMarket:
 
     """
 
-    def __init__(self, retail_dict, key):
+
+    def __init__(self, retail_dict, key, port, dso_bus):
         """ Initializes the class
         """
         self.name = key
+        self.dso_bus = dso_bus
+        self.rate = retail_dict['rate']
         self.basecase = retail_dict['basecase']
         self.load_flexibility = retail_dict['load_flexibility']
         self.num_samples = retail_dict['num_samples']
@@ -161,6 +165,9 @@ class RetailMarket:
         # self.AMES_RT_agent_prices = None
         # self.AMES_DA_agent_quantities = None
         # self.AMES_DA_agent_prices = None
+        self.gproxy = DataClient(port).proxy
+        self.current_time = None
+
 
     def clean_bids_RT(self):
         """ Initialize the real-time market
@@ -245,10 +252,6 @@ class RetailMarket:
         cleared_quantity = 0.0
         clear_type = 0
 
-        rate = 'TOU'
-        if rate == 'TOU':
-            cleared_price = tou.main()
-
         if curve_buyer.uncontrollable_only:
             temp = curve_buyer.quantities[0]
             if temp < 0.0:
@@ -263,15 +266,18 @@ class RetailMarket:
             if min(curve_seller.quantities) <= temp <= max(curve_seller.quantities):
                 cleared_quantity = temp
                 for idx in range(1, self.num_samples):
-                    if curve_seller.quantities[idx - 1] < cleared_quantity < curve_seller.quantities[idx]:
-                        cleared_price = curve_seller.prices[idx - 1] + (
-                                    cleared_quantity - curve_seller.quantities[idx - 1]) * (
-                                                    curve_seller.prices[idx] - curve_seller.prices[idx - 1]) / (
-                                                    curve_seller.quantities[idx] - curve_seller.quantities[idx - 1])
-                    elif curve_seller.quantities[idx - 1] == cleared_quantity:
-                        cleared_price = curve_seller.prices[idx - 1]
-                    elif curve_seller.quantities[idx] == cleared_quantity:
-                        cleared_price = curve_seller.prices[idx]
+                    if self.rate == 'TOU':
+                        cleared_price = self.gproxy.read_tou_schedules("tou_price", self.current_time, self.dso_bus)
+                    else:
+                        if curve_seller.quantities[idx - 1] < cleared_quantity < curve_seller.quantities[idx]:
+                            cleared_price = curve_seller.prices[idx - 1] + (
+                                        cleared_quantity - curve_seller.quantities[idx - 1]) * (
+                                                        curve_seller.prices[idx] - curve_seller.prices[idx - 1]) / (
+                                                        curve_seller.quantities[idx] - curve_seller.quantities[idx - 1])
+                        elif curve_seller.quantities[idx - 1] == cleared_quantity:
+                            cleared_price = curve_seller.prices[idx - 1]
+                        elif curve_seller.quantities[idx] == cleared_quantity:
+                            cleared_price = curve_seller.prices[idx]
                 # if cleared_quantity > self.Q_max:
                 #     clear_type = MarketClearingType.CONGESTED
                 # else:
@@ -313,7 +319,12 @@ class RetailMarket:
             #                                                        min_q, max_q, self.num_samples)
             # seller_quantities, seller_prices = resample_curve(curve_seller.quantities, curve_seller.prices,
             #                                                          min_q, max_q, self.num_samples)
-            buyer_prices = curve_buyer.prices
+            if self.rate == 'TOU':
+                for price in curve_buyer.prices:
+                    buyer_prices.append(self.gproxy.read_tou_schedules("tou_price", self.current_time, self.dso_bus))
+            else: 
+                buyer_prices = curve_buyer.prices
+                
             buyer_quantities = curve_buyer.quantities
             seller_quantities = buyer_quantities
             # log.info("curve_seller.prices: "+str(curve_seller.prices))

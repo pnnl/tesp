@@ -230,7 +230,7 @@ def inner_substation_loop(metrics_root, with_market):
             retail_name = key
             retail_config['basecase'] = not with_market
             retail_config['load_flexibility'] = priceSensLoad
-            retail_market_obj = RetailMarket(retail_config, retail_name)
+            retail_market_obj = RetailMarket(retail_config, retail_name, port, dso_bus)
             retail_period_da = config['markets'][key]['period_da']
             retail_period_rt = config['markets'][key]['period_rt']
 
@@ -710,6 +710,9 @@ def inner_substation_loop(metrics_root, with_market):
         log.debug('\t day of week -> ' + str(day_of_week))
         log.debug('\t hour of day -> ' + str(hour_of_day))
         log.debug('\t minute of hour -> ' + str(minute_of_hour))
+
+        # Pass current time to retail market
+        retail_market_obj.current_time = current_time
 
         # portion that sets the initial billing information. Runs only once!
         if billing_set_defaults:

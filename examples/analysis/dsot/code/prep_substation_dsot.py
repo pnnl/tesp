@@ -755,6 +755,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
             'site_agent': site_agent,
             'StartTime': simulation_config['StartTime'],
             'EndTime': simulation_config['EndTime'],
+            'rate': simulation_config['rate'],
             'LogLevel': simulation_config['LogLevel'],
             'solver': simulation_config['solver'],
             'numCore': simulation_config['numCore'],
