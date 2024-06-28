@@ -1387,7 +1387,6 @@ def calculate_tariff_prices(
     dso_num,
     sf,
     num_ind_cust,
-    year,
     rate_scenario,
 ):
     """Determines the prices that ensure enough revenue is collected to recover the 
