@@ -320,6 +320,7 @@ class RetailMarket:
             # seller_quantities, seller_prices = resample_curve(curve_seller.quantities, curve_seller.prices,
             #                                                          min_q, max_q, self.num_samples)
             if self.rate == 'TOU':
+                buyer_prices = []
                 for price in curve_buyer.prices:
                     buyer_prices.append(self.gproxy.read_tou_schedules("tou_price", self.current_time, self.dso_bus))
             else: 
