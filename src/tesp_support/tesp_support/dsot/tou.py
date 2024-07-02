@@ -166,8 +166,8 @@ def main(dso_name, method):
         )
     
     # Specify the step size between each time stamp in the time-of-use price profile
-    #step_size = "5min"
-    step_size = "1h"
+    step_size = "5min"
+    #step_size = "1h"
 
 
     # Create the time-of-use price profile
