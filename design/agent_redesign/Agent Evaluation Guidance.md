@@ -48,7 +48,7 @@ Still have to figure out we need to do here. In addition to using the new softwa
 ### Deliverables for Seattle meeting
 * Class definition for your agent 
   * Methods will be more important than attributes
-  * As necessary or helpful, a workflow or sequence diagram to show how the agen will use it's methods
+  * As necessary or helpful, a workflow or sequence diagram to show how the agent will use it's methods
   * Any supporting classes that are particular to your agent. For example, the HVAC agent has a model of the house it is controlling that I'm thinking of spinning off into a separate class.
 * Comments on the prematurely-defined agent class diagram Trevor put together.
 * Thoughts on common classes that all the agents will need
@@ -61,7 +61,7 @@ This work will be started in FY24 and continue into FY25. The following is a pre
 
 * July 23, 2024 - Meeting in Seattle. Completion of assessment of agents and beginning development of new software architecture.
 * Sept 27, 2024 - Completion of new software architecture design with sufficient documenation (class sequence diagrams).
-* Jan 1, 2025 - Completion of re-implementation of agents using new software architecture and beginning of validation testing, testing suite, and documentation.
+* Jan 2, 2025 - Completion of re-implementation of agents using new software architecture and beginning of validation testing, testing suite, and documentation.
 * Mar 7, 2025 - Completion of validation testing, testing suite and documentation.
 
 ## References
