@@ -285,7 +285,7 @@
   "solarQPlayerFile": "no_file",
   "solarAgentForecastFile": "8-node_dist_hourly_forecast_power.csv",
   "dataPath": "../data",
-  "dsoAgentFile": "default_case_config.json",
+  "dsoAgentFile": "rates_analysis_case_config.json",
   "dsoPopulationFile": "8-hi-metadata-lean.json",
   "dsoRECSPopulationFile": "8-hi-metadata-recs.json",
   "WeatherDataSourcePath": "../data/8-node data/DAT formatted files/",
