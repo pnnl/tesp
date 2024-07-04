@@ -19,7 +19,17 @@ from .plots import load_da_retail_price, customer_meta_data, load_json, load_age
     load_system_data, get_date, tic, toc, load_retail_data, load_ames_data, load_gen_data, load_indust_data
 
 
-def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_data_path, rate_scenario):
+def read_meters(
+    metadata,
+    dir_path,
+    folder_prefix,
+    dso_num,
+    day_range,
+    SF,
+    dso_data_path,
+    rate_scenario=None,
+    tou_path=None,
+):
     """ Determines the total energy consumed and max power consumption for all meters within a DSO for a series of days.
     Also collects information on day ahead and real time quantities consumed by transactive customers.
     Creates summation of these statistics by customer class.
@@ -30,8 +40,10 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
         dso_num (str): number of the DSO folder to be opened
         day_range (list): range of days to be summed (for example a month).
         SF (float): Scaling factor to scale GLD results to TSO scale (e.g. 1743)
-        rate_scenario (str): A str specifying the rate scenario under investigation: flat,
-        time-of-use, subscription, or transactive.
+        rate_scenario (str): A str specifying the rate scenario under investigation: 
+        flat, time-of-use (or TOU), subscription, or transactive. Defaults to None.
+        tou_path (str): A str specifying the directory in which the time-of-use rate 
+        parameters are located. Dafaults to None.
     Returns:
         meter_df: dataframe of energy consumption and max 15 minute power consumption for each month and total
         energysum_df: dataframe of energy consumption summations by customer class (residential, commercial, and industial)
@@ -43,9 +55,9 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
     indust_df = load_indust_data(industrial_file, day_range)
 
     # Load in necessary data for the defined rate scenario
-    if rate_scenario == "time-of-use":
+    if (rate_scenario in ["time-of-use", "TOU"]) and (tou_path is not None):
         # Load time-of-use rate parameters
-        tou_params = load_json(dir_path, "time_of_use_parameters.json")
+        tou_params = load_json(tou_path, "time_of_use_parameters.json")
 
         # Create a mapping between month number and month abbreviation
         month_num_to_abbrev = {
@@ -81,7 +93,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
             month.append(0)
 
         # Add consumtpion during time-of-use periods, if applicable
-        if rate_scenario == "time-of-use":
+        if rate_scenario in ["time-of-use", "TOU"]:
             for k in tou_params["DSO_" + dso_num][month_name]["periods"].keys():
                 meter.append(each)
                 variable.append(k + "_kwh")
@@ -133,7 +145,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
             month.append(0)
         
         # Add consumtpion during time-of-use periods, if applicable
-        if rate_scenario == "time-of-use":
+        if rate_scenario in ["time-of-use", "TOU"]:
             for k in tou_params["DSO_" + dso_num][month_name]["periods"].keys():
                 loads.append(each)
                 variable.append(k + "_kwh")
@@ -192,7 +204,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
                 meter_df.loc[(each, 'load_factor'), day_name] = 0
             
             # Calculate each consumer's time-of-use-related consumption metrics, if applicable
-            if rate_scenario == "time-of-use":
+            if rate_scenario in ["time-of-use", "TOU"]:
                 for k in tou_params["DSO_" + dso_num][month_name]["periods"].keys():
                     for t in range(len(tou_params["DSO_" + dso_num][month_name]["periods"][k]["hour_start"])):
                         meter_df.loc[(each, k + "_kwh"), day_name] += (
@@ -265,7 +277,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
                                                                                      (each, 'max_kw'), day_name] * SF
                     
                     # Calculate the time-of-use-related metrics, if applicable
-                    if rate_scenario == "time-of-use":
+                    if rate_scenario in ["time-of-use", "TOU"]:
                         for k in tou_params["DSO_" + dso_num][month_name]["periods"].keys():
                             energysum_df.loc[(load, k + "_kwh"), day_name] += (
                                 meter_df.loc[(each, k + "_kwh"), day_name] * SF
@@ -290,7 +302,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
         energysum_df.loc[('total', 'dist_loss_q'), day_name] += dso_losses.sum()
 
         # Calculate the time-of-use-related metrics, if applicable
-        if rate_scenario == "time-of-use":
+        if rate_scenario in ["time-of-use", "TOU"]:
             for k in tou_params["DSO_" + dso_num][month_name]["periods"].keys():
                 num_hours = 0
                 for i in range(
@@ -318,7 +330,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
 
     # Create totals for energy metrics
     energysum_metrics = ['kw-hr', 'demand_quantity', 'da_q', 'rt_q', 'congest_$', 'congest_q']
-    if rate_scenario == "time-of-use":
+    if rate_scenario in ["time-of-use", "TOU"]:
         for k in tou_params["DSO_" + dso_num][month_name]["periods"].keys():
             energysum_metrics.append(k + "_kwh")
     for item in energysum_metrics:
@@ -340,7 +352,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
         else:
             meter_df.loc[(each, 'load_factor'), 'sum'] = 0
     
-    if rate_scenario == "time-of-use":
+    if rate_scenario in ["time-of-use", "TOU"]:
         for k in tou_params["DSO_" + dso_num][month_name]["periods"].keys():
             meter_df.loc[(slice(None), k + "_kwh"), ["sum"]] = meter_df.loc[
                 (slice(None), k + "_kwh"),

@@ -108,7 +108,10 @@ def post_process():
                 day_range,
                 dso_scaling_factor,
                 metadata_path,
-                rate_scenario,
+                rate_scenario=rate_scenario,
+                tou_path=os.path.join(
+                    os.path.dirname(os.path.abspath(__file__)), case_config["dataPath"]
+                ),
             )
             print('Meter reading complete: DSO ' + str(dso_number) + ', Month ' + month_name)
             pt.toc()
@@ -171,13 +174,6 @@ def post_process():
     # bldg_stack_plots = False
     # forecast_plots = False
 
-    # Specify the rate scenario
-    # rate_scenario = None
-    rate_scenario = "flat"
-    # rate_scenario = "time-of-use"
-    # rate_scenario = "subscription"
-    # rate_scenario = "transactive"
-
     system_case = 'generate_case_config.json'
     first_data_day = 4  # First day in the simulation that data to be analyzed. Run-in days before this are discarded.
     discard_end_days = 1  # Number of days at the end of the simulation to be discarded
@@ -197,6 +193,12 @@ def post_process():
     check_folder = isdir(case_path + '/plots')
     if not check_folder:
         os.makedirs(case_path + '/plots')
+
+    # Identify the rate scenario
+    if "rate" in case_config:
+        rate_scenario = case_config["rate"]
+    else:
+        rate_scenario = None
 
     # STEP 1 --------- DSO Specific Post-Processing -------------------------
 
@@ -242,7 +244,7 @@ def post_process():
         for day_num in day_range:
             processlist.append([Daily_market_plot, day_num])
     
-    if create_baseline_demand_profiles and (rate_scenario == "time-of-use"):
+    if create_baseline_demand_profiles and (rate_scenario == "TOU"):
         for dso_num in dso_range:
             processlist.append([determine_baseline_demand_profiles, dso_num])
 
