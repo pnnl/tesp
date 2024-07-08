@@ -18,6 +18,7 @@ import numpy as np
 
 from tesp_support.api.parse_helpers import parse_kw
 from tesp_support.dsot.helpers_dsot import Curve, get_intersect, MarketClearingType
+from tesp_support.api.schedule_client import *
 
 
 class DSOMarket:
@@ -58,6 +59,9 @@ class DSOMarket:
         """
         self.active_power_rt = None
         self.name = key
+        self.dso_bus = dso_dict['bus']
+        if 'rate' in dso_dict:
+            self.rate = dso_dict['rate']
         self.DSO_Q_max = dso_dict['DSO_Q_max']
         Q_max_scale = (70.0e6 / self.DSO_Q_max)
 
@@ -141,6 +145,8 @@ class DSOMarket:
         self.last_bid_c2 = 0.0
         self.last_bid_c1 = 0.0
         self.last_bid_c0 = 0.0
+        self.gproxy = DataClient(dso_dict['serverPort']).proxy
+        self.current_time = None
 
     def update_wholesale_node_curve(self):
         """ Update the wholesale node curves according to the most updated curve coefficients,
@@ -393,7 +399,14 @@ class DSOMarket:
             # x, buyer_prices, seller_prices = \
             #     resample_curve_for_market(curve_DSO.quantities, curve_DSO.prices,
             #                               curve_ws_node.quantities, curve_ws_node.prices)
-            buyer_prices = curve_DSO.prices
+            if self.rate == 'TOU':
+                buyer_prices = []
+                price = self.gproxy.read_tou_schedules("tou_price", self.current_time, self.dso_bus-1)
+                for _ in curve_DSO.prices:
+                    buyer_prices.append(price)
+            else:
+                buyer_prices = curve_DSO.prices
+
             buyer_quantities = curve_DSO.quantities
             seller_quantities = buyer_quantities
             seller_prices = self.get_prices_of_quantities(buyer_quantities, day, hour)

@@ -741,6 +741,8 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, sta
             market_name = market_config['DSO']['Name']
             markets[market_name] = {
                 'bus': market_config['DSO']['Bus'],
+                'rate': simulation_config['rate'],
+                'serverPort': simulation_config['serverPort'],
                 'unit': market_config['DSO']['Unit'],
                 'pricecap': market_config['DSO']['PriceCap'],
                 'num_samples': market_config['DSO']['CurveSamples'],

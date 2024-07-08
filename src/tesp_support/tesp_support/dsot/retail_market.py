@@ -32,7 +32,6 @@ from copy import deepcopy
 import numpy as np
 
 from tesp_support.dsot.helpers_dsot import Curve, get_intersect, MarketClearingType, resample_curve, resample_curve_for_price_only
-import tesp_support.dsot.tou as tou
 from tesp_support.api.schedule_client import *
 
 
@@ -92,13 +91,14 @@ class RetailMarket:
 
     """
 
-
     def __init__(self, retail_dict, key):
         """ Initializes the class
         """
         self.name = key
-        self.dso_bus = int(key.replace("Retail_",""))
-        self.rate = retail_dict['rate']
+        self.dso_bus = int(key.replace("Retail_", ""))
+        self.rate = ""
+        if 'rate' in retail_dict:
+            self.rate = retail_dict['rate']
         self.basecase = retail_dict['basecase']
         self.load_flexibility = retail_dict['load_flexibility']
         self.num_samples = retail_dict['num_samples']
@@ -267,7 +267,7 @@ class RetailMarket:
                 cleared_quantity = temp
                 for idx in range(1, self.num_samples):
                     if self.rate == 'TOU':
-                        cleared_price = self.gproxy.read_tou_schedules("tou_price", self.current_time, self.dso_bus)
+                        cleared_price = self.gproxy.read_tou_schedules("tou_price", self.current_time, self.dso_bus-1)
                     else:
                         if curve_seller.quantities[idx - 1] < cleared_quantity < curve_seller.quantities[idx]:
                             cleared_price = curve_seller.prices[idx - 1] + (
@@ -322,7 +322,7 @@ class RetailMarket:
             if self.rate == 'TOU':
                 buyer_prices = []
                 for price in curve_buyer.prices:
-                    buyer_prices.append(self.gproxy.read_tou_schedules("tou_price", self.current_time, self.dso_bus))
+                    buyer_prices.append(self.gproxy.read_tou_schedules("tou_price", self.current_time, self.dso_bus-1))
             else: 
                 buyer_prices = curve_buyer.prices
                 
@@ -727,7 +727,7 @@ def test():
              "Base_Year": 20.54794520547945, "P_Rated": 2500000.0, "NLL_rate": 0.3, "LL_rate": 1.0, "Sec_V": 69000,
              "TOU_TOR": 75.0, "TOU_GR": 5, "Oil_n": 0.8, "Wind_m": 0.8, "delta_T_TOR": 55, "delta_T_ave_wind_R": 65,
              "distribution_charge_rate": 0.04}
-    market = RetailMarket(agent, 'test', market.port, market.rate)
+    market = RetailMarket(agent, 'test')
     market.clean_bids_DA()
     market.basecase = False
     # Retail agent collects DA bids from DERs
