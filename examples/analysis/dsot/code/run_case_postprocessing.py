@@ -248,7 +248,7 @@ def post_process():
         for dso_num in dso_range:
             processlist.append([determine_baseline_demand_profiles, dso_num])
 
-    if create_demand_profiles and (rate_scenario == "subscription"):
+    if create_demand_profiles and (rate_scenario == "DNR"):
         for dso_num in dso_range:
             processlist.append([determine_demand_profiles, dso_num])
 
