@@ -360,7 +360,14 @@ def get_mean_for_diff_groups(df, main_variables, variables_combs, cfs_start_posi
     return customer_mean_df
 
 
-def get_DSO_df(dso_range, case_config, DSOmetadata, case_path, base_case_path):
+def get_DSO_df(
+    dso_range,
+    case_config,
+    DSOmetadata,
+    case_path,
+    base_case_path,
+    rate_scenario=None,
+):
     DSO_df = pd.DataFrame([])
     CapitalCosts_dict_list = []
     Expenses_dict_list = []
@@ -384,11 +391,26 @@ def get_DSO_df(dso_range, case_config, DSOmetadata, case_path, base_case_path):
         DSO_base_case_peak_demand = Market_Purchases_base_case['WhEnergyPurchases']['WholesalePeakLoadRate']
 
 
-        CapitalCosts_dict, Expenses_dict, Revenues_dict, DSO_Cash_Flows_dict, \
-            DSO_Wholesale_Energy_Purchase_Summary, DSO_Cash_Flows_composite = \
-                cfs.dso_CFS(case_config, DSOmetadata, str(dso_num), DSO_peak_demand, DSO_base_case_peak_demand,
-                            System_peak_reduction_fraction, DSO_Cash_Flows, DSO_Revenues_and_Energy_Sales,
-                            Market_Purchases, Market_Purchases_base_case)
+        (
+            CapitalCosts_dict,
+            Expenses_dict,
+            Revenues_dict,
+            DSO_Cash_Flows_dict,
+            DSO_Wholesale_Energy_Purchase_Summary,
+            DSO_Cash_Flows_composite,
+        ) = cfs.dso_CFS(
+            case_config,
+            DSOmetadata,
+            str(dso_num),
+            DSO_peak_demand,
+            DSO_base_case_peak_demand,
+            System_peak_reduction_fraction,
+            DSO_Cash_Flows,
+            DSO_Revenues_and_Energy_Sales,
+            Market_Purchases,
+            Market_Purchases_base_case,
+            rate_scenario,
+        )
         CapitalCosts_dict_list.append(CapitalCosts_dict)
         Expenses_dict_list.append(Expenses_dict)
         Revenues_dict_list.append(Revenues_dict)
@@ -405,9 +427,9 @@ def get_DSO_df(dso_range, case_config, DSOmetadata, case_path, base_case_path):
             "DSO_peak_demand": Market_Purchases['WhEnergyPurchases']['WholesalePeakLoadRate'],
             "DSO_base_case_peak_demand": Market_Purchases_base_case['WhEnergyPurchases']['WholesalePeakLoadRate'],
             "energy_sold_MWh": DSO_Revenues_and_Energy_Sales['EnergySold'],
-            "energy_purchased_MWh":  Market_Purchases['WhEnergyPurchases']['WhDAPurchases']['WhDAEnergy']
-                                     + Market_Purchases['WhEnergyPurchases']['WhRTPurchases']['WhRTEnergy']
-                                     + Market_Purchases['WhEnergyPurchases']['WhBLPurchases']['WhBLEnergy'],
+            "energy_purchased_MWh": Market_Purchases['WhEnergyPurchases']['WhDAPurchases']['WhDAEnergy']
+                                    + Market_Purchases['WhEnergyPurchases']['WhRTPurchases']['WhRTEnergy']
+                                    + Market_Purchases['WhEnergyPurchases']['WhBLPurchases']['WhBLEnergy'],
             'EffectiveCostRetailEnergy': DSO_Revenues_and_Energy_Sales['EffectiveCostRetailEnergy']
         }
         DSO_col.update(DSO_Cash_Flows_composite)
