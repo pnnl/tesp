@@ -183,9 +183,21 @@ def post_process():
     config_path = os.getcwd()
     case_config = pt.load_json(config_path, system_case)
 
+    # Identify the rate scenario
+    if "rate" in case_config:
+        rate_scenario = case_config["rate"]
+    else:
+        rate_scenario = None
+
     case_path = dirname(abspath(__file__)) + '/' + case_config['caseName']
     metadata_path = "../" + case_config['dataPath']
-    dso_metadata_file = case_config['dsoPopulationFile']
+
+    # Identify the proper metadata file depending on the rate scenario
+    if (rate_scenario is not None) or (rate_scenario == ""):
+        dso_metadata_file = case_config["dsoPopulationFile"]
+    else:
+        dso_metadata_file = case_config["dsoRECSPopulationFile"]
+
     agent_prefix = '/DSO_'
     GLD_prefix = '/Substation_'
 
@@ -193,12 +205,6 @@ def post_process():
     check_folder = isdir(case_path + '/plots')
     if not check_folder:
         os.makedirs(case_path + '/plots')
-
-    # Identify the rate scenario
-    if "rate" in case_config:
-        rate_scenario = case_config["rate"]
-    else:
-        rate_scenario = None
 
     # STEP 1 --------- DSO Specific Post-Processing -------------------------
 
