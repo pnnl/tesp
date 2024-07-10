@@ -2207,7 +2207,7 @@ def DSO_rate_making(
     cust_bill_df.to_csv(path_or_buf=case + '/cust_bill_dso_' + str(dso_num) + '_data.csv')
     billsum_df.to_csv(path_or_buf=case + '/billsum_dso_' + str(dso_num) + '_data.csv')
 
-    with open(os.path.join(tariff_path, 'rate_case_values_' + case_name + '.json'), 'w') as out_file:
+    with open(os.path.join(tariff_path, file_name), "w") as out_file:
         json.dump(tariff, out_file, indent=2)
 
     if rate_scenario is None:
