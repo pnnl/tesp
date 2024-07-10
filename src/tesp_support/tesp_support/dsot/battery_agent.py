@@ -8,12 +8,12 @@ for DA and RT; monitor and supervisory control of GridLAB-D environment element.
 The function call order for this agent is:
     * initialize()
 
-    Repeats at every hour
+    Repeats at every hour:
         * formulate_bid_da() {return BID}
         * set_price_forecast(forecasted_price)
 
-    Repeats at every 5 mins
-        * set_battery_SOC(msg_str) {updates C_init}
+    Repeats at every 5 minutes:
+        * set_SOC(msg_str) {updates C_init}
         * formulate_bid_rt() {return BID}
         * inform_bid(price) {update RTprice}
         * bid_accepted() {update inv_P_setpoint and GridLAB-D P_out if needed}
@@ -32,11 +32,12 @@ logger = log.getLogger()
 
 
 class BatteryDSOT:
+    # TODO: update inputs for this agent
     """
-    This agent manages the battery/inverter
+    This agent manages the battery/inverter (bt)
 
     Args:
-        battery_dict (dict):
+        diction (dict): battery/inverter parameters
         inv_properties (dict):
         key (str):
         model_diag_level (int): Specific level for logging errors; set it to 11
@@ -53,7 +54,7 @@ class BatteryDSOT:
         Cmin (float): minimum allowable stored energy in kWh (state of charge lower limit)
         Cmax (float): maximum allowable stored energy in kWh (state of charge upper limit)
         Cinit (float): initial stored energy in the battery in kWh
-        batteryCapacity (float): battery capacity in kWh
+        capacity (float): battery capacity in kWh
         batteryLifeDegFactor (float): constant to model battery degradation
         windowLength (int): length of day ahead optimization period in hours (e.g. 48-hours)
         dayAheadCapacity (float): % of battery capacity reserved for day ahead bidding
@@ -63,10 +64,6 @@ class BatteryDSOT:
         P (int): location of P in bids
         Q (int): location of Q in bids
         f_DA (List[float]) (1 X windowLength): forecasted prices in $/kWh for all the hours in the duration of windowLength
-        ProfitMargin_slope (float): specified in % and used to modify slope of bid curve. Set to 0 to disable
-        ProfitMargin_intercept (float): specified in % to generate a small dead band (i.e., change in price does not affect quantity). Set to 0 to disable
-        pm_hi (float): Highest possible profit margin in %
-        pm_lo (float): Lowest possible profit margin in %
         RT_state_maintain (bool): true if battery must maintain charging or discharging state for 1 hour
         RT_state_maintain_flag (int): (0) not define at current hour (-1) charging (+1) discharging
         RT_flag (bool): if True, has to update GridLAB-D
@@ -78,26 +75,26 @@ class BatteryDSOT:
         BindingObjFunc (bool): if True, then optimization considers cleared price, quantities from previous iteration in the objective function
     """
 
-    def __init__(self, battery_dict, inv_properties, key, model_diag_level, sim_time, solver):
+    def __init__(self, diction, inv_properties, key, model_diag_level, sim_time, solver):
         # initialize from Args:
         self.name = key
         self.solver = solver
-        self.participating = battery_dict['participating']
-        self.Rc = float(battery_dict['rating']) * 0.001
-        self.Rd = float(battery_dict['rating']) * 0.001
+        self.participating = diction['participating']
+        self.Rc = float(diction['rating']) * 0.001
+        self.Rd = float(diction['rating']) * 0.001
         # this includes both inverter and single trip battery efficiency
-        self.Lin = float(battery_dict['efficiency'])
-        self.Lout = float(battery_dict['efficiency'])
-        self.reserved_soc = float(battery_dict['reserved_soc'])
-        self.Cmin = float(battery_dict['capacity'] * self.reserved_soc) * 0.001
-        self.Cmax = float(battery_dict['capacity']) * 0.001
-        self.Cinit = float(battery_dict['charge']) * 0.001
-        self.batteryCapacity = float(battery_dict['capacity']) * 0.001
+        self.Lin = float(diction['efficiency'])
+        self.Lout = float(diction['efficiency'])
+        self.reserved_soc = float(diction['reserved_soc'])
+        self.Cmin = float(diction['capacity'] * self.reserved_soc) * 0.001
+        self.Cmax = float(diction['capacity']) * 0.001
+        self.Cinit = float(diction['charge']) * 0.001
+        self.capacity = float(diction['capacity']) * 0.001
         self.period = 300
         # maximum soc
         self.soc_upper_res = 0.99
         # made constant
-        self.batteryLifeDegFactor = float(battery_dict['degrad_factor']) * 0.001
+        self.batteryLifeDegFactor = float(diction['degrad_factor']) * 0.001
         self.windowLength = int(48)
         self.dayAheadCapacity = float(80)
         # no initialization required
@@ -114,12 +111,11 @@ class BatteryDSOT:
         self.RT_minute_count_interpolation = float(0.0)
         self.previous_Q_RT = float(0.0)
         self.delta_Q = float(0.0)
-        # self.previous_Q_DA = float(0.0)
 
         # price vector to initialize and to be used in the first optimization
         self.RTprice = 0.0
-        self.slider = float(battery_dict['slider_setting'])
-        self.profit_margin = float(battery_dict['profit_margin'])
+        self.slider = float(diction['slider_setting'])
+        self.profit_margin = float(diction['profit_margin'])
         self.RT_state_maintain = bool(False)
         self.RT_state_maintain_flag = int(0)
         self.RT_flag = bool(False)
@@ -138,12 +134,12 @@ class BatteryDSOT:
         self.TIME = range(0, self.windowLength)
 
         # Sanity checks:
-        if self.Cmin <= self.batteryCapacity <= self.Cmax:
-            # log.info('Cmin < batteryCapacity < Cmax.')
+        if self.Cmin <= self.capacity <= self.Cmax:
+            # log.info('Cmin < capacity < Cmax.')
             pass
         else:
-            log.log(model_diag_level, '{} {} -- batteryCapacity is {}, not between Cmin ({}) and Cmax ({})'.
-                    format(self.name, 'init', self.batteryCapacity, self.Cmin, self.Cmax))
+            log.log(model_diag_level, '{} {} -- capacity is {}, not between Cmin ({}) and Cmax ({})'.
+                    format(self.name, 'init', self.capacity, self.Cmin, self.Cmax))
 
         Lin_lower = 0
         Lin_upper = 1
@@ -234,7 +230,7 @@ class BatteryDSOT:
         for the DA market. With the quantities, the 4 point bids are formulated.
 
         Before returning the BID the function resets "RT_state_maintain_flag"
-        wich if RT_state_maintain is TRUE the battery will be forced to keep its
+        which, if RT_state_maintain is TRUE, the battery will be forced to keep its
         state (i.e., charging or discharging).
 
         Returns:
@@ -252,7 +248,6 @@ class BatteryDSOT:
         deltaf_DA = max(self.f_DA) - min(self.f_DA)
 
         for t in TIME:
-            # CurveSlope[t] = ((max(self.f_DA)-min(self.f_DA))/(-self.Rd-self.Rc))*(1 + self.ProfitMargin_slope/100)   #Remains same in all hours of the window
             if self.slider != 0:
                 # Remains same in all hours of the window
                 CurveSlope[t] = ((max(self.f_DA) - min(self.f_DA)) / (-self.Rd - self.Rc)) / self.slider
@@ -264,10 +259,6 @@ class BatteryDSOT:
                 BID[t][2][Q] = Quantity[t]
                 BID[t][3][Q] = self.Rc
 
-                # BID[t][0][P] = -self.Rd*CurveSlope[t]+yIntercept[t]+(self.ProfitMargin_intercept/100)*deltaf_DA
-                # BID[t][1][P] = Quantity[t]*CurveSlope[t]+yIntercept[t]+(self.ProfitMargin_intercept/100)*deltaf_DA
-                # BID[t][2][P] = Quantity[t]*CurveSlope[t]+yIntercept[t]-(self.ProfitMargin_intercept/100)*deltaf_DA
-                # BID[t][3][P] = self.Rc*CurveSlope[t]+yIntercept[t]-(self.ProfitMargin_intercept/100)*deltaf_DA
                 BID[t][0][P] = -self.Rd * CurveSlope[t] + yIntercept[t] + self.batteryLifeDegFactor * (
                         1 + self.profit_margin)
                 BID[t][1][P] = Quantity[t] * CurveSlope[t] + yIntercept[t] + self.batteryLifeDegFactor * (
@@ -297,9 +288,9 @@ class BatteryDSOT:
 
     def obj_rule(self, m):
         return sum(
-            self.f_DA[i] * (m.E_DA_out[i] - m.E_DA_in[i]) - self.batteryLifeDegFactor * (1 + self.profit_margin) * (
-                    m.E_DA_out[i] + m.E_DA_in[i]) - 0.001 * (
-                    m.E_DA_out[i] * m.E_DA_out[i] + 2 * m.E_DA_out[i] * m.E_DA_in[i] + m.E_DA_in[i] * m.E_DA_in[i])
+            self.f_DA[i] * (m.E_DA_out[i] - m.E_DA_in[i]) - self.batteryLifeDegFactor *
+            (1 + self.profit_margin) * (m.E_DA_out[i] + m.E_DA_in[i]) - 0.001 *
+            (m.E_DA_out[i] * m.E_DA_out[i] + 2 * m.E_DA_out[i] * m.E_DA_in[i] + m.E_DA_in[i] * m.E_DA_in[i])
             for i in self.TIME)  # - 0.0000003*(m.E_DA_out[i]+m.E_DA_in[i])**2
 
     def con_rule_ine1(self, m, i):
@@ -321,8 +312,8 @@ class BatteryDSOT:
             return m.C[i] == m.C[i - 1] - m.E_stor_out[i] + m.E_stor_in[i]
 
     def DA_optimal_quantities(self):
-        """ Generates Day Ahead optimized quantities for Battery
-          
+        """ Generates Day Ahead optimized quantities for agent
+
         Returns:
             Quantity (float) (1 x windowLength): Optimal quantity from optimization for all hours of the window specified by windowLength
         """
@@ -384,7 +375,6 @@ class BatteryDSOT:
             if self.RT_minute_count_interpolation == 30.0:
                 self.delta_Q = deepcopy((self.bid_da[1][1][Q] - self.previous_Q_RT) * 0.5)
             Qopt_DA = self.previous_Q_RT + self.delta_Q * (5.0 / 30.0)
-            # Qopt_DA = self.bid_da[0][1][Q]*(self.RT_minute_count_interpolation/60.0) + self.previous_Q_DA*(1-self.RT_minute_count_interpolation/60.0)
             self.previous_Q_RT = Qopt_DA
             BID[1][Q] = Qopt_DA
             BID[2][Q] = Qopt_DA
@@ -405,10 +395,10 @@ class BatteryDSOT:
 
         # fix 4 point error if exixtent start
         if state >= 3:
-            print("Battery Error --> Verify Battery RC, RD, and batteryCapacity")
+            print("Battery Error --> Verify battery RC, RD, and capacity")
             print(self.Rc)
             print(self.Rd)
-            print(self.batteryCapacity)
+            print(self.capacity)
 
         if state == 0:  # no error
             realTimeBid = BID
@@ -535,7 +525,7 @@ class BatteryDSOT:
             log.log(model_diag_level, '{} {} -- input power ({}) is not <= rated input power ({}).'.
                     format(self.name, sim_time, -self.inv_P_setpoint, self.Rc))
 
-    def set_battery_SOC(self, msg_str, model_diag_level, sim_time):
+    def set_SOC(self, msg_str, model_diag_level, sim_time):
         """ Set the battery state of charge
 
         Updates the self.Cinit of the battery
@@ -546,7 +536,7 @@ class BatteryDSOT:
              sim_time (str): Current time in the simulation; should be human-readable
         """
         val = parse_number(msg_str)
-        self.Cinit = self.batteryCapacity * val
+        self.Cinit = self.capacity * val
 
         if self.Cmin < self.Cinit < self.Cmax:
             pass
@@ -605,7 +595,10 @@ class BatteryDSOT:
 
 
 def test():
-    """ Makes a single battery agent and run DA
+    """
+    Testing
+
+    Makes a single agent and run DA
     """
     import time
     import matplotlib.pyplot as plt
@@ -700,7 +693,7 @@ def test():
 #     rtbid = B_obj1.formulate_bid_rt()
 #     price_forecast = B_obj1.f_DA
 #     BIDS_of_agent = B_obj1.bid_da
-#     #B_obj.Cinit = B_obj.batteryCapacity * 0.5#B_obj.set_battery_SOC()
+#     #B_obj.Cinit = B_obj.capacity * 0.5#B_obj.set_SOC()
 #     BID = [[-5.0,6.0],[0.0,5.0],[0.0,4.0],[5.0,3.0]]
 #     fixed = B_obj1.RT_fix_four_points_range(BID,0.0,10.0)
 #     print(fixed)
