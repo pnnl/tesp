@@ -883,12 +883,6 @@ def dso_CFS(
             )
         )
 
-    FixedSales = dso_helper.returnDictSum(DSO_Cash_Flows['Revenues']['RetailSales']['FixedSales'])
-    TransactiveSales = dso_helper.returnDictSum(DSO_Cash_Flows['Revenues']['RetailSales']['TransactiveSales'])
-    RetailSales = FixedSales + TransactiveSales
-
-    Revenues = RetailSales  # + TransactFees +
-
     DSO_Cash_Flows_composite = {
         'CapitalExpenses': CapitalExpenses,  # Capital Expenses
         'DistPlant': DistPlant,  # Distribution Plant
@@ -953,26 +947,92 @@ def dso_CFS(
         'TransFromRSP': TransFromRSP,  # Transfers from RSP
         'RSPtoMO': RSPtoMO,  # Sent by RSP to MO
         'RSPtoDO': RSPtoDO,  # Sent by RSP to DO
-        'Revenues': Revenues,
-        'RetailSales': RetailSales,  # Retail Sales
-        'FixedSales': FixedSales,  # Fixed-Rate Sales
-        'FixedEnergyCharges': DSO_Cash_Flows['Revenues']['RetailSales']['FixedSales']['FixedEnergyCharges'],  # Fixed-Rate energy charges
-        'DemandCharges': DSO_Cash_Flows['Revenues']['RetailSales']['FixedSales']['DemandCharges'],  # Demand charges (C & I)
-        'ConnectChargesFix': DSO_Cash_Flows['Revenues']['RetailSales']['FixedSales']['ConnectChargesFix'],  # Connect charges (fixed-price)
-        'TransactiveSales': TransactiveSales,  # Transactive-Rate Sales
-        'RetailDACharges': DSO_Cash_Flows['Revenues']['RetailSales']['TransactiveSales']['RetailDACharges'],  # Day-ahead energy charges
-        'RetailRTCharges': DSO_Cash_Flows['Revenues']['RetailSales']['TransactiveSales']['RetailRTCharges'],  # Real-time energy charges
-        'DistCharges': DSO_Cash_Flows['Revenues']['RetailSales']['TransactiveSales']['DistCharges'],  # Distribution charges
-        'ConnectChargesDyn': DSO_Cash_Flows['Revenues']['RetailSales']['TransactiveSales']['ConnectChargesDyn'],  # Connect charges (dynamic rate)
-        'TransactFees': TransactFees,  # Transaction Fees
-        'TransTo': TransTo,  # Transfers Received Within DSO
-        'TransToMO': TransToMO,  # Transfers to MO
-        'MOtoDO': MOtoDO,  # Received by MO from DO
-        'MOtoRSP': MOtoRSP,  # Received by MO from RSP
-        'TransToDO': TransToDO,  # Transfers to DO
-        'DOtoRSP': DOtoRSP,  # Received by DO from RSP
-        'Balance': 0
     }
+
+    if rate_scenario is None:
+        # Specify relevant DSO+T retail sales information
+        FixedSales = dso_helper.returnDictSum(DSO_Cash_Flows['Revenues']['RetailSales']['FixedSales'])
+        TransactiveSales = dso_helper.returnDictSum(DSO_Cash_Flows['Revenues']['RetailSales']['TransactiveSales'])
+        RetailSales = FixedSales + TransactiveSales
+        Revenues = RetailSales  # + TransactFees +
+
+        # Update the DSO cash flows composite dict
+        DSO_Cash_Flows_composite.update(
+            {
+                'Revenues': Revenues,
+                'RetailSales': RetailSales,  # Retail Sales
+                'FixedSales': FixedSales,  # Fixed-Rate Sales
+                'FixedEnergyCharges': DSO_Cash_Flows['Revenues']['RetailSales']['FixedSales']['FixedEnergyCharges'],  # Fixed-Rate energy charges
+                'DemandCharges': DSO_Cash_Flows['Revenues']['RetailSales']['FixedSales']['DemandCharges'],  # Demand charges (C & I)
+                'ConnectChargesFix': DSO_Cash_Flows['Revenues']['RetailSales']['FixedSales']['ConnectChargesFix'],  # Connect charges (fixed-price)
+                'TransactiveSales': TransactiveSales,  # Transactive-Rate Sales
+                'RetailDACharges': DSO_Cash_Flows['Revenues']['RetailSales']['TransactiveSales']['RetailDACharges'],  # Day-ahead energy charges
+                'RetailRTCharges': DSO_Cash_Flows['Revenues']['RetailSales']['TransactiveSales']['RetailRTCharges'],  # Real-time energy charges
+                'DistCharges': DSO_Cash_Flows['Revenues']['RetailSales']['TransactiveSales']['DistCharges'],  # Distribution charges
+                'ConnectChargesDyn': DSO_Cash_Flows['Revenues']['RetailSales']['TransactiveSales']['ConnectChargesDyn'],  # Connect charges (dynamic rate)
+            }
+        )
+    else:
+        # Specify the flat rate's sales, which are present in each rate scenario
+        FlatSales = dso_helper.returnDictSum(
+            DSO_Cash_Flows["Revenues"]["RetailSales"]["FlatSales"]
+        )
+
+        # Specify the sales for the other rates under consideration in each rate scenario
+        OtherRateSales = 0
+        if rate_scenario == "time-of-use":
+            OtherRateSales = dso_helper.returnDictSum(
+            DSO_Cash_Flows["Revenues"]["RetailSales"]["TOUSales"]
+        )
+        elif rate_scenario == "subscription":
+            OtherRateSales = 0
+        elif rate_scenario == "transactive":
+            OtherRateSales = 0
+
+        # Determine the total retail sales
+        RetailSales = FlatSales + OtherRateSales
+
+        # Create a dictionary to contain all the relevant retail-slaes-related information
+        retail_sales_dict = {
+            "Revenues": RetailSales, # + TransactFees + ...
+            "RetailSales": RetailSales,  # Retail Sales
+            "FlatSales": FlatSales,
+            "FlatEnergySales": DSO_Cash_Flows["Revenues"]["RetailSales"]["FlatSales"]["FlatEnergyCharges"],
+            "FlatDemandSales": DSO_Cash_Flows["Revenues"]["RetailSales"]["FlatSales"]["FlatDemandCharges"],
+            "FlatFixedSales": DSO_Cash_Flows["Revenues"]["RetailSales"]["FlatSales"]["FlatFixedCharges"],
+        }
+
+        # Update the retail sales dictionary depending on the rate scenario
+        if rate_scenario == "time-of-use":
+            retail_sales_dict.update(
+                {
+                    "TOUSales": OtherRateSales,
+                    "TOUEnergySales": DSO_Cash_Flows["Revenues"]["RetailSales"]["TOUSales"]["TOUEnergyCharges"],
+                    "TOUDemandSales": DSO_Cash_Flows["Revenues"]["RetailSales"]["TOUSales"]["TOUDemandCharges"],
+                    "TOUFixedSales": DSO_Cash_Flows["Revenues"]["RetailSales"]["TOUSales"]["TOUFixedCharges"],
+                }
+            )
+        elif rate_scenario == "subscription":
+            None
+        elif rate_scenario == "transactive":
+            None
+
+        # Update the DSO cash flows composite dict
+        DSO_Cash_Flows_composite.update(retail_sales_dict)
+
+    # Update the last part of the DSO cash flows composite dict
+    DSO_Cash_Flows_composite.update(
+        {
+            'TransactFees': TransactFees,  # Transaction Fees
+            'TransTo': TransTo,  # Transfers Received Within DSO
+            'TransToMO': TransToMO,  # Transfers to MO
+            'MOtoDO': MOtoDO,  # Received by MO from DO
+            'MOtoRSP': MOtoRSP,  # Received by MO from RSP
+            'TransToDO': TransToDO,  # Transfers to DO
+            'DOtoRSP': DOtoRSP,  # Received by DO from RSP
+            'Balance': 0,
+        }
+    )
 
     # Add the monthly DSO capital and operating expenses to the composite cash flows dict
     for m in months:
