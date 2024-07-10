@@ -320,20 +320,20 @@ class RetailMarket:
             # seller_quantities, seller_prices = resample_curve(curve_seller.quantities, curve_seller.prices,
             #                                                          min_q, max_q, self.num_samples)
             if self.rate == 'TOU':
-                buyer_prices = []
-                for price in curve_buyer.prices:
-                    buyer_prices.append(self.gproxy.read_tou_schedules("tou_price", self.current_time, self.dso_bus-1))
+                seller_prices = []
+                for price in curve_seller.prices:
+                    seller_prices.append(self.gproxy.read_tou_schedules("tou_price", self.current_time, self.dso_bus-1))
             else: 
-                buyer_prices = curve_buyer.prices
+                seller_prices = curve_seller.prices
                 
             buyer_quantities = curve_buyer.quantities
             seller_quantities = buyer_quantities
             # log.info("curve_seller.prices: "+str(curve_seller.prices))
-            seller_prices = resample_curve_for_price_only(buyer_quantities,
-                                                                  curve_seller.quantities,
-                                                                  curve_seller.prices)
+            buyer_prices = resample_curve_for_price_only(seller_quantities,
+                                                                  curve_buyer.quantities,
+                                                                  curve_buyer.prices)
             # seller_prices[0]=0.0
-            seller_prices[-1] = self.price_cap
+            buyer_prices[-1] = self.price_cap
 
             for idx in range(len(buyer_quantities) - 1):
                 if buyer_prices[idx] > seller_prices[idx] and buyer_prices[idx + 1] < seller_prices[idx + 1]:

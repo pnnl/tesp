@@ -400,16 +400,16 @@ class DSOMarket:
             #     resample_curve_for_market(curve_DSO.quantities, curve_DSO.prices,
             #                               curve_ws_node.quantities, curve_ws_node.prices)
             if self.rate == 'TOU':
-                buyer_prices = []
+                seller_prices = []
                 price = self.gproxy.read_tou_schedules("tou_price", self.current_time, self.dso_bus-1)
                 for _ in curve_DSO.prices:
-                    buyer_prices.append(price)
+                    seller_prices.append(price)
             else:
-                buyer_prices = curve_DSO.prices
+                seller_prices = self.get_prices_of_quantities(buyer_quantities, day, hour)
 
+            buyer_prices = curve_DSO.prices
             buyer_quantities = curve_DSO.quantities
             seller_quantities = buyer_quantities
-            seller_prices = self.get_prices_of_quantities(buyer_quantities, day, hour)
             # seller_prices[0]=0.0
             seller_prices[-1] = self.price_cap
             # buyer_quantities, buyer_prices = resample_curve(curve_DSO.quantities, curve_DSO.prices,
@@ -467,8 +467,7 @@ class DSOMarket:
                     else:
                         trial_clear_type = MarketClearingType.UNCONGESTED
                     return Pwclear, cleared_quantity, trial_clear_type
-            log.info("ERROR dso intersection not found (not supposed to happen). quantities: " + str(
-                buyer_quantities) + ", buyer_prices: " + str(buyer_prices) + ", seller_prices: " + str(seller_prices))
+            log.info("buyer_quantities: " + str(buyer_quantities) + ", buyer_prices: " + str(buyer_prices) + ", seller_prices: " + str(seller_prices))
             if buyer_prices[0] > seller_prices[0]:
                 if max_q == max(curve_ws_node.quantities):
                     Pwclear = buyer_prices[-1]
