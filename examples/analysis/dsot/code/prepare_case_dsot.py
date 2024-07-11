@@ -19,8 +19,8 @@ import tesp_support.dsot.helpers_dsot as helpers
 import tesp_support.dsot.case_merge as cm
 import tesp_support.dsot.glm_dictionary as gd
 
-recs_data = False
-#recs_data = True
+#recs_data = False
+recs_data = True #rerun recs_gld_house_parameters.py
 if recs_data:
     rcs = "RECS"
     sys.path.append('../')
@@ -69,7 +69,12 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
             sys_config['market'] = True
 
     # loading default agent data
-    with open(os.path.join(data_Path, sys_config['dsoAgentFile']), 'r', encoding='utf-8') as json_file:
+    agent_file = sys_config['dsoAgentFile']
+    if 'rate' in sys_config:
+        if sys_config['rate'] == "":
+            agent_file = sys_config['rateAgentFile']
+
+    with open(os.path.join(data_Path, agent_file), 'r', encoding='utf-8') as json_file:
         case_config = json.load(json_file)
     # loading building and DSO metadata
     with open(os.path.join(data_Path, sys_config['dso' + rcs + 'PopulationFile']), 'r', encoding='utf-8') as json_file:
@@ -132,6 +137,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
     sim['StartTime'] = start_time
     sim['EndTime'] = end_time
     sim['port'] = sys_config['port']
+    sim['rate'] = sys_config['rate']
     sim['numCore'] = sys_config['numCore']
     sim['keyLoad'] = sys_config['keyLoad']
     # sim['players'] = sys_config['players']
@@ -146,8 +152,11 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
     sim['OutputPath'] = sys_config['caseName']  # currently only used for the experiment management scripts
     sim['priceSensLoad'] = sys_config['priceSensLoad']
     sim['quadratic'] = sys_config['quadratic']
-    sim['quadraticFile'] = sys_config['dsoQuadraticFile']
-    
+    if sys_config['rate'] == "":
+        sim['quadraticFile'] = sys_config['dsoQuadraticFile']
+    else:
+        sim['quadraticFile'] = sys_config['rateQuadraticFile']
+
     # =================== fernando 2021/06/25 - removing 10 AM bid correction to AMES =======
     if case_type['fl'] == 1:
         print('Correction of DSO bid for 10 AM AMES bid is performed')
@@ -536,10 +545,10 @@ if __name__ == "__main__":
         # prepare_case(8, "8_system_case_config", pv=0, bt=0, fl=1, ev=0)
         # prepare_case(8, "8_hi_system_case_config", pv=1, bt=0, fl=0, ev=0)
         # prepare_case(8, "8_hi_system_case_config", pv=1, bt=1, fl=0, ev=1)
-        prepare_case(8, "8_hi_system_case_config", pv=1, bt=0, fl=1, ev=1)
+        # prepare_case(8, "8_hi_system_case_config", pv=1, bt=0, fl=1, ev=1)
+        # prepare_case(8, "8_hi_system_case_config", pv=1, bt=1, fl=1, ev=1)
+        # prepare_case(8, "8_hi_system_case_config", pv=0, bt=0, fl=1, ev=0)
         prepare_case(8, "8_hi_system_case_config", pv=1, bt=1, fl=1, ev=1)
-        prepare_case(8, "8_hi_system_case_config", pv=1, bt=0, fl=1, ev=0)
-        # prepare_case(8, "8_hi_system_case_config", pv=1, bt=1, fl=0, ev=0)
         # prepare_case(8, "8_hi_system_case_config", pv=1, bt=0, fl=0, ev=1)
 
         # prepare_case(200, "200_system_case_config", pv=0, bt=0, fl=0, ev=0)

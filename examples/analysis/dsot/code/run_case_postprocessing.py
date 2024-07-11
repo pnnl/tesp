@@ -109,9 +109,7 @@ def post_process():
                 dso_scaling_factor,
                 metadata_path,
                 rate_scenario=rate_scenario,
-                tou_path=os.path.join(
-                    os.path.dirname(os.path.abspath(__file__)), case_config["dataPath"]
-                ),
+                tou_path=os.path.join(os.path.dirname(os.path.abspath(__file__)), case_config["dataPath"])
             )
             print('Meter reading complete: DSO ' + str(dso_number) + ', Month ' + month_name)
             pt.toc()
