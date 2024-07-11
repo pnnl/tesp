@@ -198,42 +198,10 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, sta
     water_heater_agent_config = case_config['AgentPrep']['WaterHeater']
     site_map = {}
 
-    if simulation_config['caseType']['fl']:
-        trans_cust_per = feeder_config['TransactiveHousePercentage']
-    else:
-        trans_cust_per = 0
-    ineligible_cust = 0
-    eligible_cust = 0
+    trans_cust_per = feeder_config['TransactiveHousePercentage']/100
     # Customer Participation Strategy: Whether a customer (billing meter) will participate or not
-    if gd['billingmeters']:
-        # 1. First find out the % of customers ineligible to participate:
-        # % of customers without cooling and with gas fuel type
-        for key, val in gd['billingmeters'].items():
-            if val['children']:
-                hse = gd['houses'][val['children'][0]]
-                if hse['cooling'] == 'NONE' and hse['fuel_type'] == 'gas':
-                    ineligible_cust += 1
-                else:
-                    eligible_cust += 1
-        inelig_per = ineligible_cust / (ineligible_cust + eligible_cust) * 100
-
-        # 2. Now check how much % is remaining of requested non-participating (transactive) houses
-        requested_non_trans_cust_per = (100 - trans_cust_per)
-        rem_non_trans_cust_per = requested_non_trans_cust_per - inelig_per
-        if rem_non_trans_cust_per < 0:
-            rem_non_trans_cust_per = 0
-            print("{} % customers are ineligible to participate in market, therefore only {} % of customers "
-                  "will be able to participate rather than requested {} %!".format(inelig_per, 100 - inelig_per,
-                                                                                   100 - requested_non_trans_cust_per))
-        else:
-            print("{} % of houses will be participating!".format(trans_cust_per))
-
-        # 3. Find out % of houses that needs to be set non-participating out of total eligible houses
-        # For example: if ineligible houses are 5% and requested non-transactive houses is 20%, we only need to set
-        # participating as false in 15% of the total houses which means 15/95% houses of the total eligible houses
-        eff_non_participating_per = rem_non_trans_cust_per / (100 - inelig_per)
-
     # Obtain site dictionary. We consider each billing meter to correspond to a site
+    # Randomly select houses to participate regardless of if they have DERs
     site_agent = {}
     slider_ranges = case_config['SimulationConfig']['slider_ranges']
     for key, val in gd['billingmeters'].items():
@@ -245,7 +213,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, sta
                     sliders[_key] = _val['_DOWN']
             for child in val['children']:
                 site_map[child] = {'slider_settings': sliders}
-            cust_participating = np.random.uniform(0, 1) <= (1 - eff_non_participating_per)
+            cust_participating = np.random.uniform(0, 1) <= trans_cust_per
             site_agent[key] = {'slider_settings': sliders, 'participating': cust_participating}
 
     # prepare inputs for weather agent
@@ -289,11 +257,14 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, sta
                 house_class = val['house_class']
                 controller_name = key
                 meter_name = val['billingmeter_id']
-
-                # hvac participation depends on whether house is participating or not
-                cooling_participating = site_agent[meter_name]['participating'] and val['cooling'] == 'ELECTRIC'
-                heating_participating = site_agent[meter_name]['participating'] and val['fuel_type'] == 'electric'
-
+                
+                if simulation_config['caseType']['fl']:
+                    # hvac participation depends on whether house is participating or not
+                    cooling_participating = site_agent[meter_name]['participating'] and val['cooling'] == 'ELECTRIC'
+                    heating_participating = site_agent[meter_name]['participating'] and val['fuel_type'] == 'electric'
+                else:
+                    cooling_participating = False
+                    heating_participating = False
                 # in agent debugging mode, we may need to avoid hvac participation for debugging waterheaters only
                 if simulation_config['agent_debug_mode']['ON'] and not simulation_config['agent_debug_mode']['flex_hvac']:
                     cooling_participating = False
@@ -542,7 +513,10 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, sta
             num_water_heaters += 1
 
             # will this device participate in market
-            participating = hvac_agents[key]['house_participating']
+            if simulation_config['caseType']['fl']:
+                participating = site_agent[meter_name]['participating']
+            else:
+                participating = False
             # in agent debugging mode, we may need to avoid wh participation for debugging hvacs only
             if simulation_config['agent_debug_mode']['ON'] and not simulation_config['agent_debug_mode']['flex_wh']:
                 participating = False
@@ -597,10 +571,10 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, sta
             meter_name = val['billingmeter_id']
 
             # will this device participate in market
-            participating = np.random.uniform(0, 1) <= feeder_config['StorageParticipation'] / 100
-
-            # we should also change site_agent participation if batteries are participating
-            site_agent[meter_name]['participating'] = site_agent[meter_name]['participating'] or participating
+            if simulation_config['caseType']['bt']:
+                participating = site_agent[meter_name]['participating']
+            else:
+                participating = False
 
             slider = site_map[inverter_name]['slider_settings']['bt']
 
@@ -646,13 +620,10 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, sta
         meter_name = val['billingmeter_id']
 
         # will this device participate in market
-        participating = np.random.uniform(0, 1) <= feeder_config['EVParticipation'] / 100
+        participating = site_agent[meter_name]['participating']
         # ev won't participate at all if caseType is not ev
         if not simulation_config['caseType']['ev']:
             participating = False
-
-        # we should also change site_agent participation if evs are participating
-        site_agent[meter_name]['participating'] = site_agent[meter_name]['participating'] or participating
 
         slider = site_map[key]['slider_settings']['ev']
 
@@ -701,9 +672,6 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, sta
 
             # will this device participate in market: PV don't participate at all
             participating = False
-
-            # we should also change site_agent participation if batteries are participating
-            site_agent[meter_name]['participating'] = site_agent[meter_name]['participating'] or participating
 
             slider = site_map[inverter_name]['slider_settings']['pv']
 

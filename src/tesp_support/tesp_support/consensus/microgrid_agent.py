@@ -331,7 +331,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
         battery_agent_objs[key] = BatteryDSOT(row, gld_row, key, 11, current_time, solver)
 
         # map FNCS topics
-        topic_map[key + '#SOC'] = [battery_agent_objs[key].set_battery_SOC]
+        topic_map[key + '#SOC'] = [battery_agent_objs[key].set_SOC]
     log.info('instantiated %s Battery control agents' % (len(battery_keys)))
 
     site_dictionary = config['site_agent']

@@ -289,7 +289,7 @@ def get_residential_metadata(metadata, sample_data, state, hsdens_str, inc_lev, 
                                                                                                     (sample_data[vintage_str] == p) &
                                                                                                    (sample_data[n_stories_str] == n)),
                                                                                                     'NWEIGHT'].sum()/total_dict_consol[hc][y], 4)
-    # Get floor_area distribution by house type and vintage
+    # Get floor_area distribution by house type
     for hc, l in housing_type_consol_dict.items():
         metadata['floor_area'][state][hsdens_str][inc_lev][hc] = {}
         k1 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[0])]
@@ -317,7 +317,7 @@ def get_residential_metadata(metadata, sample_data, state, hsdens_str, inc_lev, 
     #                                                                                          (sample_data[flr_area_str]<=1080)),
     #                                                                                          'NWEIGHT'].sum()/sum(total_dict['mobile_home'].values()),4)
 
-    # Get distribution for air conditioning for homes with gas or resistance heating by house type and vintage
+    # Get distribution for air conditioning for homes with gas or resistance heating by house type
     for hc, l in housing_type_consol_dict.items():
         k1 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[0])]
         k2 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[1])]

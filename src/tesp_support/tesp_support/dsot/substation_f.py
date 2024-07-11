@@ -305,7 +305,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
         gld_row = config_glm['inverters'][key]
         battery_agent_objs[key] = BatteryDSOT(row, gld_row, key, 11, current_time, solver)
         # map topics
-        topic_map[key + '#SOC'] = [battery_agent_objs[key].set_battery_SOC]
+        topic_map[key + '#SOC'] = [battery_agent_objs[key].set_SOC]
     log.info('instantiated %s battery control agents' % (len(battery_keys)))
 
     # instantiate the ev controller objects and map their message inputs
@@ -316,7 +316,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
         gld_row = config_glm['ev'][row['houseName']]
         ev_agent_objs[key] = EVDSOT(row, gld_row, key, 11, current_time, solver)
         # map topics
-        topic_map[key + '#SOC'] = [ev_agent_objs[key].set_ev_SOC]
+        topic_map[key + '#SOC'] = [ev_agent_objs[key].set_SOC]
     log.info('instantiated %s electric vehicle control agents' % (len(ev_keys)))
 
     # instantiate the pv objects and map their message inputs
@@ -1684,7 +1684,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                     obj.set_price_forecast(forecast_obj.retail_price_forecast)
                     da_cleared_quantity = []
                     for idx in range(obj.windowLength):
-                        da_cleared_quantity.append(obj.from_P_to_Q_ev(obj.bid_da[idx], retail_market_obj.cleared_price_DA[idx]))
+                        da_cleared_quantity.append(obj.from_P_to_Q_battery(obj.bid_da[idx], retail_market_obj.cleared_price_DA[idx]))
                     site_da_ev_cleared_quantities[site_id] += np.array(da_cleared_quantity)
                 else:
                     site_da_ev_cleared_quantities[site_id] += np.zeros(48)
