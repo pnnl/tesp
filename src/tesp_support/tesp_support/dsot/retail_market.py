@@ -319,21 +319,19 @@ class RetailMarket:
             #                                                        min_q, max_q, self.num_samples)
             # seller_quantities, seller_prices = resample_curve(curve_seller.quantities, curve_seller.prices,
             #                                                          min_q, max_q, self.num_samples)
+            buyer_prices = curve_buyer.prices    
+            buyer_quantities = curve_buyer.quantities
+            seller_quantities = buyer_quantities
+            # log.info("curve_seller.prices: "+str(curve_seller.prices))
             if self.rate == 'TOU':
                 seller_prices = []
                 for price in curve_seller.prices:
                     seller_prices.append(self.gproxy.read_tou_schedules("tou_price", self.current_time, self.dso_bus-1))
             else: 
-                seller_prices = curve_seller.prices
-                
-            buyer_quantities = curve_buyer.quantities
-            seller_quantities = buyer_quantities
-            # log.info("curve_seller.prices: "+str(curve_seller.prices))
-            buyer_prices = resample_curve_for_price_only(seller_quantities,
-                                                                  curve_buyer.quantities,
-                                                                  curve_buyer.prices)
+                seller_prices = resample_curve_for_price_only(buyer_quantities, curve_seller.quantities, curve_seller.prices)
+            
             # seller_prices[0]=0.0
-            buyer_prices[-1] = self.price_cap
+            seller_prices[-1] = self.price_cap
 
             for idx in range(len(buyer_quantities) - 1):
                 if buyer_prices[idx] > seller_prices[idx] and buyer_prices[idx + 1] < seller_prices[idx + 1]:
@@ -364,6 +362,14 @@ class RetailMarket:
                         clear_type = MarketClearingType.UNCONGESTED
                         congestion_surcharge = 0.0
                     return clear_type, cleared_price, cleared_quantity, congestion_surcharge
+                elif buyer_prices[idx] == seller_prices[idx]:
+                    cleared_price = buyer_prices[idx]
+                    cleared_quantity = buyer_quantities[idx]
+                    clear_type = MarketClearingType.UNCONGESTED
+                    congestion_surcharge = 0
+                    log.info("Buyer and seller prices are identical!")
+                    return clear_type, cleared_price, cleared_quantity, congestion_surcharge
+
 
             log.info("ERROR retail intersection not found (not supposed to happen)" +
                      "\n  quantities: " + str(buyer_quantities) +
@@ -372,20 +378,32 @@ class RetailMarket:
 
             if buyer_prices[0] > seller_prices[0]:
                 if max_q == max(curve_seller.quantities):
-                    cleared_price = buyer_prices[-1]
+                    if self.rate == 'TOU':
+                        cleared_price = self.gproxy.read_tou_schedules("tou_price", self.current_time, self.dso_bus-1)
+                    else:
+                        cleared_price = buyer_prices[-1]
                     cleared_quantity = buyer_quantities[-1]
                     clear_type = MarketClearingType.CONGESTED
                 elif max_q == max(curve_buyer.quantities):
-                    cleared_price = seller_prices[-1]
+                    if self.rate == 'TOU':
+                        cleared_price = self.gproxy.read_tou_schedules("tou_price", self.current_time, self.dso_bus-1)
+                    else: 
+                        cleared_price = seller_prices[-1]
                     cleared_quantity = seller_quantities[-1]
                     clear_type = MarketClearingType.UNCONGESTED
             else:
                 if min_q == min(curve_seller.quantities):
-                    cleared_price = buyer_prices[0]
+                    if self.rate == 'TOU':
+                        cleared_price = self.gproxy.read_tou_schedules("tou_price", self.current_time, self.dso_bus-1)
+                    else:
+                        cleared_price = buyer_prices[0]
                     cleared_quantity = buyer_quantities[0]
                     clear_type = MarketClearingType.UNCONGESTED
                 elif min_q == min(curve_buyer.quantities):
-                    cleared_price = seller_prices[0]
+                    if self.rate == 'TOU':
+                        cleared_price = self.gproxy.read_tou_schedules("tou_price", self.current_time, self.dso_bus-1)
+                    else: 
+                        cleared_price = seller_prices[0]
                     cleared_quantity = seller_quantities[0]
                     clear_type = MarketClearingType.UNCONGESTED
             if cleared_quantity > Q_max:

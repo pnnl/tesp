@@ -113,7 +113,7 @@ def main(dso_name, method):
                     "ratio": 3,
                 },
             },
-            "price": 0.1,
+            "price": 0.07,
             "season": "winter",
         }
 
@@ -131,7 +131,7 @@ def main(dso_name, method):
                     "ratio": 3,
                 },
             },
-            "price": 0.1,
+            "price": 0.07,
             "season": "summer",
         }
 

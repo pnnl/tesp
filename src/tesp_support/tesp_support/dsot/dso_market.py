@@ -467,7 +467,7 @@ class DSOMarket:
                     else:
                         trial_clear_type = MarketClearingType.UNCONGESTED
                     return Pwclear, cleared_quantity, trial_clear_type
-            log.info("buyer_quantities: " + str(buyer_quantities) + ", buyer_prices: " + str(buyer_prices) + ", seller_prices: " + str(seller_prices))
+            log.info("ERROR dso intersection not found (not supposed to happen). buyer_quantities: " + str(buyer_quantities) + ", buyer_prices: " + str(buyer_prices) + ", seller_prices: " + str(seller_prices))
             if buyer_prices[0] > seller_prices[0]:
                 if max_q == max(curve_ws_node.quantities):
                     Pwclear = buyer_prices[-1]
