@@ -1574,7 +1574,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                         obj.bid_rt,
                         obj.inv_P_setpoint,
                         obj.inv_Q_setpoint,
-                        obj.Cinit / obj.batteryCapacity
+                        obj.Cinit / obj.capacity
                     )
 
             tnext_retail_adjust_rt += retail_period_rt
