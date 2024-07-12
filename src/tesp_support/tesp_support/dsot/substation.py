@@ -1900,7 +1900,7 @@ def inner_substation_loop(metrics_root, with_market):
                             obj.bid_rt,
                             obj.inv_P_setpoint,
                             obj.inv_Q_setpoint,
-                            obj.Cinit/obj.batteryCapacity
+                            obj.Cinit/obj.capacity
                         )
                     timing(proc[17], False)
 
@@ -1921,7 +1921,7 @@ def inner_substation_loop(metrics_root, with_market):
                             obj.name,
                             obj.bid_rt,
                             obj.inv_P_setpoint,
-                            obj.Cinit/obj.evCapacity
+                            obj.Cinit/obj.capacity
                         )
                     timing(proc[17], False)
 

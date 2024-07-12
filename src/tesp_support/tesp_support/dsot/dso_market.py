@@ -399,6 +399,11 @@ class DSOMarket:
             # x, buyer_prices, seller_prices = \
             #     resample_curve_for_market(curve_DSO.quantities, curve_DSO.prices,
             #                               curve_ws_node.quantities, curve_ws_node.prices)
+
+            buyer_prices = curve_DSO.prices
+            buyer_quantities = curve_DSO.quantities
+            seller_quantities = buyer_quantities
+
             if self.rate == 'TOU':
                 seller_prices = []
                 price = self.gproxy.read_tou_schedules("tou_price", self.current_time, self.dso_bus-1)
@@ -406,10 +411,7 @@ class DSOMarket:
                     seller_prices.append(price)
             else:
                 seller_prices = self.get_prices_of_quantities(buyer_quantities, day, hour)
-
-            buyer_prices = curve_DSO.prices
-            buyer_quantities = curve_DSO.quantities
-            seller_quantities = buyer_quantities
+                
             # seller_prices[0]=0.0
             seller_prices[-1] = self.price_cap
             # buyer_quantities, buyer_prices = resample_curve(curve_DSO.quantities, curve_DSO.prices,
