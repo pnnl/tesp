@@ -2207,7 +2207,7 @@ def test():
         sim_time = sim_time + timedelta(hours=1)
         obj.get_uncntrl_hvac_load(sim_time.minute, sim_time.hour, sim_time.weekday())
 
-        # B_obj.Cinit = B_obj.batteryCapacity * 0.5#B_obj.set_SOC()
+        # B_obj.Cinit = B_obj.capacity * 0.5#B_obj.set_SOC()
 
     # BID = [[-5.0, 6.0], [0.0, 5.0], [0.0, 4.0], [5.0, 3.0]]
     # fixed = B_obj1.RT_fix_four_points_range(BID, 0.0, 10.0)
