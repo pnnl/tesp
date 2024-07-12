@@ -2245,7 +2245,7 @@ class Feeder:
         params = {"connect_type": 'WYE_WYE',
                   "install_type": 'PADMOUNT',
                   "primary_voltage": '{:.2f}'.format(self.base.transmissionVoltage),
-                  "secondary_voltage": '{:.2f}'.format(vll),
+                  "secondary_voltage": '{:.2f}'.format(v_ll),
                   "power_rating": '{:.2f}'.format(self.base.transmissionXfmrMVAbase * 1000.0),
                   "resistance": '{:.2f}'.format(0.01 * self.base.transmissionXfmrRpct),
                   "reactance": '{:.2f}'.format(0.01 * self.base.transmissionXfmrXpct),
