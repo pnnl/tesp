@@ -181,6 +181,7 @@ def read_meters(
 
         meter_meta_df, meter_data_df = load_system_data(dir_path, folder_prefix, dso_num, str(day), 'billing_meter')
         meter_data_df['date'] = meter_data_df['date'].str.replace('CDT', '', regex=True)
+        meter_data_df['date'] = meter_data_df['date'].str.replace('CST', '', regex=True)
         meter_data_df['date'] = pd.to_datetime(meter_data_df['date'])  #, infer_datetime_format=True)
         meter_data_df = meter_data_df.set_index(['time', 'name'])
         RThourprice = RT_price_df[' LMP' + dso_num].resample('H').mean() / 1000

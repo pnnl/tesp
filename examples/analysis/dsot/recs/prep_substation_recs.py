@@ -19,6 +19,7 @@ from tesp_support.api.helpers import random_norm_trunc
 # write txt for gridlabd to subscribe house setpoints and meter price; publish meter voltages
 # write the json agent dictionary for post-processing, and run-time configuration of substation.py
 
+
 def select_setpt_occ(prob, mode, st, hd, inc_lev):
     if 'No_DSO_Type' in list(hvac_setpt['occ_' + mode][st].keys()):
         hd = 'No_DSO_Type'
@@ -390,39 +391,6 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, sta
                         weekend_night_set_cool = night_set_cool
                         weekend_day_set_heat = wakeup_set_heat
                         weekend_night_set_heat = night_set_heat
-                    # # Schedule V2
-                    # wakeup_start = random_norm_trunc(thermostat_schedule_config['WeekdayWakeStart'])
-                    # daylight_start = wakeup_start + random_norm_trunc(
-                    #     thermostat_schedule_config['WeekdayWakeToDaylightTime'])
-                    # evening_start = random_norm_trunc(thermostat_schedule_config['WeekdayEveningStart'])
-                    # night_start = evening_start + random_norm_trunc(thermostat_schedule_config['WeekdayEveningToNightTime'])
-                    # weekend_day_start = random_norm_trunc(thermostat_schedule_config['WeekendDaylightStart'])
-                    # weekend_night_start = random_norm_trunc(thermostat_schedule_config['WeekendNightStart'])
-                    # temp_midpoint = random_norm_trunc(thermostat_schedule_config['TemperatureMidPoint'])
-                    # schedule_scalar = random_norm_trunc(thermostat_schedule_config['ScheduleScalar'])
-                    # weekday_schedule_offset = thermostat_schedule_config['WeekdayScheduleOffset']
-                    # weekend_schedule_offset = thermostat_schedule_config['WeekendScheduleOffset']
-                    #
-                    # # cooling
-                    # wakeup_set_cool = temp_midpoint + (deadband / 2) + schedule_scalar * weekday_schedule_offset['wakeup']
-                    # daylight_set_cool = temp_midpoint + (deadband / 2) + \
-                    #                     schedule_scalar * weekday_schedule_offset['daylight']
-                    # evening_set_cool = temp_midpoint + (deadband / 2) + schedule_scalar * weekday_schedule_offset['evening']
-                    # night_set_cool = temp_midpoint + (deadband / 2) + schedule_scalar * weekday_schedule_offset['night']
-                    # weekend_day_set_cool = temp_midpoint + (deadband / 2) + \
-                    #                        schedule_scalar * weekend_schedule_offset['daylight']
-                    # weekend_night_set_cool = temp_midpoint + (deadband / 2) + \
-                    #                          schedule_scalar * weekend_schedule_offset['night']
-                    # # heating
-                    # wakeup_set_heat = temp_midpoint - (deadband / 2) - schedule_scalar * weekday_schedule_offset['wakeup']
-                    # daylight_set_heat = temp_midpoint - (deadband / 2) - \
-                    #                     schedule_scalar * weekday_schedule_offset['daylight']
-                    # evening_set_heat = temp_midpoint - (deadband / 2) - schedule_scalar * weekday_schedule_offset['evening']
-                    # night_set_heat = temp_midpoint - (deadband / 2) - schedule_scalar * weekday_schedule_offset['night']
-                    # weekend_day_set_heat = temp_midpoint - (deadband / 2) - \
-                    #                        schedule_scalar * weekend_schedule_offset['daylight']
-                    # weekend_night_set_heat = temp_midpoint - (deadband / 2) - \
-                    #                          schedule_scalar * weekend_schedule_offset['night']
                 else:
                     wakeup_start = np.random.uniform(thermostat_schedule_config['WeekdayWakeStartLo'],
                                                      thermostat_schedule_config['WeekdayWakeStartHi'])

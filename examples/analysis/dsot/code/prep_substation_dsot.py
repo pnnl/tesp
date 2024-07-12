@@ -19,9 +19,6 @@ from tesp_support.api.helpers import random_norm_trunc
 # write txt for gridlabd to subscribe house setpoints and meter price; publish meter voltages
 # write the json agent dictionary for post-processing, and run-time configuration of substation.py
 
-# we want the same pseudo-random thermostat schedules each time, for repeatability
-np.random.seed(0)
-
 
 def select_setpt_occ(prob, mode):
     hdr = hvac_setpt['occ_' + mode][0]
@@ -675,6 +672,8 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
             market_name = market_config['DSO']['Name']
             markets[market_name] = {
                 'bus': market_config['DSO']['Bus'],
+                'rate': simulation_config['rate'],
+                'serverPort': simulation_config['serverPort'],
                 'unit': market_config['DSO']['Unit'],
                 'pricecap': market_config['DSO']['PriceCap'],
                 'num_samples': market_config['DSO']['CurveSamples'],
@@ -701,6 +700,8 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
             num_market_agents += 1
             market_name = market_config['Retail']['Name']
             markets[market_name] = {
+                'rate': simulation_config['rate'],
+                'serverPort': simulation_config['serverPort'],
                 'unit': market_config['Retail']['Unit'],
                 'pricecap': market_config['Retail']['PriceCap'],
                 'num_samples': market_config['Retail']['CurveSamples'],
@@ -874,12 +875,11 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
 
     for key, val in battery_agents.items():
         # key is the name of inverter resource
-        inverter_name = key
         battery_name = val['batteryName']
         substation_sim_key = "dso" + substation_name + '/' + key
         gld.pubs(False, battery_name + "#SOC", "double", battery_name, "state_of_charge")
-        gld.subs(substation_sim_key + "/p_out", "double", inverter_name, "P_Out")
-        gld.subs(substation_sim_key + "/q_out", "double", inverter_name, "Q_Out")
+        gld.subs(substation_sim_key + "/p_out", "double", key, "P_Out")
+        gld.subs(substation_sim_key + "/q_out", "double", key, "Q_Out")
 
     for key, val in ev_agents.items():
         ev_name = val['evName']
