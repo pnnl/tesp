@@ -77,3 +77,7 @@ fabric.properties
 src/tesp_support/tesp_support/.idea
 TESP_demo-checkpoint.ipynb
 tesp.code-workspace
+examples/analysis/dsot/data/8_const_industry_p.csv
+
+# TESP Data
+examples/analysis/dsot/data/
