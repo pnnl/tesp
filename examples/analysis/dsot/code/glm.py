@@ -167,7 +167,11 @@ def _parse_token_list(token_list):
         if len(list_in) == 0:
             return ''
         else:
-            return reduce(lambda x, y: str(x) + ' ' + str(y), list_in[1:-1])
+            # return reduce(lambda x, y: str(x) + ' ' + str(y), list_in[1:-1])
+            if "#include" in list_in:
+                return reduce(lambda x, y: str(x) + '' + str(y), list_in[1:-1])
+            else:
+                return reduce(lambda x, y: str(x) + ' ' + str(y), list_in[1:-1])
 
     # Tree variables.
     tree = {}

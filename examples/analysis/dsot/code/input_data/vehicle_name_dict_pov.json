@@ -1,0 +1,24 @@
+{
+    "military_name_dict": {
+        "Morning": [
+            "9-17"
+        ],
+        "Afternoon": [
+            "12-15"
+        ],
+        "Evening": [
+            "18-8"
+        ]
+    },
+    "civilian_name_dict": {
+        "Morning": [
+            "9-17"
+        ],
+        "Afternoon": [
+            "12-15"
+        ],
+        "Evening": [
+            "18-8"
+        ]
+    }
+}

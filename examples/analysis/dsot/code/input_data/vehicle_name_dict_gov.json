@@ -1,0 +1,40 @@
+{
+    "MHDV_name_dict": {
+        "Ambulance": [
+            "HD Vehicle (ambulance)"
+        ],
+        "Buses": [
+            "HD Vehicle (bus)"
+        ],
+        "Vans": [
+            "MD Van (cargo)",
+            "MD Van (passenger)"
+        ],
+        "Trucks": [
+            "HD Truck",
+            "MD Vehicle",
+            "MD Pickup",
+            "MD SUV"
+        ]
+    },
+    "LDV_name_dict": {
+        "Ambulance": [],
+        "AllOther": [
+            "LD vehicle 4x2",
+            "LD Pickup 4x2",
+            "LD Pickup 4x4",
+            "LD SUV 4x4"
+        ],
+        "Vans": [
+            "LD Minivan 4x2 (cargo)",
+            "LD Minivan 4x2 (passenger)",
+            "LD Van 4x2 (cargo)",
+            "LD Van 4x2 (passenger)"
+        ],
+        "Sedan": [
+            "sedan/St Wgn compact",
+            "sedan/St Wgn midsize",
+            "sedan/St Wgn subcompact"
+        ]
+    }
+}

@@ -55,7 +55,7 @@ def modify_time(voc_id_start_end_time, offset_main_logic):
                 vocation_id_map[v.lower()] = 'sedan'
             else:
                 vocation_id_map[v.lower()] = 'telecom'
-
+    vocation_id_map["LD POV"] = "ld_pov"
     # for k in len(data_classifiers):
     for file in files:
         print(file)
@@ -73,6 +73,9 @@ def modify_time(voc_id_start_end_time, offset_main_logic):
                 time_idx = random.randint(0, 17)
                 df['Reach office (24h)'][k] = time_idx
                 df['Reach home (24h)'][k] = time_idx + 6
+            elif voc_id_name == "ld_pov":
+                # do nothing... leave the time as is since POV times are properly done by adoption team
+                pass
             else:
                 if offset_main_logic:
                     start_time = str(18)
@@ -88,6 +91,11 @@ def modify_time(voc_id_start_end_time, offset_main_logic):
                         # end_time = str(int(int(float(start_time)) + 6))
                         start_time = str(18)
                         end_time = str(8)
+                    # if random.uniform(0,1) < 0.5:  # 50% randomly make vehicles have ev times during day
+                    #     start_time = round(random.uniform(8,13))
+                    #     end_time = start_time + 3
+                    # else:
+                    #     pass
                 df['Reach office (24h)'][k] = end_time
                 df['Reach home (24h)'][k] = start_time
         headers = df.columns

@@ -13,7 +13,8 @@ def run_sh(current_folder_name):
 if __name__ == "__main__":
     start_time = time.time()
     # folder_name = "AZ_Tucson_Large_parallel_and_comm_overload_test2"
-    customsuffix = "feb12_runs"  # "test_timestamp_mismatch"  # "final_runs"  "fix_comm_tf_config_ratings"  # "parallel_and_comm_overload_test2"
+    # customsuffix = "feb12_runs"  # "test_timestamp_mismatch"  # "final_runs"  "fix_comm_tf_config_ratings"  # "parallel_and_comm_overload_test2"
+    customsuffix = "jul9_runs"
     gridsize = "Large"
     # weather_folders = [f"AZ_Tucson_{gridsize}_{customsuffix}",
     #                    f"WA_Tacoma_{gridsize}_{customsuffix}",
@@ -22,12 +23,12 @@ if __name__ == "__main__":
     #                    f"LA_Alexandria_{gridsize}_{customsuffix}",
     #                    f"AK_Anchorage_{gridsize}_{customsuffix}",
     #                    f"MT_Greatfalls_{gridsize}_{customsuffix}"]
-    weather_folders = [f"MT_Greatfalls_{gridsize}_{customsuffix}"]
+    weather_folders = [f"AZ_Tucson_{gridsize}_{customsuffix}"]
     # weather_folders = [f"AZ_Tucson_Large_{customsuffix}"]
     # folder_count_list = [10, 10, 10, 10, 10, 10, 10]
     # folder_count_list = [2, 2, 2, 2, 2, 2, 2]
     # folder_count_list = [17, 17, 17, 17, 17, 16, 16]
-    folder_count_list = [16]
+    folder_count_list = [17]
     batch_size = 10
     # batch_size = 2
     # batch_size = 10

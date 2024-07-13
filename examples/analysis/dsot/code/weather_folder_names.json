@@ -1,0 +1,79 @@
+{
+    "AK_Anchorage": {
+        "Large": [
+            "Large"
+        ],
+        "Medium": [
+            "Medium"
+        ],
+        "Small": [
+            "Small"
+        ]
+    },
+    "AL_Dothan": {
+        "Large": [
+            "Large"
+        ],
+        "Medium": [
+            "Medium"
+        ],
+        "Small": [
+            "Small"
+        ]
+    },
+    "AZ_Tucson": {
+        "Large": [
+            "Large"
+        ],
+        "Medium": [
+            "Medium"
+        ],
+        "Small": [
+            "Small"
+        ]
+    },
+    "IA_Johnston": {
+        "Large": [
+            "Large"
+        ],
+        "Medium": [
+            "Medium"
+        ],
+        "Small": [
+            "Small"
+        ]
+    },
+    "LA_Alexandria": {
+        "Large": [
+            "Large"
+        ],
+        "Medium": [
+            "Medium"
+        ],
+        "Small": [
+            "Small"
+        ]
+    },
+    "MT_Greatfalls": {
+        "Large": [
+            "Large"
+        ],
+        "Medium": [
+            "Medium"
+        ],
+        "Small": [
+            "Small"
+        ]
+    },
+    "WA_Tacoma": {
+        "Large": [
+            "Large"
+        ],
+        "Medium": [
+            "Medium"
+        ],
+        "Small": [
+            "Small"
+        ]
+    }
+}

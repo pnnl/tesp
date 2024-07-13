@@ -6,11 +6,13 @@ import json
 import random
 import math
 import sys
+import glmanip
 import ingest_bld_data
 if os.path.abspath("/home/gudd172/tesp/repository/tesp/src/tesp_support/tesp_support/weather") not in sys.path:
     sys.path.append("/home/gudd172/tesp/repository/tesp/src/tesp_support/tesp_support/weather")
 import EPWtoDAT
 from glm import GLMManager
+from DSOT_post_processing_aggregated_folders import load_system_data, get_attributes_from_metrics_data
 
 def get_xfrmr_info_from_all_substations_subfolders(subfolder_count, idx, network_size, customsuffix, main_path):
     xfmr_size_name_mapping = {}
@@ -106,10 +108,126 @@ def perform_commonsense_check(possible_xfrmrs, vehicles_to_add_at_a_location, ne
               f" {len(possible_xfrmrs)}/{len(xfmr_size_map_df)}. Vehicle assignment to grid possible, proceeding"
               f" to next steps. Number of vehicles per xfrmr with {type_l} = {vehicles_to_add_at_a_location}. Total "
               f"vehicles to assign on grid = {len(df_vehicles)}")
+
+cache_output = {}
+cache_df = {}
+def load_json(dir_path, file_name):
+    """Utility to open Json files."""
+    name = os.path.join(dir_path, file_name)
+    try:
+        cache = cache_output[name]
+        return cache
+    except:
+        with open(name) as json_file:
+            cache_output[name] = json.load(json_file)
+    return cache_output[name]
+def main_cyclic_pov_assignments(df, sizes, custom_suffix, subfolder_count, idx, map_given_size):
+    df["Location"] = 99999
+    df["chargertype"] = 2  # all povs will have level 2 charger
+
+    # for the given grid size, identify all the residential xfrmrs
+    # identify how many houses are present under each xfrmr. Assume two ports per house and identify total vehicles
+    # per each residential xfrmr
+    main_names = 'AZ_Tucson'
+    folder_count = subfolder_count[idx]
+    half_name = f"{main_names}_{sizes}_{custom_suffix}"
+    pure_res_xfmr_dict = {}  # keys = res xfrmr names and values = total houses under the res xfrmr
+    pure_res_xfrmr_size_mapping = {}
+    for xio in range(folder_count):
+        folder_name = f"{half_name}_{xio+1}_fl"
+
+        curr_dir = os.getcwd()
+        base_case = f"{curr_dir}/" + folder_name
+        basedir = f"{base_case}/Substation_1/"
+        # below file is generated when "update_pov_xfrmrs_after_tesp.py" is executed
+        asset_str = '_hse_'
+        res_xfmr_file_name = 'asset_map_' + 'Substation_1' + asset_str + '.json'  # obtained using networkx and
+        # com_loads json
+        res_xfmr_dict = load_json(basedir, res_xfmr_file_name)
+
+        # above dictionary has both residential and commercial xfrmrs as keys but commercial xfrmr keys have values as
+        # empty. lets remove them first before assigning unique location id.
+
+        glm_lines = glmanip.read(basedir + 'Substation_1.glm', basedir, buf=[])
+        [model, clock, directives, modules, classes] = glmanip.parse(glm_lines)
+
+        for key, value in res_xfmr_dict.items():
+            if value != [] and key != "substation_transformer":
+                if "R2" in key:
+                    key_h = f"feeder1_{key}"
+                elif "R4" in key:
+                    key_h = f"feeder2_{key}"
+                else:
+                    print(key)
+                    print("unexpected feeder...exiting")
+                    exit()
+
+                pure_res_xfmr_dict[key_h + f"_set{xio + 1}"] = len(value)
+
+                # also lets grab the size of the residential xfrmr. This was not done during gov analysis. So this data
+                # needs to be appended to the ALL commerical xfrmrs dictionary at the end.
+                pure_res_xfrmr_size_mapping[key_h + f"_set{xio + 1}"] = float((
+                    model)["transformer_configuration"][model["transformer"][key]["configuration"]]["power_rating"])
+
+    # assign unique location ids by considering whats already assigned for govs
+    if len([x for x in pure_res_xfmr_dict if x in map_given_size]) != 0:
+        print("There is intersection between res xfrmr and commercial xfrmr dictionaries, this should never happen....check this, exiting")
+        exit()
+    gov_ids = max(map_given_size.values())
+
+    # create unique xfrmr names as we iterate through all subfolders
+    # create xfrmr to dummy location mapping
+    id_counter = gov_ids
+    for key, value in pure_res_xfmr_dict.items():
+        id_counter += 1
+        map_given_size[key] = id_counter
+
+    # in a cyclic manner assign povs one per house (half of pov capacity of a xfrmr) and if all xfrmrs are filled then
+    # start utilizing the second port in each house until all povs are assigned to the xfrmrs
+    list_of_vehicleIDs = list(df["Vehicle ID"])  # has only povs at residential xfrmrs
+    possible_xfrmrs = pd.DataFrame(pure_res_xfmr_dict.items(), columns=['Name', 'HouseCount'])
+    possible_xfrmrs = possible_xfrmrs.sample(frac=1).reset_index(drop=True)
+    df = assign_pov_vehicles(list_of_vehicleIDs, possible_xfrmrs, df, map_given_size)
+
+    k = 1
+
+    return map_given_size, df, pure_res_xfrmr_size_mapping, pure_res_xfmr_dict, possible_xfrmrs
+
+def assign_pov_vehicles(list_of_vehicleIDs, possible_xfrmrs, df, map_given_size):
+    vehicle_counter = 0
+    for xfrmr_id in range(possible_xfrmrs.shape[0]):
+        current_xfrmr = possible_xfrmrs.iloc[xfrmr_id]["Name"]
+        vehicles_to_assign_at_current_xfrmr = possible_xfrmrs.iloc[xfrmr_id]["HouseCount"]  # because we
+        # first assign 1 vehicle per house and move to next xfrmr and if all xfrmrs for evs one per house then we go
+        # back to the first xfrmrx.
+        vehicle_counter_min = vehicle_counter
+        vehicle_counter_max = vehicle_counter_min + min(vehicles_to_assign_at_current_xfrmr, len(list_of_vehicleIDs)-vehicle_counter_min)
+        if vehicle_counter_max > len(list_of_vehicleIDs):
+            # finished assigning all vehicles to the xfrmrs, exiting the for loop
+            break
+        vehicles_in_current_batch = list_of_vehicleIDs[vehicle_counter_min:vehicle_counter_max]
+        vehicle_counter = vehicle_counter_max
+
+        # update xfrmr assignment
+        mask_current_batch = df["Vehicle ID"].isin(vehicles_in_current_batch)
+        df.loc[mask_current_batch, "Location"] = map_given_size[current_xfrmr]
+        # move to next possible xfrmr through for loop
+
+        # conditions to check
+        # if vehicles to assign are less than the available xfrmrs then "vehicles_in_current_batch" will have error
+        # (handled this scenario if condition and break).
+
+        # if vehicles are more than available xfrmrs then for loop will not through error but some vehicles will not be
+        # assigned to any transformer and their location will have 99999 (this case will likely never happen in this
+        # project so not handling the edge case...if error occurs then this will need to be fixed)
+
+    return df
+
+
 def main_cyclic_selective_locs_for_chargers(vehicles_per_port, Years, Networks, subfolder_count,
                                             main_path, xfrmrrating_evshare,
          custom_suffix_sim_run_uncontrolled, vehicle_inventory_path, final_year, max_ports,
-                                            load_existing_mapping_bldg_no_to_manually_selected_EVbldgs):
+                                            load_existing_mapping_bldg_no_to_manually_selected_EVbldgs, date_name):
     # PART 1:
     # Shortlist location of transformers where EVs will be placed. The names of the buildings are selected manually.
     # Now:
@@ -148,10 +266,11 @@ def main_cyclic_selective_locs_for_chargers(vehicles_per_port, Years, Networks, 
 
         xfmrs_assigned_for_current_grid_names = []
 
+        # todo: note this logic for simulation purposes!
         if network_size == "Large":
-            customsuffix = "feb12_runs"
+            customsuffix = "jul9_runs"  #"feb12_runs" - this wont work anymore after pov addition results on jul9_runs
         else:
-            customsuffix = "feb24_runs"
+            customsuffix = "jul9_runs"  # "feb14_runs"
 
         # # Load the commercial transformers and their sizes from all subfolders for a given size.
         # # Create subfolder location paths (assume arizona as references - it maybe an issue if other climate zones have
@@ -167,7 +286,7 @@ def main_cyclic_selective_locs_for_chargers(vehicles_per_port, Years, Networks, 
                                                                           customsuffix, main_path, weather_folder_names,
                                                                             weather_mappings_bldg_name,
                                                                             weather_mappings_bldg_count)
-
+        # xfmr_size_map_df = xfmr_size_map_df.sample(frac=1).reset_index(drop=True)
         # create xfrmr to dummy location mapping
         list_xfrmr = list(xfmr_size_map_df_allxfrmrs["Name"].unique())
         map_given_size = {}
@@ -178,7 +297,33 @@ def main_cyclic_selective_locs_for_chargers(vehicles_per_port, Years, Networks, 
         # take the 2040 vehicle inventory and assign vehicles as per the logic
             # Load the corresponding vehicle inventory
         filename = f"{vehicle_inventory_path}/vehicle_master_{network_size}_Year_{final_year}.csv"
-        df = pd.read_csv(filename)
+        # this function is for GOVs, so filter out the POVs from the above df and proceed to assign GOVs to the
+        # commercial transformer.
+        # NOTE: There are specific POVs (comuters) who charge at commercial transformer. include those also into the
+        # GOVs df
+        df_all = pd.read_csv(filename)
+        gov_and_cummuter_mask = ((df_all["POVs/GOVs"] == "HD_GOV")|(df_all["POVs/GOVs"] == "MD_GOV")|
+                                 (df_all["POVs/GOVs"] == "LD_GOV")|((df_all["POVs/GOVs"] == "POV_civilian")&
+                                                                (df_all["Reach office (24h)"] == 15)&
+                                                                (df_all["Reach home (24h)"] == 12)))
+        df = df_all[gov_and_cummuter_mask]
+
+        # assign povs to residential xfrmrs. At the end we will concate the pov assignment results and gov assignment
+        # results. It can be concated because both vehicle set are exclusive hence independent
+        df_povs = df_all[~gov_and_cummuter_mask]
+        map_given_size, df_povs, pure_res_xfrmr_size_mapping, pure_res_xfmr_housecount_dict, pure_res_xfmr_housecount_df\
+            = main_cyclic_pov_assignments(df_povs, network_size, customsuffix, subfolder_count, idx, map_given_size)
+
+        # pure_res_xfrmr_size_mapping
+        # with open(os.getcwd() + f"/Forecast_from_gld_{date_name}/" + f"{zone_name}_grid_dummy_to_size_mapping.json", 'w',
+        #                   encoding='utf-8') as f:
+        #     json.dump(map_given_size, f, ensure_ascii=False, indent=4)
+
+        map_given_size_reverse = {}
+        for key, value in map_given_size.items():
+            map_given_size_reverse[value] = key
+
+        # continue to assign govs and cummuters to commercial xfrmrs
         df["Location"] = 99999
 
         # perform cyclic assignment
@@ -261,6 +406,9 @@ def main_cyclic_selective_locs_for_chargers(vehicles_per_port, Years, Networks, 
         names2 = list(possible_xfrmrs.loc[xfrmr_df_indices_to_delete]["Name"])
         xfmrs_assigned_for_current_grid_names.extend(names2)
 
+        # combine both govs and povs
+        df_gov_pov = pd.concat([df, df_povs])
+
         # now all vehicles are assigned to a transformer. Generate the vehicle inventory for different years with
         # desired formatting. generate the new vehicle inventory files with ports and other information as
         # needed for the follow up process in the project/study.
@@ -276,13 +424,19 @@ def main_cyclic_selective_locs_for_chargers(vehicles_per_port, Years, Networks, 
                 nodataflag = True
 
             if not nodataflag:
-                updated_df_current_year = df[df["Vehicle ID"].isin(df_current_year_vinfo["Vehicle ID"])]
+                updated_df_current_year = df_gov_pov[df_gov_pov["Vehicle ID"].isin(df_current_year_vinfo["Vehicle ID"])]
                 sav_df = updated_df_current_year.copy(deep=True)
                 sav_df["Year of adoption"] = int(float(current_year))
                 sav_df["Grid size"] = network_size
                 df_struct = pd.concat([df_struct, sav_df])
-                loc_p_port_df = pd.DataFrame({"Location": list(updated_df_current_year["Location"].unique()),
+                locs_gov = df[df["Vehicle ID"].isin(df_current_year_vinfo["Vehicle ID"])]
+                loc_p_port_df_gov = pd.DataFrame({"Location": list(locs_gov["Location"].unique()),
                                                                             "NumberofPorts": max_ports/vehicles_per_port})
+                locs_pov = df_povs[df_povs["Vehicle ID"].isin(df_current_year_vinfo["Vehicle ID"])]
+                locs_pov_unique = list(locs_pov["Location"].unique())
+                loc_p_port_df_pov = pd.DataFrame({"Location": locs_pov_unique,
+                                                  "NumberofPorts": [pure_res_xfmr_housecount_dict[map_given_size_reverse[x]]*2 for x in locs_pov_unique]})
+                loc_p_port_df = pd.concat([loc_p_port_df_gov, loc_p_port_df_pov])
                 with pd.ExcelWriter(
                         f"final_vehicle_inventory_{custom_suffix_sim_run_uncontrolled}/vehicle_master_{network_size}_Year_{current_year}.xlsx") as writer:
                     updated_df_current_year.to_excel(writer, sheet_name='main_info', index=False)

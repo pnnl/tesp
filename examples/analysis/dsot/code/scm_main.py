@@ -360,7 +360,8 @@ def main(inventory_filename, grid_forecast_filename, size_of_batch, xfmr_rating_
 
 if __name__ == '__main__':
 
-    inventory_filename = "vehicle_master_Large_Year_2040_diff_ev_times.xlsx"  # 'vehicle_master_Large_Year_2040_randmaxsoc.xlsx'
+    # inventory_filename = "vehicle_master_Large_Year_2040_diff_ev_times.xlsx"  # 'vehicle_master_Large_Year_2040_randmaxsoc.xlsx'
+    inventory_filename = "vehicle_master_Large_Year_2040_randmaxsoc.xlsx"  # 'vehicle_master_Large_Year_2040_randmaxsoc.xlsx'
     grid_forecast_filename = 'AZ_Tucson_Large_grid_forecast.csv'
     # decide on size of batch
     size_of_batch = 50
