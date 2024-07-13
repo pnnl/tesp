@@ -47,6 +47,7 @@ TODO:
                 OK - "v_an" = "voltage from phase a to neutral"
                 NOT OK - "sub" = "substation"? "substitute"?
         * TODO - JK + - review flagged variables for renaming or removal
+    * TODO - FR - Convert all the string formatting from ".format" to "f{}"
 """
 import json
 import math
