@@ -211,9 +211,9 @@ def get_residential_metadata(metadata, sample_data, state, hsdens_str, inc_lev, 
         5: 'apartment_5_units'
     }
     housing_type_consol_dict = {
-        'single_family':['single_family_detached','single_family_attached'],
-        'apartments':['apartment_2_4_units','apartment_5_units'],
-        'mobile_home':['mobile_home','mobile_home']
+        'single_family': ['single_family_detached', 'single_family_attached'],
+        'apartments': ['apartment_2_4_units', 'apartment_5_units'],
+        'mobile_home': ['mobile_home', 'mobile_home']
     }
     housing_vintage_dict = {
         1: 'pre_1950', 2: '1950-1959', 3: '1960-1969', 4: '1970-1979', 5: '1980-1989', 6: '1990-1999', 7: '2000-2009',
@@ -295,8 +295,8 @@ def get_residential_metadata(metadata, sample_data, state, hsdens_str, inc_lev, 
         k1 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[0])]
         k2 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[1])]
         # for p, y in housing_vintage_dict.items():
-        values = sample_data.loc[(sample_data[house_type_str].isin([k1,k2])), flr_area_str].values
-        weighting = sample_data.loc[(sample_data[house_type_str].isin([k1,k2])), 'NWEIGHT'].values
+        values = sample_data.loc[(sample_data[house_type_str].isin([k1, k2])), flr_area_str].values
+        weighting = sample_data.loc[(sample_data[house_type_str].isin([k1, k2])), 'NWEIGHT'].values
         if values.size == 0:
             metadata['floor_area'][state][hsdens_str][inc_lev][hc]['mean'] = None
             metadata['floor_area'][state][hsdens_str][inc_lev][hc]['max'] = None
@@ -460,10 +460,8 @@ def get_residential_metadata(metadata, sample_data, state, hsdens_str, inc_lev, 
                              (sample_data[solar_str] == 1)), 'NWEIGHT'].sum() / sum(total_dict[h].values()), 4)
     # Get distribution for EV by house type
     for k, h in housing_type_dict.items():
-        metadata['ev'][state][hsdens_str][inc_lev][h] = round(sample_data.loc[((sample_data[house_type_str] == k) &
-                                                                               (sample_data[
-                                                                                    ev_str] == 1)), 'NWEIGHT'].sum() / sum(
-            total_dict[h].values()), 4)
+        metadata['ev'][state][hsdens_str][inc_lev][h] = round(sample_data.loc[
+            ((sample_data[house_type_str] == k) & (sample_data[ev_str] == 1)), 'NWEIGHT'].sum() / sum(total_dict[h].values()), 4)
 
     metadata['programmable_thermostat'][state][hsdens_str][inc_lev] = round(
         sample_data.loc[(sample_data[therm_str].isin([2, 3])), 'NWEIGHT'].sum() / total, 4)
@@ -496,7 +494,7 @@ def get_RECS_jsons(recs_data_file, dsot_metadata_file, output_file_resmeta, outp
     # Use the right income level data from RECS
     inc_str = 'Income_cat2'
     # Make sure income level is in the right order
-    order = {key: i for i, key in enumerate(['Low', 'Moderate', 'Middle', 'Upper'])}
+    order = {key: i for i, key in enumerate(['Low', 'Middle', 'Upper'])}
     sample['income_level'] = sorted(sample['income_level'], key=lambda d: order[d])
     # Read DSOT_residential_parameters_metadata.json
     with open(dsot_metadata_file) as json_file:

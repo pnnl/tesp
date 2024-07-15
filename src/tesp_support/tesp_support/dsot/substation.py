@@ -940,8 +940,8 @@ def inner_substation_loop(metrics_root, with_market):
                     P_age_DA.append(obj)
                 # else:
             timing(proc[6], True)
-            # print('uncontrolled battery ***')
-            # print('no uncntrl load for battery)
+            log.debug('uncontrolled battery ***')
+            log.debug('no uncntrl load for battery')
 
             # HVAC bidding
             timing(proc[7], True)
@@ -981,10 +981,10 @@ def inner_substation_loop(metrics_root, with_market):
                     site_da_hvac_uncntrl[site_id] += temp
                 site_da_zip_loads[site_id] += obj.forecast_ziploads
             timing(proc[7], False)
-            # print('uncontrolled zip ***')
-            # print(zip_loads)
-            # print('uncontrolled hvac ***')
-            # print(uncntrl_hvac)
+            log.debug('uncontrolled zip ***')
+            log.debug(zip_loads)
+            log.debug('uncontrolled hvac ***')
+            log.debug(uncntrl_hvac)
 
             # Water heater bidding
             timing(proc[8], True)
@@ -1008,8 +1008,8 @@ def inner_substation_loop(metrics_root, with_market):
                     uncntrl_wh.append(temp1)
                     site_da_wh_uncntrl[site_id] += temp1
             timing(proc[8], False)
-            # print('uncontrolled wh ***')
-            # print(uncntrl_wh)
+            log.debug('uncontrolled wh ***')
+            log.debug(uncntrl_wh)
 
             # Electrical Vehicle bidding
             timing(proc[9], True)
@@ -1017,7 +1017,6 @@ def inner_substation_loop(metrics_root, with_market):
             for key, obj in ev_agent_objs.items():
                 site_id = site_da_meter.index(config_glm['ev'][obj.houseName]['billingmeter_id'])
                 if obj.participating and with_market:
-                    # print('current_time before opt: ', current_time)
                     obj.DA_model_parameters(current_time)
                     P_age_DA.append(obj)
                 else:
@@ -1026,8 +1025,8 @@ def inner_substation_loop(metrics_root, with_market):
                     uncntrl_ev.append(temp1)
                     site_da_ev_uncntrl[site_id] += temp1
             timing(proc[9], False)
-            # print('uncontrolled ev ***')
-            # print(uncntrl_ev)
+            log.debug('uncontrolled ev ***')
+            log.debug(uncntrl_ev)
 
             # PV generation forecasting
             timing(proc[10], True)
@@ -1041,8 +1040,8 @@ def inner_substation_loop(metrics_root, with_market):
                     uncntrl_pv.append(temp1)
                     site_da_pv_uncntrl[site_id] += temp1
             timing(proc[10], False)
-            # print('uncontrolled pv ***')
-            # print(uncntrl_pv)
+            log.debug('uncontrolled pv ***')
+            log.debug(uncntrl_pv)
 
             timing(proc[15], True)
             # Sum all uncontrollable loads
@@ -1057,10 +1056,10 @@ def inner_substation_loop(metrics_root, with_market):
             site_da_total_quantities_uncntrl = site_da_total_quantities_uncntrl.tolist()
             if site_da_quantities == 0.0:
                 site_da_quantities = [0.0]*retail_market_obj.windowLength
-            # print('uncontrolled total ***')
-            # print(site_da_quantities)
-            # print('uncontrolled total site load ***')
-            # print(site_da_total_quantities_uncntrl)
+            log.debug('uncontrolled total ***')
+            log.debug(site_da_quantities)
+            log.debug('uncontrolled total site load ***')
+            log.debug(site_da_total_quantities_uncntrl)
 
             # formulating bid DA with multiprocessing library
             # created pyomo models in serial, but solves in parallel
@@ -1296,6 +1295,8 @@ def inner_substation_loop(metrics_root, with_market):
             publish('da_bid_' + str(dso_bus), json.dumps(da_bid))
 
             print('Day-Ahead bid at', time_granted, '=', retail_market_obj.AMES_DA, flush=True)
+            log.info('First hour total DA bid to AMES unresponsive' + '=' + str(retail_market_obj.AMES_DA[offset+1]) + 'MW')
+            log.info('First hour total DA bid to AMES responsive max' + '=' + str(retail_market_obj.AMES_DA[offset+1]) + 'MW')
 
             temp = np.array(site_da_total_quantities_uncntrl) + np.array(site_da_total_quantities_cleared)
             site_total_quantities = []

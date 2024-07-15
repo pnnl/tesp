@@ -108,8 +108,7 @@ def post_process():
                 day_range,
                 dso_scaling_factor,
                 metadata_path,
-                rate_scenario=rate_scenario,
-                tou_path=os.path.join(os.path.dirname(os.path.abspath(__file__)), case_config["dataPath"])
+                rate_scenario=rate_scenario
             )
             print('Meter reading complete: DSO ' + str(dso_number) + ', Month ' + month_name)
             pt.toc()
@@ -171,6 +170,8 @@ def post_process():
     # der_stack_plots = False
     # bldg_stack_plots = False
     # forecast_plots = False
+    create_baseline_demand_profiles = False
+    create_demand_profiles = False
 
     system_case = 'generate_case_config.json'
     first_data_day = 4  # First day in the simulation that data to be analyzed. Run-in days before this are discarded.
