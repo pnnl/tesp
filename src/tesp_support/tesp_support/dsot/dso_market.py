@@ -60,8 +60,9 @@ class DSOMarket:
         self.active_power_rt = None
         self.name = key
         self.dso_bus = dso_dict['bus']
-        if 'rate' in dso_dict:
-            self.rate = dso_dict['rate']
+        self.rate = ""
+        if "rate" in dso_dict:
+            self.rate = dso_dict["rate"]
         self.DSO_Q_max = dso_dict['DSO_Q_max']
         Q_max_scale = (70.0e6 / self.DSO_Q_max)
 
@@ -389,7 +390,6 @@ class DSOMarket:
                 log.info("dso quantities: curve_DSO" + str(curve_DSO.quantities))
                 return float('inf'), float('inf'), MarketClearingType.FAILURE
         else:
-
             max_q = min(max(curve_ws_node.quantities), max(curve_DSO.quantities))
             min_q = max(min(curve_ws_node.quantities), min(curve_DSO.quantities))
             if max_q <= min_q:
@@ -399,19 +399,17 @@ class DSOMarket:
             # x, buyer_prices, seller_prices = \
             #     resample_curve_for_market(curve_DSO.quantities, curve_DSO.prices,
             #                               curve_ws_node.quantities, curve_ws_node.prices)
-
             buyer_prices = curve_DSO.prices
             buyer_quantities = curve_DSO.quantities
             seller_quantities = buyer_quantities
-
             if self.rate == 'TOU':
                 seller_prices = []
-                price = self.gproxy.read_tou_schedules("tou_price", self.current_time, self.dso_bus-1)
+                tou_price = self.gproxy.read_tou_schedules("tou_price", self.current_time, self.dso_bus-1)
                 for _ in curve_DSO.prices:
-                    seller_prices.append(price)
+                    seller_prices.append(tou_price)
             else:
                 seller_prices = self.get_prices_of_quantities(buyer_quantities, day, hour)
-                
+
             # seller_prices[0]=0.0
             seller_prices[-1] = self.price_cap
             # buyer_quantities, buyer_prices = resample_curve(curve_DSO.quantities, curve_DSO.prices,
@@ -469,7 +467,12 @@ class DSOMarket:
                     else:
                         trial_clear_type = MarketClearingType.UNCONGESTED
                     return Pwclear, cleared_quantity, trial_clear_type
-            log.info("ERROR dso intersection not found (not supposed to happen). buyer_quantities: " + str(buyer_quantities) + ", buyer_prices: " + str(buyer_prices) + ", seller_prices: " + str(seller_prices))
+
+            log.info("ERROR dso intersection not found (not supposed to happen)." +
+                     " buyer_quantities: " + str(buyer_quantities) +
+                     ", buyer_prices: " + str(buyer_prices) +
+                     ", seller_prices: " + str(seller_prices))
+
             if buyer_prices[0] > seller_prices[0]:
                 if max_q == max(curve_ws_node.quantities):
                     Pwclear = buyer_prices[-1]
