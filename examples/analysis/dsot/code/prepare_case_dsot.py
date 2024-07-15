@@ -45,7 +45,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         sys_config = json.load(json_file)
 
     # Get path for other data
-    data_Path = sys_config['dataPath']
+    data_path = sys_config['dataPath']
     case_type = sys_config['caseType']
     sys_config['market'] = False
     if pv is not None:
@@ -69,28 +69,28 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
             sys_config['market'] = True
 
     # loading default agent data
-    with open(os.path.join(data_Path, 'dso' + rcs + 'AgentFile'), 'r', encoding='utf-8') as json_file:
+    with open(os.path.join(data_path, sys_config['dso' + rcs + 'AgentFile']), 'r', encoding='utf-8') as json_file:
         case_config = json.load(json_file)
     # loading building and DSO metadata
-    with open(os.path.join(data_Path, sys_config['dso' + rcs + 'PopulationFile']), 'r', encoding='utf-8') as json_file:
+    with open(os.path.join(data_path, sys_config['dso' + rcs + 'PopulationFile']), 'r', encoding='utf-8') as json_file:
         dso_config = json.load(json_file)
     # loading residential metadata
-    with open(os.path.join(data_Path, sys_config['dso' + rcs + 'ResBldgFile']), 'r', encoding='utf-8') as json_file:
+    with open(os.path.join(data_path, sys_config['dso' + rcs + 'ResBldgFile']), 'r', encoding='utf-8') as json_file:
         res_config = json.load(json_file)
     # loading commercial building metadata
-    with open(os.path.join(data_Path, sys_config['dsoCommBldgFile']), 'r', encoding='utf-8') as json_file:
+    with open(os.path.join(data_path, sys_config['dsoCommBldgFile']), 'r', encoding='utf-8') as json_file:
         comm_config = json.load(json_file)
     # loading battery metadata
-    with open(os.path.join(data_Path, sys_config['dsoBattFile']), 'r', encoding='utf-8') as json_file:
+    with open(os.path.join(data_path, sys_config['dsoBattFile']), 'r', encoding='utf-8') as json_file:
         batt_config = json.load(json_file)
     # loading ev model metadata
-    with open(os.path.join(data_Path, sys_config['dsoEvModelFile']), 'r', encoding='utf-8') as json_file:
+    with open(os.path.join(data_path, sys_config['dsoEvModelFile']), 'r', encoding='utf-8') as json_file:
         ev_model_config = json.load(json_file)
     # loading hvac set point metadata
     # record aggregated hvac_setpoint_data from survey:
     # In this implementation individual house set point schedule may not
     # make sense but aggregated behavior will do.
-    with open(os.path.join(data_Path, sys_config['hvac' + rcs + 'SetPoint']), 'r', encoding='utf-8') as json_file:
+    with open(os.path.join(data_path, sys_config['hvac' + rcs + 'SetPoint']), 'r', encoding='utf-8') as json_file:
         hvac_setpt = json.load(json_file)
 
     # print(json.dumps(sys_config, sort_keys = True, indent = 2))

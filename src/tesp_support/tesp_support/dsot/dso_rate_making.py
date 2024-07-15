@@ -27,9 +27,7 @@ def read_meters(
     day_range,
     SF,
     dso_data_path,
-    rate_scenario=None,
-    tou_path=None,
-):
+    rate_scenario=None):
     """ Determines the total energy consumed and max power consumption for all meters within a DSO for a series of days.
     Also collects information on day ahead and real time quantities consumed by transactive customers.
     Creates summation of these statistics by customer class.
@@ -40,10 +38,9 @@ def read_meters(
         dso_num (str): number of the DSO folder to be opened
         day_range (list): range of days to be summed (for example a month).
         SF (float): Scaling factor to scale GLD results to TSO scale (e.g. 1743)
-        rate_scenario (str): A str specifying the rate scenario under investigation: 
-        flat, time-of-use (or TOU), subscription, or transactive. Defaults to None.
-        tou_path (str): A str specifying the directory in which the time-of-use rate 
-        parameters are located. Dafaults to None.
+        dso_path (str): A str specifying the directory in which the time-of-use rate
+        rate_scenario (str): A str specifying the rate scenario under investigation:
+                flat, time-of-use (or TOU), subscription, or transactive. Defaults to None.
     Returns:
         meter_df: dataframe of energy consumption and max 15 minute power consumption for each month and total
         energysum_df: dataframe of energy consumption summations by customer class (residential, commercial, and industial)
@@ -55,9 +52,9 @@ def read_meters(
     indust_df = load_indust_data(industrial_file, day_range)
 
     # Load in necessary data for the defined rate scenario
-    if (rate_scenario in ["time-of-use", "TOU"]) and (tou_path is not None):
+    if (rate_scenario in ["time-of-use", "TOU"]):
         # Load time-of-use rate parameters
-        tou_params = load_json(tou_path, "time_of_use_parameters.json")
+        tou_params = load_json(os.path.join("../" + dso_data_path), "time_of_use_parameters.json")
 
         # Create a mapping between month number and month abbreviation
         month_num_to_abbrev = {
@@ -1011,8 +1008,7 @@ def calculate_consumer_bills(
     dso_num,
     sf,
     num_ind_cust,
-    rate_scenario,
-):
+    rate_scenario):
     """Calculates the consumers' bills for the four different scenarios considered in 
     the Rates Analysis work.
     Args:
@@ -1037,10 +1033,7 @@ def calculate_consumer_bills(
     # Load in necessary data for the defined rate scenario
     if rate_scenario == "time-of-use":
         # Note: this assumes each month has the same number of time-of-use periods
-        tou_params = load_json(
-            case_path,
-            "time_of_use_parameters.json",
-        )
+        tou_params = load_json(case_path, "time_of_use_parameters.json")
 
     # Specify the bill components that will be recorded
     bill_components = [
