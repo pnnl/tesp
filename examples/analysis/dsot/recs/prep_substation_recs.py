@@ -277,7 +277,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, sta
                     num_hvac_agents_heating += 1
 
                 period = hvac_agent_config['MarketClearingPeriod']
-                deadband = 2.0  # np.random.uniform(hvac_agent_config['ThermostatBandLo'],hvac_agent_config['ThermostatBandHi'])
+                deadband = 2.0
 
                 # TODO: this is only until we agree on the new schedule
                 if simulation_config['ThermostatScheduleVersion'] == 2:
@@ -359,17 +359,23 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, sta
 
                         # Determine setpoints
                         # cooling - RECS data individual behavior
-                        wakeup_set_cool = select_setpt_occ(prob, 'cool', state, dso_type, inc_level)  # when home is occupied during day
-                        daylight_set_cool = select_setpt_unocc(wakeup_set_cool,
-                                                               'cool', state, dso_type, inc_level)  # when home is not occupied during day
-                        evening_set_cool = wakeup_set_cool  # when home is occupied during evening
-                        night_set_cool = select_setpt_night(wakeup_set_cool, daylight_set_cool, 'cool',state,dso_type,inc_level)  # during night
+                        # when home is occupied during day
+                        wakeup_set_cool = select_setpt_occ(prob, 'cool', state, dso_type, inc_level)
+                        # when home is not occupied during day
+                        daylight_set_cool = select_setpt_unocc(wakeup_set_cool, 'cool', state, dso_type, inc_level)
+                        # when home is occupied during evening
+                        evening_set_cool = wakeup_set_cool
+                        # during night
+                        night_set_cool = select_setpt_night(wakeup_set_cool, daylight_set_cool, 'cool',
+                                                            state, dso_type, inc_level)
                         # heating - RECS data individual behavior
                         wakeup_set_heat = select_setpt_occ(prob, 'heat', state, dso_type, inc_level)
                         daylight_set_heat = select_setpt_unocc(wakeup_set_heat, 'heat', state, dso_type, inc_level)
                         evening_set_heat = wakeup_set_heat
-                        night_set_heat = select_setpt_night(wakeup_set_heat, daylight_set_heat, 'heat', state, dso_type, inc_level)
-                        # If they work from home at least 1 day per week, set the daylight setpoint to the same value as the wakeup setpoint
+                        night_set_heat = select_setpt_night(wakeup_set_heat, daylight_set_heat, 'heat',
+                                                            state, dso_type, inc_level)
+                        # If they work from home at least 1 day per week,
+                        # set the daylight setpoint to the same value as the wakeup setpoint
                         if n_tw_days > 0:
                             daylight_set_cool = wakeup_set_cool
                             daylight_set_heat = wakeup_set_heat

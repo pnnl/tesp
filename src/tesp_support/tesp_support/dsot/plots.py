@@ -1228,8 +1228,7 @@ def bldg_load_stack(dso, day_range, case, agent_prefix, gld_prefix, metadata_pat
 
     dso_metadata_file = case_config["dsoPopulationFile"]
     if "rate" in case_config:
-        if case_config["rate"] == "":
-            dso_metadata_file = case_config["dsoRECSPopulationFile"]
+        dso_metadata_file = case_config["dsoRECSPopulationFile"]
 
     # Load DSO MetaData
     DSOmetadata = load_json(metadata_path, dso_metadata_file)
@@ -1427,8 +1426,7 @@ def der_load_stack(dso, day_range, case, gld_prefix, metadata_path):
 
     dso_metadata_file = case_config["dsoPopulationFile"]
     if "rate" in case_config:
-        if case_config["rate"] == "":
-            dso_metadata_file = case_config["dsoRECSPopulationFile"]
+        dso_metadata_file = case_config["dsoRECSPopulationFile"]
 
     # Load DSO MetaData
     DSOmetadata = load_json(metadata_path, dso_metadata_file)
@@ -2589,8 +2587,7 @@ def non_participating_dso_loads(dso_range, case, metadata_path):
 
     dso_metadata_file = case_config["dsoPopulationFile"]
     if "rate" in case_config:
-        if case_config["rate"] == "":
-            dso_metadata_file = case_config["dsoRECSPopulationFile"]
+        dso_metadata_file = case_config["dsoRECSPopulationFile"]
 
     # Load DSO MetaData
     DSOmetadata = load_json(metadata_path, dso_metadata_file)
@@ -4813,8 +4810,7 @@ def run_plots():
 
     metadata_file = case_config["dsoPopulationFile"]
     if "rate" in case_config:
-        if case_config["rate"] == "":
-            metadata_file = case_config["dsoRECSPopulationFile"]
+        metadata_file = case_config["dsoRECSPopulationFile"]
     dso_meta_file = metadata_path + '/' + metadata_file
 
     base_case = os.getcwd()
