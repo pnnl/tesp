@@ -183,16 +183,15 @@ def post_process():
     case_config = pt.load_json(config_path, system_case)
 
     # Identify the rate scenario
+    rate_scenario = None
     if "rate" in case_config:
         rate_scenario = case_config["rate"]
-    else:
-        rate_scenario = None
 
     case_path = dirname(abspath(__file__)) + '/' + case_config['caseName']
     metadata_path = "../" + case_config['dataPath']
 
     # Identify the proper metadata file depending on the rate scenario
-    if (rate_scenario is not None) or (rate_scenario == ""):
+    if rate_scenario is None:
         dso_metadata_file = case_config["dsoPopulationFile"]
     else:
         dso_metadata_file = case_config["dsoRECSPopulationFile"]

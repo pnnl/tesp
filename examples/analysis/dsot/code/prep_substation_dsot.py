@@ -338,6 +338,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                         weekend_night_set_heat = night_set_heat
                     else:
                         # New schedule to implement CBEC's data
+                        # Determine setpoint transition times
                         wakeup_start = random_norm_trunc(thermostat_schedule_config['WeekdayWakeStart'])
                         daylight_start = wakeup_start + random_norm_trunc(
                             thermostat_schedule_config['WeekdayWakeToDaylightTime'])
@@ -350,6 +351,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                         night_start = min(night_start, 23.9)
                         weekend_night_start = min(weekend_night_start, 23.9)
 
+                        # Determine setpoints
                         # cooling - CBEC's data individual behavior
                         prob = np.random.uniform(0, 1)  # a random number
                         # when home is occupied during day
