@@ -15,6 +15,9 @@ import networkx as nx
 # import copy
 from create_json_for_networkx import createJson
 import matplotlib.pyplot as plt
+import random
+
+
 
 cache_output = {}
 cache_df = {}
@@ -159,9 +162,13 @@ def load_system_data(dir_path, folder_prefix, dso_num, day_num, system_name):
 
 if __name__ == '__main__':
 
+
+
+
+
     main_names = ['AZ_Tucson']  # , 'WA_Tacoma', 'AL_Dothan', 'IA_Johnston', 'LA_Alexandria', 'AK_Anchorage', 'MT_Greatfalls']
     sizes = ["Large"]
-    custom_suffix = "jul9_runs"
+    custom_suffix = "jul14_runs"  # "jul9_runs"
     folder_count = 17
     for xol in main_names:
         for xoli in sizes:
@@ -187,6 +194,21 @@ if __name__ == '__main__':
                 base_case = f"{curr_dir}/" + folder_name
                 basedir = f"{base_case}/Substation_1/"
 
+                # If this file "Substation_1_no_pov_xfrmr_upgrades.glm" already exists in the folder then this file
+                # is the original glm file used to conduct gridlabd simulations. So, if this script is run and if
+                # this above glm file exists then Substation_1.glm (has pov xfrmr upgrades) need to be replaced with
+                # Substation_1_no_pov_xfrmr_upgrades.glm. This is because this script is trying to update pov ratings
+                # on top of the original glm file from tesp (Substation_1_no_pov_xfrmr_upgrades.glm). However,
+                # if "Substation_1_no_pov_xfrmr_upgrades.glm" does not exist then we can proceed with editing the
+                # Substation_1.glm file directly since Substation_1.glm file will be the original .glm file from
+                # tesp. Trying to avoid any bugs in case a user tries to run this script multiple times without
+                # knowing the detail behind how the pipeline is setup.
+                if os.path.isfile(basedir + '/Substation_1_no_pov_xfrmr_upgrades.glm'):
+                    shutil.copy2(base_case + "/Substation_1/Substation_1_no_pov_xfrmr_upgrades.glm",
+                                 base_case + "/Substation_1/Substation_1.glm")
+                    os.remove(base_case + "/Substation_1/Substation_1_no_pov_xfrmr_upgrades.glm")
+
+
                 # get house data using networkx
                 res_xfmr_file_dir, res_xfmr_file_name = get_house_info_networkx(basedir)
                 res_xfmr_dict = load_json(basedir, res_xfmr_file_name)
@@ -203,7 +225,7 @@ if __name__ == '__main__':
                 ########################### Load House Data ###############################
                 ###########################################################################
                 print("Processing metrics_house.h5 data ....")
-                hse_attr = 'total_load_avg'  ### Adjust the attribute that you want to collect
+                hse_attr = 'total_load_max'  ### Adjust the attribute that you want to collect
                 house_att_df = pd.DataFrame()
                 for day in day_range:
                     meta_house_df_base, data_house_df_base = load_system_data(base_case, '/Substation_', str(dso), str(day),
@@ -232,7 +254,7 @@ if __name__ == '__main__':
 
                 xfmr_load_file_name = "XFMR_peak_load.json"
                 xfmr_max_load_dict = load_json(basedir, xfmr_load_file_name)
-                alpha_xfmr_pwr_mult = 1.5
+                # alpha_xfmr_pwr_mult = 1.5
 
                 glm_mgr = GLMManager(basedir + '/Substation_1.glm', model_is_path=True)
 
@@ -251,7 +273,10 @@ if __name__ == '__main__':
                 for k, v in glm_mgr.model_dict.items():
                     item_type = glm_mgr._get_item_type(v)
                     if item_type == 'object' and v['object'] == 'transformer_configuration' and v['name']!="substation_xfmr_config":
-                        updated_power_rating = alpha_xfmr_pwr_mult*float(xfmr_config_peak_dict[v['name']])
+                        updated_power_rating = (
+                                float(xfmr_config_peak_dict[v['name']])*(1/0.9)*((random.randint(97,105))/100))
+                        # also converted the kws to kva using 0.9, because rating update on xfrmr and xfrm name to size
+                        # json must be in kva.
                         pwr = [0, 0, 0]
                         if float(v['powerA_rating']) != 0.0:
                             pwr[0] = 1
@@ -271,14 +296,14 @@ if __name__ == '__main__':
                         glm_mgr.modify_item(load_dict)
                         # break
 
-                glm_mgr.add_item({'object': 'group_recorder',
-                                  'name': 'transformer_kva',
-                                  'group': 'class=transformer',
-                                  'property': 'power_out',
-                                  'interval': '3600',
-                                  'limit': '100000',
-                                  'file': 'transformer_va_data.csv',
-                                  'complex_part': 'MAG'})
+                # glm_mgr.add_item({'object': 'group_recorder',
+                #                   'name': 'transformer_kva',
+                #                   'group': 'class=transformer',
+                #                   'property': 'power_out',
+                #                   'interval': '3600',
+                #                   'limit': '100000',
+                #                   'file': 'transformer_va_data.csv',
+                #                   'complex_part': 'MAG'})
 
                 # save original file as backup and delete the original file before saving the modified glm by the same name.
                 shutil.copy2(base_case + "/Substation_1/Substation_1.glm", base_case + "/Substation_1/Substation_1_no_pov_xfrmr_upgrades.glm")

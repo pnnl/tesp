@@ -77,20 +77,31 @@ def assign_vehicles(list_of_vehicleIDs, vehicles_to_add_at_a_location, possible_
     xfrmr_added_idx = 0
     xfrmr_df_indices_to_delete = []
     for batch in range(0, len(list_of_vehicleIDs), vehicles_to_add_at_a_location):
-        xfrmr_to_assign_for_current_batch = possible_xfrmrs.iloc[xfrmr_added_idx]["Name"]
-        xfrmr_df_indices_to_delete.append(possible_xfrmrs.index[xfrmr_added_idx])
-        # for k in xfmr_loading_df.columns.tolist():
-        min_id = batch
-        max_id = min(batch + vehicles_to_add_at_a_location, len(list_of_vehicleIDs))
+        if xfrmr_added_idx >= possible_xfrmrs.shape[0]:
+            if vehicles_to_add_at_a_location == 2:
+                charger_type = "L3"
+            else:
+                charger_type = "L2"
+            print(f"Grid expansion needed: Total available xfrmrs = {possible_xfrmrs.shape[0]}, "
+                  f"only {possible_xfrmrs.shape[0]*vehicles_to_add_at_a_location} vehicles can "
+                  f"be accomodated as per user charger infra plan but, {len(list_of_vehicleIDs)} vehicles are asked to "
+                  f"be assigned. Skipping the "
+                  f"excess vehicles. Type of charger location = {charger_type}")
+        else:
+            xfrmr_to_assign_for_current_batch = possible_xfrmrs.iloc[xfrmr_added_idx]["Name"]
+            xfrmr_df_indices_to_delete.append(possible_xfrmrs.index[xfrmr_added_idx])
+            # for k in xfmr_loading_df.columns.tolist():
+            min_id = batch
+            max_id = min(batch + vehicles_to_add_at_a_location, len(list_of_vehicleIDs))
 
-        vehicles_in_current_batch = list_of_vehicleIDs[min_id:max_id]
+            vehicles_in_current_batch = list_of_vehicleIDs[min_id:max_id]
 
-        # update xfrmr assignment
-        mask_current_batch = df["Vehicle ID"].isin(vehicles_in_current_batch)
-        df.loc[mask_current_batch, "Location"] = map_given_size[xfrmr_to_assign_for_current_batch]
+            # update xfrmr assignment
+            mask_current_batch = df["Vehicle ID"].isin(vehicles_in_current_batch)
+            df.loc[mask_current_batch, "Location"] = map_given_size[xfrmr_to_assign_for_current_batch]
 
-        # move to next possible xfrmr
-        xfrmr_added_idx += 1
+            # move to next possible xfrmr
+            xfrmr_added_idx += 1
 
     return df, xfrmr_df_indices_to_delete
 
@@ -268,9 +279,10 @@ def main_cyclic_selective_locs_for_chargers(vehicles_per_port, Years, Networks, 
 
         # todo: note this logic for simulation purposes!
         if network_size == "Large":
-            customsuffix = "jul9_runs"  #"feb12_runs" - this wont work anymore after pov addition results on jul9_runs
+            customsuffix = date_name.split("_")[0]+"_runs"  # "jul14_runs"  #"feb12_runs" - this wont work anymore after
+            # pov addition results on jul9_runs
         else:
-            customsuffix = "jul9_runs"  # "feb14_runs"
+            customsuffix = date_name.split("_")[0]+"_runs"  # "jul14_runs"  # "feb14_runs"
 
         # # Load the commercial transformers and their sizes from all subfolders for a given size.
         # # Create subfolder location paths (assume arizona as references - it maybe an issue if other climate zones have
@@ -401,8 +413,16 @@ def main_cyclic_selective_locs_for_chargers(vehicles_per_port, Years, Networks, 
         perform_commonsense_check(possible_xfrmrs, 2, network_size, xfmr_size_map_df,
                                   type_l, df_L3)
         list_of_vehicleIDs = list(df_L3["Vehicle ID"])
+
         df, xfrmr_df_indices_to_delete = assign_vehicles(list_of_vehicleIDs, 2,
                                                          possible_xfrmrs, df, map_given_size)
+
+        # removing any vehicles that are not assigned to the grid from the inventory. This will never happen unless
+        # "grid expansion needed" print message shows up.
+        print(f"Total vehicles not considered due to grid expansion needed situation = "
+              f"{df[df['Location'] == 99999].shape[0]}")
+        df = df[~(df["Location"] == 99999)]
+
         names2 = list(possible_xfrmrs.loc[xfrmr_df_indices_to_delete]["Name"])
         xfmrs_assigned_for_current_grid_names.extend(names2)
 
@@ -432,6 +452,12 @@ def main_cyclic_selective_locs_for_chargers(vehicles_per_port, Years, Networks, 
                 locs_gov = df[df["Vehicle ID"].isin(df_current_year_vinfo["Vehicle ID"])]
                 loc_p_port_df_gov = pd.DataFrame({"Location": list(locs_gov["Location"].unique()),
                                                                             "NumberofPorts": max_ports/vehicles_per_port})
+                # update the L3 locations to have only two ports because above line of code add ports as if L3
+                # locations are L2
+                l3_location_info = df[df["chargertype"] == 3]["Location"]
+                mask_ll3_current_year = loc_p_port_df_gov["Location"].isin(l3_location_info)
+                loc_p_port_df_gov.loc[mask_ll3_current_year, "NumberofPorts"] = 2
+
                 locs_pov = df_povs[df_povs["Vehicle ID"].isin(df_current_year_vinfo["Vehicle ID"])]
                 locs_pov_unique = list(locs_pov["Location"].unique())
                 loc_p_port_df_pov = pd.DataFrame({"Location": locs_pov_unique,

@@ -3,6 +3,8 @@ import pandas as pd
 import json
 import openpyxl
 import os
+import math
+import random
 
 from vehicle_df_create_v2 import vehicle_sample_df
 
@@ -40,7 +42,7 @@ def read_json_file(file):
     return data
 
 def main(output_path, input_path):
-    vehicle_master_file = f"{input_path}/ev_data_input_scm_07_09_24.xlsx"
+    vehicle_master_file = f"{input_path}/ev_data_input_scm_07_10_24.xlsx"
     # vehicle_master_file = "input_data/vehicle_master_file.xlsx"
     os.makedirs(f"{output_path}", exist_ok=True)
 
@@ -67,6 +69,17 @@ def main(output_path, input_path):
 
         vehicle_master_df_case_sensative = read_excel_sheets(vehicle_master_file, sheet_name=sheet_name)
 
+        random.seed(42)
+        # assigning which gov vehicles will always be plugged in all day
+        gov_v_df_mask = vehicle_master_df_case_sensative["POVs/GOVs"].isin(["HD_GOV", "LD_GOV", "MD_GOV"])
+        gov_v_df = vehicle_master_df_case_sensative[gov_v_df_mask]
+        gov_count_that_are_always_plugged_in = math.floor(gov_v_df.shape[0] * 0.15)
+        gov_ids_always_plugged_in = random.sample(list(gov_v_df["Vehicle ID"]),
+                                                  gov_count_that_are_always_plugged_in)
+        vehicle_master_df_case_sensative["alldaypluggedin"] = 0
+        mask_lop = vehicle_master_df_case_sensative["Vehicle ID"].isin(gov_ids_always_plugged_in)
+        vehicle_master_df_case_sensative.loc[mask_lop, "alldaypluggedin"] = 1
+
         vehicle_master_df_case_sensative.loc[:, 'Vehicle type (POV, M/H)'] = [i.casefold() for i in
                                                                               vehicle_master_df_case_sensative.loc[:,
                                                                               'Vehicle type (POV, M/H)']]
@@ -76,6 +89,8 @@ def main(output_path, input_path):
 
         if sampling_povs:
             vehicle_master_df_case_sensative_pov = read_excel_sheets(vehicle_master_file, sheet_name=sheet_name)
+            # no povs will be plugged in all day
+            vehicle_master_df_case_sensative_pov["alldaypluggedin"] = 0
             vehicle_master_df_case_sensative_pov.loc[:, 'POVs/GOVs'] = [i.casefold() for i in
                                                                         vehicle_master_df_case_sensative_pov.loc[:,
                                                                         'POVs/GOVs']]

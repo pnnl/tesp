@@ -7,10 +7,10 @@ import json
 import GenerateVehicleInventoryFromAdaptionData_v2
 import MapEVstoGridLocations
 import ev_times
-import EV_uncontrolled_case
+import EV_uncontrolled_case_v2
 import glob
 import DSOT_post_processing_aggregated_folders
-import scm_main
+import scm_main_v2
 
 def implement_assumptions_on_vehicle_inventory(randomsoc, output_file_save_loc, value, year):
     if randomsoc:
@@ -30,11 +30,11 @@ def implement_assumptions_on_vehicle_inventory(randomsoc, output_file_save_loc, 
 
 
 def main(date_name, EV_preprocess_localization_skip, EV_placement_on_grid, extract_load_forecast, uncontrolled,
-         xfrmrrating_evshare, num_days, num_hours, depletionassumption, sens_flag, size_of_batch, randomsoc,
+         xfrmrrating_evshare, list_of_days_to_simulate, num_hours, depletionassumption, sens_flag, size_of_batch, randomsoc,
          customsuffix_list, size_name_list, zone_name_list_list, state_list_list, folder_list_list,
          custom_suffix_sim_run, custom_suffix_sim_run_uncontrolled, controlled, threshold_cutoff, smooth,
          offset_evtimes_main_logic):
-    # EV_preprocess_localization_skip = True
+    EV_preprocess_localization_skip = True
     if not EV_preprocess_localization_skip:
         # generate the EV inventory based on adaption data. This will create a folder "output_data" that will have vehicle
         # inventory for large, medium, small and all years worth of inventory.
@@ -42,6 +42,7 @@ def main(date_name, EV_preprocess_localization_skip, EV_placement_on_grid, extra
         input_path = "input_data"
         Years, Networks = GenerateVehicleInventoryFromAdaptionData_v2.main(output_path, input_path)
 
+        # exit()
         # Remove a column that is not used and also adjust the "start time" and "end time" of vehicle inventory data's
         # charging time such that it follows NREL's fleet DNA data.
         output_path = "new_" + output_path
@@ -88,7 +89,6 @@ def main(date_name, EV_preprocess_localization_skip, EV_placement_on_grid, extra
         no_of_ports_per_charger = 2
         vehicle_at_a_location = no_of_chargers*no_of_ports_per_charger*vehicles_per_port
         load_existing_mapping_bldg_no_to_manually_selected_EVbldgs = True
-
         # pov settings
 
         output_file_save_loc =\
@@ -101,7 +101,7 @@ def main(date_name, EV_preprocess_localization_skip, EV_placement_on_grid, extra
     else:
         output_file_save_loc = f"final_vehicle_inventory_{custom_suffix_sim_run_uncontrolled}"
 
-    exit()
+    # exit()
     # loop through all xlsx files (for all years and sizes)
     my_main_loc = os.getcwd()
     os.chdir(f"{output_file_save_loc}/")
@@ -115,13 +115,8 @@ def main(date_name, EV_preprocess_localization_skip, EV_placement_on_grid, extra
 
     random.seed(42)  # Set the random number generator to a fixed sequence.
 
-    # if not uncontrolled:
 
-    if not depletionassumption:
-        print(
-            "do not make depletionassumption flag False. because then SCM depletion assumption constraint also needs "
-            "a proper fix which is currently not automated.")
-        exit()
+    # extract_load_forecast = False
     if extract_load_forecast:
         # extract load forecast in all subfolders
         # create load forecast input for SCM planning
@@ -209,7 +204,7 @@ def main(date_name, EV_preprocess_localization_skip, EV_placement_on_grid, extra
                 # load 2040 xfrmr mapping size for "given size" (mapping of real to dummy names remains same across
                 # different climate zones, years).
                 size_here = zone_name.split("_")[2]
-                map_filename_here = f"{output_file_save_loc}/xfrmr_map_{size_here}_Year_2040.json"
+                map_filename_here = f"{output_file_save_loc}/xfrmr_map_{size_here}_Year_2042.json"
                 with open(os.getcwd() + '/' + map_filename_here, 'r') as fp:
                     real_to_dummy_mapping = json.load(fp)
 
@@ -318,7 +313,8 @@ def main(date_name, EV_preprocess_localization_skip, EV_placement_on_grid, extra
             # conditions remain same everytime its run and both uncontrolled+controlled have same setup.
             implement_assumptions_on_vehicle_inventory(randomsoc, output_file_save_loc, value, year_list[idx])
 
-    exit()
+    # exit()
+    # uncontrolled = False
     if uncontrolled:
         for idx, value in enumerate(size_list):
 
@@ -330,10 +326,11 @@ def main(date_name, EV_preprocess_localization_skip, EV_placement_on_grid, extra
 
             os.makedirs(f"Uncontrolled_results_{custom_suffix_sim_run_uncontrolled}", exist_ok=True)
             outputfilename = f"Uncontrolled_results_{custom_suffix_sim_run_uncontrolled}/uncontrolled_{value}_Year_{year_list[idx]}.csv"
-            # NOTE: made EVs deplete 70% of their soc during their travel time: assumption i.e., depletion assumption = True!!!
-            all_load_days, per_day_profile, loads_at_locations, main_output_df = (
-                EV_uncontrolled_case.main(path, num_days, num_hours, outputfilename, depletionassumption))
 
+            all_load_days, per_day_profile, loads_at_locations, main_output_df = (
+                EV_uncontrolled_case_v2.main(path, list_of_days_to_simulate, num_hours, outputfilename))
+
+    exit()
     if controlled:
         failed_xfrmr_df = pd.DataFrame()
         for idx, value in enumerate(size_list):
@@ -347,7 +344,7 @@ def main(date_name, EV_preprocess_localization_skip, EV_placement_on_grid, extra
 
 
             if value == 'Large':
-                zone_name_list_h = ["AZ_Tucson_Large", "WA_Tacoma_Large", "AL_Dothan_Large", "LA_Alexandria_Large"]
+                zone_name_list_h = ["AZ_Tucson_Large"]  #, "WA_Tacoma_Large", "AL_Dothan_Large", "LA_Alexandria_Large"]
             elif value == 'Small':
                 zone_name_list_h = ["AZ_Tucson_Small", "WA_Tacoma_Small", "AL_Dothan_Small", "IA_Johnston_Small",
                                     "LA_Alexandria_Small", "AK_Anchorage_Small", "MT_Greatfalls_Small"]
@@ -370,11 +367,17 @@ def main(date_name, EV_preprocess_localization_skip, EV_placement_on_grid, extra
                 outputfilename1 = f"Controlled_results_{custom_suffix_sim_run}/controlled_xfrmr_{each_zone}_Year_{year_list[idx]}.csv"
                 outputfilename2 = f"Controlled_results_{custom_suffix_sim_run}/controlled_ev_{each_zone}_Year_{year_list[idx]}.csv"
                 outputfilename3 = f"Controlled_results_{custom_suffix_sim_run}/controlled_ev_energy_{each_zone}_Year_{year_list[idx]}.csv"
+                outputfilename4 = (f"Controlled_results_{custom_suffix_sim_run}/ev_energy_ports_connected"
+                                   f"_{each_zone}_Year_{year_list[idx]}.csv")
+                outputfilename5 = (f"Controlled_results_{custom_suffix_sim_run}/number_ports_sessions_in_use"
+                                   f"_{each_zone}_Year_{year_list[idx]}.csv")
 
                 print(f"Processing year = {year_list[idx]}, grid size and climate zone = {each_zone}...")
 
-                failed_xfrmrs = scm_main.main(inventory_filename, grid_forecast_filename, size_of_batch, xfmr_rating_data_filename,
-                              outputfilename1, outputfilename2, sens_flag, threshold_cutoff, smooth, outputfilename3)
+                failed_xfrmrs = scm_main_v2.main(inventory_filename, grid_forecast_filename, size_of_batch,
+                                               xfmr_rating_data_filename,
+                              outputfilename1, outputfilename2, sens_flag, threshold_cutoff, smooth, outputfilename3,
+                                                 outputfilename4, outputfilename5)
 
                 current_df = pd.DataFrame()
                 if len(failed_xfrmrs) != 0:
@@ -415,7 +418,7 @@ if __name__ == '__main__':
         for idx_loop, threshold_cutoff in enumerate(threshold_list):
 
             # ------------------------ parameters ---------------------------------------------------
-            date_name = f"jul9_{sens_flag2}"
+            date_name = f"jul14_{sens_flag2}"
             # ------------------------- vehicle inventory and EV placement on grid parameters ------------------------------
             subfolder_count_dic = {"Small": 2, "Medium": 10, "Large": 17}  # vehicle inventory
             if idx_loop == 0:
@@ -465,7 +468,7 @@ if __name__ == '__main__':
             # state_list_list = [state_list_l, state_list_m, state_list_s]
             # folder_list_list = [folder_list_l, folder_list_m, folder_list_s]
 
-            customsuffix_l = "jul9_runs"
+            customsuffix_l = date_name.split("_")[0]+"_runs"  # "jul14_runs"
             size_name_l = "large"
             zone_name_list_l = ["AZ_Tucson_Large"]
             state_list_l = ["az"]
@@ -484,10 +487,11 @@ if __name__ == '__main__':
                 uncontrolled = False
 
             xfrmrrating_evshare = 70  # percent, for EV assignment on grid or xfrmrs
-            num_days = 7  # Defining number of days for uncontrolled
+            list_of_days_to_simulate = ['7-10-2021']  # Defining number of days for uncontrolled
             num_hours = 24  # Defining number of hours in each day for uncontrolled
-            depletionassumption = True  # this assumption is separately handled in both uncontrolled and controlled script.
-            # Always leave it True for now.
+            depletionassumption = False  # this when True assumes all vehicle will hit 0.3 soc instead of daily
+            # energy depleted.
+
 
             # -----------------------------SCM parameters --------------------------------------------
             controlled = True
@@ -496,8 +500,10 @@ if __name__ == '__main__':
             size_of_batch = 50  # for scm optimization to parallel xfrmrs
 
             # ------------ shared between uncontrolled and SCM ------------
-            randomsoc = True  # this assumption is modified consitently for both uncontrolled and controlled by modifying the
-            # common shared input vehicle inventory file.
+            randomsoc = False  # this assumption is modified consitently for both uncontrolled and controlled by modifying the
+            # common shared input vehicle inventory file. This flag will change max soc to be random high values
+            # instead of following the max soc from vehicle inventory (when this flag is set to true). This can stay
+            # False going forward.
 
             # distribute soc growth over available time for peak reduction
             smooth = True
@@ -511,7 +517,7 @@ if __name__ == '__main__':
                                                   f"{EV_placement_on_grid}_{date_name}")
 
             main(date_name, EV_preprocess_localization_skip, EV_placement_on_grid, extract_load_forecast, uncontrolled,
-                 xfrmrrating_evshare, num_days, num_hours, depletionassumption, sens_flag, size_of_batch, randomsoc,
+                 xfrmrrating_evshare, list_of_days_to_simulate, num_hours, depletionassumption, sens_flag, size_of_batch, randomsoc,
                  customsuffix_list, size_name_list, zone_name_list_list, state_list_list, folder_list_list,
                  custom_suffix_sim_run, custom_suffix_sim_run_uncontrolled, controlled, threshold_cutoff, smooth,
                  offset_evtimes_main_logic)

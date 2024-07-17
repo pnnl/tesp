@@ -2826,6 +2826,16 @@ def ProcessTaxonomyFeeder(climate_zone_count, feedercnt, current_player_filename
         print('  tz_meridian {0:.2f};'.format(15 * time_zone_offset), file=op)
         print('}', file=op)
 
+        print("object group_recorder {", file=op)
+        print("name transformer_kva;", file=op)
+        print("group class=transformer;", file=op)
+        print("property power_out;", file=op)
+        print("interval 3600;", file=op)
+        print("limit 100000;", file=op)
+        print("file transformer_va_data.csv;", file=op)
+        print("complex_part MAG;", file=op)
+        print('}', file=op)
+
         #        print('// taxonomy_base_feeder', rootname, file=op)
         #        print('// region_name', rgnName[rgn-1], file=op)
         if case_type['pv']:  # solar_percentage > 0.0:

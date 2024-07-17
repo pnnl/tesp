@@ -8,6 +8,7 @@ import cvxpy as cp
 import random
 import multiprocessing
 from multiprocessing import Pool
+import time
 
 
 def plot_scm_results(ev_demand_recorder, xfmr_demand, soc_record, lambda_c, xfmr_loading, n_batt, n_intervals,
@@ -51,7 +52,9 @@ def plot_scm_results(ev_demand_recorder, xfmr_demand, soc_record, lambda_c, xfmr
 def ev_schedule(ev_charger_availability, ev_cap_charger, ev_e_rated, energy_depleted, 
                 soc_min, soc_max, eff, soc_init, n_batt, n_intervals, xfmr_loading, num_ports,
                 controlled_demand_xfmrs, controlled_demand_evs, xfmr_index, xfmr_dict, xfmr_rating,
-                xfmr_dict2,sens_flag, threshold_cutoff, smooth, soc_per_hour, soc_dict, energy_dict, p_batt_c_dict, deplete_per_unavailable_hour):
+                xfmr_dict2,sens_flag, threshold_cutoff, smooth, soc_per_hour, soc_dict, energy_dict, p_batt_c_dict,
+                deplete_per_unavailable_hour, all_allocated_ev_dayofweek_availability, energy_port_dict,
+                n_ports_used_dict):
 
     # Define Optimization Variables
     soc = cp.Variable((n_batt, n_intervals), integer=False, name='soc')
@@ -62,7 +65,7 @@ def ev_schedule(ev_charger_availability, ev_cap_charger, ev_e_rated, energy_depl
     b = cp.Variable((n_batt, n_intervals), boolean=True, name='b')
     M = 1000.0
 
-    # n_intervals = 5  # Avijit: to stop simulation at a specific interval.
+    n_intervals = 24  # Avijit: to stop simulation at a specific interval.
 
     # Objective is to maximize SoC of EV battery subject to transformer loading
     # Obj 1: Max Power drawn by EVs to increase their SoC for every time stamp
@@ -86,7 +89,10 @@ def ev_schedule(ev_charger_availability, ev_cap_charger, ev_e_rated, energy_depl
             constraints.append(p_batt_c[idx][t] >= 0)
             constraints.append(p_batt_c[idx][t] <= lambda_c[idx][t] * ev_cap_charger[idx])
             if t > 0:
-                if ev_charger_availability[idx][t] == 0:
+                # deplete energy when vehicle is driving (first piece of if condition) and if vehicle is available
+                # that day at the charging station (second piece of if condition). basically capturing both "time"
+                # and "day" of charging.
+                if (ev_charger_availability[idx][t] == 0) and (all_allocated_ev_dayofweek_availability[idx][t] == 1):
                     # TODO: idea is all vehicle are depreciated to 70% of their storage capacity at the end.
                     # no matter their discharge rate, we make soc for unavailability to be 0.3
                     # constraints.append(soc[idx][t] == 0.3)
@@ -131,7 +137,8 @@ def ev_schedule(ev_charger_availability, ev_cap_charger, ev_e_rated, energy_depl
     problem = cp.Problem(cp.Minimize(objective), constraints)
     print(f"Attempting to solve transformer name = {xfmr_index}")
     # try:
-    problem.solve(verbose=False, solver=cp.MOSEK) # solver=cp.ECOS, feastol=1e-2
+    mydict = {"MSK_DPAR_OPTIMIZER_MAX_TIME": 60}
+    problem.solve(verbose=False, solver=cp.MOSEK, mosek_params=mydict) # solver=cp.ECOS, feastol=1e-2
     # problem.solve(solver='SCIPY', verbose=True, scipy_options={'maxiter': 10000, 'tol':1e-2})
     # except:
     #     pass
@@ -142,12 +149,14 @@ def ev_schedule(ev_charger_availability, ev_cap_charger, ev_e_rated, energy_depl
     soc_record = {}
     energy_record = {}
     pbat_record = {}
+    lambda_c_record = {}
     for k in range(n_batt):
         if k not in ev_demand_recorder:
             ev_demand_recorder[k] = []
             soc_record[k] = []
             energy_record[k] = []
             pbat_record[k] = []
+            lambda_c_record[k] = []
     _xfmr_demand = []
     _ev_demand = []
     _energy_at_times = []
@@ -184,7 +193,38 @@ def ev_schedule(ev_charger_availability, ev_cap_charger, ev_e_rated, energy_depl
             soc_record[idx].append(toadd2)
             energy_record[idx].append(ev_e_rated[idx]*toadd2)
             pbat_record[idx].append(toadd)
+            lambda_c_record[idx].append(toadd3)
             s += toadd3
+
+    n_ports_used = []
+    for t in range(n_intervals):
+        s = 0
+        for idx in range(n_batt):
+            if lambda_c[(idx, t)].value is None:
+                toadd = 0
+            else:
+                toadd = lambda_c[(idx, t)].value
+            s += toadd
+        n_ports_used.append(s)
+
+    # NOTES:
+    # 1. pbat_record: gives the EV demand on grid for all EVs connected to the grid via ports
+    # 2. energy_record: gives the total energy of all EVs at any point irrespective of if an EV is connected to a port.
+    # 3. energy_record_port: gives the total energy of EVs that are only connected to the grid via port (at any given
+    # point of time).
+    # 4. n_ports_used: gives the total ports in use under a transformer at any given point of time. This can be used
+    # to mention about total number of active sessions
+    energy_record_list = []
+    for key, value in energy_record.items():
+        energy_record_list.append(value)
+
+    energy_record_port = [[x * y for x, y in zip(i, v)] for i, v in
+                                zip(ev_charger_availability, energy_record_list)]  # knowingly not using lambda_c
+    # because it means vehicle behave exactly as told by SCM versus ev charger availability assumes EVs are still
+    # connected to the ports based on the EV availability inputs to SCM (to avoid strong dependency on ev behavior
+    # due to SCM).
+    energy_record_port_at_times = [sum(i) for i in zip(*energy_record_port)]  # aggrgated energy of all evs connected
+    # to a port at any given point of time
 
     # changing time to 8 AM start time
     xfmr_demand = _xfmr_demand  # _xfmr_demand[7:] + _xfmr_demand[:7]
@@ -201,9 +241,12 @@ def ev_schedule(ev_charger_availability, ev_cap_charger, ev_e_rated, energy_depl
     energy_dict[xfmr_index] = energy_at_times  # needed for results
     p_batt_c_dict[xfmr_index] = pbat_record  # not needed, this is same as _ev_demand when sum for every time stamp
     # across all available EVs. Here I am just saving them separately.
+    energy_port_dict[xfmr_index] = energy_record_port_at_times
+    n_ports_used_dict[xfmr_index] = n_ports_used
 
 
-def scm_ev(df_ev, df_port, xfmr_loading_df, xfmr_rating_info, batch_size, n_intervals, f1, f2, sens_flag, threshold_cutoff, smooth, f3):
+def scm_ev(df_ev, df_port, xfmr_loading_df, xfmr_rating_info, batch_size, n_intervals, f1, f2, sens_flag,
+           threshold_cutoff, smooth, f3, f4, f5):
 
     # Initialize variables for optimization
     # port_to_vehicle = df_port.to_dict()
@@ -215,13 +258,21 @@ def scm_ev(df_ev, df_port, xfmr_loading_df, xfmr_rating_info, batch_size, n_inte
     timestamp = _timestamp  # _timestamp[7:] + _timestamp[:7]
     days_here =xfmr_loading_df['day'].tolist()
     hours_here = xfmr_loading_df['hour'].tolist()
-    # initialize variables to store data
-    controlled_demand_xfmrs = {'# timestamp': timestamp, 'day': days_here, 'hour': hours_here}
-    controlled_demand_evs = {'# timestamp': timestamp, 'day': days_here, 'hour': hours_here}
 
-    all_energy_dict = {'# timestamp': timestamp, 'day': days_here, 'hour': hours_here}
+    # 0-6 --> Monday to Sunday
+    dayofweek_info = pd.to_datetime(xfmr_loading_df['# timestamp']).dt.dayofweek.tolist()
+
+    # initialize variables to store data
+    controlled_demand_xfmrs = {'# timestamp': timestamp, 'day': dayofweek_info, 'hour': hours_here}
+    controlled_demand_evs = {'# timestamp': timestamp, 'day': dayofweek_info,
+                             'hour': hours_here}
+
+    all_energy_dict = {'# timestamp': timestamp, 'day': dayofweek_info, 'hour': hours_here}
     all_demand_dict = {}
-    time_dict_here = {'# timestamp': timestamp, 'day': days_here, 'hour': hours_here}
+    time_dict_here = {'# timestamp': timestamp, 'day': dayofweek_info, 'hour': hours_here}
+
+    all_energy_ports = {'# timestamp': timestamp, 'day': dayofweek_info, 'hour': hours_here}
+    all_ports_used = {'# timestamp': timestamp, 'day': dayofweek_info, 'hour': hours_here}
 
     # parallel processor parameters
     jobs = []
@@ -231,6 +282,10 @@ def scm_ev(df_ev, df_port, xfmr_loading_df, xfmr_rating_info, batch_size, n_inte
     soc_dict = manager.dict()
     energy_dict = manager.dict()
     p_batt_c_dict = manager.dict()
+    energy_port_dict = manager.dict()
+    n_ports_used_dict = manager.dict()
+
+
 
     xfmr_loading_df = xfmr_loading_df.drop(columns=['# timestamp', 'day', 'hour'])
 
@@ -240,13 +295,42 @@ def scm_ev(df_ev, df_port, xfmr_loading_df, xfmr_rating_info, batch_size, n_inte
     for batch in range(0, total_xfmrs, batch_size):
         # for k in xfmr_loading_df.columns.tolist():
         for ktoo in range(batch, min(batch + batch_size, total_xfmrs)):
-            # ktoo = 153  # Avijit: uncomment this to always test a specific transformer that you are debugging.
+            # ktoo = 1  # Avijit: uncomment this to always test a specific transformer that you are debugging.
             k = xfrmr_name_list_here[ktoo]
-            if k == '2643':
-                dkj = 1
+            # if k == '129':
+            #     dkj = 1
             evs_allocation_df = df_ev.loc[df_ev['Location'] == float(k)]
+
+            # short list the evs based on the day of availability
+            # create a binary vector (same length as daysofweek/timestamp) with 0 = not available and 1 = available
+            all_allocated_ev_dayofweek_availability = []
+            for row_index, act_row in evs_allocation_df.iterrows():  # for each EV+
+                current_ev_dayofweek_availability = []
+                check_category = act_row["Charge category"]
+                if act_row["alldaypluggedin"] == 1: # if ev that is parked all day then it is fully charged and
+                            # does not cause any ev demand as per the meeting discussion.
+                    for d in dayofweek_info:
+                        current_ev_dayofweek_availability.append(0)
+                else:
+                    # d < 4 (mon - thursday) and vehicle category = 0 (means vehicle wants to charge on fri, sat, sun)
+                    for d in dayofweek_info:  # for all days in the simulation time
+                        if check_category == 0 and d < 4:
+                            current_ev_dayofweek_availability.append(0)
+                        # d > 4 (fri, sat, sun) and category = 66 (vehicle wants to charge on mon-fri)
+                        elif check_category == 66 and d > 4:
+                            current_ev_dayofweek_availability.append(0)
+                        # vehicle wants to charge a specific day of a week
+                        elif check_category >= 1 and check_category <= 7:
+                            if check_category - 1 != d:  # checks if the vehicle's specific day matches with the day of
+                                # uncontrolled simulation
+                                current_ev_dayofweek_availability.append(0)
+                        else:
+                            current_ev_dayofweek_availability.append(1)
+
+                all_allocated_ev_dayofweek_availability.append(current_ev_dayofweek_availability)
+
             if len(evs_allocation_df) > 0:
-                xfmr_loading = (xfmr_loading_df[str(k)] / 1000).tolist()
+                xfmr_loading = ((xfmr_loading_df[str(k)] / 1000)*0.9).tolist()  # xfrmr loading in va converted to kw since EV demand is in kw (for overload comparison purpose in optimization)
                 # Max vehicle that can charge in a given transformer is based on number of ports
                 num_ports = port_to_vehicle[float(k)]
 
@@ -255,9 +339,9 @@ def scm_ev(df_ev, df_port, xfmr_loading_df, xfmr_rating_info, batch_size, n_inte
                 ev_cap_charger = evs_allocation_df['Size of the charger (kw)'].tolist()
                 ev_e_rated = evs_allocation_df['Rating of EV battery (kwh)'].tolist()
                 soc_min = [x/100 for x in evs_allocation_df['min SOC'].tolist()]
-                soc_max = evs_allocation_df['max SOC'].tolist()
+                soc_max = [x/100 for x in evs_allocation_df['max SOC'].tolist()]
                 eff = evs_allocation_df['Efficiency of charging'].tolist()
-                soc_init = evs_allocation_df['max SOC'].tolist()
+                soc_init = [x/100 for x in evs_allocation_df['max SOC'].tolist()]
                 energy_depleted = evs_allocation_df['Daily energy depleted (kwh)'].tolist()
 
 
@@ -302,31 +386,42 @@ def scm_ev(df_ev, df_port, xfmr_loading_df, xfmr_rating_info, batch_size, n_inte
                               " n_intervals as mutiples of 24 always.. exiting...")
                         exit()
 
-                # # start multiprocessing
-                # p = multiprocessing.Process(target=ev_schedule,
-                #                             args=(ev_charger_availability, ev_cap_charger, ev_e_rated, energy_depleted,
-                #                                   soc_min, soc_max, eff, soc_init, n_batt, n_intervals,
-                #                                   xfmr_loading, num_ports, controlled_demand_xfmrs,
-                #                                   controlled_demand_evs, k, xfmr_dict,
-                #                                   xfmr_rating_info[str(k)], xfmr_dict2, sens_flag, threshold_cutoff, smooth, soc_per_hour, soc_dict, energy_dict, p_batt_c_dict, deplete_per_unavailable_hour))
+                ev_charger_availability2 = [[x * y for x, y in zip(i, v)] for i, v in
+                                            zip(ev_charger_availability, all_allocated_ev_dayofweek_availability)]
 
-                # temp fix for residential xfrmrs whose ratings are smaller than peak load (look for xfrmrs = 264 i.e., "feeder1_R2_12_47_1_xfmr_8_set1": 2643, in the input data)
-                if max(xfmr_loading) > xfmr_rating_info[str(k)]:  # todo: look at this, fix it in glm side when you can
-                    xfmr_rating_info[str(k)] = max(xfmr_loading)*1.1
-
-
-                ev_schedule(ev_charger_availability, ev_cap_charger, ev_e_rated, energy_depleted,
+                # start multiprocessing
+                p = multiprocessing.Process(target=ev_schedule,
+                                            args=(ev_charger_availability2, ev_cap_charger, ev_e_rated,
+                                            energy_depleted,
                                                   soc_min, soc_max, eff, soc_init, n_batt, n_intervals,
                                                   xfmr_loading, num_ports, controlled_demand_xfmrs,
                                                   controlled_demand_evs, k, xfmr_dict,
-                                                  xfmr_rating_info[str(k)], xfmr_dict2, sens_flag, threshold_cutoff, smooth, soc_per_hour, soc_dict, energy_dict, p_batt_c_dict, deplete_per_unavailable_hour)
+                                                  xfmr_rating_info[str(k)], xfmr_dict2, sens_flag, threshold_cutoff,
+                                                  smooth, soc_per_hour, soc_dict, energy_dict, p_batt_c_dict,
+                                                  deplete_per_unavailable_hour,
+                                                  all_allocated_ev_dayofweek_availability, energy_port_dict,
+                                n_ports_used_dict))
 
-                # jobs.append(p)
-                # p.start()
+                # # temp fix for residential xfrmrs whose ratings are smaller than peak load (look for xfrmrs = 264 i.e., "feeder1_R2_12_47_1_xfmr_8_set1": 2643, in the input data)
+                # if max(xfmr_loading) > xfmr_rating_info[str(k)]:  # todo: look at this, fix it in glm side when you can: update:fixed
+                #     xfmr_rating_info[str(k)] = max(xfmr_loading)*1.1
 
 
-        # for proc in jobs:
-        #     proc.join()
+                # ev_schedule(ev_charger_availability2, ev_cap_charger, ev_e_rated, energy_depleted,
+                #                                   soc_min, soc_max, eff, soc_init, n_batt, n_intervals,
+                #                                   xfmr_loading, num_ports, controlled_demand_xfmrs,
+                #                                   controlled_demand_evs, k, xfmr_dict,
+                #                                   xfmr_rating_info[str(k)], xfmr_dict2, sens_flag, threshold_cutoff,
+                #             smooth, soc_per_hour, soc_dict, energy_dict, p_batt_c_dict, deplete_per_unavailable_hour,
+                #             all_allocated_ev_dayofweek_availability, energy_port_dict,
+                # n_ports_used_dict)
+
+                p.start()
+                jobs.append(p)
+
+
+        for proc in jobs:
+            proc.join()
 
         print(f"Finished batch = {batch}/{total_xfmrs/batch_size} ......")
 
@@ -342,6 +437,12 @@ def scm_ev(df_ev, df_port, xfmr_loading_df, xfmr_rating_info, batch_size, n_inte
         for xfmr in p_batt_c_dict:
             all_demand_dict[xfmr] = p_batt_c_dict[xfmr]
 
+        for xfmr in energy_port_dict:
+            all_energy_ports[xfmr] = energy_port_dict[xfmr]
+
+        for xfmr in n_ports_used_dict:
+            all_ports_used[xfmr] = n_ports_used_dict[xfmr]
+
 
 
     # with open(f3, 'w') as f:
@@ -353,23 +454,48 @@ def scm_ev(df_ev, df_port, xfmr_loading_df, xfmr_rating_info, batch_size, n_inte
     # with open("timestamp_info.json", 'w') as f:
     #     json.dump(time_dict_here, f)
 
+    n_intervals = 24
+    controlled_demand_xfmrs["# timestamp"] = controlled_demand_xfmrs["# timestamp"][:n_intervals]
+    controlled_demand_xfmrs["day"] = controlled_demand_xfmrs["day"][:n_intervals]
+    controlled_demand_xfmrs["hour"] = controlled_demand_xfmrs["hour"][:n_intervals]
     df = pd.DataFrame(controlled_demand_xfmrs)
     df = df.drop(columns=['# timestamp'])
     df.to_csv(f1, index=False)
 
+    controlled_demand_evs["# timestamp"] = controlled_demand_evs["# timestamp"][:n_intervals]
+    controlled_demand_evs["day"] = controlled_demand_evs["day"][:n_intervals]
+    controlled_demand_evs["hour"] = controlled_demand_evs["hour"][:n_intervals]
     df = pd.DataFrame(controlled_demand_evs)
     df = df.drop(columns=['# timestamp'])
     df.to_csv(f2, index=False)
 
+    all_energy_dict["# timestamp"] = all_energy_dict["# timestamp"][:n_intervals]
+    all_energy_dict["day"] = all_energy_dict["day"][:n_intervals]
+    all_energy_dict["hour"] = all_energy_dict["hour"][:n_intervals]
     df = pd.DataFrame(all_energy_dict)
     df = df.drop(columns=['# timestamp'])
     df.to_csv(f3, index=False)
+
+    all_energy_ports["# timestamp"] = all_energy_ports["# timestamp"][:n_intervals]
+    all_energy_ports["day"] = all_energy_ports["day"][:n_intervals]
+    all_energy_ports["hour"] = all_energy_ports["hour"][:n_intervals]
+    df = pd.DataFrame(all_energy_ports)
+    df = df.drop(columns=['# timestamp'])
+    df.to_csv(f4, index=False)
+
+    all_ports_used["# timestamp"] = all_ports_used["# timestamp"][:n_intervals]
+    all_ports_used["day"] = all_ports_used["day"][:n_intervals]
+    all_ports_used["hour"] = all_ports_used["hour"][:n_intervals]
+    df = pd.DataFrame(all_ports_used)
+    df = df.drop(columns=['# timestamp'])
+    df.to_csv(f5, index=False)
 
     return df
 
 
 
-def main(inventory_filename, grid_forecast_filename, size_of_batch, xfmr_rating_data_filename, f1, f2, sens_flag, threshold_cutoff, smooth, f3):
+def main(inventory_filename, grid_forecast_filename, size_of_batch, xfmr_rating_data_filename, f1, f2, sens_flag,
+         threshold_cutoff, smooth, f3, f4, f5):
     # read EV data and Port data
     df_ev_input = pd.read_excel(inventory_filename, sheet_name='main_info')
     df_port_info = pd.read_excel(inventory_filename, sheet_name='locationAndPorts')
@@ -387,10 +513,10 @@ def main(inventory_filename, grid_forecast_filename, size_of_batch, xfmr_rating_
             all_xfrmr_locations_on_grid.append(int(float(col)))
     all_xfrmr_locations_on_grid_set = set(all_xfrmr_locations_on_grid)
     check_this = ev_xfrmr_locations.difference(all_xfrmr_locations_on_grid_set)
-    if len(check_this) != 0:
-        print("found a scenario where there is an ev xfrmr name that is not found in xfrmr names from grid. this should"
-              " not be possible, check for bug, exiting...")
-        exit()
+    # if len(check_this) != 0:
+    #     print("found a scenario where there is an ev xfrmr name that is not found in xfrmr names from grid. this should"
+    #           " not be possible, check for bug, exiting...")
+    #     exit()
     columns_to_drop = all_xfrmr_locations_on_grid_set.difference(ev_xfrmr_locations)
     base_xfmr_loading_df = base_xfmr_loading_df.drop(columns=[str(x) for x in list(columns_to_drop)])
 
@@ -411,7 +537,8 @@ def main(inventory_filename, grid_forecast_filename, size_of_batch, xfmr_rating_
     n_hrs = len(base_xfmr_loading_df)
 
     # function for SCM
-    controlled_demand_evs = scm_ev(df_ev_input, df_port_info, base_xfmr_loading_df, xfmr_rating_data, size_of_batch, n_hrs, f1, f2, sens_flag, threshold_cutoff, smooth, f3)
+    controlled_demand_evs = scm_ev(df_ev_input, df_port_info, base_xfmr_loading_df, xfmr_rating_data, size_of_batch,
+                                   n_hrs, f1, f2, sens_flag, threshold_cutoff, smooth, f3, f4, f5)
 
     # function to verify if any xfrmrs failed its SCM optimization
     df1 = base_xfmr_loading_df.drop(columns=['# timestamp', 'day', 'hour'])
@@ -424,23 +551,30 @@ def main(inventory_filename, grid_forecast_filename, size_of_batch, xfmr_rating_
 
 if __name__ == '__main__':
 
-    inventory_filename = "vehicle_master_Large_Year_2042_randmaxsoc_latest.xlsx"  # 'vehicle_master_Large_Year_2040_randmaxsoc.xlsx'
+    inventory_filename = "vehicle_master_Large_Year_2042_ju14.xlsx"  # 'vehicle_master_Large_Year_2040_randmaxsoc.xlsx'
     # inventory_filename = "vehicle_master_Large_Year_2040_randmaxsoc.xlsx"
-    grid_forecast_filename = 'AZ_Tucson_Large_grid_forecast_latest.csv'
+    grid_forecast_filename = 'AZ_Tucson_Large_grid_forecast_ju14.csv'
     # decide on size of batch
     size_of_batch = 50
-    xfmr_rating_data_filename = "AZ_Tucson_Large_grid_dummy_to_size_mapping.json"
+    xfmr_rating_data_filename = "AZ_Tucson_Large_grid_dummy_to_size_mapping_ju14.json"
 
-    f1 = 'controlled_xfmr_demand_smooth_diff_evtimes.csv'
+    f1 = 'controlled_xfmr_demand_smooth_jul15.csv'
 
-    f2 = 'controlled_ev_demand_smooth_diff_evtimes.csv'
+    f2 = 'controlled_ev_demand_smooth_jul15.csv'
 
-    f3 = 'ev_energy_info_diff_evtimes.csv'
+    f3 = 'all_ev_energy_info_jul15.csv'
+
+    f4 = 'ev_energy_ports_connected_jul15.csv'
+
+    f5 = 'number_ports_sessions_in_use_jul15.csv'
 
     sens_flag = "tight"  # "tight", "relax"
 
     threshold_cutoff = 1
 
     smooth = True
-
-    failed_xfrmrs = main(inventory_filename, grid_forecast_filename, size_of_batch, xfmr_rating_data_filename, f1, f2, sens_flag, threshold_cutoff, smooth, f3)
+    start_time = time.time()
+    failed_xfrmrs = main(inventory_filename, grid_forecast_filename, size_of_batch, xfmr_rating_data_filename, f1,
+                         f2, sens_flag, threshold_cutoff, smooth, f3, f4, f5)
+    end_time = time.time()
+    print(f"Total time taken to perform this run = {(end_time - start_time)/60} minutes.")

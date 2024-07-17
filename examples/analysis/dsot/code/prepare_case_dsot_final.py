@@ -971,7 +971,7 @@ if __name__ == "__main__":
     mastercase = "8_hi_system_case_config"
     with open(mastercase + '.json', 'r', encoding='utf-8') as json_file:
         sys_config = json.load(json_file)
-    customsuffix = "feb12_runs"  # "parallel_and_comm_overload_test2"
+    customsuffix = "jul14_runs"  # "parallel_and_comm_overload_test2"
 
     unique_port_for_simulation = 90000  # 60300
 
@@ -994,21 +994,21 @@ if __name__ == "__main__":
     #            # 'MT_Greatfalls': ['MT_montana-greatfalls', '_']}  # ,
     #            # 'AL_Dothan': ['alabama-dothan', '_'],
     #            # 'LA_Alexandria': ['Louisiana-Alexandria', '_']}
-    # bus_loc = {'AZ_Tucson': ['AZ_file', '_'],
-    #            'WA_Tacoma': ['WA_file', '_'],
-    #            'AL_Dothan': ['AL_file', '_'],
-    #            'IA_Johnston': ['IA_file', '_'],
-    #            'LA_Alexandria': ['LA_file', '_'],
-    #            'AK_Anchorage': ['AK_file', '_'],
-    #            'MT_Greatfalls': ['MT_file', '_']}
-    bus_loc = {'MT_Greatfalls': ['MT_file', '_']}
-    # file_name_dict = {'AZ_Tucson': 'Largesite_az.xlsx',
-    #                   'WA_Tacoma': 'Largesite_wa.xlsx',
-    #                   'AL_Dothan': 'Largesite_al.xlsx',
-    #                   'IA_Johnston': 'Largesite_ia.xlsx',
-    #                   'LA_Alexandria': 'Largesite_la.xlsx',
-    #                   'AK_Anchorage': 'Largesite_ak.xlsx',
-    #                   'MT_Greatfalls': 'Largesite_mt.xlsx'}
+    bus_loc = {'AZ_Tucson': ['AZ_file', '_'],
+               'WA_Tacoma': ['WA_file', '_'],
+               'AL_Dothan': ['AL_file', '_'],
+               'IA_Johnston': ['IA_file', '_'],
+               'LA_Alexandria': ['LA_file', '_'],
+               'AK_Anchorage': ['AK_file', '_'],
+               'MT_Greatfalls': ['MT_file', '_']}
+    # bus_loc = {'MT_Greatfalls': ['MT_file', '_']}
+    file_name_dict = {'AZ_Tucson': 'Largesite_az.xlsx',
+                      'WA_Tacoma': 'Largesite_wa.xlsx',
+                      'AL_Dothan': 'Largesite_al.xlsx',
+                      'IA_Johnston': 'Largesite_ia.xlsx',
+                      'LA_Alexandria': 'Largesite_la.xlsx',
+                      'AK_Anchorage': 'Largesite_ak.xlsx',
+                      'MT_Greatfalls': 'Largesite_mt.xlsx'}
     # file_name_dict = {'AZ_Tucson': 'Mediumsite_az.xlsx',
     #                   'WA_Tacoma': 'Mediumsite_wa.xlsx',
     #                   'AL_Dothan': 'Mediumsite_al.xlsx',
@@ -1023,25 +1023,25 @@ if __name__ == "__main__":
     #                   'LA_Alexandria': 'Smallsite_la.xlsx',
     #                   'AK_Anchorage': 'Smallsite_ak.xlsx',
     #                   'MT_Greatfalls': 'Smallsite_mt.xlsx'}
-    file_name_dict = {'MT_Greatfalls': 'Largesite_mt.xlsx'}
-    # latlong_dict = {'AZ_Tucson': [32.13, -110.95],
-    #                   'WA_Tacoma': [47.15, -122.48],
-    #                   'AL_Dothan': [31.27, -85.72],
-    #                   'IA_Johnston': [41.53, -93.67],
-    #                   'LA_Alexandria': [31.32, -92.55],
-    #                   'AK_Anchorage': [61.25, -149.8],
-    #                   'MT_Greatfalls': [47.47, -111.38]}
-    latlong_dict = {'MT_Greatfalls': [47.47, -111.38]}
+    # file_name_dict = {'MT_Greatfalls': 'Largesite_mt.xlsx'}
+    latlong_dict = {'AZ_Tucson': [32.13, -110.95],
+                      'WA_Tacoma': [47.15, -122.48],
+                      'AL_Dothan': [31.27, -85.72],
+                      'IA_Johnston': [41.53, -93.67],
+                      'LA_Alexandria': [31.32, -92.55],
+                      'AK_Anchorage': [61.25, -149.8],
+                      'MT_Greatfalls': [47.47, -111.38]}
+    # latlong_dict = {'MT_Greatfalls': [47.47, -111.38]}
 
     # not sure how to use below variable but we would need it maybe.
     grid_size_mapping = {'Altus': 'small', 'Dodge': 'medium', 'Bragg': 'large', 'FortLiberty': 'large'}
-    # feeder_list_basesytheticglms = {'AZ_Tucson': {'Large': [f1, f2]},
-    #                   'WA_Tacoma': {'Large': [f1, f2]},
-    #                   'AL_Dothan': {'Large': [f1, f2]},
-    #                   'IA_Johnston': {'Large': [f1, f2]},
-    #                   'LA_Alexandria': {'Large': [f1, f2]},
-    #                                 'AK_Anchorage': {'Large': [f1, f2]},
-    #                                 'MT_Greatfalls': {'Large': [f1, f2]}}
+    feeder_list_basesytheticglms = {'AZ_Tucson': {'Large': [f1, f2]},
+                      'WA_Tacoma': {'Large': [f1, f2]},
+                      'AL_Dothan': {'Large': [f1, f2]},
+                      'IA_Johnston': {'Large': [f1, f2]},
+                      'LA_Alexandria': {'Large': [f1, f2]},
+                                    'AK_Anchorage': {'Large': [f1, f2]},
+                                    'MT_Greatfalls': {'Large': [f1, f2]}}
     # feeder_list_basesytheticglms = {'AZ_Tucson': {'Medium': [f1, f2]},
     #                                 'WA_Tacoma': {'Medium': [f1, f2]},
     #                                 'AL_Dothan': {'Medium': [f1, f2]},
@@ -1057,7 +1057,7 @@ if __name__ == "__main__":
     #                                 'AK_Anchorage': {'Small': [f1, f2]},
     #                                 'MT_Greatfalls': {'Small': [f1, f2]}}
 
-    feeder_list_basesytheticglms = {'MT_Greatfalls': {'Large': [f1, f2]}}
+    # feeder_list_basesytheticglms = {'MT_Greatfalls': {'Large': [f1, f2]}}
         # {'AZ_Tucson': {'Large': ["R5-12.47-1","R5-12.47-2"]}}#, # "R5-12.47-1",
                                     #'WA_Tacoma': {'Large': ["R5-12.47-1","R5-12.47-2"]},
                                     #'MT_Greatfalls': {'Large': ["R5-12.47-1","R5-12.47-2"]}}

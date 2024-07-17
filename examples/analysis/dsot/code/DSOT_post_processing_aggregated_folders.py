@@ -15,6 +15,7 @@ import warnings
 from warnings import simplefilter
 import plotly.express as px
 from matplotlib.ticker import PercentFormatter
+import MapEVstoGridLocations
 import itertools
 # import json
 
@@ -775,6 +776,8 @@ def work_with_uncontrolled_and_controlled_ev_load(value, xfrmr_name_to_size, fla
     os.chdir(my_main_loc)
     all_year_ev_uncontrolled_laod = pd.DataFrame()
     for each_year in year_list:
+        if each_year == "2042":
+            sdkjfh = 1
         # load the current years uncontrolled EV demand
         if flag == "uncontrolled":
             uncontroll_ev_file = f"Uncontrolled_results_{custom_suffix_sim_run_uncontrolled}/uncontrolled_{current_size}_Year_{each_year}.csv"
@@ -782,8 +785,10 @@ def work_with_uncontrolled_and_controlled_ev_load(value, xfrmr_name_to_size, fla
             uncontroll_ev_file = f"Controlled_results_{custom_suffix_sim_run}/controlled_ev_{zone_name}_Year_{each_year}.csv"
             fail_xfrmr_info = f"Controlled_results_{custom_suffix_sim_run}/failed_xfrmr_SCM_info.csv"
             fail_xfrmr_info_df = pd.read_csv(fail_xfrmr_info)
-            # pick xfrms from current year
-            current_xfrmr_fails = fail_xfrmr_info_df[(fail_xfrmr_info_df["Zone and size"]==zone_name)& (fail_xfrmr_info_df["Year"]==int(each_year))]
+
+            if fail_xfrmr_info_df.shape[0] > 0:
+                # pick xfrms from current year
+                current_xfrmr_fails = fail_xfrmr_info_df[(fail_xfrmr_info_df["Zone and size"]==zone_name)& (fail_xfrmr_info_df["Year"]==int(each_year))]
 
             # info to copy from uncontrolled ev for failed xfrmr
             required_info = f"Uncontrolled_results_{custom_suffix_sim_run_uncontrolled}/uncontrolled_{current_size}_Year_{each_year}.csv"
@@ -804,15 +809,16 @@ def work_with_uncontrolled_and_controlled_ev_load(value, xfrmr_name_to_size, fla
             columns=current_year_xfrmr_map_reversed)
 
         if flag == "controlled":
-            # change their dummy names to actual names
-            current_xfrmr_fails = current_xfrmr_fails.replace({"Dummy name": current_year_xfrmr_map_reversed_k})
-            # assign the uncontrolled info to controlled for failed xfrmrs
-            for x in list(current_xfrmr_fails["Dummy name"]):
-                if x in list(df_current_year_uncontrolled_ev.columns):
-                    print("failed xfrmr found in controlled even before assignment, bug if found, exiting...")
-                    exit()
-                else:
-                    df_current_year_uncontrolled_ev[x] = list(required_df[str(current_year_xfrmr_map[x])])
+            if fail_xfrmr_info_df.shape[0] > 0:
+                # change their dummy names to actual names
+                current_xfrmr_fails = current_xfrmr_fails.replace({"Dummy name": current_year_xfrmr_map_reversed_k})
+                # assign the uncontrolled info to controlled for failed xfrmrs
+                for x in list(current_xfrmr_fails["Dummy name"]):
+                    if x in list(df_current_year_uncontrolled_ev.columns):
+                        print("failed xfrmr found in controlled even before assignment, bug if found, exiting...")
+                        exit()
+                    else:
+                        df_current_year_uncontrolled_ev[x] = list(required_df[str(current_year_xfrmr_map[x])])
 
         df_current_year_uncontrolled_ev["Year"] = each_year
         all_year_ev_uncontrolled_laod = pd.concat(
@@ -981,7 +987,8 @@ H is the hatch used for identification of the different dataframe"""
 
     return axe_h
 
-def plot1a_task_percentoverload(input_basecase_folder_name, GLD_prefix, sets_in_all_folders, plots_folder_name, extrafoldersexist, plot_plotly, replace_threshold):
+def plot1a_task_percentoverload(zone_name, input_basecase_folder_name, GLD_prefix, sets_in_all_folders,
+                                plots_folder_name, extrafoldersexist, plot_plotly, replace_threshold):
     input_basecase_without_ev = input_basecase_folder_name + '_uncontrolled'
     input_basecase_with_ev = input_basecase_folder_name + '_controlled'
     # if extrafoldersexist:
@@ -1002,34 +1009,137 @@ def plot1a_task_percentoverload(input_basecase_folder_name, GLD_prefix, sets_in_
         # uncontrolled first
 
         consolidated_df_in_va = pd.DataFrame()
-        cnsolidated_xfrmr_to_size_map = dict()
+        cnsolidated_xfrmr_to_size_map2 = dict()
+        consolidated_xfrmr_all_in_va_df = pd.DataFrame()
+        pure_res_xfrmr_size_mapping = {}
         for x in range(sets_in_all_folders[idx]):
             path = r'/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/code/' + value + f"_{x+1}_fl" + GLD_prefix + '1/'
             # load_to_xfrmr_config_map_dict, config_to_power_rating_map_dict, load_to_xfrmr_name, xfrmr_name_to_size = transformer_map(
             #     path)
             print(f"extracting base load --> {path}")
             subfolder_df_in_VA, sub_xfrmr_tosize_map = extract_demand_forecast_from_gld(path, x + 1)
-            cnsolidated_xfrmr_to_size_map.update(sub_xfrmr_tosize_map)
+            cnsolidated_xfrmr_to_size_map2.update(sub_xfrmr_tosize_map)
+
+            # load xfrmr load for
+            subfolder_xfrmr_all_in_va_df = pd.read_csv(path + "transformer_va_data.csv", skiprows=8)
+            all_cols = list(subfolder_xfrmr_all_in_va_df.columns)
+            zipped_item = zip(all_cols, [xy + f"_set{x + 1}" if xy != '# timestamp' else xy for xy in all_cols])
+            subfolder_xfrmr_all_in_va_df = subfolder_xfrmr_all_in_va_df.rename(columns=dict(zipped_item))
             if x == 0:
                 consolidated_df_in_va = pd.concat([consolidated_df_in_va, subfolder_df_in_VA])
+                consolidated_xfrmr_all_in_va_df = pd.concat(
+                    [consolidated_xfrmr_all_in_va_df, subfolder_xfrmr_all_in_va_df])
             else:
                 subfolder_df_in_VA = subfolder_df_in_VA.drop('# timestamp', axis=1)
                 consolidated_df_in_va = pd.concat([consolidated_df_in_va, subfolder_df_in_VA], axis=1)
+                subfolder_xfrmr_all_in_va_df = subfolder_xfrmr_all_in_va_df.drop('# timestamp', axis=1)
+                # subfolder_xfrmr_all_in_va_df = subfolder_xfrmr_all_in_va_df.drop('substation_transformer', axis=1)
+                consolidated_xfrmr_all_in_va_df = pd.concat(
+                    [consolidated_xfrmr_all_in_va_df, subfolder_xfrmr_all_in_va_df], axis=1)
+
+            # curr_dir = os.getcwd()
+            # base_case = f"{curr_dir}/" + folder_name
+            # basedir = f"{base_case}/Substation_1/"
+            basedir = path
+            # below file is generated when "update_pov_xfrmrs_after_tesp.py" is executed
+            asset_str = '_hse_'
+            res_xfmr_file_name = 'asset_map_' + 'Substation_1' + asset_str + '.json'  # obtained using networkx and
+            # com_loads json
+            res_xfmr_dict = MapEVstoGridLocations.load_json(basedir, res_xfmr_file_name)
+
+            # above dictionary has both residential and commercial xfrmrs as keys but commercial xfrmr keys have values as
+            # empty. lets remove them first before assigning unique location id.
+
+            glm_lines = MapEVstoGridLocations.glmanip.read(basedir + 'Substation_1.glm', basedir, buf=[])
+            [model, clock, directives, modules, classes] = MapEVstoGridLocations.glmanip.parse(glm_lines)
+
+            for key, valuerr in res_xfmr_dict.items():
+                if valuerr != [] and key != "substation_transformer":
+                    if "R2" in key:
+                        key_h = f"feeder1_{key}"
+                    elif "R4" in key:
+                        key_h = f"feeder2_{key}"
+                    else:
+                        print(key)
+                        print("unexpected feeder...exiting")
+                        exit()
+
+                    # also lets grab the size of the residential xfrmr. This was not done during gov analysis. So this data
+                    # needs to be appended to the ALL commerical xfrmrs dictionary at the end.
+                    pure_res_xfrmr_size_mapping[key_h + f"_set{x + 1}"] = float((
+                                                                                     model)[
+                                                                                     "transformer_configuration"][
+                                                                                     model["transformer"][key][
+                                                                                         "configuration"]][
+                                                                                     "power_rating"])
+
+        # convert the transformer names into dummy names using the mapping generated from ev localization on
+        # grid.
+        # PS: The mapping of xfrmr to dummy locations is same for all years...thats how I coded it in
+        # MapEVstoGridLocations.main().
+        # load 2040 xfrmr mapping size for "given size" (mapping of real to dummy names remains same across
+        # different climate zones, years).
+        size_here = zone_name.split("_")[2]
+        map_filename_here = (f"final_vehicle_inventory_{custom_suffix_sim_run_uncontrolled}/xfrmr_map_"
+                                f"{size_here}_Year_2042.json")
+        with open(os.getcwd() + '/' + map_filename_here, 'r') as fp:
+            real_to_dummy_mapping = json.load(fp)
+
+
+        consolidated_xfrmr_all_in_va_df.columns = ["feeder1_" + x if "R2" in x else "feeder2_" + x for x
+                                                   in consolidated_xfrmr_all_in_va_df]
+        consolidated_xfrmr_all_in_va_df = consolidated_xfrmr_all_in_va_df.rename(
+            columns={'feeder2_# timestamp': '# timestamp'})
+        # df_cols_all = list(consolidated_xfrmr_all_in_va_df.columns)
+        # df_cols_all.remove('# timestamp')
+        # nonEVxfrmrs_names_to_drop = list(set(df_cols_all) - set(list(real_to_dummy_mapping.keys())))
+        # consolidated_xfrmr_all_in_va_df = consolidated_xfrmr_all_in_va_df.drop(
+        #     columns=nonEVxfrmrs_names_to_drop)
 
         # base load has one extra time stamp at the end, need to drop it
         n = 1
         consolidated_df_in_va.drop(consolidated_df_in_va.tail(n).index, inplace=True)  # drop last n rows
+        consolidated_xfrmr_all_in_va_df.drop(consolidated_xfrmr_all_in_va_df.tail(n).index,
+                                             inplace=True)  # drop last n rows
 
         # make it hourly
         consolidated_df_in_va['# timestamp'] = pd.to_datetime(consolidated_df_in_va['# timestamp'])
         consolidated_df_in_va = consolidated_df_in_va.groupby(
             consolidated_df_in_va['# timestamp'].dt.to_period('H')).first()
 
-        consolidated_df_in_kw = consolidated_df_in_va.copy(deep=True)
+        consolidated_xfrmr_all_in_va_df['# timestamp'] = pd.to_datetime(consolidated_xfrmr_all_in_va_df['# timestamp'])
+        consolidated_xfrmr_all_in_va_df = consolidated_xfrmr_all_in_va_df.groupby(
+            consolidated_xfrmr_all_in_va_df['# timestamp'].dt.to_period('H')).first()
+
+        # new line after adding povs, its replacing gov info with both gov+pov info
+        cnsolidated_xfrmr_to_size_map = {**cnsolidated_xfrmr_to_size_map2, **pure_res_xfrmr_size_mapping}
+
+        # need to verify again but I think I am removing the residential xfrmrs that do not have evs and
+        # "feeder1_substation_transformer_set1/2/3"
+        df_cols_all = list(consolidated_xfrmr_all_in_va_df.columns)
+        df_cols_all.remove('# timestamp')
+        nonEVxfrmrs_names_to_drop = list(set(df_cols_all) - set(list(cnsolidated_xfrmr_to_size_map.keys())))
+        consolidated_xfrmr_all_in_va_df = consolidated_xfrmr_all_in_va_df.drop(
+            columns=nonEVxfrmrs_names_to_drop)
+
+        # new line after povs are added, its replacing gov info with both gov+pov info
+        consolidated_df_in_kw = consolidated_xfrmr_all_in_va_df.copy(deep=True)
+
+        # original line
+        # consolidated_df_in_kw = consolidated_df_in_va.copy(deep=True)
 
         for col_name in list(consolidated_df_in_kw.columns):
             if col_name != "# timestamp":
                 consolidated_df_in_kw[col_name] = consolidated_df_in_kw[col_name]/1000 # converting va to kw/kva
+
+        # # cnsolidated_xfrmr_to_size_map
+        # xfrmr_dummy_to_size_map = dict()  # for govs
+        # for real_name, dummy_name in real_to_dummy_mapping.items():
+        #     if real_name in cnsolidated_xfrmr_to_size_map2.keys():
+        #         size_corres_here = cnsolidated_xfrmr_to_size_map2[real_name]
+        #         xfrmr_dummy_to_size_map[dummy_name] = size_corres_here
+
+
 
         consolidated_df_in_percent = consolidated_df_in_kw.copy(deep=True)
 
@@ -1237,7 +1347,7 @@ def plot1a_task_percentoverload(input_basecase_folder_name, GLD_prefix, sets_in_
         total_transformers = df_to_plot1.shape[0]
         k_here = df_to_plot1[df_to_plot1['Maximum % loading of transformer'] > 100].shape[0]
         total_basecase_vios.append(k_here)
-        h_here = all_year_ev_uncontrolled_laod.shape[1]-1
+        h_here = all_year_ev_uncontrolled_laod.shape[1]-4
         total_basecase_xfrmrs_with_evs.append(h_here)
         xfrmr_cnt_uncontrolled_100 = df_to_plot2[df_to_plot2['Maximum % loading of transformer'] > 100].shape[0]
         total_uncontrolled_vios.append(xfrmr_cnt_uncontrolled_100)
@@ -1421,12 +1531,14 @@ def plot1a_task_percentoverload(input_basecase_folder_name, GLD_prefix, sets_in_
                 if xfrmrs_with_ev_violations is None:
                     xfrmrs_with_ev_violations = []
                 xfrmrs_with_ev_violations.append("type")
-                df_for_box_plot = df_for_box_plot.drop(columns=[col for col in df_for_box_plot if col not in xfrmrs_with_ev_violations])
-                df_for_box_plot = df_for_box_plot.rename(columns=unique_id_map)
+                df_for_box_plot2 = df_for_box_plot.copy(deep=True)
+                df_for_box_plot2 = df_for_box_plot2.drop(columns=[col for col in df_for_box_plot if col not in
+                                                                 xfrmrs_with_ev_violations])
+                df_for_box_plot2 = df_for_box_plot2.rename(columns=unique_id_map)
                 # clmn_lst = list(df_to_plot["Transformer indices"].unique())
                 # clmn_lst.append("type")
                 # df_for_box_to_plot = df_for_box_plot[clmn_lst]
-                df_for_box_to_plot = df_for_box_plot.copy(deep=True)
+                df_for_box_to_plot = df_for_box_plot2.copy(deep=True)
                 # find xfrmrs with large std
                 my_series = df_for_box_to_plot.std()
                 sorted_indicessss = my_series.argsort()
@@ -1487,13 +1599,39 @@ def plot1a_task_percentoverload(input_basecase_folder_name, GLD_prefix, sets_in_
                 df_to_plot["Transformer indices"] = df_to_plot["name"].map(df_cum_dict)
 
                 var = "Transformer overload periods as a % of total time"
-                fig = px.scatter(df_to_plot, x="Transformer indices", y=var,
+
+                uncontrolled_infor = df_to_plot[df_to_plot["type"] == "uncontrolled"][var]
+                increment_value = df_to_plot[df_to_plot["type"] == "controlled"][var].axes[0].values[0]
+                controlled_infor = df_to_plot[df_to_plot["type"] == "controlled"][var].reset_index(drop=True)
+                total_points = controlled_infor.shape[0]
+                mask_success = uncontrolled_infor > controlled_infor
+                total_success = sum(mask_success)
+                mask_fail = ~mask_success
+                df_to_plot_cum_success = df_to_plot.copy(deep=True)
+                # drop data from uncontrolled
+                df_to_plot_cum_success2 = df_to_plot_cum_success[df_to_plot_cum_success["type"] == "uncontrolled"].loc[
+                    mask_success]
+
+                uncontrolled_infor = df_to_plot[df_to_plot["type"] == "uncontrolled"][var]
+                uncontrolled_infor.index += increment_value
+                controlled_infor = df_to_plot[df_to_plot["type"] == "controlled"][var]
+                mask_success = uncontrolled_infor > controlled_infor
+                mask_fail = ~mask_success
+                # drop data from controlled
+                df_to_plot_cum_success3 = df_to_plot_cum_success[df_to_plot_cum_success["type"] == "controlled"].loc[
+                    mask_success]
+
+                df_to_plot_cum_success = pd.concat([df_to_plot_cum_success2, df_to_plot_cum_success3])
+
+                fig = px.scatter(df_to_plot_cum_success, x="Transformer indices", y=var,
                                  size="rating", color="type",
                                  hover_name="name", size_max=size_value, color_discrete_sequence=color_pallate)
-                if df_to_plot.empty:
+                if df_to_plot_cum_success.empty:
                     pass
                 else:
-                    fig.update_layout(yaxis_range=[-1*0.1*max(df_to_plot[var]), max(df_to_plot[var]) + 0.2*max(df_to_plot[var])])
+                    fig.update_layout(yaxis_range=[-1 * 0.1 * max(df_to_plot_cum_success[var]),
+                                                   max(df_to_plot_cum_success[var]) + 0.2 * max(
+                                                       df_to_plot_cum_success[var])])
                 fig.update_layout(
                     yaxis=dict(
                         titlefont_size=26,
@@ -1515,8 +1653,43 @@ def plot1a_task_percentoverload(input_basecase_folder_name, GLD_prefix, sets_in_
                 fig.update_yaxes(showline=True, linewidth=4, linecolor='black')
                 # fig.update_yaxes(range=[1, max(df_to_plot[var])])
                 plotly.offline.plot(fig,
-                                    filename=f"/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/code/{plots_folder_name}/{plots_folder_name}_cum_bubble_{each_year}_{info_info}.html", auto_open=False)
-                # fig.show()
+                                    filename=f"/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/code/"
+                                             f"{plots_folder_name}/successSCMxfrmrsbytotal"
+                                             f"{total_success}BY{total_points}_cum_bubble"
+                                             f"_{each_year}_{info_info}.html",
+                                    auto_open=False)
+
+
+                # fig = px.scatter(df_to_plot, x="Transformer indices", y=var,
+                #                  size="rating", color="type",
+                #                  hover_name="name", size_max=size_value, color_discrete_sequence=color_pallate)
+                # if df_to_plot.empty:
+                #     pass
+                # else:
+                #     fig.update_layout(yaxis_range=[-1*0.1*max(df_to_plot[var]), max(df_to_plot[var]) + 0.2*max(df_to_plot[var])])
+                # fig.update_layout(
+                #     yaxis=dict(
+                #         titlefont_size=26,
+                #         tickfont_size=28,
+                #     ),
+                #     xaxis=dict(
+                #         titlefont_size=26,
+                #         tickfont_size=28,
+                #     ),
+                #     font=dict(
+                #         family="Courier New, monospace",
+                #         size=26,
+                #         color="RebeccaPurple"
+                #     ),
+                #     paper_bgcolor='rgba(255,255,255,1)',
+                #     plot_bgcolor='rgba(255,255,255,1)'
+                # )
+                # fig.update_xaxes(showline=True, linewidth=4, linecolor='black')
+                # fig.update_yaxes(showline=True, linewidth=4, linecolor='black')
+                # # fig.update_yaxes(range=[1, max(df_to_plot[var])])
+                # plotly.offline.plot(fig,
+                #                     filename=f"/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/code/{plots_folder_name}/{plots_folder_name}_cum_bubble_{each_year}_{info_info}.html", auto_open=False)
+                # # fig.show()
 
     k = 1
     return year_list, total_basecase_xfrmrs_with_evs, total_uncontrolled_vios, total_controlled_vios, merged_df_uncontrolled, total_basecase_vios, merged_df_uncontrolled_in_kws, df_final_divided_inkws_hourly, all_year_ev_uncontrolled_laod_in_kw, merged_df_controlled_in_kws, all_year_ev_controlled_laod_in_kw, total_xfrmrs_need_replacing_120, replace_df
@@ -1765,7 +1938,7 @@ def plot_histogram_plotly(plots_folder_name, basecase_peak_demand_all_folders, u
 
     if evxfrmrcount != 'dont care':
         if "Large" in plots_folder_name:
-            tot_cm_xfmr = 2501
+            tot_cm_xfmr = 9350  # 2501
         elif "Medium" in plots_folder_name:
             tot_cm_xfmr = 1549
         elif "Small" in plots_folder_name:
@@ -1808,6 +1981,7 @@ def plot_stacked_plot_for_uncontrolled_ev(years_list, base_demand_list, ev_deman
     position_val = "auto"
     # size_val = 28
     colot_val = "black"
+    years_list = [str(x) for x in years_list]
     fig = go.Figure(data=[
         go.Bar(name='Base Demand', x=years_list, y=base_demand_list, marker_color="grey",
                text=[int(x) for x in base_demand_list],
@@ -1969,13 +2143,13 @@ if __name__ == '__main__':
 
 
 
-    randomsoc = True
+    randomsoc = False
     xfrmrrating_evshare = 70
 
 
     # EV_placement_on_grid = "ascen"
 
-    offset_evtimes_main_logic = True
+    offset_evtimes_main_logic = False
     if offset_evtimes_main_logic:
         EV_placement_on_grid = "cyclic_evtimes_6pm8am"
     else:
@@ -1983,16 +2157,16 @@ if __name__ == '__main__':
 
     sens_flag = "tight"
     sensitivity_suffix = f"scm_{sens_flag}"
-    date_name = f"may22_{sens_flag}"  # f"april21_{sens_flag}"
+    date_name = f"jul14_{sens_flag}"  # f"april21_{sens_flag}"
     threshold_cutoff = 1
     custom_suffix_sim_run = (f"randsoc{randomsoc}_sensflag{sens_flag}_evongrid{xfrmrrating_evshare}"
                              f"{EV_placement_on_grid}_threshold{threshold_cutoff}_{date_name}")
     custom_suffix_sim_run_uncontrolled = (f"randsoc{randomsoc}_evongrid{xfrmrrating_evshare}"
                                           f"{EV_placement_on_grid}_{date_name}")
 
-    customsuffix_l = "feb12_runs"
-    customsuffix_m = "feb24_runs"
-    customsuffix_s = "feb24_runs"
+    customsuffix_l = "jul14_runs"
+    customsuffix_m = "jul14_runs"
+    customsuffix_s = "jul14_runs"
     size_name_l = "large"
     size_name_m = "medium"
     size_name_s = "small"
@@ -2002,23 +2176,23 @@ if __name__ == '__main__':
     # zone_name_list_m = ["AZ_Tucson_Medium", "WA_Tacoma_Medium", "AL_Dothan_Medium", "IA_Johnston_Medium", "LA_Alexandria_Medium", "AK_Anchorage_Medium", "MT_Greatfalls_Medium"]  # ["AZ_Tucson_Medium", "WA_Tacoma_Medium"]
 
     zone_name_list_l = ["AZ_Tucson_Large"]
-    zone_name_list_s = ["AZ_Tucson_Small"]
-    zone_name_list_m = ["AZ_Tucson_Medium"]
+    zone_name_list_s = []
+    zone_name_list_m = []
 
     # state_list_l = ["az", "wa", "al", "la"]
     # state_list_m = ["az", "wa", "al", "ia", "la", "ak", "mt"]
     # state_list_s = ["az", "wa", "al", "ia", "la", "ak", "mt"]
 
     state_list_l = ["az"]
-    state_list_m = ["az"]
-    state_list_s = ["az"]
+    state_list_m = []
+    state_list_s = []
     # folder_list_l = [17, 17, 17, 17]
     # folder_list_s = [2, 2, 2, 2, 2, 2, 2]
     # folder_list_m = [10, 10, 10, 10, 10, 10, 10]
 
     folder_list_l = [17]
-    folder_list_s = [2]
-    folder_list_m = [10]
+    folder_list_s = []
+    folder_list_m = []
 
 
     customsuffix_list = [customsuffix_l, customsuffix_m, customsuffix_s]
@@ -2119,7 +2293,7 @@ if __name__ == '__main__':
              merged_df_uncontrolled, total_basecase_vios, merged_df_uncontrolled_in_kws, df_final_divided_inkws_hourly,
              all_year_ev_uncontrolled_laod_in_kw, merged_df_controlled_in_kws, all_year_ev_controlled_laod_in_kw,
              total_xfrmrs_need_replacing_120, replace_df) =\
-                plot1a_task_percentoverload(input_1a, GLD_prefix, [total_folders]*3,
+                plot1a_task_percentoverload(zone_name, input_1a, GLD_prefix, [total_folders]*len(zone_name_list),
                                                                                         plots_folder_name,
                                                                                         extrafoldersexist, plot_plotly,
                                             replace_threshold=120)
@@ -2129,7 +2303,7 @@ if __name__ == '__main__':
             # ASAP!!!!!!
 
             # to avoid mismatch of 100 and 100.1 logic. otherwise creates a plotting bug (results are accurate) - quick fix made for quick result generation
-            total_controlled_vios = total_basecase_vios
+            # total_controlled_vios = total_basecase_vios
 
             # df_final=overload_calculation(base_case_list,GLD_prefix,plots_folder_name)
 
