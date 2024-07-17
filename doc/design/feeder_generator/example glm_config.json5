@@ -1,0 +1,9 @@
+// This file is an example of the glm_config.json5 that is used to
+// configure the process of populating a feeder. 
+
+{
+    "average house load": <float>, // Used to determine how many houses are used to replace a given zip load.
+    
+
+
+}
