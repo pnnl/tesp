@@ -691,7 +691,6 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                 'distribution_charge_rate': market_config['DSO']['distribution_charge_rate'],
                 'dso_retail_scaling': market_config['DSO']['dso_retail_scaling'],
                 'full_metrics_detail': simulation_config['metricsFullDetail'],
-                'rate': simulation_config['rate'],
                 'quadratic': simulation_config['quadratic']
             }
             if DSO_quadratic_curves:
@@ -733,8 +732,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                 'Wind_m': market_config['Retail']['Wind_m'],
                 'delta_T_TOR': market_config['Retail']['delta_T_TOR'],
                 'delta_T_ave_wind_R': market_config['Retail']['delta_T_ave_wind_R'],
-                'full_metrics_detail': simulation_config['metricsFullDetail'],
-                'rate': simulation_config['rate']
+                'full_metrics_detail': simulation_config['metricsFullDetail']
             }
 
         else:
@@ -760,7 +758,6 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
             'site_agent': site_agent,
             'StartTime': simulation_config['StartTime'],
             'EndTime': simulation_config['EndTime'],
-            'rate': simulation_config['rate'],
             'LogLevel': simulation_config['LogLevel'],
             'solver': simulation_config['solver'],
             'numCore': simulation_config['numCore'],

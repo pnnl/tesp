@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sims="/mnt/simdata/ready"
+sims="/mnt/dsot/ready"
 
 for dir in $1*
 do
