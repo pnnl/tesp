@@ -77,13 +77,10 @@
                     <mxGeometry x="370" y="580" width="60" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="46" value="Solar meter" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
-                    <mxGeometry x="450" y="580" width="60" height="60" as="geometry"/>
+                    <mxGeometry x="520" y="580" width="60" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="47" value="Battery meter" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
-                    <mxGeometry x="530" y="580" width="60" height="60" as="geometry"/>
-                </mxCell>
-                <mxCell id="48" value="EV meter" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
-                    <mxGeometry x="610" y="580" width="60" height="60" as="geometry"/>
+                    <mxGeometry x="600" y="580" width="60" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="49" value="" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=2;" parent="1" source="45" target="44" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
@@ -101,12 +98,6 @@
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="442.9584603096623" y="610.6891455339291" as="sourcePoint"/>
                         <mxPoint x="527.0984114389321" y="539.3782672439806" as="targetPoint"/>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="53" value="" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=2;" parent="1" source="48" target="44" edge="1">
-                    <mxGeometry width="50" height="50" relative="1" as="geometry">
-                        <mxPoint x="452.9584603096623" y="620.6891455339291" as="sourcePoint"/>
-                        <mxPoint x="537.0984114389321" y="549.3782672439806" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="54" value="" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=2;" parent="1" edge="1">
@@ -148,52 +139,43 @@
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="64" value="Solar inverter" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
-                    <mxGeometry x="450" y="670" width="60" height="60" as="geometry"/>
+                    <mxGeometry x="520" y="670" width="60" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="65" value="Battery inverter" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
-                    <mxGeometry x="530" y="670" width="60" height="60" as="geometry"/>
-                </mxCell>
-                <mxCell id="66" value="EV inverter?" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
-                    <mxGeometry x="610" y="670" width="60" height="60" as="geometry"/>
+                    <mxGeometry x="600" y="670" width="60" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="67" value="" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=2;" parent="1" source="64" target="46" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
-                        <mxPoint x="502.33866600804436" y="592.6548483064962" as="sourcePoint"/>
-                        <mxPoint x="527.585911670976" y="537.3109943238528" as="targetPoint"/>
+                        <mxPoint x="572.3386660080444" y="592.6548483064962" as="sourcePoint"/>
+                        <mxPoint x="597.585911670976" y="537.3109943238528" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="68" value="" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=2;" parent="1" source="65" target="47" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
-                        <mxPoint x="512.3386660080444" y="602.6548483064962" as="sourcePoint"/>
-                        <mxPoint x="537.585911670976" y="547.3109943238528" as="targetPoint"/>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="69" value="" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=2;" parent="1" source="66" target="48" edge="1">
-                    <mxGeometry width="50" height="50" relative="1" as="geometry">
-                        <mxPoint x="522.3386660080444" y="612.6548483064962" as="sourcePoint"/>
-                        <mxPoint x="547.585911670976" y="557.3109943238528" as="targetPoint"/>
+                        <mxPoint x="582.3386660080444" y="602.6548483064962" as="sourcePoint"/>
+                        <mxPoint x="607.585911670976" y="547.3109943238528" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="70" value="Solar obj" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
-                    <mxGeometry x="450" y="760" width="60" height="60" as="geometry"/>
+                    <mxGeometry x="520" y="760" width="60" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="71" value="Battery obj" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
-                    <mxGeometry x="530" y="760" width="60" height="60" as="geometry"/>
+                    <mxGeometry x="600" y="760" width="60" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="72" value="" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=2;" parent="1" source="70" target="64" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
-                        <mxPoint x="490" y="680" as="sourcePoint"/>
-                        <mxPoint x="490" y="700" as="targetPoint"/>
+                        <mxPoint x="560" y="680" as="sourcePoint"/>
+                        <mxPoint x="560" y="700" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="73" value="" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=2;" parent="1" source="71" target="65" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
-                        <mxPoint x="500" y="690" as="sourcePoint"/>
-                        <mxPoint x="500" y="660" as="targetPoint"/>
+                        <mxPoint x="570" y="690" as="sourcePoint"/>
+                        <mxPoint x="570" y="660" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="74" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;Standard residential customer layout&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
-                    <mxGeometry x="240" y="430" width="280" height="30" as="geometry"/>
+                    <mxGeometry x="185" y="460" width="280" height="30" as="geometry"/>
                 </mxCell>
                 <mxCell id="76" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;add_small_loads()&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=16;" parent="1" vertex="1">
                     <mxGeometry x="1990" y="350" width="120" height="30" as="geometry"/>
@@ -287,6 +269,15 @@
                 </mxCell>
                 <mxCell id="100" value="glm_mod_dict.json" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;" vertex="1" parent="1">
                     <mxGeometry x="2287.5" y="150" width="115" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="102" value="EV charger" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+                    <mxGeometry x="445" y="760" width="60" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="103" value="" style="endArrow=none;dashed=1;html=1;dashPattern=1 3;strokeWidth=2;" edge="1" parent="1" source="102" target="56">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="358.34342503227094" y="776.2614499582369" as="sourcePoint"/>
+                        <mxPoint x="391.5817815945745" y="733.6805665212619" as="targetPoint"/>
+                    </mxGeometry>
                 </mxCell>
             </root>
         </mxGraphModel>
