@@ -62,7 +62,7 @@ def dso_CFS(
     system_case_config = case_config
 
     if rate_scenario is not None:
-        if rate_scenario == "transactive":
+        if rate_scenario in ["transactive", "dsot"]:
             TransactiveCaseFlag = 1
         else:
             TransactiveCaseFlag = 0
@@ -396,6 +396,19 @@ def dso_CFS(
             )
             RetailRTEnergy = sum(
                 DSO_Revenues_and_Energy_Sales["RetailSales"]["TransactiveSales" + c][
+                    "RetailRTEnergy" + c
+                ]
+                for c in ["Res", "Comm", "Ind"]
+            )
+        elif rate_scenario == "dsot":
+            RetailDAEnergy = sum(
+                DSO_Revenues_and_Energy_Sales["RetailSales"]["DSOTSales" + c][
+                    "RetailDAEnergy" + c
+                ]
+                for c in ["Res", "Comm", "Ind"]
+            )
+            RetailRTEnergy = sum(
+                DSO_Revenues_and_Energy_Sales["RetailSales"]["DSOTSales" + c][
                     "RetailRTEnergy" + c
                 ]
                 for c in ["Res", "Comm", "Ind"]
@@ -985,8 +998,12 @@ def dso_CFS(
             DSO_Cash_Flows["Revenues"]["RetailSales"]["TOUSales"]
         )
         elif rate_scenario == "subscription":
-            OtherRateSales = 0
+            OtherRateSales = dso_helper.returnDictSum(
+            DSO_Cash_Flows["Revenues"]["RetailSales"]["SubscriptionSales"]
+        )
         elif rate_scenario == "transactive":
+            OtherRateSales = 0
+        elif rate_scenario == "dsot":
             OtherRateSales = 0
 
         # Determine the total retail sales
@@ -1013,8 +1030,18 @@ def dso_CFS(
                 }
             )
         elif rate_scenario == "subscription":
-            None
+            retail_sales_dict.update(
+                {
+                    "SubscriptionSales": OtherRateSales,
+                    "SubscriptionEnergySales": DSO_Cash_Flows["Revenues"]["RetailSales"]["SubscriptionSales"]["SubscriptionEnergyCharges"],
+                    "SubscriptionDemandSales": DSO_Cash_Flows["Revenues"]["RetailSales"]["SubscriptionSales"]["SubscriptionDemandCharges"],
+                    "SubscriptionFixedSales": DSO_Cash_Flows["Revenues"]["RetailSales"]["SubscriptionSales"]["SubscriptionFixedCharges"],
+                    "SubscriptionNetDeviationCharges": DSO_Cash_Flows["Revenues"]["RetailSales"]["SubscriptionSales"]["SubscriptionFixedCharges"],
+                }
+            )
         elif rate_scenario == "transactive":
+            None
+        elif rate_scenario == "dsot":
             None
 
         # Update the DSO cash flows composite dict

@@ -51,6 +51,7 @@ customer_cfs = False
 rate_scenario = "time-of-use"
 # rate_scenario = "subscription"
 # rate_scenario = "transactive"
+# rate_scenario = "dsot"
 
 # Only set to True if you have already run cfs once and want to update billing to match expenses.
 squareup_revenue = True

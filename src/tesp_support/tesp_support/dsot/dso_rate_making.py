@@ -27,7 +27,8 @@ def read_meters(
     day_range,
     SF,
     dso_data_path,
-    rate_scenario=None):
+    rate_scenario=None,
+):
     """ Determines the total energy consumed and max power consumption for all meters within a DSO for a series of days.
     Also collects information on day ahead and real time quantities consumed by transactive customers.
     Creates summation of these statistics by customer class.
@@ -1008,7 +1009,8 @@ def calculate_consumer_bills(
     dso_num,
     sf,
     num_ind_cust,
-    rate_scenario):
+    rate_scenario,
+):
     """Calculates the consumers' bills for the four different scenarios considered in 
     the Rates Analysis work.
     Args:
@@ -1023,7 +1025,7 @@ def calculate_consumer_bills(
         sf (float): Scaling factor to scale the GridLAB-D results to TSO scale.
         num_ind_cust (int): Number of industrial consumers.
         rate_scenario (str): A str specifying the rate scenario under investigation: flat,
-        time-of-use, subscription, or transactive.
+        time-of-use, subscription, transactive, or dsot.
     Returns:
         bill_df (pandas.DataFrame): DataFrame containing bill information for each meter.
         billsum_df (pandas.DataFrame): DataFrame containing bill information for each 
@@ -1031,8 +1033,7 @@ def calculate_consumer_bills(
     """
 
     # Load in necessary data for the defined rate scenario
-    if rate_scenario == "time-of-use":
-        # Note: this assumes each month has the same number of time-of-use periods
+    if rate_scenario in ["time-of-use", "subscription"]:
         tou_params = load_json(case_path, "time_of_use_parameters.json")
 
     # Specify the bill components that will be recorded
@@ -1064,9 +1065,40 @@ def calculate_consumer_bills(
         bill_components.append("tou_energy_purchased")
         bill_components.append("tou_average_price")
     elif rate_scenario == "subscription":
-        None
+        bill_components.append("subscription_net_deviation_charge")
+        bill_components.append("subscription_energy_charge")
+        bill_components.extend(
+            [
+                "subscription_" * k * "_energy_charge"
+                for k in tou_params["DSO_" + dso_num]["Jan"]["periods"].keys()
+            ]
+        )
+        bill_components.append("subscription_demand_charge")
+        bill_components.append("subscription_fixed_charge")
+        bill_components.append("subscription_total_charge")
+        bill_components.extend(
+            [
+                "subscription_" * k * "_energy_purchased"
+                for k in tou_params["DSO_" + dso_num]["Jan"]["periods"].keys()
+            ]
+        )
+        bill_components.append("subscription_energy_purchased")
+        bill_components.append("subscription_average_price")
     elif rate_scenario == "transactive":
-        None
+        bill_components.append("transactive_DA_energy_charge")
+        bill_components.append("transactive_RT_energy_charge")
+        bill_components.append("transactive_capacity_charge")
+        bill_components.append("transactive_fixed_charge")
+        bill_components.append("transactive_volumetric_charge")
+        bill_components.append("transactive_energy_purchased")
+        bill_components.append("transactive_average_price")
+    elif rate_scenario == "dsot":
+        bill_components.append("dsot_DA_energy_charge")
+        bill_components.append("dsot_RT_energy_charge")
+        bill_components.append("dsot_fixed_charge")
+        bill_components.append("dsot_volumetric_charge")
+        bill_components.append("dsot_energy_purchased")
+        bill_components.append("dsot_average_price")
 
     # Create empty DataFrame for all consumer bills
     meters = []
@@ -1100,6 +1132,51 @@ def calculate_consumer_bills(
         # Initialize the DataFrames for each month
         bill_df[m] = [0] * len(bill_df)
         billsum_df[m] = [0] * len(billsum_df)
+
+        if rate_scenario == "subscription":
+            # Create a mapping between month name and month number
+            month_map = {
+                "Jan": "01",
+                "Feb": "02",
+                "Mar": "03",
+                "Apr": "04",
+                "May": "05",
+                "Jun": "06",
+                "Jul": "07",
+                "Aug": "08",
+                "Sep": "09",
+                "Oct": "10",
+                "Nov": "11",
+                "Dec": "12",
+            }
+
+            # For the subscription rate, load the month's hourly baseline demand
+            # profile and the month's hourly demand profile
+            bl_demand_df = pd.read_hdf(
+                os.path.join(
+                    case_path,
+                    [p for p in os.listdir(case_path) if p[6:9] == month_map[m]][0],
+                    "Substation_" + dso_num,
+                    "Substation_" + dso_num + "_baseline_demand_by_meter.h5",
+                ),
+                key="demand",
+                mode="r",
+            )
+            demand_df = pd.read_hdf(
+                os.path.join(
+                    case_path,
+                    [p for p in os.listdir(case_path) if p[6:9] == month_map[m]][0],
+                    "Substation_" + dso_num,
+                    "Substation_" + dso_num + "_demand_by_meter.h5",
+                ),
+                key="demand",
+                mode="r",
+            )
+
+            # For the subscription rate, load in the annual DA LMP data
+            da_lmp_stats = pd.read_csv(
+                os.path.join(case_path, "Annual_DA_LMP_Load_data.csv"), index_col=0
+            )
 
         # Iterate through each consumer
         for each in metadata["billingmeters"]:
@@ -1178,8 +1255,164 @@ def calculate_consumer_bills(
                             / meter_df.loc[(each, "kw-hr"), m]
                         )
                 elif rate_scenario == "subscription":
-                    None
+                    # Calculate the consumer's net deviation charge under the
+                    # subscription rate
+                    bill_df.loc[(each, "subscription_net_deviation_charge"), m] = sum(
+                        da_lmp_stats.loc[str(t), "da_lmp" + dso_num]
+                        * (demand_df.loc[t, each] - bl_demand_df.loc[t, each])
+                        for t in demand_df.index
+                    )
+
+                    # Calculate the consumer's energy charge under the time-of-use rate
+                    # associated with the subscription rate
+                    bill_df.loc[(each, "subscription_energy_charge"), m] = sum(
+                        tou_params["DSO_" + dso_num][m]["price"]
+                        * tou_params["DSO_" + dso_num][m]["periods"][k]["ratio"]
+                        * sum(
+                            bl_demand_df.loc[:, each]
+                            .between_time(
+                                str(
+                                    tou_params["DSO_" + dso_num][m]["periods"][k][
+                                        "hour_start"
+                                    ][h]
+                                )
+                                + ":00",
+                                str(
+                                    tou_params["DSO_" + dso_num][m]["periods"][k][
+                                        "hour_end"
+                                    ][h]
+                                )
+                                + ":00"
+                                if tou_params["DSO_" + dso_num][m]["periods"][k][
+                                    "hour_end"
+                                ][h]
+                                != 24
+                                else "0:00",
+                                inclusive="left",
+                            )
+                            .sum()
+                            for h in range(
+                                len(
+                                    tou_params["DSO_" + dso_num][m]["periods"][k][
+                                        "hour_start"
+                                    ]
+                                )
+                            )
+                        )
+                        for k in tou_params["DSO_" + dso_num][m]["periods"].keys()
+                    ) + calculate_tier_credit(
+                        dso_num,
+                        metadata["billingmeters"][each]["tariff_class"],
+                        tariff,
+                        bl_demand_df.loc[:, each].sum(),
+                    )
+
+                    # Calculate the consumer's energy charge for each time-of-use period
+                    for k in tou_params["DSO_" + dso_num][m]["periods"].keys():
+                        bill_df.loc[(each, "subscription_" + k + "_energy_charge"), m] = (
+                            tou_params["DSO_" + dso_num][m]["price"]
+                            * tou_params["DSO_" + dso_num][m]["periods"][k]["ratio"]
+                            * sum(
+                                bl_demand_df.loc[:, each]
+                                .between_time(
+                                    str(
+                                        tou_params["DSO_" + dso_num][m]["periods"][k][
+                                            "hour_start"
+                                        ][h]
+                                    )
+                                    + ":00",
+                                    str(
+                                        tou_params["DSO_" + dso_num][m]["periods"][k][
+                                            "hour_end"
+                                        ][h]
+                                    )
+                                    + ":00"
+                                    if tou_params["DSO_" + dso_num][m]["periods"][k][
+                                        "hour_end"
+                                    ][h]
+                                    != 24
+                                    else "0:00",
+                                    inclusive="left",
+                                )
+                                .sum()
+                                for h in range(
+                                    len(
+                                        tou_params["DSO_" + dso_num][m]["periods"][k][
+                                            "hour_start"
+                                        ]
+                                    )
+                                )
+                            )
+                        )
+
+                    # Calculate the consumer's demand charge under the subscription tariff
+                    bill_df.loc[(each, "subscription_demand_charge"), m] = (
+                        demand_charge * bl_demand_df.loc[:, each].max()
+                    )
+
+                    # Calculate the consumer's fixed charge under the subscription tariff
+                    bill_df.loc[(each, "subscription_fixed_charge"), m] = fixed_charge
+
+                    # Calculate the consumer's total bill under the subscription tariff
+                    bill_df.loc[(each, "subscription_total_charge"), m] = (
+                        bill_df.loc[(each, "subscription_net_deviation_charge")]
+                        + bill_df.loc[(each, "subscription_energy_charge"), m]
+                        + bill_df.loc[(each, "subscription_demand_charge"), m]
+                        + bill_df.loc[(each, "subscription_fixed_charge"), m]
+                    )
+
+                    # Store the total energy purchased under the subscription tariff
+                    bill_df.loc[
+                        (each, "subscription_energy_purchased"), m
+                    ] = bl_demand_df.loc[:, each].sum()
+
+                    # Store the total energy purchased during each time-of-use period
+                    for k in tou_params["DSO_" + dso_num][m]["periods"].keys():
+                        bill_df.loc[
+                            (each, "subscription_" + k + "_energy_purchased"), m
+                        ] = sum(
+                            bl_demand_df.loc[:, each]
+                            .between_time(
+                                str(
+                                    tou_params["DSO_" + dso_num][m]["periods"][k][
+                                        "hour_start"
+                                    ][h]
+                                )
+                                + ":00",
+                                str(
+                                    tou_params["DSO_" + dso_num][m]["periods"][k][
+                                        "hour_end"
+                                    ][h]
+                                )
+                                + ":00"
+                                if tou_params["DSO_" + dso_num][m]["periods"][k][
+                                    "hour_end"
+                                ][h]
+                                != 24
+                                else "0:00",
+                                inclusive="left",
+                            )
+                            .sum()
+                            for h in range(
+                                len(
+                                    tou_params["DSO_" + dso_num][m]["periods"][k][
+                                        "hour_start"
+                                    ]
+                                )
+                            )
+                        )
+
+                    # Calculate the average price under the subscription tariff
+                    if bl_demand_df.loc[:, each].sum() == 0:
+                        bill_df.loc[(each, "subscription_average_price"), m] = 0
+                    else:
+                        bill_df.loc[(each, "subscription_average_price"), m] = (
+                            bill_df.loc[(each, "subscription_total_charge"), m]
+                            / bl_demand_df.loc[:, each].sum()
+                        )
                 elif rate_scenario == "transactive":
+                    None
+                elif rate_scenario == "dsot":
                     None
             else:
                 # Calculate the consumer's energy charge under the flat rate tariff
@@ -1308,8 +1541,13 @@ def calculate_consumer_bills(
                 / bill_df.loc[(each, "tou_energy_purchased"), "sum"]
             )
         elif rate_scenario == "subscription":
-            None
+            bill_df.loc[(each, "subscription_average_price"), "sum"] = (
+                bill_df.loc[(each, "subscription_total_charge"), "sum"]
+                / bill_df.loc[(each, "subscription_energy_purchased"), "sum"]
+            )
         elif rate_scenario == "transactive":
+            None
+        elif rate_scenario == "dsot":
             None
         
     # Calculate the average prices at the sector level
@@ -1324,8 +1562,13 @@ def calculate_consumer_bills(
                 / billsum_df.loc[(load, "tou_energy_purchased")]
             )
         elif rate_scenario == "subscription":
-            None
+            billsum_df.loc[(load, "subscription_average_price")] = (
+                billsum_df.loc[(load, "subscription_total_charge")]
+                / billsum_df.loc[(load, "subscription_energy_purchased")]
+            )
         elif rate_scenario == "transactive":
+            None
+        elif rate_scenario == "dsot":
             None
 
     # Return the bill DataFrames
@@ -1393,6 +1636,7 @@ def calculate_tariff_prices(
     dso_num,
     sf,
     num_ind_cust,
+    industrial_file,
     rate_scenario,
 ):
     """Determines the prices that ensure enough revenue is collected to recover the 
@@ -1408,8 +1652,9 @@ def calculate_tariff_prices(
         dso_num (str): A string specifying the number of the DSO being considered.
         sf (float): Scaling factor to scale the GridLAB-D results to TSO scale.
         num_ind_cust (int): Number of industrial consumers.
+        industrial_file (str): File path to the bulk industrial loads.
         rate_scenario (str): A str specifying the rate scenario under investigation: flat,
-        time-of-use, subscription, or transactive.
+        time-of-use, subscription, transactive, or dsot.
     Returns:
         prices (dict): A dictionary containing the prices that need to be calculated for 
         each of the rates considered in the rate scenario.
@@ -1528,7 +1773,7 @@ def calculate_tariff_prices(
         total_tier_credit_tou_i = {s: 0 for s in seasons_dict}
 
         # Iterate through each consumer as if they are all participating under 
-        # time-of-use
+        # the time-of-use rate
         for s in seasons_dict:
             for each in metadata["billingmeters"]:
                 # Calculate the necessary rate components for residential and commercial
@@ -1607,7 +1852,7 @@ def calculate_tariff_prices(
             )
 
             # Find the off-peak energy price for each season for the time-of-use rate,
-            # assuming that each consumer is taking service under time-of-use
+            # assuming that each consumer is taking service under the time-of-use rate
             prices["tou_rate_" + s] = (
                 dso_expenses[s]
                 - sf
@@ -1657,7 +1902,7 @@ def calculate_tariff_prices(
                         )
 
                         # Calculate the consumer's tier credit (due to the declining 
-                        # block) rate, if the consumer is eligible
+                        # block rate), if the consumer is eligible
                         if metadata["billingmeters"][each]["tariff_class"] in [
                             #"residential",
                             "commercial",
@@ -1761,8 +2006,570 @@ def calculate_tariff_prices(
             - total_tier_credit_flat_i
         ) / (sf * total_consumption_flat_rc + total_consumption_flat_i)
     elif rate_scenario == "subscription":
-        None
+        # Load in necessary data for the time-of-use rate
+        tou_params = load_json(case_path, "time_of_use_parameters.json")
+
+        # Create a mapping between month name and month number
+        month_map = {
+            "Jan": "01",
+            "Feb": "02",
+            "Mar": "03",
+            "Apr": "04",
+            "May": "05",
+            "Jun": "06",
+            "Jul": "07",
+            "Aug": "08",
+            "Sep": "09",
+            "Oct": "10",
+            "Nov": "11",
+            "Dec": "12",
+        }
+
+        # Determine the seasons under consideration in the time-of-use rate
+        seasons_dict = {}
+        for m in months:
+            if tou_params["DSO_" + dso_num][m]["season"] in seasons_dict:
+                seasons_dict[tou_params["DSO_" + dso_num][m]["season"]].append(m)
+            else:
+                seasons_dict[tou_params["DSO_" + dso_num][m]["season"]] = [m]
+
+        # Obtain the DSO expenses (e.g., operational expenditures, capital expenditures)
+        dso_expenses = get_total_dso_costs(
+            case_path, dso_num, rate_scenario, seasons_dict
+        )
+
+        # Load in the market data
+        da_lmp_stats = pd.read_csv(
+            os.path.join(case_path, "Annual_DA_LMP_Load_data.csv"), index_col=0
+        )
+
+        # Initialize the demand and baseline demand profiles for their seasonal 
+        # aggregation
+        demand_df = {s: 0 for s in seasons_dict}
+        bl_demand_df = {s: 0 for s in seasons_dict}
+
+        # Initialize some of the closed-form solution components
+        total_weighted_consumption_sub_rc = {s: 0 for s in seasons_dict}
+        total_weighted_consumption_sub_i = {s: 0 for s in seasons_dict}
+        total_unweighted_consumption_sub_i = {
+            s: {m: 0 for m in seasons_dict[s]} for s in seasons_dict
+        }
+        rev_net_deviation_charge_sub_rc = {s: 0 for s in seasons_dict}
+        rev_net_deviation_charge_sub_i = {s: 0 for s in seasons_dict}
+        rev_demand_charge_sub_rc = {s: 0 for s in seasons_dict}
+        rev_demand_charge_sub_i = {s: 0 for s in seasons_dict}
+        rev_fixed_charge_sub_rc = {s: 0 for s in seasons_dict}
+        rev_fixed_charge_sub_i = {s: 0 for s in seasons_dict}
+        total_tier_credit_sub_rc = {s: 0 for s in seasons_dict}
+        total_tier_credit_sub_i = {s: 0 for s in seasons_dict}
+
+        # Iterate through each consumer as if they are all participating under 
+        # the subscription rate
+        for s in seasons_dict:
+            # Load in and combine the hourly baseline demand profiles and the hourly 
+            # demand profiles for each month in the season being considered
+            for m in seasons_dict[s]:
+                if m == seasons_dict[s][0]:
+                    bl_demand_df[s] = pd.read_df(
+                        os.path.join(
+                            case_path,
+                            [
+                                p
+                                for p in os.listdir(case_path)
+                                if p[6:9] == month_map[m]
+                            ][0],
+                            "Substation_" + dso_num,
+                            "Substation_" + dso_num + "_baseline_demand_by_meter.h5",
+                        ),
+                        key="demand",
+                        mode="r",
+                    )
+                    demand_df[s] = pd.read_df(
+                        os.path.join(
+                            case_path,
+                            [
+                                p
+                                for p in os.listdir(case_path)
+                                if p[6:9] == month_map[m]
+                            ][0],
+                            "Substation_" + dso_num,
+                            "Substation_" + dso_num + "_demand_by_meter.h5",
+                        ),
+                        key="demand",
+                        mode="r",
+                    )
+                else:
+                    bl_demand_df[s] = pd.concat(
+                        [
+                            bl_demand_df[s],
+                            pd.read_df(
+                                os.path.join(
+                                    case_path,
+                                    [
+                                        p
+                                        for p in os.listdir(case_path)
+                                        if p[6:9] == month_map[m]
+                                    ][0],
+                                    "Substation_" + dso_num,
+                                    "Substation_"
+                                    + dso_num
+                                    + "_baseline_demand_by_meter.h5",
+                                ),
+                                key="demand",
+                                mode="r",
+                            ),
+                        ]
+                    )
+                    demand_df[s] = pd.concat(
+                        [
+                            demand_df[s],
+                            pd.read_df(
+                                os.path.join(
+                                    case_path,
+                                    [
+                                        p
+                                        for p in os.listdir(case_path)
+                                        if p[6:9] == month_map[m]
+                                    ][0],
+                                    "Substation_" + dso_num,
+                                    "Substation_" + dso_num + "_demand_by_meter.h5",
+                                ),
+                                key="demand",
+                                mode="r",
+                            ),
+                        ]
+                    )
+
+            # Calculate the necessary rate components for the metered consumers
+            for each in metadata["billingmeters"]:
+                if metadata["billingmeters"][each]["tariff_class"] in [
+                    "residential",
+                    "commercial",
+                ]:
+                    # Update the total weighted consumption for each residential and
+                    # commercial consumer during each season
+                    total_weighted_consumption_sub_rc[s] += sum(
+                        tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"][k][
+                            "ratio"
+                        ]
+                        * sum(
+                            bl_demand_df[s]
+                            .loc[:, each]
+                            .between_time(
+                                str(
+                                    tou_params["DSO_" + dso_num][seasons_dict[s][0]][
+                                        "periods"
+                                    ][k]["hour_start"][h]
+                                )
+                                + ":00",
+                                str(
+                                    tou_params["DSO_" + dso_num][seasons_dict[s][0]][
+                                        "periods"
+                                    ][k]["hour_end"][h]
+                                )
+                                + ":00"
+                                if tou_params["DSO_" + dso_num][seasons_dict[s][0]][
+                                    "periods"
+                                ][k]["hour_end"][h]
+                                != 24
+                                else "0:00",
+                                inclusive="left",
+                            )
+                            .sum()
+                            for h in range(
+                                len(
+                                    tou_params["DSO_" + dso_num][seasons_dict[s][0]][
+                                        "periods"
+                                    ][k]["hour_start"]
+                                )
+                            )
+                        )
+                        for k in tou_params["DSO_" + dso_num][seasons_dict[s][0]][
+                            "periods"
+                        ].keys()
+                    )
+
+                    # Update the total revenue from demand charges for each residential
+                    # and commercial consumer during each season
+                    rev_demand_charge_sub_rc[s] += tariff["DSO_" + dso_num][
+                        "industrial"
+                    ]["demand_charge"] * sum(
+                        bl_demand_df[s][
+                            bl_demand_df[s].index.month == int(month_map[m])
+                        ]
+                        .loc[:, each]
+                        .max()
+                        for m in seasons_dict[s]
+                    )
+
+                    # Update total revenue from fixed charges for each residential and 
+                    # commercial consumer during each season
+                    rev_fixed_charge_sub_rc[s] += fixed_charge * len(seasons_dict[s])
+
+                    # Update the total revenue from the net deviation charges for each
+                    # residential and commercial consumer during each season
+                    rev_net_deviation_charge_sub_rc[s] += sum(
+                        da_lmp_stats.loc[str(t), "da_lmp" + dso_num]
+                        * (demand_df[s].loc[t, each] - bl_demand_df[s].loc[t, each])
+                        for t in demand_df[s].index
+                    )
+
+                    # Update the total tier credit for each consumer during each season,
+                    # if the consumer qualifies
+                    if metadata["billingmeters"][each]["tariff_class"] in [
+                        # "residential",
+                        "commercial",
+                    ]:
+                        total_tier_credit_tou_rc[s] += sum(
+                            calculate_tier_credit(
+                                dso_num,
+                                metadata["billingmeters"][each]["tariff_class"],
+                                tariff,
+                                bl_demand_df[s][
+                                    bl_demand_df[s].index.month == int(month_map[m])
+                                ]
+                                .loc[:, each]
+                                .sum(),
+                            )
+                            for m in seasons_dict[s]
+                        )
+                elif metadata["billingmeters"][each]["tariff_class"] == "industrial":
+                    # Update the total weighted consumption for each industrial consumer
+                    # during each season
+                    total_weighted_consumption_sub_i[s] += sum(
+                        tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"][k][
+                            "ratio"
+                        ]
+                        * sum(
+                            bl_demand_df[s]
+                            .loc[:, each]
+                            .between_time(
+                                str(
+                                    tou_params["DSO_" + dso_num][seasons_dict[s][0]][
+                                        "periods"
+                                    ][k]["hour_start"][h]
+                                )
+                                + ":00",
+                                str(
+                                    tou_params["DSO_" + dso_num][seasons_dict[s][0]][
+                                        "periods"
+                                    ][k]["hour_end"][h]
+                                )
+                                + ":00"
+                                if tou_params["DSO_" + dso_num][seasons_dict[s][0]][
+                                    "periods"
+                                ][k]["hour_end"][h]
+                                != 24
+                                else "0:00",
+                                inclusive="left",
+                            )
+                            .sum()
+                            for h in range(
+                                len(
+                                    tou_params["DSO_" + dso_num][seasons_dict[s][0]][
+                                        "periods"
+                                    ][k]["hour_start"]
+                                )
+                            )
+                        )
+                        for k in tou_params["DSO_" + dso_num][seasons_dict[s][0]][
+                            "periods"
+                        ].keys()
+                    )
+
+                    # Specify the demand charge based on the consumer's sector type
+                    demand_charge = tariff["DSO_" + dso_num][
+                        metadata["billingmeters"][each]["tariff_class"]
+                    ]["demand_charge"]
+
+                    # Update the total revenue from demand charges for each industrial
+                    # consumer during each season
+                    rev_demand_charge_sub_i[s] += demand_charge * sum(
+                        bl_demand_df[s][bl_demand_df[s].index.month == int(month_map[m])]
+                        .loc[:, each]
+                        .max()
+                        for m in seasons_dict[s]
+                    )
+
+                    # Update the total revenue from the net deviation charges for each
+                    # industrial consumer during each season
+                    rev_net_deviation_charge_sub_i[s] += sum(
+                        da_lmp_stats.loc[str(t), "da_lmp" + dso_num]
+                        * (demand_df[s].loc[t, each] - bl_demand_df[s].loc[t, each])
+                        for t in demand_df[s].index
+                    )
+
+                    # Update the total unweighted consumption for each industrial
+                    # consumer during each month of each season
+                    for m in seasons_dict[s]:
+                        total_unweighted_consumption_sub_i[s][m] += (
+                            bl_demand_df[s][bl_demand_df[s].index.month == int(month_map[m])]
+                            .loc[:, each]
+                            .sum()
+                        )
+
+            # Calculate the necessary rate components for industrial consumers
+            indust_df = load_indust_data(industrial_file, range(1, 2)) * 1000
+            for k in tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"].keys():
+                num_hours = 0
+                for i in range(
+                    len(
+                        tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"][k][
+                            "hour_start"
+                        ]
+                    )
+                ):
+                    num_hours += (
+                        tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"][k][
+                            "hour_end"
+                        ][i]
+                        - tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"][
+                            k
+                        ]["hour_start"][i]
+                    )
+                total_weighted_consumption_sub_i[s] += (
+                    tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"][k][
+                        "ratio"
+                    ]
+                    * indust_df.loc[0, "Bus" + dso_num]
+                    * bl_demand_df[s].shape[0]
+                    * num_hours
+                    / 24
+                )
+            rev_demand_charge_sub_i[s] += (
+                tariff["DSO_" + dso_num]["industrial"]["demand_charge"]
+                * len(seasons_dict[s])
+                * indust_df.loc[0, "Bus" + dso_num]
+            )
+            rev_fixed_charge_sub_i[s] = fixed_charge * len(seasons_dict) * num_ind_cust
+            total_tier_credit_sub_i[s] = sum(
+                calculate_tier_credit(
+                    dso_num,
+                    "industrial",
+                    tariff,
+                    total_unweighted_consumption_sub_i[s][m]
+                    + bl_demand_df[s][
+                        bl_demand_df[s].index.month == int(month_map[m])
+                    ].shape[0]
+                    * indust_df.loc[0, "Bus" + dso_num],
+                )
+                for m in seasons_dict[s]
+            )
+
+
+            # Find the off-peak energy price for each season for the time-of-use rate,
+            # assuming that each consumer is taking service under the subscription rate
+            prices["subscription_rate_" + s] = (
+                dso_expenses[s]
+                - sf
+                * (
+                    rev_net_deviation_charge_sub_rc[s]
+                    + rev_demand_charge_sub_rc[s]
+                    + rev_fixed_charge_sub_rc[s]
+                    + total_tier_credit_sub_rc[s]
+                    + rev_net_deviation_charge_sub_i[s]
+                    + rev_demand_charge_sub_i[s]
+                    + rev_fixed_charge_sub_i[s]
+                    + total_tier_credit_sub_i[s]
+                )
+            ) / (
+                sf
+                * (
+                    total_weighted_consumption_sub_rc[s]
+                    + total_weighted_consumption_sub_i[s]
+                )
+            )
+
+        # Initialize some of the closed-form solution components
+        total_consumption_flat_rc = 0
+        rev_energy_charge_sub = {s: 0 for s in seasons_dict}
+        rev_demand_charge_flat_rc = 0
+        rev_demand_charge_sub = {s: 0 for s in seasons_dict}
+        rev_fixed_charge_flat_rc = 0
+        rev_fixed_charge_sub = {s: 0 for s in seasons_dict}
+        total_tier_credit_flat_rc = 0
+        rev_net_deviation_charge_sub = {s: 0 for s in seasons_dict}
+
+        # Iterate through each consumer to allocate costs according to the tariff under 
+        # which they take service
+        for each in metadata["billingmeters"]:
+            # Calculate the necessary rate components for residential and commercial 
+            # consumers
+            if metadata["billingmeters"][each]["tariff_class"] in [
+                "residential",
+                "commercial",
+            ]:
+                if metadata["billingmeters"][each]["cust_participating"]:
+                    for s in seasons_dict:
+                        # Update the total revenue from the net deviation charges for 
+                        # subscription consumers during each season
+                        rev_net_deviation_charge_sub[s] += sum(
+                            da_lmp_stats.loc[str(t), "da_lmp" + dso_num]
+                            * (demand_df[s].loc[t, each] - bl_demand_df[s].loc[t, each])
+                            for t in demand_df[s].index
+                        )
+
+                        # Update the total revenue from energy charges for subscription
+                        # consumers durng each season
+                        rev_energy_charge_sub[s] += sum(
+                            prices["subscription_rate_" * s]
+                            * tou_params["DSO_" + dso_num][seasons_dict[s][0]][
+                                "periods"
+                            ][k]["ratio"]
+                            * sum(
+                                bl_demand_df[s]
+                                .loc[:, each]
+                                .between_time(
+                                    str(
+                                        tou_params["DSO_" + dso_num][
+                                            seasons_dict[s][0]
+                                        ]["periods"][k]["hour_start"][h]
+                                    )
+                                    + ":00",
+                                    str(
+                                        tou_params["DSO_" + dso_num][
+                                            seasons_dict[s][0]
+                                        ]["periods"][k]["hour_end"][h]
+                                    )
+                                    + ":00"
+                                    if tou_params["DSO_" + dso_num][seasons_dict[s][0]][
+                                        "periods"
+                                    ][k]["hour_end"][h]
+                                    != 24
+                                    else "0:00",
+                                    inclusive="left",
+                                )
+                                .sum()
+                                for h in range(
+                                    len(
+                                        tou_params["DSO_" + dso_num][
+                                            seasons_dict[s][0]
+                                        ]["periods"][k]["hour_start"]
+                                    )
+                                )
+                            )
+                            for k in tou_params["DSO_" + dso_num][seasons_dict[s][0]][
+                                "periods"
+                            ].keys()
+                        )
+
+                        # Calculate the consumer's tier credit (due to the declining 
+                        # block rate), if the consumer is eligible
+                        if metadata["billingmeters"][each]["tariff_class"] in [
+                            # "residential",
+                            "commercial",
+                        ]:
+                            rev_energy_charge_sub[s] += sum(
+                                calculate_tier_credit(
+                                    dso_num,
+                                    metadata["billingmeters"][each]["tariff_class"],
+                                    tariff,
+                                    bl_demand_df[s][
+                                        bl_demand_df[s].index.month == int(month_map[m])
+                                    ]
+                                    .loc[:, each]
+                                    .sum(),
+                                )
+                                for m in seasons_dict[s]
+                            )
+
+                        # Specify the demand charge based on the consumer's sector type
+                        demand_charge = tariff["DSO_" + dso_num][
+                            metadata["billingmeters"][each]["tariff_class"]
+                        ]["demand_charge"]
+
+                        # Update the total revenue from demand charges for subscription
+                        # consumers during each season
+                        rev_demand_charge_sub[s] += demand_charge * sum(
+                            bl_demand_df[s][
+                                bl_demand_df[s].index.month == int(month_map[m])
+                            ]
+                            .loc[:, each]
+                            .max()
+                            for m in seasons_dict[s]
+                        )
+
+                        # Update total revenue from fixed charges for subscription 
+                        # consumers during each season
+                        rev_fixed_charge_sub[s] += fixed_charge * len(seasons_dict[s])
+                else:
+                     # Update total consumption for the flat rate consumers
+                    total_consumption_flat_rc += meter_df.loc[(each, "kw-hr"), "sum"]
+
+                    # Specify the demand charge based on the consumer's sector type
+                    demand_charge = tariff["DSO_" + dso_num][
+                        metadata["billingmeters"][each]["tariff_class"]
+                    ]["demand_charge"]
+
+                    # Update total revenue from demand charges for the flat rate 
+                    # consumers
+                    rev_demand_charge_flat_rc += demand_charge * sum(
+                        meter_df.loc[(each, "max_kw"), m] for m in months
+                    )
+
+                    # Update total revenue from fixed charges for the flat rate 
+                    # consumers
+                    rev_fixed_charge_flat_rc += fixed_charge * len(months)
+
+                    # Update the total tier credit for the flat rate consumers, if the 
+                    # consumer qualifies
+                    if metadata["billingmeters"][each]["tariff_class"] in [
+                        #"residential",
+                        "commercial",
+                    ]:
+                        total_tier_credit_flat_rc += sum(
+                            calculate_tier_credit(
+                                dso_num,
+                                metadata["billingmeters"][each]["tariff_class"],
+                                tariff,
+                                meter_df.loc[(each, "kw-hr"), m],
+                            )
+                            for m in months
+                        )
+
+        # Calculate the necessary rate components for industrial consumers
+        total_consumption_flat_i = energy_sum_df.loc[("industrial", "kw-hr"), "sum"]
+        rev_demand_charge_flat_i = tariff["DSO_" + dso_num]["industrial"][
+            "demand_charge"
+        ] * sum(energy_sum_df.loc[("industrial", "demand_quantity"), m] for m in months)
+        rev_fixed_charge_flat_i = fixed_charge * len(months) * num_ind_cust
+        total_tier_credit_flat_i = sum(
+            calculate_tier_credit(
+                dso_num,
+                "industrial",
+                tariff,
+                energy_sum_df.loc[("industrial", "kw-hr"), m],
+            )
+            for m in months
+        )
+
+        # Calculate the total revenue obtained from consumers taking service under the 
+        # subscription rate
+        rev_total_sub = sum(
+            rev_net_deviation_charge_sub[s]
+            + rev_energy_charge_sub[s]
+            + rev_demand_charge_sub[s]
+            + rev_fixed_charge_sub[s]
+            for s in seasons_dict
+        )
+
+        # Find the energy price for the flat rate
+        prices["flat_rate"] = (
+            sum(dso_expenses[s] for s in seasons_dict)
+            - sf
+            * (
+                rev_total_sub
+                + rev_demand_charge_flat_rc
+                + rev_fixed_charge_flat_rc
+                + total_tier_credit_flat_rc
+            )
+            - rev_demand_charge_flat_i
+            - rev_fixed_charge_flat_i
+            - total_tier_credit_flat_i
+        ) / (sf * total_consumption_flat_rc + total_consumption_flat_i)
     elif rate_scenario == "transactive":
+        None
+    elif rate_scenario == "dsot":
         None
     
     # Return the prices dictionary
@@ -1833,6 +2640,14 @@ def get_total_dso_costs(case_path, dso_num, rate_scenario, seasons_dict=None):
                     for m in seasons_dict[s]
                 )
     elif rate_scenario == "transactive":
+        if dso_df is None:
+            dso_expenses = 1e10
+        else:
+            dso_expenses = 1000 * (
+                float(dso_df.loc["CapitalExpenses", "DSO_" + dso_num])
+                + float(dso_df.loc["OperatingExpenses", "DSO_" + dso_num])
+            )
+    elif rate_scenario == "dsot":
         if dso_df is None:
             dso_expenses = 1e10
         else:
@@ -2092,6 +2907,12 @@ def DSO_rate_making(
         )
         #toc()
     else:
+        # Specify the file path of the bulk industrial loads
+        case_config = load_json(case, "generate_case_config.json")
+        industrial_file = os.path.join(
+            tariff_path, case_config["indLoad"][5].split("/")[-1]
+        )
+
         # Calculate the prices the ensure enough revenue is collected to recover the  
         # DSO's expenses in the Rate Scenario analysis
         prices = calculate_tariff_prices(
@@ -2103,6 +2924,7 @@ def DSO_rate_making(
             str(dso_num),
             dso_scaling_factor,
             num_indust_cust,
+            industrial_file,
             rate_scenario,
         )
 
@@ -2120,16 +2942,23 @@ def DSO_rate_making(
                 ]
 
             # Store the variables in the appropriate files, if not done later
-            with open(
-                os.path.join(
-                    case, "time_of_use_parameters_dso_" + str(dso_num) + ".json"
-                ),
-                "w",
-            ) as fp:
+            with open(os.path.join(case, "time_of_use_parameters.json"), "w") as fp:
                 json.dump(tou_params, fp)
         elif rate_scenario == "subscription":
-            None
+            # Update the variables
+            tariff["DSO_" + str(dso_num)]["flat_rate"] = prices["flat_rate"]
+            tou_params = load_json(case, "time_of_use_parameters.json")
+            for m in tou_params["DSO_" + dso_num].keys():
+                tou_params["DSO_" + dso_num][m]["price"] = prices[
+                    "subscription_rate_" + tou_params["DSO_" + dso_num][m]["season"]
+                ]
+
+            # Store the variables in the appropriate files, if not done later
+            with open(os.path.join(case, "time_of_use_parameters.json"), "w") as fp:
+                json.dump(tou_params, fp)
         elif rate_scenario == "transactive":
+            None
+        elif rate_scenario == "dsot":
             None
         
         # Calculate consumer bills in the Rate Scenario analysis
@@ -2452,8 +3281,53 @@ def DSO_rate_making(
                 "TOUFixedCharges": billsum_df.loc[("total", "tou_fixed_charge"), "sum"] / 1000, # $k
             }
         elif rate_scenario == "subscription":
-            None
+            DSO_Revenues_and_Energy_Sales["RetailSales"]["SubscriptionSales"] = {
+                "SubscriptionSalesRes": {
+                    "SubscriptionEnergySalesRes": billsum_df.loc[("residential", "subscription_energy_purchased"), "sum"] / 1000, # MW-hr/year
+                    "SubscriptionEnergyChargesRes": billsum_df.loc[("residential", "subscription_energy_charge"), "sum"] / 1000, # $k
+                    "SubscriptionDemandChargesRes": billsum_df.loc[("residential", "subscription_demand_charge"), "sum"] / 1000, # $k
+                    "SubscriptionFixedChargesRes": billsum_df.loc[("residential", "subscription_fixed_charge"), "sum"] / 1000, # $k
+                    "SubsctiptionNetDeviationChargesRes": billsum_df.loc[("residential", "subscription_net_deviation_charge"), "sum"] / 1000, # $k
+                    "SubscriptionAveragePriceRes": billsum_df.loc[("residential", "subscription_average_price"), "sum"], # $/kW-hr
+                },
+                "SubscriptionSalesComm": {
+                    "SubscriptionEnergySalesComm": billsum_df.loc[("commercial", "subscription_energy_purchased"), "sum"] / 1000, # MW-hr/year
+                    "SubscriptionEnergyChargesComm": billsum_df.loc[("commercial", "subscription_energy_charge"), "sum"] / 1000, # $k
+                    "SubscriptionDemandChargesComm": billsum_df.loc[("commercial", "subscription_demand_charge"), "sum"] / 1000, # $k
+                    "SubscriptionFixedChargesComm": billsum_df.loc[("commercial", "subscription_fixed_charge"), "sum"] / 1000, # $k
+                    "SubsctiptionNetDeviationChargesComm": billsum_df.loc[("commercial", "subscription_net_deviation_charge"), "sum"] / 1000, # $k
+                    "SubscriptionAveragePriceComm": billsum_df.loc[("commercial", "subscription_average_price"), "sum"], # $/kW-hr
+                },
+                "SubscriptionSalesInd": {
+                    "SubscriptionEnergySalesInd": billsum_df.loc[("industrial", "subscription_energy_purchased"), "sum"] / 1000, # MW-hr/year
+                    "SubscriptionEnergyChargesInd": billsum_df.loc[("industrial", "subscription_energy_charge"), "sum"] / 1000, # $k
+                    "SubscriptionDemandChargesInd": billsum_df.loc[("industrial", "subscription_demand_charge"), "sum"] / 1000, # $k
+                    "SubscriptionFixedChargesInd": billsum_df.loc[("industrial", "subscription_fixed_charge"), "sum"] / 1000, # $k
+                    "SubsctiptionNetDeviationChargesInd": billsum_df.loc[("industrial", "subscription_net_deviation_charge"), "sum"] / 1000, # $k
+                    "SubscriptionAveragePriceInd": billsum_df.loc[("industrial", "subscription_average_price"), "sum"], # $/kW-hr
+                },
+            }
+            DSO_Revenues_and_Energy_Sales["EnergySold"] += billsum_df.loc[("total", "subscription_energy_purchased"), "sum"] / 1000 # Energy Sold in MW-hr
+            for m in billsum_df:
+                if m != "sum":
+                    DSO_Revenues_and_Energy_Sales["EnergySoldMonthly"][m] += billsum_df.loc[("total", "subscription_energy_purchased"), m] / 1000
+            DSO_Revenues_and_Energy_Sales["RequiredRevenue"] += billsum_df.loc[("total", "subscription_total_charge"), "sum"] / 1000, # Energy charges in $k
+            DSO_Revenues_and_Energy_Sales["EffectiveCostRetailEnergy"] = (
+                billsum_df.loc[("total", "flat_total_charge"), "sum"]
+                + billsum_df.loc[("total", "subscription_total_charge"), "sum"]
+            ) / (
+                billsum_df.loc[("total", "flat_energy_purchased"), "sum"]
+                + billsum_df.loc[("total", "subscription_energy_purchased"), "sum"]
+            )
+            DSO_Cash_Flows["Revenues"]["RetailSales"]["SubscriptionSales"] = {
+                "SubscriptionEnergyCharges": billsum_df.loc[("total", "subscription_energy_charge"), "sum"] / 1000, # $k
+                "SubscriptionDemandCharges": billsum_df.loc[("total", "subscription_demand_charge"), "sum"] / 1000, # $k
+                "SubscriptionFixedCharges": billsum_df.loc[("total", "subscription_fixed_charge"), "sum"] / 1000, # $k
+                "SubscriptionNetDeviationCharges": billsum_df.loc[("total", "subscription_net_deviation_charge"), "sum"] / 1000, # $k
+            }
         elif rate_scenario == "transactive":
+            None
+        elif rate_scenario == "dsot":
             None
 
     return DSO_Cash_Flows, DSO_Revenues_and_Energy_Sales, tariff, surplus
