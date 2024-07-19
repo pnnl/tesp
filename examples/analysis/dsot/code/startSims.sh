@@ -3,7 +3,7 @@
 #max minus one dockers can run
 max=3
 #usr="oste814"
-sims="/mnt/dsot/ready"
+sims="/mnt/dsot/run_outputs/ready"
 
 hostname > $sims/$(hostname).log
 

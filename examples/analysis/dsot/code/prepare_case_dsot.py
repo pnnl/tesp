@@ -375,8 +375,8 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
                                      hvacSetpt=hvac_setpt,
                                      Q_forecast=sim['Q_bid_forecast_correction'],
                                      Q_dso_key=dso_key,
-                                     usState = sim['state'],
-                                     dsoType = dso_val['utility_type'])
+                                     usState=sim['state'],
+                                     dsoType=dso_val['utility_type'])
             else:
                 prep.prep_substation(caseName + '/' + feed_key + '/' + feed_key,
                                      caseName + '/' + dso_key + '/' + feed_key,
@@ -420,17 +420,17 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
                                          hvacSetpt=hvac_setpt,
                                          Q_forecast=sim['Q_bid_forecast_correction'],
                                          Q_dso_key=dso_key,
-                                         usState = sim['state'],
-                                         dsoType = dso_val['utility_type'])
+                                         usState=sim['state'],
+                                         dsoType=dso_val['utility_type'])
                 else:
                     prep.prep_substation(caseName + '/' + feed_key + '/' + feed_key,
                                          caseName + '/' + dso_key + '/' + feed_key,
                                          caseName + '/' + weather_agent_name + '/',
                                          feedercnt,
-                                         config = case_config,
-                                         hvacSetpt = hvac_setpt,
-                                         Q_forecast = sim['Q_bid_forecast_correction'],
-                                         Q_dso_key = dso_key)
+                                         config=case_config,
+                                         hvacSetpt=hvac_setpt,
+                                         Q_forecast=sim['Q_bid_forecast_correction'],
+                                         Q_dso_key=dso_key)
                 feedercnt += 1
                 print("=== DONE WITH COPPERPLATE FEEDER {0:s} for {1:s}. ======\n".format(feed_key, dso_key))
 
@@ -538,10 +538,7 @@ if __name__ == "__main__":
         # prepare_case(8, "8_hi_system_case_config", pv=1, bt=0, fl=0, ev=0)
         # prepare_case(8, "8_hi_system_case_config", pv=1, bt=1, fl=0, ev=1)
         # prepare_case(8, "8_hi_system_case_config", pv=1, bt=0, fl=1, ev=1)
-        # prepare_case(8, "8_hi_system_case_config", pv=1, bt=1, fl=1, ev=1)
-        # prepare_case(8, "8_hi_system_case_config", pv=0, bt=0, fl=1, ev=0)
         prepare_case(8, "8_hi_system_case_config", pv=1, bt=1, fl=1, ev=1)
-        # prepare_case(8, "8_hi_system_case_config", pv=1, bt=0, fl=0, ev=1)
 
         # prepare_case(200, "200_system_case_config", pv=0, bt=0, fl=0, ev=0)
         # prepare_case(200, "200_system_case_config", pv=0, bt=1, fl=0, ev=0)

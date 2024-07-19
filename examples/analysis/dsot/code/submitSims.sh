@@ -1,7 +1,9 @@
 #!/bin/bash
 
-sims="/mnt/dsot/ready"
+# change the ready folder
+sims="/mnt/dsot/run_outputs/ready"
 
+# cd to directory where the cases
 for dir in $1*
 do
   if [ -d "$dir" ]
@@ -17,4 +19,3 @@ do
     fi
   fi
 done
-
