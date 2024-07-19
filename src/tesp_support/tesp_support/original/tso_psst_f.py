@@ -303,7 +303,7 @@ def tso_psst_loop_f(casename):
 
         lseDispatch = {}
         if len(priceSenLoadData) != 0:
-            for ld in sorted(instance.PriceSensitiveLoads.data()):
+            for ld in sorted(instance.PriceSensitiveLoads.value):
                 lseDispatch[ld] = []
                 for t in sorted(instance.TimePeriods):
                     lseDispatch[ld].append(instance.PSLoadDemand[ld, t].value)
@@ -990,7 +990,7 @@ def tso_psst_loop_f(casename):
             solver = ppc['solver']
             if pst.SOLVER is not None:
                 solver = pst.SOLVER
-
+            power_level = ppc['genPowerLevel']
             priceCap = 2 * ppc['priceCap']
             used_curtail = ppc['curtail']
             genLowerLimit = ppc['genLowerLimit']
@@ -1309,8 +1309,8 @@ def tso_psst_loop_f(casename):
             genCost[i][1] = 0                  # no startup cost
             genFuel[i][3] = 1                  # turn on generator
         if genFuel[i][0] not in renewables:
-            # gen[i, 1] = gen[i, 8]              # set to maximum real power output (MW)
-            gen[i, 1] = gen[i, 9] + ((gen[i, 8] - gen[i, 9]) * 0.55)
+            gen[i, 1] = gen[i, 9] + ((gen[i, 8] - gen[i, 9]) * power_level)
+            genFuel[i][3] = 1                  # turn on generator
 
     # copy of originals for outages
     ugen = deepcopy(gen)
@@ -1500,6 +1500,17 @@ def tso_psst_loop_f(casename):
                     # get the schedule for this hour
                     rt_schedule = write_rtm_schedule(schedule)
 
+                    # Turn on all generators at start up
+                    if day == 2 and hour == 0 and not priceSensLoad:
+                        log.info("Start up " + print_time)
+                        for igen in range(numGen):
+                            if genFuel[igen][0] not in renewables:
+                                name = 'GenCo' + str(igen + 1)
+                                gen[igen, 1] = gen[igen, 9] + ((gen[igen, 8] - gen[igen, 9]) * power_level)
+                                genFuel[igen][3] = 1  # turn on generator
+                                if name in rt_schedule.keys():
+                                    rt_schedule[name] = '1'
+
                     # unplanned outage implementation on the hour
                     if outagesUnplanned:
                         # convert day and hour to 0-8760
@@ -1551,6 +1562,8 @@ def tso_psst_loop_f(casename):
             line += '{: .2f}'.format(bus[:, 2].sum()) + ','
             line += '{: .2f}'.format(gen[:, 1].sum()) + ','
             line += '{: .2f}'.format(Pswing) + ','
+
+            # LMP for each bus
             da_sum = 0
             for idx in range(bus.shape[0]):
                 line += '{: .2f}'.format(bus[idx, 13]) + ','
@@ -1576,8 +1589,8 @@ def tso_psst_loop_f(casename):
             # DAGen
             if len(last_dispatch) > 0:
                 da_sum = 0
-                for key, row in last_dispatch.items():
-                    da_sum += row[hour]
+                for key in last_dispatch:
+                    da_sum += last_dispatch[key][hour]
                 line += '{: .2f}'.format(da_sum) + ','
             else:
                 line += ' 0,'

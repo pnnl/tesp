@@ -2,8 +2,8 @@
 
 #max minus one dockers can run
 max=3
-usr="oste814"
-sims="/mnt/simdata/ready"
+#usr="oste814"
+sims="/mnt/dsot/run_outputs/ready"
 
 hostname > $sims/$(hostname).log
 
@@ -27,7 +27,7 @@ hostname > $sims/$(hostname).log
           hostname > $dir/hostname
           yes | cp -rf $dir .
 #          rm -rf $sims/$dir
-          sudo chown -R $usr:sim_group ../../*
+#          sudo chown -R $usr:sim_group ../../*
           cd $(basename $dir)
           ./docker-run.sh
           cd ..
