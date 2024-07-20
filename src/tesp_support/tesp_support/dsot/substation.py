@@ -711,6 +711,10 @@ def inner_substation_loop(metrics_root, with_market):
         log.debug('\t hour of day -> ' + str(hour_of_day))
         log.debug('\t minute of hour -> ' + str(minute_of_hour))
 
+        # Pass current time to retail market
+        retail_market_obj.current_time = current_time
+        dso_market_obj.current_time = current_time
+
         # portion that sets the initial billing information. Runs only once!
         if billing_set_defaults:
             for key, obj in hvac_agent_objs.items():
@@ -1843,9 +1847,17 @@ def inner_substation_loop(metrics_root, with_market):
                         # if Water heater real-time bid is accepted adjust the thermostat setpoint in GridLAB-D
                         water_heater_name = obj.name.replace("hse", "wh")
                         # print("Water_heater name",water_heater_name)
-                        publish(water_heater_name + '/lower_tank_setpoint', obj.Setpoint_bottom)
-                        publish(water_heater_name + '/upper_tank_setpoint', obj.Setpoint_upper)
-                        # print('My published setpoints',obj.Setpoint_bottom, obj.Setpoint_upper)
+                        try:
+                            publish(water_heater_name + '/lower_tank_setpoint', obj.Setpoint_bottom)
+                            publish(water_heater_name + '/upper_tank_setpoint', obj.Setpoint_upper)
+                            # print('My published setpoints',obj.Setpoint_bottom, obj.Setpoint_upper)
+                        except:
+                            water_heater_name = water_heater_name.replace("_Middle", "")
+                            water_heater_name = water_heater_name.replace("_Low", "")
+                            water_heater_name = water_heater_name.replace("_Upper", "")
+                            publish(water_heater_name + '/lower_tank_setpoint', obj.Setpoint_bottom)
+                            publish(water_heater_name + '/upper_tank_setpoint', obj.Setpoint_upper)
+                            # print('My published setpoints',obj.Setpoint_bottom, obj.Setpoint_upper)
 
                     timing(proc[17], True)
                     if write_metrics:
