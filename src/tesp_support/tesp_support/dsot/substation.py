@@ -1859,7 +1859,6 @@ def inner_substation_loop(metrics_root, with_market):
                             publish(water_heater_name + '/upper_tank_setpoint', obj.Setpoint_upper)
                             # print('My published setpoints',obj.Setpoint_bottom, obj.Setpoint_upper)
 
-
                     timing(proc[17], True)
                     if write_metrics:
                         # ('bid_four_point_rt', [[retail_unit, '$/' + retail_unit]] * 4),
