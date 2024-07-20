@@ -185,7 +185,6 @@ def inner_substation_loop(configfile, metrics_root, with_market):
             dso_market_obj = DSOMarket(dso_config, dso_name)
 
             # check the unit of the market
-            dso_bus = config['markets'][key]['bus']
             dso_unit = config['markets'][key]['unit']
             dso_full_metrics = config['markets'][key]['full_metrics_detail']  # True for full
 
@@ -1219,7 +1218,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                       'resp_c1': retail_market_obj.AMES_RT[3],
                       'resp_c0': retail_market_obj.AMES_RT[4],
                       'resp_deg': retail_market_obj.AMES_RT[5]}
-            publish('rt_bid_' + str(dso_bus), json.dumps(rt_bid))
+            fncs.publish('rt_bid', json.dumps(rt_bid))
 
             print('Real-time bid at', time_granted, '=', retail_market_obj.AMES_RT, flush=True)
             log.info('Total RT bid to AMES unresponsive' + '=' + str(retail_market_obj.AMES_RT[0]) + 'MW')
@@ -1260,7 +1259,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
 
             da_bid['unresp_mw'] = forecast_obj.correcting_Q_forecast_10_AM(da_bid['unresp_mw'], offset, day_of_week)
             
-            publish('da_bid_' + str(dso_bus), json.dumps(da_bid))
+            fncs.publish('da_bid', json.dumps(da_bid))
 
             print('Day-Ahead bid at', time_granted, '=', retail_market_obj.AMES_DA, flush=True)
             log.info('First hour total DA bid to AMES unresponsive' + '=' + str(retail_market_obj.AMES_DA[offset+1]) + 'MW')
