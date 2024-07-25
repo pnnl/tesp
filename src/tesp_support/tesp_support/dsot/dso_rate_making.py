@@ -1212,6 +1212,7 @@ def calculate_consumer_bills(
                 elif rate_scenario == "subscription":
                     # Calculate the consumer's net deviation charge under the
                     # subscription rate
+                    # TODO: Incorporate dynamic capital cost recovery price
                     bill_df.loc[(each, "subscription_net_deviation_charge"), m] = sum(
                         da_lmp_stats.loc[str(t), "da_lmp" + dso_num]
                         * (demand_df.loc[t, each] - bl_demand_df.loc[t, each])
@@ -2163,6 +2164,7 @@ def calculate_tariff_prices(
 
                     # Update the total revenue from the net deviation charges for each
                     # residential and commercial consumer during each season
+                    # TODO: Incorporate dynamic capital cost recovery price
                     rev_net_deviation_charge_sub_rc[s] += sum(
                         da_lmp_stats.loc[str(t), "da_lmp" + dso_num]
                         * (demand_df[s].loc[t, each] - bl_demand_df[s].loc[t, each])
@@ -2248,6 +2250,7 @@ def calculate_tariff_prices(
 
                     # Update the total revenue from the net deviation charges for each
                     # industrial consumer during each season
+                    # TODO: Incorporate dynamic capital cost recovery price
                     rev_net_deviation_charge_sub_i[s] += sum(
                         da_lmp_stats.loc[str(t), "da_lmp" + dso_num]
                         * (demand_df[s].loc[t, each] - bl_demand_df[s].loc[t, each])
@@ -2358,6 +2361,7 @@ def calculate_tariff_prices(
                     for s in seasons_dict:
                         # Update the total revenue from the net deviation charges for 
                         # subscription consumers during each season
+                        # TODO: Incorporate dynamic capital cost recovery price
                         rev_net_deviation_charge_sub[s] += sum(
                             da_lmp_stats.loc[str(t), "da_lmp" + dso_num]
                             * (demand_df[s].loc[t, each] - bl_demand_df[s].loc[t, each])
