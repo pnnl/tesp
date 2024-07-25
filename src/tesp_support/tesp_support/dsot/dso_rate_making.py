@@ -432,8 +432,6 @@ def annual_energy(month_list, folder_prefix, dso_num, metadata):
 def create_demand_profiles_for_each_meter(
     dir_path,
     dso_num,
-    year,
-    month,
     day_range,
     save=False,
 ):
@@ -443,8 +441,6 @@ def create_demand_profiles_for_each_meter(
         dir_path (str): Contains file path of daily power and voltage information for 
         each meter in five-minute time steps.
         dso_num (int): The number of a valid substation in the system model.
-        year (int): The year under consideration.
-        month (int): The month under consideration.
         day_range (list): List of day numbers in a month to be considered.
         save (bool): Indicates whether or not the output data should be saved in a .h5
         file. If True, data is saved to the same location as what is provided in 
@@ -452,34 +448,6 @@ def create_demand_profiles_for_each_meter(
     Returns:
         demand_df (pandas.DataFrame): Monthly hourly demand data for each meter.
     """
-    # Make sure day_range is sorted
-    day_range.sort()
-
-    # Validate first and last days in day_range
-    if day_range[0] < 1:
-        raise ValueError("The first day in day_range is not valid. Please try again.")
-    if (
-        ((day_range[-1] > 31) and (month in [1, 3, 5, 7, 8, 10, 12]))
-        or ((day_range[-1] > 30) and (month in [4, 6, 9, 11]))
-        or (
-            (month == 2)
-            and (
-                ((day_range[-1] > 29) and (year % 4 == 0))
-                or ((day_range[-1] > 28) and (year % 4 != 0))
-            )
-        )
-    ):
-        raise ValueError("The last day in day_range is not valid. Please try again.")
-
-    # Check the month
-    if not isinstance(month, int):
-        raise TypeError("The month needs to be provided as an int. Please try again.")
-    if (month < 1) or (month > 12):
-        raise ValueError(
-            "Provided month integers must fall between 1 and 12, inclusive. Please "
-            + "try again."
-        )
-
     # Iterate through the days to access the demand data
     demand_dict = {}
     for day in day_range:
@@ -490,6 +458,12 @@ def create_demand_profiles_for_each_meter(
         meter_data_df["date"] = meter_data_df["date"].str.replace("CDT", "", regex=True)
         meter_data_df["date"] = pd.to_datetime(meter_data_df["date"])
         meter_data_df = meter_data_df.set_index(["time", "name"])
+
+        # Identify the start and end indices, for use in the DataFrame
+        if day == day_range[0]:
+            start_index = meter_data_df["date"].iloc[0].date()
+        if day == day_range[-1]:
+            end_index = meter_data_df["date"].iloc[-1].date()
 
         # Distribute demand data from meter_data_df to demand_df
         for meter in meter_data_df.index.get_level_values("name").unique():
@@ -510,28 +484,9 @@ def create_demand_profiles_for_each_meter(
                     )
                 )
 
-    # Identify the end index
-    if (
-        ((day_range[-1] == 31) and (month in [1, 3, 5, 7, 8, 10, 12]))
-        or ((day_range[-1] == 30) and (month in [4, 6, 9, 11]))
-        or (
-            (month == 2)
-            and (
-                ((day_range[-1] == 29) and (year % 4 == 0))
-                or ((day_range[-1] == 28) and (year % 4 != 0))
-            )
-        )
-    ):
-        if month == 12:
-            end_index = "01/01/" + str(year + 1)
-        else:
-            end_index = str(month + 1) + "/01/" + str(year)
-    else:
-        end_index = str(month) + "/" + str(day_range[-1] + 1) + "/" + str(year)
-
     # Identify the timestamp index that will be used in the time-series demand DataFrame
     index = pd.date_range(
-        start=str(month) + "/" + str(day_range[0]) + "/" + str(year),
+        start=start_index,
         end=end_index,
         freq="5min",
         inclusive="left",
