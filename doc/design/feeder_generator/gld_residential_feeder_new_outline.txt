@@ -1,0 +1,33 @@
+Read original.glm
+Read model configuration
+	glm_config.json5 (user-defined scenarios, ~20 defined parameters)
+	gld_defaults.json5 (legacy/reasonable defaults)
+Read in RECS data, pre-processes  (defines housing parameters and cross-correlations)
+	recs_data_set()
+.glm preamble 
+	includes (schedules)
+	objects (climate)
+	defines ()
+	set (profiler, iteration_limit)
+	module (clock, residential, powerflow, tape, generators)
+Identify & classify load conversion points
+	identify_xfmr_houses
+Generate residential customer 
+	add_houses()
+		enduse (default=ZIP load & schedules, GLD built-in, none) 
+		Water heater (distribution system type)
+Add object to house object
+	EV charger
+Add sub-meters to billing meter
+	Solar
+		inverter
+		panel
+	Battery
+		inverter
+		battery
+Redistribute excess load
+	add_small_loads()
+Write out .glm
+	modified.glm
+Optional inspect 
+	glm_mod_dict.json (aligns glm_inspect.py)
