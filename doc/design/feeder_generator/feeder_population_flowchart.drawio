@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="M40tJBM27hI6XAPLBgmJ" name="Page-1">
-        <mxGraphModel dx="1576" dy="964" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="10000" pageHeight="10000" math="0" shadow="0">
+        <mxGraphModel dx="987" dy="672" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="10000" pageHeight="10000" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -35,7 +35,7 @@
                     <mxGeometry x="2175" y="150" width="80" height="80" as="geometry"/>
                 </mxCell>
                 <mxCell id="33" value="original.glm" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;" parent="1" vertex="1">
-                    <mxGeometry x="190" y="150" width="80" height="80" as="geometry"/>
+                    <mxGeometry x="170" y="150.5" width="80" height="80" as="geometry"/>
                 </mxCell>
                 <mxCell id="34" style="edgeStyle=none;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitPerimeter=0;" parent="1" source="33" target="2" edge="1">
                     <mxGeometry relative="1" as="geometry">
@@ -53,7 +53,7 @@
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="38" value="glm_config.json5" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;" parent="1" vertex="1">
-                    <mxGeometry x="325" y="150" width="110" height="80" as="geometry"/>
+                    <mxGeometry x="275" y="120" width="110" height="80" as="geometry"/>
                 </mxCell>
                 <mxCell id="39" style="edgeStyle=none;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" source="38" target="35" edge="1">
                     <mxGeometry relative="1" as="geometry">
@@ -278,6 +278,18 @@
                         <mxPoint x="358.34342503227094" y="776.2614499582369" as="sourcePoint"/>
                         <mxPoint x="391.5817815945745" y="733.6805665212619" as="targetPoint"/>
                     </mxGeometry>
+                </mxCell>
+                <mxCell id="104" value="&lt;br&gt;Annotate to indicate which GLD obj &lt;br&gt;class for each of these" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                    <mxGeometry x="170" y="630" width="210" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="106" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="105" target="35">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="105" value="gld_defaults.json5" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;" vertex="1" parent="1">
+                    <mxGeometry x="410" y="120" width="110" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="107" value="Add ordinality to diagram" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                    <mxGeometry x="140" y="715" width="160" height="30" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>

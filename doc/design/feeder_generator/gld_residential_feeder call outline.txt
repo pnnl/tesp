@@ -7,6 +7,7 @@ _test1
         glm.model.draw_network()
         self.accumulate_load_kva()
         ### Add .glm boilerplate  ###
+        ######## add_headers() ########
             glm.add_modules(modules)
             glm.model.include_lines(schedules)
             glm.model.set_lines(#set...)
@@ -14,9 +15,11 @@ _test1
             glm.model.add_object(climate)
             glm.model.define_lines(#define inverter settings)
             glm.model.add_object(voltage and current dump)
-            self.add_xfmr_config
-            self.add_local_triplex_configurations()
-            self.add_config_class(lots of configuration classes)
+            ######## add_configs() ########
+            ######## add_xfrmer_configs() ########
+                self.add_xfmr_config
+                self.add_local_triplex_configurations()
+                self.add_config_class(lots of configuration classes)
             self.add_link_class(lots of link classes)
         self.replace_commercial_loads(glm model)
             self.accumulate_load_kva()
