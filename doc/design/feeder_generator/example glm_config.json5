@@ -2,8 +2,66 @@
 // configure the process of populating a feeder. 
 
 {
-    "average house load": <float>, // Used to determine how many houses are used to replace a given zip load.
+    "state": <string> // REQUIRED
+    "RECS data file": <string> 
+    "income distribution": { // Must sum to 1
+        "low": // DEFAULT: defined by RECS data
+        "middle": // DEFAULT: defined by RECS data
+        "upper": // DEFAULT: defined by RECS data
+    },
+
+ // Preamble Definitions
+    "starttime": <string>, // DEFAULT: "2023-01-01 00:00:00"
+    "stoptime": <string>, // DEFAULT: "2023-01-02 00:00:00"
+    "timezone": <string>, // REQUIRED
+    "tmyfile": <string>, // REQUIRED
+
+// add_houses Defininitions
+    "enduses": {
+        "lights": <string "none" or "gld implicit" or "ZIPload">, //DEFAULT: gld implicit
+        "plugs": <string "none" or "gld implicit" or "ZIPload">, //DEFAULT: gld implicit
+        "clotheswasher": <string "none" or "gld implicit" or "ZIPload">, //DEFAULT: gld implicit
+        "refrigerator": <string "none" or "gld implicit" or "ZIPload">, //DEFAULT: gld implicit
+        "dryer": <string "none" or "gld implicit" or "ZIPload">, //DEFAULT: gld implicit
+        "freezer": <string "none" or "gld implicit" or "ZIPload">, //DEFAULT: gld implicit
+        "dishwasher": <string "none" or "gld implicit" or "ZIPload">, //DEFAULT: gld implicit
+        "range": <string "none" or "gld implicit" or "ZIPload">, //DEFAULT: gld implicit
+        "microwave": <string "none" or "gld implicit" or "ZIPload">, //DEFAULT: gld implicit
+    }
+    "average house load": <float>, // Used to determine how many houses are used to replace a given zip load. DEFAULT: 5000 W
+    "waterheater heat_mode distribution": {// Must sum to 1 
+        "electric": <float>, // DEFAULT: determined by RECS data
+        "gas": <float>, // DEFAULT: determined by RECS data
+        "heat pump": <float>, //DEFAULT: determined by RECS data
+        },
+
+// add_ev Definitions
+    "EV installation penetration": <float>, // the percentage of households with EVs, DEFAULT: determined by RECS data
+    "battery size distribution": { // uniform distribution
+        "min battery size": <float>, //DEFAULT: 50 kWh, https://insideevs.com/reviews/344001/compare-evs/
+        "max battery size": <float>, //DEFAULT: 125 kWh, https://insideevs.com/reviews/344001/compare-evs/
+    },
+    "charging power distribution": { // must sum to 1
+        "level 1": <float>, // DEFAULT: 0.1 made up by Trevor, charging power is 3.5 kW
+        "level 2": <float>, // DEFAULT: 0.9, made up by Trevor, charging power is 5-12 kW, https://www.evchargerreviews.net/best-ev-chargers-for-home-use/
+    },
+
+// add_solar Definitions
+    "solar installation penetration": <float>, // the percentage of households with solar, DEFAULT: determined by RECS data
+    "solar installation rated power": { // uniform distribution
+        "min solar size": <float>, //DEFAULT: 6 kW
+        "max solar size": <float> //DEFAULT: 8 kW
+    },
+    "inverter rated power": <float>, // DEFAULT: same as solar installation rated power
     
 
+// add_battery Definitions
+    "battery installation penetration": <float>, // the percentage of households with batteries, DEFAULT: determined by RECS data
+    "battery installation rated power": { // uniform distribution
+        "min battery size": <float>, //DEFAULT: 9 kWh Generac power cell
+        "max batter size": <float>, //DEFAULT: 18 kWh Panasonic Evervolt
+    },
+    "battery roundtrip efficiency": <float>, // DEAFULT: 0.93
+    "inverter efficiency": <float>, // DEFAULT: 0.98
 
 }
