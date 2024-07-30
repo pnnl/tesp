@@ -1,33 +1,61 @@
 Read original.glm
 Read model configuration
-	glm_config.json5 (user-defined scenarios, ~20 defined parameters)
-	gld_defaults.json5 (legacy/reasonable defaults)
-Read in RECS data, pre-processes  (defines housing parameters and cross-correlations)
-	recs_data_set()
-.glm preamble 
-	includes (schedules)
-	objects (climate)
-	defines ()
-	set (profiler, iteration_limit)
-	module (clock, residential, powerflow, tape, generators)
-Identify & classify load conversion points
-	identify_xfmr_houses
+	Read-in glm_config.json5 - User-defined values that may override defaults
+	Read-in gld_defaults.json5 - Legacy defaults 
+Read in RECS data, pre-processes  - defines some model parameters and (one day) cross-correlations
+	recs_data_set() - Uses "state", "RECS data path", and "income distribution" from glm_config.json5
+Add to model: .glm preamble 
+	includes
+		schedules
+			appliance_schedules - Only if glm_config "enduses" calls out "ZIPload"
+			water_and_setpoint_schedules - always
+			commercial_schedules - always
+	objects
+		climate
+			tmyfile - defined in glm_config
+			interpolation - "QUADRATIC"
+	class player
+		always add
+			"class player {
+				 double value; 
+			};"
+	#sets
+		minimum_timestep - glm_config
+		profiler - 1
+	modules
+		powerflow - Use default
+			module powerflow {
+    			solver_method NR;
+     			NR_iteration_limit 50;
+     			lu_solver "KLU_x64";
+			};
+		tape
+		climate
+		residential	
+			default is GLD built-in (defined in residential module declaration, see https://gridlab-d.shoutwiki.com/wiki/Residential_(module))
+		generator
+Identify & classify load conversion points - Triplex nodes after service transformers
+	identify_xfmr_houses()
 Generate residential customer 
 	add_houses()
-		enduse (default=ZIP load & schedules, GLD built-in, none) 
-		Water heater (distribution system type)
+		enduses - if not using gld implicit enduses, add in ZIPload objects with schedules
+		Water heater - glm_config to define distribution of water heater type
 Add object to house object
-	EV charger
+	EVcharger_det object - glm_config for installation factor and battery size distribution
 Add sub-meters to billing meter
-	Solar
-		inverter
-		panel
-	Battery
-		inverter
-		battery
+	Solar - glm_config for installation factor (whether a given house gets it)
+		inverter object- glm_config for rated power
+		solar panel object - glm_config for rated power distribution
+	Battery - glm_config for installation factor (whether a given house gets it)
+		inverter - glm_config for efficiency
+		battery - glm_config for efficiency and size
 Redistribute excess load
 	add_small_loads()
+Generate commercial loads at commercial load conversion points - We're not doing anything new here.
 Write out .glm
 	modified.glm
-Optional inspect 
-	glm_mod_dict.json (aligns glm_inspect.py)
+(Future feature) GLMInspect - new class that users can use to provide insight into the model
+	Summarizes changes made and prints to console
+	Detailed summary to output JSON
+	Makes graphs of various parameter values
+	Make visual representation of model (using existing networkx layout)

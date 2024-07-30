@@ -2,19 +2,25 @@
 // configure the process of populating a feeder. 
 
 {
-    "state": <string> // REQUIRED
-    "RECS data file": <string> 
+    "state": <string>, // REQUIRED
+    "RECS data file": <string>, //DEFAULT is path that is same as GLD model fil
     "income distribution": { // Must sum to 1
-        "low": // DEFAULT: defined by RECS data
-        "middle": // DEFAULT: defined by RECS data
-        "upper": // DEFAULT: defined by RECS data
+        "low": <float>, // DEFAULT: defined by RECS data
+        "middle": <float>, // DEFAULT: defined by RECS data
+        "upper": <float>, // DEFAULT: defined by RECS data
     },
+    "random seed": <int>, // DEFAULT: 1 - seeds randomizer used in populating the models
 
  // Preamble Definitions
     "starttime": <string>, // DEFAULT: "2023-01-01 00:00:00"
     "stoptime": <string>, // DEFAULT: "2023-01-02 00:00:00"
     "timezone": <string>, // REQUIRED
     "tmyfile": <string>, // REQUIRED
+    "minimum timestep": <int>, // DEFAULT: 60
+
+// Co-simulation
+    "HELICS config": <string>, //DEFAULT is "none" which
+    // If "none", don't include the "object helics_msg" in the preamble
 
 // add_houses Defininitions
     "enduses": {
@@ -36,7 +42,7 @@
         },
 
 // add_ev Definitions
-    "EV installation penetration": <float>, // the percentage of households with EVs, DEFAULT: determined by RECS data
+    "EV installation factor": <float>, // the percentage of households with EVs, DEFAULT: determined by RECS data
     "battery size distribution": { // uniform distribution
         "min battery size": <float>, //DEFAULT: 50 kWh, https://insideevs.com/reviews/344001/compare-evs/
         "max battery size": <float>, //DEFAULT: 125 kWh, https://insideevs.com/reviews/344001/compare-evs/
@@ -47,7 +53,7 @@
     },
 
 // add_solar Definitions
-    "solar installation penetration": <float>, // the percentage of households with solar, DEFAULT: determined by RECS data
+    "solar installation factor": <float>, // the percentage of households with solar, DEFAULT: determined by RECS data
     "solar installation rated power": { // uniform distribution
         "min solar size": <float>, //DEFAULT: 6 kW
         "max solar size": <float> //DEFAULT: 8 kW
@@ -56,7 +62,7 @@
     
 
 // add_battery Definitions
-    "battery installation penetration": <float>, // the percentage of households with batteries, DEFAULT: determined by RECS data
+    "battery installation factor": <float>, // the percentage of households with batteries, DEFAULT: determined by RECS data
     "battery installation rated power": { // uniform distribution
         "min battery size": <float>, //DEFAULT: 9 kWh Generac power cell
         "max batter size": <float>, //DEFAULT: 18 kWh Panasonic Evervolt
