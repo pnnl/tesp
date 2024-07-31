@@ -1,12 +1,18 @@
-Read original.glm
+(Optional) Run RECS augmentation script - Adds income column; talk to economists to figure out how to implement
+	input: RECS microdata from website (CSV?)
+	produces "RECSwincomeLvl.csv"
+(Optional) Run RECS_gld_house_parameters.py - Only needed if changes are made to the augmented-with-income RECS data
+	input: "RECSwincomeLvl.csv"
+	produces "recs_residential_metadata.json" - contains distribution of house object parameters based on income, location and vintage (and DSO_type?)
+Read in "recs_residential_metadata.json"
+	recs_data_set() - Uses "state", "RECS data path", and "income distribution" from glm_config.json5
+Read original.glm - Could be any feeder but will have to have signature structure to define where house objects are added.
 Read model configuration
 	Read-in glm_config.json5 - User-defined values that may override defaults
 	Read-in gld_defaults.json5 - Legacy defaults 
-Read in RECS data, pre-processes  - defines some model parameters and (one day) cross-correlations
-	recs_data_set() - Uses "state", "RECS data path", and "income distribution" from glm_config.json5
-Add to model: .glm preamble 
+Add .glm preamble - Don't duplicate any existing lines/definitions
 	includes
-		schedules
+		schedules - 
 			appliance_schedules - Only if glm_config "enduses" calls out "ZIPload"
 			water_and_setpoint_schedules - always
 			commercial_schedules - always
@@ -22,6 +28,8 @@ Add to model: .glm preamble
 	#sets
 		minimum_timestep - glm_config
 		profiler - 1
+	#defines
+		TODO
 	modules
 		powerflow - Use default
 			module powerflow {
@@ -29,28 +37,29 @@ Add to model: .glm preamble
      			NR_iteration_limit 50;
      			lu_solver "KLU_x64";
 			};
-		tape
-		climate
-		residential	
+		tape - always
+		climate - always
+		residential	 - always
 			default is GLD built-in (defined in residential module declaration, see https://gridlab-d.shoutwiki.com/wiki/Residential_(module))
-		generator
+		generator - always
 Identify & classify load conversion points - Triplex nodes after service transformers
-	identify_xfmr_houses()
-Generate residential customer 
+	identify_xfmr_houses() - Ideally, provide a way for users to define their own signature for where to add houses.
+Generate residential customer - Uses lists of conversion points provided by above function
 	add_houses()
 		enduses - if not using gld implicit enduses, add in ZIPload objects with schedules
 		Water heater - glm_config to define distribution of water heater type
-Add object to house object
-	EVcharger_det object - glm_config for installation factor and battery size distribution
-Add sub-meters to billing meter
-	Solar - glm_config for installation factor (whether a given house gets it)
-		inverter object- glm_config for rated power
-		solar panel object - glm_config for rated power distribution
-	Battery - glm_config for installation factor (whether a given house gets it)
-		inverter - glm_config for efficiency
-		battery - glm_config for efficiency and size
-Redistribute excess load
-	add_small_loads()
+
+		Add object to house object
+			EVcharger_det object - glm_config for installation factor and battery size distribution
+		Add sub-meters to billing meter
+			Solar - glm_config for installation factor (whether a given house gets it)
+				inverter object- glm_config for rated power
+				solar panel object - glm_config for rated power distribution
+			Battery - glm_config for installation factor (whether a given house gets it)
+				inverter - glm_config for efficiency
+				battery - glm_config for efficiency and size
+		Redistribute excess load
+			add_small_loads()
 Generate commercial loads at commercial load conversion points - We're not doing anything new here.
 Write out .glm
 	modified.glm
