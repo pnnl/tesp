@@ -7,7 +7,7 @@ import json
 import GenerateVehicleInventoryFromAdaptionData_v2
 import MapEVstoGridLocations
 import ev_times
-import EV_uncontrolled_case_v2
+import EV_uncontrolled_case_v3
 import glob
 import DSOT_post_processing_aggregated_folders
 import scm_main_v2
@@ -116,7 +116,7 @@ def main(date_name, EV_preprocess_localization_skip, EV_placement_on_grid, extra
     random.seed(42)  # Set the random number generator to a fixed sequence.
 
 
-    # extract_load_forecast = False
+    extract_load_forecast = False
     if extract_load_forecast:
         # extract load forecast in all subfolders
         # create load forecast input for SCM planning
@@ -314,7 +314,7 @@ def main(date_name, EV_preprocess_localization_skip, EV_placement_on_grid, extra
             implement_assumptions_on_vehicle_inventory(randomsoc, output_file_save_loc, value, year_list[idx])
 
     # exit()
-    # uncontrolled = False
+    uncontrolled = False
     if uncontrolled:
         for idx, value in enumerate(size_list):
 
@@ -327,10 +327,13 @@ def main(date_name, EV_preprocess_localization_skip, EV_placement_on_grid, extra
             os.makedirs(f"Uncontrolled_results_{custom_suffix_sim_run_uncontrolled}", exist_ok=True)
             outputfilename = f"Uncontrolled_results_{custom_suffix_sim_run_uncontrolled}/uncontrolled_{value}_Year_{year_list[idx]}.csv"
 
+            list_of_days_to_simulate = ['7-10-2021', '7-11-2021', '7-12-2021', '7-13-2021', '7-14-2021', '7-15-2021',
+                                        '7-16-2021']
             all_load_days, per_day_profile, loads_at_locations, main_output_df = (
-                EV_uncontrolled_case_v2.main(path, list_of_days_to_simulate, num_hours, outputfilename))
+                EV_uncontrolled_case_v3.main(path, list_of_days_to_simulate, num_hours, outputfilename, depletionassumption,
+                                             randomsoc))
 
-    exit()
+    # exit()
     if controlled:
         failed_xfrmr_df = pd.DataFrame()
         for idx, value in enumerate(size_list):
@@ -371,13 +374,15 @@ def main(date_name, EV_preprocess_localization_skip, EV_placement_on_grid, extra
                                    f"_{each_zone}_Year_{year_list[idx]}.csv")
                 outputfilename5 = (f"Controlled_results_{custom_suffix_sim_run}/number_ports_sessions_in_use"
                                    f"_{each_zone}_Year_{year_list[idx]}.csv")
+                outputfilename6 = (f"Controlled_results_{custom_suffix_sim_run}/total_vehicles_available_at_times"
+                                   f"_{each_zone}_Year_{year_list[idx]}.csv")
 
                 print(f"Processing year = {year_list[idx]}, grid size and climate zone = {each_zone}...")
 
                 failed_xfrmrs = scm_main_v2.main(inventory_filename, grid_forecast_filename, size_of_batch,
                                                xfmr_rating_data_filename,
                               outputfilename1, outputfilename2, sens_flag, threshold_cutoff, smooth, outputfilename3,
-                                                 outputfilename4, outputfilename5)
+                                                 outputfilename4, outputfilename5, outputfilename6)
 
                 current_df = pd.DataFrame()
                 if len(failed_xfrmrs) != 0:

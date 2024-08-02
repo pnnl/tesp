@@ -571,11 +571,11 @@ def main():
 def main_plot_perfect_actual():
     # NOTE: THIS CODE IS NOT PERFECT! INDEXING IS NOT PERFECT WHEN SORTING. IT ONLY WORKS BECAUSE THE ALL THE INPUT
     # FILES ARE ALREADY IN SYNCHED ORDER WITH RESPECT TO THE HOURS WHEN A PARTICULAR DAY IS SELECTED!!!!
-    energy_filename = 'controlled_ev_energy_AZ_Tucson_Large_Year_2042_kj14.csv'
+    energy_filename = 'controlled_ev_energy_AZ_Tucson_Large_Year_2042.csv'
 
-    ev_demand_filename = 'controlled_ev_AZ_Tucson_Large_Year_2042_kj14.csv'  # 'controlled_ev_demand_smooth3.csv'
+    ev_demand_filename = 'controlled_ev_AZ_Tucson_Large_Year_2042.csv'  # 'controlled_ev_demand_smooth3.csv'
 
-    grid_forecast_filename = 'AZ_Tucson_Large_grid_forecast_kj14.csv'
+    grid_forecast_filename = 'AZ_Tucson_Large_grid_forecast.csv'
 
 
     energy_ports_filename = 'ev_energy_ports_connected_AZ_Tucson_Large_Year_2042.csv'
@@ -589,8 +589,8 @@ def main_plot_perfect_actual():
 
     year = 2042
     month = 7
-    day_energy = 5
-    day_grid_forecast = 10
+    day_energy = 14
+    day_grid_forecast = 14
 
     energy_df = pd.read_csv(energy_filename)
     ev_demand_df = pd.read_csv(ev_demand_filename)
@@ -677,7 +677,9 @@ def main_plot_perfect_actual():
             ev_demand_y_values = np.append(ev_demand_y_values, ev_demand_y_values[10])
     ev_demand_y_values = ev_demand_y_values[idxa2]
 
-    ev_demand_y_values = [list(ev_demand_y_values)[-1]] + list(ev_demand_y_values)[:-1]
+    # ev_demand_y_values = [list(ev_demand_y_values)[-1]] + list(ev_demand_y_values)[:-1]
+
+    energy_y_values = list(energy_y_values)[1:] + [list(energy_y_values)[0]]
 
     grid_demand_y_values = grid_demand_df.sum(axis=1) / 1000 / 1000  # convert to mwh
     grid_demand_y_values = np.array(grid_demand_y_values)
@@ -687,7 +689,7 @@ def main_plot_perfect_actual():
     grid_demand_y_values = [x + ev_demand_y_values[fx] for fx, x in enumerate(grid_demand_y_values)]
 
     # fig = go.Figure()
-    fig = plotly.subplots.make_subplots(rows=4, cols=1)
+    fig = plotly.subplots.make_subplots(rows=4, cols=1, shared_xaxes=True)
 
     fig.add_trace(go.Scatter(
         x=x_values,
@@ -695,7 +697,7 @@ def main_plot_perfect_actual():
         name="Aggregated Stored Energy of all EVs (MWh)",
         mode='lines',
         marker=dict(color='rgb(31, 119, 180)'),
-        showlegend=True
+        showlegend=False
     ), row=1, col=1)
 
     fig.add_trace(go.Scatter(
@@ -703,8 +705,8 @@ def main_plot_perfect_actual():
         y=energy_y_values_ports,
         name="Stored Energy of EVs at Charging Stations (MWh)",
         mode='lines',
-        marker=dict(color='rgb(31, 119, 180)'),
-        showlegend=True
+        marker=dict(color='#d62728'),
+        showlegend=False
     ), row=2, col=1)
 
     fig.add_trace(go.Scatter(
@@ -714,7 +716,7 @@ def main_plot_perfect_actual():
         # yaxis="y2",
         mode='lines',
         marker=dict(color='rgb(255, 127, 14)'),
-        showlegend=True
+        showlegend=False
     ), row=3, col=1)
 
     fig.add_trace(go.Scatter(
@@ -724,23 +726,23 @@ def main_plot_perfect_actual():
         # yaxis="y",
         mode='lines',
         line=dict(color='rgb(44, 160, 44)'),
-        showlegend=True
+        showlegend=False
     ), row=4, col=1)
 
     fig.update_layout(
         # group together boxes of the different
         # traces for each value of x
-        yaxis=dict(
-            # title="Aggregated Stored Energy in EVs (MWh)",
-            titlefont_size=20,
-            tickfont_size=16,
-            titlefont=dict(
-                color="#1f77b4"
-            ),
-            tickfont=dict(
-                color="#1f77b4"
-            )
-        ),
+        # yaxis=dict(
+        #     # title="Aggregated Stored Energy in EVs (MWh)",
+        #     titlefont_size=20,
+        #     tickfont_size=16,
+        #     titlefont=dict(
+        #         color="#1f77b4"
+        #     ),
+        #     tickfont=dict(
+        #         color="#1f77b4"
+        #     )
+        # ),
         # yaxis2=dict(
         #     title="Aggregated EV Charging (MW)",
         #     titlefont_size=20,
@@ -773,14 +775,14 @@ def main_plot_perfect_actual():
         #     tickmode="sync",
         #     autoshift=True
         # ),
-        xaxis=dict(
-            titlefont_size=20,
-            tickfont_size=16,
-        ),
+        # xaxis=dict(
+        #     titlefont_size=20,
+        #     tickfont_size=16,
+        # ),
         font=dict(
-            family="Courier New, monospace",
-            size=20,
-            color="RebeccaPurple"
+            family="Times New Roman",
+            size=30,
+            color="black"
         ),
         paper_bgcolor='rgba(255,255,255,1)',
         plot_bgcolor='rgba(255,255,255,1)',
@@ -788,12 +790,23 @@ def main_plot_perfect_actual():
     )
     fig.update_xaxes(showline=True, linewidth=2, linecolor='black')
     fig.update_yaxes(showline=True, linewidth=2, linecolor='black')
+    fig.update_yaxes(title_text="MWh", row=1, col=1)
+    fig.update_yaxes(title_text="MWh", row=2, col=1)
+    fig.update_yaxes(title_text="MW", row=3, col=1)
+    fig.update_yaxes(title_text="MW", row=4, col=1)
     # fig.show()
 
     plotly.offline.plot(fig,
                         filename=savfilename,
                         auto_open=True)
 
+    list_of_lists = [x_values_ma, energy_y_values, energy_y_values_ports, ev_demand_y_values, grid_demand_y_values]
+    list_of_lists = np.array(list_of_lists).T.tolist()
+    col_names_here = ["Time", "Stored Energy All EVs", "Stored Energy - EVs connected to grid", "Instantaneous EV "
+                                                                                                "demand",
+                      "Total demand, grid and EV"]
+    df_to_save_here = pd.DataFrame(data=list_of_lists, columns=col_names_here)
+    df_to_save_here.to_excel("Data_to_share_for_ppt.xlsx")
     k = 1
 
 

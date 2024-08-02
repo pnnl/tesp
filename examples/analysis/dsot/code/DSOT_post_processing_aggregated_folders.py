@@ -1012,6 +1012,7 @@ def plot1a_task_percentoverload(zone_name, input_basecase_folder_name, GLD_prefi
         cnsolidated_xfrmr_to_size_map2 = dict()
         consolidated_xfrmr_all_in_va_df = pd.DataFrame()
         pure_res_xfrmr_size_mapping = {}
+        pure_res_xfrmrs_with_houses_info = {}
         for x in range(sets_in_all_folders[idx]):
             path = r'/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/code/' + value + f"_{x+1}_fl" + GLD_prefix + '1/'
             # load_to_xfrmr_config_map_dict, config_to_power_rating_map_dict, load_to_xfrmr_name, xfrmr_name_to_size = transformer_map(
@@ -1063,6 +1064,8 @@ def plot1a_task_percentoverload(zone_name, input_basecase_folder_name, GLD_prefi
                         print(key)
                         print("unexpected feeder...exiting")
                         exit()
+
+                    pure_res_xfrmrs_with_houses_info[key_h + f"_set{x + 1}"] = valuerr
 
                     # also lets grab the size of the residential xfrmr. This was not done during gov analysis. So this data
                     # needs to be appended to the ALL commerical xfrmrs dictionary at the end.
@@ -1221,7 +1224,7 @@ def plot1a_task_percentoverload(zone_name, input_basecase_folder_name, GLD_prefi
         # go through all columns of test and find total count of violations for entire simulation time.
         cumm_vio_counts = []
         for h_idx, hh_value in enumerate(transformer_names):
-            cumm_vio_counts.append(test[test[hh_value]>100].shape[0])
+            cumm_vio_counts.append(test[test[hh_value]>125].shape[0])
         cumm_vio_counts_list.append(cumm_vio_counts)
 
         list_data.append(flatten(test_hourly.values.tolist()))
@@ -1277,12 +1280,12 @@ def plot1a_task_percentoverload(zone_name, input_basecase_folder_name, GLD_prefi
 
         cumm_vio_counts_uncontrolled = []
         for h_idx, hh_value in enumerate(transformer_names_uncontrolled):
-            cumm_vio_counts_uncontrolled.append(test_hourly_uncontrolled[test_hourly_uncontrolled[hh_value] > 100].shape[0])
+            cumm_vio_counts_uncontrolled.append(test_hourly_uncontrolled[test_hourly_uncontrolled[hh_value] > 125].shape[0])
 
         cumm_vio_counts_controlled = []
         for h_idx, hh_value in enumerate(transformer_names_controlled):
             cumm_vio_counts_controlled.append(
-                test_hourly_controlled[test_hourly_controlled[hh_value] > 100].shape[0])
+                test_hourly_controlled[test_hourly_controlled[hh_value] > 125].shape[0])
 
         # cumm_vio_counts_controlled = []  # dummy
         # for h_idx, hh_value in enumerate(transformer_names):
@@ -1345,13 +1348,15 @@ def plot1a_task_percentoverload(zone_name, input_basecase_folder_name, GLD_prefi
 
         # below lines of code is used to find the transformer count that are > 100% loaded.
         total_transformers = df_to_plot1.shape[0]
-        k_here = df_to_plot1[df_to_plot1['Maximum % loading of transformer'] > 100].shape[0]
+        k_here = df_to_plot1[df_to_plot1['Maximum % loading of transformer'] > 125].shape[0]
         total_basecase_vios.append(k_here)
         h_here = all_year_ev_uncontrolled_laod.shape[1]-4
         total_basecase_xfrmrs_with_evs.append(h_here)
-        xfrmr_cnt_uncontrolled_100 = df_to_plot2[df_to_plot2['Maximum % loading of transformer'] > 100].shape[0]
+        # df_to_plot2[df_to_plot2['Maximum % loading of transformer'] > 125][
+            # "name"] - pure_res_xfrmrs_with_houses_info.keys()
+        xfrmr_cnt_uncontrolled_100 = df_to_plot2[df_to_plot2['Maximum % loading of transformer'] > 125].shape[0]
         total_uncontrolled_vios.append(xfrmr_cnt_uncontrolled_100)
-        xfrmr_cnt_controlled_100 = df_to_plot3[df_to_plot3['Maximum % loading of transformer'] > 100.1].shape[0]
+        xfrmr_cnt_controlled_100 = df_to_plot3[df_to_plot3['Maximum % loading of transformer'] > 125].shape[0]
         total_controlled_vios.append(xfrmr_cnt_controlled_100)
 
         xfrmr_replace_df = df_to_plot2[df_to_plot2['Maximum % loading of transformer'] > replace_threshold]
@@ -1422,14 +1427,14 @@ def plot1a_task_percentoverload(zone_name, input_basecase_folder_name, GLD_prefi
                     # drop all xfrmrs which already have basecase violations greater than 100% (due to building loads).
                     # to remove them from ev plots
                     xfrmrs_with_base_violations = list(
-                        df_to_plot[(df_to_plot["type"] == "basecase") & (df_to_plot[var] >= 100)]["name"])
+                        df_to_plot[(df_to_plot["type"] == "basecase") & (df_to_plot[var] >= 125)]["name"])
                     fdkj = df_to_plot[df_to_plot["name"].isin(xfrmrs_with_base_violations)]
                     df_to_plot = df_to_plot.drop(fdkj.index)
                     df_to_plot.reset_index(drop=True, inplace=True)
 
                     # show only the xfrmrs whose violations are greater than 100%
                     xfrmrs_with_ev_violations = list(
-                        df_to_plot[(df_to_plot["type"] == "uncontrolled") & (df_to_plot[var] >= 100)]["name"])
+                        df_to_plot[(df_to_plot["type"] == "uncontrolled") & (df_to_plot[var] >= 125)]["name"])
                     fdkj = df_to_plot[~df_to_plot["name"].isin(xfrmrs_with_ev_violations)]
                     df_to_plot = df_to_plot.drop(fdkj.index)
                     df_to_plot.reset_index(drop=True, inplace=True)
@@ -1457,7 +1462,7 @@ def plot1a_task_percentoverload(zone_name, input_basecase_folder_name, GLD_prefi
                 fig = px.scatter(df_to_plot, x="Transformer indices", y="Maximum % loading of transformer",
                                  size="rating", color="type",
                                  hover_name="name", size_max=size_value, color_discrete_sequence=color_pallate)  #  log_x=True,
-                fig.add_hline(y=100, line_width=4, line_color="red")
+                fig.add_hline(y=125, line_width=4, line_color="red")
                 # fig.add_hrect(y0=100.5, y1=max(df_to_plot[var]) + 0.2 * max(df_to_plot[var]), line_width=0, fillcolor="red", opacity=0.2)
                 if df_to_plot.empty:
                     pass
@@ -1473,9 +1478,9 @@ def plot1a_task_percentoverload(zone_name, input_basecase_folder_name, GLD_prefi
                         tickfont_size=28,
                     ),
                     font=dict(
-                        family="Courier New, monospace",
+                        family="Times New Roman",
                         size=30,
-                        color="RebeccaPurple"
+                        color="black"
                     ),
                     paper_bgcolor='rgba(255,255,255,1)',
                     plot_bgcolor='rgba(255,255,255,1)'
@@ -1513,9 +1518,9 @@ def plot1a_task_percentoverload(zone_name, input_basecase_folder_name, GLD_prefi
                         tickfont_size=28,
                     ),
                     font=dict(
-                        family="Courier New, monospace",
+                        family="Times New Roman",
                         size=30,
-                        color="RebeccaPurple"
+                        color="black"
                     ),
                     paper_bgcolor='rgba(255,255,255,1)',
                     plot_bgcolor='rgba(255,255,255,1)'
@@ -1577,9 +1582,9 @@ def plot1a_task_percentoverload(zone_name, input_basecase_folder_name, GLD_prefi
                         tickfont_size=28,
                     ),
                     font=dict(
-                        family="Courier New, monospace",
+                        family="Times New Roman",
                         size=30,
-                        color="RebeccaPurple"
+                        color="black"
                     ),
                     paper_bgcolor='rgba(255,255,255,1)',
                     plot_bgcolor='rgba(255,255,255,1)',
@@ -1642,9 +1647,9 @@ def plot1a_task_percentoverload(zone_name, input_basecase_folder_name, GLD_prefi
                         tickfont_size=28,
                     ),
                     font=dict(
-                        family="Courier New, monospace",
-                        size=26,
-                        color="RebeccaPurple"
+                        family="Times New Roman",
+                        size=30,
+                        color="black"
                     ),
                     paper_bgcolor='rgba(255,255,255,1)',
                     plot_bgcolor='rgba(255,255,255,1)'
@@ -1679,7 +1684,7 @@ def plot1a_task_percentoverload(zone_name, input_basecase_folder_name, GLD_prefi
                 #     font=dict(
                 #         family="Courier New, monospace",
                 #         size=26,
-                #         color="RebeccaPurple"
+                #         color="black"
                 #     ),
                 #     paper_bgcolor='rgba(255,255,255,1)',
                 #     plot_bgcolor='rgba(255,255,255,1)'
@@ -1903,9 +1908,9 @@ def plot_histogram_plotly_1plot(plots_folder_name, basecase_peak_demand_all_fold
             tickfont_size=28,
         ),
         font=dict(
-            family="Courier New, monospace",
+            family="Times New Roman",
             size=30,
-            color="RebeccaPurple"
+            color="black"
         ),
         paper_bgcolor='rgba(255,255,255,1)',
         plot_bgcolor='rgba(255,255,255,1)'
@@ -1962,14 +1967,15 @@ def plot_histogram_plotly(plots_folder_name, basecase_peak_demand_all_folders, u
             tickfont_size=28,
         ),
         font=dict(
-            family="Courier New, monospace",
+            family="Times New Roman",
             size=30,
-            color="RebeccaPurple"
+            color="black"
         ),
         paper_bgcolor='rgba(255,255,255,1)',
         plot_bgcolor='rgba(255,255,255,1)'
     )
     fig.update_xaxes(showline=True, linewidth=4, linecolor='black')
+    fig.update_xaxes(tickangle=-90)
     fig.update_yaxes(showline=True, linewidth=4, linecolor='black')
     # fig.show()
     plotly.offline.plot(fig,
@@ -1977,16 +1983,23 @@ def plot_histogram_plotly(plots_folder_name, basecase_peak_demand_all_folders, u
 
     k = 1
 
-def plot_stacked_plot_for_uncontrolled_ev(years_list, base_demand_list, ev_demand_list, size_val, file_to_save, grid_peak_demand_value, y_title, x_title):
-    position_val = "auto"
+def plot_stacked_plot_for_uncontrolled_ev(years_list, base_demand_list, ev_demand_list, size_val, file_to_save,
+                                          grid_peak_demand_value, y_title, x_title, col_name):
+    position_val = "outside"
     # size_val = 28
     colot_val = "black"
+
+    if col_name == "Uncontrolled EV Demand":
+        mark_color = '#EF553B'
+    else:
+        mark_color = '#00CC96'
+
     years_list = [str(x) for x in years_list]
     fig = go.Figure(data=[
         go.Bar(name='Base Demand', x=years_list, y=base_demand_list, marker_color="grey",
                text=[int(x) for x in base_demand_list],
                textposition=position_val, outsidetextfont=dict(size=size_val, color=colot_val), constraintext='none'),
-        go.Bar(name='Uncontrolled EV Demand', x=years_list, y=ev_demand_list, marker_color='#EF553B',
+        go.Bar(name=col_name, x=years_list, y=ev_demand_list, marker_color=mark_color,
                text=[int(x) for x in ev_demand_list],
                textposition=position_val, outsidetextfont=dict(size=size_val, color=colot_val), constraintext='none')
     ])
@@ -2004,15 +2017,17 @@ def plot_stacked_plot_for_uncontrolled_ev(years_list, base_demand_list, ev_deman
                           tickfont_size=28,
                       ),
                       font=dict(
-                          family="Courier New, monospace",
+                          family="Times New Roman",
                           size=30,
-                          color="RebeccaPurple"
+                          color="black"
                       ),
                       paper_bgcolor='rgba(255,255,255,1)',
                       plot_bgcolor='rgba(255,255,255,1)'
                       )
     fig.update_xaxes(showline=True, linewidth=4, linecolor='black')
     fig.update_yaxes(showline=True, linewidth=4, linecolor='black')
+    fig.update_xaxes(tickangle=-90)
+    fig.update_layout(yaxis_range=[0, 255])
     # fig.show()
     plotly.offline.plot(fig,
                         filename=file_to_save, auto_open=False)
@@ -2246,12 +2261,13 @@ if __name__ == '__main__':
             state = state_list[iiidxx]
             total_folders = folder_list[iiidxx]
             folder_names = [f"{zone_name}_{customsuffix}_{ji+1}_fl" for ji in range(0, total_folders)]
-            folder_name = f"aggregated_data_{zone_name}_{state}_{customsuffix}_{sensitivity_suffix}_threshold{threshold_cutoff}_{date_name}_v2"
+            folder_name = (f"aggregated_data_{zone_name}_{state}_{customsuffix}_{sensitivity_suffix}_threshold"
+                           f"{threshold_cutoff}_{date_name}_jul31")
             # folder_name = f"aggregated_data_{zone_name}_{state}_{customsuffix}_{sensitivity_suffix}"
             input_1a = f"{zone_name}_{customsuffix}"
 
 
-            plots_folder_name = f"{folder_name}_plots_testingcode"
+            plots_folder_name = f"{folder_name}_plots"
             base_case_list =[]
             for name in folder_names:
 
@@ -2354,7 +2370,7 @@ if __name__ == '__main__':
             title = "Count of EV transformers with overloads"
             x_title = "Years"
             year_list = [int(x) for x in year_list]
-            size_val = 18
+            size_val = 28
 
 
             plot_histogram_plotly(plots_folder_name, total_basecase_vios,
@@ -2411,9 +2427,9 @@ if __name__ == '__main__':
                     tickfont_size=28,
                 ),
                 font=dict(
-                    family="Courier New, monospace",
+                    family="Times New Roman",
                     size=30,
-                    color="RebeccaPurple"
+                    color="black"
                 ),
                 paper_bgcolor='rgba(255,255,255,1)',
                 plot_bgcolor='rgba(255,255,255,1)'
@@ -2465,9 +2481,9 @@ if __name__ == '__main__':
                     tickfont_size=28,
                 ),
                 font=dict(
-                    family="Courier New, monospace",
+                    family="Times New Roman",
                     size=30,
-                    color="RebeccaPurple"
+                    color="black"
                 ),
                 paper_bgcolor='rgba(255,255,255,1)',
                 plot_bgcolor='rgba(255,255,255,1)'
@@ -2560,9 +2576,19 @@ if __name__ == '__main__':
 
             title = "Demand in MWs"
             x_title = "Years"
+            col_name = 'Uncontrolled EV Demand'
             file_to_save = f"/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/code/{plots_folder_name}/Uncontrolled_stack_plot_with_baseload_line_{plots_folder_name}.html"
             plot_stacked_plot_for_uncontrolled_ev(year_list, list(df1_uncontrolled["Base Load"]), list(df1_uncontrolled["EV Demand"]), size_val, file_to_save,
-                                                  base_building_peak_demand, title, x_title)
+                                                  base_building_peak_demand, title, x_title, col_name)
+
+            title = "Demand in MWs"
+            x_title = "Years"
+            col_name = 'Controlled EV Demand'
+            file_to_save = (f"/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/code/"
+                            f"{plots_folder_name}/Controlled_stack_plot_with_baseload_line_{plots_folder_name}.html")
+            plot_stacked_plot_for_uncontrolled_ev(year_list, list(df2_controlled["Base Load"]),
+                                                  list(df2_controlled["EV Demand"]), size_val, file_to_save,
+                                                  base_building_peak_demand, title, x_title, col_name)
 
             if not coincident_peak:
                 base_building_peak_demand = df_final_divided_inkws_hourly.sum(axis=1).max()
