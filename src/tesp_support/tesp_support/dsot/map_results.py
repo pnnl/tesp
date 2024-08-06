@@ -33,8 +33,7 @@ def bulk_system_map_plot(dataPath, configPath, shapePath, case_config_path, case
     contoursubjects = ['Wholesale LMP', 'Generation Utilization', 'Generation Load', 'Generation Capacity',
                        'Generation Capacity Fraction', 'Load', 'Net Load', 'Load Fraction', 'Renewable Capacity',
                        'Renewable Generation']
-    contourlabels = ['LMP ($/MW-hr', 'Generation Fraction (-)', 'Gen Load (MW)', 'Gen Capacity (MW)',
-                     'Gen Capacity (-)',
+    contourlabels = ['LMP ($/MW-hr)', 'Generation Fraction (-)', 'Gen Load (MW)', 'Gen Capacity (MW)', 'Gen Capacity (-)',
                      'Load (MW)', 'Net Load (MW)', 'Load Fraction (-)', 'Renew Capacity (MW)', 'Renew Gen (MW)']
     contoursubject = contoursubjects[contour_index]
     contourlabel = contourlabels[contour_index]
@@ -51,7 +50,7 @@ def bulk_system_map_plot(dataPath, configPath, shapePath, case_config_path, case
     if not check_folder:
         os.makedirs(dataPath + '/plots')
 
-    # case_config_file = case_config_path + '\\' + case_config_name
+    # case_config_file = case_config_path + '/' + case_config_name
 
     # Load and Apply Map Features:
     featureScale = '50m'  # 10, 50 0r 110
@@ -429,22 +428,23 @@ def bulk_system_map_plot(dataPath, configPath, shapePath, case_config_path, case
 # ----------------------   MAIN  ------------------------
 
 if __name__ == '__main__':
-
     # --- PLOTTING INPUTS  -----------
-    ercot_200 = False
+    ercot_200 = True
     plot_data = True
-    real_time = False
+    real_time = True
     dispatch_gen_only = False
-    dayrange = range(32, 33)
-    hr = 12  # Select hour from start of first day in day range (keeping to integer hours allows RT and DA to be compared at same time)
+    dayrange = range(15, 16)
+    # Select hour from start of first day in day range
+    # keeping to integer hours allows RT and DA to be compared at same time
+    hr = 14
 
-    data_path = 'C:\\Users\\reev057\PycharmProjects\DSO+T\Data\Simdata\DER2\\v1.1-1557-gc2432db4\\2016_08_pv'
-    config_path = 'C:\\Users\\reev057\\PycharmProjects\\TESP\\src\\ercot\\bulk_system\\'
-    shape_path = 'C:\\Users\\reev057\\PycharmProjects\\DSO+T\\Texas_County_Boundaries\\GOVTUNIT_Texas_State_Shape\\Shape\\'
-    case_config_path = 'C:\\Users\\reev057\\PycharmProjects\\TESP\\src\\examples\\dsot_v3'
+    data_path = 'C:/Users/reev057\PycharmProjects/DSO+T/Data/Simdata/DER2/v1.1-1557-gc2432db4/2016_08_pv'
+    config_path = 'C:/Users/reev057/PycharmProjects/TESP/src/ercot/bulk_system/'
+    shape_path = 'C:/Users/reev057/PycharmProjects/DSO+T/Texas_County_Boundaries/GOVTUNIT_Texas_State_Shape/Shape/'
+    case_config_path = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/dsot_v3'
 
-    case_config_name = '8_hi_system_case_config.json'
-    # case_config_name = '200_system_case_config.json'
+    # case_config_name = '8_hi_system_case_config.json'
+    case_config_name = '200_system_case_config.json'
 
     contour_idx = 0
     ''' Contour Index = Title , Units
@@ -459,21 +459,19 @@ if __name__ == '__main__':
     8 = 'Renewable Capacity', 'Renew Capacity (MW)' Total renewable capacity installed at each bus
     9 = 'Renewable Generation', 'Renew Gen (MW)' Total renewable generation produced at each bus
     '''
+    # index_range = range(0,6)
+    # for contour_idx in index_range:
+    #   bulk_system_map_plot(data_path, config_path, shape_path, case_config_path, case_config_name, dayrange, hr, contour_idx, ercot_200, real_time)
 
-    index_range = range(0, 1)
-    for contour_idx in index_range:
+    contour_idx = 0
+    hr_range = range(0, 24)
+    for hr in hr_range:
+        real_time = True
         bulk_system_map_plot(data_path, config_path, shape_path, case_config_path, case_config_name, dayrange, hr,
                              contour_idx, ercot_200, real_time)
-
-    # contour_idx = 0
-    # hr_range = range(0, 24)
-    # for hr in hr_range:
-    # 	real_time = True
-    # 	bulk_system_map_plot(data_path, config_path, shape_path, case_config_path, case_config_name, dayrange, hr,
-    # 					 contour_idx, ercot_200, real_time)
-    # 	real_time = False
-    # 	bulk_system_map_plot(data_path, config_path, shape_path, case_config_path, case_config_name, dayrange, hr,
-    # 					 contour_idx, ercot_200, real_time)
+        real_time = False
+        bulk_system_map_plot(data_path, config_path, shape_path, case_config_path, case_config_name, dayrange, hr,
+                             contour_idx, ercot_200, real_time)
 
     # real_time = False
     # contour_idx = 0

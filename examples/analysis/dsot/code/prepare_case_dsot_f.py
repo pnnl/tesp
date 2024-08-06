@@ -26,7 +26,7 @@ import prep_substation_dsot_f as prep
 # Simulation settings for the experimental case
 def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
 
-    # We need to load in the master metadata (*system_case_config.josn)
+    # We need to load in the master metadata (*system_case_config.json)
     with open(mastercase + '.json', 'r', encoding='utf-8') as json_file:
         sys_config = json.load(json_file)
 
@@ -210,6 +210,8 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
 
         sub_key = dso_val['substation']
         bus = str(dso_val['bus_number'])
+        # seed the random number here
+        np.random.seed(dso_val['random_seed'])
 
         # write the tso connections for this substation
         print('  RT_BID_' + bus + ':', file=yp)
@@ -247,9 +249,6 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
 
         os.makedirs(caseName + '/' + dso_key)
 
-        # seed the random number here instead of in feedergenerator_dsot.py
-        np.random.seed(dso_val['random_seed'])
-
         # copy dso default config
         sim['DSO'] = dso_key
         sim[dso_key] = dso_val
@@ -257,7 +256,6 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         sim['Substation'] = sub_key
         sim['OutputPath'] = caseName + '/' + dso_key
         sim['BulkpowerBus'] = dso_val['bus_number']
-        # case_config['BackboneFiles']['RandomSeed'] = dso_val['random_seed']
         sim['DSO_type'] = dso_val['utility_type']
         sim['rooftop_pv_rating_MW'] = dso_val['rooftop_pv_rating_MW']
         sim['scaling_factor'] = dso_val['scaling_factor']
@@ -319,7 +317,8 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         except:
             pass
 
-        # (Laurentiu Marinovici 11/07/2019) but now, we are going to copy the .dat file from its location into the weather agent folder
+        # (Laurentiu Marinovici 11/07/2019)
+        # we are going to copy the .dat file from its location into the weather agent folder
         shutil.copy(os.path.join(os.path.abspath(sys_config['WeatherDataSourcePath']), dso_val['weather_file']),
                     os.path.join(os.path.abspath(caseName), weather_agent_name, 'weather.dat'))
 

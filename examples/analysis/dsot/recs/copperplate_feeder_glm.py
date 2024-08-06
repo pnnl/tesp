@@ -100,7 +100,6 @@ def write_solar_inv_settings(op):
     print('    VW_P2 ${INV_VW_P2};', file=op)
 
 
-storage_inv_mode = 'LOAD_FOLLOWING'
 weather_file = 'AZ-Tucson_International_Ap.tmy3'
 bill_mode = 'UNIFORM'
 kwh_price = 0.1243
@@ -1356,7 +1355,7 @@ def write_substation(op, name, phs, vnom, vll):
         print('  name gld' + substation_name + ';', file=op)  # for full-order DSOT
         print('  parent network_node;', file=op)
         print('  configure', caseName + '_gridlabd.txt;', file=op)
-        print('  option "transport:hostname localhost, port 5570";', file=op)
+        print('  option "transport:hostname localhost, port ' + str(port) + '";', file=op)
         print('  aggregate_subscriptions true;', file=op)
         print('  aggregate_publications true;', file=op)
         print('}', file=op)
@@ -1718,6 +1717,19 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
                     print('  stoptime \'' + endtime + '\';', file=op)
                 elif 'timezone' in line:
                     print('  timezone ' + timezone + ';', file=op)
+                elif 'module powerflow' in line:
+                    print('module powerflow{', file=op)
+                    print('  lu_solver \"KLU\";', file=op)
+                elif 'solver_method FBS' in line:
+                    if method not in 'FBS':
+                        print('  solver_method NR;', file=op)
+                    else:
+                        print('  ' + line.strip(), file=op)
+                elif 'default_maximum_voltage_error 0.01' in line:
+                    if method not in 'FBS':
+                        print('  NR_iteration_limit 100;', file=op)
+                    else:
+                        print('  ' + line.strip(), file=op)
                 else:
                     print(line, file=op)
 
@@ -1810,6 +1822,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
         print('  interpolate QUADRATIC;', file=op)
         print('  latitude', str(latitude) + ';', file=op)
         print('  longitude', str(longitude) + ';', file=op)
+        print('  tz_meridian {0:.2f};'.format(15 * time_zone_offset), file=op)
         print('};', file=op)
         #        print('// taxonomy_base_feeder', rootname, file=op)
         #        print('// region_name', rgnName[rgn-1], file=op)
@@ -1832,6 +1845,19 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
             print('#define INV_VW_V2=1.10', file=op)
             print('#define INV_VW_P1=1.0', file=op)
             print('#define INV_VW_P2=0.0', file=op)
+            print('// player class and object for solar P_out and Q_out', file=op)
+            print('class player{', file=op)
+            print(' double value; // must defined the filed "value"', file=op)
+            print('}', file=op)
+            print('object player{', file=op)
+            print(' name P_out_inj;', file=op)
+            print(' file "'+solar_path+solar_P_player+'";', file=op)
+            print('}', file=op)
+            if 'no_file' not in solar_Q_player:
+                print('object player{', file=op)
+                print(' name Q_out_inj;', file=op)
+                print(' file "'+solar_path+solar_Q_player+'";', file=op)
+                print('}', file=op)
 
         # write the optional volt_dump and curr_dump for validation
         print('#ifdef WANT_VI_DUMP', file=op)
@@ -1903,17 +1929,17 @@ def populate_feeder(config=None):
     global Eplus_Bus, Eplus_Volts, Eplus_kVA
     global transmissionVoltage, transmissionXfmrMVAbase
     global storage_inv_mode, solar_inv_mode, solar_percentage, storage_percentage
-    global ev_percentage, ev_metadata, pv_rating_MW, solar_Q_player
+    global ev_percentage, ev_metadata, pv_rating_MW, solar_path, solar_P_player, solar_Q_player
     global work_path, weather_file
     global timezone, starttime, endtime, timestep
     global metrics, metrics_interval, metrics_interim, metrics_type, electric_cooling_percentage
     global water_heater_percentage, water_heater_participation
-    global caseName, substation_name
+    global caseName, port, substation_name
     global house_nodes, small_nodes, comm_loads
     global inverter_efficiency, round_trip_efficiency
-    global latitude, longitude, weather_name, feeder_commercial_building_number
+    global latitude, longitude, time_zone_offset, weather_name
     global dso_type
-    global case_type
+    global case_type, method
     global ashrae_zone, comm_bldg_metadata, comm_bldgs_pop
     # (Laurentiu Marinovici 11/18/2019)
     global res_bldg_metadata  # to store residential metadata
@@ -1951,6 +1977,8 @@ def populate_feeder(config=None):
     storage_percentage = 0.01 * float(config['FeederGenerator']['StoragePercentage'])
     ev_percentage = 0.01 * float(config['FeederGenerator']['EVPercentage'])
     ev_metadata = config['BuildingPrep']['EvModelMetaData']
+    solar_path = config['BuildingPrep']['SolarDataPath']
+    solar_P_player = config['BuildingPrep']['SolarPPlayerFile']
     solar_Q_player = config['BuildingPrep']['SolarQPlayerFile']
     pv_rating_MW = config['SimulationConfig']['rooftop_pv_rating_MW']
     solar_inv_mode = config['FeederGenerator']['SolarInverterMode']
@@ -1977,6 +2005,7 @@ def populate_feeder(config=None):
     weather_name = config['WeatherPrep']['Name']
     latitude = float(config['WeatherPrep']['Latitude'])
     longitude = float(config['WeatherPrep']['Longitude'])
+    time_zone_offset = float(config['WeatherPrep']['TimeZoneOffset'])
     dso_type = config['SimulationConfig']['DSO_type']
     res_bldg_metadata = config['BuildingPrep']['ResBldgMetaData']
     batt_metadata = config['BuildingPrep']['BattMetaData']
@@ -1986,6 +2015,7 @@ def populate_feeder(config=None):
     comm_bldg_metadata = config['BuildingPrep']['CommBldgMetaData']
     comm_bldgs_pop = config['BuildingPrep']['CommBldgPopulation']
     case_type = config['SimulationConfig']['caseType']
+    method = config['SimulationConfig']['method']
 
     # -------- create cop lookup table by vintage bin-----------
     # (Laurentiu MArinovici 11/18/2019) moving the cop_lookup inside this function as it requires

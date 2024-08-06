@@ -17,22 +17,22 @@ git config --global credential.helper store
 
 echo
 if [[ -z $3 ]]; then
-  WORKDIR=$HOME/tesp
+  WORKDIR=$HOME/grid/tesp
 else
   WORKDIR=$HOME/$3
 fi
 echo "Install TESP home directory"
-echo "TESP home dirctory is $WORKDIR"
+echo "TESP home directory is $WORKDIR"
 
-cat > "$HOME/tespEnv" << EOF
-. $HOME/.tvenv/bin/activate
+cat > "$HOME/grid/tesp.env" << EOF
+. $HOME/grid/venv/bin/activate
 
 # TESP exports
+export GRID_DIR=$WORKDIR
 export TESPDIR=$WORKDIR
-export INSTDIR=\$TESPDIR/tenv
-export REPODIR=\$TESPDIR/repository
-export TESPBUILD=\$TESPDIR/scripts/build
-export TESPHELPR=\$TESPDIR/scripts/helpers
+export INSTDIR=\$GRID_DIR/tenv
+export REPO_DIR=\$GRID_DIR/repo
+export BUILD_DIR=\$TESPDIR/scripts/build
 
 # COMPILE exports
 export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
@@ -51,7 +51,7 @@ export PATH=\$JAVA_HOME:\$PATH
 export PATH=\$PATH:\$INSTDIR/energyplus
 export PATH=\$PATH:\$INSTDIR/energyplus/PreProcess
 export PATH=\$PATH:\$INSTDIR/energyplus/PostProcess
-export PATH=\$PATH:\$TESPHELPR
+export PATH=\$PATH:\$TESPDIR/scripts/helpers
 
 # PSST environment variables
 export PSST_SOLVER=cbc
@@ -64,10 +64,10 @@ export PSST_WARNING=ignore
 EOF
 
 echo
-echo "Install a virtual python environment to $HOME/.tvenv"
+echo "Install a virtual python environment to $HOME/venv"
 python3 -m pip install --upgrade pip
 python3 -m pip install virtualenv
-python3 -m venv "$HOME/.tvenv" --prompt TESP
+python3 -m venv "$HOME/venv" --prompt TESP
 
 source "$HOME/tespEnv"
 

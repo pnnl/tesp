@@ -595,7 +595,7 @@ class RetailMarket:
                     curve.prices) + ' curve.quantities: ' + str(curve.quantities))
 
         resp_deg = 2
-        # below conversion is because fncsTSO is written in terms of MWs and the DSO is in kWs
+        # below conversion is because TSO is written in terms of MWs and the DSO is in kWs
         bid = list()
         bid.append(unresp_mw)
         bid.append(Q_sc_max)  # maximum flexible load

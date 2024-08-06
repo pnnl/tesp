@@ -29,7 +29,7 @@ Make script directory for run the simulations
 Make the 'environment' script using emacs/vi. The export 'runLocation' and 'experimentName' is where the $runLocation/$experimentName files are zipped, the directory must be empty when case the is run. The INSTDIR is the was built by Mitch Pelton(d3j331) and used with out you having to build your own.
 
 	#Running
-	export REPODIR=$HOME/grid/repository
+	export REPO_DIR=$HOME/grid/repository
 	export INSTDIR=/people/d3j331/grid/installed
 
 	export FNCS_INCLUDE_DIR=$INSTDIR/include
@@ -38,7 +38,7 @@ Make the 'environment' script using emacs/vi. The export 'runLocation' and 'expe
 	export PATH=$INSTDIR/bin:$HOME/.local/bin:$PATH
 	export GLPATH=$INSTDIR/lib/gridlabd:$INSTDIR/share/gridlabd
 	export LD_LIBRARY_PATH=$INSTDIR/lib:$LD_LIBRARY_PATH
-	export TESPDIR=$REPODIR/tesp
+	export TESPDIR=$REPO_DIR/tesp
 
 	export FNCS_FATAL=yes
 	export FNCS_LOG_STDOUT=yes

@@ -4,7 +4,7 @@
 import math
 import numpy as np
 
-from tesp_support.api.helpers import gld_strict_name
+from tesp_support.api.helpers import gld_strict_name, randomize_commercial_skew
 import tesp_support.dsot.residential_feeder_glm as res_FG
 
 
@@ -188,13 +188,13 @@ def define_comm_loads(bldg_type, bldg_size, dso_type, climate, bldg_metadata):
             bldg['skew_value'] = 0
         elif bldg_type in ['office', 'warehouse_storage', 'education']:
             bldg['base_schedule'] = 'office'
-            bldg['skew_value'] = res_FG.randomize_commercial_skew()
+            bldg['skew_value'] = randomize_commercial_skew()
         elif bldg_type in ['big_box', 'strip_mall', 'food_service', 'food_sales']:
             bldg['base_schedule'] = 'retail'
-            bldg['skew_value'] = res_FG.randomize_commercial_skew()
+            bldg['skew_value'] = randomize_commercial_skew()
         elif bldg_type == 'low_occupancy':
             bldg['base_schedule'] = 'lowocc'
-            bldg['skew_value'] = res_FG.randomize_commercial_skew()
+            bldg['skew_value'] = randomize_commercial_skew()
 
         # randomize 10# then convert W/sf -> kW
         floor_area = bldg['floor_area']

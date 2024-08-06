@@ -6,7 +6,6 @@ import json
 
 import pandas as pd
 import requests
-import xlrd
 
 '''
 This script automatically creates the 200 bus meta data files.
@@ -85,8 +84,7 @@ def prepare_metadata(node, end_row, feeder_mode, high_renewables_case, DSO_Load_
         indust_load_list = []
     use_dso_list = []
 
-    book = xlrd.open_workbook(data_path + 'bus_mapping.xlsx')
-    sheet = book.sheet_by_name(sheet_name)
+    sheet = pd.read_excel(data_path + 'bus_mapping.xlsx', engine='openpyxl', sheet_name=sheet_name)
 
     # os.rename(case_path + case_file + '.json', case_path + case_file + '_old.json')
 
@@ -99,39 +97,41 @@ def prepare_metadata(node, end_row, feeder_mode, high_renewables_case, DSO_Load_
         #         del data[key]
 
         # Get values from spreadsheet
-        for irow in range(2, end_row):
-            busid = int(sheet.cell(irow, 4).value)
-            busname = sheet.cell(irow, 6).value
-            climatezone = int(sheet.cell(irow, 7).value)
-            ashrae_zone = sheet.cell(irow, 10).value
-            blm_zone = int(sheet.cell(irow, 11).value)
-            latitude = sheet.cell(irow, 0).value
-            longitude = sheet.cell(irow, 1).value
-            utiltype = sheet.cell(irow, 8).value
+        for irow in range(1, end_row):
+            busid = int(sheet.loc[irow, 'Bus'])
+            busname = sheet.loc[irow, 'DSO Name']
+            climatezone = int(sheet.loc[irow, 'Climate Zone'])
+            ashrae_zone = sheet.loc[irow, 'ASHRAE Zone']
+            blm_zone = int(sheet.loc[irow, 'BLM Zone'])
+            latitude = sheet.loc[irow, 'Latitude']
+            if len(str(latitude)) == 2:
+                latitude = format(latitude, '.1f')
+            longitude = sheet.loc[irow, 'Longitude']
+            utiltype = sheet.loc[irow, 'Utility Type']
             if utiltype == 'Town':
                 utiltype = 'Suburban'
-            ownership_type = sheet.cell(irow, 9).value
-            peakseason = sheet.cell(irow, 14).value
-            county = sheet.cell(irow, 34).value
-            roof_top_PV_MW = sheet.cell(irow, 38).value
+            ownership_type = sheet.loc[irow, 'Ownership Type']
+            peakseason = sheet.loc[irow, 'Seasonal Peak (5% Thresh.)']
+            county = sheet.loc[irow, 'County']
+            roof_top_PV_MW = sheet.loc[irow, 'Rooftop PV Rating (MW)']
 
             if high_renewables_case:
-                max_load = sheet.cell(irow, 40).value
+                max_load = sheet.loc[irow, 'Peak Load High Renewable (MW)']
             else:
-                max_load = sheet.cell(irow, 39).value
-            congestion_factor = sheet.cell(irow, 41).value
-            bus_simulated = sheet.cell(irow, 42).value
+                max_load = sheet.loc[irow, 'Peak Load Moderate Renewable (MW)']
+            congestion_factor = sheet.loc[irow, 'Substation Congestion Factor (-)']
+            bus_simulated = sheet.loc[irow, 'Simulated']
 
-            total_average_load = sheet.cell(irow, 16).value
+            total_average_load = sheet.loc[irow, 'Scaled Load (Average)']
             if total_average_load == 0:
                 total_average_load = 0.001
-            res_average_load = sheet.cell(irow, 19).value
-            comm_average_load = sheet.cell(irow, 20).value
-            indust_average_load = sheet.cell(irow, 21).value
+            res_average_load = sheet.loc[irow, 'Scaled Load Breakup RCI (MW)']
+            comm_average_load = sheet.loc[irow, 'Unnamed: 20']
+            indust_average_load = sheet.loc[irow, 'Unnamed: 21']
 
-            res_customers = int(sheet.cell(irow, 25).value)
-            comm_customers = int(sheet.cell(irow, 26).value)
-            indust_customers = int(sheet.cell(irow, 27).value)
+            res_customers = int(sheet.loc[irow, 'Scaled Load Breakup RCI (Customers)'])
+            comm_customers = int(sheet.loc[irow, 'Unnamed: 26'])
+            indust_customers = int(sheet.loc[irow, 'Unnamed: 27'])
             total_customers = res_customers + comm_customers + indust_customers
             # Need to have non-zero residential customers for prepare case to run
             if total_customers == 0:
@@ -282,8 +282,8 @@ def prepare_metadata(node, end_row, feeder_mode, high_renewables_case, DSO_Load_
                 "name": busname,
                 "climate_zone": climatezone,
                 "county": county,
-                "latitude": latitude,
-                "longitude": longitude,
+                "latitude": float(latitude),
+                "longitude": float(longitude),
                 "time_zone_offset": -6,
                 "utility_type": utiltype,
                 "ownership_type": ownership_type,
@@ -368,10 +368,10 @@ if __name__ == '__main__':
     # ========   END INPUT SETTINGS  ========================
 
     # def prepare_metadata(node, end_row, feeder_mode, high_renewables_case, DSO_Load_Threshold):
-    prepare_metadata('8', 10, 'lean', True, 0)
+    prepare_metadata('8', 9, 'lean', True, 0)
     # prepare_metadata('8', 10, 'skinny', True, 0)
     # prepare_metadata('8', 10, 'stub', True, 0)
-    prepare_metadata('8', 10, 'lean', False, 0)
+    prepare_metadata('8', 9, 'lean', False, 0)
     # prepare_metadata('8', 10, 'skinny', False, 0)
     # prepare_metadata('8', 10, 'test', False, 0)
     # prepare_metadata('8', 10, 'stub', False, 0)
@@ -381,7 +381,7 @@ if __name__ == '__main__':
     # prepare_metadata('200', 202, 'stub', True, 300)
     # prepare_metadata('200', 202, 'lean', False, 1130)
     # prepare_metadata('200', 202, 'test', False, 1130)
-    prepare_metadata('200', 202, 'lean', False, 'File')
-    prepare_metadata('200', 202, 'lean', True, 'File')
+    prepare_metadata('200', 201, 'lean', False, 'File')
+    prepare_metadata('200', 201, 'lean', True, 'File')
     # prepare_metadata('200', 202, 'skinny', False, 300)
     # prepare_metadata('200', 202, 'stub', False, 300)

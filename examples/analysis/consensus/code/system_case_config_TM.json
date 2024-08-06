@@ -32,7 +32,7 @@
   "simplifiedFeeders": false,
   "howToConfigureOutputPath": "Leave it blank for default, otherwise use full path",
   "outputPath": "",
-  "myoutputPath": "/home/osboxes/grid/repository/tesp-private/examples/dsot_v2/output",
+  "myoutputPath": "~/grid/tesp/examples/dsot_v2/output",
   "version": "2",
   "baseMVA": 100.0,
   "dataPath": "../usecase_data",

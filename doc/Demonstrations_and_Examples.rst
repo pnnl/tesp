@@ -54,5 +54,5 @@ TESP Example Analysis
 
     
     ./examples/SGIP1_Example
-    ./examples/DSOT_Study
+    ./examples/dsot/DSOT_index
     ./examples/Consensus_Usecase

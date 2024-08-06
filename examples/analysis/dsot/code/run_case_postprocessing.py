@@ -139,8 +139,8 @@ def post_process():
     config_path = os.getcwd()
     case_config = pt.load_json(config_path, system_case)
 
-    case_path = dirname(abspath(__file__)) + '/' + case_config['caseName']    
-    metadata_path = case_config['dataPath']
+    case_path = dirname(abspath(__file__)) + '/' + case_config['caseName']
+    metadata_path = "../" + case_config['dataPath']
     dso_metadata_file = case_config['dsoPopulationFile']
     agent_prefix = '/DSO_'
     GLD_prefix = '/Substation_'
