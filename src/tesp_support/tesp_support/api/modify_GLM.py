@@ -5,6 +5,7 @@ import numpy as np
 from .data import feeder_entities_path
 from .entity import assign_defaults
 from .model_GLM import GLModel
+from .parse_helpers import parse_kva
 
 
 class Defaults:
@@ -269,6 +270,75 @@ class GLMModifier:
                       "file": file,
                       "interval": str(self.defaults.metrics_interval)}
             self.add_object("recorder", property_name, params)
+
+    def accumulate_load_kva(self, data: dict) -> float:
+        """Add up the total kva in a load-bearing object instance
+
+        Considers constant_power_A/B/C/1/2/12 and power_1/2/12 attributes
+
+        Args:
+            data (dict): dictionary of data for a selected GridLAB-D instance
+
+        Returns:
+            kva (float): total kva in a load-bearing object instance
+        """
+        kva = 0.0
+        if 'constant_power_A' in data:
+            kva += parse_kva(data['constant_power_A'])
+        if 'constant_power_B' in data:
+            kva += parse_kva(data['constant_power_B'])
+        if 'constant_power_C' in data:
+            kva += parse_kva(data['constant_power_C'])
+        if 'constant_power_1' in data:
+            kva += parse_kva(data['constant_power_1'])
+        if 'constant_power_2' in data:
+            kva += parse_kva(data['constant_power_2'])
+        if 'constant_power_12' in data:
+            kva += parse_kva(data['constant_power_12'])
+        if 'power_1' in data:
+            kva += parse_kva(data['power_1'])
+        if 'power_2' in data:
+            kva += parse_kva(data['power_2'])
+        if 'power_12' in data:
+            kva += parse_kva(data['power_12'])
+        return kva
+
+    def identify_seg_loads(self):
+        swing_node = ''
+        G = self.model.draw_network()
+        for n1, data in G.nodes(data=True):
+            if 'nclass' in data:
+                if 'bustype' in data['ndata']:
+                    if data['ndata']['bustype'] == 'SWING':
+                        swing_node = n1
+                        return swing_node
+        seg_loads = {}  # [name][kva, phases]
+        total_kva = 0.0
+        for n1, data in G.nodes(data=True):
+            if 'ndata' in data:
+                kva = self.accumulate_load_kva(data['ndata'])
+                # need to account for large-building loads added through transformer connections
+                if kva > 0:
+                    total_kva += kva
+                    nodes = self.glm.nx.shortest_path(G, n1, swing_node)
+                    edges = zip(nodes[0:], nodes[1:])
+                    for u, v in edges:
+                        eclass = G[u][v]['eclass']
+                        if self.model.is_edge_class(eclass):
+                            ename = G[u][v]['ename']
+                            if ename not in seg_loads:
+                                seg_loads[ename] = [0.0, '']
+                            seg_loads[ename][0] += kva
+                            seg_loads[ename][1] = self.union_of_phases(seg_loads[ename][1], data['ndata']['phases'])
+        # sub_graphs = self.glm.nx.connected_components(G)
+        # print('  swing node', swing_node, 'with', len(list(sub_graphs)), 'subgraphs and',
+        #       '{:.2f}'.format(total_kva), 'total kva')
+        return seg_loads
+
+
+
+
+
 
     def resize(self):
         return True

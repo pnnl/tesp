@@ -20,6 +20,23 @@
     "stoptime": <string>, // DEFAULT: "2023-01-02 00:00:00"
     "minimum timestep": <int>, // DEFAULT: 60
 
+    "includes": [
+        "${TESPDIR}/data/schedules/appliance_schedules.glm",
+        "${TESPDIR}/data/schedules/water_and_setpoint_schedule_v5.glm",
+        "${TESPDIR}/data/schedules/commercial_schedules.glm"
+        ],
+
+    "set": [
+        "minimum_timestep=15",
+        "relax_naming_rules=1",
+        "warn=0"
+        ],
+    "defines": [],
+    "players": {"name": "lp","file": "your_file","type": "double"},
+    "avghouse": 4500.0,
+    "region": 1,
+
+
 // Co-simulation
     "HELICS config": <string>, //DEFAULT is "none", value is the path to the HELICS config file
     // If "none", don't include the "object helics_msg" in the preamble

@@ -4,6 +4,7 @@
 """
 
 import json
+import pyjson5
 import os.path
 import re
 import sqlite3
@@ -15,7 +16,6 @@ import networkx as nx
 from .data import feeders_path
 from .data import glm_entities_path
 from .entity import Entity
-
 
 class GLM:
     pass
@@ -88,13 +88,13 @@ class GLModel:
 
     def __init__(self):
         # with open(os.path.join(entities_path, 'glm_modules.json'), 'r', encoding='utf-8') as json_file:
-        #     self.modules = json.load(json_file)
+        #     self.modules = pyjson5.load(json_file)
         #     for name in self.modules:
         #         self.module_entities[name] = Entity(name, self.modules[name])
         #
         # # define objects that can be in a GLM file
         # with open(os.path.join(entities_path, 'glm_objects.json'), 'r', encoding='utf-8') as json_file:
-        #     self.objects = json.load(json_file)
+        #     self.objects = pyjson5.load(json_file)
         #     for name in self.objects:
         #         self.object_entities[name] = Entity(name, self.objects[name])
         self.hash = None
@@ -118,7 +118,7 @@ class GLModel:
         self.outside_comments = dict()
         self.inline_comments = dict()
         with open(glm_entities_path, 'r', encoding='utf-8') as json_file:
-            self.classes = json.load(json_file)
+            self.classes = pyjson5.load(json_file)
             entity = Entity("clock", None)
             entity.add_attr("TEXT", "Time zone", "", "timezone", value=None)
             entity.add_attr("TEXT", "Start time", "", "timestamp", value=None)
@@ -896,6 +896,8 @@ class GLModel:
                         print('orphaned node', t, o)
         return G
 
+
+
     def plot_model(self, node_labels=False, edge_labels=False, node_legend=True, edge_legend=True):
 
         def update_annot(ind):
@@ -909,6 +911,7 @@ class GLModel:
             text = text.replace(', ', '\n').replace('ndata: {', '').replace('}', '')
             text = text.replace('nclass', 'class').replace("'", '')
             annot.set_text(text)
+
 
         def hover(event):
             vis = annot.get_visible()
@@ -1011,7 +1014,7 @@ def _test1():
         print(model_file.instancesToGLM())
 
         op = open(tesp_test + 'api/model_out.json', 'w', encoding='utf-8')
-        json.dump(model_file.entitiesToJson(), op, ensure_ascii=False, indent=2)
+        pyjson5.dump(model_file.entitiesToJson(), op, ensure_ascii=False, indent=2)
         op.close()
 
 

@@ -49,7 +49,8 @@ TODO:
         * TODO - JK + - review flagged variables for renaming or removal
     * TODO - FR - Convert all the string formatting from ".format" to "f{}"
 """
-import json
+# import json
+import pyjson5
 import math
 import os.path
 import re
@@ -76,14 +77,61 @@ extra_billing_meters = set()
 class Feeder:
 
 
-    def __init__(self, taxonomy_choice):
+    def __init__(self, gld_filename=None):
 
         self.glm = GLMModifier()
-        self.taxonomy = self.glm.defaults.taxchoice[taxonomy_choice]
-        self.g, success = self.glm.model.readBackboneModel(self.taxonomy[0] + '.glm')
-        if not success:
-            raise 'File not found or file not supported, exiting!'
         self.base = self.glm.defaults
+        self.recs = None
+        if gld_filename:
+            self.glm.read_model(gld_filename)
+        else:
+            raise 'File not found or file not supported, exiting!'
+
+    def preamble(self, glm_config=None):
+        #TODO: read file
+        if glm_config:
+            self.glm.read_model(glm_config)
+        else:
+            raise 'File not found or file not supported, exiting!'
+        self.glm.add_module("tape", {})
+        self.glm.add_module("climate", {})
+        self.glm.add_module("generators", {})
+        self.glm.add_module("connection", {})
+        params = {"implicit_enduses": "NONE"}
+        self.glm.add_module("residential", params)
+        params = {"double": "value", "int": "value1"}
+        self.glm.add_module("player", params)
+        #TODO: add for loop for players
+
+        #TODO: set includes
+        self.glm.model.include_lines.append('#include "${TESPDIR}/data/schedules/appliance_schedules.glm"')
+        self.glm.model.include_lines.append('#include "${TESPDIR}/data/schedules/water_and_setpoint_schedule_v5.glm"')
+        self.glm.model.include_lines.append('#include "${TESPDIR}/data/schedules/commercial_schedules.glm"')
+
+        #TODO: set lines
+        self.glm.model.set_lines.append('#set minimum_timestep=' + str(self.base.timestep))
+        self.glm.model.set_lines.append('#set relax_naming_rules=1')
+        self.glm.model.set_lines.append('#set warn=0')
+
+        if self.base.metrics_interval > 0:
+            params = {"interval": str(self.base.metrics_interval),
+                      "interim": "43200",
+                      "filename": "${METRICS_FILE}"
+                      }
+            self.glm.add_object("metrics_collector_writer", "mc", params)
+
+        name = "localWeather"
+        params = {"name": str(self.base.weather_name),
+                   "interpolate": "QUADRATIC",
+                   "latitude": str(self.base.latitude),
+                   "longitude": str(self.base.longitude),
+                   "tz_meridian": '{0:.2f};'.format(15 * self.base.time_zone_offset)}
+        self.glm.add_object("climate", name, params)
+        seg_loads = self.glm.identify_seg_loads()
+        #TODO: find where avghouse and rgn are coming from avghouse and rgn = 4500.0, 30000.0
+        self.identify_xfmr_houses('transformer', seg_loads, 0.001 * self.glm_config.avghouse, self.glm_config.region)
+
+
 
     # EV population functions
     def process_nhts_data(self, data_file: str) -> pd.DataFrame:
@@ -252,6 +300,7 @@ class Feeder:
             want_inverter (boolean): True to write the IEEE 1547-2018 smarter 
                 inverter function setpoints
         """
+        #TODO: define lines
         if want_inverter:
             # print ('#define INVERTER_MODE=CONSTANT_PF', file=fp)
             # print ('//#define INVERTER_MODE=VOLT_VAR', file=fp)
@@ -285,14 +334,14 @@ class Feeder:
             self.add_kersting_quadriplex(xfkva)
 
     def add_kersting_quadriplex(self, kva: float):
-        """Writes a quadriplex_line_configuration based on 1/0 AA example from 
+        """Writes a quadriplex_line_configuration based on 1/0 AA example from
         Kersting's book
 
-        The conductor capacity is 202 amps, so the number of triplex in parallel 
+        The conductor capacity is 202 amps, so the number of triplex in parallel
         will be kva/sqrt(3)/0.208/202
 
         Args:
-            kva (float): 
+            kva (float):
         """
         params = dict()
         params["key"] = 'quad_cfg_{:d}'.format(int(kva))
@@ -311,14 +360,14 @@ class Feeder:
         self.glm.add_object("line_configuration", params["key"], params)
 
     def add_kersting_triplex(self, kva: float):
-        """Writes a triplex_line_configuration based on 1/0 AA example from 
+        """Writes a triplex_line_configuration based on 1/0 AA example from
         Kersting's book
 
-        The conductor capacity is 202 amps, so the number of triplex in parallel 
+        The conductor capacity is 202 amps, so the number of triplex in parallel
         will be kva/0.12/202
 
         Args:
-            kva (float): 
+            kva (float):
         """
         params = dict()
         params["key"] = 'tpx_cfg_{:d}'.format(int(kva))
@@ -332,37 +381,6 @@ class Feeder:
         params["x12"] = 0.0081 * params["scale"]
         self.glm.add_object("triplex_line_configuration", params["key"], params)
 
-    def accumulate_load_kva(self, data: dict) -> float:
-        """Add up the total kva in a load-bearing object instance
-
-        Considers constant_power_A/B/C/1/2/12 and power_1/2/12 attributes
-
-        Args:
-            data (dict): dictionary of data for a selected GridLAB-D instance
-
-        Returns:
-            kva (float): total kva in a load-bearing object instance
-        """
-        kva = 0.0
-        if 'constant_power_A' in data:
-            kva += parse_kva(data['constant_power_A'])
-        if 'constant_power_B' in data:
-            kva += parse_kva(data['constant_power_B'])
-        if 'constant_power_C' in data:
-            kva += parse_kva(data['constant_power_C'])
-        if 'constant_power_1' in data:
-            kva += parse_kva(data['constant_power_1'])
-        if 'constant_power_2' in data:
-            kva += parse_kva(data['constant_power_2'])
-        if 'constant_power_12' in data:
-            kva += parse_kva(data['constant_power_12'])
-        if 'power_1' in data:
-            kva += parse_kva(data['power_1'])
-        if 'power_2' in data:
-            kva += parse_kva(data['power_2'])
-        if 'power_12' in data:
-            kva += parse_kva(data['power_12'])
-        return kva
 
     def log_model(self, model: dict, h: dict):
         """Prints the whole parsed model for debugging
@@ -552,7 +570,7 @@ class Feeder:
             ConfigDict = {}
             with open(fgconfig, 'r') as fgfile:
                 confile = fgfile.read()
-                ConfigDict = json.loads(confile)
+                ConfigDict = pyjson5.loads(confile)
                 fgfile.close()
             tval2 = ConfigDict['feedergenerator']['constants']
             ConfigDict = tval2
@@ -749,235 +767,235 @@ class Feeder:
             params["diameter"] = str(row[4])
             self.glm.add_object("triplex_line_configuration", name, params)
 
-    def add_ercot_houses(self, model: dict, h: dict, v_ln: float, v_sec: float):
-        """For the reduced-order ERCOT feeders, add houses and a large service 
-        transformer to the load points
-        TODO: not all variables are used in this function
+    # def add_ercot_houses(self, model: dict, h: dict, v_ln: float, v_sec: float):
+    #     """For the reduced-order ERCOT feeders, add houses and a large service
+    #     transformer to the load points
+    #     TODO: not all variables are used in this function
+    #
+    #     Args:
+    #         model (dict): the parsed GridLAB-D model
+    #         h (dict): the object ID hash
+    #         v_ln (float): the primary line-to-neutral voltage
+    #         v_sec (float): the secondary line-to-neutral voltage
+    #     """
+    #     for key in self.base.house_nodes:
+    #         #        bus = key[:-2]
+    #         bus = self.base.house_nodes[key][6]
+    #         phs = self.base.house_nodes[key][3]
+    #         nh = self.base.house_nodes[key][0]
+    #         xfkva = self.glm.find_1phase_xfmr_kva(6.0 * nh)
+    #         if xfkva > 100.0:
+    #             npar = int(xfkva / 100.0 + 0.5)
+    #             xfkva = 100.0
+    #         elif xfkva <= 0.0:
+    #             xfkva = 100.0
+    #             npar = int(0.06 * nh + 0.5)
+    #         else:
+    #             npar = 1
+    #         # add the service transformer==>TN==>TPX==>TM for all houses
+    #         kvat = npar * xfkva
+    #         row = self.glm.find_1phase_xfmr(xfkva)
+    #         params = {}
+    #         name = key + '_xfconfig'
+    #         params["power_rating"] = format(kvat, '.2f')
+    #         if 'A' in phs:
+    #             params["powerA_rating"] = format(kvat, '.2f')
+    #         elif 'B' in phs:
+    #             params["powerB_rating"] = format(kvat, '.2f')
+    #         elif 'C' in phs:
+    #             params["powerC_rating"] = format(kvat, '.2f')
+    #         params["install_type"] = "PADMOUNT"
+    #         params["connect_type"] = "SINGLE_PHASE_CENTER_TAPPED"
+    #         params["primary_voltage"] = str(v_ln)
+    #         params["secondary_voltage"] = format(v_sec, '.1f')
+    #         params["resistance"] = format(row[1] * 0.5, '.5f')
+    #         params["resistance1"] = format(row[1], '.5f')
+    #         params["resistance2"] = format(row[1], '.5f')
+    #         params["reactance"] = format(row[2] * 0.8, '.5f')
+    #         params["reactance1"] = format(row[2] * 0.4, '.5f')
+    #         params["reactance2"] = format(row[2] * 0.4, '.5f')
+    #         params["shunt_resistance"] = format(1.0 / row[3], '.2f')
+    #         params["shunt_reactance"] = format(1.0 / row[4], '.2f')
+    #         self.glm.add_object("transformer_configuration", name, params)
+    #
+    #         name = key + '_xf'
+    #         params = {"phases": phs + 'S',
+    #                   "from": bus,
+    #                   "to": key + '_tn',
+    #                   "configuration": key + '_xfconfig'}
+    #         self.glm.add_object("transformer", name, params)
+    #
+    #         name = key + '_tpxconfig'
+    #         zs = format(self.base.tpxR11 / nh, '.5f') + '+' + format(self.base.tpxX11 / nh, '.5f') + 'j;'
+    #         zm = format(self.base.tpxR12 / nh, '.5f') + '+' + format(self.base.tpxX12 / nh, '.5f') + 'j;'
+    #         amps = format(self.base.tpxAMP * nh, '.1f') + ';'
+    #         params = {"z11": zs,
+    #                   "z22": zs,
+    #                   "z12": zm,
+    #                   "rating.summer.continuous": amps}
+    #         self.glm.add_object("triplex_line_configuration", name, params)
+    #
+    #         name = key + '_tpx'
+    #         params = {"phases": phs + 'S',
+    #                   "from": key + '_tn',
+    #                   "to": key + '_mtr',
+    #                   "length": 50,
+    #                   "configuration": key + '_tpxconfig'}
+    #         self.glm.add_object("triplex_line", name, params)
+    #
+    #         if 'A' in phs:
+    #             vstart = str(v_sec) + '+0.0j;'
+    #         elif 'B' in phs:
+    #             vstart = format(-0.5 * v_sec, '.2f') + format(-0.866025 * v_sec, '.2f') + 'j;'
+    #         else:
+    #             vstart = format(-0.5 * v_sec, '.2f') + '+' + format(0.866025 * v_sec, '.2f') + 'j;'
+    #
+    #         t_name = key + '_tn'
+    #         params = {"phases": phs + 'S',
+    #                   "voltage_1": vstart,
+    #                   "voltage_2": vstart,
+    #                   "voltage_N": 0,
+    #                   "nominal_voltage": format(v_sec, '.1f')}
+    #         self.glm.add_object("triplex_node", t_name, params)
+    #
+    #         t_name = key + '_mtr'
+    #         params = {"phases": phs + 'S',
+    #                   "voltage_1": vstart,
+    #                   "voltage_2": vstart,
+    #                   "voltage_N": 0,
+    #                   "nominal_voltage": format(v_sec, '.1f')}
+    #         self.glm.add_tariff(params)
+    #         self.glm.add_object("triplex_meter", t_name, params)
+    #         self.glm.add_collector(t_name, "meter")
+    #
+    # def connect_ercot_commercial(self):
+    #     """For the reduced-order ERCOT feeders, add a billing meter to the
+    #     commercial load points, except small ZIPLOADs
+    #     """
+    #     meters_added = set()
+    #     for key in self.base.comm_loads:
+    #         mtr = self.base.comm_loads[key][0]
+    #         comm_type = self.base.comm_loads[key][1]
+    #         if comm_type == 'ZIPLOAD':
+    #             continue
+    #         phases = self.base.comm_loads[key][5]
+    #         vln = float(self.base.comm_loads[key][6])
+    #         idx = mtr.rfind('_')
+    #         parent = mtr[:idx]
+    #         if mtr not in meters_added:
+    #             meters_added.add(mtr)
+    #             params = {"parent": parent,
+    #                       "phases": phases,
+    #                       "nominal_voltage": format(vln, '.1f')}
+    #             self.glm.add_tariff(params)
+    #             self.glm.add_object("meter", mtr, params)
+    #             self.glm.add_collector(mtr, "meter")
 
-        Args:
-            model (dict): the parsed GridLAB-D model
-            h (dict): the object ID hash
-            v_ln (float): the primary line-to-neutral voltage
-            v_sec (float): the secondary line-to-neutral voltage
-        """
-        for key in self.base.house_nodes:
-            #        bus = key[:-2]
-            bus = self.base.house_nodes[key][6]
-            phs = self.base.house_nodes[key][3]
-            nh = self.base.house_nodes[key][0]
-            xfkva = self.glm.find_1phase_xfmr_kva(6.0 * nh)
-            if xfkva > 100.0:
-                npar = int(xfkva / 100.0 + 0.5)
-                xfkva = 100.0
-            elif xfkva <= 0.0:
-                xfkva = 100.0
-                npar = int(0.06 * nh + 0.5)
-            else:
-                npar = 1
-            # add the service transformer==>TN==>TPX==>TM for all houses
-            kvat = npar * xfkva
-            row = self.glm.find_1phase_xfmr(xfkva)
-            params = {}
-            name = key + '_xfconfig'
-            params["power_rating"] = format(kvat, '.2f')
-            if 'A' in phs:
-                params["powerA_rating"] = format(kvat, '.2f')
-            elif 'B' in phs:
-                params["powerB_rating"] = format(kvat, '.2f')
-            elif 'C' in phs:
-                params["powerC_rating"] = format(kvat, '.2f')
-            params["install_type"] = "PADMOUNT"
-            params["connect_type"] = "SINGLE_PHASE_CENTER_TAPPED"
-            params["primary_voltage"] = str(v_ln)
-            params["secondary_voltage"] = format(v_sec, '.1f')
-            params["resistance"] = format(row[1] * 0.5, '.5f')
-            params["resistance1"] = format(row[1], '.5f')
-            params["resistance2"] = format(row[1], '.5f')
-            params["reactance"] = format(row[2] * 0.8, '.5f')
-            params["reactance1"] = format(row[2] * 0.4, '.5f')
-            params["reactance2"] = format(row[2] * 0.4, '.5f')
-            params["shunt_resistance"] = format(1.0 / row[3], '.2f')
-            params["shunt_reactance"] = format(1.0 / row[4], '.2f')
-            self.glm.add_object("transformer_configuration", name, params)
+    # def add_ercot_small_loads(self, basenode: str, v_nom:float):
+    #     """For the reduced-order ERCOT feeders, write loads that are too small
+    #     for houses
+    #
+    #     Args:
+    #       basenode (str): the GridLAB-D node name
+    #       v_nom (float): the primary line-to-neutral voltage
+    #     """
+    #     kva = float(self.base.small_nodes[basenode][0])
+    #     phs = self.base.small_nodes[basenode][1]
+    #     parent = self.base.small_nodes[basenode][2]
+    #     cls = self.base.small_nodes[basenode][3]
+    #     if 'A' in phs:
+    #         voltage = "voltage_A"
+    #         v_voltage = str(v_nom) + '+0.0j;'
+    #         power = 'constant_power_A_real'
+    #         v_power = format(1000.0 * kva, '.2f')
+    #     elif 'B' in phs:
+    #         voltage = "voltage_B"
+    #         v_voltage = format(-0.5 * v_nom, '.2f') + format(-0.866025 * v_nom, '.2f') + 'j'
+    #         power = 'constant_power_B_real'
+    #         v_power = format(1000.0 * kva, '.2f')
+    #     else:
+    #         voltage = "voltage_C"
+    #         v_voltage = format(-0.5 * v_nom, '.2f') + '+' + format(0.866025 * v_nom, '.2f') + 'j'
+    #         power = 'constant_power_C_real'
+    #         v_power = format(1000.0 * kva, '.2f')
+    #
+    #     params = {"parent": parent,
+    #               "phases": phs,
+    #               "nominal_voltage": str(v_nom),
+    #               "load_class": cls,
+    #               voltage: v_voltage,
+    #               power: v_power}
+    #     self.glm.add_object("load", basenode, params)
 
-            name = key + '_xf'
-            params = {"phases": phs + 'S',
-                      "from": bus,
-                      "to": key + '_tn',
-                      "configuration": key + '_xfconfig'}
-            self.glm.add_object("transformer", name, params)
-
-            name = key + '_tpxconfig'
-            zs = format(self.base.tpxR11 / nh, '.5f') + '+' + format(self.base.tpxX11 / nh, '.5f') + 'j;'
-            zm = format(self.base.tpxR12 / nh, '.5f') + '+' + format(self.base.tpxX12 / nh, '.5f') + 'j;'
-            amps = format(self.base.tpxAMP * nh, '.1f') + ';'
-            params = {"z11": zs,
-                      "z22": zs,
-                      "z12": zm,
-                      "rating.summer.continuous": amps}
-            self.glm.add_object("triplex_line_configuration", name, params)
-
-            name = key + '_tpx'
-            params = {"phases": phs + 'S',
-                      "from": key + '_tn',
-                      "to": key + '_mtr',
-                      "length": 50,
-                      "configuration": key + '_tpxconfig'}
-            self.glm.add_object("triplex_line", name, params)
-
-            if 'A' in phs:
-                vstart = str(v_sec) + '+0.0j;'
-            elif 'B' in phs:
-                vstart = format(-0.5 * v_sec, '.2f') + format(-0.866025 * v_sec, '.2f') + 'j;'
-            else:
-                vstart = format(-0.5 * v_sec, '.2f') + '+' + format(0.866025 * v_sec, '.2f') + 'j;'
-
-            t_name = key + '_tn'
-            params = {"phases": phs + 'S',
-                      "voltage_1": vstart,
-                      "voltage_2": vstart,
-                      "voltage_N": 0,
-                      "nominal_voltage": format(v_sec, '.1f')}
-            self.glm.add_object("triplex_node", t_name, params)
-
-            t_name = key + '_mtr'
-            params = {"phases": phs + 'S',
-                      "voltage_1": vstart,
-                      "voltage_2": vstart,
-                      "voltage_N": 0,
-                      "nominal_voltage": format(v_sec, '.1f')}
-            self.glm.add_tariff(params)
-            self.glm.add_object("triplex_meter", t_name, params)
-            self.glm.add_collector(t_name, "meter")
-
-    def connect_ercot_commercial(self):
-        """For the reduced-order ERCOT feeders, add a billing meter to the 
-        commercial load points, except small ZIPLOADs
-        """
-        meters_added = set()
-        for key in self.base.comm_loads:
-            mtr = self.base.comm_loads[key][0]
-            comm_type = self.base.comm_loads[key][1]
-            if comm_type == 'ZIPLOAD':
-                continue
-            phases = self.base.comm_loads[key][5]
-            vln = float(self.base.comm_loads[key][6])
-            idx = mtr.rfind('_')
-            parent = mtr[:idx]
-            if mtr not in meters_added:
-                meters_added.add(mtr)
-                params = {"parent": parent,
-                          "phases": phases,
-                          "nominal_voltage": format(vln, '.1f')}
-                self.glm.add_tariff(params)
-                self.glm.add_object("meter", mtr, params)
-                self.glm.add_collector(mtr, "meter")
-
-    def add_ercot_small_loads(self, basenode: str, v_nom:float):
-        """For the reduced-order ERCOT feeders, write loads that are too small 
-        for houses
-
-        Args:
-          basenode (str): the GridLAB-D node name
-          v_nom (float): the primary line-to-neutral voltage
-        """
-        kva = float(self.base.small_nodes[basenode][0])
-        phs = self.base.small_nodes[basenode][1]
-        parent = self.base.small_nodes[basenode][2]
-        cls = self.base.small_nodes[basenode][3]
-        if 'A' in phs:
-            voltage = "voltage_A"
-            v_voltage = str(v_nom) + '+0.0j;'
-            power = 'constant_power_A_real'
-            v_power = format(1000.0 * kva, '.2f')
-        elif 'B' in phs:
-            voltage = "voltage_B"
-            v_voltage = format(-0.5 * v_nom, '.2f') + format(-0.866025 * v_nom, '.2f') + 'j'
-            power = 'constant_power_B_real'
-            v_power = format(1000.0 * kva, '.2f')
-        else:
-            voltage = "voltage_C"
-            v_voltage = format(-0.5 * v_nom, '.2f') + '+' + format(0.866025 * v_nom, '.2f') + 'j'
-            power = 'constant_power_C_real'
-            v_power = format(1000.0 * kva, '.2f')
-
-        params = {"parent": parent,
-                  "phases": phs,
-                  "nominal_voltage": str(v_nom),
-                  "load_class": cls,
-                  voltage: v_voltage,
-                  power: v_power}
-        self.glm.add_object("load", basenode, params)
-
-    def identify_ercot_houses(self, model: dict, h: dict, t: str, avgHouse: float, rgn: int):
-        """For the reduced-order ERCOT feeders, scan each primary load to 
-        determine the number of houses it should have. Looks at the primary 
-        loads, not the service transformers.
-        TODO: not all variables are used in function
-
-        Args:
-            model (dict): the parsed GridLAB-D model
-            h (dict): the object ID hash
-            t (str): the GridLAB-D class name to scan
-            avgHouse (float): the average house load in kva
-            rgn (int): the region number, 1..5
-        """
-        print('Average ERCOT House {}, region number {}'.format(avgHouse, rgn))
-        total_houses = {'A': 0, 'B': 0, 'C': 0}
-        total_small = {'A': 0, 'B': 0, 'C': 0}
-        total_small_kva = {'A': 0, 'B': 0, 'C': 0}
-        total_sf = 0
-        total_apt = 0
-        total_mh = 0
-        if t in model:
-            for o in model[t]:
-                name = o
-                node = o
-                parent = model[t][o]['parent']
-                for phs in ['A', 'B', 'C']:
-                    tok = 'constant_power_' + phs
-                    key = node + '_' + phs
-                    if tok in model[t][o]:
-                        kva = parse_kva(model[t][o][tok])
-                        nh = 0
-                        cls = 'U'
-                        # don't populate houses onto A, C, I or U load_class nodes
-                        if 'load_class' in model[t][o]:
-                            cls = model[t][o]['load_class']
-                            if cls == 'R':
-                                if (kva > 1.0):
-                                    nh = int((kva / avgHouse) + 0.5)
-                                    total_houses[phs] += nh
-                        if nh > 0:
-                            lg_v_sm = kva / avgHouse - nh  # >0 if we rounded down the number of houses
-                            bldg, ti = self.selectResidentialBuilding(self.base.rgnThermalPct[rgn - 1],
-                                                                      np.random.uniform(0, 1))
-                            if bldg == 0:
-                                total_sf += nh
-                            elif bldg == 1:
-                                total_apt += nh
-                            else:
-                                total_mh += nh
-                            # parent is the primary node, only for ERCOT
-                            self.base.house_nodes[key] = [nh, rgn, lg_v_sm, phs, bldg, ti, parent]
-                        elif kva > 0.1:
-                            total_small[phs] += 1
-                            total_small_kva[phs] += kva
-                            # parent is the primary node, only for ERCOT
-                            self.base.small_nodes[key] = [kva, phs, parent, cls]
-
-        for phs in ['A', 'B', 'C']:
-            print('phase {}: {} Houses and {} Small Loads totaling {:.2f} kVA'.
-                  format(phs, total_houses[phs], total_small[phs], total_small_kva[phs]))
-        print('{} primary house nodes, [SF, APT, MH] = {}, {}, {}'.
-              format(len(self.base.house_nodes), total_sf, total_apt, total_mh))
-        for i in range(6):
-            self.base.heating_bins[0][i] = round(total_sf * self.base.bldgHeatingSetpoints[0][i][0] + 0.5)
-            self.base.heating_bins[1][i] = round(total_apt * self.base.bldgHeatingSetpoints[1][i][0] + 0.5)
-            self.base.heating_bins[2][i] = round(total_mh * self.base.bldgHeatingSetpoints[2][i][0] + 0.5)
-            self.base.cooling_bins[0][i] = round(total_sf * self.base.bldgCoolingSetpoints[0][i][0] + 0.5)
-            self.base.cooling_bins[1][i] = round(total_apt * self.base.bldgCoolingSetpoints[1][i][0] + 0.5)
-            self.base.cooling_bins[2][i] = round(total_mh * self.base.bldgCoolingSetpoints[2][i][0] + 0.5)
+    # def identify_ercot_houses(self, model: dict, h: dict, t: str, avgHouse: float, rgn: int):
+    #     """For the reduced-order ERCOT feeders, scan each primary load to
+    #     determine the number of houses it should have. Looks at the primary
+    #     loads, not the service transformers.
+    #     TODO: not all variables are used in function
+    #
+    #     Args:
+    #         model (dict): the parsed GridLAB-D model
+    #         h (dict): the object ID hash
+    #         t (str): the GridLAB-D class name to scan
+    #         avgHouse (float): the average house load in kva
+    #         rgn (int): the region number, 1..5
+    #     """
+    #     print('Average ERCOT House {}, region number {}'.format(avgHouse, rgn))
+    #     total_houses = {'A': 0, 'B': 0, 'C': 0}
+    #     total_small = {'A': 0, 'B': 0, 'C': 0}
+    #     total_small_kva = {'A': 0, 'B': 0, 'C': 0}
+    #     total_sf = 0
+    #     total_apt = 0
+    #     total_mh = 0
+    #     if t in model:
+    #         for o in model[t]:
+    #             name = o
+    #             node = o
+    #             parent = model[t][o]['parent']
+    #             for phs in ['A', 'B', 'C']:
+    #                 tok = 'constant_power_' + phs
+    #                 key = node + '_' + phs
+    #                 if tok in model[t][o]:
+    #                     kva = parse_kva(model[t][o][tok])
+    #                     nh = 0
+    #                     cls = 'U'
+    #                     # don't populate houses onto A, C, I or U load_class nodes
+    #                     if 'load_class' in model[t][o]:
+    #                         cls = model[t][o]['load_class']
+    #                         if cls == 'R':
+    #                             if (kva > 1.0):
+    #                                 nh = int((kva / avgHouse) + 0.5)
+    #                                 total_houses[phs] += nh
+    #                     if nh > 0:
+    #                         lg_v_sm = kva / avgHouse - nh  # >0 if we rounded down the number of houses
+    #                         bldg, ti = self.selectResidentialBuilding(self.base.rgnThermalPct[rgn - 1],
+    #                                                                   np.random.uniform(0, 1))
+    #                         if bldg == 0:
+    #                             total_sf += nh
+    #                         elif bldg == 1:
+    #                             total_apt += nh
+    #                         else:
+    #                             total_mh += nh
+    #                         # parent is the primary node, only for ERCOT
+    #                         self.base.house_nodes[key] = [nh, rgn, lg_v_sm, phs, bldg, ti, parent]
+    #                     elif kva > 0.1:
+    #                         total_small[phs] += 1
+    #                         total_small_kva[phs] += kva
+    #                         # parent is the primary node, only for ERCOT
+    #                         self.base.small_nodes[key] = [kva, phs, parent, cls]
+    #
+    #     for phs in ['A', 'B', 'C']:
+    #         print('phase {}: {} Houses and {} Small Loads totaling {:.2f} kVA'.
+    #               format(phs, total_houses[phs], total_small[phs], total_small_kva[phs]))
+    #     print('{} primary house nodes, [SF, APT, MH] = {}, {}, {}'.
+    #           format(len(self.base.house_nodes), total_sf, total_apt, total_mh))
+    #     for i in range(6):
+    #         self.base.heating_bins[0][i] = round(total_sf * self.base.bldgHeatingSetpoints[0][i][0] + 0.5)
+    #         self.base.heating_bins[1][i] = round(total_apt * self.base.bldgHeatingSetpoints[1][i][0] + 0.5)
+    #         self.base.heating_bins[2][i] = round(total_mh * self.base.bldgHeatingSetpoints[2][i][0] + 0.5)
+    #         self.base.cooling_bins[0][i] = round(total_sf * self.base.bldgCoolingSetpoints[0][i][0] + 0.5)
+    #         self.base.cooling_bins[1][i] = round(total_apt * self.base.bldgCoolingSetpoints[1][i][0] + 0.5)
+    #         self.base.cooling_bins[2][i] = round(total_mh * self.base.bldgCoolingSetpoints[2][i][0] + 0.5)
 
     def replace_commercial_loads(self, model: dict, h: dict, t: str, avgBuilding: float):
         """For the full-order feeders, scan each load with load_class==C to 
@@ -1105,13 +1123,11 @@ class Feeder:
         print('{} commercial buildings, approximately {} kVA still to be assigned.'.
               format(len(self.base.comm_bldgs_pop), int(remain_comm_kva)))
 
-    def identify_xfmr_houses(self, model: dict, h: dict, t: str, seg_loads: dict, avgHouse: float, rgn: int):
+    def identify_xfmr_houses(self, t: str, seg_loads: dict, avgHouse: float, rgn: int):
         """For the full-order feeders, scan each service transformer to 
         determine the number of houses it should have
         TODO: not all variables are used in this function
         Args:
-            model (dict): the parsed GridLAB-D model
-            h (dict): the object ID hash
             t (str): the GridLAB-D class name to scan
             seg_loads (dict): dictionary of downstream load (kva) served by each GridLAB-D link
             avgHouse (float): the average house load in kva
@@ -1124,35 +1140,35 @@ class Feeder:
         total_mh = 0
         total_small = 0
         total_small_kva = 0
-        if t in model:
-            for o in model[t]:
-                if o in seg_loads:
-                    tkva = seg_loads[o][0]
-                    phs = seg_loads[o][1]
-                    if 'S' in phs:
-                        nhouse = int((tkva / avgHouse) + 0.5)  # round to nearest int
-                        name = o
-                        node = gld_strict_name(model[t][o]['to'])
-                        if nhouse <= 0:
-                            total_small += 1
-                            total_small_kva += tkva
-                            self.base.small_nodes[node] = [tkva, phs]
+        transformers = self.glm.model.object_entities[t]
+        names = list(transformers)
+        for transformer_name, transformer in transformers.items():
+            if transformer_name in seg_loads:
+                tkva = seg_loads[transformer_name][0]
+                phs = seg_loads[transformer_name][1]
+                if 'S' in phs:
+                    nhouse = int((tkva / avgHouse) + 0.5)  # round to nearest int
+                    node = gld_strict_name(transformer['to'])
+                    if nhouse <= 0:
+                        total_small += 1
+                        total_small_kva += tkva
+                        self.base.small_nodes[node] = [tkva, phs]
+                    else:
+                        total_houses += nhouse
+                        lg_v_sm = tkva / avgHouse - nhouse  # >0 if we rounded down the number of houses
+                        # let's get the income level for the dso_type and state
+                        dsoIncomePct = self.getDsoIncomeLevelTable()
+                        inc_lev = self.selectIncomeLevel(dsoIncomePct, np.random.uniform(0, 1))
+                        # let's get the vintage table for dso_type, state, and income level
+                        dsoThermalPct = self.getDsoThermalTable(self.base.income_level[inc_lev])
+                        bldg, ti = self.selectResidentialBuilding(dsoThermalPct, np.random.uniform(0, 1))
+                        if bldg == 0:
+                            total_sf += nhouse
+                        elif bldg == 1:
+                            total_apt += nhouse
                         else:
-                            total_houses += nhouse
-                            lg_v_sm = tkva / avgHouse - nhouse  # >0 if we rounded down the number of houses
-                            # let's get the income level for the dso_type and state
-                            dsoIncomePct = self.getDsoIncomeLevelTable()
-                            inc_lev = self.selectIncomeLevel(dsoIncomePct, np.random.uniform(0, 1))
-                            # let's get the vintage table for dso_type, state, and income level
-                            dsoThermalPct = self.getDsoThermalTable(self.base.income_level[inc_lev])
-                            bldg, ti = self.selectResidentialBuilding(dsoThermalPct, np.random.uniform(0, 1))
-                            if bldg == 0:
-                                total_sf += nhouse
-                            elif bldg == 1:
-                                total_apt += nhouse
-                            else:
-                                total_mh += nhouse
-                            self.base.house_nodes[node] = [nhouse, rgn, lg_v_sm, phs, bldg, ti, inc_lev]
+                            total_mh += nhouse
+                        self.base.house_nodes[node] = [nhouse, rgn, lg_v_sm, phs, bldg, ti, inc_lev]
         print('{} small loads totaling {:.2f} kVA'.
               format(total_small, total_small_kva))
         print('{} houses on {} transformers, [SF, APT, MH] = [{}, {}, {}]'.
@@ -1628,14 +1644,11 @@ class Feeder:
 
         tpxname = gld_strict_name(basenode + '_tpx')
         mtrname = gld_strict_name(basenode + '_mtr')
-        if self.base.forERCOT == "True":
-            phs = phs + 'S'
-        else:
-            params = {"phases": phs,
-                      "nominal_voltage": str(v_nom),
-                      "voltage_1": vstart,
-                      "voltage_2": vstart}
-            self.glm.add_object("triplex_node", basenode, params)
+        params = {"phases": phs,
+                  "nominal_voltage": str(v_nom),
+                  "voltage_1": vstart,
+                  "voltage_2": vstart}
+        self.glm.add_object("triplex_node", basenode, params)
         for i in range(nhouse):
             tpxname1 = tpxname + '_' + str(i + 1)
             mtrname1 = mtrname + '_' + str(i + 1)
@@ -1649,42 +1662,26 @@ class Feeder:
             bat_i_name = gld_strict_name(basenode + '_ibat_' + str(i + 1))
             sol_m_name = gld_strict_name(basenode + '_msol_' + str(i + 1))
             bat_m_name = gld_strict_name(basenode + '_mbat_' + str(i + 1))
-            if self.base.forERCOT:
-                params = {"parent": mtrname,
-                          "phases": phs,
-                          "meter_power_consumption": "1+7j",
-                          "nominal_voltage": str(v_nom),
-                          "voltage_1": vstart,
-                          "voltage_2": vstart}
-                self.glm.add_tariff(params)
-                self.glm.add_object("triplex_meter", mtrname1, params)
-                self.glm.add_collector(mtrname, "meter")
+            params = {"from": basenode,
+                      "to": mtrname1,
+                      "phases": phs,
+                      "length": "30",
+                      "configuration": self.base.name_prefix + self.base.triplex_configurations[0][0]}
+            self.glm.add_object("triplex_line", tpxname, params)
 
-                params = {"parent": mtrname,
-                          "phases": phs,
-                          "nominal_voltage": str(v_nom)}
-                self.glm.add_object("triplex_meter", hse_m_name, params)
-            else:
-                params = {"from": basenode,
-                          "to": mtrname1,
-                          "phases": phs,
-                          "length": "30",
-                          "configuration": self.base.name_prefix + self.base.triplex_configurations[0][0]}
-                self.glm.add_object("triplex_line", tpxname, params)
+            params = {"phases": phs,
+                      "meter_power_consumption": "1+7j",
+                      "nominal_voltage": str(v_nom),
+                      "voltage_1": vstart,
+                      "voltage_2": vstart}
+            self.glm.add_tariff(params)
+            self.glm.add_object("triplex_meter", mtrname1, params)
+            self.glm.add_collector(mtrname, "meter")
 
-                params = {"phases": phs,
-                          "meter_power_consumption": "1+7j",
-                          "nominal_voltage": str(v_nom),
-                          "voltage_1": vstart,
-                          "voltage_2": vstart}
-                self.glm.add_tariff(params)
-                self.glm.add_object("triplex_meter", mtrname1, params)
-                self.glm.add_collector(mtrname, "meter")
-
-                params = {"parent": mtrname1,
-                          "phases": phs,
-                          "nominal_voltage": str(v_nom)}
-                self.glm.add_object("triplex_meter", hse_m_name, params)
+            params = {"parent": mtrname1,
+                      "phases": phs,
+                      "nominal_voltage": str(v_nom)}
+            self.glm.add_object("triplex_meter", hse_m_name, params)
 
         # ************* Floor area, ceiling height and stories *************************
         fa_array = {}  # distribution array for floor area min, max, mean, standard deviation
@@ -2082,7 +2079,7 @@ class Feeder:
                     self.base.solar_kw += 0.001 * inv_power
                     params = {"parent": mtrname,
                               "phases": phs,
-                              "nominal_voltage": str(vnom)}
+                              "nominal_voltage": str(v_nom)}
                     self.glm.add_object("triplex_meter", sol_m_name, params)
 
                     params = {"parent": sol_m_name,
@@ -2134,7 +2131,7 @@ class Feeder:
                 self.base.battery_count += 1
                 params = {"parent": mtrname,
                           "phases": phs,
-                          "nominal_voltage": str(vnom)}
+                          "nominal_voltage": str(v_nom)}
                 self.glm.add_object("triplex_meter", bat_m_name, params)
 
                 params = {"parent": bat_m_name,
@@ -2538,6 +2535,8 @@ class Feeder:
         self.glm.model.module_entities['clock'].stoptime.value = self.base.endtime
         self.glm.model.module_entities['clock'].timezone.value = self.base.timezone
 
+
+
         swing_node = ''
         G = self.glm.model.draw_network()
         for n1, data in G.nodes(data=True):
@@ -2547,6 +2546,8 @@ class Feeder:
                         swing_node = n1
 
         sub_graphs = nx.connected_components(G)
+
+
         seg_loads = {}  # [name][kva, phases]
         total_kva = 0.0
         for n1, data in G.nodes(data=True):
@@ -2571,6 +2572,12 @@ class Feeder:
         print('  swing node', swing_node, 'with', len(list(sub_graphs)), 'subgraphs and',
               '{:.2f}'.format(total_kva), 'total kva')
 
+
+
+
+
+
+
         # preparatory items for TESP
         self.glm.add_module("climate", {})
         self.glm.add_module("generators", {})
@@ -2589,10 +2596,10 @@ class Feeder:
         if self.base.metrics_interval > 0:
             params = {"interval": str(self.base.metrics_interval),
                       "interim": "43200"}
-            if self.base.forERCOT == "True":
-                params["filename"] = outname + '_metrics.json'
-            else:
-                params["filename"] = '${METRICS_FILE}'
+            # if self.base.forERCOT == "True":
+            #     params["filename"] = outname + '_metrics.json'
+            # else:
+            params["filename"] = '${METRICS_FILE}'
             self.glm.add_object("metrics_collector_writer", "mc", params)
 
         name = "localWeather"
@@ -2741,47 +2748,47 @@ class Feeder:
         self.add_link_class(model, h, 'transformer', seg_loads)
         self.add_link_class(model, h, 'capacitor', seg_loads, want_metrics=True)
 
-        if self.base.forERCOT == "True":
-            self.replace_commercial_loads(model, h, 'load', 0.001 * avgcommercial)
-            #            connect_ercot_commercial (op)
-            self.identify_ercot_houses(model, h, 'load', 0.001 * avghouse, rgn)
-
-            # connect_ercot_houses(model, h, op, vln, 120.0)
-            self.add_ercot_houses(model, h, vln, 120.0)
-
-            for key in self.base.house_nodes:
-                self.add_houses(key, 120.0)
-            for key in self.base.small_nodes:
-                self.add_ercot_small_loads(key, vln)
-            for key in self.base.comm_loads:
-                self.add_commercial_loads(rgn, key)
-        else:
-            self.replace_commercial_loads(model, h, 'load', 0.001 * avgcommercial)
-            self.identify_xfmr_houses(model, h, 'transformer', seg_loads, 0.001 * avghouse, rgn)
-            for key in self.base.house_nodes:
-                self.add_houses(key, 120.0)
-            for key in self.base.small_nodes:
-                self.add_small_loads(key, 120.0)
-            for key in self.base.comm_loads:
-                # add_commercial_loads(rgn, key)
-                bldg_definition = comm_FG.define_comm_loads(self, self.base.comm_loads[key][1],
-                                                            self.base.comm_loads[key][2],
-                                                            "Suburban",
-                                                            # self.base.dso_type,
-                                                            self.base.ashrae_zone,
-                                                            self.base.comm_bldg_metadata)
-                comm_FG.add_comm_zones(self.glm, bldg_definition,
-                                       self.base.comm_loads, key,
-                                       self.base.batt_metadata, self.base.storage_percentage,
-                                       self.base.ev_metadata, self.base.ev_percentage,
-                                       self.base.solar_percentage, self.base.pv_rating_MW,
-                                       self.base.solar_Q_player,
-                                       self.base.case_type)
+        #if self.base.forERCOT == "True":
+            # self.replace_commercial_loads(model, h, 'load', 0.001 * avgcommercial)
+            # #            connect_ercot_commercial (op)
+            # self.identify_ercot_houses(model, h, 'load', 0.001 * avghouse, rgn)
+            #
+            # # connect_ercot_houses(model, h, op, vln, 120.0)
+            # self.add_ercot_houses(model, h, vln, 120.0)
+            #
+            # for key in self.base.house_nodes:
+            #     self.add_houses(key, 120.0)
+            # for key in self.base.small_nodes:
+            #     self.add_ercot_small_loads(key, vln)
+            # for key in self.base.comm_loads:
+            #     self.add_commercial_loads(rgn, key)
+        #else:
+        self.replace_commercial_loads(model, h, 'load', 0.001 * avgcommercial)
+        self.identify_xfmr_houses(model, h, 'transformer', seg_loads, 0.001 * avghouse, rgn)
+        for key in self.base.house_nodes:
+            self.add_houses(key, 120.0)
+        for key in self.base.small_nodes:
+            self.add_small_loads(key, 120.0)
+        for key in self.base.comm_loads:
+            # add_commercial_loads(rgn, key)
+            bldg_definition = comm_FG.define_comm_loads(self, self.base.comm_loads[key][1],
+                                                        self.base.comm_loads[key][2],
+                                                       "Suburban",
+                                                        # self.base.dso_type,
+                                                        self.base.ashrae_zone,
+                                                        self.base.comm_bldg_metadata)
+            comm_FG.add_comm_zones(self.glm, bldg_definition,
+                                  self.base.comm_loads, key,
+                                  self.base.batt_metadata, self.base.storage_percentage,
+                                  self.base.ev_metadata, self.base.ev_percentage,
+                                  self.base.solar_percentage, self.base.pv_rating_MW,
+                                  self.base.solar_Q_player,
+                                  self.base.case_type)
 
         self.add_voltage_class(model, h, 'node', vln, vll, secnode)
         self.add_voltage_class(model, h, 'meter', vln, vll, secnode)
-        if self.base.forERCOT == "False":
-            self.add_voltage_class(model, h, 'load', vln, vll, secnode)
+        # if self.base.forERCOT == "False":
+        #     self.add_voltage_class(model, h, 'load', vln, vll, secnode)
         if len(self.base.Eplus_Bus) > 0 and self.base.Eplus_Volts > 0.0 and \
                 self.base.Eplus_kVA > 0.0:
             # Waiting for the add comment method to be added to the modify class
@@ -2986,19 +2993,19 @@ def _test1():
     data_Path = "../data/"
     # loading general metadata
     with open(os.path.join(data_Path, "8-hi-metadata-lean.json"), 'r', encoding='utf-8') as json_file:
-        feeder.base.dso_config = json.load(json_file)
+        feeder.base.dso_config = pyjson5.load(json_file)
     # loading residential metadata
     with open(os.path.join(data_Path, "RECS_residential_metadata.json"), 'r', encoding='utf-8') as json_file:
-        feeder.base.res_bldg_metadata = json.load(json_file)
+        feeder.base.res_bldg_metadata = pyjson5.load(json_file)
     # loading commercial building metadata
     with open(os.path.join(data_Path, "DSOT_commercial_metadata.json"), 'r', encoding='utf-8') as json_file:
-        feeder.base.comm_bldg_metadata = json.load(json_file)
+        feeder.base.comm_bldg_metadata = pyjson5.load(json_file)
     # loading battery metadata
     with open(os.path.join(data_Path, "DSOT_battery_metadata.json"), 'r', encoding='utf-8') as json_file:
-        feeder.base.batt_metadata = json.load(json_file)
+        feeder.base.batt_metadata = pyjson5.load(json_file)
     # loading ev model metadata
     with open(os.path.join(data_Path, "DSOT_ev_model_metadata.json"), 'r', encoding='utf-8') as json_file:
-        feeder.base.ev_metadata = json.load(json_file)
+        feeder.base.ev_metadata = pyjson5.load(json_file)
 
     # We need to generate the total population of commercial buildings by type and size
     dso_val = feeder.base.dso_config["DSO_2"]
