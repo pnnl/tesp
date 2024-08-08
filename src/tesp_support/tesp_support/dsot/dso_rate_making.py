@@ -90,7 +90,7 @@ def read_meters(
             variable.append(var)
             month.append(0)
 
-        # Add consumtpion during time-of-use periods, if applicable
+        # Add consumption during time-of-use periods, if applicable
         if rate_scenario in ["time-of-use", "TOU"]:
             for k in tou_params["DSO_" + dso_num][month_name]["periods"].keys():
                 meter.append(each)
@@ -107,6 +107,9 @@ def read_meters(
     month = []
 
     dynamic_variable_list = ['DA_Q', 'DA_cost', 'RT_Q', 'RT_cost', 'Congestion_Q', 'Congestion_cost']
+    if rate_scenario == "transactive":
+        dynamic_variable_list.append("DA_capacity_charge")
+        dynamic_variable_list.append("RT_capacity_charge")
     for each in metadata['billingmeters']:
         # if metadata['billingmeters'][each]['cust_participating']:
         for var in dynamic_variable_list:
@@ -258,6 +261,13 @@ def read_meters(
                                                               DA_retail_df['clear_type_da']).sum() + \
                                                              ((RTonehour['real_power_avg'] - temp2[
                                                                  'total_cleared_quantity']) * RThourcleartype).sum()
+            
+            # Calculate the transactive capacity charge components, if applicable
+            if rate_scenario == "transactive":
+                # TODO: Incorporate dynamic capital costs, likely following a similar 
+                # format to that implemented for the DA and RT energy charges
+                trans_df.loc[(each, "DA_capacity_charge"), day_name] = 0
+                trans_df.loc[(each, "RT_capacity_charge"), day_name] = 0
 
         # Calculate total energy consumption for each customer class (aka load type)
         for each in metadata['billingmeters']:
@@ -959,6 +969,7 @@ def calculate_consumer_bills(
     case_path,
     metadata,
     meter_df,
+    trans_df,
     energy_sum_df,
     tariff,
     dso_num,
@@ -972,6 +983,8 @@ def calculate_consumer_bills(
         case_path (str): A string specifying the directory path of the case being analyzed.
         metadata (dict): A dictionary containing the metadata structure of the DSO.
         meter_df (pandas.DataFrame): DataFrame containing consumers' consumption information.
+        trans_df (pandas.DataFrame): DataFrame containing consumers' transactive consumption
+        information.
         energy_sum_df (pandas.DataFrame): DataFrame containing consumption information for 
         each consumer class.
         tariff (dict): A dictionary of pertinant tariff information. Includes information 
@@ -1042,9 +1055,11 @@ def calculate_consumer_bills(
     elif rate_scenario == "transactive":
         bill_components.append("transactive_DA_energy_charge")
         bill_components.append("transactive_RT_energy_charge")
-        bill_components.append("transactive_capacity_charge")
+        bill_components.append("transactive_DA_capacity_charge")
+        bill_components.append("transactive_RT_capacity_charge")
         bill_components.append("transactive_fixed_charge")
         bill_components.append("transactive_volumetric_charge")
+        bill_components.append("transactive_total_charge")
         bill_components.append("transactive_energy_purchased")
         bill_components.append("transactive_average_price")
     elif rate_scenario == "dsot":
@@ -1052,6 +1067,7 @@ def calculate_consumer_bills(
         bill_components.append("dsot_RT_energy_charge")
         bill_components.append("dsot_fixed_charge")
         bill_components.append("dsot_volumetric_charge")
+        bill_components.append("dsot_total_charge")
         bill_components.append("dsot_energy_purchased")
         bill_components.append("dsot_average_price")
 
@@ -1080,6 +1096,9 @@ def calculate_consumer_bills(
     # Specify price components that do not vary in time or by consumer type
     flat_rate = tariff["DSO_" + dso_num]["flat_rate"]
     fixed_charge = tariff["DSO_" + dso_num]["base_connection_charge"]
+    trans_vol_charge = tariff['DSO_' + dso_num]['transactive_dist_rate']
+    trans_fixed_charge = tariff['DSO_' + dso_num]['transactive_connection_charge']
+    trans_retail_scale = tariff['DSO_' + dso_num]['transactive_LMP_multiplier']
     
     # Cycle through each month for which there is energy data and calculate customer bill
     months = list(meter_df.columns[~meter_df.columns.str.contains('sum')])
@@ -1367,9 +1386,100 @@ def calculate_consumer_bills(
                             / bl_demand_df.loc[:, each].sum()
                         )
                 elif rate_scenario == "transactive":
-                    None
+                    # Calculate the consumer's market-related charges under the 
+                    # transactive tariff
+                    bill_df.loc[(each, "transactive_DA_energy_charge"), m] = (
+                        trans_df.loc[(each, "DA_cost"), m] * trans_retail_scale
+                    )
+                    bill_df.loc[(each, "transactive_RT_energy_cahrge"), m] = (
+                        trans_df.loc[(each, "RT_cost"), m] * trans_retail_scale
+                    )
+
+                    # Calculate the consumer's dynamic capacity charges under the
+                    # transactive tariff
+                    bill_df.loc[(each, "transactive_DA_capacity_charge"), m] = (
+                        trans_df.loc[(each, "DA_capacity_charge"), m]
+                        * trans_retail_scale
+                    )
+                    bill_df.loc[(each, "transactive_RT_capacity_cahrge"), m] = (
+                        trans_df.loc[(each, "RT_capacity_charge"), m]
+                        * trans_retail_scale
+                    )
+
+                    # Calculate the consumer's fixed charge under the transactive tariff
+                    bill_df.loc[
+                        (each, "transactive_fixed_charge"), m
+                    ] = trans_fixed_charge
+
+                    # Calculate the consumer's volumetric energy charge under the
+                    # transactive tariff
+                    bill_df.loc[(each, "transactive_volumetric_charge"), m] = (
+                        meter_df.loc[(each, "kw-hr"), m] * trans_vol_charge
+                    )
+
+                    # Calculate the consumer's total bill under the transactive tariff
+                    bill_df.loc[(each, "transactive_total_charge"), m] = (
+                        bill_df.loc[(each, "transactive_DA_energy_charge"), m]
+                        + bill_df.loc[(each, "transactive_RT_energy_charge"), m]
+                        + bill_df.loc[(each, "transactive_DA_capacity_charge"), m]
+                        + bill_df.loc[(each, "transactive_RT_capacity_charge"), m]
+                        + bill_df.loc[(each, "transactive_fixed_charge"), m]
+                        + bill_df.loc[(each, "transactive__charge"), m]
+                    )
+
+                    # Store the total energy purchased under the transactive tariff
+                    bill_df.loc[
+                        (each, "transactive_energy_purchased"), m
+                    ] = meter_df.loc[(each, "kw-hr"), m]
+
+                    # Calculate the average price under the transactive rate
+                    if meter_df.loc[(each, "kw-hr"), m] == 0:
+                        bill_df.loc[(each, "transactive_average_price"), m] = 0
+                    else:
+                        bill_df.loc[(each, "transactive_average_price"), m] = (
+                            bill_df.loc[(each, "transactive_total_charge"), m]
+                            / meter_df.loc[(each, "kw-hr"), m]
+                        )
                 elif rate_scenario == "dsot":
-                    None
+                    # Calculate the consumer's market-related charges under the DSO+T 
+                    # tariff
+                    bill_df.loc[(each, "dsot_DA_energy_charge"), m] = (
+                        trans_df.loc[(each, "DA_cost"), m] * trans_retail_scale
+                    )
+                    bill_df.loc[(each, "dsot_RT_energy_cahrge"), m] = (
+                        trans_df.loc[(each, "RT_cost"), m] * trans_retail_scale
+                    )
+
+                    # Calculate the consumer's fixed charge under the DSO+T tariff
+                    bill_df.loc[(each, "dsot_fixed_charge"), m] = trans_fixed_charge
+
+                    # Calculate the consumer's volumetric energy charge under the DSO+T
+                    # tariff
+                    bill_df.loc[(each, "dsot_volumetric_charge"), m] = (
+                        meter_df.loc[(each, "kw-hr"), m] * trans_vol_charge
+                    )
+
+                    # Calculate the consumer's total bill under the DSO+T tariff
+                    bill_df.loc[(each, "dsot_total_charge"), m] = (
+                        bill_df.loc[(each, "dsot_DA_energy_charge"), m]
+                        + bill_df.loc[(each, "dsot_RT_energy_charge"), m]
+                        + bill_df.loc[(each, "dsot_fixed_charge"), m]
+                        + bill_df.loc[(each, "dsot__charge"), m]
+                    )
+
+                    # Store the total energy purchased under the DSO+T tariff
+                    bill_df.loc[(each, "dsot_energy_purchased"), m] = meter_df.loc[
+                        (each, "kw-hr"), m
+                    ]
+
+                    # Calculate the average price under the DSO+T rate
+                    if meter_df.loc[(each, "kw-hr"), m] == 0:
+                        bill_df.loc[(each, "dsot_average_price"), m] = 0
+                    else:
+                        bill_df.loc[(each, "dsot_average_price"), m] = (
+                            bill_df.loc[(each, "dsot_total_charge"), m]
+                            / meter_df.loc[(each, "kw-hr"), m]
+                        )
             else:
                 # Calculate the consumer's energy charge under the flat rate tariff
                 bill_df.loc[(each, "flat_energy_charge"), m] = flat_rate * meter_df.loc[
@@ -1502,9 +1612,15 @@ def calculate_consumer_bills(
                 / bill_df.loc[(each, "subscription_energy_purchased"), "sum"]
             )
         elif rate_scenario == "transactive":
-            None
+            bill_df.loc[(each, "transactive_average_price"), "sum"] = (
+                bill_df.loc[(each, "transactive_total_charge"), "sum"]
+                / bill_df.loc[(each, "transactive_energy_purchased"), "sum"]
+            )
         elif rate_scenario == "dsot":
-            None
+            bill_df.loc[(each, "dsot_average_price"), "sum"] = (
+                bill_df.loc[(each, "dsot_total_charge"), "sum"]
+                / bill_df.loc[(each, "dsot_energy_purchased"), "sum"]
+            )
         
     # Calculate the average prices at the sector level
     for load in ["residential", "commercial", "industrial", "total"]:
@@ -1523,9 +1639,15 @@ def calculate_consumer_bills(
                 / billsum_df.loc[(load, "subscription_energy_purchased")]
             )
         elif rate_scenario == "transactive":
-            None
+            billsum_df.loc[(load, "transactive_average_price")] = (
+                billsum_df.loc[(load, "transactive_total_charge")]
+                / billsum_df.loc[(load, "transactive_energy_purchased")]
+            )
         elif rate_scenario == "dsot":
-            None
+            billsum_df.loc[(load, "dsot_average_price")] = (
+                billsum_df.loc[(load, "dsot_total_charge")]
+                / billsum_df.loc[(load, "dsot_energy_purchased")]
+            )
 
     # Return the bill DataFrames
     return bill_df, billsum_df
@@ -1587,6 +1709,7 @@ def calculate_tariff_prices(
     case_path,
     metadata,
     meter_df,
+    trans_df,
     energy_sum_df,
     tariff,
     dso_num,
@@ -1601,6 +1724,8 @@ def calculate_tariff_prices(
         case_path (str): A string specifying the directory path of the case being analyzed.
         metadata (dict): A dictionary containing the metadata structure of the DSO.
         meter_df (pandas.DataFrame): DataFrame containing consumers' consumption information.
+        trans_df (pandas.DataFrame): DataFrame containing consumers' transactive consumption
+        information.
         energy_sum_df (pandas.DataFrame): DataFrame containing consumption information for 
         each consumer class.
         tariff (dict): A dictionary of pertinant tariff information. Includes information 
@@ -2878,6 +3003,7 @@ def DSO_rate_making(
             case,
             metadata,
             year_meter_df,
+            year_trans_df,
             year_energysum_df,
             tariff,
             str(dso_num),
@@ -2925,6 +3051,7 @@ def DSO_rate_making(
             case,
             metadata,
             year_meter_df,
+            year_trans_df,
             year_energysum_df,
             tariff,
             str(dso_num),
