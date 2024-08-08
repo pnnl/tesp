@@ -531,7 +531,6 @@ git describe --tags > tesp_version
 docker images -q ${IMAGE} > docker_version
 hostname > hostname
 
-LOCAL_TESP="$HOME/projects/dsot/code/tesp-private"
 WORKING_DIR="$DOCKER_HOME/tesp/examples/analysis/dsot/code/%s"
 ARCHIVE_DIR="%s"
 

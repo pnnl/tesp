@@ -14,13 +14,26 @@ import datetime
 import numpy as np
 
 import tesp_support.dsot.helpers_dsot as helpers
-import tesp_support.original.commercial_feeder_glm as com_FG
-import tesp_support.original.copperplate_feeder_glm as cp_FG
-
 import tesp_support.dsot.case_merge as cm
 import tesp_support.dsot.glm_dictionary as gd
-import tesp_support.dsot.residential_feeder_glm as res_FG
-import prep_substation_dsot_f as prep
+
+
+# recs_data = False
+recs_data = True  # rerun recs_gld_house_parameters.py
+if recs_data:
+    rcs = "RECS"
+    sys.path.append('../')
+    import recs.commercial_feeder_glm as com_FG
+    import recs.copperplate_feeder_glm as cp_FG
+    import recs.residential_feeder_glm as res_FG
+    import recs.prep_substation_recs_f as prep
+    import pandas as pd
+else:
+    rcs = ""
+    import tesp_support.original.commercial_feeder_glm as com_FG
+    import tesp_support.original.copperplate_feeder_glm as cp_FG
+    import tesp_support.dsot.residential_feeder_glm as res_FG
+    import prep_substation_dsot_f as prep
 
 
 # Simulation settings for the experimental case
@@ -31,7 +44,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         sys_config = json.load(json_file)
 
     # Get path for other data
-    data_Path = sys_config['dataPath']
+    data_path = sys_config['dataPath']
     case_type = sys_config['caseType']
     sys_config['market'] = False
     if pv is not None:
@@ -55,28 +68,28 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
             sys_config['market'] = True
 
     # loading default agent data
-    with open(os.path.join(data_Path, sys_config['dsoAgentFile']), 'r', encoding='utf-8') as json_file:
+    with open(os.path.join(data_path, sys_config['dso' + rcs + 'AgentFile']), 'r', encoding='utf-8') as json_file:
         case_config = json.load(json_file)
     # loading building and DSO metadata
-    with open(os.path.join(data_Path, sys_config['dsoPopulationFile']), 'r', encoding='utf-8') as json_file:
+    with open(os.path.join(data_path, sys_config['dso' + rcs + 'PopulationFile']), 'r', encoding='utf-8') as json_file:
         dso_config = json.load(json_file)
     # loading residential metadata
-    with open(os.path.join(data_Path, sys_config['dsoResBldgFile']), 'r', encoding='utf-8') as json_file:
+    with open(os.path.join(data_path, sys_config['dso' + rcs + 'ResBldgFile']), 'r', encoding='utf-8') as json_file:
         res_config = json.load(json_file)
     # loading commercial building metadata
-    with open(os.path.join(data_Path, sys_config['dsoCommBldgFile']), 'r', encoding='utf-8') as json_file:
+    with open(os.path.join(data_path, sys_config['dsoCommBldgFile']), 'r', encoding='utf-8') as json_file:
         comm_config = json.load(json_file)
     # loading battery metadata
-    with open(os.path.join(data_Path, sys_config['dsoBattFile']), 'r', encoding='utf-8') as json_file:
+    with open(os.path.join(data_path, sys_config['dsoBattFile']), 'r', encoding='utf-8') as json_file:
         batt_config = json.load(json_file)
     # loading ev model metadata
-    with open(os.path.join(data_Path, sys_config['dsoEvModelFile']), 'r', encoding='utf-8') as json_file:
+    with open(os.path.join(data_path, sys_config['dsoEvModelFile']), 'r', encoding='utf-8') as json_file:
         ev_model_config = json.load(json_file)
     # loading hvac set point metadata
     # record aggregated hvac_setpoint_data from survey:
     # In this implementation individual house set point schedule may not
     # make sense but aggregated behavior will do.
-    with open(os.path.join(data_Path, sys_config['hvacSetPoint']), 'r', encoding='utf-8') as json_file:
+    with open(os.path.join(data_path, sys_config['hvac' + rcs + 'SetPoint']), 'r', encoding='utf-8') as json_file:
         hvac_setpt = json.load(json_file)
 
     # print(json.dumps(sys_config, sort_keys = True, indent = 2))
@@ -105,7 +118,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
     gen = sys_config['gen']
     genFuel = sys_config['genfuel']
     tso_config = sys_config['DSO']
-    out_Path = sys_config['outputPath']
+    out_path = sys_config['outputPath']
 
     sim = case_config['SimulationConfig']
     bldPrep = case_config['BuildingPrep']
@@ -118,6 +131,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
     sim['StartTime'] = start_time
     sim['EndTime'] = end_time
     sim['port'] = sys_config['port']
+    sim['rate'] = sys_config['rate']
     sim['numCore'] = sys_config['numCore']
     sim['keyLoad'] = sys_config['keyLoad']
     # sim['players'] = sys_config['players']
@@ -132,8 +146,8 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
     sim['OutputPath'] = sys_config['caseName']  # currently only used for the experiment management scripts
     sim['priceSensLoad'] = sys_config['priceSensLoad']
     sim['quadratic'] = sys_config['quadratic']
-    sim['quadraticFile'] = sys_config['dsoQuadraticFile']
-    
+    sim['quadraticFile'] = sys_config['dso' + rcs + 'QuadraticFile']
+
     # =================== fernando 2021/06/25 - removing 10 AM bid correction to AMES =======
     if case_type['fl'] == 1:
         print('Correction of DSO bid for 10 AM AMES bid is performed')
@@ -155,13 +169,11 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         exit(1)
 
     # We need to create the experiment out folder. If it already exists, we delete it and then create it
-    if out_Path != "" and out_Path != ".." and out_Path != ".":
-        if os.path.isdir(out_Path):
+    if out_path != "" and out_path != ".." and out_path != ".":
+        if os.path.isdir(out_path):
             print("experiment folder already exists, deleting and moving on...")
-            shutil.rmtree(out_Path)
-        os.makedirs(out_Path)
-    else:
-        out_Path = caseName
+            shutil.rmtree(out_path)
+        os.makedirs(out_path)
 
     # write player yaml(s) for load and generator players
     players = sys_config["players"]
@@ -200,6 +212,11 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
                         print('    topic: ' + player[0] + 'player/' + player[0] + '_power_history_' + idx, file=yp)
                         print('    default: 0', file=yp)
 
+    # Create empty list for glm dictionary files
+    if recs_data:
+        glm_dict_list = {}
+        agent_dict_list = {}
+
     # First step is to create the dso folders and populate the feeders
     for dso_key, dso_val in dso_config.items():
         # print('dso ->', dso_key)
@@ -213,7 +230,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         # seed the random number here
         np.random.seed(dso_val['random_seed'])
 
-        # write the tso connections for this substation
+        # write the tso published connections for this substation
         print('  RT_BID_' + bus + ':', file=yp)
         print('    topic: ' + sub_key + '/rt_bid', file=yp)
         print('    default: 0', file=yp)
@@ -257,6 +274,9 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         sim['OutputPath'] = caseName + '/' + dso_key
         sim['BulkpowerBus'] = dso_val['bus_number']
         sim['DSO_type'] = dso_val['utility_type']
+        if recs_data:
+            sim['state'] = dso_val['state']
+            sim['income_level'] = dso_val['income_level']
         sim['rooftop_pv_rating_MW'] = dso_val['rooftop_pv_rating_MW']
         sim['scaling_factor'] = dso_val['scaling_factor']
         sim['serverPort'] = 5150 + (int(bus) // 20)
@@ -325,7 +345,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         # We need to generate the total population of commercial buildings by type and size
         num_res_customers = dso_val['number_of_gld_homes']
         num_comm_customers = round(num_res_customers * dso_val['RCI customer count mix']['commercial'] /
-                             dso_val['RCI customer count mix']['residential'])
+                                   dso_val['RCI customer count mix']['residential'])
         num_comm_bldgs = num_comm_customers / dso_val['comm_customers_per_bldg']
         comm_bldgs_pop = com_FG.define_comm_bldg(comm_config, dso_val['utility_type'], num_comm_bldgs)
         bldPrep['CommBldgPopulation'] = comm_bldgs_pop
@@ -365,14 +385,26 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
                         caseName + '/' + dso_key + '/' + feed_key + '_glm_dict.json')
 
             # Next we create the agent dictionary along with the substation YAML file
-            prep.prep_substation(caseName + '/' + feed_key + '/' + feed_key,
-                                 caseName + '/' + dso_key + '/' + feed_key,
-                                 caseName + '/' + weather_agent_name + '/',
-                                 feedercnt,
-                                 config=case_config,
-                                 hvacSetpt=hvac_setpt,
-                                 Q_forecast=sim['Q_bid_forecast_correction'],
-                                 Q_dso_key=dso_key)
+            if recs_data:
+                prep.prep_substation(caseName + '/' + feed_key + '/' + feed_key,
+                                     caseName + '/' + dso_key + '/' + feed_key,
+                                     caseName + '/' + weather_agent_name + '/',
+                                     feedercnt,
+                                     config=case_config,
+                                     hvacSetpt=hvac_setpt,
+                                     Q_forecast=sim['Q_bid_forecast_correction'],
+                                     Q_dso_key=dso_key,
+                                     usState=sim['state'],
+                                     dsoType=dso_val['utility_type'])
+            else:
+                prep.prep_substation(caseName + '/' + feed_key + '/' + feed_key,
+                                     caseName + '/' + dso_key + '/' + feed_key,
+                                     caseName + '/' + weather_agent_name + '/',
+                                     feedercnt,
+                                     config=case_config,
+                                     hvacSetpt=hvac_setpt,
+                                     Q_forecast=sim['Q_bid_forecast_correction'],
+                                     Q_dso_key=dso_key)
             feedercnt += 1
             print("=== DONE WITH FEEDER {0:s} for {1:s}. ======\n".format(feed_key, dso_key))
 
@@ -398,14 +430,26 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
                             caseName + '/' + dso_key + '/' + feed_key + '_glm_dict.json')
 
                 # Next we create the agent dictionary along with the substation YAML file
-                prep.prep_substation(caseName + '/' + feed_key + '/' + feed_key,
-                                     caseName + '/' + dso_key + '/' + feed_key,
-                                     caseName + '/' + weather_agent_name + '/',
-                                     feedercnt,
-                                     config=case_config,
-                                     hvacSetpt=hvac_setpt,
-                                     Q_forecast=sim['Q_bid_forecast_correction'],
-                                     Q_dso_key=dso_key)
+                if recs_data:
+                    prep.prep_substation(caseName + '/' + feed_key + '/' + feed_key,
+                                         caseName + '/' + dso_key + '/' + feed_key,
+                                         caseName + '/' + weather_agent_name + '/',
+                                         feedercnt,
+                                         config=case_config,
+                                         hvacSetpt=hvac_setpt,
+                                         Q_forecast=sim['Q_bid_forecast_correction'],
+                                         Q_dso_key=dso_key,
+                                         usState=sim['state'],
+                                         dsoType=dso_val['utility_type'])
+                else:
+                    prep.prep_substation(caseName + '/' + feed_key + '/' + feed_key,
+                                         caseName + '/' + dso_key + '/' + feed_key,
+                                         caseName + '/' + weather_agent_name + '/',
+                                         feedercnt,
+                                         config=case_config,
+                                         hvacSetpt=hvac_setpt,
+                                         Q_forecast=sim['Q_bid_forecast_correction'],
+                                         Q_dso_key=dso_key)
                 feedercnt += 1
                 print("=== DONE WITH COPPERPLATE FEEDER {0:s} for {1:s}. ======\n".format(feed_key, dso_key))
 
@@ -419,9 +463,13 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
 
         print("\n=== MERGING/WRITING THE FEEDERS GLM DICTIONARIES =====")
         cm.merge_glm_dict(os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '_glm_dict.json'), list(dso_val['feeders'].keys()), 20)
+        if recs_data:
+            glm_dict_list[dso_key] = os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '_glm_dict.json')
 
         print("\n=== MERGING/WRITING THE SUBSTATION AGENT DICTIONARIES =====")
         cm.merge_agent_dict(os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '_agent_dict.json'), list(dso_val['feeders'].keys()))
+        if recs_data:
+            agent_dict_list[dso_key] = os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '_agent_dict.json')
 
         print("\n=== MERGING/WRITING THE DSO MESSAGE FILE =====")
         cm.merge_substation_yaml(os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '.yaml'), list(dso_val['feeders'].keys()))
@@ -440,6 +488,58 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
 
     yp.close()
 
+    # Residential population summary
+    if recs_data:
+        hse_df = pd.DataFrame()
+        hvac_agent_df = pd.DataFrame()
+        # Get house parameters from each DSO glm_dict
+        for dso_k, f_str in glm_dict_list.items():
+            with open(f_str) as f:
+                glm_dict = json.load(f)
+            temp_df = pd.DataFrame.from_dict(glm_dict['houses'],orient='index')
+            temp_df = temp_df.reset_index()
+            temp_df['DSO'] = dso_k # add a column for DSO number
+            # Add columns to distinguish houses and each DER
+            for inc in ['Low', 'Middle', 'Upper']:
+                for k, v in {'house':inc,'battery':'bat','solar':'sol','ev':'ev'}.items():
+                    for val in glm_dict['billingmeters'].values():
+                        children = val['children']
+                        if len([s for s in children if inc in s]) > 0:
+                            if len([s for s in children if v in s]) > 0:
+                                temp_df.loc[temp_df['index']==[s for s in children if inc in s][0],k] = 'Yes'
+                            else:
+                                temp_df.loc[temp_df['index']==[s for s in children if inc in s][0],k] = 'No'
+            # Merge all DSO house parameters into one dataframe
+            hse_df = pd.concat([hse_df,temp_df],ignore_index=True)
+        # Get HVAC agent data
+        for dso_k, f_str in agent_dict_list.items():
+            with open(f_str) as f:
+                agent_dict = json.load(f)
+            temp_df2 = pd.DataFrame.from_dict(agent_dict['hvacs'],orient='index')
+            temp_df2 = temp_df2.reset_index()
+            temp_df2['DSO'] = dso_k # add a column for DSO number
+            hvac_agent_df = pd.concat([hvac_agent_df,temp_df2],ignore_index=True)
+        # Save for later analysis
+        hse_df.to_csv(os.path.abspath(caseName + '/' + 'house_parameters.csv'))
+        hvac_agent_df.to_csv(os.path.abspath(caseName + '/' + 'hvac_agents.csv'))
+        # Get totals
+        tot_hses = len(hse_df.loc[hse_df['house']=='Yes'])
+        low_hses = len(hse_df.loc[(hse_df['income_level']=='Low')])
+        middle_hses = len(hse_df.loc[(hse_df['income_level']=='Middle')])
+        upper_hses = len(hse_df.loc[(hse_df['income_level']=='Upper')])
+        sol_hses = len(hse_df.loc[(hse_df['house']=='Yes') & (hse_df['solar']=='Yes')])
+        ev_hses = len(hse_df.loc[(hse_df['house']=='Yes') & (hse_df['ev']=='Yes')])
+        bat_hses = len(hse_df.loc[(hse_df['house']=='Yes') & (hse_df['battery']=='Yes')])
+        elec_wh_hses = len(hse_df.loc[(hse_df['house']=='Yes') & (hse_df['wh_gallons']!=0)])
+        elec_sh_hses = len(hse_df.loc[(hse_df['house']=='Yes') & (hse_df['fuel_type']=='electric')])
+        print(f"=== RESIDENTIAL POPULATION SUMMARY ===")
+        print(f"=== Income (Percent of all homes) ===")
+        print(f"=== Low: {round(100*low_hses/tot_hses,2)}%, Middle: {round(100*middle_hses/tot_hses,2)}%, Upper: {round(100*upper_hses/tot_hses,2)}%. ===")
+        print(f"=== DERs (Percent of all homes) ===")
+        print(f"=== Solar: {round(100*sol_hses/tot_hses,2)}%, EVs: {round(100*ev_hses/tot_hses,2)}%, Batteries: {round(100*bat_hses/tot_hses,2)}%. ===")
+        print(f"=== Electric Water Heating/Space Heating (Percent of all homes) ===")
+        print(f"=== Water Heating: {round(100*elec_wh_hses/tot_hses,2)}%, Space Heating: {round(100*elec_sh_hses/tot_hses,2)}%. ===")
+
     # Also create the launch, kill and clean scripts for this case
     helpers.write_dsot_management_script_f(master_file="generate_case_config",
                                            case_path=caseName,
@@ -452,12 +552,13 @@ if __name__ == "__main__":
     if len(sys.argv) > 6:
         prepare_case(int(sys.argv[1]), sys.argv[2], pv=int(sys.argv[3]), bt=int(sys.argv[4]), fl=int(sys.argv[5]), ev=int(sys.argv[6]))
     else:
-        prepare_case(8, "8_system_case_config", pv=0, bt=0, fl=0, ev=0)
+        # prepare_case(8, "8_system_case_config", pv=0, bt=0, fl=0, ev=0)
         # prepare_case(8, "8_system_case_config", pv=0, bt=1, fl=0, ev=0)
         # prepare_case(8, "8_system_case_config", pv=0, bt=0, fl=1, ev=0)
         # prepare_case(8, "8_hi_system_case_config", pv=1, bt=0, fl=0, ev=0)
         # prepare_case(8, "8_hi_system_case_config", pv=1, bt=1, fl=0, ev=1)
         # prepare_case(8, "8_hi_system_case_config", pv=1, bt=0, fl=1, ev=1)
+        prepare_case(8, "8_hi_system_case_config", pv=1, bt=1, fl=1, ev=1)
 
         # prepare_case(200, "200_system_case_config", pv=0, bt=0, fl=0, ev=0)
         # prepare_case(200, "200_system_case_config", pv=0, bt=1, fl=0, ev=0)

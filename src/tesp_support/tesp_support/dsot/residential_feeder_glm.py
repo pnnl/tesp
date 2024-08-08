@@ -38,10 +38,11 @@ import json
 import os.path
 import re
 import sys
+from math import sqrt
+
 import networkx as nx
 import numpy as np
 import pandas as pd
-from math import sqrt
 
 from tesp_support.api.data import feeders_path, weather_path
 from tesp_support.api.helpers import gld_strict_name, random_norm_trunc, randomize_residential_skew
@@ -250,7 +251,8 @@ def is_drive_time_valid(drive_sch):
     commute_secs = min(3600, 24 * 3600 - drive_sch['home_duration'])
     work_arr_time = add_hhmm_secs(home_leave_time, commute_secs / 2)
     work_duration = 24 * 3600 - drive_sch['home_duration'] - commute_secs
-    if work_arr_time != drive_sch['work_arr_time'] or round(work_duration/60) != round(drive_sch['work_duration']/60):
+    if (work_arr_time != drive_sch['work_arr_time'] or
+            round(work_duration / 60) != round(drive_sch['work_duration'] / 60)):
         return False
     return True
 
@@ -338,7 +340,14 @@ rgnName = ['West_Coast',
            'Southeast_Coast']
 rgnTimeZone = ['PST+8PDT', 'EST+5EDT', 'MST+7MDT', 'CST+6CDT', 'EST+5EDT']
 rgnWeather = ['CA-San_francisco', 'OH-Cleveland', 'AZ-Phoenix', 'TN-Nashville', 'FL-Miami']
-vint_type = ['pre_1950', '1950-1959', '1960-1969', '1970-1979', '1980-1989', '1990-1999', '2000-2009', '2010-2015']
+vint_type = ['pre_1950',
+             '1950-1959',
+             '1960-1969',
+             '1970-1979',
+             '1980-1989',
+             '1990-1999',
+             '2000-2009',
+             '2010-2015']
 dsoThermalPct = []
 
 # -----------fraction of vintage type by home type in a given dso type---------
@@ -1597,7 +1606,7 @@ def write_houses(basenode, op, vnom):
                 print('    interval', str(metrics_interval) + ';', file=op)
                 print('  };', file=op)
             print('}', file=op)
-        # LAurentiu MArinovici - 03/05/2020
+        # Laurentiu Marinovici - 03/05/2020
         else:
             mtrname1 = gld_strict_name(basenode + '_mtr_' + str(i + 1))
             print('object triplex_meter {', file=op)
@@ -1840,21 +1849,25 @@ def write_houses(basenode, op, vnom):
             else:
                 print('  cooling_system_type NONE;', file=op)
 
-        cooling_sch = np.ceil(coolingScheduleNumber * np.random.uniform(0, 1))
-        heating_sch = np.ceil(heatingScheduleNumber * np.random.uniform(0, 1))
-        # Set point bins dict:[Bin Prob, NightTimeAvgDiff, HighBinSetting, LowBinSetting]
-        cooling_bin, heating_bin = selectSetpointBins(bldg, np.random.uniform(0, 1))
-        # randomly choose setpoints within bins, and then widen the separation to account for deadband
-        cooling_set = cooling_bin[3] + np.random.uniform(0, 1) * (cooling_bin[2] - cooling_bin[3])
-        heating_set = heating_bin[3] + np.random.uniform(0, 1) * (heating_bin[2] - heating_bin[3])
-        cooling_diff = 2.0 * cooling_bin[1] * np.random.uniform(0, 1)
-        heating_diff = 2.0 * heating_bin[1] * np.random.uniform(0, 1)
-        cooling_str = 'cooling{:.0f}*{:.4f}+{:.2f}'.format(cooling_sch, cooling_diff, cooling_set)
-        heating_str = 'heating{:.0f}*{:.4f}+{:.2f}'.format(heating_sch, heating_diff, heating_set)
+        # Used to use a schedule
+        # cooling_sch = np.ceil(coolingScheduleNumber * np.random.uniform(0, 1))
+        # heating_sch = np.ceil(heatingScheduleNumber * np.random.uniform(0, 1))
+        # # Set point bins dict:[Bin Prob, NightTimeAvgDiff, HighBinSetting, LowBinSetting]
+        # cooling_bin, heating_bin = selectSetpointBins(bldg, np.random.uniform(0, 1))
+        # # randomly choose setpoints within bins, and then widen the separation to account for deadband
+        # cooling_set = cooling_bin[3] + np.random.uniform(0, 1) * (cooling_bin[2] - cooling_bin[3])
+        # heating_set = heating_bin[3] + np.random.uniform(0, 1) * (heating_bin[2] - heating_bin[3])
+        # cooling_diff = 2.0 * cooling_bin[1] * np.random.uniform(0, 1)
+        # heating_diff = 2.0 * heating_bin[1] * np.random.uniform(0, 1)
+        # cooling_str = 'cooling{:.0f}*{:.4f}+{:.2f}'.format(cooling_sch, cooling_diff, cooling_set)
+        # heating_str = 'heating{:.0f}*{:.4f}+{:.2f}'.format(heating_sch, heating_diff, heating_set)
+        # print('  cooling_setpoint ', cooling_str + ';', file=op)
+        # print('  heating_setpoint ', heating_str + ';', file=op)
+
         # default heating and cooling setpoints are 70 and 75 degrees in GridLAB-D
         # we need more separation to assure no overlaps during transactive simulations
-        print('  cooling_setpoint 80.0; // ', cooling_str + ';', file=op)
-        print('  heating_setpoint 60.0; // ', heating_str + ';', file=op)
+        print('  cooling_setpoint 80.0;', file=op)
+        print('  heating_setpoint 60.0;', file=op)
 
         # heatgain fraction, Zpf, Ipf, Ppf, Z, I, P
         print('  object ZIPload { // responsive', file=op)
@@ -1923,6 +1936,7 @@ def write_houses(basenode, op, vnom):
             wh_size = np.random.choice(size_array)
             wh_demand_str = wh_demand_type + '{:.0f}'.format(water_sch) + '*' + '{:.2f}'.format(water_var)
             wh_skew_value = randomize_residential_skew(True)
+
             print('  object waterheater {', file=op)
             print('    name', whname + ';', file=op)
             print('    schedule_skew', '{:.0f}'.format(wh_skew_value) + ';', file=op)
@@ -2025,9 +2039,9 @@ def write_houses(basenode, op, vnom):
                     print('}', file=op)
         if np.random.uniform(0, 1) <= storage_percentage:
             battery_capacity = get_dist(batt_metadata['capacity(kWh)']['mean'],
-                                     batt_metadata['capacity(kWh)']['deviation_range_per']) * 1000
+                                        batt_metadata['capacity(kWh)']['deviation_range_per']) * 1000
             max_charge_rate = get_dist(batt_metadata['rated_charging_power(kW)']['mean'],
-                                     batt_metadata['rated_charging_power(kW)']['deviation_range_per']) * 1000
+                                       batt_metadata['rated_charging_power(kW)']['deviation_range_per']) * 1000
             max_discharge_rate = max_charge_rate
             inverter_efficiency = batt_metadata['inv_efficiency(per)'] / 100
             charging_loss = get_dist(batt_metadata['rated_charging_loss(per)']['mean'],
@@ -2973,9 +2987,6 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
     metrics_type = config['FeederGenerator']['MetricsType']
     metrics_interval = int(config['FeederGenerator']['MetricsInterval'])
     metrics_interim = int(config['FeederGenerator']['MetricsInterim'])
-    # electric_cooling_percentage = 0.01 * float(config['FeederGenerator']['ElectricCoolingPercentage'])
-    # water_heater_percentage = 0.01 * float(config['FeederGenerator']['WaterHeaterPercentage'])
-    # water_heater_participation = 0.01 * float(config['FeederGenerator']['WaterHeaterParticipation'])
     solar_percentage = 0.01 * float(config['FeederGenerator']['SolarPercentage'])
     storage_percentage = 0.01 * float(config['FeederGenerator']['StoragePercentage'])
     ev_percentage = 0.01 * float(config['FeederGenerator']['EVPercentage'])
@@ -3062,14 +3073,13 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
         print('times', starttime, endtime)
         print('steps', timestep, metrics_interval)
         print('hvac', electric_cooling_percentage)
-        print('pv', solar_percentage, solar_inv_mode)
-        print('storage', storage_percentage, storage_inv_mode)
+        print('pv', solar_percentage, 'mode', solar_inv_mode)
+        print('storage', storage_percentage, 'mode', storage_inv_mode)
         print('billing', kwh_price, monthly_fee)
         for c in taxchoice:
             if c[0] in rootname:
                 case_name = config['SimulationConfig']['CaseName']
                 ProcessTaxonomyFeeder(case_name, rootname, c[1], c[2], c[3], c[4])
-#                quit()
 
 
 def populate_all_feeders():

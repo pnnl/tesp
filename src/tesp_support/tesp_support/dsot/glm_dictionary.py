@@ -309,8 +309,6 @@ def glm_dict(name_root, config=None, ercot=False):  # , te30=False):
                     name = lst[1].strip(';')
                     if 'Low' in name:
                         inc_level = 'Low'
-                    elif 'Moderate' in name:
-                        inc_level = 'Moderate'
                     elif 'Middle' in name:
                         inc_level = 'Middle'
                     elif 'Upper' in name:

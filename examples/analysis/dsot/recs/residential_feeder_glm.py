@@ -42,13 +42,13 @@ from math import sqrt
 import networkx as nx
 import numpy as np
 import pandas as pd
-import recs.commercial_feeder_glm as comm_FG
 
 from tesp_support.api.data import feeders_path, weather_path
 from tesp_support.api.helpers import gld_strict_name, random_norm_trunc, randomize_residential_skew
 from tesp_support.api.parse_helpers import parse_kva
-from tesp_support.api.time_helpers import get_secs_from_hhmm, get_hhmm_from_secs, get_duration, get_dist
 from tesp_support.api.time_helpers import is_hhmm_valid, subtract_hhmm_secs, add_hhmm_secs
+from tesp_support.api.time_helpers import get_secs_from_hhmm, get_hhmm_from_secs, get_duration, get_dist
+import recs.commercial_feeder_glm as comm_FG
 
 forERCOT = False
 port = 5570
@@ -330,7 +330,6 @@ vint_type = ['pre_1950',
              '2010-2015',
              '2016-2020']
 dsoThermalPct = []
-
 
 # -----------fraction of vintage type by home type in a given dso type---------
 # index 0 is the home type:
@@ -1726,7 +1725,6 @@ def write_houses(basenode, op, vnom):
         scalar3 = 0.6 + 0.4 * np.random.uniform(0, 1)
         resp_scalar = scalar1 * scalar2
         unresp_scalar = scalar1 * scalar3
-
         skew_value = randomize_residential_skew()
 
         #  *************** Aspect ratio, ewf, ecf, eff, wwr ****************************
@@ -2126,6 +2124,7 @@ def write_houses(basenode, op, vnom):
                             print('    };', file=op)
                         print('  };', file=op)
                         print('}', file=op)
+
         if np.random.uniform(0, 1) <= ev_percentage_il:
             # first lets select an ev model:
             ev_name = selectEVmodel(ev_metadata['sale_probability'], np.random.uniform(0, 1))
@@ -3010,10 +3009,6 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
     metrics_type = config['FeederGenerator']['MetricsType']
     metrics_interval = int(config['FeederGenerator']['MetricsInterval'])
     metrics_interim = int(config['FeederGenerator']['MetricsInterim'])
-    # ToDo: Comment out percentage if defining by income level
-    # electric_cooling_percentage = 0.01 * float(config['FeederGenerator']['ElectricCoolingPercentage'])
-    # water_heater_percentage = 0.01 * float(config['FeederGenerator']['WaterHeaterPercentage'])
-    # water_heater_participation = 0.01 * float(config['FeederGenerator']['WaterHeaterParticipation'])
     solar_percentage = 0.01 * float(config['FeederGenerator']['SolarPercentage'])
     storage_percentage = 0.01 * float(config['FeederGenerator']['StoragePercentage'])
     ev_percentage = 0.01 * float(config['FeederGenerator']['EVPercentage'])

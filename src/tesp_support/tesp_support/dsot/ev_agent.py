@@ -14,12 +14,11 @@ The function call order for this agent is:
         * formulate_bid_da() {return BID}
         * set_price_forecast(forecasted_price)
 
-    Repeats at every 5 min:
-        * set_battery_SOC(msg_str) {updates C_init}
+    Repeats at every 5 minutes:
+        * set_SOC(msg_str) {updates C_init}
         * formulate_bid_rt() {return BID}
         * inform_bid(price) {update RTprice}
         * bid_accepted() {update inv_P_setpoint and GridLAB-D P_out if needed}
-
 """
 import logging as log
 from copy import deepcopy
@@ -42,7 +41,7 @@ class EVDSOT:
     This agent manages the electric vehicle (ev)
 
     Args:
-        ev_dict (dict):
+        diction (dict): electric vehicle parameters
         inv_properties (dict):
         key (str):
         model_diag_level (int): Specific level for logging errors; set it to 11
@@ -59,7 +58,7 @@ class EVDSOT:
         Cmin (float): minimum allowable stored energy in kWh (state of charge lower limit)
         Cmax (float): maximum allowable stored energy in kWh (state of charge upper limit)
         Cinit (float): initial stored energy in the battery in kWh
-        evCapacity (float): battery capacity in kWh
+        capacity (float): battery capacity in kWh
         batteryLifeDegFactor (float): constant to model battery degradation
         windowLength (int): length of day ahead optimization period in hours (e.g. 48-hours)
         dayAheadCapacity (float): % of battery capacity reserved for day ahead bidding
@@ -68,52 +67,48 @@ class EVDSOT:
         bidSpread (int): this can be used to spread out bids in multiple hours. When set to 1 hour (recommended), it’s effect is none
         P (int): location of P in bids
         Q (int): location of Q in bids
-        f_DA (float) (1 X windowLength): forecasted prices in $/kWh for all the hours in the duration of windowLength
-        ProfitMargin_slope (float): specified in % and used to modify slope of bid curve. Set to 0 to disable
-        ProfitMargin_intercept (float): specified in % to generate a small dead band (i.e., change in price does not affect quantity). Set to 0 to disable
-        pm_hi (float): Highest possible profit margin in %
-        pm_lo (float): Lowest possible profit margin in %
+        f_DA (List[float]) (1 X windowLength): forecasted prices in $/kWh for all the hours in the duration of windowLength
         RT_state_maintain (bool): true if battery must maintain charging or discharging state for 1 hour
         RT_state_maintain_flag (int): (0) not define at current hour (-1) charging (+1) discharging
         RT_flag (bool): if True, has to update GridLAB-D
         inv_P_setpoint (float): next GridLAB-D inverter power output
-        optimized_Quantity (float) (1 X Window Length): Optimized quantity
+        optimized_Quantity (List[float]) (1 X Window Length): Optimized quantity
         #not used if not biding DA
-        prev_clr_Quantity (float) (1 X Window Length): cleared quantities (kWh) from previous market iteration for all hours
-        prev_clr_Price (float) (1 X windowLength): cleared prices ($/kWh) from previous market iteration
+        prev_clr_Quantity (List[float]) (1 X Window Length): cleared quantities (kWh) from previous market iteration for all hours
+        prev_clr_Price (List[float]) (1 X windowLength): cleared prices ($/kWh) from previous market iteration
         BindingObjFunc (bool): if True, then optimization considers cleared price, quantities from previous iteration in the objective function
     """
 
-    def __init__(self, ev_dict, inv_properties, key, model_diag_level, sim_time, solver):
+    def __init__(self, diction, inv_properties, key, model_diag_level, sim_time, solver):
         # initialize from Args:
         self.name = key
-        self.houseName = ev_dict['houseName']
+        self.houseName = diction['houseName']
         self.solver = solver
-        self.participating = ev_dict['participating']
-        self.Rc = float(ev_dict['max_charge']) * 0.001  # kW
-        self.ev_mode = ev_dict['ev_mode']
+        self.participating = diction['participating']
+        self.Rc = float(diction['max_charge']) * 0.001  # kW
+        self.ev_mode = diction['ev_mode']
         if self.ev_mode == 'V1G':
             self.Rd = 0
         elif self.ev_mode == 'V2G':
-            self.Rd = float(ev_dict['max_charge']) * 0.001  # kW
+            self.Rd = float(diction['max_charge']) * 0.001  # kW
         self.soc_upper_res = 0.99  # maximum soc
-        self.Lin = float(ev_dict['efficiency'])  # charging efficiency in pu
+        self.Lin = float(diction['efficiency'])  # charging efficiency in pu
         self.Lout = 1.0  # discharging has no efficiency factor
-        self.reserved_soc = 0.2  # float(ev_dict['reserved_soc'])
-        self.range = float(ev_dict['range_miles'])
-        self.mileage = float(ev_dict['miles_per_kwh'])
-        self.evCapacity = self.range / self.mileage
-        self.Cmin = self.evCapacity * self.reserved_soc
-        self.Cmax = self.evCapacity * self.soc_upper_res
-        self.Cinit = float(ev_dict['initial_soc']) / 100 * self.evCapacity
-        self.travel_miles = float(ev_dict['daily_miles'])
-        self.arrival_work = float(ev_dict['arrival_work'])  # HHMM
-        self.arrival_home = float(ev_dict['arrival_home'])  # HHMM
-        self.work_duration = float(ev_dict['work_duration'])  # seconds
-        self.home_duration = float(ev_dict['home_duration'])  # seconds
+        self.reserved_soc = 0.2  # float(diction['reserved_soc'])
+        self.range = float(diction['range_miles'])
+        self.mileage = float(diction['miles_per_kwh'])
+        self.capacity = self.range / self.mileage
+        self.Cmin = self.capacity * self.reserved_soc
+        self.Cmax = self.capacity * self.soc_upper_res
+        self.Cinit = float(diction['initial_soc']) / 100 * self.capacity
+        self.travel_miles = float(diction['daily_miles'])
+        self.arrival_work = float(diction['arrival_work'])  # HHMM
+        self.arrival_home = float(diction['arrival_home'])  # HHMM
+        self.work_duration = float(diction['work_duration'])  # seconds
+        self.home_duration = float(diction['home_duration'])  # seconds
         self.leaving_home = add_hhmm_secs(self.arrival_home, self.home_duration)  # HHMM
-        self.slider = float(ev_dict['slider_setting'])
-        self.boundary_cond = ev_dict['boundary_cond']
+        self.slider = float(diction['slider_setting'])
+        self.boundary_cond = diction['boundary_cond']
         # calculate boundary condition for minimum charge before leaving home
         if self.boundary_cond == 'full':
             self.home_depart_soc = self.Cmax
@@ -140,7 +135,7 @@ class EVDSOT:
         self.home_arrival_hours = []  # collecting home arrival hours with respect to current hour
         # no initialization required
         self.bidSpread = int(1)
-        self.quad_fac = 0.0001  # quadratic term coefficient in optimizaion objective
+        self.quad_fac = 0.0001  # quadratic term coefficient in optimization objective
         self.P = int(1)
         self.Q = int(0)
         self.f_DA = [0.06] * self.windowLength
@@ -150,11 +145,10 @@ class EVDSOT:
         self.RT_minute_count_interpolation = float(0.0)
         self.previous_Q_RT = float(0.0)
         self.delta_Q = float(0.0)
-        # self.previous_Q_DA = float(0.0)
 
         # price vector to initialize and to be used in the first optimization
         self.RTprice = 0.0
-        self.profit_margin = float(ev_dict['profit_margin']) / 100
+        self.profit_margin = float(diction['profit_margin']) / 100
         self.RT_state_maintain = bool(False)
         self.RT_state_maintain_flag = int(0)
         self.RT_flag = bool(False)
@@ -173,12 +167,12 @@ class EVDSOT:
         self.TIME = range(0, self.windowLength)
 
         # Sanity checks:
-        if self.Cmin <= self.evCapacity <= self.Cmax:
-            # log.info('Cmin < evCapacity < Cmax.')
+        if self.Cmin <= self.capacity <= self.Cmax:
+            # log.info('Cmin < capacity < Cmax.')
             pass
         else:
-            log.log(model_diag_level, '{} {} -- evCapacity is {}, not between Cmin ({}) and Cmax ({})'.
-                    format(self.name, 'init', self.evCapacity, self.Cmin, self.Cmax))
+            log.log(model_diag_level, '{} {} -- capacity is {}, not between Cmin ({}) and Cmax ({})'.
+                    format(self.name, 'init', self.capacity, self.Cmin, self.Cmax))
 
         Lin_lower = 0
         Lin_upper = 1
@@ -207,12 +201,12 @@ class EVDSOT:
             log.log(model_diag_level, '{} {} -- reserved_soc is {}, outside of nominal range of {} to {}'.
                     format(self.name, 'init', self.reserved_soc, reserved_soc_lower, reserved_soc_upper))
 
-        # if 0 < self.batteryLifeDegFactor < 1:
-        #     # log.info('batteryLifeDegFactor is within the bounds.')
-        #     pass
-        # else:
-        #     log.log(model_diag_level, '{} {} -- batteryLifeDegFactor is out of bounds.'.
-        #             format(self.name, 'init'))
+        if 0 < self.batteryLifeDegFactor < 1:
+            # log.info('batteryLifeDegFactor is within the bounds.')
+            pass
+        else:
+            log.log(model_diag_level, '{} {} -- batteryLifeDegFactor is out of bounds.'.
+                    format(self.name, 'init'))
 
     def test_function(self):
         """ Test function with the only purpose of returning the name of the object
@@ -256,7 +250,7 @@ class EVDSOT:
         self.prev_clr_Price = deepcopy(price)
         self.BindingObjFunc = bool(True)
         for i in range(len(self.prev_clr_Price)):
-            self.prev_clr_Quantity.append(self.from_P_to_Q_ev(self.bid_da[i], self.prev_clr_Price[i]))
+            self.prev_clr_Quantity.append(self.from_P_to_Q_battery(self.bid_da[i], self.prev_clr_Price[i]))
         self.prev_clr_Price.pop(0)
         self.prev_clr_Quantity.pop(0)
         self.prev_clr_Price.append(0.0)
@@ -280,9 +274,6 @@ class EVDSOT:
 
         P = self.P
         Q = self.Q
-        # previous hour quantity
-        # self.previous_Q = self.bid_da[0][1][Q]
-
         TIME = range(0, self.windowLength)
         CurveSlope = [0] * len(TIME)
         yIntercept = [-1] * len(TIME)
@@ -290,9 +281,8 @@ class EVDSOT:
         deltaf_DA = max(self.f_DA) - min(self.f_DA)
 
         for t in TIME:
-            # CurveSlope[t] = ((max(self.f_DA)-min(self.f_DA))/(-self.Rd-self.Rc))*(1 + self.ProfitMargin_slope/100)   #Remains same in all hours of the window
             if self.slider != 0:
-                # check if non transactive hours: make an inflexible straight verticle line bid
+                # check if non transactive hours: make an inflexible straight vertical line bid
                 if t in self.non_trans_hours:
                     BID[t][0][Q] = Quantity[t]
                     BID[t][1][Q] = Quantity[t]
@@ -306,8 +296,6 @@ class EVDSOT:
                 else:
                     # Remains same in all hours of the window
                     CurveSlope[t] = ((max(self.f_DA) - min(self.f_DA)) / (-self.Rd - self.Rc)) / self.slider
-                    # print(CurveSlope[t])
-                    # print(Quantity[t])
                     # Is different for each hour of the window
                     yIntercept[t] = self.f_DA[t] - CurveSlope[t] * Quantity[t]
 
@@ -316,10 +304,6 @@ class EVDSOT:
                     BID[t][2][Q] = Quantity[t]
                     BID[t][3][Q] = self.Rc
 
-                    # BID[t][0][P] =    -self.Rd*CurveSlope[t]+yIntercept[t]+(self.ProfitMargin_intercept/100)*deltaf_DA
-                    # BID[t][1][P] = Quantity[t]*CurveSlope[t]+yIntercept[t]+(self.ProfitMargin_intercept/100)*deltaf_DA
-                    # BID[t][2][P] = Quantity[t]*CurveSlope[t]+yIntercept[t]-(self.ProfitMargin_intercept/100)*deltaf_DA
-                    # BID[t][3][P] = self.Rc * CurveSlope[t] + yIntercept[t] - (self.ProfitMargin_intercept / 100) * deltaf_DA
                     BID[t][0][P] = -self.Rd * CurveSlope[t] + yIntercept[t] + self.batteryLifeDegFactor * (
                             1 + self.profit_margin)
                     BID[t][1][P] = Quantity[t] * CurveSlope[t] + yIntercept[t] + self.batteryLifeDegFactor * (
@@ -355,11 +339,13 @@ class EVDSOT:
                 - self.quad_fac * (m.E_DA_out[i] + m.E_DA_in[i]) ** 2 for i in self.TIME) \
                    - sum((1 - self.slider) * 0.001 * (self.home_depart_soc - m.C[i]) for i in self.trans_hours)
             # - sum(100000 * (self.Cmax - m.C[i]) for i in range(self.TIME.stop - 24, self.TIME.stop))
-            # The last line is to enforce 100% charging during the last day of the simulation and should be removed in 48-hour windowlength optimization
+            # The last line is to enforce 100% charging during the last day of the simulation
+            # and should be removed in 48-hour window length optimization
         return sum(
-            self.f_DA[i] * (m.E_DA_out[i] - m.E_DA_in[i]) - 0 * self.batteryLifeDegFactor * (1 + self.profit_margin)
-            * (m.E_DA_out[i] + m.E_DA_in[i]) - 0.001 * (m.E_DA_out[i] + m.E_DA_in[i]) ** 2 for i in self.TIME)
-        # - 0.0000003*(m.E_DA_out[i]+m.E_DA_in[i])**2
+            self.f_DA[i] * (m.E_DA_out[i] - m.E_DA_in[i]) - 0 * self.batteryLifeDegFactor *
+            (1 + self.profit_margin) * (m.E_DA_out[i] + m.E_DA_in[i]) - 0.001 *
+            (m.E_DA_out[i] + m.E_DA_in[i]) ** 2
+            for i in self.TIME)  # - 0.0000003*(m.E_DA_out[i]+m.E_DA_in[i])**2
 
     def con_rule_ine1(self, m, i):
         if i in self.trans_hours:
@@ -419,7 +405,7 @@ class EVDSOT:
         # print('updating home depart hours:', self.home_depart_hours)
 
     def DA_optimal_quantities(self):
-        """ Generates Day Ahead optimized quantities for EV
+        """ Generates Day Ahead optimized quantities for agent
 
         Returns:
             Quantity (float) (1 x windowLength): Optimal quantity from optimization for all hours of the window specified by windowLength
@@ -442,13 +428,14 @@ class EVDSOT:
         model.con3 = pyo.Constraint(self.TIME, rule=self.con_rule_eq1)
         model.con4 = pyo.Constraint(self.TIME, rule=self.con_rule_eq2)
         model.con5 = pyo.Constraint(self.TIME, rule=self.con_rule_eq3)
-        # do not create following constraint (boundary condition) when departing hour is 0th. In this case, Cinit should take care of it.
+        # do not create following constraint (boundary condition) when departing hour is 0th.
+        # In this case, Cinit should take care of it.
         # get non-zero values
         nz_home_depart = [val for idx, val in enumerate(self.home_depart_hours) if val != 0]
         model.con6 = pyo.Constraint(nz_home_depart, rule=self.con_rule_eq4)
 
         # print('home depart hours: ', self.home_depart_hours)
-        # print('day_ahead_price_forcast...', self.f_DA)
+        # print('day_ahead_price_forecast...', self.f_DA)
         results = get_run_solver('ev_' + self.name, pyo, model, self.solver)
         # print('*** optimization model ***:')
         # print(model.pprint())
@@ -463,10 +450,10 @@ class EVDSOT:
             # if pyo.value(model.E_DA_out[t]) > TOL:
             #     Quantity[t] = pyo.value(-model.E_DA_out[t])
 
-            # following is a better implementation as the above implementation create issues and stores
-            # wrong value
+            # following is a better implementation as the above
+            # implementation creates issues and stores the wrong values
             Quantity[t] = pyo.value(model.E_DA_in[t] - model.E_DA_out[t])
-            soc[t] = pyo.value(model.C[t]) / self.evCapacity
+            soc[t] = pyo.value(model.C[t]) / self.capacity
 
         # fig, (ax1, ax2, ax3) = plt.subplots(3,1, sharex=True)
         # ax1.plot(Quantity)
@@ -475,13 +462,13 @@ class EVDSOT:
         # ax2.set_ylabel('SOC')
         # ax3.plot(self.f_DA)
         # ax3.set_ylabel('$/kWh')
-        return Quantity  # , soc
+        return Quantity
 
     def formulate_bid_rt(self):
         """ Formulates RT bid
 
         Uses the last 4 point bid from DA market and consider current state
-        of charge of the ev. Will change points to change points for feasible
+        of charge of the battery. Will change points to change points for feasible
         range of Qmin Qmax points if necessary. Furthermore, allows a maximum
         deviation of +/-100% from the DA plan.
 
@@ -509,7 +496,6 @@ class EVDSOT:
             if self.RT_minute_count_interpolation == 30.0:
                 self.delta_Q = deepcopy((self.bid_da[1][1][Q] - self.previous_Q_RT) * 0.5)
             Qopt_DA = self.previous_Q_RT + self.delta_Q * (5.0 / 30.0)
-            # Qopt_DA = self.bid_da[0][1][Q]*(self.RT_minute_count_interpolation/60.0) + self.previous_Q*(1-self.RT_minute_count_interpolation/60.0)
             self.previous_Q_RT = Qopt_DA
             BID[1][Q] = Qopt_DA
             BID[2][Q] = Qopt_DA
@@ -530,10 +516,10 @@ class EVDSOT:
 
         # fix 4 point error if exixtent start
         if state >= 3:
-            print("EV Error --> Verify EV battery RC, RD, and evCapacity")
+            print("EV Error --> Verify battery RC, RD, and capacity")
             print(self.Rc)
             print(self.Rd)
-            print(self.evCapacity)
+            print(self.capacity)
 
         if state == 0:  # no error
             realTimeBid = BID
@@ -569,8 +555,8 @@ class EVDSOT:
 
         Args:
             BID (float) ((1,2)X4): 4 point bid
-            Ql: 
-            Qu: 
+            Ql:
+            Qu:
 
         Returns:
             BIDr (float) ((1,2)X4): 4 point bid only the feasible range
@@ -625,7 +611,7 @@ class EVDSOT:
         return BIDr
 
     def RT_gridlabd_set_P(self, model_diag_level, sim_time):
-        """ Update variables for ev output "inverter"
+        """ Update variables for battery output "inverter"
 
         Args:
             model_diag_level (int): Specific level for logging errors; set it to 11
@@ -634,7 +620,7 @@ class EVDSOT:
         inv_P_setpoint is a float in W
         """
         realTimeBid = deepcopy(self.bid_rt)
-        invPower = self.from_P_to_Q_ev(realTimeBid, self.RTprice)
+        invPower = self.from_P_to_Q_battery(realTimeBid, self.RTprice)
 
         if invPower < 0:
             self.RT_state_maintain_flag = -1
@@ -665,7 +651,7 @@ class EVDSOT:
             log.log(model_diag_level, '{} {} -- input power ({}) is not <= rated input power ({}).'.
                     format(self.name, sim_time, -self.inv_P_setpoint, self.Rc))
 
-    def set_ev_SOC(self, msg_str, model_diag_level, sim_time):
+    def set_SOC(self, msg_str, model_diag_level, sim_time):
         """ Set the ev state of charge
 
         Updates the self.Cinit of the battery
@@ -676,7 +662,7 @@ class EVDSOT:
              sim_time (str): Current time in the simulation; should be human-readable
         """
         val = parse_number(msg_str)
-        self.Cinit = self.evCapacity / 100 * val
+        self.Cinit = self.capacity / 100 * val
 
         if self.Cmin < self.Cinit < self.Cmax:
             pass
@@ -741,8 +727,7 @@ class EVDSOT:
         arr_sec = get_secs_from_hhmm(self.arrival_home)
         leav_sec = get_secs_from_hhmm(self.leaving_home)
         if self.is_car_home(cur_secs):  # car at home in the beginning of interval
-            rem_home_sec = get_duration(interval_beg_hhmm,
-                                           self.leaving_home)  # how long car will be home
+            rem_home_sec = get_duration(interval_beg_hhmm, self.leaving_home)  # how long car will be home
             duration = min(interval, rem_home_sec)  # if remaining duration is more than interval, return interval
         elif cur_secs + interval > arr_sec:  # if car is coming home during this interval
             rem_home_sec = get_duration(self.arrival_home, interval_end_hhmm)  # how long car will be home
@@ -768,8 +753,8 @@ class EVDSOT:
         for _ in self.TIME:
             car_home_dur = self.get_car_home_duration(cur_secs, dt * 3600)  # car at home duration
             cur_cap = cur_cap_pr + self.Rc * car_home_dur / 3600 * self.Lin  # increment in soc
-            if cur_cap > self.evCapacity:  # if soc >100%
-                cur_cap = self.evCapacity
+            if cur_cap > self.capacity:  # if soc >100%
+                cur_cap = self.capacity
             avg_kw = (cur_cap - cur_cap_pr) / self.Lin / dt  # average kW consumption during dt interval
             # now lets check if car is leaving home during this interval
             if self.is_car_leaving_home(cur_secs, dt * 3600):
@@ -780,14 +765,15 @@ class EVDSOT:
             Quantity.append(avg_kw)
         return Quantity
 
-    def from_P_to_Q_ev(self, BID, PRICE):
+    def from_P_to_Q_battery(self, BID, PRICE):
         """ Convert the 4 point bids to a quantity with the known price
 
         Args:
             BID (float) ((1,2)X4): 4 point bid
             PRICE (float): cleared price in $/kWh
+
         Returns:
-            float:  _quantity -> active power (-) charging (+) discharging
+            _quantity (float): active power (-) charging (+) discharging
         """
         P = self.P
         Q = self.Q
@@ -832,8 +818,8 @@ class EVDSOT:
 def test():
     """
     Testing
-    
-    Makes a single battery agent and run DA 
+
+    Makes a single agent and run DA
     """
     import time
     import matplotlib.pyplot as plt
@@ -962,7 +948,7 @@ def test():
         opt.append(quantity[0])
         # soc_opt.append(soc[0])
         B_obj1.optimized_Quantity = quantity
-        # B_obj1.set_ev_SOC(str(soc[0]*100),11,sim_time)
+        # B_obj1.set_SOC(str(soc[0]*100),11,sim_time)
     fig, (ax1, ax2, ax3) = plt.subplots(3, 1, sharex=True)
     ax1.plot(quantity)
     ax1.set_ylabel('kW')
@@ -1009,7 +995,7 @@ def test():
             0.006091970388207173
         ]
     ]
-    getQ = B_obj1.from_P_to_Q_ev(rtbid2, 0.09)
+    getQ = B_obj1.from_P_to_Q_battery(rtbid2, 0.09)
     print(getQ)
 
     B_obj1.bid_da = [
@@ -1093,7 +1079,7 @@ def test():
     # # rtbid = B_obj1.formulate_bid_rt()
     # # price_forecast = B_obj1.f_DA
     # # BIDS_of_agent = B_obj1.bid_da
-    # # # B_obj.Cinit = B_obj.evCapacity * 0.5#B_obj.set_battery_SOC()
+    # # # B_obj.Cinit = B_obj.capacity * 0.5#B_obj.set_SOC()
     # # BID = [[-5.0, 6.0], [0.0, 5.0], [0.0, 4.0], [5.0, 3.0]]
     # # fixed = B_obj1.RT_fix_four_points_range(BID, 0.0, 10.0)
     # # print(fixed)

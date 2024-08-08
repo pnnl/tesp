@@ -33,10 +33,10 @@ logger = log.getLogger()
 # Key parameters for investigating the controller performance
 
 ProfitMargin_intercept = 10
-price_std_dev = 10 # Assumed value; just has to be > 0
+price_std_dev = 100 # Assumed value; just has to be > 0
 hvac_kw = 5
 Topt_DA = 72
-my_quantity_curve = [0, 1.25, 2.5, 3.75, 5] # simplified vector showing the sensitivity of the HVAC load to air temperature
+
 
 class HVACDSOT: 
     def __init__(self):
@@ -227,7 +227,11 @@ class HVACDSOT:
     def calc_bid_quantity(self, price_curve: list, quantity_curve: list) -> None:
         """
         Uses the cleared price to define the bid quantity (maybe should
-        be cleared_quantity?)
+        be called cleared_quantity?). Currently only implemented for
+        cooling.
+
+        TODO: Assumes specific size of price_curve and quantity_curve;
+        this needs to be made more generic.
 
         Args:
             price_curve (list): Four-point bid prices
@@ -255,26 +259,45 @@ class HVACDSOT:
             b = quantity_curve[2] - a * price_curve[2]
             self.bid_quantity = a * self.cleared_price + b
         elif self.cleared_price > price_curve[0]:
-            self.bid_quantity = quantity_curve[0]  # assuming this is minimum
+            self.bid_quantity = quantity_curve[0]  
         elif self.cleared_price < price_curve[3]:
-            self.bid_quantity = quantity_curve[3]  # assuming this is maximum
+            self.bid_quantity = quantity_curve[3]  
         else:
             self.bid_quantity = 0
             print("something went wrong with clear price")
+        return self.bid_quantity
 
-    def calc_thermostat_setpoint(self, basepoint_tmp: float) -> bool:
+    def calc_thermostat_setpoint(self, basepoint_tmp: float, bid_quantity: float) -> bool:
         """
+        Using the basepoint temperature (the default temperature, which may
+        follow a customer-defined schedule), and the bid quantity (cleared
+        quantity) to find the thermostat setpoint.
         """
-        if self.price_std_dev > 0.0:
+
+        # Allows a user to override the object's internal bid quantity. If
+        # the call is made with the parameter empty the internal one is used.
+        # If a value is provided it over-writes the internally stored value
+        if self.bid_quantity is not None:
+            self.bid_quantity = bid_quantity
+        
+        # Check to see if there's any variation in price. If there is, the
+        # controller needs to adjust setpoints based on that price.
+        if self.price_std_dev > 0.0: 
             if self.thermostat_mode == 'Cooling':
+                # "ramp" values only used in leg_clearing which is not 
+                # implemented here.
                 ramp_high_tmp = self.ramp_high_cool
                 ramp_low_tmp = self.ramp_low_cool
                 setpoint_tmp = self.cooling_setpoint
             else: # "Heating"
+                # "ramp" values only used in leg_clearing which is not 
+                # implemented here.
                 ramp_high_tmp = self.ramp_high_heat
                 ramp_low_tmp = self.ramp_low_heat
                 setpoint_tmp = self.heating_setpoint
-            use_RT_curve = True
+            # DSOT clearing method, all the others are unimplemented here.
+            # Other methods = "DA_curve" and "leg_clearing"
+            use_RT_curve = True 
             if use_RT_curve:
                 if max(self.quantity_curve) == 0:
                     self.bid_quantity = 0.0
@@ -289,16 +312,19 @@ class HVACDSOT:
                         setpoint_tmp = max(self.temp_curve)
                 else:
                     for ipt in range(len(self.temp_curve) - 1):
-                        if self.quantity_curve[ipt + 1] != self.quantity_curve[ipt]:
-                            a = (self.temp_curve[ipt + 1] - self.temp_curve[ipt]) / \
-                                (self.quantity_curve[ipt + 1] - self.quantity_curve[ipt])
-                        else:
-                            a = 0
-                        b = self.temp_curve[ipt] - a * self.quantity_curve[ipt]
                         if self.quantity_curve[ipt] <= self.bid_quantity <= self.quantity_curve[ipt + 1]:
+                            if self.quantity_curve[ipt + 1] != self.quantity_curve[ipt]:
+                                a = (self.temp_curve[ipt + 1] - self.temp_curve[ipt]) / \
+                                    (self.quantity_curve[ipt + 1] - self.quantity_curve[ipt])
+                            else:
+                                a = 0
+                            b = self.temp_curve[ipt] - a * self.quantity_curve[ipt]
                             setpoint_tmp = a * self.bid_quantity + b
+                            break
             returnflag = True
         else:
+            # If there's no variation in price, just follow the customer's
+            # setpoint schedule.
             setpoint_tmp = basepoint_tmp
             returnflag = False
 
@@ -313,9 +339,9 @@ class HVACDSOT:
             else:
                 # push heating_setpoint down
                 self.heating_setpoint = self.cooling_setpoint - self.deadband
-        return returnflag
+        return returnflag, self.cooling_setpoint, self.heating_setpoint
 
-    def bid_accepted(self) -> tuple[bool, float, float]:
+    def bid_accepted(self, bid:list) -> tuple[bool, float, float]:
         """ Update the thermostat setting if the last bid was accepted
 
         The last bid is always "accepted". If it wasn't high enough,
@@ -328,6 +354,12 @@ class HVACDSOT:
         Returns:
             bool: True if the thermostat setting changes, False if not.
         """
+        # Allows a user to override the object's internal bid curve. If
+        # the call is made with the parameter empty the internal one is used.
+        # If a value is provided it over-writes the internally stored value
+        if bid is not None:
+            self.bid_rt = bid
+
         self.setpoint_curve_x = []
         self.setpoint_curve_y = []
 
@@ -342,10 +374,10 @@ class HVACDSOT:
         price_curve = [self.bid_rt[0][1], self.bid_rt[1][1], self.bid_rt[2][1], self.bid_rt[3][1]]
         quantity_curve = [self.bid_rt[0][0], self.bid_rt[1][0], self.bid_rt[2][0], self.bid_rt[3][0]]
 
-        self.calc_bid_quantity(price_curve, quantity_curve)
-        returnflag = self.calc_thermostat_setpoint(basepoint_tmp)
+        bid_quantity = self.calc_bid_quantity(price_curve, quantity_curve)
+        returnflag, cooling_setpoint, heating_setpoint = self.calc_thermostat_setpoint(basepoint_tmp, bid_quantity)
 
-        return returnflag, self.cooling_setpoint, self.heating_setpoint
+        return returnflag, bid_quantity, cooling_setpoint, heating_setpoint
   
     def adj_heat_pump_capacity(self) -> tuple[float, float]:
         """
@@ -458,14 +490,23 @@ class HVACDSOT:
             self.temp_curve.append(Topt_DA + (i - 2) / 4.0 * self.slider)
             self.quantity_curve.append(0.0)
 
+        # This is a proxy for a much more involved process to estimate the
+        # HVAC energy consumption for the upcoming real-time market period
+        # (see formulate_bid_rt in the hvac_agent.py in the for loop with
+        # index "itime"). This is a reasonable approximation where the HVAC
+        # runs for the entire five minutes. 
+        self.quantity_curve = [0, 1.25, 2.5, 3.75, 5]
 
         for itemp in range(npt):
             x = np.zeros([2, 1])
             x[0] = self.air_temp
             x[1] = self.mass_temp
-            Q_max = self.hvac_kw
-            Q_min = 0.0
+            Q_min = min(self.quantity_curve)
+            Q_max = max(self.quantity_curve)
 
+
+            # The original DSO+T HVAC agent 
+            # provides no details on what this little bit of logic does.
             if ((self.thermostat_mode == "Cooling" and self.hvac_on) or
                     (self.thermostat_mode != "Cooling" and not self.hvac_on)):
                 self.temp_curve[0] = self.air_temp + self.deadband / 2.0
@@ -473,8 +514,15 @@ class HVACDSOT:
                   (self.thermostat_mode == "Cooling" and not self.hvac_on)):
                 self.temp_curve[0] = self.air_temp - self.deadband / 2.0
         
-        self.quantity_curve = my_quantity_curve 
-        Qopt_DA = self.hvac_kw/2 # simplified value, assumes operating at 50% of the time
+        # ----------- Begin non DSO+T code --------------- #
+        # Switching the order of the setpoints so that in cooling mode the 
+        # highest setpoint temperatures correspond to lowest quantities.
+        if self.thermostat_mode == "Cooling":
+            self.temp_curve.sort( reverse=True)
+        # ----------- End non DSO+T code   --------------- #
+
+        
+        Qopt_DA = self.hvac_kw/2 # simplified value, assumes operating at 50% duty cycle
         Qmin = 0
         Qmax = self.hvac_kw
         if self.slider != 0:
@@ -512,7 +560,7 @@ class HVACDSOT:
 
         axs[1].set_title("Thermostat Curve")
         axs[1].set_xlabel(f"Bid Quantity (kW) - Cleared Quantity = {self.bid_quantity:0.2f}")
-        axs[1].set_ylabel(f"Thermostat Setpoint ('F) - Cleared Sepoint = {self.cooling_setpoint:.2f}")
+        axs[1].set_ylabel(f"Cooling Setpoint ('F) - Cleared Sepoint = {self.cooling_setpoint:.2f}")
         axs[1].plot(self.setpoint_curve_x, self.setpoint_curve_y)
         clearing_quantity_y = [self.cooling_setpoint_lower, self.cooling_setpoint_upper]
         axs[1].plot(clearing_quantity_x, clearing_quantity_y)
@@ -551,15 +599,15 @@ if __name__ == "__main__":
     init_delta_DA_price = 20
     init_ProfitMargin_intercept = 10
 
-    def run_model(slider, cleared_price, delta_DA_price, ProfitMargin_intercept) -> tuple[float, float]:
+    def run_agent_rt_market(slider, cleared_price, delta_DA_price, ProfitMargin_intercept) -> tuple[float, float]:
         hvac_agent.slider = slider
         hvac_agent.cleared_price = cleared_price
         hvac_agent.delta_DA_price = delta_DA_price
         hvac_agent.ProfitMargin_intercept = ProfitMargin_intercept
         rt_bid = hvac_agent.formulate_bid_rt()
-        status_flag = hvac_agent.bid_accepted()
+        status_flag, bid_quantity, heating_setpoint, cooling_setpoint = hvac_agent.bid_accepted(rt_bid)
         hvac_agent.collect_bid_curve_data()
-        return hvac_agent.cooling_setpoint, hvac_agent.heating_setpoint
+        return bid_quantity, hvac_agent.cooling_setpoint, hvac_agent.heating_setpoint
 
     def create_setpoint_vs_price_data(slider: float,
                                       delta_DA_price: float,
@@ -567,16 +615,21 @@ if __name__ == "__main__":
                                       min_price: float, 
                                       max_price: float) -> tuple[list, list]:
         """
-        
+        To create a graphical relationship between the clearing price and the
+        setpoint temperature, the bidding and clearing model has to be run
+        for each clearing price (the output of the model is a heating and
+        cooling clearing price.) In contract, to generate the bid curve
+        (since it is defined prior to the market clearing), you only need
+        to run the model once.
         """
         setpoint_curve_x = []
         setpoint_curve_y = []
-        for idx in range(min_price, max_price, 1):
-            setpoint_curve_x.append(idx)
-            cooling_setpoint, heating_setpoint = run_model(slider, 
-                                                           idx, 
-                                                           delta_DA_price,
-                                                           ProfitMargin_intercept)
+        for clearing_price in range(min_price, max_price, 1):
+            setpoint_curve_x.append(clearing_price)
+            bid_quantity, cooling_setpoint, heating_setpoint = run_agent_rt_market(slider, 
+                                                                    clearing_price, 
+                                                                    delta_DA_price,
+                                                                    ProfitMargin_intercept)
             setpoint_curve_y.append(cooling_setpoint)
         return setpoint_curve_x, setpoint_curve_y    
 
@@ -590,20 +643,29 @@ if __name__ == "__main__":
                                                                             max_price=100)
 
         # Run the model at the actual clearing price
-        cooling_setpoint, heating_setpoint = run_model(slider_setting.val, 
-                                                       cleared_price_setting.val, 
-                                                       delta_DA_price_setting.val,
-                                                       ProfitMargin_intercept_setting.val)
+        bid_quantity, cooling_setpoint, heating_setpoint = run_agent_rt_market(slider_setting.val, 
+                                                                    cleared_price_setting.val, 
+                                                                    delta_DA_price_setting.val,
+                                                                    ProfitMargin_intercept_setting.val)
+        
+        # Update bid curve and clearing lines
         bid_line.set_ydata(hvac_agent.plotting_data["bid_curve"]["bid_y"])
         clear_q_line_bid.set_xdata(hvac_agent.plotting_data["bid_curve"]["clearing_quantity_x"])
         clear_q_line_bid.set_ydata(hvac_agent.plotting_data["bid_curve"]["clearing_quantity_y"])
         clear_p_line_bid.set_xdata(hvac_agent.plotting_data["bid_curve"]["clearing_price_x"])
         clear_p_line_bid.set_ydata(hvac_agent.plotting_data["bid_curve"]["clearing_price_y"])
+        
+        # Update temperature curve and clearing lines
         thermostat_line.set_ydata(setpoint_curve_y)
-        clear_p_line_thermostat.set_xdata(hvac_agent.plotting_data["bid_curve"]["clearing_quantity_x"])
+        clear_p_line_thermostat.set_xdata([cleared_price_setting.val, cleared_price_setting.val])
         clear_p_line_thermostat.set_ydata([0, cooling_setpoint])
-        clear_t_line_thermostat.set_xdata([cleared_price_setting.val, cleared_price_setting.val])
+        clear_t_line_thermostat.set_xdata([0, cleared_price_setting.val])
         clear_t_line_thermostat.set_ydata([cooling_setpoint, cooling_setpoint])
+
+        # Update bid quantity (cleared quantity?)
+        bid_quantity_text.set_text(f"bid_quantity = {bid_quantity}")
+        cooling_setpoint_text.set_text(f"cooling_setpoint = {cooling_setpoint}")
+
         fig.canvas.draw_idle()
     
 
@@ -612,12 +674,13 @@ if __name__ == "__main__":
     fig.suptitle("DSO+T HVAC Agent Behavior in Cooling Mode")
     ax[0].set_xlabel('Quantity (kW)')
     ax[0].set_ylabel('Cleared Price ($/kW)')
-    ax[0].set_xlim([0, hvac_agent.hvac_kw])
+    ax[0].set_xlim([0-0.5, hvac_agent.hvac_kw + 0.5])
     ax[0].set_ylim([0, hvac_agent.price_cap])
     ax[1].set_xlabel('Price ($/kW)')
     ax[1].set_ylabel('Thermostat Setpoint (\u00B0F)')
-    ax[1].set_xlim([0, 100])
-    ax[1].set_ylim([50, 100])
+    ax[1].set_xlim([0, hvac_agent.price_cap])
+    ax[1].set_ylim([70, 74]) # deg. F
+    
 
     # Calculating model to create data for initial plots
     setpoint_curve_x, setpoint_curve_y  = create_setpoint_vs_price_data(init_slider,
@@ -625,7 +688,7 @@ if __name__ == "__main__":
                                                                         init_ProfitMargin_intercept,
                                                                         min_price=1, 
                                                                         max_price=100)
-    cooling_setpoint, heating_setpoint = run_model(init_slider, 
+    bid_quantity, cooling_setpoint, heating_setpoint = run_agent_rt_market(init_slider, 
                                                    init_cleared_price, 
                                                    init_delta_DA_price, 
                                                    init_ProfitMargin_intercept)
@@ -635,7 +698,7 @@ if __name__ == "__main__":
     #  setpoint are on these two curves
     bid_line, = ax[0].plot(hvac_agent.plotting_data["bid_curve"]["bid_x"], 
                            hvac_agent.plotting_data["bid_curve"]["bid_y"], 
-                           lw=2)
+                           'o-', lw=2)
     clear_q_line_bid, = ax[0].plot(hvac_agent.plotting_data["bid_curve"]["clearing_quantity_x"], 
                                    hvac_agent.plotting_data["bid_curve"]["clearing_quantity_y"], 
                                    lw=2)
@@ -651,7 +714,9 @@ if __name__ == "__main__":
                                           [cooling_setpoint, cooling_setpoint], 
                                           lw=2)
 
-   
+    # Add bid_quantity value on graph
+    bid_quantity_text = ax[0].text(x=0, y=10, s=f"bid_quantity = {bid_quantity}")
+    cooling_setpoint_text = ax[1].text(x=10, y=73, s=f"cooling_setpoint = {cooling_setpoint}")
     
 
     # Add sliders for the parameters we want to adjust

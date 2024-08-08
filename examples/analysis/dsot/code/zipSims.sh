@@ -6,7 +6,7 @@
 # this script will copy results from eioc host(boomer,tapteal...) /mnt/simdata/done/[tesp version]/[case]/ 
 # to the pnl share drive \\pnl\projects\DSOT\run_outputs\DER\[tesp version]\zip\
 
-share="/mnt/dsot/run_outputs/DER"
+share="/mnt/dsot/run_outputs/Rates_Scenario/dsot"
 
 for dir in "$1"*
 do

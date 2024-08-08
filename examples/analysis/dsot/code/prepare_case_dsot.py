@@ -19,8 +19,9 @@ import tesp_support.dsot.helpers_dsot as helpers
 import tesp_support.dsot.case_merge as cm
 import tesp_support.dsot.glm_dictionary as gd
 
-recs_data = False
-#recs_data = True
+
+# recs_data = False
+recs_data = True  # rerun recs_gld_house_parameters.py
 if recs_data:
     rcs = "RECS"
     sys.path.append('../')
@@ -45,7 +46,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         sys_config = json.load(json_file)
 
     # Get path for other data
-    data_Path = sys_config['dataPath']
+    data_path = sys_config['dataPath']
     case_type = sys_config['caseType']
     sys_config['market'] = False
     if pv is not None:
@@ -69,33 +70,28 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
             sys_config['market'] = True
 
     # loading default agent data
-    with open(os.path.join(data_Path, sys_config['dsoAgentFile']), 'r', encoding='utf-8') as json_file:
+    with open(os.path.join(data_path, sys_config['dso' + rcs + 'AgentFile']), 'r', encoding='utf-8') as json_file:
         case_config = json.load(json_file)
-        if recs_data:
-            # Overwriting default_case_config.json
-            case_config['FeederGenerator']['SolarPercentage'] = 11
-            case_config['FeederGenerator']['StoragePercentage'] = 3
-            case_config['FeederGenerator']['EVPercentage'] = 8
     # loading building and DSO metadata
-    with open(os.path.join(data_Path, sys_config['dso' + rcs + 'PopulationFile']), 'r', encoding='utf-8') as json_file:
+    with open(os.path.join(data_path, sys_config['dso' + rcs + 'PopulationFile']), 'r', encoding='utf-8') as json_file:
         dso_config = json.load(json_file)
     # loading residential metadata
-    with open(os.path.join(data_Path, sys_config['dso' + rcs + 'ResBldgFile']), 'r', encoding='utf-8') as json_file:
+    with open(os.path.join(data_path, sys_config['dso' + rcs + 'ResBldgFile']), 'r', encoding='utf-8') as json_file:
         res_config = json.load(json_file)
     # loading commercial building metadata
-    with open(os.path.join(data_Path, sys_config['dsoCommBldgFile']), 'r', encoding='utf-8') as json_file:
+    with open(os.path.join(data_path, sys_config['dsoCommBldgFile']), 'r', encoding='utf-8') as json_file:
         comm_config = json.load(json_file)
     # loading battery metadata
-    with open(os.path.join(data_Path, sys_config['dsoBattFile']), 'r', encoding='utf-8') as json_file:
+    with open(os.path.join(data_path, sys_config['dsoBattFile']), 'r', encoding='utf-8') as json_file:
         batt_config = json.load(json_file)
     # loading ev model metadata
-    with open(os.path.join(data_Path, sys_config['dsoEvModelFile']), 'r', encoding='utf-8') as json_file:
+    with open(os.path.join(data_path, sys_config['dsoEvModelFile']), 'r', encoding='utf-8') as json_file:
         ev_model_config = json.load(json_file)
     # loading hvac set point metadata
     # record aggregated hvac_setpoint_data from survey:
     # In this implementation individual house set point schedule may not
     # make sense but aggregated behavior will do.
-    with open(os.path.join(data_Path, sys_config['hvac' + rcs + 'SetPoint']), 'r', encoding='utf-8') as json_file:
+    with open(os.path.join(data_path, sys_config['hvac' + rcs + 'SetPoint']), 'r', encoding='utf-8') as json_file:
         hvac_setpt = json.load(json_file)
 
     # print(json.dumps(sys_config, sort_keys = True, indent = 2))
@@ -124,7 +120,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
     gen = sys_config['gen']
     genFuel = sys_config['genfuel']
     tso_config = sys_config['DSO']
-    out_Path = sys_config['outputPath']
+    out_path = sys_config['outputPath']
 
     sim = case_config['SimulationConfig']
     bldPrep = case_config['BuildingPrep']
@@ -137,6 +133,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
     sim['StartTime'] = start_time
     sim['EndTime'] = end_time
     sim['port'] = sys_config['port']
+    sim['rate'] = sys_config['rate']
     sim['numCore'] = sys_config['numCore']
     sim['keyLoad'] = sys_config['keyLoad']
     # sim['players'] = sys_config['players']
@@ -151,8 +148,8 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
     sim['OutputPath'] = sys_config['caseName']  # currently only used for the experiment management scripts
     sim['priceSensLoad'] = sys_config['priceSensLoad']
     sim['quadratic'] = sys_config['quadratic']
-    sim['quadraticFile'] = sys_config['dsoQuadraticFile']
-    
+    sim['quadraticFile'] = sys_config['dso' + rcs + 'QuadraticFile']
+
     # =================== fernando 2021/06/25 - removing 10 AM bid correction to AMES =======
     if case_type['fl'] == 1:
         print('Correction of DSO bid for 10 AM AMES bid is performed')
@@ -174,13 +171,11 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         exit(1)
 
     # We need to create the experiment out folder. If it already exists, we delete it and then create it
-    if out_Path != "" and out_Path != ".." and out_Path != ".":
-        if os.path.isdir(out_Path):
+    if out_path != "" and out_path != ".." and out_path != ".":
+        if os.path.isdir(out_path):
             print("experiment folder already exists, deleting and moving on...")
-            shutil.rmtree(out_Path)
-        os.makedirs(out_Path)
-    else:
-        out_Path = caseName
+            shutil.rmtree(out_path)
+        os.makedirs(out_path)
 
     # write player helics config json file for load and generator players
     helpers.write_players_msg(caseName, sys_config, dt)
@@ -379,8 +374,8 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
                                      hvacSetpt=hvac_setpt,
                                      Q_forecast=sim['Q_bid_forecast_correction'],
                                      Q_dso_key=dso_key,
-                                     usState = sim['state'],
-                                     dsoType = dso_val['utility_type'])
+                                     usState=sim['state'],
+                                     dsoType=dso_val['utility_type'])
             else:
                 prep.prep_substation(caseName + '/' + feed_key + '/' + feed_key,
                                      caseName + '/' + dso_key + '/' + feed_key,
@@ -424,17 +419,17 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
                                          hvacSetpt=hvac_setpt,
                                          Q_forecast=sim['Q_bid_forecast_correction'],
                                          Q_dso_key=dso_key,
-                                         usState = sim['state'],
-                                         dsoType = dso_val['utility_type'])
+                                         usState=sim['state'],
+                                         dsoType=dso_val['utility_type'])
                 else:
                     prep.prep_substation(caseName + '/' + feed_key + '/' + feed_key,
                                          caseName + '/' + dso_key + '/' + feed_key,
                                          caseName + '/' + weather_agent_name + '/',
                                          feedercnt,
-                                         config = case_config,
-                                         hvacSetpt = hvac_setpt,
-                                         Q_forecast = sim['Q_bid_forecast_correction'],
-                                         Q_dso_key = dso_key)
+                                         config=case_config,
+                                         hvacSetpt=hvac_setpt,
+                                         Q_forecast=sim['Q_bid_forecast_correction'],
+                                         Q_dso_key=dso_key)
                 feedercnt += 1
                 print("=== DONE WITH COPPERPLATE FEEDER {0:s} for {1:s}. ======\n".format(feed_key, dso_key))
 
@@ -541,11 +536,8 @@ if __name__ == "__main__":
         # prepare_case(8, "8_system_case_config", pv=0, bt=0, fl=1, ev=0)
         # prepare_case(8, "8_hi_system_case_config", pv=1, bt=0, fl=0, ev=0)
         # prepare_case(8, "8_hi_system_case_config", pv=1, bt=1, fl=0, ev=1)
-        prepare_case(8, "8_hi_system_case_config", pv=1, bt=0, fl=1, ev=1)
+        # prepare_case(8, "8_hi_system_case_config", pv=1, bt=0, fl=1, ev=1)
         prepare_case(8, "8_hi_system_case_config", pv=1, bt=1, fl=1, ev=1)
-        prepare_case(8, "8_hi_system_case_config", pv=1, bt=0, fl=1, ev=0)
-        # prepare_case(8, "8_hi_system_case_config", pv=1, bt=1, fl=0, ev=0)
-        # prepare_case(8, "8_hi_system_case_config", pv=1, bt=0, fl=0, ev=1)
 
         # prepare_case(200, "200_system_case_config", pv=0, bt=0, fl=0, ev=0)
         # prepare_case(200, "200_system_case_config", pv=0, bt=1, fl=0, ev=0)

@@ -1602,8 +1602,9 @@ def tso_psst_loop(casename):
             line += '{: .2f}'.format(bus[:, 2].sum()) + ','
             line += '{: .2f}'.format(gen[:, 1].sum()) + ','
             line += '{: .2f}'.format(Pswing) + ','
-            da_sum = 0
+
             # LMP for each bus
+            da_sum = 0
             for idx in range(bus.shape[0]):
                 line += '{: .2f}'.format(bus[idx, 13]) + ','
                 da_sum += last_unRespMW[idx][hour] + last_respMaxMW[idx][hour]

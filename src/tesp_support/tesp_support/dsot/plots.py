@@ -1226,8 +1226,12 @@ def bldg_load_stack(dso, day_range, case, agent_prefix, gld_prefix, metadata_pat
     indust_df = load_indust_data(industrial_file, day_range)
     indust_df = indust_df.set_index(ercot_df.index)
 
+    dso_metadata_file = case_config["dsoPopulationFile"]
+    if "rate" in case_config:
+        dso_metadata_file = case_config["dsoRECSPopulationFile"]
+
     # Load DSO MetaData
-    DSOmetadata = load_json(metadata_path, case_config['dsoPopulationFile'])
+    DSOmetadata = load_json(metadata_path, dso_metadata_file)
 
     # Create Dataframe to collect and store all data reduced in this process
     dso_list = ['dso' + str(dso)]
@@ -1420,8 +1424,12 @@ def der_load_stack(dso, day_range, case, gld_prefix, metadata_path):
     else:
         pv_case = False
 
+    dso_metadata_file = case_config["dsoPopulationFile"]
+    if "rate" in case_config:
+        dso_metadata_file = case_config["dsoRECSPopulationFile"]
+
     # Load DSO MetaData
-    DSOmetadata = load_json(metadata_path, case_config['dsoPopulationFile'])
+    DSOmetadata = load_json(metadata_path, dso_metadata_file)
 
     # Create Dataframe to collect and store all data reduced in this process
     dso_list = ['dso' + str(dso)]
@@ -1922,7 +1930,7 @@ def dso_market_plot(dso_range, day, case, dso_metadata_file, ercot_dir, comp_cas
     ames_da_lmp_df = load_gen_data(case, 'da_lmp', range(int(day), int(day) + 1))
     ames_da_lmp_df = ames_da_lmp_df.unstack(level=1)
     ames_da_lmp_df.columns = ames_da_lmp_df.columns.droplevel()
-    ames_da_gen_df = load_gen_data(case, 'da_gen', range(int(day), int(day) + 1))
+    # ames_da_gen_df = load_gen_data(case, 'da_gen', range(int(day), int(day) + 1))
     # TODO: Need to check - think this is PyPower results.
     PyPower_rt_gen_df = load_gen_data(case, 'gen', range(int(day), int(day) + 1))
 
@@ -1946,7 +1954,7 @@ def dso_market_plot(dso_range, day, case, dso_metadata_file, ercot_dir, comp_cas
     plt.plot(ames_rt_df[' TotalLoad'], label='AMES RT Total Load', marker='.')
     plt.plot(ames_rt_df[' TotalGen'], label='AMES RT Total Gen', marker='.')
     plt.plot(ames_da_q_df.sum(axis=1), label='DA Cleared Q', marker='.')
-    plt.plot(ames_da_gen_df.groupby(level=0)['ClearQ'].sum(), label='DA Gen Q Generation', marker='.')
+    # plt.plot(ames_da_gen_df.groupby(level=0)['ClearQ'].sum(), label='DA Gen Q Generation', marker='.')
     plt.plot(PyPower_rt_gen_df.groupby(level=0)['Pgen'].sum(), label='PyPower Generation', marker='.')
     plt.legend()
     plt.title('DSO Market Quantity Comparison (all DSOs; Day ' + date.strftime("%m-%d") + ')')
@@ -2577,8 +2585,12 @@ def non_participating_dso_loads(dso_range, case, metadata_path):
     arr = np.array([start_time + timedelta(seconds=float(i)) for i in dso_load_profiles.index.values])
     dso_load_profiles.set_index(arr, inplace=True)
 
+    dso_metadata_file = case_config["dsoPopulationFile"]
+    if "rate" in case_config:
+        dso_metadata_file = case_config["dsoRECSPopulationFile"]
+
     # Load DSO MetaData
-    DSOmetadata = load_json(metadata_path, case_config['dsoPopulationFile'])
+    DSOmetadata = load_json(metadata_path, dso_metadata_file)
 
     np_dsos = []
     for dso in DSOmetadata:
@@ -4795,7 +4807,10 @@ def run_plots():
     GLD_prefix = '/Substation_'
 
     metadata_path = "../" + case_config['dataPath']
-    metadata_file = case_config['dsoPopulationFile']
+
+    metadata_file = case_config["dsoPopulationFile"]
+    if "rate" in case_config:
+        metadata_file = case_config["dsoRECSPopulationFile"]
     dso_meta_file = metadata_path + '/' + metadata_file
 
     base_case = os.getcwd()
