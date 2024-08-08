@@ -19,8 +19,9 @@ import tesp_support.dsot.helpers_dsot as helpers
 import tesp_support.dsot.case_merge as cm
 import tesp_support.dsot.glm_dictionary as gd
 
-#recs_data = False
-recs_data = True #rerun recs_gld_house_parameters.py
+
+# recs_data = False
+recs_data = True  # rerun recs_gld_house_parameters.py
 if recs_data:
     rcs = "RECS"
     sys.path.append('../')
@@ -119,7 +120,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
     gen = sys_config['gen']
     genFuel = sys_config['genfuel']
     tso_config = sys_config['DSO']
-    out_Path = sys_config['outputPath']
+    out_path = sys_config['outputPath']
 
     sim = case_config['SimulationConfig']
     bldPrep = case_config['BuildingPrep']
@@ -170,13 +171,11 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         exit(1)
 
     # We need to create the experiment out folder. If it already exists, we delete it and then create it
-    if out_Path != "" and out_Path != ".." and out_Path != ".":
-        if os.path.isdir(out_Path):
+    if out_path != "" and out_path != ".." and out_path != ".":
+        if os.path.isdir(out_path):
             print("experiment folder already exists, deleting and moving on...")
-            shutil.rmtree(out_Path)
-        os.makedirs(out_Path)
-    else:
-        out_Path = caseName
+            shutil.rmtree(out_path)
+        os.makedirs(out_path)
 
     # write player helics config json file for load and generator players
     helpers.write_players_msg(caseName, sys_config, dt)
