@@ -34,7 +34,7 @@ def main(date_name, EV_preprocess_localization_skip, EV_placement_on_grid, extra
          customsuffix_list, size_name_list, zone_name_list_list, state_list_list, folder_list_list,
          custom_suffix_sim_run, custom_suffix_sim_run_uncontrolled, controlled, threshold_cutoff, smooth,
          offset_evtimes_main_logic):
-    EV_preprocess_localization_skip = True
+    # EV_preprocess_localization_skip = True
     if not EV_preprocess_localization_skip:
         # generate the EV inventory based on adaption data. This will create a folder "output_data" that will have vehicle
         # inventory for large, medium, small and all years worth of inventory.
@@ -116,7 +116,7 @@ def main(date_name, EV_preprocess_localization_skip, EV_placement_on_grid, extra
     random.seed(42)  # Set the random number generator to a fixed sequence.
 
 
-    extract_load_forecast = False
+    # extract_load_forecast = False
     if extract_load_forecast:
         # extract load forecast in all subfolders
         # create load forecast input for SCM planning
@@ -314,7 +314,7 @@ def main(date_name, EV_preprocess_localization_skip, EV_placement_on_grid, extra
             implement_assumptions_on_vehicle_inventory(randomsoc, output_file_save_loc, value, year_list[idx])
 
     # exit()
-    uncontrolled = False
+    # uncontrolled = False
     if uncontrolled:
         for idx, value in enumerate(size_list):
 
