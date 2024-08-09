@@ -1241,7 +1241,8 @@ def plot1a_task_percentoverload(zone_name, input_basecase_folder_name, GLD_prefi
 
     # below script has uncontrolled and controlled data which will need to be in a loop for several years
 
-
+    total_res_xfrmr_uncontrolled_violation_count = []
+    total_comm_xfrmr_uncontrolled_violation_count = []
     total_basecase_xfrmrs_with_evs = []
     total_basecase_vios = []
     total_uncontrolled_vios = []
@@ -1352,8 +1353,15 @@ def plot1a_task_percentoverload(zone_name, input_basecase_folder_name, GLD_prefi
         total_basecase_vios.append(k_here)
         h_here = all_year_ev_uncontrolled_laod.shape[1]-4
         total_basecase_xfrmrs_with_evs.append(h_here)
+
         # df_to_plot2[df_to_plot2['Maximum % loading of transformer'] > 125][
             # "name"] - pure_res_xfrmrs_with_houses_info.keys()
+        all_res_xfrmr_names = list(pure_res_xfrmrs_with_houses_info.keys())
+        uncontrolled_xfrmr_viola_names = df_to_plot2[df_to_plot2['Maximum % loading of transformer'] > 125]["name"].tolist()
+        commercial_uncontrolled_xfrmr_count = (set(uncontrolled_xfrmr_viola_names) - set(all_res_xfrmr_names)).__len__()
+        residential_uncontrolled_xfrmr_count = len(uncontrolled_xfrmr_viola_names) - commercial_uncontrolled_xfrmr_count
+        total_res_xfrmr_uncontrolled_violation_count.append(residential_uncontrolled_xfrmr_count)
+        total_comm_xfrmr_uncontrolled_violation_count.append(commercial_uncontrolled_xfrmr_count)
         xfrmr_cnt_uncontrolled_100 = df_to_plot2[df_to_plot2['Maximum % loading of transformer'] > 125].shape[0]
         total_uncontrolled_vios.append(xfrmr_cnt_uncontrolled_100)
         xfrmr_cnt_controlled_100 = df_to_plot3[df_to_plot3['Maximum % loading of transformer'] > 125].shape[0]
@@ -1697,7 +1705,11 @@ def plot1a_task_percentoverload(zone_name, input_basecase_folder_name, GLD_prefi
                 # # fig.show()
 
     k = 1
-    return year_list, total_basecase_xfrmrs_with_evs, total_uncontrolled_vios, total_controlled_vios, merged_df_uncontrolled, total_basecase_vios, merged_df_uncontrolled_in_kws, df_final_divided_inkws_hourly, all_year_ev_uncontrolled_laod_in_kw, merged_df_controlled_in_kws, all_year_ev_controlled_laod_in_kw, total_xfrmrs_need_replacing_120, replace_df
+    return (year_list, total_basecase_xfrmrs_with_evs, total_uncontrolled_vios, total_controlled_vios,
+            merged_df_uncontrolled, total_basecase_vios, merged_df_uncontrolled_in_kws,
+            df_final_divided_inkws_hourly, all_year_ev_uncontrolled_laod_in_kw, merged_df_controlled_in_kws,
+            all_year_ev_controlled_laod_in_kw, total_xfrmrs_need_replacing_120, replace_df,
+            total_comm_xfrmr_uncontrolled_violation_count, total_res_xfrmr_uncontrolled_violation_count)
 
 
 def plot1a_task_percentoverload_mod(input_basecase_folder_name, GLD_prefix, sets_in_all_folders):
@@ -2308,11 +2320,15 @@ if __name__ == '__main__':
             (year_list, total_basecase_xfrmrs_with_evs, total_uncontrolled_vios, total_controlled_vios,
              merged_df_uncontrolled, total_basecase_vios, merged_df_uncontrolled_in_kws, df_final_divided_inkws_hourly,
              all_year_ev_uncontrolled_laod_in_kw, merged_df_controlled_in_kws, all_year_ev_controlled_laod_in_kw,
-             total_xfrmrs_need_replacing_120, replace_df) =\
+             total_xfrmrs_need_replacing_120, replace_df, total_comm_xfrmr_uncontrolled_violation_count,
+             total_res_xfrmr_uncontrolled_violation_count) =\
                 plot1a_task_percentoverload(zone_name, input_1a, GLD_prefix, [total_folders]*len(zone_name_list),
                                                                                         plots_folder_name,
                                                                                         extrafoldersexist, plot_plotly,
                                             replace_threshold=120)
+
+
+
 
             # NOTE TO SELF AND PS: SAVE THE VARIABLE "replace_df" to csv and share with Christine!!! FIX THE RANDOM
             # EV ASSIGNMENT ISSUE AND RERUN STUDIES AND PLOTS AND GENERATE THIS SAID CSV FILE AND GIVE TO CHRISTINE
@@ -2357,6 +2373,18 @@ if __name__ == '__main__':
             total_basecase_vios_y = [total_basecase_vios_y[x] for x in idx_sort]
             total_uncontrolled_vios_y = [total_uncontrolled_vios_y[x] for x in idx_sort]
             total_controlled_vios_y = [total_controlled_vios_y[x] for x in idx_sort]
+            total_comm_xfrmr_uncontrolled_violation_count_y = [total_comm_xfrmr_uncontrolled_violation_count[x] for
+                                                               x in idx_sort]
+            total_res_xfrmr_uncontrolled_violation_count_y = [total_res_xfrmr_uncontrolled_violation_count[x] for x
+                                                              in idx_sort]
+
+            list_of_lists = [year_list, total_comm_xfrmr_uncontrolled_violation_count_y,
+                             total_res_xfrmr_uncontrolled_violation_count_y, total_uncontrolled_vios_y]
+            list_of_lists = np.array(list_of_lists).T.tolist()
+            col_names_here = ["Year", "Comm xfrmr count violations", "Res xfrmr count violations",
+                              "Total uncontroled violations"]
+            df_to_save_here_kop = pd.DataFrame(data=list_of_lists, columns=col_names_here)
+            df_to_save_here_kop.to_excel("xfrmr_uncontrolled_viola_count.xlsx", index=False)
 
             total_basecase_vios = [total_basecase_vios[x] for x in idx_sort]
             total_uncontrolled_vios = [total_uncontrolled_vios[x] for x in idx_sort]

@@ -8,8 +8,8 @@ import math
 import sys
 import glmanip
 import ingest_bld_data
-if os.path.abspath("/home/gudd172/tesp/repository/tesp/src/tesp_support/tesp_support/weather") not in sys.path:
-    sys.path.append("/home/gudd172/tesp/repository/tesp/src/tesp_support/tesp_support/weather")
+# if os.path.abspath("/home/gudd172/tesp/repository/tesp/src/tesp_support/tesp_support/weather") not in sys.path:
+#     sys.path.append("/home/gudd172/tesp/repository/tesp/src/tesp_support/tesp_support/weather")
 import EPWtoDAT
 from glm import GLMManager
 from DSOT_post_processing_aggregated_folders import load_system_data, get_attributes_from_metrics_data
