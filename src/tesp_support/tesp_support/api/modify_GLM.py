@@ -291,7 +291,7 @@ class GLMModifier:
                     params[p] = self.glm.hash[e_object[p]]
                 else:
                     params[p] = e_object[p]
-            self.glm.add_object(t, e_name, params)
+            self.add_object(t, e_name, params)
 
     def add_link_class(self, t: str, seg_loads: dict, want_metrics=False):
         """Write a GridLAB-D link (i.e., edge) class
@@ -318,10 +318,10 @@ class GLMModifier:
                             params[p] = self.glm.gld_strict_name(e_object[p])
                         else:
                             params[p] = e_object[p]
-            self.glm.add_object(t, e_name, params)
+            self.add_object(t, e_name, params)
 
             if want_metrics:
-                self.glm.add_collector(e_name, t)
+                self.add_collector(e_name, t)
 
     def add_voltage_class(self, t: str, v_prim: float, v_ll: float, secmtrnode: dict):
         """Write GridLAB-D instances that have a primary nominal voltage, i.e.,
@@ -514,7 +514,7 @@ class GLMModifier:
             params["reactance"] = format(row[2], '.5f')
             params["shunt_resistance"] = format(1.0 / row[3], '.2f')
             params["shunt_reactance"] = format(1.0 / row[4], '.2f')
-        self.glm.add_object("transformer_configuration", name, params)
+        self.add_object("transformer_configuration", name, params)
 
     def add_local_triplex_configurations(self):
         """Adds local triplex configurations"""
@@ -528,7 +528,7 @@ class GLMModifier:
             params["rating.summer.emergency"] = rating_str
             params["rating.winter.continuous"] = rating_str
             params["rating.winter.emergency"] = rating_str
-            self.glm.add_object("triplex_line_conductor", name, params)
+            self.add_object("triplex_line_conductor", name, params)
         for row in self.defaults.triplex_configurations:
             params = dict()
             name = self.defaults.name_prefix + row[0]
@@ -537,7 +537,7 @@ class GLMModifier:
             params["conductor_N"] = self.defaults.name_prefix + row[2]
             params["insulation_thickness"] = str(row[3])
             params["diameter"] = str(row[4])
-            self.glm.add_object("triplex_line_configuration", name, params)
+            self.add_object("triplex_line_configuration", name, params)
 
 
     def resize(self):

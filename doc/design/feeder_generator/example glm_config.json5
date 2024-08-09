@@ -3,6 +3,7 @@
 
 {
 // General
+    "glmfile": <string>, // REQUIRED
     "state": <string>, // REQUIRED
     "timezone": <string>, // REQUIRED
     "tmyfile": <string>, // REQUIRED

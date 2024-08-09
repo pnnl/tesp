@@ -1,0 +1,50 @@
+// This file is an example of the glm_config.json5 that is used to
+// configure the process of populating a feeder.
+
+{
+    // RECS
+    "in_file_recs_income_level": '../../../../data/feeders/RECSwIncomeLvl.csv',
+    "in_file_residential_meta": '../data/DSOT_residential_metadata.json',
+    "out_file_residential_meta": '../data/RECS_residential_metadata.json',
+    "out_file_hvac_set_point": '../data/hvac_setpt_RECS.json',
+    "sample": {
+        'state': ["TX"],
+        'housing_density': ['No_DSO_Type'],   //'No_DSO_Type', U, R, C possibly = S
+        'income_level': ['Middle', 'Upper', 'Low']
+    },
+    "bin_size_threshold": 100,
+    "climate_zone": null,
+    "wh_shift": 0,
+
+    // General
+    "in_file_glm": "", // REQUIRED
+    "out_file_glm": "", // REQUIRED
+    "starttime": "2023-01-01 00:00:00", // REQUIRED: "2023-01-01 00:00:00"
+    "stoptime": "2023-01-02 00:00:00", // REQUIRED: "2023-01-02 00:00:00"
+    "minimum timestep": 60, // REQUIRED: 60
+    "timezone": 15, // REQUIRED
+    "tmyfile": "WTF", // REQUIRED
+
+    "random seed": 13, // DEFAULT: 1 - seeds randomizer used in populating the models
+
+    "includes": [
+        "${TESPDIR}/data/schedules/appliance_schedules.glm",
+        "${TESPDIR}/data/schedules/water_and_setpoint_schedule_v5.glm",
+        "${TESPDIR}/data/schedules/commercial_schedules.glm"
+        ],
+
+    "set": [
+        "minimum_timestep=15",
+        "relax_naming_rules=1",
+        "warn=0"
+        ],
+
+    "defines": [],
+    "players": {"name": "lp","file": "your_file","type": "double"},
+
+    "region": 1,
+    "vll": 12470.0,
+    "vln": 7200.0,
+    "avg_house": 4500.0,
+    "avg_commercial": 30000.0
+}

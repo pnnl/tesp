@@ -60,6 +60,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
+from examples.analysis.dsot.code import recs_gld_house_parameters
 from tesp_support.api.helpers import gld_strict_name, random_norm_trunc
 from tesp_support.api.modify_GLM import GLMModifier
 from tesp_support.api.parse_helpers import parse_kva
@@ -76,21 +77,31 @@ extra_billing_meters = set()
 
 class Feeder:
 
-    def __init__(self, gld_filename=None):
+    def __init__(self, glm_config=None):
+        with open(glm_config, 'r', encoding='utf-8') as json_file:
+            self.g_config = pyjson5.load(json_file)
+
+        # recs_gld_house_parameters.get_RECS_jsons(
+        #     self.g_config['in_file_recs_income_level'],
+        #     self.g_config['in_file_residential_meta'],
+        #     self.g_config['out_file_residential_meta'],
+        #     self.g_config['out_file_hvac_set_point'],
+        #     self.g_config['sample'],
+        #     self.g_config['bin_size_threshold'],
+        #     self.g_config['climate_zone'],
+        #     self.g_config['wh_shift']
+        # )
+
         self.glm = GLMModifier()
         self.base = self.glm.defaults
-        self.recs = None
-        if gld_filename:
-            self.glm.read_model(gld_filename)
-        else:
-            raise 'File not found or file not supported, exiting!'
+#        if self.g_config.in_file_glm:
+#            self.glm.read_model(self.g_config['in_file_glm'])
+        # else:
+        #     raise 'File not found or file not supported, exiting!'
 
-    def preamble(self, glm_config=None):
-        #TODO: read file
-        if glm_config:
-            self.glm.read_model(glm_config)
-        else:
-            raise 'File not found or file not supported, exiting!'
+        with open(self.g_config['out_file_residential_meta'], 'r', encoding='utf-8') as json_file:
+            self.res_bldg_metadata = pyjson5.load(json_file)
+
         self.glm.add_module("tape", {})
         self.glm.add_module("climate", {})
         self.glm.add_module("generators", {})
@@ -98,8 +109,12 @@ class Feeder:
         params = {"implicit_enduses": "NONE"}
         self.glm.add_module("residential", params)
         params = {"double": "value", "int": "value1"}
-        self.glm.add_module("player", params)
+
+#        self.glm.add_module("player", params)
         #TODO: add for loop for players
+        self.glm.model.module_entities['clock'].starttime.value = self.base.starttime
+        self.glm.model.module_entities['clock'].stoptime.value = self.base.endtime
+        self.glm.model.module_entities['clock'].timezone.value = self.base.timezone
 
         #TODO: set includes
         self.glm.model.include_lines.append('#include "${TESPDIR}/data/schedules/appliance_schedules.glm"')
@@ -130,7 +145,7 @@ class Feeder:
         xfused = {}  # ID, phases, total kva, vnom (LN), vsec, poletop/padmount
         secnode = {}  # Node, st, phases, vnom
 
-        for e_name, e_object in self.glm.transformer.items():
+        for e_name, e_object in self.glm.glm.transformer.items():
             seg_kva = seg_loads[e_name][0]
             seg_phs = seg_loads[e_name][1]
             nphs = 0
@@ -172,13 +187,13 @@ class Feeder:
 
         for key in xfused:
             self.glm.add_xfmr_config(key, xfused[key][0], xfused[key][1], xfused[key][2], xfused[key][3],
-                                 xfused[key][4], vll, vln)
+                                 xfused[key][4], self.g_config.vll, self.g_config.vln)
 
-        for e_name, e_object in self.glm.capacitor.items():
-            e_object['nominal_voltage'] = str(int(vln))
-            e_object['cap_nominal_voltage'] = str(int(vln))
+        for e_name, e_object in self.glm.glm.capacitor.items():
+            e_object['nominal_voltage'] = str(int(self.g_config.vln))
+            e_object['cap_nominal_voltage'] = str(int(self.g_config.vln))
 
-        for e_name, e_object in self.glm.fuse.items():
+        for e_name, e_object in self.glm.glm.fuse.items():
             if e_name in seg_loads:
                 seg_kva = seg_loads[e_name][0]
                 seg_phs = seg_loads[e_name][1]
@@ -190,11 +205,11 @@ class Feeder:
                 if 'C' in seg_phs:
                     nphs += 1
                 if nphs == 3:
-                    amps = 1000.0 * seg_kva / math.sqrt(3.0) / vll
+                    amps = 1000.0 * seg_kva / math.sqrt(3.0) / self.g_config.vll
                 elif nphs == 2:
-                    amps = 1000.0 * seg_kva / 2.0 / vln
+                    amps = 1000.0 * seg_kva / 2.0 / self.g_config.vln
                 else:
-                    amps = 1000.0 * seg_kva / vln
+                    amps = 1000.0 * seg_kva / self.g_config.vln
                 e_object['current_limit'] = str(self.glm.find_fuse_limit(amps))
 
         self.glm.add_local_triplex_configurations()
@@ -208,12 +223,24 @@ class Feeder:
                  'overhead_line', 'underground_line', 'series_reactor',
                  'regulator', 'transformer', 'capacitor']
         for link in links:
-            self.glm.add_link_class(link, seg_loads)
+            metrics = False
+            if link in ['regulator', 'capacitor']:
+                metrics = True
+            self.glm.add_link_class(link, seg_loads, want_metrics=metrics)
 
 
         #TODO: find where avghouse and rgn are coming from avghouse and rgn = 4500.0, 30000.0
-        self.identify_xfmr_houses('transformer', seg_loads, 0.001 * self.glm_config.avghouse, self.glm_config.region)
+        self.identify_xfmr_houses('transformer', seg_loads, 0.001 * self.g_config['avg_house'], self.g_config['region'])
 
+        # todo houses
+
+        self.glm.add_voltage_class('node', self.g_config['vln'], self.g_config['vll'], secnode)
+        self.glm.add_voltage_class('meter', self.g_config['vln'], self.g_config['vll'], secnode)
+
+        print('cooling bins unused', self.base.cooling_bins)
+        print('heating bins unused', self.base.heating_bins)
+        print(self.base.solar_count, 'pv totaling', '{:.1f}'.format(self.base.solar_kw),
+              'kw with', self.base.battery_count, 'batteries')
 
 
     # EV population functions
@@ -744,7 +771,10 @@ class Feeder:
         total_mh = 0
         total_small = 0
         total_small_kva = 0
-        entity = self.glm.model.object_entities[t]
+        try:
+            entity = self.glm.glm.__getattribute__(t)
+        except:
+            return
         for e_name, e_object in entity.items():
             if e_name in seg_loads:
                 tkva = seg_loads[e_name][0]
@@ -1867,9 +1897,6 @@ class Feeder:
         # else:
         #     print('using', self.base.water_heater_percentage, 'water heater penetration from JSON config')
 
-        self.glm.model.module_entities['clock'].starttime.value = self.base.starttime
-        self.glm.model.module_entities['clock'].stoptime.value = self.base.endtime
-        self.glm.model.module_entities['clock'].timezone.value = self.base.timezone
 
 
 
@@ -2023,68 +2050,6 @@ class Feeder:
                                   self.base.solar_Q_player,
                                   self.base.case_type)
 
-        self.add_voltage_class(model, h, 'node', vln, vll, secnode)
-        self.add_voltage_class(model, h, 'meter', vln, vll, secnode)
-        # if self.base.forERCOT == "False":
-        #     self.add_voltage_class(model, h, 'load', vln, vll, secnode)
-        if len(self.base.Eplus_Bus) > 0 and self.base.Eplus_Volts > 0.0 and \
-                self.base.Eplus_kVA > 0.0:
-            # Waiting for the add comment method to be added to the modify class
-            #            print('////////// EnergyPlus large-building load ///////////////', file=op)
-            row = self.glm.find_3phase_xfmr(self.base.Eplus_kVA)
-            actual_kva = row[0]
-            watts_per_phase = 1000.0 * actual_kva / 3.0
-            Eplus_vln = self.base.Eplus_Volts / math.sqrt(3.0)
-            vstarta = format(Eplus_vln, '.2f') + '+0.0j'
-            vstartb = format(-0.5 * Eplus_vln, '.2f') + format(-0.866025 * Eplus_vln, '.2f') + 'j'
-            vstartc = format(-0.5 * Eplus_vln, '.2f') + '+' + format(0.866025 * Eplus_vln, '.2f') + 'j'
-
-            name = self.base.name_prefix + 'Eplus_transformer_configuration'
-            params = {"connect_type": "WYE_WYE",
-                      "install_type": "PADMOUNT",
-                      "power_rating": str(actual_kva),
-                      "primary_voltage": str(vll),
-                      "secondary_voltage": format(self.base.Eplus_Volts, '.1f'),
-                      "resistance": format(row[1], '.5f'),
-                      "reactance": format(row[2], '.5f'),
-                      "shunt_resistance": format(1.0 / row[3], '.2f'),
-                      "shunt_reactance": format(1.0 / row[4], '.2f')}
-            self.glm.add_object("transformer_configuration", name, params)
-
-            name = self.base.name_prefix + 'Eplus_transformer'
-            params = {"phases": "ABCN",
-                      "from": self.base.name_prefix + self.base.Eplus_Bus,
-                      "to": self.base.name_prefix + 'Eplus_meter',
-                      "configuration": self.base.name_prefix + 'Eplus_transformer_configuration'}
-            self.glm.add_object("transformer", name, params)
-
-            t_name = self.base.name_prefix + 'Eplus_meter'
-            params = {"phases": "ABCN",
-                      "meter_power_consumption": "1+15j",
-                      "nominal_voltage": '{:.4f}'.format(Eplus_vln),
-                      "voltage_A": vstarta,
-                      "voltage_B": vstartb,
-                      "voltage_C": vstartc}
-            self.glm.add_tariff(params)
-            self.glm.add_object("meter", t_name, params)
-            self.glm.add_collector(t_name, "meter")
-
-            name = self.base.name_prefix + 'Eplus_load;'
-            params = {"parent": self.base.name_prefix + 'Eplus_meter',
-                      "phases": "ABCN",
-                      "nominal_voltage": '{:.4f}'.format(Eplus_vln),
-                      "voltage_A": vstarta,
-                      "voltage_B": vstartb,
-                      "voltage_C": vstartc,
-                      "constant_power_A": '{:.1f}'.format(watts_per_phase),
-                      "constant_power_B": '{:.1f}'.format(watts_per_phase),
-                      "constant_power_C": '{:.1f}'.format(watts_per_phase)}
-            self.glm.add_object("load", name, params)
-
-        print('cooling bins unused', self.base.cooling_bins)
-        print('heating bins unused', self.base.heating_bins)
-        print(self.base.solar_count, 'pv totaling', '{:.1f}'.format(self.base.solar_kw),
-              'kw with', self.base.battery_count, 'batteries')
 
     def add_node_houses(self, node: str, region: int, xfkva: float, phs: str, nh=None, loadkw=None, house_avg_kw=None, secondary_ft=None,
                         storage_fraction=0.0, solar_fraction=0.0, electric_cooling_fraction=0.5,
@@ -2222,6 +2187,9 @@ class Feeder:
 #     return tdt, tdv
 
 
+def _test2():
+    feeder = Feeder("feeder_config.json5")
+
 def _test1():
     """ Parse and re-populate one backbone feeder, usually but not necessarily 
     one of the PNNL taxonomy feeders
@@ -2291,4 +2259,4 @@ def _test1():
 
 
 if __name__ == "__main__":
-    _test1()
+    _test2()
