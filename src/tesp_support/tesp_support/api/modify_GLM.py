@@ -1,5 +1,7 @@
 # Copyright (C) 2019-2023 Battelle Memorial Institute
 # file: glm_modifier.py
+import math
+
 import numpy as np
 
 from .data import feeder_entities_path
@@ -19,6 +21,7 @@ class GLMModifier:
         self.model = GLModel()
         self.glm = self.model.glm
         self.defaults = Defaults
+        self.extra_billing_meters = set()
         assign_defaults(self.defaults, feeder_entities_path)
 
     # get/add/del module calls to modify GridLabD module entities
@@ -271,73 +274,270 @@ class GLMModifier:
                       "interval": str(self.defaults.metrics_interval)}
             self.add_object("recorder", property_name, params)
 
-    def accumulate_load_kva(self, data: dict) -> float:
-        """Add up the total kva in a load-bearing object instance
-
-        Considers constant_power_A/B/C/1/2/12 and power_1/2/12 attributes
+    def add_config_class(self, t: str):
+        """Write a GridLAB-D configuration (i.e., not a link or node) class
 
         Args:
-            data (dict): dictionary of data for a selected GridLAB-D instance
-
-        Returns:
-            kva (float): total kva in a load-bearing object instance
+            t (str): the GridLAB-D class
         """
-        kva = 0.0
-        if 'constant_power_A' in data:
-            kva += parse_kva(data['constant_power_A'])
-        if 'constant_power_B' in data:
-            kva += parse_kva(data['constant_power_B'])
-        if 'constant_power_C' in data:
-            kva += parse_kva(data['constant_power_C'])
-        if 'constant_power_1' in data:
-            kva += parse_kva(data['constant_power_1'])
-        if 'constant_power_2' in data:
-            kva += parse_kva(data['constant_power_2'])
-        if 'constant_power_12' in data:
-            kva += parse_kva(data['constant_power_12'])
-        if 'power_1' in data:
-            kva += parse_kva(data['power_1'])
-        if 'power_2' in data:
-            kva += parse_kva(data['power_2'])
-        if 'power_12' in data:
-            kva += parse_kva(data['power_12'])
-        return kva
+        try:
+            entity = self.glm.__getattribute__(t)
+        except:
+            return
+        for e_name, e_object in entity.items():
+            params = dict()
+            for p in e_object:
+                if ':' in str(e_object[p]):
+                    params[p] = self.glm.hash[e_object[p]]
+                else:
+                    params[p] = e_object[p]
+            self.glm.add_object(t, e_name, params)
 
-    def identify_seg_loads(self):
-        swing_node = ''
-        G = self.model.draw_network()
-        for n1, data in G.nodes(data=True):
-            if 'nclass' in data:
-                if 'bustype' in data['ndata']:
-                    if data['ndata']['bustype'] == 'SWING':
-                        swing_node = n1
-                        return swing_node
-        seg_loads = {}  # [name][kva, phases]
-        total_kva = 0.0
-        for n1, data in G.nodes(data=True):
-            if 'ndata' in data:
-                kva = self.accumulate_load_kva(data['ndata'])
-                # need to account for large-building loads added through transformer connections
-                if kva > 0:
-                    total_kva += kva
-                    nodes = self.glm.nx.shortest_path(G, n1, swing_node)
-                    edges = zip(nodes[0:], nodes[1:])
-                    for u, v in edges:
-                        eclass = G[u][v]['eclass']
-                        if self.model.is_edge_class(eclass):
-                            ename = G[u][v]['ename']
-                            if ename not in seg_loads:
-                                seg_loads[ename] = [0.0, '']
-                            seg_loads[ename][0] += kva
-                            seg_loads[ename][1] = self.union_of_phases(seg_loads[ename][1], data['ndata']['phases'])
-        # sub_graphs = self.glm.nx.connected_components(G)
-        # print('  swing node', swing_node, 'with', len(list(sub_graphs)), 'subgraphs and',
-        #       '{:.2f}'.format(total_kva), 'total kva')
-        return seg_loads
+    def add_link_class(self, t: str, seg_loads: dict, want_metrics=False):
+        """Write a GridLAB-D link (i.e., edge) class
 
+        Args:
+            t (str): the GridLAB-D class
+            seg_loads (dict) : a dictionary of downstream loads for each link
+            want_metrics (bool): true or false
 
+        """
+        try:
+            entity = self.glm.__getattribute__(t)
+        except:
+            return
+        for e_name, e_object in entity.items():
+            params = dict()
+            if e_name in seg_loads:
+                # print('// downstream', '{:.2f}'.format(seg_loads[o][0]), 'kva on', seg_loads[o][1])
+                for p in e_object:
+                    if ':' in e_object[p]:
+                        params[p] = self.glm.hash[e_object[p]]
+                    else:
+                        if p == "from" or p == "to" or p == "parent":
+                            params[p] = self.glm.gld_strict_name(e_object[p])
+                        else:
+                            params[p] = e_object[p]
+            self.glm.add_object(t, e_name, params)
 
+            if want_metrics:
+                self.glm.add_collector(e_name, t)
 
+    def add_voltage_class(self, t: str, v_prim: float, v_ll: float, secmtrnode: dict):
+        """Write GridLAB-D instances that have a primary nominal voltage, i.e.,
+        node, meter and load.
+
+        If triplex load, node or meter, the nominal voltage is 120. If the name
+        or parent attribute is found in secmtrnode, we look up the nominal
+        voltage there. Otherwise, the nominal voltage is vprim
+        secmtrnode[mtr_node] = [kva_total, phases, vnom]. The transformer
+        phasing was not changed, and the transformers were up-sized to the
+        largest phase kva. Therefore, it should not be necessary to look up
+        kva_total, but phases might have changed N==>S. If the phasing did
+        change N==>S, we have to prepend triplex_ to the class, write power_1
+        and voltage_1. When writing commercial buildings, if load_class is
+        present and == C, skip the instance.
+
+        Args:
+            model (dict): a parsed GridLAB-D model
+            h (dict): the object ID hash
+            t (str): the GridLAB-D class name to write
+            v_prim (float): the primary nominal line-to-neutral voltage TODO: Should this be v_ln?
+            v_ll (float): the primary nominal line-to-line voltage
+            secmtrnode (dict): key to [transfomer kva, phasing, nominal voltage] by secondary node name
+        """
+        try:
+            entity = self.glm.__getattribute__(t)
+        except:
+            return
+        for e_name, e_object in entity.items():
+            #            if 'load_class' in model[t][o]:
+            #                if model[t][o]['load_class'] == 'C':
+            #                    continue
+            phs = e_object['phases']
+            vnom = v_prim
+            if 'bustype' in e_object:
+                if e_object['bustype'] == 'SWING':
+                    self.add_substation(e_name, phs, vnom, v_ll)
+            parent = ''
+            prefix = ''
+            if str.find(phs, 'S') >= 0:
+                bHadS = True
+            else:
+                bHadS = False
+            if str.find(e_name, '_tn_') >= 0 or str.find(e_name, '_tm_') >= 0:
+                vnom = 120.0
+            if e_name in secmtrnode:
+                vnom = secmtrnode[e_name][2]
+                phs = secmtrnode[e_name][1]
+            if 'parent' in e_object:
+                parent = e_object['parent']
+                if parent in secmtrnode:
+                    vnom = secmtrnode[parent][2]
+                    phs = secmtrnode[parent][1]
+            if str.find(phs, 'S') >= 0:
+                bHaveS = True
+            else:
+                bHaveS = False
+            if bHaveS and not bHadS:
+                prefix = 'triplex_'
+            params = {}
+            if len(parent) > 0:
+                params["parent"] = parent
+            if 'groupid' in e_object:
+                params["groupid"] = e_object['groupid']
+            if 'bustype' in e_object:  # already moved the SWING bus behind substation transformer
+                if e_object['bustype'] != 'SWING':
+                    params["bustype"] = e_object['bustype']
+            params["phases"] = phs
+            params["nominal_voltage"] = str(vnom)
+            if 'load_class' in e_object:
+                params["load_class"] = e_object['load_class']
+            if 'constant_power_A' in e_object:
+                if bHaveS:
+                    params["power_1"] = e_object['constant_power_A']
+                else:
+                    params["constant_power_A"] = e_object['constant_power_A']
+            if 'constant_power_B' in e_object:
+                if bHaveS:
+                    params["power_1"] = e_object['constant_power_B']
+                else:
+                    params["constant_power_B"] = e_object['constant_power_B']
+            if 'constant_power_C' in e_object:
+                if bHaveS:
+                    params["power_1"] = e_object['constant_power_C']
+                else:
+                    params["constant_power_C"] = e_object['constant_power_C']
+            if 'power_1' in e_object:
+                params["power_1"] = e_object['power_1']
+            if 'power_2' in e_object:
+                params["power_2"] = e_object['power_2']
+            if 'power_12' in e_object:
+                params["power_12"] = e_object['power_12']
+            vstarta = str(vnom) + '+0.0j'
+            vstartb = format(-0.5 * vnom, '.2f') + format(-0.866025 * vnom, '.2f') + 'j'
+            vstartc = format(-0.5 * vnom, '.2f') + '+' + format(0.866025 * vnom, '.2f') + 'j'
+            if 'voltage_A' in e_object:
+                if bHaveS:
+                    params["voltage_1"] = vstarta
+                    params["voltage_2"] = vstarta
+                else:
+                    params["voltage_A"] = vstarta
+            if 'voltage_B' in e_object:
+                if bHaveS:
+                    params["voltage_1"] = vstartb
+                    params["voltage_2"] = vstartb
+                else:
+                    params["voltage_B"] = vstartb
+            if 'voltage_C' in e_object:
+                if bHaveS:
+                    params["voltage_1"] = vstartc
+                    params["voltage_2"] = vstartc
+                else:
+                    params["voltage_C"] = vstartc
+            if 'power_1' in e_object:
+                params["power_1"] = e_object['power_1']
+            if 'power_2' in e_object:
+                params["power_2"] = e_object['power_2']
+            if 'voltage_1' in e_object:
+                if str.find(phs, 'A') >= 0:
+                    params["voltage_1"] = vstarta
+                    params["voltage_2"] = vstarta
+                if str.find(phs, 'B') >= 0:
+                    params["voltage_1"] = vstartb
+                    params["voltage_2"] = vstartb
+                if str.find(phs, 'C') >= 0:
+                    params["voltage_1"] = vstartc
+                    params["voltage_2"] = vstartc
+            if e_name in self.extra_billing_meters:
+                self.add_tariff(params)
+                self.add_collector(e_name, prefix + t)
+            self.add_object(prefix + t, e_name, params)
+
+    def add_xfmr_config(self, key: str, phs: str, kvat: float, v_nom: float, v_sec: float, install_type: str,
+                        vprimll: float, vprimln: float):
+        """Write a transformer_configuration
+
+        Args:
+            key (str): name of the configuration
+            phs (str): primary phasing
+            kvat (float): transformer rating in kVA TODO: why kvat? Should this be kva or xfkva?
+            v_nom (float): primary voltage rating, not used any longer (see
+                vprimll and vprimln)
+            v_sec (float): secondary voltage rating, should be line-to-neutral
+                for single-phase or line-to-line for three-phase
+            install_type (str): should be VAULT, PADMOUNT or POLETOP
+            vprimll (float): primary line-to-line voltage, used for three-phase  TODO: should this be v_ll?
+            vprimln (float): primary line-to-neutral voltage, used for
+                single-phase transformers TODO: should this be v_ln?
+        """
+        params = dict()
+        name = self.defaults.name_prefix + key
+        params["power_rating"] = format(kvat, '.2f')
+        kvaphase = kvat
+        if 'XF2' in key:
+            kvaphase /= 2.0
+        if 'XF3' in key:
+            kvaphase /= 3.0
+        if 'A' in phs:
+            params["powerA_rating"] = format(kvaphase, '.2f')
+        else:
+            params["powerA_rating"] = "0.0"
+        if 'B' in phs:
+            params["powerB_rating"] = format(kvaphase, '.2f')
+        else:
+            params["powerB_rating"] = "0.0"
+        if 'C' in phs:
+            params["powerC_rating"] = format(kvaphase, '.2f')
+        else:
+            params["powerC_rating"] = "0.0"
+        params["install_type"] = install_type
+        if 'S' in phs:
+            row = self.glm.find_1phase_xfmr(kvat)
+            params["connect_type"] = "SINGLE_PHASE_CENTER_TAPPED"
+            params["primary_voltage"] = str(vprimln)
+            params["secondary_voltage"] = format(v_sec, '.1f')
+            params["resistance"] = format(row[1] * 0.5, '.5f')
+            params["resistance1"] = format(row[1], '.5f')
+            params["resistance2"] = format(row[1], '.5f')
+            params["reactance"] = format(row[2] * 0.8, '.5f')
+            params["reactance1"] = format(row[2] * 0.4, '.5f')
+            params["reactance2"] = format(row[2] * 0.4, '.5f')
+            params["shunt_resistance"] = format(1.0 / row[3], '.2f')
+            params["shunt_reactance"] = format(1.0 / row[4], '.2f')
+        else:
+            row = self.glm.find_3phase_xfmr(kvat)
+            params["connect_type"] = "WYE_WYE"
+            params["primary_voltage"] = str(vprimll)
+            params["secondary_voltage"] = format(v_sec, '.1f')
+            params["resistance"] = format(row[1], '.5f')
+            params["reactance"] = format(row[2], '.5f')
+            params["shunt_resistance"] = format(1.0 / row[3], '.2f')
+            params["shunt_reactance"] = format(1.0 / row[4], '.2f')
+        self.glm.add_object("transformer_configuration", name, params)
+
+    def add_local_triplex_configurations(self):
+        """Adds local triplex configurations"""
+        params = dict()
+        for row in self.defaults.triplex_conductors:
+            name = self.defaults.name_prefix + row[0]
+            params["resistance"] = row[1]
+            params["geometric_mean_radius"] = row[2]
+            rating_str = str(row[2])
+            params["rating.summer.continuous"] = rating_str
+            params["rating.summer.emergency"] = rating_str
+            params["rating.winter.continuous"] = rating_str
+            params["rating.winter.emergency"] = rating_str
+            self.glm.add_object("triplex_line_conductor", name, params)
+        for row in self.defaults.triplex_configurations:
+            params = dict()
+            name = self.defaults.name_prefix + row[0]
+            params["conductor_1"] = self.defaults.name_prefix + row[0]
+            params["conductor_2"] = self.defaults.name_prefix + row[1]
+            params["conductor_N"] = self.defaults.name_prefix + row[2]
+            params["insulation_thickness"] = str(row[3])
+            params["diameter"] = str(row[4])
+            self.glm.add_object("triplex_line_configuration", name, params)
 
 
     def resize(self):
@@ -351,6 +551,64 @@ class GLMModifier:
 
     def set_simulation_times(self):
         return True
+
+    def add_substation(self, name: str, phs: str, v_ll: float):
+        """Write the substation swing node, transformer, metrics collector and
+        fncs_msg object
+
+        Args:
+            name (str): node name of the primary (not transmission) substation bus
+            phs (str): primary phasing in the substation
+            v_ll (float): feeder primary line-to-line voltage
+        """
+        # if this feeder will be combined with others, need USE_FNCS to appear first as a marker for the substation
+        if len(self.defaults.case_name) > 0:
+            if self.defaults.message_broker == "fncs_msg":
+                def_params = dict()
+                t_name = "gld" + self.defaults.substation_name
+                def_params["parent"] = "network_node"
+                def_params["configure"] = self.defaults.case_name + '_gridlabd.txt'
+                def_params["option"] = "transport:hostname localhost, port " + str(self.defaults.port)
+                def_params["aggregate_subscriptions"] = "true"
+                def_params["aggregate_publications"] = "true"
+                self.glm.add_object("fncs_msg", t_name, def_params)
+            if self.defaults.message_broker == "helics_msg":
+                def_params = dict()
+                t_name = "gld" + self.defaults.substation_name
+                def_params["configure"] = self.defaults.case_name + '.json'
+                self.glm.add_object("helics_msg", t_name, def_params)
+
+        name = 'substation_xfmr_config'
+        params = {"connect_type": 'WYE_WYE',
+                  "install_type": 'PADMOUNT',
+                  "primary_voltage": '{:.2f}'.format(self.defaults.transmissionVoltage),
+                  "secondary_voltage": '{:.2f}'.format(v_ll),
+                  "power_rating": '{:.2f}'.format(self.defaults.transmissionXfmrMVAbase * 1000.0),
+                  "resistance": '{:.2f}'.format(0.01 * self.defaults.transmissionXfmrRpct),
+                  "reactance": '{:.2f}'.format(0.01 * self.defaults.transmissionXfmrXpct),
+                  "shunt_resistance": '{:.2f}'.format(100.0 / self.defaults.transmissionXfmrNLLpct),
+                  "shunt_reactance": '{:.2f}'.format(100.0 / self.defaults.transmissionXfmrImagpct)}
+        self.glm.add_object("transformer_configuration", name, params)
+
+        name = "substation_transformer"
+        params = {"from": "network_node",
+                  "to": name, "phases": phs,
+                  "configuration": "substation_xfmr_config"}
+        self.glm.add_object("transformer", name, params)
+
+        vsrcln = self.defaults.transmissionVoltage / math.sqrt(3.0)
+        name = "network_node"
+        params = {"groupid": self.defaults.base_feeder_name,
+                  "bustype": 'SWING',
+                  "nominal_voltage": '{:.2f}'.format(vsrcln),
+                  "positive_sequence_voltage": '{:.2f}'.format(vsrcln),
+                  "base_power": '{:.2f}'.format(self.defaults.transmissionXfmrMVAbase * 1000000.0),
+                  "power_convergence_value": "100.0",
+                  "phases": phs}
+        self.glm.add_object("substation", name, params)
+        self.glm.add_collector(name, "meter")
+        self.glm.add_recorder(name, "distribution_power_A", "sub_power.csv")
+
 
 
 def _test1():

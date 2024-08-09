@@ -3,7 +3,7 @@
 """GridLAB-D model I/O for TESP api
 """
 
-import json
+# import json
 import pyjson5
 import os.path
 import re
@@ -16,6 +16,8 @@ import networkx as nx
 from .data import feeders_path
 from .data import glm_entities_path
 from .entity import Entity
+from .parse_helpers import parse_kva
+
 
 class GLM:
     pass
@@ -78,6 +80,8 @@ class GLModel:
                     'triplex_node': 'yellow',
                     'triplex_meter': 'orange',
                     'house': 'brown'}
+
+    # are these edge or node (sectionalizer, series_reactor, capacitor)
 
     set_declarations = ['profiler', 'iteration_limit', 'randomseed',
                         'relax_naming_rules', 'minimum_timestep',
@@ -834,7 +838,6 @@ class GLModel:
             return True
         else:
             raise FileNotFoundError(f"{filename} not found")
-        return False
 
     def readBackboneModel(self, root_name):
         filename = feeders_path + root_name
@@ -896,8 +899,6 @@ class GLModel:
                         print('orphaned node', t, o)
         return G
 
-
-
     def plot_model(self, node_labels=False, edge_labels=False, node_legend=True, edge_legend=True):
 
         def update_annot(ind):
@@ -911,7 +912,6 @@ class GLModel:
             text = text.replace(', ', '\n').replace('ndata: {', '').replace('}', '')
             text = text.replace('nclass', 'class').replace("'", '')
             annot.set_text(text)
-
 
         def hover(event):
             vis = annot.get_visible()
@@ -993,6 +993,76 @@ class GLModel:
 
         plt.subplots_adjust(left=0.01, bottom=0.01, right=0.99, top=0.99)
         plt.show()
+
+    @staticmethod
+    def union_of_phases(phs1, phs2):
+        """Collect all phases on both sides of a connection
+
+        Args:
+            phs1 (str): first phasing
+            phs2 (str): second phasing
+
+        Returns:
+            str: union of phs1 and phs2
+        """
+        phases = ['A', 'B', 'C', 'S']
+        phs = ''
+        for phase_type in phases:
+            if phase_type in phs1 or phase_type in phs2:
+                phs += phase_type
+        return phs
+
+    @staticmethod
+    def accumulate_load_kva(data: dict) -> float:
+        """Add up the total kva in a load-bearing object instance
+
+        Considers constant_power_A/B/C/1/2/12 and power_1/2/12 attributes
+
+        Args:
+            data (dict): dictionary of data for a selected GridLAB-D instance
+
+        Returns:
+            kva (float): total kva in a load-bearing object instance
+        """
+        power = ['constant_power_A', 'constant_power_B', 'constant_power_C',
+                 'constant_power_1', 'constant_power_2', 'constant_power_12',
+                 'power_1', 'power_2', 'power_12']
+        kva = 0.0
+        for power_type in power:
+            if power_type in data:
+                kva += parse_kva(data[power_type])
+        return kva
+
+    def identify_seg_loads(self):
+        swing_node = ''
+        G = self.draw_network()
+        for n1, data in G.nodes(data=True):
+            if 'nclass' in data:
+                if 'bustype' in data['ndata']:
+                    if data['ndata']['bustype'] == 'SWING':
+                        swing_node = n1
+                        return swing_node
+        seg_loads = {}  # [name][kva, phases]
+        total_kva = 0.0
+        for n1, data in G.nodes(data=True):
+            if 'ndata' in data:
+                kva = self.accumulate_load_kva(data['ndata'])
+                # need to account for large-building loads added through transformer connections
+                if kva > 0:
+                    total_kva += kva
+                    nodes = nx.shortest_path(G, n1, swing_node)
+                    edges = zip(nodes[0:], nodes[1:])
+                    for u, v in edges:
+                        eclass = G[u][v]['eclass']
+                        if self.is_edge_class(eclass):
+                            ename = G[u][v]['ename']
+                            if ename not in seg_loads:
+                                seg_loads[ename] = [0.0, '']
+                            seg_loads[ename][0] += kva
+                            seg_loads[ename][1] = self.union_of_phases(seg_loads[ename][1], data['ndata']['phases'])
+        # sub_graphs = nx.connected_components(G)
+        # print(f'  swing node {swing_node}, with {len(list(sub_graphs))}, subgraphs and {:.2f}'.format(total_kva)} total kva')
+        return seg_loads
 
 
 def _test1():
