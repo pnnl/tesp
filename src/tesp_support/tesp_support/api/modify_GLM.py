@@ -260,6 +260,14 @@ class GLMModifier:
                 params["third_tier_energy"] = self.defaults.tier3_energy
                 params["third_tier_price"] = self.defaults.tier3_price
 
+    def add_voltage_dump(self, outname: str):
+        params = {"filename": 'Voltage_Dump_' + outname + '.csv',
+                  "mode": 'polar'}
+        self.add_object("voltdump", "voltdump", params)
+        params = {"filename": 'Current_Dump_' + outname + '.csv',
+                  "mode": 'polar'}
+        self.add_object("currdump", "currdump", params)
+
     def add_collector(self, parent: str, metric: str):
         if self.defaults.metrics_interval > 0 and metric in self.defaults.metrics:
             params = {"parent": parent,
@@ -315,7 +323,7 @@ class GLMModifier:
                         params[p] = self.glm.hash[e_object[p]]
                     else:
                         if p == "from" or p == "to" or p == "parent":
-                            params[p] = self.glm.gld_strict_name(e_object[p])
+                            params[p] = self.model.gld_strict_name(e_object[p])
                         else:
                             params[p] = e_object[p]
             self.add_object(t, e_name, params)
@@ -358,7 +366,7 @@ class GLMModifier:
             vnom = v_prim
             if 'bustype' in e_object:
                 if e_object['bustype'] == 'SWING':
-                    self.add_substation(e_name, phs, vnom, v_ll)
+                    self.add_substation(e_name, phs, v_ll)
             parent = ''
             prefix = ''
             if str.find(phs, 'S') >= 0:
@@ -493,7 +501,7 @@ class GLMModifier:
             params["powerC_rating"] = "0.0"
         params["install_type"] = install_type
         if 'S' in phs:
-            row = self.glm.find_1phase_xfmr(kvat)
+            row = self.find_1phase_xfmr(kvat)
             params["connect_type"] = "SINGLE_PHASE_CENTER_TAPPED"
             params["primary_voltage"] = str(vprimln)
             params["secondary_voltage"] = format(v_sec, '.1f')
@@ -506,7 +514,7 @@ class GLMModifier:
             params["shunt_resistance"] = format(1.0 / row[3], '.2f')
             params["shunt_reactance"] = format(1.0 / row[4], '.2f')
         else:
-            row = self.glm.find_3phase_xfmr(kvat)
+            row = self.find_3phase_xfmr(kvat)
             params["connect_type"] = "WYE_WYE"
             params["primary_voltage"] = str(vprimll)
             params["secondary_voltage"] = format(v_sec, '.1f')
@@ -571,12 +579,12 @@ class GLMModifier:
                 def_params["option"] = "transport:hostname localhost, port " + str(self.defaults.port)
                 def_params["aggregate_subscriptions"] = "true"
                 def_params["aggregate_publications"] = "true"
-                self.glm.add_object("fncs_msg", t_name, def_params)
+                self.add_object("fncs_msg", t_name, def_params)
             if self.defaults.message_broker == "helics_msg":
                 def_params = dict()
                 t_name = "gld" + self.defaults.substation_name
                 def_params["configure"] = self.defaults.case_name + '.json'
-                self.glm.add_object("helics_msg", t_name, def_params)
+                self.add_object("helics_msg", t_name, def_params)
 
         name = 'substation_xfmr_config'
         params = {"connect_type": 'WYE_WYE',
@@ -588,13 +596,13 @@ class GLMModifier:
                   "reactance": '{:.2f}'.format(0.01 * self.defaults.transmissionXfmrXpct),
                   "shunt_resistance": '{:.2f}'.format(100.0 / self.defaults.transmissionXfmrNLLpct),
                   "shunt_reactance": '{:.2f}'.format(100.0 / self.defaults.transmissionXfmrImagpct)}
-        self.glm.add_object("transformer_configuration", name, params)
+        self.add_object("transformer_configuration", name, params)
 
         name = "substation_transformer"
         params = {"from": "network_node",
                   "to": name, "phases": phs,
                   "configuration": "substation_xfmr_config"}
-        self.glm.add_object("transformer", name, params)
+        self.add_object("transformer", name, params)
 
         vsrcln = self.defaults.transmissionVoltage / math.sqrt(3.0)
         name = "network_node"
@@ -605,9 +613,9 @@ class GLMModifier:
                   "base_power": '{:.2f}'.format(self.defaults.transmissionXfmrMVAbase * 1000000.0),
                   "power_convergence_value": "100.0",
                   "phases": phs}
-        self.glm.add_object("substation", name, params)
-        self.glm.add_collector(name, "meter")
-        self.glm.add_recorder(name, "distribution_power_A", "sub_power.csv")
+        self.add_object("substation", name, params)
+        self.add_collector(name, "meter")
+        self.add_recorder(name, "distribution_power_A", "sub_power.csv")
 
 
 

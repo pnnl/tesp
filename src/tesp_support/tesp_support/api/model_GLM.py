@@ -1041,7 +1041,7 @@ class GLModel:
                 if 'bustype' in data['ndata']:
                     if data['ndata']['bustype'] == 'SWING':
                         swing_node = n1
-                        return swing_node
+                        break
         seg_loads = {}  # [name][kva, phases]
         total_kva = 0.0
         for n1, data in G.nodes(data=True):
