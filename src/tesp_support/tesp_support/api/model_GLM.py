@@ -1034,14 +1034,43 @@ class GLModel:
         return kva
 
     def identify_seg_loads(self):
+        """Estimates loads on segments (i.e. lines, edges) in the model
+
+        Iterates over all loads in the network and uses the networkx model of
+        the network to identify the shortest path (least number of edges or 
+        lines) between the load and the swing node (the source of the power).
+        This method assumes that this is the path the power will flow over
+        which is not generally true (especially in a meshed network), but 
+        is likely to be true for radial models.
+
+        Once the path of the power flow is identifed, the power of the load
+        is added to each to each line and stored in a dictionary along with
+        the affected phases. In this manner an estimate of the loading on each
+        line is found by inspecting the model without running a simulation.
+
+        Args:
+            self (GLModel)
+
+        Returns:
+            dict: key - name of line in model 
+                  value - list with members of
+                            - accumulated load
+                            - all affected phases
+        """
         swing_node = ''
         G = self.draw_network()
+
+        # Identify swing node in GridLAB-D model
         for n1, data in G.nodes(data=True):
             if 'nclass' in data:
                 if 'bustype' in data['ndata']:
                     if data['ndata']['bustype'] == 'SWING':
                         swing_node = n1
                         break
+
+        # Finds the load on each segment (i.e. edge, line) by iterating over all 
+        # load definitions, identifying all affected lines and adding the load
+        # to those lines.            
         seg_loads = {}  # [name][kva, phases]
         total_kva = 0.0
         for n1, data in G.nodes(data=True):
