@@ -161,7 +161,7 @@ class Entity:
 
         Args:
             object_name (str): the name of the instance
-            params (list<list>): list of the attribute parameters
+            params (dict): list of the attribute parameters
         Returns:
             Entity instance: an object with name and values
         """

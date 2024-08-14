@@ -166,7 +166,7 @@ class Feeder:
             if nphs > 1:
                 kvat = self.glm.find_3phase_xfmr_kva(seg_kva)
             else:
-                kvat = self.glm.find_1phase_xfmr_kva(seg_kva)
+                kvat = self.glm.find_1phase_xfmr_kva_w_margin(seg_kva)
             if 'S' in seg_phs:
                 vnom = 120.0
                 vsec = 120.0
@@ -218,7 +218,7 @@ class Feeder:
                     amps = 1000.0 * seg_kva / 2.0 / self.g_config.vln
                 else:
                     amps = 1000.0 * seg_kva / self.g_config.vln
-                e_object['current_limit'] = str(self.glm.find_fuse_limit(amps))
+                e_object['current_limit'] = str(self.glm.find_fuse_limit_w_margin(amps))
 
         self.glm.add_local_triplex_configurations()
 
@@ -891,7 +891,7 @@ class Feeder:
                   "voltage_2": vstart}
         self.glm.add_tariff(params)
         self.glm.add_object("triplex_meter", mtrname, params)
-        self.glm.add_collector(mtrname, "meter")
+        self.glm.add_metrics_collector(mtrname, "meter")
 
         params = {"parent": mtrname,
                   "phases": phs,
@@ -1014,7 +1014,7 @@ class Feeder:
                       "base_power": '{:.2f};'.format(bldg['adj_refrig'])}
             self.glm.add_object("ZIPload", "large refrigeration", params)
 
-        self.glm.add_collector(name, "house")
+        self.glm.add_metrics_collector(name, "house")
 
     def add_commercial_loads(self, rgn: int, key: str):
         """Put commercial building zones and ZIP loads into the model
@@ -1350,7 +1350,7 @@ class Feeder:
                       "voltage_2": vstart}
             self.glm.add_tariff(params)
             self.glm.add_object("triplex_meter", mtrname1, params)
-            self.glm.add_collector(mtrname, "meter")
+            self.glm.add_metrics_collector(mtrname, "meter")
 
             params = {"parent": mtrname1,
                       "phases": phs,
@@ -1662,9 +1662,9 @@ class Feeder:
             #          else:
                             # "tank_setpoint": '{:.1f}'.format(tank_set)
             self.glm.add_object("waterheater", whname, params)
-            self.glm.add_collector(whname, "waterheater")
+            self.glm.add_metrics_collector(whname, "waterheater")
 
-        self.glm.add_collector(hsename, "house")
+        self.glm.add_metrics_collector(hsename, "house")
 
         # if PV is allowed,
         #     then only single-family houses can buy it,
@@ -1754,7 +1754,7 @@ class Feeder:
                     params["V_In"] = "10000000"
                     params["I_In"] = "10000000"
                     self.glm.add_object("inverter", sol_i_name, params)
-                    self.glm.add_collector(sol_i_name, "inverter")
+                    self.glm.add_metrics_collector(sol_i_name, "inverter")
 
         # if np.random.uniform(0, 1) <= bat_g_sol_sf_inc:
         #     battery_capacity = get_dist(self.base.batt_metadata['capacity(kWh)']['mean'],
@@ -1803,7 +1803,7 @@ class Feeder:
         #                   "round_trip_efficiency": round_trip_efficiency,
         #                   "state_of_charge": 0.50}
         #         self.glm.add_object("battery", batname, params)
-        #         self.glm.add_collector(batname, "inverter")
+        #         self.glm.add_metrics_collector(batname, "inverter")
         #
         if np.random.uniform(0, 1) <= ev_percentage_il:
             # first lets select an ev model:
@@ -1854,7 +1854,7 @@ class Feeder:
                           "mileage_classification": ev_range,
                           "charging_efficiency": ev_charge_eff}
                 self.glm.add_object("evcharger_det", evname, params)
-                self.glm.add_collector(evname, "house")
+                self.glm.add_metrics_collector(evname, "house")
 
     def add_solar_defines(self):
 

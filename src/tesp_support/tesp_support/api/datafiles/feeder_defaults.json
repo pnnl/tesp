@@ -31,7 +31,7 @@
   "message_broker": "helics_msg",
   "WANT_VI_DUMP": "False",
   "metrics_interval": 300,
-  "metrics": [
+  "metrics_classes": [
       "house",
       "waterheater",
       "meter",

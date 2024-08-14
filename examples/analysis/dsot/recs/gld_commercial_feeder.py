@@ -429,7 +429,7 @@ def add_comm_zones(glm, bldg, comm_loads, key, batt_metadata, storage_percentage
                           "round_trip_efficiency": '{:.2f}'.format(round_trip_efficiency),
                           "state_of_charge": "0.50"}
                 glm.add_object("battery", batname, params)
-                glm.add_collector(batname, "meter")
+                glm.add_metrics_collector(batname, "meter")
 
         if np.random.uniform(0, 1) <= solar_percentage:
             # typical PV panel is 350 Watts and avg home has 5kW installed.
@@ -472,7 +472,7 @@ def add_comm_zones(glm, bldg, comm_loads, key, batt_metadata, storage_percentage
                 params["V_In"] = "10000000"
                 params["I_In"] = "10000000"
                 glm.add_object("inverter", sol_i_name, params)
-                glm.add_collector(sol_i_name, "inverter")
+                glm.add_metrics_collector(sol_i_name, "inverter")
 
         if np.random.uniform(0, 1) <= ev_percentage:
             # first lets select an ev model:
@@ -525,7 +525,7 @@ def add_comm_zones(glm, bldg, comm_loads, key, batt_metadata, storage_percentage
                           "mileage_classification": '{:.3f}; // range in miles'.format(ev_range),
                           "charging_efficiency": '{:.3f};'.format(ev_charge_eff)}
                 glm.add_object("evcharger_det", evname, params)
-                glm.add_collector(evname, "house")
+                glm.add_metrics_collector(evname, "house")
 
     elif comm_type == 'ZIPLOAD':
         phsva = 1000.0 * kva / nphs
@@ -720,7 +720,7 @@ def add_one_commercial_zone(glm, bldg, mode=None):
     # Internal gains need to be converted from kW to BTU-hr.
     #  GLD uses the term window_sharing to assign 'glazing_shgc'
     glm.add_object("house", bldg['zonename'], params)
-    glm.add_collector(bldg['zonename'], "house")
+    glm.add_metrics_collector(bldg['zonename'], "house")
 
     params = {"parent": bldg['zonename'],
               "schedule_skew": '{:.0f}'.format(bldg['skew_value']),

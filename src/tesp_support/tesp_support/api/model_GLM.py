@@ -770,10 +770,13 @@ class GLModel:
         return line, counter, name
 
     def readModel(self, filename):
-        """ Reads and parses the model from filename, usually but not necessarily one of the PNNL taxonomy feeders
+        """ Reads and parses the model from the provided filename.
 
         Args:
             filename (str): fully qualified model path/name
+
+        Returns:
+            bool: Indicates whether the model was read-in successfully.
         """
 
         name = ""
