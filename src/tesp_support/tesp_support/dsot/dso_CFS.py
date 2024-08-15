@@ -1002,9 +1002,13 @@ def dso_CFS(
             DSO_Cash_Flows["Revenues"]["RetailSales"]["SubscriptionSales"]
         )
         elif rate_scenario == "transactive":
-            OtherRateSales = 0
+            OtherRateSales = dso_helper.returnDictSum(
+            DSO_Cash_Flows["Revenues"]["RetailSales"]["TransactiveSales"]
+        )
         elif rate_scenario == "dsot":
-            OtherRateSales = 0
+            OtherRateSales = dso_helper.returnDictSum(
+            DSO_Cash_Flows["Revenues"]["RetailSales"]["DSOTSales"]
+        )
 
         # Determine the total retail sales
         RetailSales = FlatSales + OtherRateSales
@@ -1040,9 +1044,25 @@ def dso_CFS(
                 }
             )
         elif rate_scenario == "transactive":
-            None
+            retail_sales_dict.update(
+                {
+                    "TransactiveSales": OtherRateSales,
+                    "TransactiveDAEnergySales": DSO_Cash_Flows["Revenues"]["RetailSales"]["TransactiveSales"]["TransactiveDAEnergyCharges"],
+                    "TransactiveRTEnergySales": DSO_Cash_Flows["Revenues"]["RetailSales"]["TransactiveSales"]["TransactiveRTEnergyCharges"],
+                    "TransactiveFixedSales": DSO_Cash_Flows["Revenues"]["RetailSales"]["TransactiveSales"]["TransactiveFixedCharges"],
+                    "TransactiveVolumetricSales": DSO_Cash_Flows["Revenues"]["RetailSales"]["TransactiveSales"]["TransactiveVolumetricCharges"],
+                }
+            )
         elif rate_scenario == "dsot":
-            None
+            retail_sales_dict.update(
+                {
+                    "DSOTSales": OtherRateSales,
+                    "DSOTDAEnergySales": DSO_Cash_Flows["Revenues"]["RetailSales"]["DSOTSales"]["DSOTDAEnergyCharges"],
+                    "DSOTRTEnergySales": DSO_Cash_Flows["Revenues"]["RetailSales"]["DSOTSales"]["DSOTRTEnergyCharges"],
+                    "DSOTFixedSales": DSO_Cash_Flows["Revenues"]["RetailSales"]["DSOTSales"]["DSOTFixedCharges"],
+                    "DSOTVolumetricSales": DSO_Cash_Flows["Revenues"]["RetailSales"]["DSOTSales"]["DSOTVolumetricCharges"],
+                }
+            )
 
         # Update the DSO cash flows composite dict
         DSO_Cash_Flows_composite.update(retail_sales_dict)

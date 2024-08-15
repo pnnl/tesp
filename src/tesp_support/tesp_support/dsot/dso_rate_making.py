@@ -3501,7 +3501,7 @@ def DSO_rate_making(
                 billsum_df.loc[("total", "flat_energy_purchased"), "sum"]
                 + billsum_df.loc[("total", "dsot_energy_purchased"), "sum"]
             )
-            DSO_Cash_Flows["Revenues"]["RetailSales"]["DSOTeSales"] = {
+            DSO_Cash_Flows["Revenues"]["RetailSales"]["DSOTSales"] = {
                 "DSOTDAEnergyCharges": billsum_df.loc[("total", "dsot_DA_energy_charge"), "sum"] / 1000, # $k
                 "DSOTRTEnergyCharges": billsum_df.loc[("total", "dsot_RT_energy_charge"), "sum"] / 1000, # $k
                 "DSOTFixedCharges": billsum_df.loc[("total", "dsot_fixed_charge"), "sum"] / 1000, # $k
