@@ -1,13 +1,12 @@
 # Copyright (C) 2019-2023 Battelle Memorial Institute
 # file: commercial_feeder_glm.py
 import math
-import sys
 
 import numpy as np
 
 from tesp_support.api.helpers import gld_strict_name
+from tesp_support.api.time_helpers import is_hhmm_valid, get_dist
 
-import gld_residential_feeder as res_FG
 
 def define_comm_bldg(bldg_metadata, dso_type, num_bldgs):
     """ Randomly selects a set number of buildings by type and size (sq. ft.)
@@ -18,12 +17,12 @@ def define_comm_bldg(bldg_metadata, dso_type, num_bldgs):
         num_bldgs: scalar value of number of buildings to be selected
     """
     bldgs = {}
-    bldg_types = normalize_dict_prob(dso_type, bldg_metadata['general']['building_type'][dso_type])
+    bldg_types = normalize_dict_prob(dso_type, bldg_metadata.general['building_type'][dso_type])
     i = 0
     while i < num_bldgs:
         bldg_type = rand_bin_select(bldg_types, np.random.uniform(0, 1))
         if bldg_type not in ['large_office']:
-            area = normalize_dict_prob('total_area', bldg_metadata['building_model_specifics'][bldg_type]['total_area'])
+            area = normalize_dict_prob('total_area', bldg_metadata.building_model_specifics[bldg_type]['total_area'])
             bldg_area_bin = rand_bin_select(area, np.random.uniform(0, 1))
             bldg_area = sub_bin_select(bldg_area_bin, 'total_area', np.random.uniform(0, 1))
             bldgs['bldg_' + str(i + 1)] = [bldg_type, bldg_area]
@@ -32,7 +31,7 @@ def define_comm_bldg(bldg_metadata, dso_type, num_bldgs):
     return bldgs
 
 
-def define_comm_loads(feeder, bldg_type, bldg_size, dso_type, climate, bldg_metadata):
+def define_comm_loads(glm, bldg_type, bldg_size, dso_type, climate, bldg_metadata):
     """ Determines building parameters based on building type, dso type, and (ASHRAE) climate zone
 
     Args:
@@ -45,7 +44,7 @@ def define_comm_loads(feeder, bldg_type, bldg_size, dso_type, climate, bldg_meta
     bldg = {'type': bldg_type}
 
     if bldg_type not in ['large_office', 'ZIPLOAD']:
-        data = bldg_metadata['building_model_specifics'][bldg_type]
+        data = bldg_metadata.building_model_specifics[bldg_type]
 
         # TODO these should NOT have to be normalized but they are
         age = normalize_dict_prob('vintage', data['vintage'])
@@ -79,16 +78,12 @@ def define_comm_loads(feeder, bldg_type, bldg_size, dso_type, climate, bldg_meta
         bldg['cool_type'] = 'ELECTRIC'
         bldg['aux_type'] = 'NONE'
         bldg['airchange_per_hour'] = data['ventilation_requirements']['air_change_per_hour']
-        bldg['COP_A'] = bldg_metadata['general']['HVAC']['COP'][str(bldg['age'])] * np.random.normal(1, 0.05)
+        bldg['COP_A'] = bldg_metadata.general['HVAC']['COP'][str(bldg['age'])] * np.random.normal(1, 0.05)
         #  HVAC oversizing factor
-        bldg['os_rand'] = np.random.normal(bldg_metadata['general']['HVAC']['oversizing_factor']['mean'],
-                                           bldg_metadata['general']['HVAC']['oversizing_factor']['std_dev'])
-        bldg['os_rand'] = min(bldg_metadata['general']['HVAC']['oversizing_factor']['upper_bound'], max(bldg['os_rand'],
-                                                                                                        bldg_metadata[
-                                                                                                            'general'][
-                                                                                                            'HVAC'][
-                                                                                                            'oversizing_factor'][
-                                                                                                            'lower_bound']))
+        bldg['os_rand'] = np.random.normal(bldg_metadata.general['HVAC']['oversizing_factor']['mean'],
+                                           bldg_metadata.general['HVAC']['oversizing_factor']['std_dev'])
+        bldg['os_rand'] = min(bldg_metadata.general['HVAC']['oversizing_factor']['upper_bound'],
+                              max(bldg['os_rand'], bldg_metadata.general['HVAC']['oversizing_factor']['lower_bound']))
 
         # Set form of the building
         bldg['floor_area'] = bldg_size
@@ -108,27 +103,27 @@ def define_comm_loads(feeder, bldg_type, bldg_size, dso_type, climate, bldg_meta
         ratio = wall_area * (1 - bldg['window_wall_ratio']) / bldg['floor_area']
 
         bldg['thermal_mass_per_floor_area'] = (0.9 *
-                                               np.random.normal(bldg_metadata['general']['interior_mass']['mean'], 0.2)
+                                               np.random.normal(bldg_metadata.general['interior_mass']['mean'], 0.2)
                                                + 0.5 * ratio *
-                                               bldg_metadata['general']['wall_thermal_mass'][str(bldg['age'])])
+                                               bldg_metadata.general['wall_thermal_mass'][str(bldg['age'])])
         bldg['exterior_ceiling_fraction'] = 1
         bldg['roof_type'] = rand_bin_select(data['roof_construction_insulation'], np.random.uniform(0, 1))
         bldg['wall_type'] = rand_bin_select(data['wall_construction'], np.random.uniform(0, 1))
         bldg['Rroof'] = 1 / find_envelope_prop(bldg['roof_type'], bldg['age'],
-                                               bldg_metadata['general']['thermal_integrity'],
+                                               bldg_metadata.general['thermal_integrity'],
                                                climate) * 1.3 * np.random.normal(1, 0.1)
         bldg['Rwall'] = 1 / find_envelope_prop(bldg['wall_type'], bldg['age'],
-                                               bldg_metadata['general']['thermal_integrity'],
+                                               bldg_metadata.general['thermal_integrity'],
                                                climate) * 1.3 * np.random.normal(1, 0.1)
         bldg['Rfloor'] = 22.  # Values from previous studies
         bldg['Rdoors'] = 3.  # Values from previous studies
         bldg['no_of_doors'] = 3  # Values from previous studies
 
         bldg['Rwindows'] = 1 / (find_envelope_prop('u_windows', bldg['age'],
-                                                   bldg_metadata['general']['thermal_integrity'],
+                                                   bldg_metadata.general['thermal_integrity'],
                                                    climate) * 1.15 * np.random.normal(1, 0.05))
         bldg['glazing_shgc'] = find_envelope_prop('window_SHGC', bldg['age'],
-                                                  bldg_metadata['general']['thermal_integrity'],
+                                                  bldg_metadata.general['thermal_integrity'],
                                                   climate) * 1.15 * np.random.normal(1, 0.05)
         if data['fraction_awnings'] > np.random.uniform(0, 1):
             bldg['window_exterior_transmission_coefficient'] = np.random.normal(0.5, 0.1)
@@ -193,13 +188,13 @@ def define_comm_loads(feeder, bldg_type, bldg_size, dso_type, climate, bldg_meta
             bldg['skew_value'] = 0
         elif bldg_type in ['office', 'warehouse_storage', 'education']:
             bldg['base_schedule'] = 'office'
-            bldg['skew_value'] = feeder.glm.randomize_commercial_skew()
+            bldg['skew_value'] = glm.randomize_commercial_skew()
         elif bldg_type in ['big_box', 'strip_mall', 'food_service', 'food_sales']:
             bldg['base_schedule'] = 'retail'
-            bldg['skew_value'] = feeder.glm.randomize_commercial_skew()
+            bldg['skew_value'] = glm.randomize_commercial_skew()
         elif bldg_type == 'low_occupancy':
             bldg['base_schedule'] = 'lowocc'
-            bldg['skew_value'] = feeder.glm.randomize_commercial_skew()
+            bldg['skew_value'] = glm.randomize_commercial_skew()
 
         # randomize 10# then convert W/sf -> kW
         floor_area = bldg['floor_area']
@@ -222,27 +217,22 @@ def define_comm_loads(feeder, bldg_type, bldg_size, dso_type, climate, bldg_meta
     return bldg
 
 
-def add_comm_zones(glm, bldg, comm_loads, key, batt_metadata, storage_percentage, ev_metadata, ev_percentage,
-                   solar_percentage, pv_rating_MW, solar_Q_player, case_type, mode=None):
+def add_comm_zones(fdr, bldg, key, mode=None):
     """ For large buildings, breaks building up into multiple zones.
 
     For all buildings sends definition dictionary to function that writes out building definition to GLD file format.
 
     Args:
+        fdr (Feeder):
         bldg (dict): dictionary of building parameters for the building to be processed.
-        comm_loads:
         key (str): name of feeder node or meter being used
-        op (any): GLD output file
-        batt_metadata:
-        storage_percentage:
-        ev_metadata:
-        ev_percentage:
-        solar_percentage:
-        pv_rating_MW:
-        solar_Q_player:
-        case_type:
         mode (str): if 'test' will ensure that GLD output function does not set parent - allows buildings to be run in GLD without feeder info
     """
+    glm = fdr.glm
+    comm_loads = fdr.base.comm_loads
+    batt_metadata = fdr.batt_metadata
+    ev_metadata = fdr.ev_metadata
+
     mtr = comm_loads[key][0]
     comm_type = comm_loads[key][1]
     comm_size = int(comm_loads[key][2])
@@ -378,17 +368,17 @@ def add_comm_zones(glm, bldg, comm_loads, key, batt_metadata, storage_percentage
                         key + '_' + comm_name + '_floor_' + str(floor) + '_zone_' + str(zone))
                     add_one_commercial_zone(glm, bldg, mode)
 
-        if np.random.uniform(0, 1) <= storage_percentage:
+        if np.random.uniform(0, 1) <= fdr.g_config.storage_percentage:
             # TODO: Review battery results to see if one battery per 10000 sq ft. is appropriate.
             num_batt = math.floor(bldg_size / 10000) + 1
-            battery_capacity = num_batt * res_FG.get_dist(batt_metadata['capacity(kWh)']['mean'],
-                                                          batt_metadata['capacity(kWh)']['deviation_range_per']) * 1000
-            max_charge_rate = res_FG.get_dist(batt_metadata['rated_charging_power(kW)']['mean'],
-                                              batt_metadata['rated_charging_power(kW)']['deviation_range_per']) * 1000
+            battery_capacity = num_batt * get_dist(batt_metadata.capacity['mean'],
+                                                   batt_metadata.capacity['deviation_range_per']) * 1000
+            max_charge_rate = get_dist(batt_metadata.rated_charging_power['mean'],
+                                       batt_metadata.rated_charging_power['deviation_range_per']) * 1000
             max_discharge_rate = max_charge_rate
-            inverter_efficiency = batt_metadata['inv_efficiency(per)'] / 100
-            charging_loss = res_FG.get_dist(batt_metadata['rated_charging_loss(per)']['mean'],
-                                            batt_metadata['rated_charging_loss(per)']['deviation_range_per']) / 100
+            inverter_efficiency = batt_metadata.inv_efficiency / 100
+            charging_loss = get_dist(batt_metadata.rated_charging_loss['mean'],
+                                     batt_metadata.rated_charging_loss['deviation_range_per']) / 100
             discharging_loss = charging_loss
             round_trip_efficiency = charging_loss * discharging_loss
             rated_power = max(max_charge_rate, max_discharge_rate)
@@ -399,14 +389,15 @@ def add_comm_zones(glm, bldg, comm_loads, key, batt_metadata, storage_percentage
             bat_i_name = gld_strict_name(basenode + '_ibat')
             storage_inv_mode = 'CONSTANT_PQ'
 
-            if case_type['bt']:
+            if fdr.g_config.case_type['bt']:
                 # battery_count += 1
                 params = {"parent": mtr,
-                          "phases": "phases",
+                          "phases": phases,
                           "nominal_voltage": str(vln)}
                 glm.add_object("meter", bat_m_name, params)
 
-                params = {"phases": phases,
+                params = {"parent": bat_m_name,
+                          "phases": phases,
                           "groupid": "batt_inverter",
                           "generator_status": "ONLINE",
                           "generator_mode": "CONSTANT_PQ",
@@ -422,23 +413,24 @@ def add_comm_zones(glm, bldg, comm_loads, key, batt_metadata, storage_percentage
                           "power_factor": "1.0"}
                 glm.add_object("inverter", bat_i_name, params)
 
-                params = {"use_internal_battery_model": "true",
+                params = {"parent": bat_i_name,
+                          "use_internal_battery_model": "true",
                           "battery_type": "LI_ION",
                           "nominal_voltage": "480",
                           "battery_capacity": '{:.2f}'.format(battery_capacity),
                           "round_trip_efficiency": '{:.2f}'.format(round_trip_efficiency),
                           "state_of_charge": "0.50"}
                 glm.add_object("battery", batname, params)
-                glm.add_metrics_collector(batname, "meter")
+                glm.add_metrics_collector(bat_i_name, "inverter")
 
-        if np.random.uniform(0, 1) <= solar_percentage:
+        if np.random.uniform(0, 1) <= fdr.g_config.solar_percentage:
             # typical PV panel is 350 Watts and avg home has 5kW installed.
             # If we assume 2500 sq. ft as avg area of a single family house, we can say:
             # one 350 W panel for every 175 sq. ft.
             num_panel = np.floor(bldg_size / 175)
             inverter_undersizing = 1.0
             inv_power = num_panel * 350 * inverter_undersizing
-            pv_scaling_factor = inv_power / pv_rating_MW
+            pv_scaling_factor = inv_power / fdr.g_config.rooftop_pv_rating_MW
 
             basenode = mtr
             sol_m_name = gld_strict_name(basenode + '_msol')
@@ -446,7 +438,7 @@ def add_comm_zones(glm, bldg, comm_loads, key, batt_metadata, storage_percentage
             sol_i_name = gld_strict_name(basenode + '_isol')
             metrics_interval = 300
             solar_inv_mode = 'CONSTANT_PQ'
-            if case_type['pv']:
+            if fdr.g_config.case_type['pv']:
                 # solar_count += 1
                 # solar_kw += 0.001 * inv_power
                 params = {"parent": basenode,
@@ -463,7 +455,7 @@ def add_comm_zones(glm, bldg, comm_loads, key, batt_metadata, storage_percentage
                           "generator_mode": solar_inv_mode,
                           "four_quadrant_control_mode": solar_inv_mode,
                           "P_Out": 'P_out_inj.value * {}'.format(pv_scaling_factor)}
-                if 'no_file' not in solar_Q_player:
+                if 'no_file' not in fdr.g_config.solar_Q_player:
                     params["Q_Out"] = "Q_out_inj.value * 0.0"
                 else:
                     params["Q_Out"] = "0"
@@ -474,56 +466,56 @@ def add_comm_zones(glm, bldg, comm_loads, key, batt_metadata, storage_percentage
                 glm.add_object("inverter", sol_i_name, params)
                 glm.add_metrics_collector(sol_i_name, "inverter")
 
-        if np.random.uniform(0, 1) <= ev_percentage:
+        if np.random.uniform(0, 1) <= fdr.g_config.ev_percentage:
             # first lets select an ev model:
-            ev_name = res_FG.selectEVmodel(ev_metadata['sale_probability'], np.random.uniform(0, 1))
-            ev_range = ev_metadata['Range (miles)'][ev_name]
-            ev_mileage = ev_metadata['Miles per kWh'][ev_name]
-            ev_charge_eff = ev_metadata['charging efficiency']
+            ev_name = fdr.selectEVmodel(ev_metadata.sale_probability, np.random.uniform(0, 1))
+            ev_range = ev_metadata.Range_miles[ev_name]
+            ev_mileage = ev_metadata.Miles_per_kWh[ev_name]
+            ev_charge_eff = ev_metadata.charging_efficiency
             # check if level 1 charger is used or level 2
-            if np.random.uniform(0, 1) <= ev_metadata['Level_1_usage']:
-                ev_max_charge = ev_metadata['Level_1 max power (kW)']
+            if np.random.uniform(0, 1) <= ev_metadata.Level_1_usage:
+                ev_max_charge = ev_metadata.Level_1_max_power_kW
                 volt_conf = 'IS110'  # for level 1 charger, 110 V is good
             else:
-                ev_max_charge = ev_metadata['Level_2 max power (kW)'][ev_name]
+                ev_max_charge = ev_metadata.Level_2_max_power_kW[ev_name]
                 volt_conf = 'IS220'  # for level 2 charger, 220 V is must
             # now, let's map a random driving schedule with this vehicle ensuring daily miles
             # doesn't exceed the vehicle range and home duration is enough to charge the vehicle
-            drive_sch = res_FG.match_driving_schedule(ev_range, ev_mileage, ev_max_charge)
+            drive_sch = fdr.match_driving_schedule(ev_range, ev_mileage, ev_max_charge)
             # ['daily_miles','home_arr_time','home_duration','work_arr_time','work_duration']
 
             # few sanity checks
             if drive_sch['daily_miles'] > ev_range:
                 raise UserWarning('daily travel miles for EV can not be more than range of the vehicle!')
-            if not res_FG.is_hhmm_valid(drive_sch['home_arr_time']) or \
-                    not res_FG.is_hhmm_valid(drive_sch['home_leave_time']) or \
-                    not res_FG.is_hhmm_valid(drive_sch['work_arr_time']):
+            if not is_hhmm_valid(drive_sch['home_arr_time']) or \
+                    not is_hhmm_valid(drive_sch['home_leave_time']) or \
+                    not is_hhmm_valid(drive_sch['work_arr_time']):
                 raise UserWarning('invalid HHMM format of driving time!')
             if (drive_sch['home_duration'] > 24 * 3600 or drive_sch['home_duration'] < 0 or
                     drive_sch['work_duration'] > 24 * 3600 or drive_sch['work_duration'] < 0):
                 raise UserWarning('invalid home or work duration for ev!')
-            if not res_FG.is_drive_time_valid(drive_sch):
+            if not fdr.is_drive_time_valid(drive_sch):
                 raise UserWarning('home and work arrival time are not consistent with durations!')
 
             basenode = mtr
             evname = gld_strict_name(basenode + '_ev')
             hsename = gld_strict_name(basenode + '_ev_hse')
             parent_zone = bldg['zonename']
-            if case_type['pv']:  # all pvCases(HR) have ev populated
+            if fdr.g_config.case_type['pv']:  # all pvCases(HR) have ev populated
                 params = {"parent": parent_zone,
                           "configuration": volt_conf,
-                          "breaker_amps": "1000",
-                          "battery_SOC": "100.0",
-                          "travel_distance": '{};'.format(drive_sch['daily_miles']),
-                          "arrival_at_work": '{};'.format(drive_sch['work_arr_time']),
-                          "duration_at_work": '{}; // (secs)'.format(drive_sch['work_duration']),
-                          "arrival_at_home": '{};'.format(drive_sch['home_arr_time']),
-                          "duration_at_home": '{}; // (secs)'.format(drive_sch['home_duration']),
+                          "breaker_amps": 1000,
+                          "battery_SOC": 100.0,
+                          "travel_distance": '{}'.format(drive_sch['daily_miles']),
+                          "arrival_at_work": '{}'.format(drive_sch['work_arr_time']),
+                          "duration_at_work": '{}'.format(drive_sch['work_duration']),
+                          "arrival_at_home": '{}'.format(drive_sch['home_arr_time']),
+                          "duration_at_home": '{}'.format(drive_sch['home_duration']),
                           "work_charging_available": "FALSE",
-                          "maximum_charge_rate": '{:.2f}; //(watts)'.format(ev_max_charge * 1000),
-                          "mileage_efficiency": '{:.3f}; // miles per kWh'.format(ev_mileage),
-                          "mileage_classification": '{:.3f}; // range in miles'.format(ev_range),
-                          "charging_efficiency": '{:.3f};'.format(ev_charge_eff)}
+                          "maximum_charge_rate": '{:.2f}'.format(ev_max_charge * 1000),
+                          "mileage_efficiency": '{:.3f}'.format(ev_mileage),
+                          "mileage_classification": '{:.3f}'.format(ev_range),
+                          "charging_efficiency": '{:.3f}'.format(ev_charge_eff)}
                 glm.add_object("evcharger_det", evname, params)
                 glm.add_metrics_collector(evname, "house")
 
@@ -532,7 +524,7 @@ def add_comm_zones(glm, bldg, comm_loads, key, batt_metadata, storage_percentage
         params = {"parent": '{:s}'.format(mtr),
                   "groupid": "STREETLIGHTS",
                   "nominal_voltage": '{:2f}'.format(vln),
-                  "phases": '{:s};'.format(phases)}
+                  "phases": '{:s}'.format(phases)}
         for phs in ['A', 'B', 'C']:
             if phs in phases:
                 params["impedance_fraction_" + phs] = '{:f}'.format(c_z_frac)
@@ -541,8 +533,8 @@ def add_comm_zones(glm, bldg, comm_loads, key, batt_metadata, storage_percentage
                 params["impedance_pf_" + phs] = '{:f}'.format(c_z_pf)
                 params["current_pf_" + phs] = '{:f}'.format(c_i_pf)
                 params["power_pf_" + phs] = ""
-                params["base_power_" + phs] = 'street_lighting*{:.2f};'.format(light_scalar_comm * phsva)
-        glm.add_object("load", '{:s};'.format(key + '_streetlights', params))
+                params["base_power_" + phs] = 'street_lighting*{:.2f}'.format(light_scalar_comm * phsva)
+        glm.add_object("load", '{:s}'.format(key + '_streetlights', params))
 
     else:
         params = {"parent": '{:s}'.format(mtr),
@@ -713,7 +705,8 @@ def add_one_commercial_zone(glm, bldg, mode=None):
               "mass_temperature": '{:.2f}'.format(bldg['init_temp']),
               "over_sizing_factor": '{:.2f}'.format(bldg['os_rand']),
               "cooling_COP": '{:2.2f}'.format(bldg['COP_A']),
-              "cooling_setpoint": "80.0", "heating_setpoint": "60.0"}
+              "cooling_setpoint": "80.0",
+              "heating_setpoint": "60.0"}
     if mode != 'test':
         params["parent"] = bldg['mtr']
 
@@ -739,7 +732,7 @@ def add_one_commercial_zone(glm, bldg, mode=None):
               "heatgain_fraction": "0.9",
               "power_fraction": '{:.2f}'.format(bldg['c_p_frac']),
               "impedance_fraction": '{:.2f}'.format(bldg['c_z_frac']),
-              "current_fraction": '{:.2f};'.format(bldg['c_i_frac']),
+              "current_fraction": '{:.2f}'.format(bldg['c_i_frac']),
               "power_pf": ' {:.2f}'.format(bldg['c_p_pf']),
               "current_pf ": '{:.2f}'.format(bldg['c_i_pf']),
               "impedance_pf": '{:.2f}'.format(bldg['c_z_pf']),
@@ -764,7 +757,7 @@ def add_one_commercial_zone(glm, bldg, mode=None):
               "power_pf": '{:.2f}'.format(bldg['c_p_pf']),
               "current_pf": '{:.2f}'.format(bldg['c_i_pf']),
               "impedance_pf": '{:.2f}'.format(bldg['c_z_pf']),
-              "base_power": '{:s}_exterior*{:.2f};'.format(bldg['base_schedule'], bldg['adj_ext'])}
+              "base_power": '{:s}_exterior*{:.2f}'.format(bldg['base_schedule'], bldg['adj_ext'])}
     glm.add_object("ZIPload", "exterior lights", params)
 
     params = {"parent": bldg['zonename'],
@@ -786,7 +779,7 @@ def add_one_commercial_zone(glm, bldg, mode=None):
                   "impedance_fraction": '{:.2f}'.format(bldg['c_z_frac']),
                   "current_fraction": '{:.2f}'.format(bldg['c_i_frac']),
                   "power_pf": '{:.2f}'.format(bldg['c_p_pf']),
-                  "current_pf": '{:.2f};'.format(bldg['c_i_pf']),
+                  "current_pf": '{:.2f}'.format(bldg['c_i_pf']),
                   "impedance_pf": '{:.2f}'.format(bldg['c_z_pf']),
                   "base_power": '{:.2f}'.format(bldg['adj_refrig'])}
         glm.add_object("ZIPload", "large refrigeration electrical load", params)

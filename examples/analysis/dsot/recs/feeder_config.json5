@@ -2,25 +2,6 @@
 // configure the process of populating a feeder.
 
 {
-    // RECS
-    "use_recs": true,
-    "recs_exist": true,
-    "in_file_recs_income_level": '${TESPDIR}/data/feeders/RECSwIncomeLvl.csv',
-    "in_file_residential_meta": '../data/DSOT_residential_metadata.json',
-    "out_file_residential_meta": '../data/RECS_residential_metadata.json',
-    "out_file_hvac_set_point": '../data/hvac_setpt_RECS.json',
-    "sample": {
-        'state': ["TX"],
-        'housing_density': ['No_DSO_Type'],   //'No_DSO_Type', U, R, C possibly = S
-        'income_level': ['Low', 'Middle', 'Upper']
-    },
-    "state": "TX",
-    "res_dso_type": "No_DSO_Type",
-    "income_level": ['Low', 'Middle', 'Upper'],
-    "bin_size_threshold": 100,
-    "climate_zone": null,
-    "wh_shift": 0,
-
     // general
     "in_file_glm": "", // REQUIRED
     "out_file_glm": "test.glm", // REQUIRED
@@ -28,16 +9,58 @@
     "substation_name": "MySub", // REQUIRED
     "starttime": "2023-01-01 00:00:00", // REQUIRED: format "2023-01-01 00:00:00"
     "stoptime": "2023-01-02 00:00:00", // REQUIRED: format "2023-01-02 00:00:00"
-    "timezone": 15, // REQUIRED
     "timestep": 60, // REQUIRED
+    "timezone": "EST+5EDT", // REQUIRED
     "metrics_interval": 300, // DEFAULT: 300
-    "WANT_VI_DUMP": false, // DEFAULT: false
     "random seed": 13, // DEFAULT: 1 - seeds randomizer used in populating the models
 
-    "players": {"name": "lp","file": "your_file","type": "double"},
+    // input files
+    "file_residential_meta": './RECS_residential_metadata.json',
+    "file_commercial_meta": './DSOT_commercial_metadata.json',
+    "file_battery_meta": "./DSOT_battery_metadata.json",
+    "file_ev_meta": "./DSOT_ev_model_metadata.json",
+    "file_ev_driving_meta": "./DSOT_ev_driving_metadata.csv",
+
+    // dso
+    "state": "TX",
+    "county": "Houston",
+    "latitude": 29.65, // DEFAULT:30.0
+    "longitude": -95.42, // DEFAULT:-110.0
+    "time_zone_offset": -6,
+    "ashrae_zone": "2A",
+    "climate_zone": 5,
+    "weather_name": "localWeather", // DEFAULT:localWeather
+    "weather_file": "AZ-Tucson_International_Ap.tmy3", // DEFAULT:AZ-Tucson_International_Ap.tmy3
+    "rooftop_pv_rating_MW": 7481.90,
+    "utility_type": "Urban",
+    "number_of_gld_homes": 1308,
+    "comm_customers_per_bldg": 2.09,
+    "RCI_customer_count_mix": {
+      "residential": 0.8357,
+      "commercial": 0.1265,
+      "industrial": 0.0379
+    },
+    "income_level": ['Low', 'Middle', 'Upper'],
+    "res_dso_type": "No_DSO_Type",
+
+    // RECS
+    "use_recs": true,
+    "recs_exist": true,
+    "file_recs_income_level": '../../../.../data/feeders/RECSwIncomeLvl.csv',
+    "out_file_residential_meta": './RECS_residential_metadata.json',
+    "out_file_hvac_set_point": '../data/hvac_setpt_RECS.json',
+    "sample": {
+        'state': ["TX"],
+        'housing_density': ['No_DSO_Type'],   //'No_DSO_Type', U, R, C possibly = S
+        'income_level': ['Low', 'Middle', 'Upper']
+    },
+    "bin_size_threshold": 100,
+    "wh_shift": 0,
+
+    "players": {"name": "lp", "file": "your_file","type": "double"},
 
     // house parameters
-    "use_house": true,
+    "message_broker": "",   // "" | "helics_msg" | "fncs_msg"
     "use_feeder": true,
     // use_feeder = true
     "taxonomy": "R1-12.47-1.glm",
@@ -56,20 +79,59 @@
         ],
 
     // add sets in glm
-    "set": [
-        "minimum_timestep=15",
-        "relax_naming_rules=1",
-        "warn=0"
-        ],
+    "sets": {
+        "minimum_timestep": 15,
+        "relax_naming_rules": 1,
+        "warn": 0
+    },
 
     // add defines
-    "defines": [],
+    "defines": {
 
-    // weather
-    "latitude": 30.0, // DEFAULT:30.0
-    "longitude": -110.0, // DEFAULT:-110.0
-    "weather_name": "localWeather", // DEFAULT:localWeather
-    "weather_file": "AZ-Tucson_International_Ap.tmy3", // DEFAULT:AZ-Tucson_International_Ap.tmy3
+    },
 
-    "rooftop_pv_rating_MW": 1677.84989450533
+    "case_type":{"bt": 1, "fl": 1, "ev": 1, "pv": 0},
+    // electric vehicles definitions
+    "ev_reserved_soc": 20,
+    "solar_path": "../../../data/solar_data/solar_pv_power_profiles/",
+    "solar_P_player": "5_minute_dist_power.csv",
+    "solar_Q_player": "no_file",
+    "electric_cooling_percentage": 90,
+
+
+    "EV_penetration": 11, // fraction of households with EVs, DEFAULT: determined by RECS data
+    "battery_size_distribution": { // uniform distribution
+        "min_size": 1.0, //DEFAULT: 50 kWh, https://insideevs.com/reviews/344001/compare-evs/
+        "max_size": 100, //DEFAULT: 125 kWh, https://insideevs.com/reviews/344001/compare-evs/
+    },
+    "charging_power_distribution": { // must sum to 1
+        "level_1": 0.1, // DEFAULT: 0.1 made up by Trevor, charging power is 3.5 kW
+        "level_2": 0.9, // DEFAULT: 0.9, made up by Trevor, charging power is 5-12 kW, https://www.evchargerreviews.net/best-ev-chargers-for-home-use/
+    },
+
+    // solar definitions
+    "solar_penetration": 10, // the percentage of households with solar, DEFAULT: determined by RECS data
+    "solar_installation_rated_power": { // uniform distribution
+        "min_size": 6.0, //DEFAULT: 6 kW
+        "max_size": 8.0 //DEFAULT: 8 kW
+    },
+    "inverter_rated_power": 8.0, // DEFAULT: same as solar installation rated power
+
+    // battery definitions
+    "battery penetration": 8, // the percentage of households with batteries, DEFAULT: determined by RECS data
+    "battery installation rated power": { // uniform distribution
+        "min_size": 9.0, //DEFAULT: 9 kWh Generac power cell
+        "max_size": 18.0, //DEFAULT: 18 kWh Panasonic Evervolt
+    },
+    "battery roundtrip efficiency": 0.93, // DEAFULT: 0.93
+
+    "inverter efficiency": 0.98, // DEFAULT: 0.98
+    "TransactiveHousePercentage": 80,
+    "solar_percentage": 11,
+    "storage_percentage": 3,
+    "ev_percentage": 8,
+    "SolarInverterMode": "CONSTANT_PQ",
+    "StorageInverterMode": "CONSTANT_PQ",
+    "InverterEfficiency": 1.0,
+    "BatteryRoundTripEfficiency": 1.0
 }

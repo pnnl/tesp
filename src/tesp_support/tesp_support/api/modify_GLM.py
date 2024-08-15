@@ -7,7 +7,6 @@ import numpy as np
 from .data import feeder_entities_path
 from .entity import assign_defaults
 from .model_GLM import GLModel
-from .parse_helpers import parse_kva
 
 
 class Defaults:
@@ -19,8 +18,8 @@ class GLMModifier:
     and writing it back out to disk.
 
     As compared to most of the other techniques for modifying a GridLAB-D model,
-    this loads the model into an in-memory data structure similar to a Python 
-    dictionary and allows editing of the model in this structure rather than on 
+    this loads the model into an in-memory data structure similar to a Python
+    dictionary and allows editing of the model in this structure rather than on
     a line-by-line basis. This allows for a comprehensive view and edits of
     the model.
 
@@ -43,7 +42,7 @@ class GLMModifier:
         self.extra_billing_meters = set()
         assign_defaults(self.defaults, feeder_entities_path)
 
-    def add_module(self, gld_type: str, params: dict) -> Entity:
+    def add_module(self, gld_type: str, params: dict):
         """Adds the specified GridLAB-D module to GLModel object
 
         Args:
@@ -52,7 +51,7 @@ class GLMModifier:
             the dictionary values are the module attribute values.
 
         Returns:
-            Entity: Dictionary-like object of the module added 
+            Entity: Dictionary-like object of the module added
         """
         return self.model.module_entities[gld_type].set_instance(gld_type, params)
 
@@ -63,14 +62,25 @@ class GLMModifier:
             gld_type (str): name of the GridLAB-D module to delete
         """
         self.model.module_entities[gld_type].del_instance(gld_type)
+        # delete all object in the module
+        # for obj in self.model.module_entities:
+        #     myObj = self.model.module_entities[obj]
+        #     myArr = []
+        #     if myObj.find_item('parent'):
+        #         for myName in myObj.instances:
+        #             instance = myObj.instances[myName]
+        #             if 'parent' in instance.keys():
+        #                 if instance['parent'] == name:
+        #                     myArr.append(myName)
+        #     for myName in myArr:
+        #         myObj.del_instance(myName)
 
     def add_module_attr(self, gld_type: str, item_name: str, item_value: str) -> None:
         """Add an attribute to a module in the GLModel object that already
         exists.
 
         Args:
-            gld_type (str): name of the GridLAB-D module where the 
-            attribute needs to be added.
+            gld_type (str): name of the GridLAB-D module where the attribute needs to be added.
             item_name (str): module attribute name to be added
             item_value (str): model attribute value to be added
 
@@ -84,16 +94,14 @@ class GLMModifier:
         exists.
 
         Args:
-            gld_type (str): name of the GridLAB-D module where the 
-            attribute needs to be deleted.
+            gld_type (str): name of the GridLAB-D module where the attribute needs to be deleted.
             item_name (str): module attribute name to be deleted
         """
         self.model.module_entities[gld_type].del_item(gld_type, item_name)
 
-    def add_object(self, gld_type: str, name: str, params: dict) -> Entity:
+    def add_object(self, gld_type: str, name: str, params: dict):
         """Adds a GridLAB-D object (those that start "object ..." in a .glm
-        like transformers, lines, houses, and triplex_meters) to the GLModel 
-        object.
+        like transformers, lines, houses, and triplex_meters) to the GLModel object.
 
         Args:
             gld_type (str): Class of GridLAB-D object to add
@@ -108,9 +116,8 @@ class GLMModifier:
         return self.model.add_object(gld_type, name, params)
 
     def rename_object(self, gld_type: str, old_name: str, new_name: str) -> bool:
-        """Renames an existing GridLAB-D object (those that start "object ..."
-        in a .glm like transformers, lines, houses, and triplex_meters) in the
-        GLModel object.
+        """Renames an existing GridLAB-D object (those that start "object ..." in a .glm
+        like transformers, lines, houses, and triplex_meters) in the GLModel object.
 
         Args:
             gld_type (str): Class of GridLAB-D object being renamed
@@ -139,9 +146,8 @@ class GLMModifier:
         return False
 
     def del_object(self, gld_type: str, name: str) -> None:
-        """Deletes an existing GridLAB-D object (those that start "object ..."
-        in a .glm like transformers, lines, houses, and triplex_meters) from the
-        GLModel object.
+        """Deletes an existing GridLAB-D object (those that start "object ..." in a .glm
+        like transformers, lines, houses, and triplex_meters) from the GLModel object.
 
         Args:
             gld_type (str): Type of GridLAB-D object being renamed
@@ -169,9 +175,8 @@ class GLMModifier:
         pass
 
     def add_object_attr(self, gld_type: str, name: str, item_name: str, item_value: str) -> None:
-        """Adds an attribute to an existing object (those that start 
-        "object ..." in a .glm like transformers, lines, houses, and
-        triplex_meters) in the GLModel object.
+        """Adds an attribute to an existing object (those that start "object ..." in a .glm
+        like transformers, lines, houses, and triplex_meters) in the GLModel object.
 
         Args:
             gld_type (str): Class of GridLAB-D object to which the
@@ -187,9 +192,8 @@ class GLMModifier:
         return self.model.object_entities[gld_type].set_item(name, item_name, item_value)
 
     def del_object_attr(self, gld_type: str, name: str, item_name: str) -> None:
-        """Deletes an attribute of an existing object (those that start 
-        "object ..." in a .glm like transformers, lines, houses, and
-        triplex_meters) from the GLModel object.
+        """Deletes an attribute of an existing object (those that start "object ..." in a .glm
+        like transformers, lines, houses, and triplex_meters) from the GLModel object.
 
         Args:
             gld_type (string): Class of GridLAB-D object from which the
@@ -202,8 +206,7 @@ class GLMModifier:
 
     # Read and Write .GLM files
     def read_model(self, filepath: str) -> bool:
-        """Reads in GridLAB-D model from a file (.glm) and stores it as an 
-        instance of the GLModel object.
+        """Reads in GridLAB-D model from a file (.glm) and stores it as an instance of the GLModel object.
 
         Args:
             filepath (string): Path to the GridLAB-D model to be read in
@@ -225,20 +228,42 @@ class GLMModifier:
         """
         return self.model.write(filepath)
 
+    # normal objects that use feeder system 'defaults'
+    @staticmethod
+    def union_of_phases(phs1, phs2):
+        """Collect all phases on both sides of a connection
+
+        Args:
+            phs1 (str): first phasing
+            phs2 (str): second phasing
+
+        Returns:
+            str: union of phs1 and phs2
+        """
+        phs = ''
+        if 'A' in phs1 or 'A' in phs2:
+            phs += 'A'
+        if 'B' in phs1 or 'B' in phs2:
+            phs += 'B'
+        if 'C' in phs1 or 'C' in phs2:
+            phs += 'C'
+        if 'S' in phs1 or 'S' in phs2:
+            phs += 'S'
+        return phs
+
     def find_1phase_xfmr_w_margin(self, kva: float, margin: float = None) -> float:
         """Select a standard 1-phase transformer size  with some design margin
         (optionally defined by caller) based on provided kVA load value
 
-        Standard sizes are defined in feeder_defaults.json and 
-        historically have been 5, 10, 15, 25, 37.5, 50, 75, 100, 167, 250, 
-        333 or 500 kVA
+        Standard sizes are defined in feeder_defaults.json and historically
+        have been 5, 10, 15, 25, 37.5, 50, 75, 100, 167, 250, 333 or 500 kVA
 
         Args:
             kva (float): load magnitude to be serviced by transfomer
+            margin (float):
 
         Returns:
-            float: the standard transformer size adequate to service the
-            caller-defined load (or 0 if none found)
+            float: the standard transformer size adequate to service the caller-defined load (or 0 if none found)
         """
         if margin is not None:
             kva *= margin
@@ -251,18 +276,16 @@ class GLMModifier:
         return 500.0 * n500
 
     def find_1phase_xfmr(self, kva: float) -> float:
-        """Select a standard 1-phase transformer size based on provided kVA
-        load value.
+        """Select a standard 1-phase transformer size based on provided kVA load value.
 
-        Standard sizes are defined in feeder_defaults.json and 
-        historically have been 5, 10, 15, 25, 37.5, 50, 75, 100, 167, 250, 
-        333 or 500 kVA
+        Standard sizes are defined in feeder_defaults.json and historically
+        have been 5, 10, 15, 25, 37.5, 50, 75, 100, 167, 250, 333 or 500 kVA
 
         Args:
             kva (float): load magnitude to be serviced by transfomer
 
         Returns:
-            [float,float,float,float,float]: 
+            [float,float,float,float,float]:
                 kVA rating
                 %r
                 %x
@@ -272,23 +295,26 @@ class GLMModifier:
         for row in self.defaults.single_phase:
             if row[0] >= kva:
                 return row[0], 0.01 * row[1], 0.01 * row[2], 0.01 * row[3], 0.01 * row[4]
-        return self.find_1phase_xfmr_kva(kva)
+        return self.find_1phase_xfmr_w_margin(kva)
 
-    def find_3phase_xfmr_kva_w_margin(self, kva: float) -> float:
+    def find_3phase_xfmr_w_margin(self, kva: float, margin: float = None) -> float:
         """Select a standard 1-phase transformer size  with some design margin
         (optionally defined by caller) based on provided kVA load value
 
         Standard sizes are defined in feeder_defaults.json and historically
-        have been 30, 45, 75, 112.5, 150, 225, 300, 500, 750, 1000, 1500,
-        2000, 2500, 3750, 5000, 7500 or 10000 kVA
+        have been 30, 45, 75, 112.5, 150, 225, 300, 500, 750, 1000, 1500, 2000, 2500, 3750, 5000, 7500 or 10000 kVA
 
         Args:
-            kva (float): load magnitude to be serviced by transfomer
+            kva (float): load magnitude to be serviced by transformer
+            margin (float):
 
         Returns:
-            float: the standard transformer size adequate to service the
-            caller-defined load (or 0 if none found)
+            float: the standard transformer size adequate to service the caller-defined load (or 0 if none found)
         """
+        if margin is not None:
+            kva *= margin
+        else:
+            kva *= self.defaults.xfmrMargin
         kva *= self.defaults.xfmrMargin
         for row in self.defaults.three_phase:
             if row[0] >= kva:
@@ -306,7 +332,7 @@ class GLMModifier:
             kva (float): load magnitude to be serviced by transfomer
 
         Returns:
-            [float,float,float,float,float]: 
+            [float,float,float,float,float]:
                 kVA rating
                 %r
                 %x
@@ -316,24 +342,25 @@ class GLMModifier:
         for row in self.defaults.three_phase:
             if row[0] >= kva:
                 return row[0], 0.01 * row[1], 0.01 * row[2], 0.01 * row[3], 0.01 * row[4]
-        return self.find_3phase_xfmr_kva(kva)
+        return self.find_3phase_xfmr_w_margin(kva)
 
     def find_fuse_limit_w_margin(self, amps: float, margin=None) -> float:
         """ Find a fuse size that's unlikely to melt during power flow
         under normal operating conditions adding a design margin that
-        can be optionally defined by the caller. Default margin is 
+        can be optionally defined by the caller. Default margin is
         defined in feeder_defaults.json
 
         Standard sizes are defined in feeder_defaults.json and historically
         have been 40, 65, 100 or 200 Amps. If that's not large enough, chooses
         a recloser size also defined in feeder_defaults.json historically
         with values of 280, 400, 560, 630 or 800 Amps. If that's not large
-        enough, selects a breaker size based on values defined in 
+        enough, selects a breaker size based on values defined in
         feeder_defaults.json with historical values of 1200
         or 2000 Amps. If that's not large enough, sets value to 999999.
 
         Args:
             amps (float): the maximum load current expected; some margin will be added
+            margin (float):
 
         Returns:
             float: the GridLAB-D fuse size to insert
@@ -357,10 +384,8 @@ class GLMModifier:
         """Returns a random value used to diversify the residential loads being
         defined with schedule skew. Uses two parameters found in
         feeder defaults.json that can optionally be defined by the caller
-            
-            residential_skew_std: Standard deviation of the normal distribution
-            sampled to define the skew
 
+            residential_skew_std: Standard deviation of the normal distribution sampled to define the skew
             residential_skew_max: Absolute value of the maximum skew value
 
         Returns:
@@ -372,14 +397,12 @@ class GLMModifier:
             skew_abs_max = self.defaults.residential_skew_max
         return self.randomize_skew(skew_std, skew_abs_max)
 
-    def randomize_commercial_skew(self,skew_std: float = None, skew_abs_max: float = None) -> float:
+    def randomize_commercial_skew(self, skew_std: float = None, skew_abs_max: float = None) -> float:
         """Returns a random value used to diversify the commercial loads being
         defined with schedule skew. Uses two parameters found in
         feeder defaults.json that can optionally be defined by the caller
-            
-            commercial_skew_std: Standard deviation of the normal distribution
-            sampled to define the skew
 
+            commercial_skew_std: Standard deviation of the normal distribution sampled to define the skew
             commercial_skew_max: Absolute value of the maximum skew value
 
         Returns:
@@ -391,7 +414,8 @@ class GLMModifier:
             skew_abs_max = self.defaults.commercial_skew_max
         return self.randomize_skew(skew_std, skew_abs_max)
 
-    def randomize_skew(self, stdev: float, skew_abs_max: float) -> float:
+    @staticmethod
+    def randomize_skew(stdev: float, skew_abs_max: float) -> float:
         """Samples a normal distribution to find a schedule skew value given
         a standard deviation and an absolute maximum deviation.
 
@@ -410,86 +434,43 @@ class GLMModifier:
         return sk
 
     # custom objects
-    def add_tariff(self, params: dict = None) -> None:
+    def add_tariff(self, params: dict) -> None:
         """Writes tariff information to billing meters. Default values are
         defined in default_values.json and can be optionally provided by
         the caller.
 
         Args:
-            params (dict): Parameters to define the tarriff, see GridLAB-D 
+            params (dict): Parameters to define the tarriff, see GridLAB-D
             Power Flow User Guide for details:
 
-            "bill_mode" 
-            "price" 
-            "monthly_fee" 
-            "bill_day" 
-            "first_tier_energy" 
-            "first_tier_price" 
-            "second_tier_energy" 
+            "bill_mode"
+            "price"
+            "monthly_fee"
+            "bill_day"
+            "first_tier_energy"
+            "first_tier_price"
+            "second_tier_energy"
             "second_tier_price"
-            "third_tier_energy" 
-            "third_tier_price" 
+            "third_tier_energy"
+            "third_tier_price"
 
         Returns:
             None
         """
-        if params is None: 
-            params["bill_mode"] = self.defaults.bill_mode
-            params["price"] = self.defaults.kwh_price
-            params["monthly_fee"] = self.defaults.monthly_fee
-            params["bill_day"] = "1"
-            if params["bill_mode"] == "TIERED":
+        params["bill_mode"] = self.defaults.bill_mode
+        params["price"] = self.defaults.kwh_price
+        params["monthly_fee"] = self.defaults.monthly_fee
+        params["bill_day"] = "1"
+        if 'TIERED' in self.defaults.bill_mode:
+            if self.defaults.tier1_energy > 0.0:
                 params["first_tier_energy"] = self.defaults.tier1_energy
                 params["first_tier_price"] = self.defaults.tier1_price
+            if self.defaults.tier2_energy > 0.0:
                 params["second_tier_energy"] = self.defaults.tier2_energy
                 params["second_tier_price"] = self.defaults.tier2_price
+            if self.defaults.tier3_energy > 0.0:
                 params["third_tier_energy"] = self.defaults.tier3_energy
                 params["third_tier_price"] = self.defaults.tier3_price
-                if self.defaults.tier1_energy > 0.0:
-                    params["first_tier_energy"] = self.defaults.tier1_energy
-                    params["first_tier_price"] = self.defaults.tier1_price
-                if self.defaults.tier2_energy > 0.0:
-                    params["second_tier_energy"] = self.defaults.tier2_energy
-                    params["second_tier_price"] = self.defaults.tier2_price
-                if self.defaults.tier3_energy > 0.0:
-                    params["third_tier_energy"] = self.defaults.tier3_energy
-                    params["third_tier_price"] = self.defaults.tier3_price
-        
-        # Checking each individual parameter to see if it is set
-        if "bill_mode" not in params.keys():
-            params["bill_mode"] = self.defaults.bill_mode
-        if "price" not in params.keys():
-            params["price"] = self.defaults.kwh_price
-        if "monthly_fee" not in params.keys():
-            params["monthly_fee"] = self.defaults.monthly_fee
-        if "bill_day" not in params.keys():
-            params["bill_day"] = "1"
-        if params["bill_mode"] == "TIERED":
-            params["first_tier_energy"] = self.defaults.tier1_energy
-            params["first_tier_price"] = self.defaults.tier1_price
-            params["second_tier_energy"] = self.defaults.tier2_energy
-            params["second_tier_price"] = self.defaults.tier2_price
-            params["third_tier_energy"] = self.defaults.tier3_energy
-            params["third_tier_price"] = self.defaults.tier3_price
-            # TODO: (TDH )I don't know why setting the values is a function of
-            # whether the value is greater than zero and it makes it hard to
-            # determine whether the default value or the params value should 
-            # be determinative.
-            if self.defaults.tier1_energy > 0.0:
-                if "first_tier_energy" not in params.keys():
-                    params["first_tier_energy"] = self.defaults.tier1_energy
-                if "first_tier_price" not in params.keys():
-                    params["first_tier_price"] = self.defaults.tier1_price
-            if self.defaults.tier2_energy > 0.0:
-                if "second_tier_energy" not in params.keys():
-                    params["second_tier_energy"] = self.defaults.tier2_energy
-                if "second_tier_price" not in params.keys():
-                    params["second_tier_price"] = self.defaults.tier2_price
-            if self.defaults.tier3_energy > 0.0:
-                if "third_tier_energy" not in params.keys():
-                    params["third_tier_energy"] = self.defaults.tier3_energy
-                if "third_tier_price" not in params.keys():
-                    params["third_tier_price"] = self.defaults.tier3_price
 
     def add_voltage_dump(self, outname: str) -> None:
         """Adds voltage_dump and current_dump objects to the GLModel object
@@ -502,16 +483,15 @@ class GLMModifier:
             None
         """
         params = {"filename": 'Voltage_Dump_' + outname + '.csv',
-                  "mode": 'polar'}
+                  "mode": 'POLAR'}
         self.add_object("voltdump", "voltdump", params)
         params = {"filename": 'Current_Dump_' + outname + '.csv',
-                  "mode": 'polar'}
+                  "mode": 'POLAR'}
         self.add_object("currdump", "currdump", params)
 
     def add_metrics_collector(self, parent: str, metrics_class: str) -> None:
-        """Adds a metrics collector to the GLModel object as a child of the 
-        GridLAB-D specified by "parent" with and an object of class 
-        "metrics_class".
+        """Adds a metrics collector to the GLModel object as a child of the
+        GridLAB-D specified by "parent" with and an object of class "metrics_class".
 
         Args:
             parent (str): GridLAB-D object to which the metrics collector is
@@ -522,7 +502,7 @@ class GLMModifier:
         Returns:
             None
         """
-        if self.defaults.metrics_interval > 0 and metrics_class in self.defaults.metrics_classes:
+        if self.defaults.metrics_interval > 0:  # and metrics_class in self.defaults.metrics_classes:
             params = {"parent": parent,
                       "interval": str(self.defaults.metrics_interval)}
             self.add_object("metrics_collector", "mc_" + parent, params)
@@ -531,8 +511,7 @@ class GLMModifier:
         """Adds a GridLAB-D recorder object to the GLModel object
 
         Args:
-            parent (str): GridLAB-D parent object that the recorder is 
-            associated with
+            parent (str): GridLAB-D parent object that the recorder is associated with
             property_name (str): Name of the object parameter being recorded
             file (str): Output file recorder writes to
 
@@ -549,10 +528,10 @@ class GLMModifier:
     def add_config_class(self, gld_class: str) -> None:
         """Write a GridLAB-D configuration (i.e., not a link or node) class
 
+           TODO: (TDH) This description is not good but I don't have confidence I understand this enough to do better.
+
         Args:
-            gld_class (str): Name of the GridLAB-D class 
-            TODO: (TDH) This description is not good but I don't have 
-            confidence I understand this enough to do better.
+            gld_class (str): Name of the GridLAB-D class
 
         Returns:
             None
@@ -573,18 +552,18 @@ class GLMModifier:
     def add_link_class(self, gld_class: str, seg_loads: dict, want_metrics=False) -> None:
         """Write a GridLAB-D link (i.e., edge) class
 
+           TODO: (TDH) This description is not good but I don't have confidence I understand this enough to do better.
+
         Args:
             gld_class (str): the GridLAB-D class
-            TODO: (TDH) This description is not good but I don't have 
-            confidence I understand this enough to do better.
-            seg_loads (dict) : a dictionary of downstream loads for each link
+            seg_loads (dict): a dictionary of downstream loads for each link
             want_metrics (bool): true or false
 
         Returns:
             None
         """
         try:
-            entity = self.glm.__getattribute__(t)
+            entity = self.glm.__getattribute__(gld_class)
         except:
             return
         for e_name, e_object in entity.items():
@@ -602,11 +581,10 @@ class GLMModifier:
             self.add_object(gld_class, e_name, params)
 
             if want_metrics:
-                self.add_metrics_collector(e_name, t)
+                self.add_metrics_collector(e_name, gld_class)
 
     def add_voltage_class(self, gld_class: str, v_prim: float, v_ll: float, secmtrnode: dict) -> None:
-        """Write GridLAB-D instances that have a primary nominal voltage, i.e.,
-        node, meter and load.
+        """Write GridLAB-D instances that have a primary nominal voltage, i.e. node, meter and load.
 
         If triplex load, node or meter, the nominal voltage is 120. If the name
         or parent attribute is found in secmtrnode, we look up the nominal
@@ -733,23 +711,23 @@ class GLMModifier:
                 self.add_metrics_collector(e_name, prefix + gld_class)
             self.add_object(prefix + gld_class, e_name, params)
 
-    def add_xfmr_config(self, key: str, phs: str, kvat: float, v_nom: float, v_sec: float, install_type: str,
+    # TODO params xfrm diction
+    def add_xfmr_config(self,
+                        key: str, phs: str, kvat: float, v_nom: float,
+                        v_sec: float, install_type: str,
                         vprimll: float, vprimln: float) -> None:
-        """Write a transformer_configuration using values in 
-        feeder_defaults.json.
+        """Write a transformer_configuration using values in feeder_defaults.json.
 
         Args:
             key (str): name of the configuration
             phs (str): primary phasing
             kvat (float): transformer rating in kVA TODO: why kvat? Should this be kva or xfkva?
-            v_nom (float): primary voltage rating, not used any longer (see
-                vprimll and vprimln)
+            v_nom (float): primary voltage rating, not used any longer (see vprimll and vprimln)
             v_sec (float): secondary voltage rating, should be line-to-neutral
                 for single-phase or line-to-line for three-phase
             install_type (str): should be VAULT, PADMOUNT or POLETOP
-            vprimll (float): primary line-to-line voltage, used for three-phase 
-            vprimln (float): primary line-to-neutral voltage, used for
-                single-phase transformers
+            vprimll (float): primary line-to-line voltage, used for three-phase
+            vprimln (float): primary line-to-neutral voltage, used for single-phase transformers
 
         Returns:
             None
@@ -800,19 +778,18 @@ class GLMModifier:
         self.add_object("transformer_configuration", name, params)
 
     def add_local_triplex_configurations(self) -> None:
-        """Adds triplex configurations using values defined
-        in feeder_defaults.json.
-        
+        """Adds triplex configurations using values defined in feeder_defaults.json.
+
         Returns:
             None
         """
 
-        params = dict()
         for row in self.defaults.triplex_conductors:
             name = self.defaults.name_prefix + row[0]
+            params = dict()
             params["resistance"] = row[1]
             params["geometric_mean_radius"] = row[2]
-            rating_str = str(row[2])
+            rating_str = str(row[3])
             params["rating.summer.continuous"] = rating_str
             params["rating.summer.emergency"] = rating_str
             params["rating.winter.continuous"] = rating_str
@@ -821,38 +798,15 @@ class GLMModifier:
         for row in self.defaults.triplex_configurations:
             params = dict()
             name = self.defaults.name_prefix + row[0]
-            params["conductor_1"] = self.defaults.name_prefix + row[0]
+            params["conductor_1"] = self.defaults.name_prefix + row[1]
             params["conductor_2"] = self.defaults.name_prefix + row[1]
             params["conductor_N"] = self.defaults.name_prefix + row[2]
             params["insulation_thickness"] = str(row[3])
             params["diameter"] = str(row[4])
             self.add_object("triplex_line_configuration", name, params)
 
-    def resize(self):
-        """UNIMPLEMENTED
-        """
-        pass
-
-    def resize_secondary_transformers(self) :
-        """UNIMPLEMENTED
-        """
-        pass
-
-    def resize_substation_transformer(self):
-        """UNIMPLEMENTED
-        """
-        pass
-
-    def set_simulation_times(self):
-        """UNIMPLEMENTED
-        """
-        pass
-
     def add_substation(self, name: str, phs: str, v_ll: float) -> None:
-        """Write the substation swing node, transformer, metrics collector and
-        fncs_msg object
-
-        TODO: (TDH) Needs to be updated for HELICS?
+        """Write the substation swing node, transformer, metrics collector and fncs_msg/helics object
 
         Args:
             name (str): node name of the primary (not transmission) substation bus
@@ -907,6 +861,25 @@ class GLMModifier:
         self.add_metrics_collector(name, "meter")
         self.add_recorder(name, "distribution_power_A", "sub_power.csv")
 
+    def resize(self):
+        """UNIMPLEMENTED
+        """
+        pass
+
+    def resize_secondary_transformers(self) :
+        """UNIMPLEMENTED
+        """
+        pass
+
+    def resize_substation_transformer(self):
+        """UNIMPLEMENTED
+        """
+        pass
+
+    def set_simulation_times(self):
+        """UNIMPLEMENTED
+        """
+        pass
 
 
 def _test1():

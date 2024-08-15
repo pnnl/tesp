@@ -53,10 +53,8 @@ TODO:
 import pyjson5
 import math
 import os.path
-import re
 import sys
 
-import networkx as nx
 import numpy as np
 import pandas as pd
 
@@ -69,7 +67,6 @@ from tesp_support.api.entity import assign_defaults
 
 sys.path.append('./')
 import gld_commercial_feeder as comm_FG
-import recs_api as recs
 
 global c_p_frac
 extra_billing_meters = set()
@@ -79,15 +76,29 @@ class Config:
     pass
 
 
-class Building:
+class Residential_Build:
     pass
 
+
+class Commercial_Building:
+    pass
+
+
+class Battery:
+    pass
+
+
+class Electric_Vehicle:
+    pass
 
 class Feeder:
 
     def __init__(self, glm_config=None):
-        self.g_config = Config
-        self.res_bldg_metadata = Building()
+        self.g_config = Config()
+        self.res_bldg_metadata = Residential_Build()
+        self.comm_bldg_metadata = Commercial_Building()
+        self.batt_metadata = Battery()
+        self.ev_metadata = Electric_Vehicle()
 
         assign_defaults(self.g_config, glm_config)
         self.glm = GLMModifier()
@@ -101,6 +112,7 @@ class Feeder:
         else:
             self.glm.read_model(self.g_config.in_file_glm)
 
+        # add tape, climate, generators, connection, residential modules
         self.glm.add_module("tape", {})
         self.glm.add_module("climate", {})
         self.glm.add_module("generators", {})
@@ -112,37 +124,41 @@ class Feeder:
         # TODO: add for loop for players
         #        self.glm.add_module("player", params)
 
-        # add clock
-        self.glm.model.module_entities['clock'].starttime.value = self.base.starttime
-        self.glm.model.module_entities['clock'].stoptime.value = self.base.endtime
-        self.glm.model.module_entities['clock'].timezone.value = self.base.timezone
+        # set clock
+        self.glm.model.set_clock(self.g_config.starttime, self.g_config.stoptime, self.g_config.timezone)
 
-        #TODO: set includes
-        self.glm.model.include_lines.append('#include "${TESPDIR}/data/schedules/appliance_schedules.glm"')
-        self.glm.model.include_lines.append('#include "${TESPDIR}/data/schedules/water_and_setpoint_schedule_v5.glm"')
-        self.glm.model.include_lines.append('#include "${TESPDIR}/data/schedules/commercial_schedules.glm"')
+        # set includes
+        for item in self.g_config.includes:
+            self.glm.model.add_include(item)
 
-        #TODO: set lines
-        self.glm.model.set_lines.append('#set minimum_timestep=' + str(self.base.timestep))
-        self.glm.model.set_lines.append('#set relax_naming_rules=1')
-        self.glm.model.set_lines.append('#set warn=0')
+        # add sets
+        for key in self.g_config.sets:
+            self.glm.model.add_set(key, self.g_config.sets[key])
 
-        if self.g_config.WANT_VI_DUMP:
-            self.glm.add_voltage_dump(self.g_config.case_name)
+        # add defines
+        for key, value in self.g_config.defines:
+            self.glm.model.add_defines(key, value)
 
-        if self.base.metrics_interval > 0:
+        # add voltage dump file
+        if self.base.WANT_VI_DUMP:
+            self.glm.add_voltage_dump(self.base.case_name)
+
+        # add metrics interval and interim interval
+        if self.g_config.metrics_interval > 0:
             params = {"interval": str(self.base.metrics_interval),
                       "interim": "43200",
-                      "filename": "${METRICS_FILE}"
-                      }
+                      "filename": "out_",
+                      "alternate": "yes",
+                      "extension": "h5"
+            }
             self.glm.add_object("metrics_collector_writer", "mc", params)
 
+        # add climate object and weather params to
         name = "localWeather"
-        params = {"name": str(self.g_config.weather_name),
-                  "interpolate": "QUADRATIC",
+        params = {"interpolate": "QUADRATIC",
                   "latitude": str(self.g_config.latitude),
                   "longitude": str(self.g_config.longitude)}
-                  # "tz_meridian": '{0:.2f};'.format(15 * self.g_config.time_zone_offset)}
+                  # "tz_meridian": '{0:.2f}'.format(15 * self.g_config.time_zone_offset)}
         self.glm.add_object("climate", name, params)
 
         # NEW STRATEGY - loop through transformer instances and assign a standard size based on the downstream load
@@ -164,9 +180,9 @@ class Feeder:
             if 'C' in seg_phs:
                 nphs += 1
             if nphs > 1:
-                kvat = self.glm.find_3phase_xfmr_kva(seg_kva)
+                kvat = self.glm.find_3phase_xfmr_w_margin(seg_kva)
             else:
-                kvat = self.glm.find_1phase_xfmr_kva_w_margin(seg_kva)
+                kvat = self.glm.find_1phase_xfmr_w_margin(seg_kva)
             if 'S' in seg_phs:
                 vnom = 120.0
                 vsec = 120.0
@@ -236,7 +252,7 @@ class Feeder:
                 metrics = True
             self.glm.add_link_class(link, seg_loads, want_metrics=metrics)
 
-        # self.replace_commercial_loads(model, h, 'load', 0.001 * avgcommercial)
+        self.replace_commercial_loads('load', 0.001 * self.g_config.avg_commercial)
 
         #TODO: find where avghouse and rgn are coming from avghouse and rgn = 4500.0, 30000.0
         self.identify_xfmr_houses('transformer', seg_loads, 0.001 * self.g_config.avg_house, self.g_config.region)
@@ -248,22 +264,17 @@ class Feeder:
             self.add_small_loads(key, 120.0)
         for key in self.base.comm_loads:
             # add_commercial_loads(rgn, key)
-            bldg_definition = comm_FG.define_comm_loads(self, self.base.comm_loads[key][1],
-                                                        self.base.comm_loads[key][2],
-                                                       "Suburban",
-                                                        # self.base.dso_type,
-                                                        self.base.ashrae_zone,
-                                                        self.base.comm_bldg_metadata)
-            comm_FG.add_comm_zones(self.glm, bldg_definition,
-                                  self.base.comm_loads, key,
-                                  self.base.batt_metadata, self.base.storage_percentage,
-                                  self.base.ev_metadata, self.base.ev_percentage,
-                                  self.base.solar_percentage, self.base.pv_rating_MW,
-                                  self.base.solar_Q_player,
-                                  self.base.case_type)
+            bldg_definition = comm_FG.define_comm_loads(self.glm,
+                self.base.comm_loads[key][1],
+                self.base.comm_loads[key][2],
+                self.g_config.utility_type,
+                self.g_config.ashrae_zone,
+                self.comm_bldg_metadata)
+            comm_FG.add_comm_zones(self, bldg_definition, key)
 
-        self.glm.add_voltage_class('node', self.g_config.vln, self.g_config.vll, secnode)
-        self.glm.add_voltage_class('meter', self.g_config.vln, self.g_config.vll, secnode)
+#        self.glm.add_voltage_class('node', self.g_config.vln, self.g_config.vll, secnode)
+#        self.glm.add_voltage_class('meter', self.g_config.vln, self.g_config.vll, secnode)
+#        self.glm.add_voltage_class('load', self.g_config.vln, self.g_config.vll, secnode)
 
         print('cooling bins unused', self.base.cooling_bins)
         print('heating bins unused', self.base.heating_bins)
@@ -275,8 +286,8 @@ class Feeder:
         # if self.g_config['use_recs']:
         if not self.g_config.recs_exist:
             recs_gld_house_parameters.get_RECS_jsons(
-                self.g_config.in_file_recs_income_level,
-                self.g_config.in_file_residential_meta,
+                self.g_config.file_recs_income_level,
+                self.g_config.file_residential_meta,
                 self.g_config.out_file_residential_meta,
                 self.g_config.out_file_hvac_set_point,
                 self.g_config.sample,
@@ -284,6 +295,15 @@ class Feeder:
                 self.g_config.climate_zone,
                 self.g_config.wh_shift
             )
+
+        assign_defaults(self.comm_bldg_metadata, self.g_config.file_commercial_meta)
+        # We need to generate the total population of commercial buildings by type and size
+        num_comm_customers = round(self.g_config.number_of_gld_homes *
+                                   self.g_config.RCI_customer_count_mix["commercial"] / self.g_config.RCI_customer_count_mix["residential"])
+        num_comm_bldgs = num_comm_customers / self.g_config.comm_customers_per_bldg
+
+        self.base.comm_bldgs_pop = comm_FG.define_comm_bldg(self.comm_bldg_metadata, self.g_config.utility_type,
+                                                              num_comm_bldgs)
 
         assign_defaults(self.res_bldg_metadata, self.g_config.out_file_residential_meta)
         cop_mat = self.res_bldg_metadata.COP_average
@@ -298,42 +318,10 @@ class Feeder:
                 temp.append(cop_mat[str(yr)])
             self.base.cop_lookup.append(temp)
 
-
-    # EV population functions
-    def process_nhts_data(self, data_file: str) -> pd.DataFrame:
-        """Read the large nhts survey data file containing driving data, process
-        it and return a dataframe
-
-        Args:
-            data_file (str): path of the file
-
-        Returns:
-            pd.DataFrame: dataframe containing start_time, end_time, travel_day 
-            (weekday/weekend) and daily miles driven
-        """
-        # Read data from NHTS survey
-        df_data = pd.read_csv(data_file, index_col=[0, 1])
-        # filter based on trip leaving only from home and not from work or other places
-        # take the earliest time leaving from home of a particular vehicle
-        df_data_leave = df_data[df_data['WHYFROM'] == 1].groupby(level=['HOUSEID', 'VEHID']).min()[
-            ['STRTTIME', 'TRAVDAY']]
-        # filter based on trip arriving only at home and not at work or other places
-        # take the latest time arriving at home of a particular vehicle
-        df_data_arrive = df_data[df_data['WHYTO'] == 1].groupby(level=['HOUSEID', 'VEHID']).max()[
-            ['ENDTIME', 'TRAVDAY']]
-        # take the sum of trip miles by a particular vehicle in a day
-        df_data_miles = df_data.groupby(level=['HOUSEID', 'VEHID']).sum()['TRPMILES']
-        # limit daily miles to maximum possible range of EV from the ev model data as EVs cant travel more
-        # than the range in a day if we don't consider the highway charging
-        max_ev_range = max(self.base.ev_metadata['Range (miles)'].values())
-        df_data_miles = df_data_miles[df_data_miles < max_ev_range]
-        df_data_miles = df_data_miles[df_data_miles > 0]
-
-        # combine all 4 parameters: starttime, endtime, total_miles, travel_day.
-        # Ignore vehicle ids that don't have both leaving and arrival time at home
-        temp = df_data_leave.merge(df_data_arrive['ENDTIME'], left_index=True, right_index=True)
-        df_fin = temp.merge(df_data_miles, left_index=True, right_index=True)
-        return df_fin
+        assign_defaults(self.comm_bldg_metadata, self.g_config.file_commercial_meta)
+        assign_defaults(self.batt_metadata, self.g_config.file_battery_meta)
+        assign_defaults(self.ev_metadata, self.g_config.file_ev_meta)
+        self.base.ev_driving_metadata = self.process_nhts_data(self.g_config.file_ev_driving_meta)
 
     def selectEVmodel(self, evTable: dict, prob: float) -> str:
         """Selects the building and vintage type
@@ -347,7 +335,7 @@ class Feeder:
 
         Returns:
             str: name
-        """    
+        """
 
         total = 0
         for name, pr in evTable.items():
@@ -357,16 +345,16 @@ class Feeder:
         raise UserWarning('EV model sale distribution does not sum to 1!')
 
     def match_driving_schedule(self, ev_range: float, ev_mileage: float, ev_max_charge: float) -> dict:
-        """Method to match the schedule of each vehicle from NHTS data based on 
-        vehicle ev_range. 
-        - Checks to make sure daily travel miles are less than 
+        """Method to match the schedule of each vehicle from NHTS data based on
+        vehicle ev_range.
+        - Checks to make sure daily travel miles are less than
         ev_range-margin. Allows a reserve SoC to be specified.
-        - Checka if home_duration is enough to charge for daily_miles driven + 
+        - Checka if home_duration is enough to charge for daily_miles driven +
         margin
-        - Since during v1g or v2g mode, we only allow charging start at the 
+        - Since during v1g or v2g mode, we only allow charging start at the
         start of the next hour after vehicle, come home and charging must end at
-        the full hour just before vehicle leaves home, the actual chargeable 
-        hours duration may be smaller than the car home duration by maximum 2 
+        the full hour just before vehicle leaves home, the actual chargeable
+        hours duration may be smaller than the car home duration by maximum 2
         hours.
 
         Args:
@@ -378,14 +366,14 @@ class Feeder:
             UserWarning: _description_
 
         Returns:
-            dict: driving_sch containing {daily_miles, home_arr_time, 
+            dict: driving_sch containing {daily_miles, home_arr_time,
             home_leave_time, home_duration, work_arr_time, work_duration}
         """
 
         while True:
             mile_ind = np.random.randint(0, len(self.base.ev_driving_metadata['TRPMILES']))
             daily_miles = self.base.ev_driving_metadata['TRPMILES'].iloc[mile_ind]
-            if ev_range * 0.0 < daily_miles < ev_range * (1 - self.base.ev_reserved_soc / 100):
+            if ev_range * 0.0 < daily_miles < ev_range * (1 - self.g_config.ev_reserved_soc / 100):
                 break
         daily_miles = max(daily_miles, ev_range * 0.2)
         home_leave_time = self.base.ev_driving_metadata['STRTTIME'].iloc[mile_ind]
@@ -429,7 +417,7 @@ class Feeder:
         """Checks if work arrival time and home arrival time adds up properly
 
         Args:
-            drive_sch (dict): Contains {daily_miles, home_arr_time, 
+            drive_sch (dict): Contains {daily_miles, home_arr_time,
             home_leave_time, home_duration, work_arr_time, work_duration}
 
         Returns:
@@ -443,6 +431,42 @@ class Feeder:
                 round(work_duration / 60) != round(drive_sch['work_duration'] / 60)):
             return False
         return True
+
+    # EV population functions
+    def process_nhts_data(self, data_file: str) -> pd.DataFrame:
+        """Read the large nhts survey data file containing driving data, process
+        it and return a dataframe
+
+        Args:
+            data_file (str): path of the file
+
+        Returns:
+            pd.DataFrame: dataframe containing start_time, end_time, travel_day 
+            (weekday/weekend) and daily miles driven
+        """
+        # Read data from NHTS survey
+        df_data = pd.read_csv(data_file, index_col=[0, 1])
+        # filter based on trip leaving only from home and not from work or other places
+        # take the earliest time leaving from home of a particular vehicle
+        df_data_leave = df_data[df_data['WHYFROM'] == 1].groupby(level=['HOUSEID', 'VEHID']).min()[
+            ['STRTTIME', 'TRAVDAY']]
+        # filter based on trip arriving only at home and not at work or other places
+        # take the latest time arriving at home of a particular vehicle
+        df_data_arrive = df_data[df_data['WHYTO'] == 1].groupby(level=['HOUSEID', 'VEHID']).max()[
+            ['ENDTIME', 'TRAVDAY']]
+        # take the sum of trip miles by a particular vehicle in a day
+        df_data_miles = df_data.groupby(level=['HOUSEID', 'VEHID']).sum()['TRPMILES']
+        # limit daily miles to maximum possible range of EV from the ev model data as EVs cant travel more
+        # than the range in a day if we don't consider the highway charging
+        max_ev_range = max(self.ev_metadata.Range_miles.values())
+        df_data_miles = df_data_miles[df_data_miles < max_ev_range]
+        df_data_miles = df_data_miles[df_data_miles > 0]
+
+        # combine all 4 parameters: starttime, endtime, total_miles, travel_day.
+        # Ignore vehicle ids that don't have both leaving and arrival time at home
+        temp = df_data_leave.merge(df_data_arrive['ENDTIME'], left_index=True, right_index=True)
+        df_fin = temp.merge(df_data_miles, left_index=True, right_index=True)
+        return df_fin
 
     def selectResidentialBuilding(self, rgnTable: list, prob: float) -> list:
         """Writes volt-var and volt-watt settings for solar inverters
@@ -614,7 +638,6 @@ class Feeder:
                 {four_quadrant_control_mode, V1, Q1, V2, Q2, V3, Q3, V4, Q4, 
                 V_In, I_In, volt_var_control_lockout, VW_V1, VW_V2, VW_P1, VW_P2}
         """
-        # print ('    four_quadrant_control_mode ${' + name_prefix + 'INVERTER_MODE};', file=op)
         params["four_quadrant_control_mode"] = self.base.name_prefix + 'INVERTER_MODE'
         params["V_base"] = '${INV_VBASE}'
         params["V1"] = '${INV_V1}'
@@ -665,15 +688,12 @@ class Feeder:
         return dsoThermalPct
         # print(dsoThermalPct)
 
-    def replace_commercial_loads(self, model: dict, h: dict, t: str, avgBuilding: float):
+    def replace_commercial_loads(self, gld_class: str, avgBuilding: float):
         """For the full-order feeders, scan each load with load_class==C to 
         determine the number of zones it should have.
-        TODO: not all variables are used in this function
 
         Args:
-            model (dict): the parsed GridLAB-D model
-            h (dict): the object ID hash
-            t (str): the GridLAB-D class name to scan
+            gld_class (str): the GridLAB-D class name to scan
             avgBuilding (float): the average building in kva
         """
         print('Average Commercial Building', avgBuilding)
@@ -692,85 +712,90 @@ class Feeder:
         total_low_occupancy = 0
         sqft_kva_ratio = 0.005  # Average com building design load is 5 W/sq ft.
 
-        if t in model:
-            for o in list(model[t].keys()):
-                if 'load_class' in model[t][o]:
-                    select_bldg = None
-                    if model[t][o]['load_class'] == 'C':
-                        kva = self.accumulate_load_kva(model[t][o])
-                        total_commercial += 1
-                        total_comm_kva += kva
-                        vln = float(model[t][o]['nominal_voltage'])
-                        nphs = 0
-                        phases = model[t][o]['phases']
-                        if 'A' in phases:
-                            nphs += 1
-                        if 'B' in phases:
-                            nphs += 1
-                        if 'C' in phases:
-                            nphs += 1
-                        nzones = int((kva / avgBuilding) + 0.5)
-                        target_sqft = kva / sqft_kva_ratio
-                        sqft_error = -target_sqft
-                        # TODO: Need a way to place all remaining buildings if this is the last/fourth feeder.
-                        # TODO: Need a way to place link for j-modelica buildings on fourth feeder of Urban DSOs
-                        # TODO: Need to work out what to do if we run out of commercial buildings before we get to the fourth feeder.
-                        for bldg in self.base.comm_bldgs_pop:
-                            if 0 >= (self.base.comm_bldgs_pop[bldg][1] - target_sqft) > sqft_error:
-                                select_bldg = bldg
-                                sqft_error = self.base.comm_bldgs_pop[bldg][1] - target_sqft
-                        # if nzones > 14 and nphs == 3:
-                        #   comm_type = 'OFFICE'
-                        #   total_office += 1
-                        # elif nzones > 5 and nphs > 1:
-                        #   comm_type = 'BIGBOX'
-                        #   total_bigbox += 1
-                        # elif nzones > 0:
-                        #   comm_type = 'STRIPMALL'
-                        #   total_stripmall += 1
-                    if select_bldg is not None:
-                        comm_name = select_bldg
-                        comm_type = self.base.comm_bldgs_pop[select_bldg][0]
-                        comm_size = self.base.comm_bldgs_pop[select_bldg][1]
-                        if comm_type == 'office':
-                            total_office += 1
-                        elif comm_type == 'warehouse_storage':
-                            total_warehouse_storage += 1
-                        elif comm_type == 'big_box':
-                            total_big_box += 1
-                        elif comm_type == 'strip_mall':
-                            total_strip_mall += 1
-                        elif comm_type == 'education':
-                            total_education += 1
-                        elif comm_type == 'food_service':
-                            total_food_service += 1
-                        elif comm_type == 'food_sales':
-                            total_food_sales += 1
-                        elif comm_type == 'lodging':
-                            total_lodging += 1
-                        elif comm_type == 'healthcare_inpatient':
-                            total_healthcare_inpatient += 1
-                        elif comm_type == 'low_occupancy':
-                            total_low_occupancy += 1
+        try:
+            entity = self.glm.glm.__getattribute__(gld_class)
+        except:
+            return
+        removenames = []
+        for e_name, e_object in entity.items():
+            if 'load_class' in e_object:
+                select_bldg = None
+                if e_object['load_class'] == 'C':
+                    kva = self.glm.model.accumulate_load_kva(e_object)
+                    total_commercial += 1
+                    total_comm_kva += kva
+                    vln = float(e_object['nominal_voltage'])
+                    nphs = 0
+                    phases = e_object['phases']
+                    if 'A' in phases:
+                        nphs += 1
+                    if 'B' in phases:
+                        nphs += 1
+                    if 'C' in phases:
+                        nphs += 1
+                    nzones = int((kva / avgBuilding) + 0.5)
+                    target_sqft = kva / sqft_kva_ratio
+                    sqft_error = -target_sqft
+                    # TODO: Need a way to place all remaining buildings if this is the last/fourth feeder.
+                    # TODO: Need a way to place link for j-modelica buildings on fourth feeder of Urban DSOs
+                    # TODO: Need to work out what to do if we run out of commercial buildings before we get to the fourth feeder.
+                    for bldg in self.base.comm_bldgs_pop:
+                        if 0 >= (self.base.comm_bldgs_pop[bldg][1] - target_sqft) > sqft_error:
+                            select_bldg = bldg
+                            sqft_error = self.base.comm_bldgs_pop[bldg][1] - target_sqft
+                    # if nzones > 14 and nphs == 3:
+                    #   comm_type = 'OFFICE'
+                    #   total_office += 1
+                    # elif nzones > 5 and nphs > 1:
+                    #   comm_type = 'BIGBOX'
+                    #   total_bigbox += 1
+                    # elif nzones > 0:
+                    #   comm_type = 'STRIPMALL'
+                    #   total_stripmall += 1
+                if select_bldg is not None:
+                    comm_name = select_bldg
+                    comm_type = self.base.comm_bldgs_pop[select_bldg][0]
+                    comm_size = self.base.comm_bldgs_pop[select_bldg][1]
+                    if comm_type == 'office':
+                        total_office += 1
+                    elif comm_type == 'warehouse_storage':
+                        total_warehouse_storage += 1
+                    elif comm_type == 'big_box':
+                        total_big_box += 1
+                    elif comm_type == 'strip_mall':
+                        total_strip_mall += 1
+                    elif comm_type == 'education':
+                        total_education += 1
+                    elif comm_type == 'food_service':
+                        total_food_service += 1
+                    elif comm_type == 'food_sales':
+                        total_food_sales += 1
+                    elif comm_type == 'lodging':
+                        total_lodging += 1
+                    elif comm_type == 'healthcare_inpatient':
+                        total_healthcare_inpatient += 1
+                    elif comm_type == 'low_occupancy':
+                        total_low_occupancy += 1
 
-                            # code = 'total_' + comm_type + ' += 1'
-                            # exec(code)
-                            # my_exec(code)
-                            # eval(compile(code, '<string>', 'exec'))
+                        # code = 'total_' + comm_type + ' += 1'
+                        # exec(code)
+                        # my_exec(code)
+                        # eval(compile(code, '<string>', 'exec'))
 
-                            del (self.base.comm_bldgs_pop[select_bldg])
-                        else:
-                            if nzones > 0:
-                                print('Commercial building could not be found for ', '{:.2f}'.format(kva), ' KVA load')
-                            comm_name = 'streetlights'
-                            comm_type = 'ZIPLOAD'
-                            comm_size = 0
-                            total_zipload += 1
-                        mtr = gld_strict_name(model[t][o]['parent'])
-                        extra_billing_meters.add(mtr)
-                        self.base.comm_loads[o] = [mtr, comm_type, comm_size, kva, nphs, phases, vln,
-                                                   total_commercial, comm_name]
-                        del model[t][o]
+                        del (self.base.comm_bldgs_pop[select_bldg])
+                    else:
+                        if nzones > 0:
+                            print('Commercial building could not be found for ', '{:.2f}'.format(kva), ' KVA load')
+                        comm_name = 'streetlights'
+                        comm_type = 'ZIPLOAD'
+                        comm_size = 0
+                        total_zipload += 1
+                    mtr = gld_strict_name(e_object['parent'])
+                    extra_billing_meters.add(mtr)
+                    self.base.comm_loads[e_name] = [mtr, comm_type, comm_size, kva, nphs, phases, vln, total_commercial, comm_name]
+                    removenames.append(e_name)
+        for e_name in removenames:
+            self.glm.del_object(gld_class, e_name)
         # Print commercial info
         print('Found {} commercial loads totaling {:.2f} kVA'.
               format(total_commercial, total_comm_kva))
@@ -791,12 +816,12 @@ class Feeder:
         print('{} commercial buildings, approximately {} kVA still to be assigned.'.
               format(len(self.base.comm_bldgs_pop), int(remain_comm_kva)))
 
-    def identify_xfmr_houses(self, t: str, seg_loads: dict, avgHouse: float, rgn: int):
+    def identify_xfmr_houses(self, gld_class: str, seg_loads: dict, avgHouse: float, rgn: int):
         """For the full-order feeders, scan each service transformer to 
         determine the number of houses it should have
         TODO: not all variables are used in this function
         Args:
-            t (str): the GridLAB-D class name to scan
+            gld_class (str): the GridLAB-D class name to scan
             seg_loads (dict): dictionary of downstream load (kva) served by each GridLAB-D link
             avgHouse (float): the average house load in kva
             rgn (int): the region number, 1..5
@@ -810,7 +835,7 @@ class Feeder:
         total_small_kva = 0
         dsoIncomePct = self.getDsoIncomeLevelTable()
         try:
-            entity = self.glm.glm.__getattribute__(t)
+            entity = self.glm.glm.__getattribute__(gld_class)
         except:
             return
         for e_name, e_object in entity.items():
@@ -988,7 +1013,7 @@ class Feeder:
                   "power_pf": '{:.2f}'.format(bldg['c_p_pf']),
                   "current_pf": '{:.2f}'.format(bldg['c_i_pf']),
                   "impedance_pf": '{:.2f}'.format(bldg['c_z_pf']),
-                  "base_power": '{:s}_exterior*{:.2f};'.format(bldg['base_schedule'], bldg['adj_ext'])}
+                  "base_power": '{:s}_exterior*{:.2f}'.format(bldg['base_schedule'], bldg['adj_ext'])}
         self.glm.add_object("ZIPload", "exterior lights", params)
 
         params = {"parent": name,
@@ -1006,12 +1031,12 @@ class Feeder:
             #  Should be set to zero after that is fixed.
             params = {"heatgain_fraction": "0.01",
                       "power_fraction": '{:.2f}'.format(bldg['c_p_frac']),
-                      "impedance_fraction": '{:.2f};'.format(bldg['c_z_frac']),
-                      "current_fraction": '{:.2f};'.format(bldg['c_i_frac']),
-                      "power_pf": '{:.2f};'.format(bldg['c_p_pf']),
-                      "current_pf": '{:.2f};'.format(bldg['c_i_pf']),
-                      "impedance_pf": '{:.2f};'.format(bldg['c_z_pf']),
-                      "base_power": '{:.2f};'.format(bldg['adj_refrig'])}
+                      "impedance_fraction": '{:.2f}'.format(bldg['c_z_frac']),
+                      "current_fraction": '{:.2f}'.format(bldg['c_i_frac']),
+                      "power_pf": '{:.2f}'.format(bldg['c_p_pf']),
+                      "current_pf": '{:.2f}'.format(bldg['c_i_pf']),
+                      "impedance_pf": '{:.2f}'.format(bldg['c_z_pf']),
+                      "base_power": '{:.2f}'.format(bldg['adj_refrig'])}
             self.glm.add_object("ZIPload", "large refrigeration", params)
 
         self.glm.add_metrics_collector(name, "house")
@@ -1239,13 +1264,13 @@ class Feeder:
         if comm_type == 'ZIPLOAD':
             phsva = 1000.0 * kva / nphs
             name = '{:s}'.format(key + '_streetlights')
-            params = {"parent": '{:s};'.format(mtr),
+            params = {"parent": '{:s}'.format(mtr),
                       "groupid": "STREETLIGHTS",
                       "nominal_voltage": '{:2f}'.format(vln),
                       "phases": '{:s}'.format(phases)}
             for phs in ['A', 'B', 'C']:
                 if phs in phases:
-                    params["impedance_fraction_" + phs] = '{:f};'.format(self.base.c_z_frac)
+                    params["impedance_fraction_" + phs] = '{:f}'.format(self.base.c_z_frac)
                     params["current_fraction_" + phs] = '{:f}'.format(self.base.c_i_frac)
                     params["power_fraction_" + phs] = '{:f}'.format(bldg['c_p_frac'])
                     params["impedance_pf_" + phs] = '{:f}'.format(self.base.c_z_pf)
@@ -1255,7 +1280,7 @@ class Feeder:
             self.glm.add_object("load", name, params)
         else:
             name = '{:s}'.format(key)
-            params = {"parent": '{:s};'.format(mtr),
+            params = {"parent": '{:s}'.format(mtr),
                       "groupid": '{:s}'.format(comm_type),
                       "nominal_voltage": '{:2f}'.format(vln),
                       "phases": '{:s}'.format(phases)}
@@ -1341,7 +1366,7 @@ class Feeder:
                       "phases": phs,
                       "length": "30",
                       "configuration": self.base.name_prefix + self.base.triplex_configurations[0][0]}
-            self.glm.add_object("triplex_line", tpxname, params)
+            self.glm.add_object("triplex_line", tpxname1, params)
 
             params = {"phases": phs,
                       "meter_power_consumption": "1+7j",
@@ -1350,7 +1375,7 @@ class Feeder:
                       "voltage_2": vstart}
             self.glm.add_tariff(params)
             self.glm.add_object("triplex_meter", mtrname1, params)
-            self.glm.add_metrics_collector(mtrname, "meter")
+            self.glm.add_metrics_collector(mtrname1, "meter")
 
             params = {"parent": mtrname1,
                       "phases": phs,
@@ -1719,10 +1744,10 @@ class Feeder:
                 inverter_undersizing = 1.0
                 inv_power = num_panel * 350 * inverter_undersizing
                 pv_scaling_factor = inv_power / self.g_config.rooftop_pv_rating_MW
-                if self.base.case_type['pv']:
+                if self.g_config.case_type['pv']:
                     self.base.solar_count += 1
                     self.base.solar_kw += 0.001 * inv_power
-                    params = {"parent": mtrname,
+                    params = {"parent": mtrname1,
                               "phases": phs,
                               "nominal_voltage": str(v_nom)}
                     self.glm.add_object("triplex_meter", sol_m_name, params)
@@ -1756,55 +1781,52 @@ class Feeder:
                     self.glm.add_object("inverter", sol_i_name, params)
                     self.glm.add_metrics_collector(sol_i_name, "inverter")
 
-        # if np.random.uniform(0, 1) <= bat_g_sol_sf_inc:
-        #     battery_capacity = get_dist(self.base.batt_metadata['capacity(kWh)']['mean'],
-        #                                 self.base.batt_metadata['capacity(kWh)'][
-        #                                     'deviation_range_per']) * 1000
-        #     max_charge_rate = get_dist(self.base.batt_metadata['rated_charging_power(kW)']['mean'],
-        #                                self.base.batt_metadata['rated_charging_power(kW)'][
-        #                                    'deviation_range_per']) * 1000
-        #     max_discharge_rate = max_charge_rate
-        #     inverter_efficiency = self.base.batt_metadata['inv_efficiency(per)'] / 100
-        #     charging_loss = get_dist(self.base.batt_metadata['rated_charging_loss(per)']['mean'],
-        #                              self.base.batt_metadata['rated_charging_loss(per)'][
-        #                                  'deviation_range_per']) / 100
-        #     discharging_loss = charging_loss
-        #     round_trip_efficiency = charging_loss * discharging_loss
-        #     rated_power = max(max_charge_rate, max_discharge_rate)
-        #
-        #     if self.base.case_type['bt']:
-        #         self.base.battery_count += 1
-        #         params = {"parent": mtrname,
-        #                   "phases": phs,
-        #                   "nominal_voltage": str(v_nom)}
-        #         self.glm.add_object("triplex_meter", bat_m_name, params)
-        #
-        #         params = {"parent": bat_m_name,
-        #                   "phases": phs,
-        #                   "groupid": "batt_inverter",
-        #                   "generator_status": "ONLINE",
-        #                   "generator_mode": "CONSTANT_PQ",
-        #                   "inverter_type": "FOUR_QUADRANT",
-        #                   "four_quadrant_control_mode": self.base.storage_inv_mode,
-        #                   "charge_lockout_time": 1,
-        #                   "discharge_lockout_time": 1,
-        #                   "rated_power": rated_power,
-        #                   "max_charge_rate": max_charge_rate,
-        #                   "max_discharge_rate": max_discharge_rate,
-        #                   "sense_object": mtrname,
-        #                   "inverter_efficiency": inverter_efficiency,
-        #                   "power_factor": 1.0}
-        #         self.glm.add_object("inverter", bat_i_name, params)
-        #
-        #         params = {"parent": bat_i_name,
-        #                   "use_internal_battery_model": "true",
-        #                   "nominal_voltage": 480,
-        #                   "battery_capacity": battery_capacity,
-        #                   "round_trip_efficiency": round_trip_efficiency,
-        #                   "state_of_charge": 0.50}
-        #         self.glm.add_object("battery", batname, params)
-        #         self.glm.add_metrics_collector(batname, "inverter")
-        #
+        if np.random.uniform(0, 1) <= bat_g_sol_sf_inc:
+            battery_capacity = get_dist(self.batt_metadata.capacity['mean'],
+                                        self.batt_metadata.capacity['deviation_range_per']) * 1000
+            max_charge_rate = get_dist(self.batt_metadata.rated_charging_power['mean'],
+                                       self.batt_metadata.rated_charging_power['deviation_range_per']) * 1000
+            max_discharge_rate = max_charge_rate
+            inverter_efficiency = self.batt_metadata.inv_efficiency / 100
+            charging_loss = get_dist(self.batt_metadata.rated_charging_loss['mean'],
+                                     self.batt_metadata.rated_charging_loss['deviation_range_per']) / 100
+            discharging_loss = charging_loss
+            round_trip_efficiency = charging_loss * discharging_loss
+            rated_power = max(max_charge_rate, max_discharge_rate)
+
+            if self.g_config.case_type['bt']:
+                self.base.battery_count += 1
+                params = {"parent": mtrname1,
+                          "phases": phs,
+                          "nominal_voltage": str(v_nom)}
+                self.glm.add_object("triplex_meter", bat_m_name, params)
+
+                params = {"parent": bat_m_name,
+                          "phases": phs,
+                          "groupid": "batt_inverter",
+                          "generator_status": "ONLINE",
+                          "generator_mode": "CONSTANT_PQ",
+                          "inverter_type": "FOUR_QUADRANT",
+                          "four_quadrant_control_mode": self.base.storage_inv_mode,
+                          "charge_lockout_time": 1,
+                          "discharge_lockout_time": 1,
+                          "rated_power": rated_power,
+                          "max_charge_rate": max_charge_rate,
+                          "max_discharge_rate": max_discharge_rate,
+                          "sense_object": mtrname1,
+                          "inverter_efficiency": inverter_efficiency,
+                          "power_factor": 1.0}
+                self.glm.add_object("inverter", bat_i_name, params)
+
+                params = {"parent": bat_i_name,
+                          "use_internal_battery_model": "true",
+                          "nominal_voltage": 480,
+                          "battery_capacity": battery_capacity,
+                          "round_trip_efficiency": round_trip_efficiency,
+                          "state_of_charge": 0.50}
+                self.glm.add_object("battery", batname, params)
+                self.glm.add_metrics_collector(bat_i_name, "inverter")
+
         if np.random.uniform(0, 1) <= ev_percentage_il:
             # first lets select an ev model:
             ev_name = self.selectEVmodel(self.base.ev_metadata['sale_probability'], np.random.uniform(0, 1))
@@ -1821,11 +1843,11 @@ class Feeder:
 
             # now, let's map a random driving schedule with this vehicle ensuring daily miles
             # doesn't exceed the vehicle range and home duration is enough to charge the vehicle
-            drive_sch = self.match_driving_schedule(ev_range, ev_mileage, ev_max_charge)
+            drive_sch = self.match_driving_schedule(self.base, ev_range, ev_mileage, ev_max_charge)
             # ['daily_miles','home_arr_time','home_duration','work_arr_time','work_duration']
 
             # Should be able to turn off ev entirely using ev_percentage, definitely in debugging
-            if self.base.case_type['pv']:  # evs are populated when its pvCase i.e. high renewable case
+            if self.g_config.case_type['pv']:  # evs are populated when its pvCase i.e. high renewable case
                 # few sanity checks
                 if drive_sch['daily_miles'] > ev_range:
                     raise UserWarning('daily travel miles for EV can not be more than range of the vehicle!')
@@ -1973,27 +1995,27 @@ class Feeder:
                     self.glm.model.define_lines.append("#define INV_VBASE=208.0")
 
             name = '{:s}_xfmr'.format(node)
-            params = {"phases": '{:s};'.format(phs),
+            params = {"phases": '{:s}'.format(phs),
                       "from": '{:s}'.format(node),
                       "to": '{:s}'.format(xfmr_meter),
                       "configuration": '{:s}'.format(xfkey)}
             self.glm.add_object("transformer", name, params)
 
             if secondary_ft is not None:
-                name = '{:s}_mtr;'.format(node)
+                name = '{:s}_mtr'.format(node)
                 params = {"phases": '{:s}'.format(phs),
-                          "nominal_voltage": '{:.2f};'.format(vnom)}
+                          "nominal_voltage": '{:.2f}'.format(vnom)}
                 self.glm.add_object('{:s} {{'.format(meter_class), name, params)
 
-                name = '{:s}_secondary;'.format(node)
-                params = {"phases": '{:s};'.format(phs),
-                          "from": '{:s};'.format(xfmr_meter),
+                name = '{:s}_secondary'.format(node)
+                params = {"phases": '{:s}'.format(phs),
+                          "from": '{:s}'.format(xfmr_meter),
                           "to": '{:s}_mtr'.format(node),
-                          "length": '{:.1f};'.format(secondary_ft),
+                          "length": '{:.1f}'.format(secondary_ft),
                           "configuration": '{:s}'.format(linekey)}
                 self.glm.add_object('{:s} {{'.format(line_class), name, params)
-            name = '{:s}_mtr;'.format(node)
-            params = {"phases": '{:s};'.format(phs),
+            name = '{:s}_mtr'.format(node)
+            params = {"phases": '{:s}'.format(phs),
                       "nominal_voltage": '{:.2f}'.format(vnom)}
             self.glm.add_tariff(params)
             self.glm.add_object('{:s} {{'.format(meter_class), name, params)

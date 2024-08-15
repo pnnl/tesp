@@ -1,34 +1,57 @@
 {
+  "in_file_glm": "",
+  "out_file_glm": "test.glm",
   "case_name": "Case",
   "substation_name": "Substation",
   "starttime": "2024-06-01 00:00:00",
-  "endtime": "2024-06-03 00:00:00",
+  "stoptime": "2024-06-03 00:00:00",
+  "timestep": 60,
+  "timezone": 15,
+
+  "file_residential_meta": "",
+  "file_commercial_meta": "",
+  "file_battery_meta": "",
+  "file_ev_meta": "",
+  "file_ev_driving_meta": "",
+
+  "res_bldg_metadata": null,
+  "comm_bldg_metadata": null,
+  "batt_metadata": null,
+  "ev_metadata": null,
+  "ev_driving_metadata": null,
 
   "state": "TX",
-  "income_level": "",
+  "county": "Houston",
+  "latitude": 29.65,
+  "longitude": -95.42,
+  "time_zone_offset": -6,
+  "ashrae_zone": "2A",
+  "climate_zone": 5,
+  "weather_name": "localWeather",
+  "weather_file": "AZ-Tucson_International_Ap.tmy3",
+  "rooftop_pv_rating_MW": 7481.90,
+  "utility_type": "Urban",
+  "number_of_gld_homes": 1308,
+  "comm_customers_per_bldg": 2.09,
+  "RCI_customer_count_mix": {
+    "residential": 0.8357,
+    "commercial": 0.1265,
+    "industrial": 0.0379
+  },
+  "income_level": ["Low", "Middle", "Upper"],
+
   "recs_state": "Texas",
   "recs_income_level": "Middle",
   "recs_housing_density": "U",
   "use_recs_data": true,
   "recs_data_file": "TESP_RECS.db",
-  "dso_type": "",
   "res_dso_type": "",
 
-  "latitude": 30.0,
-  "longitude": -110.0,
-  "time_zone_offset": 1.0,
-  "timezone": "",
-  "weather_name": "localWeather",
-  "weather_file": "AZ-Tucson_International_Ap.tmy3",
-
-  "ashrae_zone":"",
   "forERCOT": "False",
-
-  "timestep": 15,
   "name_prefix": "",
   "gld_scaling_factor": 0,
   "port": 5570,
-  "message_broker": "helics_msg",
+  "message_broker": "",
   "WANT_VI_DUMP": "False",
   "metrics_interval": 300,
   "metrics_classes": [
@@ -42,45 +65,37 @@
       "regulator",
       "substation"],
 
+  "base_feeder_name": "",
+
   "house_nodes": {},
   "small_nodes": {},
   "comm_loads": {},
   "work_path": "./Dummy/",
 
-  "comm_bldgs_pop": null,
-  "comm_bldg_metadata": null,
-  "res_bldg_metadata": null,
-  "batt_metadata": null,
-
-  "case_type":{"bt": 1, "fl": 0, "ev": 0, "pv": 0},
+  "case_type": {"bt": 1, "fl": 0, "ev": 0, "pv": 0},
   "cop_lookup": "",
+  "comm_bldgs_pop": null,
 
   "ev_count": 0,
   "ev_percentage": 0,
-  "ev_driving_metadata": null,
-  "driving_data_file": "",
-  "ev_metadata": null,
-  "ev_reserved_soc": "",
+  "ev_reserved_soc": 20,
 
   "solar_count": 0,
   "solar_percentage": 0.2,
   "solar_kw": 0,
-
-  "storage_percentage": 0.5,
-  "storage_inv_mode": "LOAD_FOLLOWING",
-
-  "water_heater_percentage": 0.0,
-  "water_heater_participation": 0.5,
-
-  "battery_count": 0,
-  "bat_rt_efficiency": 0.86,
-  "base_feeder_name": "",
-
   "pv_rating_MW": "",
+  "solar_inv_mode": "CONSTANT_PF",
   "solar_Q_player": "",
   "solar_path": "",
   "solar_P_player":"",
-  "solar_inv_mode": "CONSTANT_PF",
+
+  "battery_count": 0,
+  "storage_percentage": 0.5,
+  "storage_inv_mode": "LOAD_FOLLOWING",
+  "bat_rt_efficiency": 0.86,
+
+  "water_heater_percentage": 0.0,
+  "water_heater_participation": 0.5,
 
   "bill_mode": "UNIFORM",
   "kwh_price": 0.1243,

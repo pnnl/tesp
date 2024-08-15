@@ -997,6 +997,38 @@ class GLModel:
         plt.subplots_adjust(left=0.01, bottom=0.01, right=0.99, top=0.99)
         plt.show()
 
+    def set_clock(self, starttime: str, stoptime: str, timezone: str):
+        clock = self.module_entities['clock'].instances['clock']
+        del clock['timestamp']  # no longer used
+        clock['starttime'] = "'" + starttime + "'"
+        clock['stoptime'] = "'" + stoptime + "'"
+        clock['timezone'] = timezone
+
+    def add_include(self, file: str):
+        self.include_lines.append(f"#include \"{file}\"")
+
+    def del_include(self, file: str):
+        self.include_lines.remove(f"#include \"{file}\"")
+
+    def add_set(self, name: str, value: any):
+        self.set_lines.append(f"#set {name}={value}")
+
+    def del_set(self, name: str):
+        find = f"#set {name}="
+        for idx in range(len(self.set_lines)):
+            if find in self.set_lines[idx]:
+                del self.set_lines[idx]
+
+    def add_define(self, name:str, value: any):
+        self.define_lines.append("#define {name}={value}")
+
+    def del_define(self, name:str):
+        find = f"#define {name}="
+        for idx in range(len(self.define_lines)):
+            if find in self.define_lines[idx]:
+                del self.define_lines[idx]
+
+
     @staticmethod
     def union_of_phases(phs1, phs2):
         """Collect all phases on both sides of a connection
