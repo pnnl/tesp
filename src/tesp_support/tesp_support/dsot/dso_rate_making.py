@@ -261,13 +261,15 @@ def read_meters(
                                                               DA_retail_df['clear_type_da']).sum() + \
                                                              ((RTonehour['real_power_avg'] - temp2[
                                                                  'total_cleared_quantity']) * RThourcleartype).sum()
-            
+
             # Calculate the transactive capacity charge components, if applicable
+            # TODO: Incorporate dynamic capital costs, likely following a similar 
+            # format to that implemented for the DA and RT energy charges
+            """
             if rate_scenario == "transactive":
-                # TODO: Incorporate dynamic capital costs, likely following a similar 
-                # format to that implemented for the DA and RT energy charges
                 trans_df.loc[(each, "DA_capacity_charge"), day_name] = 0
                 trans_df.loc[(each, "RT_capacity_charge"), day_name] = 0
+            """
 
         # Calculate total energy consumption for each customer class (aka load type)
         for each in metadata['billingmeters']:
@@ -1055,8 +1057,8 @@ def calculate_consumer_bills(
     elif rate_scenario == "transactive":
         bill_components.append("transactive_DA_energy_charge")
         bill_components.append("transactive_RT_energy_charge")
-        bill_components.append("transactive_DA_capacity_charge")
-        bill_components.append("transactive_RT_capacity_charge")
+        #bill_components.append("transactive_DA_capacity_charge")
+        #bill_components.append("transactive_RT_capacity_charge")
         bill_components.append("transactive_fixed_charge")
         bill_components.append("transactive_volumetric_charge")
         bill_components.append("transactive_total_charge")
@@ -1397,6 +1399,9 @@ def calculate_consumer_bills(
 
                     # Calculate the consumer's dynamic capacity charges under the
                     # transactive tariff
+                    # TODO: Revisit later to split the DA and RT LMPs and dynamic 
+                    # capacity charges
+                    """
                     bill_df.loc[(each, "transactive_DA_capacity_charge"), m] = (
                         trans_df.loc[(each, "DA_capacity_charge"), m]
                         * trans_retail_scale
@@ -1405,6 +1410,7 @@ def calculate_consumer_bills(
                         trans_df.loc[(each, "RT_capacity_charge"), m]
                         * trans_retail_scale
                     )
+                    """
 
                     # Calculate the consumer's fixed charge under the transactive tariff
                     bill_df.loc[
@@ -1421,8 +1427,8 @@ def calculate_consumer_bills(
                     bill_df.loc[(each, "transactive_total_charge"), m] = (
                         bill_df.loc[(each, "transactive_DA_energy_charge"), m]
                         + bill_df.loc[(each, "transactive_RT_energy_charge"), m]
-                        + bill_df.loc[(each, "transactive_DA_capacity_charge"), m]
-                        + bill_df.loc[(each, "transactive_RT_capacity_charge"), m]
+                        #+ bill_df.loc[(each, "transactive_DA_capacity_charge"), m]
+                        #+ bill_df.loc[(each, "transactive_RT_capacity_charge"), m]
                         + bill_df.loc[(each, "transactive_fixed_charge"), m]
                         + bill_df.loc[(each, "transactive__charge"), m]
                     )
@@ -2824,7 +2830,7 @@ def DSO_rate_making(
         case_name="",
         iterate=False,
         rate_scenario=None,
-    ):
+):
     """ Main function to call for calculating the customer energy consumption, monthly bills, and tariff adjustments to
     ensure revenue matches expenses.  Saves meter and bill dataframes to a hdf5 file.
     Args:
