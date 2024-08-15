@@ -53,15 +53,18 @@ import math
 
 import numpy as np
 import pandas as pd
+import sys
 
-from examples.analysis.dsot.code import recs_gld_house_parameters
+import gld_commercial_feeder as comm_FG
 from tesp_support.api.helpers import gld_strict_name, random_norm_trunc, randomize_residential_skew
 from tesp_support.api.modify_GLM import GLMModifier
 from tesp_support.api.time_helpers import get_secs_from_hhmm, get_hhmm_from_secs, get_duration, get_dist
 from tesp_support.api.time_helpers import is_hhmm_valid, subtract_hhmm_secs, add_hhmm_secs
 from tesp_support.api.entity import assign_defaults
 
-import gld_commercial_feeder as comm_FG
+sys.path.append("../../..")
+from examples.analysis.dsot.code import recs_gld_house_parameters
+
 
 
 extra_billing_meters = set()
