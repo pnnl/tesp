@@ -8,7 +8,7 @@
     "case_name": "MyCase", // REQUIRED
     "substation_name": "MySub", // REQUIRED
     "starttime": "2023-01-01 00:00:00", // REQUIRED: format "2023-01-01 00:00:00"
-    "stoptime": "2023-01-02 00:00:00", // REQUIRED: format "2023-01-02 00:00:00"
+    "stoptime": "2023-01-01 00:01:00", // REQUIRED: format "2023-01-02 00:00:00"
     "timestep": 60, // REQUIRED
     "timezone": "EST+5EDT", // REQUIRED
     "metrics_interval": 300, // DEFAULT: 300
@@ -45,10 +45,10 @@
 
     // RECS
     "use_recs": true,
-    "recs_exist": true,
-    "file_recs_income_level": '../../../.../data/feeders/RECSwIncomeLvl.csv',
+    "recs_exist": false,
+    "file_recs_income_level": '../../../data/feeders/RECSwIncomeLvl.csv',
     "out_file_residential_meta": './RECS_residential_metadata.json',
-    "out_file_hvac_set_point": '../data/hvac_setpt_RECS.json',
+    "out_file_hvac_set_point": './hvac_setpt_RECS.json',
     "sample": {
         'state': ["TX"],
         'housing_density': ['No_DSO_Type'],   //'No_DSO_Type', U, R, C possibly = S
@@ -80,7 +80,7 @@
 
     // add sets in glm
     "sets": {
-        "minimum_timestep": 15,
+//        "minimum_timestep": 15,
         "relax_naming_rules": 1,
         "warn": 0
     },
@@ -91,6 +91,10 @@
     },
 
     "case_type":{"bt": 1, "fl": 1, "ev": 1, "pv": 0},
+    "solar_percentage": 11,
+    "storage_percentage": 3,
+    "ev_percentage": 8,
+
     // electric vehicles definitions
     "ev_reserved_soc": 20,
     "solar_path": "../../../data/solar_data/solar_pv_power_profiles/",
@@ -127,9 +131,6 @@
 
     "inverter efficiency": 0.98, // DEFAULT: 0.98
     "TransactiveHousePercentage": 80,
-    "solar_percentage": 11,
-    "storage_percentage": 3,
-    "ev_percentage": 8,
     "SolarInverterMode": "CONSTANT_PQ",
     "StorageInverterMode": "CONSTANT_PQ",
     "InverterEfficiency": 1.0,

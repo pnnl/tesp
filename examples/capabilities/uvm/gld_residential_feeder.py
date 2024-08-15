@@ -49,11 +49,7 @@ TODO:
         * TODO - JK + - review flagged variables for renaming or removal
     * TODO - FR - Convert all the string formatting from ".format" to "f{}"
 """
-# import json
-import pyjson5
 import math
-import os.path
-import sys
 
 import numpy as np
 import pandas as pd
@@ -65,10 +61,9 @@ from tesp_support.api.time_helpers import get_secs_from_hhmm, get_hhmm_from_secs
 from tesp_support.api.time_helpers import is_hhmm_valid, subtract_hhmm_secs, add_hhmm_secs
 from tesp_support.api.entity import assign_defaults
 
-sys.path.append('./')
 import gld_commercial_feeder as comm_FG
 
-# global c_p_frac
+
 extra_billing_meters = set()
 
 
@@ -1906,7 +1901,7 @@ class Feeder:
 
 
 def _test1():
-    feeder = Feeder("feeder_config.json5")
+    feeder = Feeder("./feeder_config.json5")
 
 
 if __name__ == "__main__":

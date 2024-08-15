@@ -35,6 +35,7 @@ def define_comm_loads(glm, bldg_type, bldg_size, dso_type, climate, bldg_metadat
     """ Determines building parameters based on building type, dso type, and (ASHRAE) climate zone
 
     Args:
+        glm (GLMModifier):
         bldg_type (str): class of building (e.g. 'strip_mall', etc.)
         bldg_size: size of the building in sq. ft.
         dso_type (str): whether the dso is 'Urban', 'Suburban', or 'Rural'
@@ -543,7 +544,6 @@ def add_comm_zones(fdr, bldg, key, mode=None):
                   "phases": '{:s}'.format(phases)}
         glm.add_object("load", '{:s}'.format(key), params)
 
-# ***********************************************************************************************************************
 
 def find_envelope_prop(prop, age, env_data, climate):
     """ Returns the envelope value for a given type of property based on the age and (ASHRAE) climate zone of the
