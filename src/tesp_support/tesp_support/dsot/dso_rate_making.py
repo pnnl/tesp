@@ -3418,9 +3418,95 @@ def DSO_rate_making(
                 "SubscriptionNetDeviationCharges": billsum_df.loc[("total", "subscription_net_deviation_charge"), "sum"] / 1000, # $k
             }
         elif rate_scenario == "transactive":
-            None
+            DSO_Revenues_and_Energy_Sales["RetailSales"]["TransactiveSales"] = {
+                "TransactiveSalesRes": {
+                    "TransactiveEnergySalesRes": billsum_df.loc[("residential", "transactive_energy_purchased"), "sum"] / 1000, # MW-hr/year
+                    "TransactiveDAEnergyChargesRes": billsum_df.loc[("residential", "transactive_DA_energy_charge"), "sum"] / 1000, # $k
+                    "TransactiveRTEnergyChargesRes": billsum_df.loc[("residential", "transactive_RT_energy_charge"), "sum"] / 1000, # $k
+                    "TransactiveFixedChargesRes": billsum_df.loc[("residential", "transactive_fixed_charge"), "sum"] / 1000, # $k
+                    "TransactiveVolumetricChargeRes": billsum_df.loc[("residential", "transactive_volumetric_charge"), "sum"] / 1000, # $k
+                    "TransactiveAveragePriceRes": billsum_df.loc[("residential", "transactive_average_price"), "sum"], # $/kW-hr
+                },
+                "TransactiveSalesComm": {
+                    "TransactiveEnergySalesComm": billsum_df.loc[("commercial", "transactive_energy_purchased"), "sum"] / 1000, # MW-hr/year
+                    "TransactiveDAEnergyChargesComm": billsum_df.loc[("commercial", "transactive_DA_energy_charge"), "sum"] / 1000, # $k
+                    "TransactiveRTEnergyChargesComm": billsum_df.loc[("commercial", "transactive_RT_energy_charge"), "sum"] / 1000, # $k
+                    "TransactiveFixedChargesComm": billsum_df.loc[("commercial", "transactive_fixed_charge"), "sum"] / 1000, # $k
+                    "TransactiveVolumetricChargeComm": billsum_df.loc[("commercial", "transactive_volumetric_charge"), "sum"] / 1000, # $k
+                    "TransactiveAveragePriceComm": billsum_df.loc[("commercial", "transactive_average_price"), "sum"], # $/kW-hr
+                },
+                "TransactiveSalesInd": {
+                    "TransactiveEnergySalesInd": billsum_df.loc[("industrial", "transactive_energy_purchased"), "sum"] / 1000, # MW-hr/year
+                    "TransactiveDAEnergyChargesInd": billsum_df.loc[("industrial", "transactive_DA_energy_charge"), "sum"] / 1000, # $k
+                    "TransactiveRTEnergyChargesInd": billsum_df.loc[("industrial", "transactive_RT_energy_charge"), "sum"] / 1000, # $k
+                    "TransactiveFixedChargesInd": billsum_df.loc[("industrial", "transactive_fixed_charge"), "sum"] / 1000, # $k
+                    "TransactiveVolumetricChargeInd": billsum_df.loc[("industrial", "transactive_volumetric_charge"), "sum"] / 1000, # $k
+                    "TransactiveAveragePriceInd": billsum_df.loc[("industrial", "transactive_average_price"), "sum"], # $/kW-hr
+                },
+            }
+            DSO_Revenues_and_Energy_Sales["EnergySold"] += billsum_df.loc[("total", "transactive_energy_purchased"), "sum"] / 1000 # Energy Sold in MW-hr
+            for m in billsum_df:
+                if m != "sum":
+                    DSO_Revenues_and_Energy_Sales["EnergySoldMonthly"][m] += billsum_df.loc[("total", "transactive_energy_purchased"), m] / 1000
+            DSO_Revenues_and_Energy_Sales["RequiredRevenue"] += billsum_df.loc[("total", "transactive_total_charge"), "sum"] / 1000, # Energy charges in $k
+            DSO_Revenues_and_Energy_Sales["EffectiveCostRetailEnergy"] = (
+                billsum_df.loc[("total", "flat_total_charge"), "sum"]
+                + billsum_df.loc[("total", "transactive_total_charge"), "sum"]
+            ) / (
+                billsum_df.loc[("total", "flat_energy_purchased"), "sum"]
+                + billsum_df.loc[("total", "transactive_energy_purchased"), "sum"]
+            )
+            DSO_Cash_Flows["Revenues"]["RetailSales"]["TransactiveSales"] = {
+                "TransactiveDAEnergyCharges": billsum_df.loc[("total", "transactive_DA_energy_charge"), "sum"] / 1000, # $k
+                "TransactiveRTEnergyCharges": billsum_df.loc[("total", "transactive_RT_energy_charge"), "sum"] / 1000, # $k
+                "TransactiveFixedCharges": billsum_df.loc[("total", "transactive_fixed_charge"), "sum"] / 1000, # $k
+                "TransactiveVolumetricCharges": billsum_df.loc[("total", "transactive_volumetric_charge"), "sum"] / 1000, # $k
+            }
         elif rate_scenario == "dsot":
-            None
+            DSO_Revenues_and_Energy_Sales["RetailSales"]["DSOTSales"] = {
+                "DSOTSalesRes": {
+                    "DSOTEnergySalesRes": billsum_df.loc[("residential", "dsot_energy_purchased"), "sum"] / 1000, # MW-hr/year
+                    "DSOTDAEnergyChargesRes": billsum_df.loc[("residential", "dsot_DA_energy_charge"), "sum"] / 1000, # $k
+                    "DSOTRTEnergyChargesRes": billsum_df.loc[("residential", "dsot_RT_energy_charge"), "sum"] / 1000, # $k
+                    "DSOTFixedChargesRes": billsum_df.loc[("residential", "dsot_fixed_charge"), "sum"] / 1000, # $k
+                    "DSOTVolumetricChargeRes": billsum_df.loc[("residential", "dsot_volumetric_charge"), "sum"] / 1000, # $k
+                    "DSOTAveragePriceRes": billsum_df.loc[("residential", "dsot_average_price"), "sum"], # $/kW-hr
+                },
+                "DSOTSalesComm": {
+                    "DSOTEnergySalesComm": billsum_df.loc[("commercial", "dsot_energy_purchased"), "sum"] / 1000, # MW-hr/year
+                    "DSOTDAEnergyChargesComm": billsum_df.loc[("commercial", "dsot_DA_energy_charge"), "sum"] / 1000, # $k
+                    "DSOTRTEnergyChargesComm": billsum_df.loc[("commercial", "dsot_RT_energy_charge"), "sum"] / 1000, # $k
+                    "DSOTFixedChargesComm": billsum_df.loc[("commercial", "dsot_fixed_charge"), "sum"] / 1000, # $k
+                    "DSOTVolumetricChargeComm": billsum_df.loc[("commercial", "dsot_volumetric_charge"), "sum"] / 1000, # $k
+                    "DSOTAveragePriceComm": billsum_df.loc[("commercial", "dsot_average_price"), "sum"], # $/kW-hr
+                },
+                "DSOTSalesInd": {
+                    "DSOTEnergySalesInd": billsum_df.loc[("industrial", "dsot_energy_purchased"), "sum"] / 1000, # MW-hr/year
+                    "DSOTDAEnergyChargesInd": billsum_df.loc[("industrial", "dsot_DA_energy_charge"), "sum"] / 1000, # $k
+                    "DSOTRTEnergyChargesInd": billsum_df.loc[("industrial", "dsot_RT_energy_charge"), "sum"] / 1000, # $k
+                    "DSOTFixedChargesInd": billsum_df.loc[("industrial", "dsot_fixed_charge"), "sum"] / 1000, # $k
+                    "DSOTVolumetricChargeInd": billsum_df.loc[("industrial", "dsot_volumetric_charge"), "sum"] / 1000, # $k
+                    "DSOTAveragePriceInd": billsum_df.loc[("industrial", "dsot_average_price"), "sum"], # $/kW-hr
+                },
+            }
+            DSO_Revenues_and_Energy_Sales["EnergySold"] += billsum_df.loc[("total", "dsot_energy_purchased"), "sum"] / 1000 # Energy Sold in MW-hr
+            for m in billsum_df:
+                if m != "sum":
+                    DSO_Revenues_and_Energy_Sales["EnergySoldMonthly"][m] += billsum_df.loc[("total", "dsot_energy_purchased"), m] / 1000
+            DSO_Revenues_and_Energy_Sales["RequiredRevenue"] += billsum_df.loc[("total", "dsot_total_charge"), "sum"] / 1000, # Energy charges in $k
+            DSO_Revenues_and_Energy_Sales["EffectiveCostRetailEnergy"] = (
+                billsum_df.loc[("total", "flat_total_charge"), "sum"]
+                + billsum_df.loc[("total", "dsot_total_charge"), "sum"]
+            ) / (
+                billsum_df.loc[("total", "flat_energy_purchased"), "sum"]
+                + billsum_df.loc[("total", "dsot_energy_purchased"), "sum"]
+            )
+            DSO_Cash_Flows["Revenues"]["RetailSales"]["DSOTeSales"] = {
+                "DSOTDAEnergyCharges": billsum_df.loc[("total", "dsot_DA_energy_charge"), "sum"] / 1000, # $k
+                "DSOTRTEnergyCharges": billsum_df.loc[("total", "dsot_RT_energy_charge"), "sum"] / 1000, # $k
+                "DSOTFixedCharges": billsum_df.loc[("total", "dsot_fixed_charge"), "sum"] / 1000, # $k
+                "DSOTVolumetricCharges": billsum_df.loc[("total", "dsot_volumetric_charge"), "sum"] / 1000, # $k
+            }
 
     return DSO_Cash_Flows, DSO_Revenues_and_Energy_Sales, tariff, surplus
 
