@@ -148,6 +148,22 @@ def gld_strict_name(val):
     return val.replace('-', '_')
 
 
+def get_region(s):
+    region = 0
+    if 'R1' in s:
+        region = 1
+    elif 'R2' in s:
+        region = 2
+    elif 'R3' in s:
+        region = 3
+    elif 'R4' in s:
+        region = 4
+    elif 'R5' in s:
+        region = 5
+    return region
+
+
+
 class HelicsMsg(object):
 
     def __init__(self, name, period):

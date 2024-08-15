@@ -17,7 +17,7 @@ from .data import feeders_path
 from .data import glm_entities_path
 from .entity import Entity
 from .parse_helpers import parse_kva
-
+from .helpers import gld_strict_name
 
 class GLM:
     pass
@@ -487,34 +487,6 @@ class GLModel:
             raise TypeError("GRIDLABD object type and/or object name {obj_type} must be a string and is not.")
         return None
 
-    @staticmethod
-    def gld_strict_name(val):
-        """ Sanitizes a name for GridLAB-D publication to FNCS
-
-        Args:
-            val (str): the input name
-        Returns:
-            str: val with all `-` replaced by `_` and any leading digit replaced by `gld_`
-        """
-        if val[0].isdigit():
-            val = "gld_" + val
-        return val.replace("-", "_")
-
-    @staticmethod
-    def get_region(s):
-        region = 0
-        if 'R1' in s:
-            region = 1
-        elif 'R2' in s:
-            region = 2
-        elif 'R3' in s:
-            region = 3
-        elif 'R4' in s:
-            region = 4
-        elif 'R5' in s:
-            region = 5
-        return region
-
     def is_edge_class(self, s):
         """ Edge class is networkx terminology. In GridLAB-D, we will represent those with
         the variable 'edge_classes' define in this model
@@ -718,7 +690,7 @@ class GLModel:
                 val = m.group(2)
                 if param == 'name':
                     # found a parameter name
-                    name = self.gld_strict_name(name_prefix + val)
+                    name = gld_strict_name(name_prefix + val)
                     if len(object_comments) > 0:
                         inside_comments['name'] = object_comments
                         object_comments = []
@@ -879,8 +851,8 @@ class GLModel:
         for t in self.model:
             if self.is_edge_class(t):
                 for o in self.model[t]:
-                    n1 = self.gld_strict_name(self.model[t][o]['from'])
-                    n2 = self.gld_strict_name(self.model[t][o]['to'])
+                    n1 = gld_strict_name(self.model[t][o]['from'])
+                    n2 = gld_strict_name(self.model[t][o]['to'])
                     G.add_edge(n1, n2, eclass=t, ename=o, edata=self.model[t][o])
 
             # add the parent-child node links
@@ -888,7 +860,7 @@ class GLModel:
             if self.is_node_class(t):
                 for o in self.model[t]:
                     if 'parent' in self.model[t][o]:
-                        p = self.gld_strict_name(self.model[t][o]['parent'])
+                        p = gld_strict_name(self.model[t][o]['parent'])
                         G.add_edge(o, p, eclass='parent', ename=o, edata={})
 
         # now we back-fill the node attributes because 'add_edge' adds the nodes
@@ -1072,14 +1044,14 @@ class GLModel:
         """Estimates loads on segments (i.e. lines, edges) in the model
 
         Iterates over all loads in the network and uses the networkx model of
-        the network to identify the shortest path (least number of edges or 
+        the network to identify the shortest path (the least number of edges or
         lines) between the load and the swing node (the source of the power).
         This method assumes that this is the path the power will flow over
         which is not generally true (especially in a meshed network), but 
         is likely to be true for radial models.
 
-        Once the path of the power flow is identifed, the power of the load
-        is added to each to each line and stored in a dictionary along with
+        Once the path of the power flow is identified, the power of the load
+        is added to each line and stored in a dictionary along with
         the affected phases. In this manner an estimate of the loading on each
         line is found by inspecting the model without running a simulation.
 
@@ -1125,7 +1097,7 @@ class GLModel:
                             seg_loads[ename][0] += kva
                             seg_loads[ename][1] = self.union_of_phases(seg_loads[ename][1], data['ndata']['phases'])
         # sub_graphs = nx.connected_components(G)
-        # print(f'  swing node {swing_node}, with {len(list(sub_graphs))}, subgraphs and {:.2f}'.format(total_kva)} total kva')
+        # print(f"  swing node {swing_node}, with {len(list(sub_graphs))}, sub graphs and {:.2f}.format(total_kva)} total kva")
         return seg_loads
 
 

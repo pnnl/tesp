@@ -6,6 +6,7 @@ import numpy as np
 
 from .data import feeder_entities_path
 from .entity import assign_defaults
+from .helpers import gld_strict_name
 from .model_GLM import GLModel
 
 
@@ -229,28 +230,6 @@ class GLMModifier:
         return self.model.write(filepath)
 
     # normal objects that use feeder system 'defaults'
-    @staticmethod
-    def union_of_phases(phs1, phs2):
-        """Collect all phases on both sides of a connection
-
-        Args:
-            phs1 (str): first phasing
-            phs2 (str): second phasing
-
-        Returns:
-            str: union of phs1 and phs2
-        """
-        phs = ''
-        if 'A' in phs1 or 'A' in phs2:
-            phs += 'A'
-        if 'B' in phs1 or 'B' in phs2:
-            phs += 'B'
-        if 'C' in phs1 or 'C' in phs2:
-            phs += 'C'
-        if 'S' in phs1 or 'S' in phs2:
-            phs += 'S'
-        return phs
-
     def find_1phase_xfmr_w_margin(self, kva: float, margin: float = None) -> float:
         """Select a standard 1-phase transformer size  with some design margin
         (optionally defined by caller) based on provided kVA load value
@@ -397,7 +376,7 @@ class GLMModifier:
             skew_abs_max = self.defaults.residential_skew_max
         return self.randomize_skew(skew_std, skew_abs_max)
 
-    def randomize_commercial_skew(self, skew_std: float = None, skew_abs_max: float = None) -> float:
+    def randomize_commercial_skew(self, skew_std: float = None, skew_abs_max: float = None, ) -> float:
         """Returns a random value used to diversify the commercial loads being
         defined with schedule skew. Uses two parameters found in
         feeder defaults.json that can optionally be defined by the caller
@@ -575,7 +554,7 @@ class GLMModifier:
                         params[p] = self.glm.hash[e_object[p]]
                     else:
                         if p == "from" or p == "to" or p == "parent":
-                            params[p] = self.model.gld_strict_name(e_object[p])
+                            params[p] = gld_strict_name(e_object[p])
                         else:
                             params[p] = e_object[p]
             self.add_object(gld_class, e_name, params)
