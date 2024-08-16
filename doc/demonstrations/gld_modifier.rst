@@ -13,7 +13,7 @@ GLMModifier Philosophy
 ~~~~~~~~~~~~~~~~~~~~~~
 There have been several other scripts previously developed that provide GridLAB-D model modification. Most of these are text-line-based where the model is read in line-by-line and at appropriate points and lines are edited before being printed out to file or additional lines are inserted before moving through the model (for example, adding rooftop solar). Though these have been used for over a decade, they always presented a challenge in that model modifications could not be made holistically as the entire model was not parsed, but rather remained as text that could be manipulated.
 
-TESP's GLMModifier overcomes these shortcomings by providing an internal data structure that the model can be read and parsed into. By doing so, the modeler has the ability to evaluate the entire model, manipulate the necessary portions, and then write out the entire model to file. For example, after GLMModifier reads in the model parses it into its data structure, it is possible to count the number of houses that use gas heating, convert them to use heat pumps, and upgrade any necessary transformers and power lines to handle the increased load.
+TESP's GLMModifier overcomes these shortcomings by providing an internal data structure into which the model can be read and parsed. By doing so, the modeler has the ability to evaluate the entire model, manipulate the necessary portions, and then write out the entire model to file. For example, after GLMModifier reads in the model and parses it into its data structure, it is possible to count the number of houses that use gas heating, convert them to use heat pumps, and upgrade any necessary transformers and power lines to handle the increased load.
 
 There are two primary ways to access the model using GLMModifier:
 
@@ -38,7 +38,7 @@ With the modifier, we can read the GridLAB-D model into the GLMModifier data str
 
     glmMod.model.read('path/to/model.glm')
 
-GridLAB-D split their functionality into various modules and for this example, we're going to be adding houses to the model, which means we need to make sure the "residential" module gets added to the model file.::
+GridLAB-D split it's functionality into various modules and for this example, we're going to be adding houses to the model, which means we need to make sure the "residential" module gets added to the model file.::
 
     glmMod.add_module('residential', [])
     
@@ -46,7 +46,7 @@ The GLMModifier has an attribute that holds the entire GridLAB-D model, "glm". P
 
 	glm = GLMMod.glm
 
-GLMModifier makes it easy to get the names of all of the objects of a given class, and in this case, to add houses we need to look for GridLAB-D's "triplex_meters" to attach the houses to.::
+GLMModifier makes it easy to get the names of all of the objects of a given class. In this case, since we're adding "house" objects, we need to look for GridLAB-D's "triplex_meters" to attach the houses to.::
 
     tp_meter_objs = glm.triplex_meter
     tp_meter_names = list(tp_meter_objs)
@@ -77,7 +77,7 @@ Once the Python dictionary with the GridLAB-D object parameters are defined, it 
 Adding a House
 --------------
 
-Now that we have a billing meter, we can add a house object. It is good practice to add the house as a child of a house meter if also adding solar and storage to the house, as we will in the next step. This allows the modeler to investigate the powerflow at each node individually. We follow the same process as adding a billing meter.::
+Now that we have a billing meter, we can add a house object. It is good practice to add the house as a child of a separate triplex meter (called the "house meter") if also adding solar and storage for this customer (as we will in the next step). This allows the modeler to investigate the powerflow at each node individually. We follow the same process as adding a billing meter.::
 
     house_meter_name = f"{new_name}_house"
     meter_params = {
@@ -98,7 +98,7 @@ This is a very simple house, with the majority of its parameters left to GridLAB
 Adding Solar and Storage
 ------------------------
 
-Now that we have a house and a billing meter, we can add solar and storage to it. In order for GridLAB-D to parse the relationship between the house, rooftop solar, and behind-the-meter energy storage correctly, and allow us to individually manage and meter each object, the parent/child order would be as follows: ::
+Now that we have a house and a billing meter, we can add solar and storage to it. In order for GridLAB-D to parse the relationship between the house, rooftop solar, and behind-the-meter energy storage correctly, and allow us to individually manage and meter each object, the parent/child hierarchy would be as follows: ::
 
 * Customer Billing Meter
     * House Meter  
@@ -198,7 +198,7 @@ First, if any edits have been made to the GridLAB-D model since importing it, th
 
 As you can see, the networkx graph is a property of the GLMModifier.model object and the above line of code simply makes a more succinct reference to it.
 
-After that, you can use networks APIs to explore the model. For example, starting at a particular node, traverse the graph in a breadth-first manner::
+After that, you can use networkx APIs to explore the model. For example, starting at a particular node, traverse the graph in a breadth-first manner::
 
     for edge in nx.bfs_edges(graph, "starting bus name"):
 
@@ -207,7 +207,7 @@ You, the modeler, can look at the properties of each edge (GridLAB-D link object
 
 Plotting Model
 --------------
-GLMModifier includes the capability of creating a visual representation of the network for manual inspection. This allows the user to evaluate the model and make sure the changes made are as expected and has the topology expected. To create the plot of the graph of the model a simple API is used::
+GLMModifier includes the capability of creating a visual representation of the network for manual inspection. This allows the user to visually inspect the model and make sure the changes made are as expected and has the topology expected. To create the plot of the graph of the model a simple API is used::
 
     glmMod.model.plot_model()
 
@@ -217,7 +217,7 @@ Under the hood, this API makes an update to the networkx graph and then automati
     :name: glmmodGraphPlot
 
 
-Mousing over the nodes of the system shows some of the metadata associated with them; in the example image shown above, one of the houses is selected. As of this writing, this metadata is not available for the links/edges in the graph but we're anticipating adding that data soon. The layout chosen is algorithmic and does not respect coordinates that may be present in the imported .glm. For larger networks, it can take tens (or many tens) of seconds for the layout to complete; creating the graph is a blocking call in the script and the rest of the script will not run until the plotting window is closed.
+Mousing over the nodes of the system shows some of the metadata associated with them; in the example image shown above, one of the houses is selected. As of this writing, this metadata is not available for the links/edges in the graph but we're anticipating adding that data soon. The layout chosen is algorithmic and does not respect coordinates that may be present in the imported .glm. For larger networks, it can take tens (or many tens) of seconds for the layout calculation to complete; creating the graph is a blocking call in the script and the rest of the script will not run until the plotting window is closed.
 
 
 
@@ -230,11 +230,11 @@ Once all the edits to the model have been made, the model can be written out to 
 
 GLMModifier House Object Population
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Previous GridLAB-D model modification tools also included methods by which to choose the parameters for some objects (the house object in particular). The re-implementation of these features using updated data and methodologies are currently being implemented in what we are calling a "reference implementation" to show others one possible way of defining values for all these parameters. We want to not only provide an empirically-based method but also clearly document it so that other users can better understand what we did and customize or modify it to better suit their needs.
+Previous GridLAB-D model modification tools also included methods by which to choose the parameters for some objects (the house object in particular). The re-implementation of these features using updated data and methodologies are currently being implemented in what we are calling a "reference implementation" to show users one possible way of defining values for all these parameters. We want to not only provide an empirically-based method for defining these parameter values but also clearly document it so that other users can better understand what we did and customize or modify it to better suit their needs.
 
 
 Future work
 ~~~~~~~~~~~~
-We've put in a lot of work to support all of GridLAB-D syntax but are not quite there yet. In particular, the last remaining element we haven't been able to capture well in our data structure are the ``#ifdef`` C-like conditionals GridLAB-D supports. `This feature is under active development <https://github.com/pnnl/tesp/issues/104>`_.
+We've put in a lot of work to support all of GridLAB-D syntax but are not quite there yet. In particular, the last remaining element we haven't been able to capture well in our data structure are the ``#ifdef`` C-like conditionals GridLAB-D supports. `This feature is on our to-do list <https://github.com/pnnl/tesp/issues/104>`_.
 
-Currently, when GLMModifier writes out the model it does so in a manner that groups all the classes together. Alternative methods of writing out this non-linear data structure need to be evaluated so that human-readers of the file have an easier time (at least in some cases). `This is on our to-do list <https://github.com/pnnl/tesp/issues/105>`_.
+Currently, when GLMModifier writes out the model it does so in a manner that groups all the classes together. Alternative methods of writing out this non-linear data structure need to be evaluated so that human-readers of the file have an easier time (at least in some cases). `This is on our to-do list as well <https://github.com/pnnl/tesp/issues/105>`_.

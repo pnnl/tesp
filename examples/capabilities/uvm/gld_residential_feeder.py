@@ -49,26 +49,24 @@ TODO:
         * TODO - JK + - review flagged variables for renaming or removal
     * TODO - FR - Convert all the string formatting from ".format" to "f{}"
 """
-# import json
-import pyjson5
 import math
-import os.path
-import sys
 
 import numpy as np
 import pandas as pd
+import sys
 
-from examples.analysis.dsot.code import recs_gld_house_parameters
+import gld_commercial_feeder as comm_FG
 from tesp_support.api.helpers import gld_strict_name, random_norm_trunc, randomize_residential_skew
 from tesp_support.api.modify_GLM import GLMModifier
 from tesp_support.api.time_helpers import get_secs_from_hhmm, get_hhmm_from_secs, get_duration, get_dist
 from tesp_support.api.time_helpers import is_hhmm_valid, subtract_hhmm_secs, add_hhmm_secs
 from tesp_support.api.entity import assign_defaults
 
-sys.path.append('./')
-import gld_commercial_feeder as comm_FG
+sys.path.append("../../..")
+from examples.analysis.dsot.code import recs_gld_house_parameters
 
-global c_p_frac
+
+
 extra_billing_meters = set()
 
 
@@ -1904,212 +1902,10 @@ class Feeder:
             self.glm.model.define_lines.append('#define INV_VW_P2=0.0')
         # write the optional volt_dump and curr_dump for validation
 
-    def add_node_houses(self, node: str, region: int, xfkva: float, phs: str, nh=None, loadkw=None, house_avg_kw=None, secondary_ft=None,
-                        storage_fraction=0.0, solar_fraction=0.0, electric_cooling_fraction=0.5,
-                        node_metrics_interval=None, random_seed=False):
-        """Writes GridLAB-D houses to a primary load point.
-
-        One aggregate service transformer is included, plus an optional aggregate
-        secondary service drop. Each house has a separate meter or triplex_meter,
-        each with a common parent, either a node or triplex_node on either the
-        transformer secondary, or the end of the service drop. The houses may be
-        written per phase, i.e., unbalanced load, or as a balanced three-phase 
-        load. The houses should be #included into a master GridLAB-D file. Before
-        using this function, call write_node_house_configs once, and only once, 
-        for each combination xfkva/phs that will be used.
-
-        Args:
-            node (str): the GridLAB-D primary node name
-            region (int): the taxonomy region for housing population, 1..6
-            xfkva (float): the total transformer size to serve expected load; 
-                make this big enough to avoid overloads
-            phs (str): 'ABC' for three-phase balanced distribution, 'AS', 'BS', 
-                or 'CS' for single-phase triplex
-            nh (int): directly specify the number of houses; an alternative to 
-                loadkw and house_avg_kw
-            loadkw (float): total load kW that the houses will represent; with 
-                house_avg_kw, an alternative to nh
-            house_avg_kw (float): average house load in kW; with loadkw, an 
-                alternative to nh
-            secondary_ft (float): if not None, the length of adequately sized 
-                secondary circuit from transformer to the meters
-            electric_cooling_fraction (float): fraction of houses to have air 
-                conditioners
-            solar_fraction (float): fraction of houses to have rooftop solar 
-                panels
-            storage_fraction (float): fraction of houses with solar panels that 
-                also have residential storage systems
-            node_metrics_interval (int): if not None, the metrics collection 
-                interval in seconds for houses, meters, solar and storage at 
-                this node
-            random_seed (boolean): if True, reseed each function call. Default 
-                value False provides repeatability of output.
-        """
-        self.base.house_nodes = {}
-        if not random_seed:
-            np.random.seed(0)
-        bTriplex = False
-        if 'S' in phs:
-            bTriplex = True
-        self.base.storage_percentage = storage_fraction
-        self.base.solar_percentage = solar_fraction
-        self.base.electric_cooling_percentage = electric_cooling_fraction
-        lg_v_sm = 0.0
-        vnom = 120.0
-        if node_metrics_interval is not None:
-            self.base.metrics_interval = node_metrics_interval
-        else:
-            self.base.metrics_interval = 0
-        if nh is not None:
-            nhouse = nh
-        else:
-            nhouse = int((loadkw / house_avg_kw) + 0.5)
-            if nhouse > 0:
-                lg_v_sm = loadkw / house_avg_kw - nhouse  # >0 if we rounded down the number of houses
-        bldg, ti = self.selectResidentialBuilding(self.base.rgnThermalPct[region - 1],
-                                                  np.random.uniform(0, 1))  # TODO - these will all be identical!
-        if nhouse > 0:
-            # write the transformer and one billing meter at the house, with optional secondary circuit
-            if bTriplex:
-                xfkey = 'XF{:s}_{:d}'.format(phs[0], int(xfkva))
-                linekey = 'tpx_cfg_{:d}'.format(int(xfkva))
-                meter_class = 'triplex_meter'
-                line_class = 'triplex_line'
-            else:
-                xfkey = 'XF3_{:d}'.format(int(xfkva))
-                linekey = 'quad_cfg_{:d}'.format(int(xfkva))
-                meter_class = 'meter'
-                line_class = 'overhead_line'
-            if secondary_ft is None:
-                xfmr_meter = '{:s}_mtr'.format(node)  # same as the house meter
-            else:
-                xfmr_meter = '{:s}_xfmtr'.format(node)  # needs its own secondary meter
-            if (self.base.solar_percentage > 0.0) or (self.base.storage_percentage > 0.0):
-                if bTriplex:
-                    # waiting for the add comment method to be added to the modifier class
-                    # print('// inverter base voltage for volt-var functions, on triplex circuit', file=fp)
-                    self.glm.model.define_lines.append("#define INV_VBASE=240.0")
-                else:
-                    # waiting for the add comment method to be added to the modifier class
-                    # print('// inverter base voltage for volt-var functions, on 208-V three-phase circuit', file=fp)
-                    self.glm.model.define_lines.append("#define INV_VBASE=208.0")
-
-            name = '{:s}_xfmr'.format(node)
-            params = {"phases": '{:s}'.format(phs),
-                      "from": '{:s}'.format(node),
-                      "to": '{:s}'.format(xfmr_meter),
-                      "configuration": '{:s}'.format(xfkey)}
-            self.glm.add_object("transformer", name, params)
-
-            if secondary_ft is not None:
-                name = '{:s}_mtr'.format(node)
-                params = {"phases": '{:s}'.format(phs),
-                          "nominal_voltage": '{:.2f}'.format(vnom)}
-                self.glm.add_object('{:s} {{'.format(meter_class), name, params)
-
-                name = '{:s}_secondary'.format(node)
-                params = {"phases": '{:s}'.format(phs),
-                          "from": '{:s}'.format(xfmr_meter),
-                          "to": '{:s}_mtr'.format(node),
-                          "length": '{:.1f}'.format(secondary_ft),
-                          "configuration": '{:s}'.format(linekey)}
-                self.glm.add_object('{:s} {{'.format(line_class), name, params)
-            name = '{:s}_mtr'.format(node)
-            params = {"phases": '{:s}'.format(phs),
-                      "nominal_voltage": '{:.2f}'.format(vnom)}
-            self.glm.add_tariff(params)
-            self.glm.add_object('{:s} {{'.format(meter_class), name, params)
-
-            if self.base.metrics_interval > 0:
-                params = {"parent": name,
-                          "interval": str(self.base.metrics_interval)}
-                self.glm.add_object('{:s} {{'.format(meter_class), name, params)
-
-            # write all the houses on that meter
-            self.base.house_nodes[node] = [nhouse, region, lg_v_sm, phs, bldg, ti]
-            self.add_houses(node, vnom, bIgnoreThermostatSchedule=False, bWriteService=False, bTriplex=bTriplex,
-                            setpoint_offset=1.0)
-        else:
-            print('// Zero houses at {:s} phases {:s}'.format(node, phs))
-            # waiting for the add comment methods to be added to modifier class
-            # print('// Zero houses at {:s} phases {:s}'.format(node, phs), file=fp)
-
-# def selectRECSBuildingTypeVintage(rcs_dataset, state, income_lvl, pop_density):
-#     type_df, vint_df = rcs_dataset.get_house_type_vintage("Washington","Low","U" )
-#     tdt, tdv = rcs_dataset.sample_type_vintage(type_df, vint_df)
-#     return tdt, tdv
-
-
-def _test2():
-    feeder = Feeder("feeder_config.json5")
 
 def _test1():
-    """ Parse and re-populate one backbone feeder, usually but not necessarily 
-    one of the PNNL taxonomy feeders
-    """
-    feeder = Feeder(4)
-    # loading default agent data
-    data_Path = "../data/"
-    # loading general metadata
-    with open(os.path.join(data_Path, "8-hi-metadata-lean.json"), 'r', encoding='utf-8') as json_file:
-        feeder.base.dso_config = pyjson5.load(json_file)
-    # loading residential metadata
-    with open(os.path.join(data_Path, "RECS_residential_metadata.json"), 'r', encoding='utf-8') as json_file:
-        feeder.base.res_bldg_metadata = pyjson5.load(json_file)
-    # loading commercial building metadata
-    with open(os.path.join(data_Path, "DSOT_commercial_metadata.json"), 'r', encoding='utf-8') as json_file:
-        feeder.base.comm_bldg_metadata = pyjson5.load(json_file)
-    # loading battery metadata
-    with open(os.path.join(data_Path, "DSOT_battery_metadata.json"), 'r', encoding='utf-8') as json_file:
-        feeder.base.batt_metadata = pyjson5.load(json_file)
-    # loading ev model metadata
-    with open(os.path.join(data_Path, "DSOT_ev_model_metadata.json"), 'r', encoding='utf-8') as json_file:
-        feeder.base.ev_metadata = pyjson5.load(json_file)
-
-    # We need to generate the total population of commercial buildings by type and size
-    dso_val = feeder.base.dso_config["DSO_2"]
-    feeder.base.ashrae_zone = dso_val['ashrae_zone']
-    feeder.base.pv_rating_MW = dso_val['rooftop_pv_rating_MW']
-    num_res_customers = dso_val['number_of_gld_homes']
-    num_comm_customers = round(num_res_customers * dso_val['RCI customer count mix']['commercial'] /
-                               dso_val['RCI customer count mix']['residential'])
-    num_comm_bldgs = num_comm_customers / dso_val['comm_customers_per_bldg']
-    feeder.base.comm_bldgs_pop = comm_FG.define_comm_bldg(feeder.base.comm_bldg_metadata, dso_val['utility_type'], num_comm_bldgs)
-
-    feeder.base.driving_data_file = "DSOT_ev_driving_metadata.csv"
-    feeder.base.ev_driving_metadata = feeder.process_nhts_data(os.path.join(data_Path + feeder.base.driving_data_file))
-
-    feeder.base.solar_path = "../../../data/solar_data/solar_pv_power_profiles/"
-    feeder.base.solar_P_player = "5_minute_dist_power.csv"
-    feeder.base.solar_Q_player = "no_file"
-    feeder.base.state = "TX"
-    feeder.base.dso_type = "No_DSO_Type"   # Suburban =C?, Urban =U, Rural =R, No_DSO_Type
-    # feeder.base.dso_type = "Suburban"
-    feeder.base.income_level = ["Low", "Middle", "Upper"]
-    feeder.base.electric_cooling_percentage = 90
-    feeder.base.rooftop_pv_rating_MW = 1677.84
-
-    cop_mat = feeder.res_bldg_metadata.COP_average
-    years_bin = [range(1945, 1950), range(1950, 1960), range(1960, 1970), range(1970, 1980),
-                 range(1980, 1990), range(1990, 2000), range(2000, 2010), range(2010, 2016), range(2016, 2021)]
-    years_bin = [list(years_bin[ind]) for ind in range(len(years_bin))]
-    feeder.base.cop_lookup = []
-    for _bin in range(len(years_bin)):
-        temp = []
-        for yr in years_bin[_bin]:
-            temp.append(cop_mat[str(yr)])
-        feeder.base.cop_lookup.append(temp)
-
-    feeder.process_taxonomy()
-    feeder.glm.write_model("test.glm")
-
-    # Test read, write, plot
-    gm = GLMModifier()
-    g, success = gm.read_model("test.glm")
-    if success:
-        gm.write_model("test2.glm")
-        # gm.model.plot_model()
+    feeder = Feeder("./feeder_config.json5")
 
 
 if __name__ == "__main__":
-    _test2()
+    _test1()
