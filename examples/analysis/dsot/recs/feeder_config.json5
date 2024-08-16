@@ -6,13 +6,10 @@
     "in_file_glm": "", // REQUIRED
     "out_file_glm": "test.glm", // REQUIRED
     "case_name": "MyCase", // REQUIRED
-    "substation_name": "MySub", // REQUIRED
     "starttime": "2023-01-01 00:00:00", // REQUIRED: format "2023-01-01 00:00:00"
     "stoptime": "2023-01-02 00:00:00", // REQUIRED: format "2023-01-02 00:00:00"
-    "timestep": 60, // REQUIRED
     "timezone": "EST+5EDT", // REQUIRED
     "metrics_interval": 300, // DEFAULT: 300
-    "random seed": 13, // DEFAULT: 1 - seeds randomizer used in populating the models
 
     // input files
     "file_residential_meta": './RECS_residential_metadata.json',
@@ -23,14 +20,11 @@
 
     // dso
     "state": "TX",
-    "county": "Houston",
     "latitude": 29.65, // DEFAULT:30.0
     "longitude": -95.42, // DEFAULT:-110.0
     "time_zone_offset": -6,
     "ashrae_zone": "2A",
     "climate_zone": 5,
-    "weather_name": "localWeather", // DEFAULT:localWeather
-    "weather_file": "AZ-Tucson_International_Ap.tmy3", // DEFAULT:AZ-Tucson_International_Ap.tmy3
     "rooftop_pv_rating_MW": 7481.90,
     "utility_type": "Urban",
     "number_of_gld_homes": 1308,
@@ -57,10 +51,8 @@
     "bin_size_threshold": 100,
     "wh_shift": 0,
 
-    "players": {"name": "lp", "file": "your_file","type": "double"},
 
     // house parameters
-    "message_broker": "",   // "" | "helics_msg" | "fncs_msg"
     "use_feeder": true,
     // use_feeder = true
     "taxonomy": "R1-12.47-1.glm",
@@ -99,39 +91,11 @@
     "electric_cooling_percentage": 90,
 
 
-    "EV_penetration": 11, // fraction of households with EVs, DEFAULT: determined by RECS data
-    "battery_size_distribution": { // uniform distribution
-        "min_size": 1.0, //DEFAULT: 50 kWh, https://insideevs.com/reviews/344001/compare-evs/
-        "max_size": 100, //DEFAULT: 125 kWh, https://insideevs.com/reviews/344001/compare-evs/
-    },
-    "charging_power_distribution": { // must sum to 1
-        "level_1": 0.1, // DEFAULT: 0.1 made up by Trevor, charging power is 3.5 kW
-        "level_2": 0.9, // DEFAULT: 0.9, made up by Trevor, charging power is 5-12 kW, https://www.evchargerreviews.net/best-ev-chargers-for-home-use/
-    },
 
-    // solar definitions
-    "solar_penetration": 10, // the percentage of households with solar, DEFAULT: determined by RECS data
-    "solar_installation_rated_power": { // uniform distribution
-        "min_size": 6.0, //DEFAULT: 6 kW
-        "max_size": 8.0 //DEFAULT: 8 kW
-    },
-    "inverter_rated_power": 8.0, // DEFAULT: same as solar installation rated power
 
     // battery definitions
-    "battery penetration": 8, // the percentage of households with batteries, DEFAULT: determined by RECS data
-    "battery installation rated power": { // uniform distribution
-        "min_size": 9.0, //DEFAULT: 9 kWh Generac power cell
-        "max_size": 18.0, //DEFAULT: 18 kWh Panasonic Evervolt
-    },
-    "battery roundtrip efficiency": 0.93, // DEAFULT: 0.93
 
-    "inverter efficiency": 0.98, // DEFAULT: 0.98
-    "TransactiveHousePercentage": 80,
     "solar_percentage": 11,
     "storage_percentage": 3,
     "ev_percentage": 8,
-    "SolarInverterMode": "CONSTANT_PQ",
-    "StorageInverterMode": "CONSTANT_PQ",
-    "InverterEfficiency": 1.0,
-    "BatteryRoundTripEfficiency": 1.0
 }
