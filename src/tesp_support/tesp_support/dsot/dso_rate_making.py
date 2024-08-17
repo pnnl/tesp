@@ -1098,12 +1098,12 @@ def calculate_consumer_bills(
     # Specify price components that do not vary in time or by consumer type
     flat_rate = tariff["DSO_" + dso_num]["flat_rate"]
     fixed_charge = tariff["DSO_" + dso_num]["base_connection_charge"]
-    trans_vol_charge = tariff['DSO_' + dso_num]['transactive_dist_rate']
-    trans_fixed_charge = tariff['DSO_' + dso_num]['transactive_connection_charge']
-    trans_retail_scale = tariff['DSO_' + dso_num]['transactive_LMP_multiplier']
+    trans_vol_charge = tariff["DSO_" + dso_num]["transactive_dist_rate"]
+    trans_fixed_charge = tariff["DSO_" + dso_num]["transactive_connection_charge"]
+    trans_retail_scale = tariff["DSO_" + dso_num]["transactive_LMP_multiplier"]
     
     # Cycle through each month for which there is energy data and calculate customer bill
-    months = list(meter_df.columns[~meter_df.columns.str.contains('sum')])
+    months = list(meter_df.columns[~meter_df.columns.str.contains("sum")])
     for m in months:
         # Initialize the DataFrames for each month
         bill_df[m] = [0] * len(bill_df)
@@ -1149,9 +1149,13 @@ def calculate_consumer_bills(
                 mode="r",
             )
 
-            # For the subscription rate, load in the annual DA LMP data
-            da_lmp_stats = pd.read_csv(
-                os.path.join(case_path, "Annual_DA_LMP_Load_data.csv"), index_col=0
+            # For the subscription rate, load in the annual DA LMP data and convert to 
+            # $/kWh
+            da_lmp_stats = (
+                pd.read_csv(
+                    os.path.join(case_path, "Annual_DA_LMP_Load_data.csv"), index_col=0
+                )
+                / 1000
             )
 
         # Iterate through each consumer
@@ -1723,6 +1727,7 @@ def calculate_tariff_prices(
     num_ind_cust,
     industrial_file,
     rate_scenario,
+    trans_cost_balance_method=None,
 ):
     """Determines the prices that ensure enough revenue is collected to recover the 
     DSO's expenses.
@@ -1742,6 +1747,8 @@ def calculate_tariff_prices(
         industrial_file (str): File path to the bulk industrial loads.
         rate_scenario (str): A str specifying the rate scenario under investigation: flat,
         time-of-use, subscription, transactive, or dsot.
+        trans_cost_balance_method (str): A str indicating the cost component of the 
+        transactive rate that will be adjusted to recover all unmet costs.
     Returns:
         prices (dict): A dictionary containing the prices that need to be calculated for 
         each of the rates considered in the rate scenario.
@@ -1752,6 +1759,7 @@ def calculate_tariff_prices(
 
     # Specify price components that do not vary in time or by consumer type
     fixed_charge = tariff["DSO_" + dso_num]["base_connection_charge"]
+    trans_retail_scale = tariff["DSO_" + dso_num]["transactive_LMP_multiplier"]
 
     # Initialize the prices dictionary
     prices = {}
@@ -2125,9 +2133,12 @@ def calculate_tariff_prices(
             case_path, dso_num, rate_scenario, seasons_dict
         )
 
-        # Load in the market data
-        da_lmp_stats = pd.read_csv(
-            os.path.join(case_path, "Annual_DA_LMP_Load_data.csv"), index_col=0
+        # Load in the market data and convert to $/kWh
+        da_lmp_stats = (
+            pd.read_csv(
+                os.path.join(case_path, "Annual_DA_LMP_Load_data.csv"), index_col=0
+            )
+            / 1000
         )
 
         # Initialize the demand and baseline demand profiles for their seasonal 
@@ -2658,9 +2669,428 @@ def calculate_tariff_prices(
             - total_tier_credit_flat_i
         ) / (sf * total_consumption_flat_rc + total_consumption_flat_i)
     elif rate_scenario == "transactive":
-        None
+        # Load in necessary data for the transactive rate
+        if trans_cost_balance_method in [None, "volumetric"]:
+            trans_fixed_charge = tariff["DSO_" + dso_num]["transactive_connection_charge"]
+        elif trans_cost_balance_method == "fixed":
+            trans_vol_charge = tariff["DSO_" + dso_num]["transactive_dist_rate"]
+
+        # Obtain the DSO expenses (e.g., operational expenditures, capital expenditures)
+        dso_expenses = get_total_dso_costs(case_path, dso_num, rate_scenario)
+
+        # Initialize some of the closed-form solution components
+        total_consumption_trans_rc = 0
+        total_consumption_trans_i = 0
+        total_consumers_trans_rc = 0
+        total_consumers_trans_i
+        rev_DA_energy_charge_trans_rc = 0
+        rev_DA_energy_charge_trans_i = 0
+        rev_RT_energy_charge_trans_rc = 0
+        rev_RT_energy_charge_trans_i = 0
+        rev_volumetric_charge_trans_rc = 0
+        rev_volumetric_charge_trans_i = 0
+        rev_fixed_charge_trans_rc = 0
+        rev_fixed_charge_trans_i = 0
+
+        # Iterate through each consumer to find certain components
+        for each in metadata["billingmeters"]:
+            # Calculate the necessary rate components for residential and commercial 
+            # consumers
+            if metadata["billingmeters"][each]["tariff_class"] in [
+                "residential",
+                "commercial",
+            ]:
+                if trans_cost_balance_method in [None, "volumetric"]:
+                    # Update the total consumption
+                    total_consumption_trans_rc += meter_df.loc[(each, "kw-hr"), "sum"]
+
+                    # Update the total revenue from fixed charges
+                    rev_fixed_charge_trans_rc += trans_fixed_charge * len(months)
+                elif trans_cost_balance_method == "fixed":
+                    # Update the total number of consumers
+                    total_consumers_trans_rc += 1
+
+                    # Update the total revenue from volumetric charges
+                    rev_volumetric_charge_trans_rc += (
+                        meter_df.loc[(each, "kw-hr"), "sum"] * trans_vol_charge
+                    )
+
+                # Update the total revenue from DA energy charges
+                rev_DA_energy_charge_trans_rc += (
+                    trans_df.loc[(each, "DA_cost"), "sum"] * trans_retail_scale
+                )
+
+                # Update the total revenue from RT energy charges
+                rev_RT_energy_charge_trans_rc += (
+                    trans_df.loc[(each, "RT_cost"), "sum"] * trans_retail_scale
+                )
+            elif metadata["billingmeters"][each]["tariff_class"] == "industrial":
+                # Update the total revenue from DA energy charges
+                rev_DA_energy_charge_trans_i += (
+                    trans_df.loc[(each, "DA_cost"), "sum"] * trans_retail_scale
+                )
+
+                # Update the total revenue from RT energy charges
+                rev_RT_energy_charge_trans_i += (
+                    trans_df.loc[(each, "RT_cost"), "sum"] * trans_retail_scale
+                )
+
+        # Calculate the necessary rate components for industrial consumers
+        if trans_cost_balance_method in [None, "volumetric"]:
+            total_consumption_trans_i = energy_sum_df.loc[("industrial", "kw-hr"), "sum"]
+            rev_fixed_charge_trans_i = trans_fixed_charge * len(months) * num_ind_cust
+        elif trans_cost_balance_method == "fixed":
+            total_consumers_trans_i = num_ind_cust
+            rev_volumetric_charge_trans_i = (
+                energy_sum_df.loc[("industrial", "kw-hr"), "sum"] * trans_vol_charge
+            )
+        da_lmp_stats = (
+            pd.read_csv(
+                os.path.join(case_path, "Annual_DA_LMP_Load_data.csv"), index_col=0
+            )
+            / 1000
+        )
+        indust_df = load_indust_data(industrial_file, range(1, 2)) * 1000
+        rev_DA_energy_charge_trans_i += (
+            indust_df.loc[0, "Bus" + dso_num]
+            * da_lmp_stats.loc[:, "da_lmp" + dso_num].sum()
+        )
+
+        # Find the volumetric price or the fixed charge for the transactive rate,
+        # assuming that each consumer is taking service under the transactive rate
+        if trans_cost_balance_method in [None, "volumetric"]:
+            prices["transactive_volumetric_rate"] = (
+                dso_expenses
+                - sf
+                * (
+                    rev_DA_energy_charge_trans_rc
+                    + rev_RT_energy_charge_trans_rc
+                    + rev_fixed_charge_trans_rc
+                    + rev_DA_energy_charge_trans_i
+                    + rev_RT_energy_charge_trans_i
+                )
+                - rev_fixed_charge_trans_i
+            ) / (sf * total_consumption_trans_rc + total_consumption_trans_i)
+        elif trans_cost_balance_method == "fixed":
+            prices["transactive_fixed_charge"] = (
+                dso_expenses
+                - sf
+                * (
+                    rev_DA_energy_charge_trans_rc
+                    + rev_RT_energy_charge_trans_rc
+                    + rev_volumetric_charge_trans_rc
+                    + rev_DA_energy_charge_trans_i
+                    + rev_RT_energy_charge_trans_i
+                )
+                - rev_volumetric_charge_trans_i
+            ) / (12 * (sf * total_consumers_trans_rc + total_consumers_trans_i))
+
+        # Initialize some of the closed-form solution components
+        total_consumption_flat_rc = 0
+        rev_demand_charge_flat_rc = 0
+        rev_fixed_charge_flat_rc = 0
+        total_tier_credit_flat_rc = 0
+        rev_DA_energy_charge_trans = 0
+        rev_RT_energy_charge_trans = 0
+        rev_volumetric_charge_trans = 0
+        rev_fixed_charge_trans = 0
+
+        # Iterate through each consumer to allocate costs according to the tariff under 
+        # which they take service
+        for each in metadata["billingmeters"]:
+            # Calculate the necessary rate components for residential and commercial
+            # consumers
+            if metadata["billingmeters"][each]["tariff_class"] in [
+                "residential",
+                "commercial",
+            ]:
+                if metadata["billingmeters"][each]["cust_participating"]:
+                    # Calculate the consumer's market-related charges under the 
+                    # transactive tariff
+                    rev_DA_energy_charge_trans += (
+                        trans_df.loc[(each, "DA_cost"), m] * trans_retail_scale
+                    )
+                    rev_RT_energy_charge_trans += (
+                        trans_df.loc[(each, "RT_cost"), m] * trans_retail_scale
+                    )
+
+                    # Calculate the consumer's volumetric charge and fixed charge under
+                    # the transactive tariff depending on the cost balance method
+                    if trans_cost_balance_method in [None, "volumetric"]:
+                        rev_volumetric_charge_trans += (
+                            meter_df.loc[(each, "kw-hr"), m]
+                            * prices["transactive_volumetric_rate"]
+                        )
+                        rev_fixed_charge_trans += trans_fixed_charge
+                    elif trans_cost_balance_method == "fixed":
+                        rev_volumetric_charge_trans += (
+                            meter_df.loc[(each, "kw-hr"), m] * trans_vol_charge
+                        )
+                        rev_fixed_charge_trans += prices["transactive_fixed_charge"]
+                else:
+                    # Update total consumption for the flat rate consumers
+                    total_consumption_flat_rc += meter_df.loc[(each, "kw-hr"), "sum"]
+
+                    # Specify the demand charge based on the consumer's sector type
+                    demand_charge = tariff["DSO_" + dso_num][
+                        metadata["billingmeters"][each]["tariff_class"]
+                    ]["demand_charge"]
+
+                    # Update total revenue from demand charges for the flat rate 
+                    # consumers
+                    rev_demand_charge_flat_rc += demand_charge * sum(
+                        meter_df.loc[(each, "max_kw"), m] for m in months
+                    )
+
+                    # Update total revenue from fixed charges for the flat rate 
+                    # consumers
+                    rev_fixed_charge_flat_rc += fixed_charge * len(months)
+
+                    # Update the total tier credit for the flat rate consumers, if the 
+                    # consumer qualifies
+                    if metadata["billingmeters"][each]["tariff_class"] in [
+                        #"residential",
+                        "commercial",
+                    ]:
+                        total_tier_credit_flat_rc += sum(
+                            calculate_tier_credit(
+                                dso_num,
+                                metadata["billingmeters"][each]["tariff_class"],
+                                tariff,
+                                meter_df.loc[(each, "kw-hr"), m],
+                            )
+                            for m in months
+                        )
+
+        # Calculate the necessary rate components for industrial consumers
+        total_consumption_flat_i = energy_sum_df.loc[("industrial", "kw-hr"), "sum"]
+        rev_demand_charge_flat_i = tariff["DSO_" + dso_num]["industrial"][
+            "demand_charge"
+        ] * sum(energy_sum_df.loc[("industrial", "demand_quantity"), m] for m in months)
+        rev_fixed_charge_flat_i = fixed_charge * len(months) * num_ind_cust
+        total_tier_credit_flat_i = sum(
+            calculate_tier_credit(
+                dso_num,
+                "industrial",
+                tariff,
+                energy_sum_df.loc[("industrial", "kw-hr"), m],
+            )
+            for m in months
+        )
+
+        # Calculate the total revenue obtained from consumers taking service under the 
+        # transactive rate
+        rev_total_trans = (
+            rev_DA_energy_charge_trans
+            + rev_RT_energy_charge_trans
+            + rev_volumetric_charge_trans
+            + rev_fixed_charge_trans
+        )
+            
+        # Find the energy price for the flat rate
+        prices["flat_rate"] = (
+            sum(dso_expenses[s] for s in seasons_dict)
+            - sf
+            * (
+                rev_total_trans
+                + rev_demand_charge_flat_rc
+                + rev_fixed_charge_flat_rc
+                + total_tier_credit_flat_rc
+            )
+            - rev_demand_charge_flat_i
+            - rev_fixed_charge_flat_i
+            - total_tier_credit_flat_i
+        ) / (sf * total_consumption_flat_rc + total_consumption_flat_i)
     elif rate_scenario == "dsot":
-        None
+        # Load in necessary data for the DSO+T rate
+        trans_fixed_charge = tariff["DSO_" + dso_num]["transactive_connection_charge"]
+
+        # Obtain the DSO expenses (e.g., operational expenditures, capital expenditures)
+        dso_expenses = get_total_dso_costs(case_path, dso_num, rate_scenario)
+
+        # Initialize some of the closed-form solution components
+        total_consumption_dsot_rc = 0
+        rev_DA_energy_charge_dsot_rc = 0
+        rev_DA_energy_charge_dsot_i = 0
+        rev_RT_energy_charge_dsot_rc = 0
+        rev_RT_energy_charge_dsot_i = 0
+        rev_fixed_charge_dsot_rc = 0
+
+        # Iterate through each consumer to find certain components
+        for each in metadata["billingmeters"]:
+            # Calculate the necessary rate components for residential and commercial 
+            # consumers
+            if metadata["billingmeters"][each]["tariff_class"] in [
+                "residential",
+                "commercial",
+            ]:
+                # Update the total consumption
+                total_consumption_dsot_rc += meter_df.loc[(each, "kw-hr"), "sum"]
+
+                # Update the total revenue from fixed charges
+                rev_fixed_charge_dsot_rc += trans_fixed_charge * len(months)
+
+                # Update the total revenue from DA energy charges
+                rev_DA_energy_charge_dsot_rc += (
+                    trans_df.loc[(each, "DA_cost"), "sum"] * trans_retail_scale
+                )
+
+                # Update the total revenue from RT energy charges
+                rev_RT_energy_charge_dsot_rc += (
+                    trans_df.loc[(each, "RT_cost"), "sum"] * trans_retail_scale
+                )
+            elif metadata["billingmeters"][each]["tariff_class"] == "industrial":
+                # Update the total revenue from DA energy charges
+                rev_DA_energy_charge_dsot_i += (
+                    trans_df.loc[(each, "DA_cost"), "sum"] * trans_retail_scale
+                )
+
+                # Update the total revenue from RT energy charges
+                rev_RT_energy_charge_dsot_i += (
+                    trans_df.loc[(each, "RT_cost"), "sum"] * trans_retail_scale
+                )
+
+        # Calculate the necessary rate components for industrial consumers
+        total_consumption_dsot_i = energy_sum_df.loc[("industrial", "kw-hr"), "sum"]
+        rev_fixed_charge_dsot_i = trans_fixed_charge * len(months) * num_ind_cust
+        da_lmp_stats = (
+            pd.read_csv(
+                os.path.join(case_path, "Annual_DA_LMP_Load_data.csv"), index_col=0
+            )
+            / 1000
+        )
+        indust_df = load_indust_data(industrial_file, range(1, 2)) * 1000
+        rev_DA_energy_charge_dsot_i += (
+            indust_df.loc[0, "Bus" + dso_num]
+            * da_lmp_stats.loc[:, "da_lmp" + dso_num].sum()
+        )
+
+        # Find the volumetric price for the DSO+T rate, assuming that each consumer is 
+        # taking service under the DSO+T rate
+        prices["dsot_volumetric_rate"] = (
+            dso_expenses
+            - sf
+            * (
+                rev_DA_energy_charge_dsot_rc
+                + rev_RT_energy_charge_dsot_rc
+                + rev_fixed_charge_dsot_rc
+                + rev_DA_energy_charge_dsot_i
+                + rev_RT_energy_charge_dsot_i
+            )
+            - rev_fixed_charge_dsot_i
+        ) / (sf * total_consumption_dsot_rc + total_consumption_dsot_i)
+
+        # Initialize some of the closed-form solution components
+        total_consumption_flat_rc = 0
+        rev_demand_charge_flat_rc = 0
+        rev_fixed_charge_flat_rc = 0
+        total_tier_credit_flat_rc = 0
+        rev_DA_energy_charge_dsot = 0
+        rev_RT_energy_charge_dsot = 0
+        rev_volumetric_charge_dsot = 0
+        rev_fixed_charge_dsot = 0
+
+        # Iterate through each consumer to allocate costs according to the tariff under 
+        # which they take service
+        for each in metadata["billingmeters"]:
+            # Calculate the necessary rate components for residential and commercial
+            # consumers
+            if metadata["billingmeters"][each]["tariff_class"] in [
+                "residential",
+                "commercial",
+            ]:
+                if metadata["billingmeters"][each]["cust_participating"]:
+                    # Calculate the consumer's market-related charges under the DSO+T 
+                    # tariff
+                    rev_DA_energy_charge_dsot += (
+                        trans_df.loc[(each, "DA_cost"), m] * trans_retail_scale
+                    )
+                    rev_RT_energy_charge_dsot += (
+                        trans_df.loc[(each, "RT_cost"), m] * trans_retail_scale
+                    )
+
+                    # Calculate the consumer's volumetric charge under the DSO+T tariff
+                    rev_volumetric_charge_dsot += (
+                        meter_df.loc[(each, "kw-hr"), m]
+                        * prices["dsot_volumetric_rate"]
+                    )
+
+                    #Calculate the consumer's fixed charge under the DSO+T tariff
+                    rev_fixed_charge_dsot += trans_fixed_charge
+                else:
+                    # Update total consumption for the flat rate consumers
+                    total_consumption_flat_rc += meter_df.loc[(each, "kw-hr"), "sum"]
+
+                    # Specify the demand charge based on the consumer's sector type
+                    demand_charge = tariff["DSO_" + dso_num][
+                        metadata["billingmeters"][each]["tariff_class"]
+                    ]["demand_charge"]
+
+                    # Update total revenue from demand charges for the flat rate 
+                    # consumers
+                    rev_demand_charge_flat_rc += demand_charge * sum(
+                        meter_df.loc[(each, "max_kw"), m] for m in months
+                    )
+
+                    # Update total revenue from fixed charges for the flat rate 
+                    # consumers
+                    rev_fixed_charge_flat_rc += fixed_charge * len(months)
+
+                    # Update the total tier credit for the flat rate consumers, if the 
+                    # consumer qualifies
+                    if metadata["billingmeters"][each]["tariff_class"] in [
+                        #"residential",
+                        "commercial",
+                    ]:
+                        total_tier_credit_flat_rc += sum(
+                            calculate_tier_credit(
+                                dso_num,
+                                metadata["billingmeters"][each]["tariff_class"],
+                                tariff,
+                                meter_df.loc[(each, "kw-hr"), m],
+                            )
+                            for m in months
+                        )
+
+        # Calculate the necessary rate components for industrial consumers
+        total_consumption_flat_i = energy_sum_df.loc[("industrial", "kw-hr"), "sum"]
+        rev_demand_charge_flat_i = tariff["DSO_" + dso_num]["industrial"][
+            "demand_charge"
+        ] * sum(energy_sum_df.loc[("industrial", "demand_quantity"), m] for m in months)
+        rev_fixed_charge_flat_i = fixed_charge * len(months) * num_ind_cust
+        total_tier_credit_flat_i = sum(
+            calculate_tier_credit(
+                dso_num,
+                "industrial",
+                tariff,
+                energy_sum_df.loc[("industrial", "kw-hr"), m],
+            )
+            for m in months
+        )
+
+        # Calculate the total revenue obtained from consumers taking service under the 
+        # DSO+T rate
+        rev_total_dsot = (
+            rev_DA_energy_charge_dsot
+            + rev_RT_energy_charge_dsot
+            + rev_volumetric_charge_dsot
+            + rev_fixed_charge_dsot
+        )
+            
+        # Find the energy price for the flat rate
+        prices["flat_rate"] = (
+            sum(dso_expenses[s] for s in seasons_dict)
+            - sf
+            * (
+                rev_total_dsot
+                + rev_demand_charge_flat_rc
+                + rev_fixed_charge_flat_rc
+                + total_tier_credit_flat_rc
+            )
+            - rev_demand_charge_flat_i
+            - rev_fixed_charge_flat_i
+            - total_tier_credit_flat_i
+        ) / (sf * total_consumption_flat_rc + total_consumption_flat_i)
     
     # Return the prices dictionary
     return prices
@@ -2830,6 +3260,7 @@ def DSO_rate_making(
         case_name="",
         iterate=False,
         rate_scenario=None,
+        trans_cost_balance_method=None,
 ):
     """ Main function to call for calculating the customer energy consumption, monthly bills, and tariff adjustments to
     ensure revenue matches expenses.  Saves meter and bill dataframes to a hdf5 file.
@@ -2845,6 +3276,8 @@ def DSO_rate_making(
         iterate (Boolean): If True will iterate once to square up revenue.
         rate_scenario (str): A str specifying the rate scenario under investigation: flat,
         time-of-use, subscription, or transactive. If None, this function defaults to DSO+T.
+        trans_cost_balance_method (str): A str indicating the cost component of the transactive 
+        rate that will be adjusted to recover all unmet costs.
     Returns:
         meter_df : dataframe of energy consumption and max 15 minute power consumption for each month and total
         bill_df : dataframe of monthly and total bill for each house broken out by each element (energy, demand,
@@ -3003,6 +3436,13 @@ def DSO_rate_making(
             tariff_path, case_config["indLoad"][5].split("/")[-1]
         )
 
+        # Check the value of the transactive cost balance method flag
+        if trans_cost_balance_method not in [None, "volumetric", "fixed"]:
+            raise ValueError(
+                f"{trans_cost_balance_method} is not a supported cost balance method "
+                + "for the transactive rate. Please try again."
+            )
+
         # Calculate the prices the ensure enough revenue is collected to recover the  
         # DSO's expenses in the Rate Scenario analysis
         prices = calculate_tariff_prices(
@@ -3017,6 +3457,7 @@ def DSO_rate_making(
             num_indust_cust,
             industrial_file,
             rate_scenario,
+            trans_cost_balance_method,
         )
 
         # Update the price datasets accordingly
@@ -3048,9 +3489,22 @@ def DSO_rate_making(
             with open(os.path.join(case, "time_of_use_parameters.json"), "w") as fp:
                 json.dump(tou_params, fp)
         elif rate_scenario == "transactive":
-            None
+            # Update the variables
+            tariff["DSO_" + str(dso_num)]["flat_rate"] = prices["flat_rate"]
+            if trans_cost_balance_method in [None, "volumetric"]:
+                tariff["DSO_" + str(dso_num)]["transactive_dist_rate"] = prices[
+                    "transactive_volumetric_rate"
+                ]
+            elif trans_cost_balance_method == "fixed":
+                tariff["DSO_" + str(dso_num)][
+                    "transactive_connection_charge"
+                ] = prices["transactive_fixed_charge"]
         elif rate_scenario == "dsot":
-            None
+            # Update the variables
+            tariff["DSO_" + str(dso_num)]["flat_rate"] = prices["flat_rate"]
+            tariff["DSO_" + str(dso_num)]["transactive_dist_rate"] = prices[
+                "transactive_volumetric_rate"
+            ]
         
         # Calculate consumer bills in the Rate Scenario analysis
         cust_bill_df, billsum_df = calculate_consumer_bills(
