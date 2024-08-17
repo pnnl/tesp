@@ -444,6 +444,7 @@ if retail:
             required_revenue = (float(dso_df.loc[13, 'DSO_' + str(dso_num)]) + float(dso_df.loc[30, 'DSO_' + str(dso_num)])) * 1000
         else:
             required_revenue = 4e6
+        trans_cost_balance_method = None
         DSO_Cash_Flows, DSO_Revenues_and_Energy_Sales, tariff, surplus = rm.DSO_rate_making(
             case_path,
             dso_num,
@@ -455,6 +456,7 @@ if retail:
             case_name,
             squareup_revenue,
             rate_scenario,
+            trans_cost_balance_method,
         )
 
         # Example of getting an annual customer bill in dictionary form:
