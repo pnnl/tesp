@@ -218,21 +218,21 @@ def define_comm_loads(glm, bldg_type, bldg_size, dso_type, climate, bldg_metadat
     return bldg
 
 
-def add_comm_zones(fdr, bldg, key, mode=None):
+def add_comm_zones(glm, self, bldg, key, mode=None):
     """ For large buildings, breaks building up into multiple zones.
 
     For all buildings sends definition dictionary to function that writes out building definition to GLD file format.
 
     Args:
-        fdr (Feeder):
+        self (Feeder):
         bldg (dict): dictionary of building parameters for the building to be processed.
         key (str): name of feeder node or meter being used
         mode (str): if 'test' will ensure that GLD output function does not set parent - allows buildings to be run in GLD without feeder info
     """
-    glm = fdr.glm
-    comm_loads = fdr.base.comm_loads
-    batt_metadata = fdr.batt_metadata
-    ev_metadata = fdr.ev_metadata
+    #glm = self.glm
+    comm_loads = self.base.comm_loads #self.comm_loads
+    batt_metadata = self.batt_metadata
+    ev_metadata = self.ev_metadata
 
     mtr = comm_loads[key][0]
     comm_type = comm_loads[key][1]
@@ -369,7 +369,7 @@ def add_comm_zones(fdr, bldg, key, mode=None):
                         key + '_' + comm_name + '_floor_' + str(floor) + '_zone_' + str(zone))
                     add_one_commercial_zone(glm, bldg, mode)
 
-        if np.random.uniform(0, 1) <= fdr.g_config.storage_percentage:
+        if np.random.uniform(0, 1) <= self.storage_percentage:
             # TODO: Review battery results to see if one battery per 10000 sq ft. is appropriate.
             num_batt = math.floor(bldg_size / 10000) + 1
             battery_capacity = num_batt * get_dist(batt_metadata.capacity['mean'],
@@ -390,7 +390,7 @@ def add_comm_zones(fdr, bldg, key, mode=None):
             bat_i_name = gld_strict_name(basenode + '_ibat')
             storage_inv_mode = 'CONSTANT_PQ'
 
-            if fdr.g_config.case_type['bt']:
+            if self.case_type['bt']:
                 # battery_count += 1
                 params = {"parent": mtr,
                           "phases": phases,
@@ -424,14 +424,14 @@ def add_comm_zones(fdr, bldg, key, mode=None):
                 glm.add_object("battery", batname, params)
                 glm.add_metrics_collector(bat_i_name, "inverter")
 
-        if np.random.uniform(0, 1) <= fdr.g_config.solar_percentage:
+        if np.random.uniform(0, 1) <= self.solar_percentage:
             # typical PV panel is 350 Watts and avg home has 5kW installed.
             # If we assume 2500 sq. ft as avg area of a single family house, we can say:
             # one 350 W panel for every 175 sq. ft.
             num_panel = np.floor(bldg_size / 175)
             inverter_undersizing = 1.0
             inv_power = num_panel * 350 * inverter_undersizing
-            pv_scaling_factor = inv_power / fdr.g_config.rooftop_pv_rating_MW
+            pv_scaling_factor = inv_power / self.rooftop_pv_rating_MW
 
             basenode = mtr
             sol_m_name = gld_strict_name(basenode + '_msol')
@@ -439,7 +439,7 @@ def add_comm_zones(fdr, bldg, key, mode=None):
             sol_i_name = gld_strict_name(basenode + '_isol')
             metrics_interval = 300
             solar_inv_mode = 'CONSTANT_PQ'
-            if fdr.g_config.case_type['pv']:
+            if self.case_type['pv']:
                 # solar_count += 1
                 # solar_kw += 0.001 * inv_power
                 params = {"parent": basenode,
@@ -456,7 +456,7 @@ def add_comm_zones(fdr, bldg, key, mode=None):
                           "generator_mode": solar_inv_mode,
                           "four_quadrant_control_mode": solar_inv_mode,
                           "P_Out": 'P_out_inj.value * {}'.format(pv_scaling_factor)}
-                if 'no_file' not in fdr.g_config.solar_Q_player:
+                if 'no_file' not in self.solar_Q_player:
                     params["Q_Out"] = "Q_out_inj.value * 0.0"
                 else:
                     params["Q_Out"] = "0"
@@ -467,58 +467,59 @@ def add_comm_zones(fdr, bldg, key, mode=None):
                 glm.add_object("inverter", sol_i_name, params)
                 glm.add_metrics_collector(sol_i_name, "inverter")
 
-        if np.random.uniform(0, 1) <= fdr.g_config.ev_percentage:
-            # first lets select an ev model:
-            ev_name = fdr.selectEVmodel(ev_metadata.sale_probability, np.random.uniform(0, 1))
-            ev_range = ev_metadata.Range_miles[ev_name]
-            ev_mileage = ev_metadata.Miles_per_kWh[ev_name]
-            ev_charge_eff = ev_metadata.charging_efficiency
-            # check if level 1 charger is used or level 2
-            if np.random.uniform(0, 1) <= ev_metadata.Level_1_usage:
-                ev_max_charge = ev_metadata.Level_1_max_power_kW
-                volt_conf = 'IS110'  # for level 1 charger, 110 V is good
-            else:
-                ev_max_charge = ev_metadata.Level_2_max_power_kW[ev_name]
-                volt_conf = 'IS220'  # for level 2 charger, 220 V is must
-            # now, let's map a random driving schedule with this vehicle ensuring daily miles
-            # doesn't exceed the vehicle range and home duration is enough to charge the vehicle
-            drive_sch = fdr.match_driving_schedule(ev_range, ev_mileage, ev_max_charge)
-            # ['daily_miles','home_arr_time','home_duration','work_arr_time','work_duration']
+       
+        # if np.random.uniform(0, 1) <= self.ev_percentage:
+        #     # first lets select an ev model:
+        #     ev_name = selectEVmodel(ev_metadata.sale_probability, np.random.uniform(0, 1))
+        #     ev_range = ev_metadata.Range_miles[ev_name]
+        #     ev_mileage = ev_metadata.Miles_per_kWh[ev_name]
+        #     ev_charge_eff = ev_metadata.charging_efficiency
+        #     # check if level 1 charger is used or level 2
+        #     if np.random.uniform(0, 1) <= ev_metadata.Level_1_usage:
+        #         ev_max_charge = ev_metadata.Level_1_max_power_kW
+        #         volt_conf = 'IS110'  # for level 1 charger, 110 V is good
+        #     else:
+        #         ev_max_charge = ev_metadata.Level_2_max_power_kW[ev_name]
+        #         volt_conf = 'IS220'  # for level 2 charger, 220 V is must
+        #     # now, let's map a random driving schedule with this vehicle ensuring daily miles
+        #     # doesn't exceed the vehicle range and home duration is enough to charge the vehicle
+        #     drive_sch = match_driving_schedule(self, ev_range, ev_mileage, ev_max_charge)
+        #     # ['daily_miles','home_arr_time','home_duration','work_arr_time','work_duration']
 
-            # few sanity checks
-            if drive_sch['daily_miles'] > ev_range:
-                raise UserWarning('daily travel miles for EV can not be more than range of the vehicle!')
-            if not is_hhmm_valid(drive_sch['home_arr_time']) or \
-                    not is_hhmm_valid(drive_sch['home_leave_time']) or \
-                    not is_hhmm_valid(drive_sch['work_arr_time']):
-                raise UserWarning('invalid HHMM format of driving time!')
-            if (drive_sch['home_duration'] > 24 * 3600 or drive_sch['home_duration'] < 0 or
-                    drive_sch['work_duration'] > 24 * 3600 or drive_sch['work_duration'] < 0):
-                raise UserWarning('invalid home or work duration for ev!')
-            if not fdr.is_drive_time_valid(drive_sch):
-                raise UserWarning('home and work arrival time are not consistent with durations!')
+        #     # few sanity checks
+        #     if drive_sch['daily_miles'] > ev_range:
+        #         raise UserWarning('daily travel miles for EV can not be more than range of the vehicle!')
+        #     if not is_hhmm_valid(drive_sch['home_arr_time']) or \
+        #             not is_hhmm_valid(drive_sch['home_leave_time']) or \
+        #             not is_hhmm_valid(drive_sch['work_arr_time']):
+        #         raise UserWarning('invalid HHMM format of driving time!')
+        #     if (drive_sch['home_duration'] > 24 * 3600 or drive_sch['home_duration'] < 0 or
+        #             drive_sch['work_duration'] > 24 * 3600 or drive_sch['work_duration'] < 0):
+        #         raise UserWarning('invalid home or work duration for ev!')
+        #     if not self.is_drive_time_valid(drive_sch):
+        #         raise UserWarning('home and work arrival time are not consistent with durations!')
 
-            basenode = mtr
-            evname = gld_strict_name(basenode + '_ev')
-            hsename = gld_strict_name(basenode + '_ev_hse')
-            parent_zone = bldg['zonename']
-            if fdr.g_config.case_type['pv']:  # all pvCases(HR) have ev populated
-                params = {"parent": parent_zone,
-                          "configuration": volt_conf,
-                          "breaker_amps": 1000,
-                          "battery_SOC": 100.0,
-                          "travel_distance": '{}'.format(drive_sch['daily_miles']),
-                          "arrival_at_work": '{}'.format(drive_sch['work_arr_time']),
-                          "duration_at_work": '{}'.format(drive_sch['work_duration']),
-                          "arrival_at_home": '{}'.format(drive_sch['home_arr_time']),
-                          "duration_at_home": '{}'.format(drive_sch['home_duration']),
-                          "work_charging_available": "FALSE",
-                          "maximum_charge_rate": '{:.2f}'.format(ev_max_charge * 1000),
-                          "mileage_efficiency": '{:.3f}'.format(ev_mileage),
-                          "mileage_classification": '{:.3f}'.format(ev_range),
-                          "charging_efficiency": '{:.3f}'.format(ev_charge_eff)}
-                glm.add_object("evcharger_det", evname, params)
-                glm.add_metrics_collector(evname, "house")
+            # basenode = mtr
+            # evname = gld_strict_name(basenode + '_ev')
+            # hsename = gld_strict_name(basenode + '_ev_hse')
+            # parent_zone = bldg['zonename']
+            # if self.case_type['pv']:  # all pvCases(HR) have ev populated
+            #     params = {"parent": parent_zone,
+            #               "configuration": volt_conf,
+            #               "breaker_amps": 1000,
+            #               "battery_SOC": 100.0,
+            #               "travel_distance": '{}'.format(drive_sch['daily_miles']),
+            #               "arrival_at_work": '{}'.format(drive_sch['work_arr_time']),
+            #               "duration_at_work": '{}'.format(drive_sch['work_duration']),
+            #               "arrival_at_home": '{}'.format(drive_sch['home_arr_time']),
+            #               "duration_at_home": '{}'.format(drive_sch['home_duration']),
+            #               "work_charging_available": "FALSE",
+            #               "maximum_charge_rate": '{:.2f}'.format(ev_max_charge * 1000),
+            #               "mileage_efficiency": '{:.3f}'.format(ev_mileage),
+            #               "mileage_classification": '{:.3f}'.format(ev_range),
+            #               "charging_efficiency": '{:.3f}'.format(ev_charge_eff)}
+            #     glm.add_object("evcharger_det", evname, params)
+            #     glm.add_metrics_collector(evname, "house")
 
     elif comm_type == 'ZIPLOAD':
         phsva = 1000.0 * kva / nphs
