@@ -504,6 +504,25 @@ class GLMModifier:
                       "interval": str(self.defaults.metrics_interval)}
             self.add_object("recorder", property_name, params)
 
+    
+    def add_group_recorder(self, group: str, property_name: str, file: str) -> None:
+        """Adds a GridLAB-D group recorder object to the GLModel object
+
+        Args:
+            group (str): GridLAB-D group name that the recorder is associated with
+            property_name (str): Name of the object parameter being recorded
+            file (str): Output file recorder writes to
+
+        Returns:
+            None
+        """
+        if self.defaults.metrics_interval > 0:
+            params = {"group": group,
+                      "property": property_name,
+                      "file": file,
+                      "interval": str(self.defaults.metrics_interval)}
+            self.add_object("group_recorder", property_name, params)
+
     def add_config_class(self, gld_class: str) -> None:
         """Write a GridLAB-D configuration (i.e., not a link or node) class
 

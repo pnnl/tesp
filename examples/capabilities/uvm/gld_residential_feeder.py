@@ -809,7 +809,7 @@ class Residential_Build:
         # apartments and mobile homes may always consider storage, but not PV
         # bConsiderStorage = True
         # Solar percentage should be defined here only from RECS data based on income level
-        # solar_percentage = self.config.res_bldg_metadata.solar_pv[state][dso_type][income][bldg_type]
+        #solar_percentage = self.config.res_bldg_metadata.solar_pv[self.config.state][self.config.res_dso_type][income][bldg_type]
         # Calculate the solar, storage, and ev percentage based on the income level
         # Chain rule for conditional probabilities
         # P(solar and income and SF)
@@ -826,8 +826,8 @@ class Residential_Build:
         # P(battery|solar and SF and income)
         bat_g_sol_sf_inc = p_bat_sol_sf_inc / (sol_g_inc_sf * p_sf_g_inc * il_percentage)
         # P(ev|income)
-        ev_percentage_il = (self.config.base.ev_percentage * self.config.res_bldg_metadata.ev_percentage[income]) / il_percentage
-
+        ev_percentage_il = (self.config.ev_percentage * self.config.res_bldg_metadata.ev_percentage[income]) / il_percentage
+        
         if bldg == 0:  # Single-family homes
             if sol_g_inc_sf > 0.0:
                 pass
@@ -939,25 +939,26 @@ class Residential_Build:
 
         if np.random.uniform(0, 1) <= ev_percentage_il:
             # first lets select an ev model:
-            ev_name = Electric_Vehicle.selectEVmodel(self.config.base.ev_metadata['sale_probability'], np.random.uniform(0, 1))
-            ev_range = self.config.base.ev_metadata['Range (miles)'][ev_name]
-            ev_mileage = self.config.base.ev_metadata['Miles per kWh'][ev_name]
-            ev_charge_eff = self.config.base.ev_metadata['charging efficiency']
+            #ev_name = Electric_Vehicle.selectEVmodel(self, self.config.ev_metadata['sale_probability'], np.random.uniform(0, 1))
+            ev_name = Electric_Vehicle.selectEVmodel(self, self.config.ev_metadata.sale_probability, np.random.uniform(0, 1))
+            ev_range = self.config.ev_metadata.Range_miles[ev_name]
+            ev_mileage = self.config.ev_metadata.Miles_per_kWh[ev_name]
+            ev_charge_eff = self.config.ev_metadata.charging_efficiency
             # check if level 1 charger is used or level 2
-            if np.random.uniform(0, 1) <= self.config.base.ev_metadata['Level_1_usage']:
-                ev_max_charge = self.config.base.ev_metadata['Level_1 max power (kW)']
+            if np.random.uniform(0, 1) <= self.config.ev_metadata.Level_1_usage:
+                ev_max_charge = self.config.ev_metadata.Level_1_max_power_kW
                 volt_conf = 'IS110'  # for level 1 charger, 110 V is good
             else:
-                ev_max_charge = self.config.base.ev_metadata['Level_2 max power (kW)'][ev_name]
+                ev_max_charge = self.config.ev_metadata.Level_2_max_power_kW[ev_name]
                 volt_conf = 'IS220'  # for level 2 charger, 220 V is must
 
             # now, let's map a random driving schedule with this vehicle ensuring daily miles
             # doesn't exceed the vehicle range and home duration is enough to charge the vehicle
-            drive_sch = Electric_Vehicle.match_driving_schedule(self.config.base, ev_range, ev_mileage, ev_max_charge)
+            drive_sch = Electric_Vehicle.match_driving_schedule(self, ev_range, ev_mileage, ev_max_charge)
             # ['daily_miles','home_arr_time','home_duration','work_arr_time','work_duration']
 
             # Should be able to turn off ev entirely using ev_percentage, definitely in debugging
-            if self.config.case_type['pv']:  # evs are populated when its pvCase i.e. high renewable case
+            if self.config.case_type['ev']:  # evs are populated when its pvCase i.e. high renewable case
                 # few sanity checks
                 if drive_sch['daily_miles'] > ev_range:
                     raise UserWarning('daily travel miles for EV can not be more than range of the vehicle!')
@@ -967,7 +968,7 @@ class Residential_Build:
                 if drive_sch['home_duration'] > 24 * 3600 or drive_sch['home_duration'] < 0 or \
                         drive_sch['work_duration'] > 24 * 3600 or drive_sch['work_duration'] < 0:
                     raise UserWarning('invalid home or work duration for ev!')
-                if not Electric_Vehicle.is_drive_time_valid(drive_sch):
+                if not Electric_Vehicle.is_drive_time_valid(self, drive_sch):
                     raise UserWarning('home and work arrival time are not consistent with durations!')
 
                 self.config.base.ev_count += 1
@@ -987,6 +988,8 @@ class Residential_Build:
                           "charging_efficiency": ev_charge_eff}
                 self.glm.add_object("evcharger_det", evname, params)
                 self.glm.add_metrics_collector(evname, "house")
+                self.glm.add_group_recorder("class=evcharger_det", "actual_charge_rate", "EV_charging_power.csv")
+                self.glm.add_group_recorder("class=evcharger_det", "battery_SOC", "EV_SOC.csv")
 
 class Commercial_Build:
     def __init__(self, config):
@@ -1544,7 +1547,7 @@ class Solar:
         
 class Electric_Vehicle:
     def __init__(self, config):
-        self.config = config      
+        self.config = config
 
     def selectEVmodel(self, evTable: dict, prob: float) -> str:
         """Selects the building and vintage type
@@ -1831,6 +1834,10 @@ class Feeder:
               'kw with', self.config.base.battery_count, 'batteries')
         self.glm.write_model(self.config.out_file_glm)
 
+        # To plot the model using the networkx package:
+        #print("\nPlotting image of model; this will take a minute.")
+        #self.glm.model.plot_model()
+
     def identify_xfmr_houses(self, gld_class: str, seg_loads: dict, avgHouse: float, rgn: int):
         """For the full-order feeders, scan each service transformer to 
         determine the number of houses it should have
@@ -1895,6 +1902,7 @@ class Feeder:
 def _test1():
     config = Config("./feeder_config.json5")
     feeder = Feeder(config)   
+    
 
 
 if __name__ == "__main__":
