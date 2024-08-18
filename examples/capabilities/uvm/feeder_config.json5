@@ -3,7 +3,7 @@
 
 {
 // general
-    "in_file_glm": "", // REQUIRED: the input feeder model 
+    "in_file_glm": "", // the input feeder model. If None, taxonomy feeder used 
     "out_file_glm": "test.glm", // REQUIRED: the output populated feeder
     "case_name": "MyCase", // REQUIRED: a name for your case
     "substation_name": "MySub", // REQUIRED: a name for the substation
@@ -43,9 +43,9 @@
     "income_level": ['Low', 'Middle', 'Upper'],
     "res_dso_type": "No_DSO_Type",
 
-// RECS
+// RECS (Residential Energy Consumption Survey) Data
     "use_recs": true,
-    "recs_exist": true, // Does 'out_file_residential_meta' exist?
+    "recs_exist": true, // Does 'out_file_residential_meta' exist? If false, generates RECS data based on config
     "file_recs_income_level": '../../../data/feeders/RECSwIncomeLvl.csv',
     "out_file_residential_meta": './RECS_residential_metadata.json',
     "out_file_hvac_set_point": './hvac_setpt_RECS.json',
@@ -55,20 +55,29 @@
         'income_level': ['Low', 'Middle', 'Upper']
     },
     "bin_size_threshold": 100,
-    "wh_shift": 0,
+    "wh_shift": 0, // Water heater shift
     "players": {"name": "lp", "file": "your_file","type": "double"},
 
-// house parameters
-    "message_broker": "helics_msg",   // "" | "helics_msg" | "fncs_msg"
-    "use_feeder": true,
-    "taxonomy": "R1-12.47-1.glm",
+// electric vehicles definitions
+"ev_reserved_soc": 20, // Reserve state of charge of vehicle
+"electric_cooling_percentage": 90,
+
+// solar definitions
+"solar_path": "../../../data/solar_data/solar_pv_power_profiles/",
+"solar_P_player": "5_minute_dist_power.csv",
+"solar_Q_player": "no_file",
+
+// simulation parameters
+    "message_broker": "helics_msg", // Use HELICS ("helics_msg") or FNCS  ("fncs_msg")
+    "use_feeder": true, // Uses default taxonomy feeder if "in_file_glm" not defined
+    "taxonomy": "R1-12.47-1.glm", // the taxonomy feeder used if "use_feeder" = true
 
 // else
     "region": 2,
     "vll": 12470.0,
     "vln": 7200.0,
-    "avg_house": 4500.0,
-    "avg_commercial": 30000.0,
+    "avg_house": 4500.0, // Average house size, in kVA
+    "avg_commercial": 30000.0, // Averate commercial bldg size, in kVA
 
 // add schedules
     "includes": [
@@ -77,33 +86,25 @@
         "${TESPDIR}/data/schedules/commercial_schedules.glm"
         ],
 
-    // add sets in glm
-    "sets": {
-//        "minimum_timestep": 15,
-        "relax_naming_rules": 1,
-        "warn": 0
-    },
+// add sets
+"sets": {
+    // "minimum_timestep": 15,
+    "relax_naming_rules": 1,
+    "warn": 0
+},
 
-    // add defines
-    "defines": {
+// add defines
+"defines": {
 
-    },
-
-    // electric vehicles definitions
-    "ev_reserved_soc": 20,
-    "electric_cooling_percentage": 90,
-    // solar definitions
-    "solar_path": "../../../data/solar_data/solar_pv_power_profiles/",
-    "solar_P_player": "5_minute_dist_power.csv",
-    "solar_Q_player": "no_file",
-
-
+},
 
 // DSOT Case Config
-    "case_type":{"bt": 1, "fl": 1, "ev": 1, "pv": 1},
-    "solar_percentage": 11,
-    "storage_percentage": 3,
+    // Include battery, flexible loads, electric vehicles, and solar
+    "case_type":{"bt": 1, "fl": 1, "ev": 1, "pv": 1}, 
+    // Percentage of DER customers participating in transactive rate
+    "solar_percentage": 11, 
+    "storage_percentage": 3, 
     "ev_percentage": 8,
-    //"TransactiveHousePercentage": 80,
+    //"TransactiveHousePercentage": 80, // flexible loads
 
 }

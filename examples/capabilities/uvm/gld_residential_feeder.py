@@ -53,7 +53,7 @@ class Config:
         self.glm = GLMModifier()
         self.base = self.glm.defaults
         self.res_bldg_metadata = Residential_Build(self)
-        self.comm_bldg_metadata = Commercial_Building(self)
+        self.comm_bldg_metadata = Commercial_Build(self)
         self.batt_metadata = Battery(self)
         self.ev_metadata = Electric_Vehicle(self)
     
@@ -988,7 +988,7 @@ class Residential_Build:
                 self.glm.add_object("evcharger_det", evname, params)
                 self.glm.add_metrics_collector(evname, "house")
 
-class Commercial_Building:
+class Commercial_Build:
     def __init__(self, config):
         self.config = config
         self.glm = GLMModifier()
@@ -1483,6 +1483,64 @@ class Commercial_Building:
 class Battery:
     def __init__(self, config):
         self.config = config
+
+class Solar:
+
+    def __init__(self, config):
+        self.config = config
+        self.glm = GLMModifier()
+        
+    def add_solar_inv_settings(self, params: dict):
+        """ Writes volt-var and volt-watt settings for solar inverters
+
+        Args:
+            params (dict): solar inverter parameters. Contains:
+                {four_quadrant_control_mode, V1, Q1, V2, Q2, V3, Q3, V4, Q4, 
+                V_In, I_In, volt_var_control_lockout, VW_V1, VW_V2, VW_P1, VW_P2}
+        """
+        params["four_quadrant_control_mode"] = self.config.base.name_prefix + 'INVERTER_MODE'
+        params["V_base"] = '${INV_VBASE}'
+        params["V1"] = '${INV_V1}'
+        params["Q1"] = '${INV_Q1}'
+        params["V2"] = '${INV_V2}'
+        params["Q2"] = '${INV_Q2}'
+        params["V3"] = '${INV_V3}'
+        params["Q3"] = '${INV_Q3}'
+        params["V4"] = '${INV_V4}'
+        params["Q4"] = '${INV_Q4}'
+        params["V_In"] = '${INV_VIN}'
+        params["I_In"] = '${INV_IIN}'
+        params["volt_var_control_lockout"] = '${INV_VVLOCKOUT}'
+        params["VW_V1"] = '${INV_VW_V1}'
+        params["VW_V2"] = '${INV_VW_V2}'
+        params["VW_P1"] = '${INV_VW_P1}'
+        params["VW_P2"] = '${INV_VW_P2}'
+
+    def add_solar_defines(self):
+
+        if self.config.base.solar_percentage > 0.0:
+            # Waiting for the add comment method to be added to the modify class
+            #    default IEEE 1547-2018 settings for Category B'
+            #    solar inverter mode on this feeder
+            self.glm.model.define_lines.append(
+                '#define ' + self.config.base.name_prefix + 'INVERTER_MODE=' + self.config.base.solar_inv_mode)
+            self.glm.model.define_lines.append('#define INV_VBASE=240.0')
+            self.glm.model.define_lines.append('#define INV_V1=0.92')
+            self.glm.model.define_lines.append('#define INV_V2=0.98')
+            self.glm.model.define_lines.append('#define INV_V3=1.02')
+            self.glm.model.define_lines.append('#define INV_V4=1.08')
+            self.glm.model.define_lines.append('#define INV_Q1=0.44')
+            self.glm.model.define_lines.append('#define INV_Q2=0.00')
+            self.glm.model.define_lines.append('#define INV_Q3=0.00')
+            self.glm.model.define_lines.append('#define INV_Q4=-0.44')
+            self.glm.model.define_lines.append('#define INV_VIN=200.0')
+            self.glm.model.define_lines.append('#define INV_IIN=32.5')
+            self.glm.model.define_lines.append('#define INV_VVLOCKOUT=300.0')
+            self.glm.model.define_lines.append('#define INV_VW_V1=1.05 // 1.05833')
+            self.glm.model.define_lines.append('#define INV_VW_V2=1.10')
+            self.glm.model.define_lines.append('#define INV_VW_P1=1.0')
+            self.glm.model.define_lines.append('#define INV_VW_P2=0.0')
+        # write the optional volt_dump and curr_dump for validation
         
 class Electric_Vehicle:
     def __init__(self, config):
@@ -1633,64 +1691,6 @@ class Electric_Vehicle:
         df_fin = temp.merge(df_data_miles, left_index=True, right_index=True)
         return df_fin
 
-class Solar:
-
-    def __init__(self, config):
-        self.config = config
-        self.glm = GLMModifier()
-        
-    def add_solar_inv_settings(self, params: dict):
-        """ Writes volt-var and volt-watt settings for solar inverters
-
-        Args:
-            params (dict): solar inverter parameters. Contains:
-                {four_quadrant_control_mode, V1, Q1, V2, Q2, V3, Q3, V4, Q4, 
-                V_In, I_In, volt_var_control_lockout, VW_V1, VW_V2, VW_P1, VW_P2}
-        """
-        params["four_quadrant_control_mode"] = config.base.name_prefix + 'INVERTER_MODE'
-        params["V_base"] = '${INV_VBASE}'
-        params["V1"] = '${INV_V1}'
-        params["Q1"] = '${INV_Q1}'
-        params["V2"] = '${INV_V2}'
-        params["Q2"] = '${INV_Q2}'
-        params["V3"] = '${INV_V3}'
-        params["Q3"] = '${INV_Q3}'
-        params["V4"] = '${INV_V4}'
-        params["Q4"] = '${INV_Q4}'
-        params["V_In"] = '${INV_VIN}'
-        params["I_In"] = '${INV_IIN}'
-        params["volt_var_control_lockout"] = '${INV_VVLOCKOUT}'
-        params["VW_V1"] = '${INV_VW_V1}'
-        params["VW_V2"] = '${INV_VW_V2}'
-        params["VW_P1"] = '${INV_VW_P1}'
-        params["VW_P2"] = '${INV_VW_P2}'
-
-    def add_solar_defines(self):
-
-        if self.config.base.solar_percentage > 0.0:
-            # Waiting for the add comment method to be added to the modify class
-            #    default IEEE 1547-2018 settings for Category B'
-            #    solar inverter mode on this feeder
-            self.glm.model.define_lines.append(
-                '#define ' + self.config.base.name_prefix + 'INVERTER_MODE=' + self.config.base.solar_inv_mode)
-            self.glm.model.define_lines.append('#define INV_VBASE=240.0')
-            self.glm.model.define_lines.append('#define INV_V1=0.92')
-            self.glm.model.define_lines.append('#define INV_V2=0.98')
-            self.glm.model.define_lines.append('#define INV_V3=1.02')
-            self.glm.model.define_lines.append('#define INV_V4=1.08')
-            self.glm.model.define_lines.append('#define INV_Q1=0.44')
-            self.glm.model.define_lines.append('#define INV_Q2=0.00')
-            self.glm.model.define_lines.append('#define INV_Q3=0.00')
-            self.glm.model.define_lines.append('#define INV_Q4=-0.44')
-            self.glm.model.define_lines.append('#define INV_VIN=200.0')
-            self.glm.model.define_lines.append('#define INV_IIN=32.5')
-            self.glm.model.define_lines.append('#define INV_VVLOCKOUT=300.0')
-            self.glm.model.define_lines.append('#define INV_VW_V1=1.05 // 1.05833')
-            self.glm.model.define_lines.append('#define INV_VW_V2=1.10')
-            self.glm.model.define_lines.append('#define INV_VW_P1=1.0')
-            self.glm.model.define_lines.append('#define INV_VW_P2=0.0')
-        # write the optional volt_dump and curr_dump for validation
-
 class Feeder:
 
     def __init__(self, config):
@@ -1801,7 +1801,7 @@ class Feeder:
                 metrics = True
             self.glm.add_link_class(link, seg_loads, want_metrics=metrics)
 
-        Commercial_Building.replace_commercial_loads(self, 'load', 0.001 * self.config.avg_commercial)
+        Commercial_Build.replace_commercial_loads(self, 'load', 0.001 * self.config.avg_commercial)
 
         # TODO: find where avghouse and rgn are coming from avghouse and rgn = 4500.0, 30000.0
         self.identify_xfmr_houses('transformer', seg_loads, 0.001 * self.config.avg_house, self.config.region)
