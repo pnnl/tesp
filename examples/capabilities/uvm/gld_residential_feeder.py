@@ -82,7 +82,7 @@ class Config:
         self.comm_bldg_metadata = Commercial_Build(self)
         self.batt_metadata = Battery(self)
         self.ev_metadata = Electric_Vehicle(self)
-    
+
     def preamble(self):
         # Add tape, climate, generators, connection, and residential modules
         self.glm.add_module("tape", {})
@@ -172,11 +172,12 @@ class Config:
 
         assign_defaults(self.batt_metadata, self.file_battery_meta)
         assign_defaults(self.ev_metadata, self.file_ev_meta)
+        self.base.ev_driving_metadata = self.ev_metadata.process_nhts_data(self.file_ev_driving_meta)
 
 class Residential_Build:
     def __init__(self, config):
         self.config = config
-        self.glm = GLMModifier()  
+        self.glm = config.glm
     
     def buildingTypeLabel(self, rgn: int, bldg: int, therm_int: int):
         """Formatted name of region, building type name and thermal integrity level
@@ -322,7 +323,7 @@ class Residential_Build:
         Returns:
             list: dsoIncomePct
         """
-        income_mat = self.config.res_bldg_metadata.income_level[self.config.state][self.config.res_dso_type]
+        income_mat = self.income_level[self.config.state][self.config.res_dso_type]
         # Create new dictionary only with income levels of interest
         dsoIncomePct = {}
         for key in self.config.income_level:
@@ -368,8 +369,7 @@ class Residential_Build:
         Returns:
             float: DSO thermal table
         """
-        vintage_mat = self.config.res_bldg_metadata.housing_vintage[self.config.state][
-            self.config.res_dso_type][income]
+        vintage_mat = self.housing_vintage[self.config.state][self.config.res_dso_type][income]
         df = pd.DataFrame(vintage_mat)
         # df = df.transpose()
         dsoThermalPct = np.zeros(shape=(3, 9))  # initialize array
@@ -528,10 +528,10 @@ class Residential_Build:
         if bldg == 0:  # SF
             bldg_type = 'single_family'  # then pick single_Family_detached values for floor_area
             if (np.random.uniform(0, 1) >
-                    self.config.res_bldg_metadata.num_stories[self.config.state][self.config.res_dso_type][income][bldg_type][vint]['one_story']):
+                    self.num_stories[self.config.state][self.config.res_dso_type][income][bldg_type][vint]['one_story']):
                 stories = 2  # all SF homes which are not single story are 2 stories
             if np.random.uniform(0, 1) <= \
-                    self.config.res_bldg_metadata.high_ceilings[self.config.state][self.config.res_dso_type][income][bldg_type][vint]:
+                    self.high_ceilings[self.config.state][self.config.res_dso_type][income][bldg_type][vint]:
                 ceiling_height = 10  # all SF homes that have high ceilings are 10 ft
             ceiling_height += np.random.randint(0, 2)
         elif bldg == 1:  # apartments
@@ -543,7 +543,7 @@ class Residential_Build:
         vint = self.config.base.vint_type[ti]
         # creating distribution array for floor_area
         for ind in ['min', 'max', 'mean', 'standard_deviation']:
-            fa_array[ind] = self.config.res_bldg_metadata.floor_area[self.config.state][self.config.res_dso_type][income][bldg_type][ind]
+            fa_array[ind] = self.floor_area[self.config.state][self.config.res_dso_type][income][bldg_type][ind]
         # print(i)
         # print(nhouse)
         floor_area = random_norm_trunc(fa_array)  # truncated normal distribution
@@ -565,7 +565,7 @@ class Residential_Build:
         #  *************** Aspect ratio, ewf, ecf, eff, wwr ****************************
         if bldg == 0:  # SF homes
             # min, max, mean, std
-            dist_array = self.config.res_bldg_metadata.aspect_ratio['single_family']
+            dist_array = self.aspect_ratio['single_family']
             aspect_ratio = random_norm_trunc(dist_array)
             # Exterior wall and ceiling and floor fraction
             # A normal single family house has all walls exterior, has a ceiling and a floor
@@ -573,20 +573,20 @@ class Residential_Build:
             ecf = 1  # exterior ceiling fraction
             eff = 1  # exterior floor fraction
             # window wall ratio
-            wwr = (self.config.res_bldg_metadata.window_wall_ratio['single_family']['mean'])
+            wwr = (self.window_wall_ratio['single_family']['mean'])
         elif bldg == 1:  # APT
             # min, max, mean, std
-            dist_array = self.config.res_bldg_metadata.aspect_ratio['apartments']
+            dist_array = self.aspect_ratio['apartments']
             aspect_ratio = random_norm_trunc(dist_array)
             # window wall ratio
-            wwr = (self.config.res_bldg_metadata.window_wall_ratio['apartments']['mean'])
+            wwr = (self.window_wall_ratio['apartments']['mean'])
             # Two type of apts assumed:
             #       1. small apt: 8 units with 4 units on each level: total 2 levels
             #       2. large apt: 16 units with 8 units on each level: total 2 levels
             # Let's decide if this unit belongs to a small apt (8 units) or large (16 units)
-            small_apt_pct = self.config.res_bldg_metadata.housing_type[self.config.state][
+            small_apt_pct = self.housing_type[self.config.state][
                 self.config.res_dso_type][income]['apartment_2_4_units']
-            large_apt_pct = self.config.res_bldg_metadata.housing_type[self.config.state][
+            large_apt_pct = self.housing_type[self.config.state][
                 self.config.res_dso_type][income]['apartment_5_units']
             if np.random.uniform(0, 1) < small_apt_pct / (small_apt_pct + large_apt_pct):
                 # 2-level small apt (8 units)
@@ -623,18 +623,18 @@ class Residential_Build:
                     eff = 0
         else:  # bldg == 2  # Mobile Homes
             # select between single and double wide
-            wwr = (self.config.res_bldg_metadata.window_wall_ratio['mobile_home']['mean'])  # window wall ratio
-            # sw_pct = self.config.res_bldg_metadata.mobile_home_single_wide[state][dso_type][income]  # single wide percentage for given vintage bin
+            wwr = (self.window_wall_ratio['mobile_home']['mean'])  # window wall ratio
+            # sw_pct = self.mobile_home_single_wide[state][dso_type][income]  # single wide percentage for given vintage bin
             # next_ti = ti
             # while not sw_pct:  # if the value is null or 'None', check the next vintage bin
             #     next_ti += 1
-            #     sw_pct = self.config.res_bldg_metadata.mobile_home_single_wide[vint_type[next_ti]]
+            #     sw_pct = self.mobile_home_single_wide[vint_type[next_ti]]
             if floor_area <= 1080:  # Single wide
                 aspect_ratio = random_norm_trunc(
-                    self.config.res_bldg_metadata.aspect_ratio['mobile_home_single_wide'])
+                    self.aspect_ratio['mobile_home_single_wide'])
             else:  # double wide
                 aspect_ratio = random_norm_trunc(
-                    self.config.res_bldg_metadata.aspect_ratio['mobile_home_double_wide'])
+                    self.aspect_ratio['mobile_home_double_wide'])
             # A normal MH has all walls exterior, has a ceiling and a floor
             ewf = 1  # exterior wall fraction
             ecf = 1  # exterior ceiling fraction
@@ -643,9 +643,9 @@ class Residential_Build:
         # oversize = rgnOversizeFactor[rgn-1] * (0.8 + 0.4 * np.random.uniform(0,1))
         # data from https://collaborate.pnl.gov/projects/Transactive/Shared%20Documents/DSO+T/Setup%20Assumptions%205.3/Residential%20HVAC.xlsx
         oversize = random_norm_trunc(
-            self.config.res_bldg_metadata.hvac_oversize)  # hvac_oversize factor
+            self.hvac_oversize)  # hvac_oversize factor
         wetc = random_norm_trunc(
-            self.config.res_bldg_metadata.window_shading)  # window_exterior_transmission_coefficient
+            self.window_shading)  # window_exterior_transmission_coefficient
 
         tiProps = Residential_Build.selectThermalProperties(self, bldg, ti)
         # Rceiling(roof), Rwall, Rfloor, WindowLayers, WindowGlass,Glazing,WindowFrame,Rdoor,AirInfil,COPhi,COPlo
@@ -700,16 +700,16 @@ class Residential_Build:
         heat_rand = np.random.uniform(0, 1)
         cool_rand = np.random.uniform(0, 1)
         house_fuel_type = 'electric'
-        heat_pump_prob = self.config.res_bldg_metadata.space_heating_type[self.config.state][
+        heat_pump_prob = self.space_heating_type[self.config.state][
                              self.config.res_dso_type][income][bldg_type][vint]['gas_heating'] + \
-                             self.config.res_bldg_metadata.space_heating_type[self.config.state][
+                             self.space_heating_type[self.config.state][
                              self.config.res_dso_type][income][bldg_type][vint]['heat_pump']
         # Get the air conditioning percentage for homes that don't have heat pumps
         electric_cooling_percentage = \
-            self.config.res_bldg_metadata.air_conditioning[self.config.state][
+            self.air_conditioning[self.config.state][
                 self.config.res_dso_type][income][bldg_type]
 
-        if heat_rand <= self.config.res_bldg_metadata.space_heating_type[self.config.state][self.config.res_dso_type][income][bldg_type][vint]['gas_heating']:
+        if heat_rand <= self.space_heating_type[self.config.state][self.config.res_dso_type][income][bldg_type][vint]['gas_heating']:
             house_fuel_type = 'gas'
             params["heating_system_type"] = "GAS"
             if cool_rand <= electric_cooling_percentage:
@@ -764,7 +764,7 @@ class Residential_Build:
 
         # Determine house water heating fuel type based on space heating fuel type
         wh_fuel_type = 'gas'
-        properties = self.config.res_bldg_metadata.water_heating_fuel[self.config.state][self.config.res_dso_type][income][bldg_type]
+        properties = self.water_heating_fuel[self.config.state][self.config.res_dso_type][income][bldg_type]
         if house_fuel_type == 'gas':
             if np.random.uniform(0, 1) <= properties['sh_gas']['electric']:
                 wh_fuel_type = 'electric'
@@ -781,7 +781,7 @@ class Residential_Build:
             wh_demand_type = 'large_'
 
             # new wh size implementation
-            wh_data = self.config.res_bldg_metadata.water_heater_tank_size
+            wh_data = self.water_heater_tank_size
             if floor_area <= wh_data['floor_area']['1_2_people']['floor_area_max']:
                 size_array = range(wh_data['tank_size']['1_2_people']['min'],
                                    wh_data['tank_size']['1_2_people']['max'] + 1, 5)
@@ -836,24 +836,24 @@ class Residential_Build:
         # apartments and mobile homes may always consider storage, but not PV
         # bConsiderStorage = True
         # Solar percentage should be defined here only from RECS data based on income level
-        #solar_percentage = self.config.res_bldg_metadata.solar_pv[self.config.state][self.config.res_dso_type][income][bldg_type]
+        #solar_percentage = self.solar_pv[self.config.state][self.config.res_dso_type][income][bldg_type]
         # Calculate the solar, storage, and ev percentage based on the income level
         # Chain rule for conditional probabilities
         # P(solar and income and SF)
-        p_sol_inc_sf = self.config.base.solar_percentage * self.config.res_bldg_metadata.solar_percentage[income]
+        p_sol_inc_sf = self.config.base.solar_percentage * self.solar_percentage[income]
         # P(SF|income)
-        p_sf_g_inc = self.config.res_bldg_metadata.housing_type[self.config.state][self.config.res_dso_type][income]['single_family_detached'] + \
-                     self.config.res_bldg_metadata.housing_type[self.config.state][self.config.res_dso_type][income]['single_family_attached']
+        p_sf_g_inc = self.housing_type[self.config.state][self.config.res_dso_type][income]['single_family_detached'] + \
+                     self.housing_type[self.config.state][self.config.res_dso_type][income]['single_family_attached']
         # P(income)
-        il_percentage = self.config.res_bldg_metadata.income_level[self.config.state][self.config.res_dso_type][income]
+        il_percentage = self.income_level[self.config.state][self.config.res_dso_type][income]
         # P(solar|income and SF)
         sol_g_inc_sf = p_sol_inc_sf / (p_sf_g_inc * il_percentage)
         # P(battery and solar and SF and income)
-        p_bat_sol_sf_inc = self.config.base.storage_percentage * self.config.res_bldg_metadata.battery_percentage[income]
+        p_bat_sol_sf_inc = self.config.base.storage_percentage * self.battery_percentage[income]
         # P(battery|solar and SF and income)
         bat_g_sol_sf_inc = p_bat_sol_sf_inc / (sol_g_inc_sf * p_sf_g_inc * il_percentage)
         # P(ev|income)
-        ev_percentage_il = (self.config.ev_percentage * self.config.res_bldg_metadata.ev_percentage[income]) / il_percentage
+        ev_percentage_il = (self.config.ev_percentage * self.ev_percentage[income]) / il_percentage
         
         if bldg == 0:  # Single-family homes
             if sol_g_inc_sf > 0.0:
@@ -967,7 +967,7 @@ class Residential_Build:
         if np.random.uniform(0, 1) <= ev_percentage_il:
             # first lets select an ev model:
             #ev_name = Electric_Vehicle.selectEVmodel(self, self.config.ev_metadata['sale_probability'], np.random.uniform(0, 1))
-            ev_name = Electric_Vehicle.selectEVmodel(self, self.config.ev_metadata.sale_probability, np.random.uniform(0, 1))
+            ev_name = Electric_Vehicle.selectEVmodel(self.config.ev_metadata.sale_probability, np.random.uniform(0, 1))
             ev_range = self.config.ev_metadata.Range_miles[ev_name]
             ev_mileage = self.config.ev_metadata.Miles_per_kWh[ev_name]
             ev_charge_eff = self.config.ev_metadata.charging_efficiency
@@ -995,7 +995,7 @@ class Residential_Build:
                 if drive_sch['home_duration'] > 24 * 3600 or drive_sch['home_duration'] < 0 or \
                         drive_sch['work_duration'] > 24 * 3600 or drive_sch['work_duration'] < 0:
                     raise UserWarning('invalid home or work duration for ev!')
-                if not Electric_Vehicle.is_drive_time_valid(self, drive_sch):
+                if not Electric_Vehicle.is_drive_time_valid(drive_sch):
                     raise UserWarning('home and work arrival time are not consistent with durations!')
 
                 self.config.base.ev_count += 1
@@ -1021,7 +1021,7 @@ class Residential_Build:
 class Commercial_Build:
     def __init__(self, config):
         self.config = config
-        self.glm = GLMModifier()
+        self.glm = config.glm
                     
     def replace_commercial_loads(self, gld_class: str, avgBuilding: float):
         """For the full-order feeders, scan each load with load_class==C to 
@@ -1518,7 +1518,7 @@ class Solar:
 
     def __init__(self, config):
         self.config = config
-        self.glm = GLMModifier()
+        self.glm = config.glm
         
     def add_solar_inv_settings(self, params: dict):
         """ Writes volt-var and volt-watt settings for solar inverters
@@ -1576,7 +1576,8 @@ class Electric_Vehicle:
     def __init__(self, config):
         self.config = config
 
-    def selectEVmodel(self, evTable: dict, prob: float) -> str:
+    @staticmethod
+    def selectEVmodel(evTable: dict, prob: float) -> str:
         """Selects the EV model based on available sale distribution data
 
         Args:
@@ -1666,7 +1667,8 @@ class Electric_Vehicle:
                        }
         return driving_sch
 
-    def is_drive_time_valid(self, drive_sch: dict) -> bool:
+    @staticmethod
+    def is_drive_time_valid(drive_sch: dict) -> bool:
         """Checks if work arrival time and home arrival time adds up properly
 
         Args:
@@ -1711,7 +1713,7 @@ class Electric_Vehicle:
         df_data_miles = df_data.groupby(level=['HOUSEID', 'VEHID']).sum()['TRPMILES']
         # limit daily miles to maximum possible range of EV from the ev model data as EVs cant travel more
         # than the range in a day if we don't consider the highway charging
-        max_ev_range = max(self.config.ev_metadata.Range_miles.values())
+        max_ev_range = max(self.Range_miles.values())
         df_data_miles = df_data_miles[df_data_miles < max_ev_range]
         df_data_miles = df_data_miles[df_data_miles > 0]
 
@@ -1723,21 +1725,20 @@ class Electric_Vehicle:
 
 class Feeder:
 
-    def __init__(self, config):
+    def __init__(self, config: Config):
         self.config = config
-        self.glm = GLMModifier()
-        Config.generate_and_load_recs(self.config)
-        self.config.base.ev_driving_metadata = Electric_Vehicle.process_nhts_data(self, self.config.file_ev_driving_meta)
-        
+        self.glm = config.glm
+        config.generate_and_load_recs()
+
         # Read in backbone feeder to populate
-        if self.config.use_feeder:
-            glm, success = self.glm.model.readBackboneModel(self.config.taxonomy)
+        if config.use_feeder:
+            glm, success = self.glm.model.readBackboneModel(config.taxonomy)
             if not success:
                 exit()
         else:
-            self.glm.read_model(self.config.in_file_glm)
+            self.glm.read_model(config.in_file_glm)
 
-        self.config.preamble()     
+        config.preamble()
 
         # NEW STRATEGY - loop through transformer instances and assign a 
         # standard size based on the downstream load
@@ -1768,7 +1769,7 @@ class Feeder:
             else:
                 if 'N' not in seg_phs:
                     seg_phs += 'N'
-                if kvat > self.config.base.max208kva:
+                if kvat > config.base.max208kva:
                     vsec = 480.0
                     vnom = 277.0
                 else:
@@ -1783,18 +1784,18 @@ class Feeder:
             raw_key = 'XF' + str(nphs) + '_' + install_type + '_' + seg_phs + '_' + str(kvat)
             key = raw_key.replace('.', 'p')
 
-            e_object['configuration'] = self.config.base.name_prefix + key
+            e_object['configuration'] = config.base.name_prefix + key
             e_object['phases'] = seg_phs
             if key not in xfused:
                 xfused[key] = [seg_phs, kvat, vnom, vsec, install_type]
 
         for key in xfused:
             self.glm.add_xfmr_config(key, xfused[key][0], xfused[key][1], xfused[key][2], xfused[key][3],
-                                 xfused[key][4], self.config.vll, self.config.vln)
+                                 xfused[key][4], config.vll, config.vln)
 
         for e_name, e_object in self.glm.glm.capacitor.items():
-            e_object['nominal_voltage'] = str(int(self.config.vln))
-            e_object['cap_nominal_voltage'] = str(int(self.config.vln))
+            e_object['nominal_voltage'] = str(int(config.vln))
+            e_object['cap_nominal_voltage'] = str(int(config.vln))
 
         for e_name, e_object in self.glm.glm.fuse.items():
             if e_name in seg_loads:
@@ -1808,11 +1809,11 @@ class Feeder:
                 if 'C' in seg_phs:
                     nphs += 1
                 if nphs == 3:
-                    amps = 1000.0 * seg_kva / math.sqrt(3.0) / self.config.vll
+                    amps = 1000.0 * seg_kva / math.sqrt(3.0) / config.vll
                 elif nphs == 2:
-                    amps = 1000.0 * seg_kva / 2.0 / self.config.vln
+                    amps = 1000.0 * seg_kva / 2.0 / config.vln
                 else:
-                    amps = 1000.0 * seg_kva / self.config.vln
+                    amps = 1000.0 * seg_kva / config.vln
                 e_object['current_limit'] = str(self.glm.find_fuse_limit_w_margin(amps))
 
         self.glm.add_local_triplex_configurations()
@@ -1831,35 +1832,35 @@ class Feeder:
                 metrics = True
             self.glm.add_link_class(link, seg_loads, want_metrics=metrics)
 
-        Commercial_Build.replace_commercial_loads(self, 'load', 0.001 * self.config.avg_commercial)
+        config.comm_bldg_metadata.replace_commercial_loads('load', 0.001 * config.avg_commercial)
 
         # TODO: find where avghouse and rgn are coming from avghouse and rgn = 4500.0, 30000.0
-        self.identify_xfmr_houses('transformer', seg_loads, 0.001 * self.config.avg_house, self.config.region)
+        self.identify_xfmr_houses('transformer', seg_loads, 0.001 * config.avg_house, config.region)
 
         # TODO: houses
-        for key in self.config.base.house_nodes:
-            Residential_Build.add_houses(self, key, 120.0)
-        for key in self.config.base.small_nodes:
-            Residential_Build.add_small_loads(self, key, 120.0)
-        for key in self.config.base.comm_loads:
+        for key in config.base.house_nodes:
+            config.res_bldg_metadata.add_houses(key, 120.0)
+        for key in config.base.small_nodes:
+            config.res_bldg_metadata.add_small_loads(key, 120.0)
+        for key in config.base.comm_loads:
             # add_commercial_loads(rgn, key)
             bldg_definition = comm_FG.define_comm_loads(self.glm,
-                self.config.base.comm_loads[key][1],
-                self.config.base.comm_loads[key][2],
-                self.config.utility_type,
-                self.config.ashrae_zone,
-                self.config.comm_bldg_metadata)
-            comm_FG.add_comm_zones(self.glm, self.config, bldg_definition, key)
+                config.base.comm_loads[key][1],
+                config.base.comm_loads[key][2],
+                config.utility_type,
+                config.ashrae_zone,
+                config.comm_bldg_metadata)
+            comm_FG.add_comm_zones(self.glm, config, bldg_definition, key)
 
 #        self.glm.add_voltage_class('node', self.g_config.vln, self.g_config.vll, secnode)
 #        self.glm.add_voltage_class('meter', self.g_config.vln, self.g_config.vll, secnode)
 #        self.glm.add_voltage_class('load', self.g_config.vln, self.g_config.vll, secnode)
 
-        print('cooling bins unused', self.config.base.cooling_bins)
-        print('heating bins unused', self.config.base.heating_bins)
-        print(self.config.base.solar_count, 'pv totaling', '{:.1f}'.format(self.config.base.solar_kw),
-              'kw with', self.config.base.battery_count, 'batteries')
-        self.glm.write_model(self.config.out_file_glm)
+        print('cooling bins unused', config.base.cooling_bins)
+        print('heating bins unused', config.base.heating_bins)
+        print(config.base.solar_count, 'pv totaling', '{:.1f}'.format(config.base.solar_kw),
+              'kw with', config.base.battery_count, 'batteries')
+        self.glm.write_model(config.out_file_glm)
 
         # To plot the model using the networkx package:
         #print("\nPlotting image of model; this will take a minute.")
@@ -1882,7 +1883,7 @@ class Feeder:
         total_mh = 0
         total_small = 0
         total_small_kva = 0
-        dsoIncomePct = Residential_Build.getDsoIncomeLevelTable(self)
+        dsoIncomePct = self.config.res_bldg_metadata.getDsoIncomeLevelTable()
         try:
             entity = self.glm.glm.__getattribute__(gld_class)
         except:
@@ -1902,10 +1903,10 @@ class Feeder:
                         total_houses += nhouse
                         lg_v_sm = tkva / avgHouse - nhouse  # >0 if we rounded down the number of houses
                         # let's get the income level for the dso_type and state
-                        inc_lev = Residential_Build.selectIncomeLevel(self, dsoIncomePct, np.random.uniform(0, 1))
+                        inc_lev = self.config.res_bldg_metadata.selectIncomeLevel(dsoIncomePct, np.random.uniform(0, 1))
                         # let's get the vintage table for dso_type, state, and income level
-                        dsoThermalPct = Residential_Build.getDsoThermalTable(self, self.config.income_level[inc_lev])
-                        bldg, ti = Residential_Build.selectResidentialBuilding(self, dsoThermalPct, np.random.uniform(0, 1))
+                        dsoThermalPct = self.config.res_bldg_metadata.getDsoThermalTable(self.config.income_level[inc_lev])
+                        bldg, ti = self.config.res_bldg_metadata.selectResidentialBuilding(dsoThermalPct, np.random.uniform(0, 1))
                         if bldg == 0:
                             total_sf += nhouse
                         elif bldg == 1:
