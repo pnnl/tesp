@@ -126,8 +126,6 @@ def post_process():
         demand_df = rm.create_demand_profiles_for_each_meter(
             case_path,
             dso_number,
-            year_num,
-            month_num,
             list(day_range),
             save=False,
         )
@@ -146,8 +144,6 @@ def post_process():
         demand_df = rm.create_demand_profiles_for_each_meter(
             case_path,
             dso_number,
-            year_num,
-            month_num,
             list(day_range),
             save=True,
         )
@@ -219,10 +215,6 @@ def post_process():
         + timedelta(days=first_data_day)
     ).month
     month_name = month_dict[month_num]
-    year_num = (
-        datetime.strptime(case_config["StartTime"], "%Y-%m-%d %H:%M:%S")
-        + timedelta(days=first_data_day)
-    ).year
 
     day_range = range(first_data_day, num_sim_days - discard_end_days + 1)
 
