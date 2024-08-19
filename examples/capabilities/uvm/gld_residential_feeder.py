@@ -1,6 +1,7 @@
 # Copyright (C) 2018-2020 Battelle Memorial Institute
 # file: gld_residential_feeder.py
-"""Replaces ZIP loads with houses, and optional storage and solar generation.
+"""Replaces ZIP loads with houses, and optional storage, electric vehicles,
+and solar generation.
 
 As this module populates the feeder backbone with houses and DER, it uses
 the Networkx package to perform graph-based capacity analysis, upgrading
@@ -9,24 +10,49 @@ a margin of 20% to avoid overloads, while fuses have a margin of 150% to
 avoid overloads. These can be changed by editing tables and variables in the
 source file.
 
-There are two kinds of house populating methods implemented:
-
-    * :Feeders with Service Transformers: This case applies to the full PNNL 
-        taxonomy feeders. Do not specify the *taxchoice* argument to 
-        *populate_feeder*. Each service transformer receiving houses will have a
-        short service drop and a small number of houses attached.
-    * :Feeders without Service Transformers: This applies to the reduced-order 
-        ERCOT feeders. To invoke this mode, specify the *taxchoice* argument to 
-        *populate_feeder*. Each primary load to receive houses will have a large
-        service transformer, large service drop and large number of houses attached.
-
 References:
     `GridAPPS-D Feeder Models <https://github.com/GRIDAPPSD/Powergrid-Models>`_
 
 Public Functions:
-    :populate_feeder: processes one GridLAB-D input file
+    :preamble: adds tape, climate, generators, connection, and residential modules
+    :generate_and_load_recs: populates residential, commercial, electric vehicle,
+        and battery metadata based on user config and RECS metadata
+    :buildingTypeLabel: assigns region, building type, and thermal integrity level
+    :checkResidentialBuildingTable: verifies that the regional building parameter
+        histograms sum to one
+    :selectSetpointBins: randomly chooses a histogram row from the cooling and 
+        heating setpoints.
+    :add_small_loads: adds loads that are too small to be a house onto a node
+    :getDsoIncomeLevelTable: retrieves the DSO income level fractions for the
+        given dso type and state
+    :selectIncomeLevel: selects the income level with region and probability
+    :getDsoThermalTable: defines the distribution of thermal integrity values by
+        housing vintage and income
+    :selectResidentialBuilding: writes volt-var and volt-watt settings for solar
+        inverters
+    :selectThermalProperties: retrieves building thermal properties for given
+        building type and thermal integrity level
+    :add_houses: puts houses, along with solar panels, batteries, and electric
+        vehicle charges, onto a node
+    :replace_commercial_loads: determines the number of commercial zones that 
+        loads assigned class 'C' should have
+    :add_one_commercial_zone: writes a pre-configured commercial zone as a house
+    :add_solar_inv_settings: writes volt-var and volt-watt settings for solar
+        inverters
+    :add_solar_defines: writes required define_lines for solar inverters
+    :selectEVmodel: selects the EV model based on available sale distribution 
+        data
+    :match_driving_schedule: matches schedule of vehicle from NHTS data based on
+        vehicle ev_range
+    :is_drive_time_valid: checks if work arrival time and home arrival time add
+        up properly
+    :process_nhts:data: reads and processes NHTS survey data, returning a
+        dataframe
+    :identify_xfmr_houses: scans each service transformer on the feeder to 
+        determine the number of houses it should have
 
 """
+
 import math
 import numpy as np
 import pandas as pd
@@ -397,7 +423,8 @@ class Residential_Build:
         return therm_prop
 
     def add_houses(self, basenode: str, v_nom: float, bIgnoreThermostatSchedule=True, bWriteService=True, bTriplex=True, setpoint_offset=1.0, fg_recs_dataset=None):
-        """Put houses, along with solar panels and batteries, onto a node
+        """Put houses, along with solar panels, batteries, and electric vehicle 
+        charges, onto a node 
         TODO: not all variables are used in this function
         
         Args: TODO
@@ -1125,7 +1152,7 @@ class Commercial_Build:
               format(len(self.config.base.comm_bldgs_pop), int(remain_comm_kva)))
 
     def add_one_commercial_zone(self, bldg: dict):
-        """Write one pre-self.configured commercial zone as a house
+        """Write one pre-configured commercial zone as a house
 
         Args:
             bldg (dict): dictionary of GridLAB-D house and zipload attributes
@@ -1550,7 +1577,7 @@ class Electric_Vehicle:
         self.config = config
 
     def selectEVmodel(self, evTable: dict, prob: float) -> str:
-        """Selects the building and vintage type
+        """Selects the EV model based on available sale distribution data
 
         Args:
             evTable (dict): models probability list
