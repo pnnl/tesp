@@ -1128,12 +1128,18 @@ class GLModel:
                             if ename not in seg_loads:
                                 seg_loads[ename] = [0.0, '']
                             seg_loads[ename][0] += kva
-                            seg_loads[ename][1] = self.union_of_phases(seg_loads[ename][1], data['ndata']['phases'])
+                            #seg_loads[ename][1] = self.union_of_phases(seg_loads[ename][1], data['ndata']['phases'])
+                            seg_phs = self.union_of_phases(seg_loads[ename][1], data['ndata']['phases']) 
+                            seg_loads[ename][1] = seg_phs.replace('ABCS', 'ABCN')
                         else:
                             print(f"Unknown edge class: {eclass}")
         # sub_graphs = nx.connected_components(G)
         # print(f"  swing node {swing_node}, with {len(list(sub_graphs))}, sub graphs and {:.2f}.format(total_kva)} total kva")
+        
         return seg_loads
+
+
+
 
 
 def _test1():
