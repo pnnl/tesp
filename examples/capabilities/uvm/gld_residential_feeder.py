@@ -1756,7 +1756,10 @@ class Feeder:
             # "identify_seg_loads" does not account for parallel paths in the
             # model. This test allows us to skip paths that have not been
             # had load accumulated with them, including parallel paths.
-            if e_name not in seg_loads:
+            # Also skipiing population for transformers with secondary more than 500 V
+            e_config = e_object['configuration']
+            sec_v = float(self.glm.glm.transformer_configuration[e_config]['secondary_voltage'])
+            if e_name not in seg_loads or sec_v > 500: 
                 print('WARNING: {} not in the seg loads'.format(e_name))
                 continue
             seg_kva = seg_loads[e_name][0]
