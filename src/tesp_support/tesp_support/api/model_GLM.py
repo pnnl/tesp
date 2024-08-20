@@ -737,6 +737,8 @@ class GLModel:
                         pos1 = line.find(";")
                         val = val + line[pos:pos1]
                         line = ""
+                    if param == "from" or param == "to" or param == "configuration":
+                        val = gld_strict_name(val)
                     params[param] = val.strip()
                     if len(comments) > 0:
                         inside_comments[param] = comments
@@ -878,14 +880,18 @@ class GLModel:
         # construct a graph of the model, starting with known links
         G = nx.Graph()
         for t in self.model:
+            # Grabs all nodes that have physical connections in the model
+            # (e.g. line, transformer, switch, ...) 
             if self.is_edge_class(t):
                 for o in self.model[t]:
                     n1 = gld_strict_name(self.model[t][o]['from'])
                     n2 = gld_strict_name(self.model[t][o]['to'])
                     G.add_edge(n1, n2, eclass=t, ename=o, edata=self.model[t][o])
 
-            # add the parent-child node links
-        # for t in self.model:
+            # Creates edges for nodes that were associated via parent-child
+            # relationships. These relationships have no edge data associate
+            # with them as the connection is, as far as the GLD model is 
+            # concerned, virtual, rather than physical.
             if self.is_node_class(t):
                 for o in self.model[t]:
                     if 'parent' in self.model[t][o]:
@@ -1000,7 +1006,6 @@ class GLModel:
 
     def set_clock(self, starttime: str, stoptime: str, timezone: str):
         clock = self.module_entities['clock'].instances['clock']
-        del clock['timestamp']  # no longer used
         clock['starttime'] = "'" + starttime + "'"
         clock['stoptime'] = "'" + stoptime + "'"
         clock['timezone'] = timezone
@@ -1124,6 +1129,8 @@ class GLModel:
                                 seg_loads[ename] = [0.0, '']
                             seg_loads[ename][0] += kva
                             seg_loads[ename][1] = self.union_of_phases(seg_loads[ename][1], data['ndata']['phases'])
+                        else:
+                            print(f"Unknown edge class: {eclass}")
         # sub_graphs = nx.connected_components(G)
         # print(f"  swing node {swing_node}, with {len(list(sub_graphs))}, sub graphs and {:.2f}.format(total_kva)} total kva")
         return seg_loads

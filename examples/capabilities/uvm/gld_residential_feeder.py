@@ -947,6 +947,10 @@ class Residential_Build:
                           "charge_lockout_time": 1,
                           "discharge_lockout_time": 1,
                           "rated_power": rated_power,
+                          "charge_on_threshold": "2 kW",
+                          "charge_off_threshold": "7 kW",
+                          "discharge_on_threshold": "10 kW",
+                          "discharge_off_threshold": "5 kW",
                           "max_charge_rate": max_charge_rate,
                           "max_discharge_rate": max_discharge_rate,
                           "sense_object": mtrname1,
@@ -1749,8 +1753,17 @@ class Feeder:
         secnode = {}  # Node, st, phases, vnom
 
         for e_name, e_object in self.glm.glm.transformer.items():
+            # "identify_seg_loads" does not account for parallel paths in the
+            # model. This test allows us to skip paths that have not been
+            # had load accumulated with them, including parallel paths.
+            if e_name not in seg_loads:
+                print('WARNING: {} not in the seg loads'.format(e_name))
+                continue
             seg_kva = seg_loads[e_name][0]
             seg_phs = seg_loads[e_name][1]
+            # Band-aid for poor accumulation of phase information.
+            # "ABCS" is not a valid phase set and should be "ABCN".
+            seg_phs = seg_phs.replace('ABCS', 'ABCN')
             nphs = 0
             if 'A' in seg_phs:
                 nphs += 1
