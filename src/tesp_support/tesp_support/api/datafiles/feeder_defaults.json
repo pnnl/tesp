@@ -29,7 +29,7 @@
   "ashrae_zone": "2A",
   "climate_zone": 5,
   "weather_name": "localWeather",
-  "weather_file": "AZ-Tucson_International_Ap.tmy3",
+  "tmyfile": "AZ-Tucson_International_Ap.tmy3",
   "rooftop_pv_rating_MW": 7481.90,
   "utility_type": "Urban",
   "number_of_gld_homes": 1308,

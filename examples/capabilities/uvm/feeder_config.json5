@@ -3,7 +3,7 @@
 
 {
     // general
-    "in_file_glm": "", // the input feeder model. If None, taxonomy feeder used
+    "in_file_glm": "South_D1_Alburgh_mod_tesp_v2.glm", // the input feeder model. If None, taxonomy feeder used
     "out_file_glm": "test.glm", // REQUIRED: the output populated feeder
     "case_name": "MyCase", // REQUIRED: a name for your case
     "substation_name": "MySub", // REQUIRED: a name for the substation
@@ -32,7 +32,7 @@
     "ashrae_zone": "6A",
     "climate_zone": 2,
     "weather_name": "localWeather", // DEFAULT:localWeather
-    "weather_file": "VT-Burlington_International_Ap.tmy3",  // DEFAULT:AZ-Tucson_International_Ap.tmy3
+    "tmyfile": "VT-Burlington_International_Ap.tmy3",  // DEFAULT:AZ-Tucson_International_Ap.tmy3
     "rooftop_pv_rating_MW": 7481.90,
     "utility_type": "Urban",
     "number_of_gld_homes": 1308,
@@ -61,8 +61,8 @@
 
     // house parameters
     "message_broker": "",   // "" | "helics_msg" | "fncs_msg"
-    "use_feeder": true,
-    // use_feeder = true
+    // "use_feeder": true,
+    "use_feeder": false,
     "taxonomy": "R1-12.47-1.glm",
     // else
     "region": 2,
@@ -98,6 +98,18 @@
     // electric vehicles definitions
     "ev_reserved_soc": 20,
 
+    "solar": {
+        "panel_type": 'SINGLE_CRYSTAL_SILICON',
+        "rated_power":  7.5,
+        "tilt_angle": 45.5,
+        "efficiency": 0.2,
+        "shading_factor": 0.1,
+        "orientation_azimuth": 270.0,
+        "orientation": "FIXED_AXIS",
+        "SOLAR_TILT_MODEL": "SOLPOS",
+        "SOLAR_POWER_MODEL": "FLATPLATE"
+    },
+
     // player diction
     "solar_P_player": {
         "name": "player",      // class name
@@ -108,6 +120,5 @@
     },
     "solar_Q_player": null,
 
-    "electric_cooling_percentage": 90,
-
+    "electric_cooling_percentage": 90
 }

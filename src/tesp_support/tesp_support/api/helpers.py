@@ -143,6 +143,7 @@ def gld_strict_name(val):
     Returns:
         str: val with all '-' replaced by '_', and any leading digit replaced by 'gld\_'
     """
+    val = val.replace('"', '')
     if val[0].isdigit():
         val = "gld_" + val
     return val.replace('-', '_')
