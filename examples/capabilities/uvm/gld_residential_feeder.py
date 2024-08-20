@@ -129,7 +129,8 @@ class Config:
         name = "localWeather"
         params = {"interpolate": str(self.interpolate),
                   "latitude": str(self.latitude),
-                  "longitude": str(self.longitude)}
+                  "longitude": str(self.longitude),
+                  "tmyfile": str(self.tmyfile)}
                   # "tz_meridian": '{0:.2f}'.format(15 * self.time_zone_offset)}
         self.glm.add_object("climate", name, params)
 
@@ -896,26 +897,36 @@ class Residential_Build:
                               "inverter_efficiency": "1",
                               "rated_power": '{:.0f}'.format(inv_power),
                               "generator_mode": self.config.base.solar_inv_mode,
-                              "four_quadrant_control_mode": self.config.base.solar_inv_mode,
-                              "P_Out": f"{self.config.solar_P_player['attr']}.value * {pv_scaling_factor}"}
-                    if self.config.base.solar_Q_player:
-                        params["Q_Out"] = f"{self.config.solar_Q_player['attr']}.value * 0.0"
-                    else:
-                        params["Q_Out"] = "0"
-                    # write_solar_inv_settings(op)  # don't want volt/var control
-                    # No need of solar object
-                    # print('    object solar {', file=op)
-                    # print('      name', solname + ';', file=op)
-                    # print('      panel_type SINGLE_CRYSTAL_SILICON;', file=op)
-                    # print('      efficiency', '{:.2f}'.format(array_efficiency) + ';', file=op)
-                    # print('      area', '{:.2f}'.format(panel_area) + ';', file=op)
-                    # print('    };', file=op)
-                    # Instead of solar object, write a fake V_in and I_in sufficient high so
-                    # that it doesn't limit the player output
-                    params["V_In"] = "10000000"
-                    params["I_In"] = "10000000"
+                              "four_quadrant_control_mode": self.config.base.solar_inv_mode}
+
+                    if self.config.solar_P_player:
+                        params["P_Out"] = f"{self.config.solar_P_player['attr']}.value * {pv_scaling_factor}"
+                        if self.config.base.solar_Q_player:
+                            params["Q_Out"] = f"{self.config.solar_Q_player['attr']}.value * 0.0"
+                        else:
+                            params["Q_Out"] = "0"
+                        # Instead of solar object, write a fake V_in and I_in sufficient high so
+                        # that it doesn't limit the player output
+                        params["V_In"] = "10000000"
+                        params["I_In"] = "10000000"
+
                     self.glm.add_object("inverter", sol_i_name, params)
                     self.glm.add_metrics_collector(sol_i_name, "inverter")
+
+                    if not self.config.solar_P_player:
+                        params = {
+                            "parent": sol_i_name,
+                            "panel_type": 'SINGLE_CRYSTAL_SILICON',
+                            # "area": '{:.2f}'.format(panel_area),
+                            "rated_power":  self.config.solar["rated_power"],
+                            "tilt_angle": self.config.solar["tilt_angle"],
+                            "efficiency": self.config.solar["efficiency"],
+                            "shading_factor": self.config.solar["shading_factor"],
+                            "orientation_azimuth": self.config.solar["orientation_azimuth"],
+                            "orientation": "FIXED_AXIS",
+                            "SOLAR_TILT_MODEL": "SOLPOS",
+                            "SOLAR_POWER_MODEL": "FLATPLATE"  }
+                        self.glm.add_object("solar", solname, params)
 
         if np.random.uniform(0, 1) <= bat_g_sol_sf_inc:
             battery_capacity = get_dist(self.config.batt_metadata.capacity['mean'],
@@ -992,8 +1003,9 @@ class Residential_Build:
                 # few sanity checks
                 if drive_sch['daily_miles'] > ev_range:
                     raise UserWarning('daily travel miles for EV can not be more than range of the vehicle!')
-                if not is_hhmm_valid(drive_sch['home_arr_time']) or not is_hhmm_valid(
-                        drive_sch['home_leave_time']) or not is_hhmm_valid(drive_sch['work_arr_time']):
+                if (not is_hhmm_valid(drive_sch['home_arr_time']) or
+                        not is_hhmm_valid(drive_sch['home_leave_time']) or
+                        not is_hhmm_valid(drive_sch['work_arr_time'])):
                     raise UserWarning('invalid HHMM format of driving time!')
                 if drive_sch['home_duration'] > 24 * 3600 or drive_sch['home_duration'] < 0 or \
                         drive_sch['work_duration'] > 24 * 3600 or drive_sch['work_duration'] < 0:
@@ -1764,9 +1776,11 @@ class Feeder:
                 continue
             seg_kva = seg_loads[e_name][0]
             seg_phs = seg_loads[e_name][1]
+
             # Band-aid for poor accumulation of phase information.
             # "ABCS" is not a valid phase set and should be "ABCN".
             seg_phs = seg_phs.replace('ABCS', 'ABCN')
+
             nphs = 0
             if 'A' in seg_phs:
                 nphs += 1
@@ -1816,6 +1830,11 @@ class Feeder:
             if e_name in seg_loads:
                 seg_kva = seg_loads[e_name][0]
                 seg_phs = seg_loads[e_name][1]
+
+                # Band-aid for poor accumulation of phase information.
+                # "ABCS" is not a valid phase set and should be "ABCN".
+                seg_phs = seg_phs.replace('ABCS', 'ABCN')
+
                 nphs = 0
                 if 'A' in seg_phs:
                     nphs += 1

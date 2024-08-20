@@ -737,8 +737,8 @@ class GLModel:
                         pos1 = line.find(";")
                         val = val + line[pos:pos1]
                         line = ""
-                    if param == "from" or param == "to" or param == "configuration":
-                        val = gld_strict_name(val)
+                    if param in ["to", "from", "configuration", "parent"]:
+                        val = gld_strict_name(name_prefix + val)
                     params[param] = val.strip()
                     if len(comments) > 0:
                         inside_comments[param] = comments
@@ -881,21 +881,21 @@ class GLModel:
         G = nx.Graph()
         for t in self.model:
             # Grabs all nodes that have physical connections in the model
-            # (e.g. line, transformer, switch, ...) 
+            # (e.g. line, transformer, switch, ...)
             if self.is_edge_class(t):
                 for o in self.model[t]:
-                    n1 = gld_strict_name(self.model[t][o]['from'])
-                    n2 = gld_strict_name(self.model[t][o]['to'])
+                    n1 = self.model[t][o]['from']
+                    n2 = self.model[t][o]['to']
                     G.add_edge(n1, n2, eclass=t, ename=o, edata=self.model[t][o])
 
             # Creates edges for nodes that were associated via parent-child
             # relationships. These relationships have no edge data associate
-            # with them as the connection is, as far as the GLD model is 
+            # with them as the connection is, as far as the GLD model is
             # concerned, virtual, rather than physical.
             if self.is_node_class(t):
                 for o in self.model[t]:
                     if 'parent' in self.model[t][o]:
-                        p = gld_strict_name(self.model[t][o]['parent'])
+                        p = self.model[t][o]['parent']
                         G.add_edge(o, p, eclass='parent', ename=o, edata={})
 
         # now we back-fill the node attributes because 'add_edge' adds the nodes
