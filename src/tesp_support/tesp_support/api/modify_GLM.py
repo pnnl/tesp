@@ -626,7 +626,7 @@ class GLMModifier:
                 vnom = secmtrnode[e_name][2]
                 phs = secmtrnode[e_name][1]
             if 'parent' in e_object:
-                parent = e_object['parent']
+                parent = gld_strict_name(e_object['parent'])
                 if parent in secmtrnode:
                     vnom = secmtrnode[parent][2]
                     phs = secmtrnode[parent][1]

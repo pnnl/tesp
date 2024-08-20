@@ -22,6 +22,7 @@
 
   "state": "TX",
   "county": "Houston",
+  "interpolate": "QUADRATIC",
   "latitude": 29.65,
   "longitude": -95.42,
   "time_zone_offset": -6,
@@ -54,6 +55,10 @@
   "message_broker": "",
   "WANT_VI_DUMP": "False",
   "metrics_interval": 300,
+  "metrics_interim": 3600,
+  "metrics_filename": "out_",
+  "metrics_alternate": "yes",
+  "metrics_extension": "h5",
   "metrics_classes": [
       "house",
       "waterheater",
@@ -63,7 +68,8 @@
       "capacitor",
       "inverter",
       "regulator",
-      "substation"],
+      "substation",
+      "evchagerdet"],
 
   "base_feeder_name": "",
 

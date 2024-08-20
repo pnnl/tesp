@@ -150,6 +150,33 @@ class GLModel:
                 setattr(self.glm, obj, self.object_entities[obj].instances)
 
     @staticmethod
+    def get_datatype(m_type:str):
+        if m_type == "double":
+            datatype = "REAL"
+        elif m_type in ["char8", "char32", "char256", "char1024"]:
+            datatype = "TEXT"
+        elif m_type in ["int16", "int32", "int64"]:
+            datatype = "INTEGER"
+        elif m_type in ["enumeration", "set"]:
+            datatype = "TEXT"
+        elif m_type == "bool":
+            datatype = "BOOLEAN"
+            unit = "|true|false|"
+        elif m_type == "timestamp":
+            datatype = "TEXT"
+        elif m_type == "complex":
+            datatype = "TEXT"
+        elif m_type == "complex_array":
+            datatype = "TEXT"
+        elif m_type == "double_array":
+            datatype = "TEXT"
+        elif m_type in ["enduse", "loadshape", "object", "parent"]:
+            datatype = "OBJECT"
+        else:
+            datatype = ""
+        return datatype
+
+    @staticmethod
     def _add_attr(entity, name, attr):
         # define modules that can be in a GLM file
         # set (bit), enumeration, bool
@@ -172,38 +199,19 @@ class GLModel:
             label = attr["description"]
 
         # all attribute must have a type
-        m_type = attr["type"]
-        if m_type == "double":
-            datatype = "REAL"
-        elif m_type in ["char8", "char32", "char256", "char1024"]:
-            datatype = "TEXT"
-        elif m_type in ["int16", "int32", "int64"]:
-            datatype = "INTEGER"
-        elif m_type in ["enumeration", "set"]:
-            datatype = "TEXT"
-            unit = "|"
-            for key in attr["keywords"]:
-                unit += key + "|"
-        elif m_type == "bool":
-            datatype = "BOOLEAN"
-            unit = "|true|false|"
-        elif m_type == "timestamp":
-            datatype = "TEXT"
-        elif m_type == "complex":
-            datatype = "TEXT"
-        elif m_type == "complex_array":
-            datatype = "TEXT"
-        elif m_type == "double_array":
-            datatype = "TEXT"
-        elif m_type in ["enduse", "loadshape", "object", "parent"]:
-            datatype = "OBJECT"
-        else:
-            datatype = ""
-
-        if datatype:
-            entity.add_attr(datatype, label, unit, name, value=None)
-        else:
-            print("name ->", name, "type", m_type)
+        if "type" in attr:
+            m_type = attr["type"]
+            m_datatype = GLModel.get_datatype(m_type)
+            if m_type in ["enumeration", "set"]:
+                unit = "|"
+                for key in attr["keywords"]:
+                    unit += key + "|"
+            elif m_type == "bool":
+                unit = "|true|false|"
+            if m_datatype:
+                entity.add_attr(m_datatype, label, unit, name, value=None)
+            else:
+                print(f"name: {name} type: {m_type}")
 
     def entitiesToJson(self):
         diction = {}
@@ -513,6 +521,27 @@ class GLModel:
         if s in self.node_classes.keys():
             return True
         return False
+
+    def add_class(self, class_name:str, value_type:str, value_name:str, static:bool, default:any):
+        if class_name not in self.module_entities.keys():
+            # don't add class_name to self.module_types
+            # this makes 'this' a class' in the module_entities list
+            entity = Entity(class_name, None)
+            entity.add_attr("TEXT", value_type, "", value_type, value="value")
+            self.module_entities[class_name] = entity
+            setattr(self.glm, class_name, self.module_entities[class_name].instances)
+            self.set_module_instance(class_name, {value_type: "value"})
+
+            entity = Entity(class_name, None)
+            entity.add_attr("TEXT", "name", "", "name", value=value_name)
+            entity.add_attr("TEXT", "file", "", "file")
+            entity.add_attr("TEXT", "value", "", "value")
+            self.object_entities[class_name] = entity
+            setattr(self.glm, class_name, self.object_entities[class_name].instances)
+            if static:
+                self.set_object_instance(class_name, value_name, {"value": default})
+            else:
+                self.set_object_instance(class_name, value_name, {"file": default})
 
     def add_object(self, _type, name, params):
         # add the new object type to the model
@@ -999,7 +1028,6 @@ class GLModel:
         for idx in range(len(self.define_lines)):
             if find in self.define_lines[idx]:
                 del self.define_lines[idx]
-
 
     @staticmethod
     def union_of_phases(phs1, phs2):

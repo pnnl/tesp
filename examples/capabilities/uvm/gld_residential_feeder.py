@@ -20,7 +20,7 @@ Public Functions:
     :buildingTypeLabel: assigns region, building type, and thermal integrity level
     :checkResidentialBuildingTable: verifies that the regional building parameter
         histograms sum to one
-    :selectSetpointBins: randomly chooses a histogram row from the cooling and 
+    :selectSetpointBins: randomly chooses a histogram row from the cooling and
         heating setpoints.
     :add_small_loads: adds loads that are too small to be a house onto a node
     :getDsoIncomeLevelTable: retrieves the DSO income level fractions for the
@@ -34,13 +34,13 @@ Public Functions:
         building type and thermal integrity level
     :add_houses: puts houses, along with solar panels, batteries, and electric
         vehicle charges, onto a node
-    :replace_commercial_loads: determines the number of commercial zones that 
+    :replace_commercial_loads: determines the number of commercial zones that
         loads assigned class 'C' should have
     :add_one_commercial_zone: writes a pre-configured commercial zone as a house
     :add_solar_inv_settings: writes volt-var and volt-watt settings for solar
         inverters
     :add_solar_defines: writes required define_lines for solar inverters
-    :selectEVmodel: selects the EV model based on available sale distribution 
+    :selectEVmodel: selects the EV model based on available sale distribution
         data
     :match_driving_schedule: matches schedule of vehicle from NHTS data based on
         vehicle ev_range
@@ -48,7 +48,7 @@ Public Functions:
         up properly
     :process_nhts:data: reads and processes NHTS survey data, returning a
         dataframe
-    :identify_xfmr_houses: scans each service transformer on the feeder to 
+    :identify_xfmr_houses: scans each service transformer on the feeder to
         determine the number of houses it should have
 
 """
@@ -65,14 +65,14 @@ from tesp_support.api.time_helpers import get_secs_from_hhmm, get_hhmm_from_secs
 from tesp_support.api.time_helpers import is_hhmm_valid, subtract_hhmm_secs, add_hhmm_secs
 from tesp_support.api.entity import assign_defaults
 
-sys.path.append("../../..") 
+sys.path.append("../../..")
 from examples.analysis.dsot.code import recs_gld_house_parameters
 
 extra_billing_meters = set()
 
 
 class Config:
-    
+
     def __init__(self, glm_config=None):
         # Assign default values to those not defined in config file
         assign_defaults(self, glm_config)
@@ -91,14 +91,13 @@ class Config:
         self.glm.add_module("connection", {})
         params = {"implicit_enduses": "NONE"}
         self.glm.add_module("residential", params)
-        params = {"double": "value", "int": "value1"}
 
-        # TODO: add for loop for players
-        #        self.glm.add_module("player", params)
+        # set for players
+        player = self.solar_P_player
+        self.glm.model.add_class(player["name"], player["datatype"], player["attr"], player["static"], player["data"])
 
         # Set clock
-        # TODO: Jessica broke the clock with the refactor
-        #self.glm.model.set_clock(self.starttime, self.stoptime, self.timezone)
+        self.glm.model.set_clock(self.starttime, self.stoptime, self.timezone)
 
         # Set includes
         for item in self.includes:
@@ -119,16 +118,16 @@ class Config:
         # Add metrics interval and interim interval
         if self.metrics_interval > 0:
             params = {"interval": str(self.base.metrics_interval),
-                      "interim": "43200",
-                      "filename": "out_",
-                      "alternate": "yes",
-                      "extension": "h5"
+                      "interim": str(self.base.metrics_interim),
+                      "filename": str(self.base.metrics_filename),
+                      "alternate": str(self.base.metrics_alternate),
+                      "extension": str(self.base.metrics_extension)
             }
             self.glm.add_object("metrics_collector_writer", "mc", params)
 
-        # Add climate object and weather params 
+        # Add climate object and weather params
         name = "localWeather"
-        params = {"interpolate": "QUADRATIC",
+        params = {"interpolate": str(self.interpolate),
                   "latitude": str(self.latitude),
                   "longitude": str(self.longitude)}
                   # "tz_meridian": '{0:.2f}'.format(15 * self.time_zone_offset)}
@@ -162,7 +161,7 @@ class Config:
                      range(1980, 1990), range(1990, 2000), range(2000, 2010), range(2010, 2016),
                      range(2016, 2020)]
         years_bin = [list(years_bin[ind]) for ind in range(len(years_bin))]
-        
+
         self.base.cop_lookup = []
         for _bin in range(len(years_bin)):
             temp = []
@@ -178,7 +177,7 @@ class Residential_Build:
     def __init__(self, config):
         self.config = config
         self.glm = config.glm
-    
+
     def buildingTypeLabel(self, rgn: int, bldg: int, therm_int: int):
         """Formatted name of region, building type name and thermal integrity level
 
@@ -288,7 +287,7 @@ class Residential_Build:
                   "to": mtrname,
                   "phases": phs,
                   "length": "30",
-                  "self.configuration": self.config.base.triplex_configurations[0][0]}
+                  "configuration": self.config.base.triplex_configurations[0][0]}
         self.glm.add_object("triplex_line", tpxname, params)
 
         params = {"phases": phs,
@@ -308,7 +307,7 @@ class Residential_Build:
                   "constant_power_12_real": "10.0",
                   "constant_power_12_reac": "8.0"}
         self.glm.add_object("triplex_load", loadname, params)
-   
+
     def getDsoIncomeLevelTable(self):
         """Retrieves the DSO Income Level
         Fraction of income level in a given dso type and state:
@@ -356,7 +355,7 @@ class Residential_Build:
                 return row
         row = len(incTable) - 1
         return row
-    
+
     def getDsoThermalTable(self, income: int) -> float:
         """TODO: _summary_
 
@@ -392,7 +391,7 @@ class Residential_Build:
         """Writes volt-var and volt-watt settings for solar inverters
 
         Args:
-            rgnTable (list): 
+            rgnTable (list):
             prob (float):
         """
         row = 0
@@ -407,7 +406,7 @@ class Residential_Build:
         return row, col
 
     def selectThermalProperties(self, bldg: int, therm_int: int):
-        """Retrieve the building thermal properties for a given type and 
+        """Retrieve the building thermal properties for a given type and
         thermal integrity level
 
         Args:
@@ -423,8 +422,8 @@ class Residential_Build:
         return therm_prop
 
     def add_houses(self, basenode: str, v_nom: float, bIgnoreThermostatSchedule=True, bWriteService=True, bTriplex=True, setpoint_offset=1.0, fg_recs_dataset=None):
-        """Put houses, along with solar panels, batteries, and electric vehicle 
-        charges, onto a node 
+        """Put houses, along with solar panels, batteries, and electric vehicle
+        charges, onto a node
         TODO: not all variables are used in this function
         
         Args: TODO
@@ -854,7 +853,7 @@ class Residential_Build:
         bat_g_sol_sf_inc = p_bat_sol_sf_inc / (sol_g_inc_sf * p_sf_g_inc * il_percentage)
         # P(ev|income)
         ev_percentage_il = (self.config.ev_percentage * self.ev_percentage[income]) / il_percentage
-        
+
         if bldg == 0:  # Single-family homes
             if sol_g_inc_sf > 0.0:
                 pass
@@ -898,9 +897,9 @@ class Residential_Build:
                               "rated_power": '{:.0f}'.format(inv_power),
                               "generator_mode": self.config.base.solar_inv_mode,
                               "four_quadrant_control_mode": self.config.base.solar_inv_mode,
-                              "P_Out": 'P_out_inj.value * {}'.format(pv_scaling_factor)}
-                    if 'no_file' not in self.config.base.solar_Q_player:
-                        params["Q_Out"] = "Q_out_inj.value * 0.0"
+                              "P_Out": f"{self.config.solar_P_player['attr']}.value * {pv_scaling_factor}"}
+                    if self.config.base.solar_Q_player:
+                        params["Q_Out"] = f"{self.config.solar_Q_player['attr']}.value * 0.0"
                     else:
                         params["Q_Out"] = "0"
                     # write_solar_inv_settings(op)  # don't want volt/var control
@@ -981,7 +980,7 @@ class Residential_Build:
 
             # now, let's map a random driving schedule with this vehicle ensuring daily miles
             # doesn't exceed the vehicle range and home duration is enough to charge the vehicle
-            drive_sch = Electric_Vehicle.match_driving_schedule(self, ev_range, ev_mileage, ev_max_charge)
+            drive_sch = self.config.ev_metadata.match_driving_schedule(ev_range, ev_mileage, ev_max_charge)
             # ['daily_miles','home_arr_time','home_duration','work_arr_time','work_duration']
 
             # Should be able to turn off ev entirely using ev_percentage, definitely in debugging
@@ -1000,7 +999,7 @@ class Residential_Build:
 
                 self.config.base.ev_count += 1
                 params = {"parent": hsename,
-                          "self.configuration": volt_conf,
+                          "configuration": volt_conf,
                           "breaker_amps": 1000,
                           "battery_SOC": 100.0,
                           "travel_distance": drive_sch['daily_miles'],
@@ -1014,7 +1013,7 @@ class Residential_Build:
                           "mileage_classification": ev_range,
                           "charging_efficiency": ev_charge_eff}
                 self.glm.add_object("evcharger_det", evname, params)
-                self.glm.add_metrics_collector(evname, "house")
+                self.glm.add_metrics_collector(evname, "evchargerdet")
                 self.glm.add_group_recorder("class=evcharger_det", "actual_charge_rate", "EV_charging_power.csv")
                 self.glm.add_group_recorder("class=evcharger_det", "battery_SOC", "EV_SOC.csv")
 
@@ -1022,9 +1021,9 @@ class Commercial_Build:
     def __init__(self, config):
         self.config = config
         self.glm = config.glm
-                    
+
     def replace_commercial_loads(self, gld_class: str, avgBuilding: float):
-        """For the full-order feeders, scan each load with load_class==C to 
+        """For the full-order feeders, scan each load with load_class==C to
         determine the number of zones it should have.
 
         Args:
@@ -1519,13 +1518,13 @@ class Solar:
     def __init__(self, config):
         self.config = config
         self.glm = config.glm
-        
+
     def add_solar_inv_settings(self, params: dict):
         """ Writes volt-var and volt-watt settings for solar inverters
 
         Args:
             params (dict): solar inverter parameters. Contains:
-                {four_quadrant_control_mode, V1, Q1, V2, Q2, V3, Q3, V4, Q4, 
+                {four_quadrant_control_mode, V1, Q1, V2, Q2, V3, Q3, V4, Q4,
                 V_In, I_In, volt_var_control_lockout, VW_V1, VW_V2, VW_P1, VW_P2}
         """
         params["four_quadrant_control_mode"] = self.config.base.name_prefix + 'INVERTER_MODE'
@@ -1571,7 +1570,7 @@ class Solar:
             self.glm.model.define_lines.append('#define INV_VW_P1=1.0')
             self.glm.model.define_lines.append('#define INV_VW_P2=0.0')
         # write the optional volt_dump and curr_dump for validation
-        
+
 class Electric_Vehicle:
     def __init__(self, config):
         self.config = config
@@ -1696,7 +1695,7 @@ class Electric_Vehicle:
             data_file (str): path of the file
 
         Returns:
-            pd.DataFrame: dataframe containing start_time, end_time, travel_day 
+            pd.DataFrame: dataframe containing start_time, end_time, travel_day
             (weekday/weekend) and daily miles driven
         """
         # Read data from NHTS survey
@@ -1740,10 +1739,10 @@ class Feeder:
 
         config.preamble()
 
-        # NEW STRATEGY - loop through transformer instances and assign a 
+        # NEW STRATEGY - loop through transformer instances and assign a
         # standard size based on the downstream load
-        #   - change the referenced transformer_self.configuration attributes
-        #   - write the standard transformer_self.configuration instances we actually need
+        #   - change the referenced transformer_configuration attributes
+        #   - write the standard transformer_configuration instances we actually need
         seg_loads = self.glm.model.identify_seg_loads()
 
         xfused = {}  # ID, phases, total kva, vnom (LN), vsec, poletop/padmount
@@ -1850,7 +1849,7 @@ class Feeder:
                 config.utility_type,
                 config.ashrae_zone,
                 config.comm_bldg_metadata)
-            comm_FG.add_comm_zones(self.glm, config, bldg_definition, key)
+            comm_FG.add_comm_zones(self, bldg_definition, key)
 
 #        self.glm.add_voltage_class('node', self.g_config.vln, self.g_config.vll, secnode)
 #        self.glm.add_voltage_class('meter', self.g_config.vln, self.g_config.vll, secnode)
@@ -1867,7 +1866,7 @@ class Feeder:
         #self.glm.model.plot_model()
 
     def identify_xfmr_houses(self, gld_class: str, seg_loads: dict, avgHouse: float, rgn: int):
-        """For the full-order feeders, scan each service transformer to 
+        """For the full-order feeders, scan each service transformer to
         determine the number of houses it should have
         TODO: not all variables are used in this function
         Args:
@@ -1929,8 +1928,8 @@ class Feeder:
 
 def _test1():
     config = Config("./feeder_config.json5")
-    feeder = Feeder(config)   
-    
+    feeder = Feeder(config)
+
 
 
 if __name__ == "__main__":
