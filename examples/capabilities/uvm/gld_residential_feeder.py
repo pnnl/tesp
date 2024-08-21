@@ -800,20 +800,33 @@ class Residential_Build:
             wh_demand_str = wh_demand_type + '{:.0f}'.format(water_sch) + '*' + '{:.2f}'.format(water_var)
             wh_skew_value = randomize_residential_skew(True)
 
-            params = {"parent": hsename,
-                      "schedule_skew": '{:.0f}'.format(wh_skew_value),
-                      "heating_element_capacity": '{:.1f}'.format(heat_element),
-                      "thermostat_deadband": '{:.1f}'.format(therm_dead),
-                      "location": "INSIDE",
-                      "tank_diameter": "1.5",
-                      "tank_UA": '{:.1f}'.format(tank_UA),
-                      "water_demand": wh_demand_str,
-                      "tank_volume": '{:.0f}'.format(wh_size),
-                      "waterheater_model": "MULTILAYER",
-                      "discrete_step_size": "60.0",
-                      "lower_tank_setpoint": '{:.1f}'.format(tank_set - 5.0),
-                      "upper_tank_setpoint": '{:.1f}'.format(tank_set + 5.0),
-                      "T_mixing_valve": '{:.1f}'.format(tank_set)}
+            if self.config.water_heater_model == "MULTILAYER":
+                params = {"parent": hsename,
+                        "schedule_skew": '{:.0f}'.format(wh_skew_value),
+                        "heating_element_capacity": '{:.1f}'.format(heat_element),
+                        "thermostat_deadband": '{:.1f}'.format(therm_dead),
+                        "location": "INSIDE",
+                        "tank_diameter": "1.5",
+                        "tank_UA": '{:.1f}'.format(tank_UA),
+                        "water_demand": wh_demand_str,
+                        "tank_volume": '{:.0f}'.format(wh_size),
+                        "waterheater_model": "MULTILAYER",
+                        "discrete_step_size": "60.0",
+                        "lower_tank_setpoint": '{:.1f}'.format(tank_set - 5.0),
+                        "upper_tank_setpoint": '{:.1f}'.format(tank_set + 5.0),
+                        "T_mixing_valve": '{:.1f}'.format(tank_set)}
+            else: # Traditional single-node model
+                params = {"parent": hsename,
+                        "schedule_skew": '{:.0f}'.format(wh_skew_value),
+                        "heating_element_capacity": '{:.1f}'.format(heat_element),
+                        "thermostat_deadband": '{:.1f}'.format(therm_dead),
+                        "location": "INSIDE",
+                        "tank_diameter": "1.5",
+                        "tank_UA": '{:.1f}'.format(tank_UA),
+                        "water_demand": wh_demand_str,
+                        "tank_volume": '{:.0f}'.format(wh_size),
+                        "waterheater_model": "TWONODE",
+                        "tank_setpoint": '{:.1f}'.format(tank_set - 5.0)}
             # All wh are multilayer now
             #          if np.random.uniform (0, 1) <= self.config.base.water_heater_participation:
                             # "waterheater_model": "MULTILAYER",
