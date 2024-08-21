@@ -75,7 +75,7 @@ class Config:
 
     def __init__(self, glm_config=None):
         # Assign default values to those not defined in config file
-        assign_defaults(self, glm_config)
+        self.keys = list(assign_defaults(self, glm_config).keys())
         self.glm = GLMModifier()
         self.base = self.glm.defaults
         self.res_bldg_metadata = Residential_Build(self)
@@ -89,12 +89,12 @@ class Config:
         self.glm.add_module("climate", {})
         self.glm.add_module("generators", {})
         self.glm.add_module("connection", {})
-        params = {"implicit_enduses": "NONE"}
-        self.glm.add_module("residential", params)
+        self.glm.add_module("residential", {"implicit_enduses": "NONE"})
 
         # set for players
-        player = self.solar_P_player
-        self.glm.model.add_class(player["name"], player["datatype"], player["attr"], player["static"], player["data"])
+        if "solar_P_player" in self.keys:
+            player = self.solar_P_player
+            self.glm.model.add_class(player["name"], player["datatype"], player["attr"], player["static"], player["data"])
 
         # Set clock
         self.glm.model.set_clock(self.starttime, self.stoptime, self.timezone)
@@ -121,18 +121,17 @@ class Config:
                       "interim": str(self.base.metrics_interim),
                       "filename": str(self.base.metrics_filename),
                       "alternate": str(self.base.metrics_alternate),
-                      "extension": str(self.base.metrics_extension)
-            }
+                      "extension": str(self.base.metrics_extension)}
             self.glm.add_object("metrics_collector_writer", "mc", params)
 
         # Add climate object and weather params
-        name = "localWeather"
         params = {"interpolate": str(self.interpolate),
                   "latitude": str(self.latitude),
                   "longitude": str(self.longitude),
                   "tmyfile": str(self.tmyfile)}
+                  # TODO: how to set tz_meridian parameter
                   # "tz_meridian": '{0:.2f}'.format(15 * self.time_zone_offset)}
-        self.glm.add_object("climate", name, params)
+        self.glm.add_object("climate", self.weather_name, params)
 
     def generate_and_load_recs(self):
         # if config['use_recs']:
@@ -173,6 +172,7 @@ class Config:
         assign_defaults(self.batt_metadata, self.file_battery_meta)
         assign_defaults(self.ev_metadata, self.file_ev_meta)
         self.base.ev_driving_metadata = self.ev_metadata.process_nhts_data(self.file_ev_driving_meta)
+
 
 class Residential_Build:
     def __init__(self, config):
@@ -852,6 +852,7 @@ class Residential_Build:
         #solar_percentage = self.solar_pv[self.config.state][self.config.res_dso_type][income][bldg_type]
         # Calculate the solar, storage, and ev percentage based on the income level
         # Chain rule for conditional probabilities
+
         # P(solar and income and SF)
         p_sol_inc_sf = self.config.base.solar_percentage * self.solar_percentage[income]
         # P(SF|income)
@@ -912,9 +913,9 @@ class Residential_Build:
                               "generator_mode": self.config.base.solar_inv_mode,
                               "four_quadrant_control_mode": self.config.base.solar_inv_mode}
 
-                    if self.config.solar_P_player:
+                    if "solar_P_player" in self.config.keys:
                         params["P_Out"] = f"{self.config.solar_P_player['attr']}.value * {pv_scaling_factor}"
-                        if self.config.base.solar_Q_player:
+                        if "solar_Q_player" in self.config.keys:
                             params["Q_Out"] = f"{self.config.solar_Q_player['attr']}.value * 0.0"
                         else:
                             params["Q_Out"] = "0"
@@ -926,7 +927,8 @@ class Residential_Build:
                     self.glm.add_object("inverter", sol_i_name, params)
                     self.glm.add_metrics_collector(sol_i_name, "inverter")
 
-                    if not self.config.solar_P_player:
+                    if ("solar" in self.config.keys and
+                            not "solar_P_player" in self.config.keys):
                         params = {
                             "parent": sol_i_name,
                             "panel_type": 'SINGLE_CRYSTAL_SILICON',
@@ -1017,8 +1019,8 @@ class Residential_Build:
                 if drive_sch['daily_miles'] > ev_range:
                     raise UserWarning('daily travel miles for EV can not be more than range of the vehicle!')
                 if (not is_hhmm_valid(drive_sch['home_arr_time']) or
-                        not is_hhmm_valid(drive_sch['home_leave_time']) or
-                        not is_hhmm_valid(drive_sch['work_arr_time'])):
+                    not is_hhmm_valid(drive_sch['home_leave_time']) or
+                    not is_hhmm_valid(drive_sch['work_arr_time'])):
                     raise UserWarning('invalid HHMM format of driving time!')
                 if drive_sch['home_duration'] > 24 * 3600 or drive_sch['home_duration'] < 0 or \
                         drive_sch['work_duration'] > 24 * 3600 or drive_sch['work_duration'] < 0:
@@ -1042,7 +1044,7 @@ class Residential_Build:
                           "mileage_classification": ev_range,
                           "charging_efficiency": ev_charge_eff}
                 self.glm.add_object("evcharger_det", evname, params)
-                # self.glm.add_metrics_collector(evname, "evchargerdet")
+                self.glm.add_metrics_collector(evname, "evchargerdet")
                 self.glm.add_group_recorder("class=evcharger_det", "actual_charge_rate", "EV_charging_power.csv")
                 self.glm.add_group_recorder("class=evcharger_det", "battery_SOC", "EV_SOC.csv")
 
@@ -1758,13 +1760,17 @@ class Feeder:
         self.glm = config.glm
         config.generate_and_load_recs()
 
+        # reassign for convenience
+        glm = config.glm
+        base = config.base
+
         # Read in backbone feeder to populate
         if config.use_feeder:
-            glm, success = self.glm.model.readBackboneModel(config.taxonomy)
+            i_glm, success = glm.model.readBackboneModel(config.taxonomy)
             if not success:
                 exit()
         else:
-            self.glm.read_model(config.in_file_glm)
+            glm.read_model(config.in_file_glm)
 
         config.preamble()
 
@@ -1772,27 +1778,32 @@ class Feeder:
         # standard size based on the downstream load
         #   - change the referenced transformer_configuration attributes
         #   - write the standard transformer_configuration instances we actually need
-        seg_loads = self.glm.model.identify_seg_loads()
+        seg_loads = glm.model.identify_seg_loads()
+
+        # Power and region to requirements for commercial and residential load
+        # The tax choice array are for feeder taxonomy signature glm file
+        # and are size accordingly with file name, the transformer configuration,
+        # setting current_limit for fuse, setting cap_nominal_voltage
+        # and current_limit for capacitor
+
+        # taxchoice array [taxonomy, vll, vln, avg_house, avg_commercial, region]
+        # and are configure in the config file with above names.
 
         xfused = {}  # ID, phases, total kva, vnom (LN), vsec, poletop/padmount
         secnode = {}  # Node, st, phases, vnom
 
-        for e_name, e_object in self.glm.glm.transformer.items():
+        for e_name, e_object in i_glm.transformer.items():
             # "identify_seg_loads" does not account for parallel paths in the
             # model. This test allows us to skip paths that have not been
             # had load accumulated with them, including parallel paths.
-            # Also skipiing population for transformers with secondary more than 500 V
+            # Also skipping population for transformers with secondary more than 500 V
             e_config = e_object['configuration']
-            sec_v = float(self.glm.glm.transformer_configuration[e_config]['secondary_voltage'])
-            if e_name not in seg_loads or sec_v > 500: 
-                print('WARNING: {} not in the seg loads'.format(e_name))
+            sec_v = float(i_glm.transformer_configuration[e_config]['secondary_voltage'])
+            if e_name not in seg_loads or sec_v > 500:
+                print(f"WARNING: {e_name} not in the seg loads")
                 continue
             seg_kva = seg_loads[e_name][0]
             seg_phs = seg_loads[e_name][1]
-
-            # Band-aid for poor accumulation of phase information.
-            # "ABCS" is not a valid phase set and should be "ABCN".
-            seg_phs = seg_phs.replace('ABCS', 'ABCN')
 
             nphs = 0
             if 'A' in seg_phs:
@@ -1802,16 +1813,16 @@ class Feeder:
             if 'C' in seg_phs:
                 nphs += 1
             if nphs > 1:
-                kvat = self.glm.find_3phase_xfmr_w_margin(seg_kva)
+                kvat = glm.find_3phase_xfmr_w_margin(seg_kva)
             else:
-                kvat = self.glm.find_1phase_xfmr_w_margin(seg_kva)
+                kvat = glm.find_1phase_xfmr_w_margin(seg_kva)
             if 'S' in seg_phs:
                 vnom = 120.0
                 vsec = 120.0
             else:
                 if 'N' not in seg_phs:
                     seg_phs += 'N'
-                if kvat > config.base.max208kva:
+                if kvat > base.max208kva:
                     vsec = 480.0
                     vnom = 277.0
                 else:
@@ -1820,33 +1831,29 @@ class Feeder:
 
             secnode[gld_strict_name(e_object['to'])] = [kvat, seg_phs, vnom]
 
-            old_key = self.glm.model.hash[e_object['configuration']]
-            install_type = self.glm.glm.transformer_configuration[old_key]['install_type']
+            old_key = glm.model.hash[e_object['configuration']]
+            install_type = i_glm.transformer_configuration[old_key]['install_type']
 
             raw_key = 'XF' + str(nphs) + '_' + install_type + '_' + seg_phs + '_' + str(kvat)
             key = raw_key.replace('.', 'p')
 
-            e_object['configuration'] = config.base.name_prefix + key
+            e_object['configuration'] = base.name_prefix + key
             e_object['phases'] = seg_phs
             if key not in xfused:
                 xfused[key] = [seg_phs, kvat, vnom, vsec, install_type]
 
         for key in xfused:
-            self.glm.add_xfmr_config(key, xfused[key][0], xfused[key][1], xfused[key][2], xfused[key][3],
+            glm.add_xfmr_config(key, xfused[key][0], xfused[key][1], xfused[key][2], xfused[key][3],
                                  xfused[key][4], config.vll, config.vln)
 
-        for e_name, e_object in self.glm.glm.capacitor.items():
+        for e_name, e_object in i_glm.capacitor.items():
             e_object['nominal_voltage'] = str(int(config.vln))
             e_object['cap_nominal_voltage'] = str(int(config.vln))
 
-        for e_name, e_object in self.glm.glm.fuse.items():
+        for e_name, e_object in i_glm.fuse.items():
             if e_name in seg_loads:
                 seg_kva = seg_loads[e_name][0]
                 seg_phs = seg_loads[e_name][1]
-
-                # Band-aid for poor accumulation of phase information.
-                # "ABCS" is not a valid phase set and should be "ABCN".
-                seg_phs = seg_phs.replace('ABCS', 'ABCN')
 
                 nphs = 0
                 if 'A' in seg_phs:
@@ -1861,14 +1868,14 @@ class Feeder:
                     amps = 1000.0 * seg_kva / 2.0 / config.vln
                 else:
                     amps = 1000.0 * seg_kva / config.vln
-                e_object['current_limit'] = str(self.glm.find_fuse_limit_w_margin(amps))
+                e_object['current_limit'] = str(glm.find_fuse_limit_w_margin(amps))
 
-        self.glm.add_local_triplex_configurations()
+        glm.add_local_triplex_configurations()
 
         configurations = ['regulator_configuration', 'overhead_line_conductor', 'line_spacing', 'line_configuration',
                           'triplex_line_conductor', 'triplex_line_configuration', 'underground_line_conductor']
         for configure in configurations:
-            self.glm.add_config_class(configure)
+            glm.add_config_class(configure)
 
         links = ['fuse', 'switch', 'recloser', 'sectionalizer',
                  'overhead_line', 'underground_line', 'series_reactor',
@@ -1877,53 +1884,52 @@ class Feeder:
             metrics = False
             if link in ['regulator', 'capacitor']:
                 metrics = True
-            self.glm.add_link_class(link, seg_loads, want_metrics=metrics)
+            glm.add_link_class(link, seg_loads, want_metrics=metrics)
 
+        # Identify commercial and residential loads
         config.comm_bldg_metadata.replace_commercial_loads('load', 0.001 * config.avg_commercial)
-
-        # TODO: find where avghouse and rgn are coming from avghouse and rgn = 4500.0, 30000.0
         self.identify_xfmr_houses('transformer', seg_loads, 0.001 * config.avg_house, config.region)
 
-        # TODO: houses
-        for key in config.base.house_nodes:
+        # Build the grid for commercial and residential loads
+        for key in base.house_nodes:
             config.res_bldg_metadata.add_houses(key, 120.0)
-        for key in config.base.small_nodes:
+        for key in base.small_nodes:
             config.res_bldg_metadata.add_small_loads(key, 120.0)
-        for key in config.base.comm_loads:
+        for key in base.comm_loads:
             # add_commercial_loads(rgn, key)
             bldg_definition = comm_FG.define_comm_loads(self.glm,
-                config.base.comm_loads[key][1],
-                config.base.comm_loads[key][2],
+                base.comm_loads[key][1],
+                base.comm_loads[key][2],
                 config.utility_type,
                 config.ashrae_zone,
                 config.comm_bldg_metadata)
             comm_FG.add_comm_zones(self, bldg_definition, key)
 
-#        self.glm.add_voltage_class('node', self.g_config.vln, self.g_config.vll, secnode)
-#        self.glm.add_voltage_class('meter', self.g_config.vln, self.g_config.vll, secnode)
-#        self.glm.add_voltage_class('load', self.g_config.vln, self.g_config.vll, secnode)
+#        glm.add_voltage_class('node', self.g_config.vln, self.g_config.vll, secnode)
+#        glm.add_voltage_class('meter', self.g_config.vln, self.g_config.vll, secnode)
+#        glm.add_voltage_class('load', self.g_config.vln, self.g_config.vll, secnode)
 
-        print('cooling bins unused', config.base.cooling_bins)
-        print('heating bins unused', config.base.heating_bins)
-        print(config.base.solar_count, 'pv totaling', '{:.1f}'.format(config.base.solar_kw),
-              'kw with', config.base.battery_count, 'batteries')
-        self.glm.write_model(config.out_file_glm)
+        print(f"cooling bins unused {base.cooling_bins}")
+        print(f"heating bins unused {base.heating_bins}")
+        print(f"{base.solar_count} pv totaling "
+              f"{base.solar_kw:.1f} kw with "
+              f"{base.battery_count} batteries")
+        glm.write_model(config.out_file_glm)
 
         # To plot the model using the networkx package:
         #print("\nPlotting image of model; this will take a minute.")
-        #self.glm.model.plot_model()
+        #glm.model.plot_model()
 
     def identify_xfmr_houses(self, gld_class: str, seg_loads: dict, avgHouse: float, rgn: int):
         """For the full-order feeders, scan each service transformer to
         determine the number of houses it should have
-        TODO: not all variables are used in this function
         Args:
             gld_class (str): the GridLAB-D class name to scan
             seg_loads (dict): dictionary of downstream load (kva) served by each GridLAB-D link
             avgHouse (float): the average house load in kva
             rgn (int): the region number, 1..5
         """
-        print('Average House', avgHouse)
+        print(f"Average House {avgHouse} kVA")
         total_houses = 0
         total_sf = 0
         total_apt = 0
@@ -1961,10 +1967,9 @@ class Feeder:
                         else:
                             total_mh += nhouse
                         self.config.base.house_nodes[node] = [nhouse, rgn, lg_v_sm, phs, bldg, ti, inc_lev]
-        print('{} small loads totaling {:.2f} kVA'.
-              format(total_small, total_small_kva))
-        print('{} houses on {} transformers, [SF, APT, MH] = [{}, {}, {}]'.
-              format(total_houses, len(self.config.base.house_nodes), total_sf, total_apt, total_mh))
+        print(f"{total_small} small loads totaling {total_small_kva:.2f} kVA")
+        print(f"{total_houses} houses on {len(self.config.base.house_nodes)} transformers, "
+              f"[SF, APT, MH] = [{total_sf}, {total_apt}, {total_mh}]")
         for i in range(6):
             self.config.base.heating_bins[0][i] = round(total_sf * self.config.base.bldgHeatingSetpoints[0][i][0] + 0.5)
             self.config.base.heating_bins[1][i] = round(total_apt * self.config.base.bldgHeatingSetpoints[1][i][0] + 0.5)

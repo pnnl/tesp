@@ -1128,9 +1128,12 @@ class GLModel:
                             if ename not in seg_loads:
                                 seg_loads[ename] = [0.0, '']
                             seg_loads[ename][0] += kva
-                            #seg_loads[ename][1] = self.union_of_phases(seg_loads[ename][1], data['ndata']['phases'])
-                            seg_phs = self.union_of_phases(seg_loads[ename][1], data['ndata']['phases']) 
-                            seg_loads[ename][1] = seg_phs.replace('ABCS', 'ABCN')
+                            seg_loads[ename][1] = self.union_of_phases(seg_loads[ename][1], data['ndata']['phases'])
+
+                            # Band-aid for poor accumulation of phase information for parrallel curcuits
+                            # "ABCS" is not a valid phase set and should be "ABCN".
+                            # seg_phs = seg_phs.replace('ABCS', 'ABCN')
+                            seg_loads[ename][1] = seg_loads[ename][1].replace('ABCS', 'ABCN')
                         else:
                             print(f"Unknown edge class: {eclass}")
         # sub_graphs = nx.connected_components(G)

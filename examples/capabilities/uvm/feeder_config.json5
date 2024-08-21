@@ -13,6 +13,7 @@
     "timezone": "EST+5EDT", // REQUIRED
     "metrics_interval": 300, // DEFAULT: 300s, update frequency of the metrics collector
     "random seed": 13, // DEFAULT: 1 - seeds randomizer used in populating the models
+    "message_broker": "",   // "" | "helics_msg" | "fncs_msg"
 
     // input files
     "file_residential_meta": './DSOT_residential_metadata.json',
@@ -24,13 +25,13 @@
     // dso
     "state": "VT",
     "county": "Burlington",
-      // weather
+      // weather zone(s) and location(s) needs and should be in sync
     "latitude": 44.78, // DEFAULT: 30.0
     "longitude": -73.21, // DEFAULT: -110.0
     "interpolate": "QUADRATIC",
     "time_zone_offset": -5,
-    "ashrae_zone": "6A",
-    "climate_zone": 2,
+    "ashrae_zone": "6A",  // used in commercial pop
+    "climate_zone": 2,  // used in RECs income pop
     "weather_name": "localWeather", // DEFAULT:localWeather
     "tmyfile": "VT-Burlington_International_Ap.tmy3",  // DEFAULT:AZ-Tucson_International_Ap.tmy3
     "rooftop_pv_rating_MW": 7481.90,
@@ -59,12 +60,11 @@
     "bin_size_threshold": 100,
     "wh_shift": 0,
 
-    // house parameters
-    "message_broker": "",   // "" | "helics_msg" | "fncs_msg"
+    // Power and region to requirements for commercial and residential load parameters
     // "use_feeder": true,
     "use_feeder": false,
     "taxonomy": "R1-12.47-1.glm",
-    // else
+    // else custom configuration
     "region": 2,
     "vll": 12470.0,
     "vln": 7200.0,
@@ -88,7 +88,6 @@
 
     // add defines
     "defines": {
-
     },
 
     "case_type":{"bt": 1, "fl": 1, "ev": 1, "pv": 1},
@@ -99,6 +98,7 @@
     // electric vehicles definitions
     "ev_reserved_soc": 20,
 
+    // solar diction
     "solar": {
         "panel_type": 'SINGLE_CRYSTAL_SILICON',
         "rated_power":  7.5,
@@ -111,15 +111,15 @@
         "SOLAR_POWER_MODEL": "FLATPLATE"
     },
 
-    // player diction
-    "solar_P_player": {
+    // player diction, remove 'no_' from the attribute to used the player
+    "no_solar_P_player": {
         "name": "player",      // class name
         "attr": "P_out_inj",   // attribute being played
         "datatype": "double",  // the data type of the attribute
         "static": false,       // static value if true, data = static value, else data is csv file
         "data": "./DSO_2_5_minute_dist_power.csv"
     },
-    "solar_Q_player": null,
+    "no_solar_Q_player": null,
 
     "electric_cooling_percentage": 90
 }
