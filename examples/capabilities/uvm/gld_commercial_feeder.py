@@ -254,7 +254,6 @@ def add_comm_zones(fdr, bldg, key, mode=None):
 
     if bldg['type'] not in ['large_office', 'ZIPLOAD']:
         bldg_size = bldg['floor_area']
-
         bldg['mtr'] = mtr
         bldg['groupid'] = comm_type  # + '_' + str(loadnum)
 
@@ -453,19 +452,37 @@ def add_comm_zones(fdr, bldg, key, mode=None):
             #               "inverter_efficiency": 1,
             #               "rated_power": '{:.0f}'.format(inv_power),
             #               "generator_mode": solar_inv_mode,
-            #               "four_quadrant_control_mode": solar_inv_mode,
-            #               "P_Out": f"{fdr.config.solar_P_player['attr']}.value * {pv_scaling_factor}" }
-            #     if fdr.config.solar_Q_player:
-            #         params["Q_Out"] = f"{fdr.config.solar_Q_player['attr']}value * 0.0"
-            #     else:
-            #         params["Q_Out"] = "0"
-            #     # Instead of solar object, write a fake V_in and I_in sufficient high so
-            #     # that it doesn't limit the player output
-            #     params["V_In"] = "10000000"
-            #     params["I_In"] = "10000000"
+            #               "four_quadrant_control_mode": solar_inv_mode}
+            #
+            #     if "solar_P_player" in fdr.config.keys:
+            #         params["P_Out"] = f"{fdr.config.solar_P_player['attr']}.value * {pv_scaling_factor}"
+            #         if "solar_Q_player" in fdr.config.attr:
+            #             params["Q_Out"] = f"{fdr.config.solar_Q_player['attr']}.value * 0.0"
+            #         else:
+            #             params["Q_Out"] = "0"
+            #         # Instead of solar object, write a fake V_in and I_in sufficient high so
+            #         # that it doesn't limit the player output
+            #         params["V_In"] = "10000000"
+            #         params["I_In"] = "10000000"
+            #
             #     glm.add_object("inverter", sol_i_name, params)
             #     glm.add_metrics_collector(sol_i_name, "inverter")
-
+            #
+            #     if ("solar" in fdr.config.keys and
+            #             not "solar_P_player" in fdr.config.keys):
+            #         params = {
+            #             "parent": sol_i_name,
+            #             "panel_type": 'SINGLE_CRYSTAL_SILICON',
+            #             # "area": '{:.2f}'.format(panel_area),
+            #             "rated_power": fdr.config.solar["rated_power"],
+            #             "tilt_angle": fdr.config.solar["tilt_angle"],
+            #             "efficiency": fdr.config.solar["efficiency"],
+            #             "shading_factor": fdr.config.solar["shading_factor"],
+            #             "orientation_azimuth": fdr.config.solar["orientation_azimuth"],
+            #             "orientation": "FIXED_AXIS",
+            #             "SOLAR_TILT_MODEL": "SOLPOS",
+            #             "SOLAR_POWER_MODEL": "FLATPLATE"}
+            #         glm.add_object("solar", solname, params)
         if np.random.uniform(0, 1) <= fdr.config.ev_percentage:
             # first lets select an ev model:
             ev_name = ev_metadata.selectEVmodel(ev_metadata.sale_probability, np.random.uniform(0, 1))
@@ -487,9 +504,9 @@ def add_comm_zones(fdr, bldg, key, mode=None):
             # few sanity checks
             if drive_sch['daily_miles'] > ev_range:
                 raise UserWarning('daily travel miles for EV can not be more than range of the vehicle!')
-            if not is_hhmm_valid(drive_sch['home_arr_time']) or \
-                    not is_hhmm_valid(drive_sch['home_leave_time']) or \
-                    not is_hhmm_valid(drive_sch['work_arr_time']):
+            if (not is_hhmm_valid(drive_sch['home_arr_time']) or
+                not is_hhmm_valid(drive_sch['home_leave_time']) or
+                not is_hhmm_valid(drive_sch['work_arr_time'])):
                 raise UserWarning('invalid HHMM format of driving time!')
             if (drive_sch['home_duration'] > 24 * 3600 or drive_sch['home_duration'] < 0 or
                     drive_sch['work_duration'] > 24 * 3600 or drive_sch['work_duration'] < 0):
@@ -668,9 +685,9 @@ def add_one_commercial_zone(glm, bldg, mode=None):
     """ Write one pre-configured commercial zone as a house
 
     Args:
-       bldg: dictionary of GridLAB-D house and zipload attributes
-       op (file): open file to write to
-       mode (str): if in 'test' mode will not write out parent info.
+        glm:
+        bldg: dictionary of GridLAB-D house and zipload attributes
+        mode (str): if in 'test' mode will not write out parent info.
     """
     # Have to wait until the add comment method is added to the modifier class
     #    print('//  type', bldg['type'] + ';', file=op)
@@ -710,7 +727,7 @@ def add_one_commercial_zone(glm, bldg, mode=None):
         params["parent"] = bldg['mtr']
 
     # Internal gains need to be converted from kW to BTU-hr.
-    #  GLD uses the term window_sharing to assign 'glazing_shgc'
+    # GLD uses the term window_sharing to assign 'glazing_shgc'
     glm.add_object("house", bldg['zonename'], params)
     glm.add_metrics_collector(bldg['zonename'], "house")
 
