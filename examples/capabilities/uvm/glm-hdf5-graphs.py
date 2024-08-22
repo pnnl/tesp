@@ -49,6 +49,7 @@ class GraphGLMH5:
     """
     def get_ev_dataset(self):
         try:
+            print(list(self.h5_data.keys()))
             self.h5_data_set = self.h5_data["index1"]
             print(type(self.h5_data_set))
             print(list(self.h5_data["Metadata"]))
@@ -68,23 +69,23 @@ class GraphGLMH5:
     def get_total_avg_data(self, file_path):
         self.read_h5_file(file_path)
         self.get_ev_dataset()
-        for item in self.h5_data_set:
-            self.h5_hours.append(item[0])
-        self.h5_unique_times = np.unique(self.h5_hours)
-        for hour_val in self.h5_unique_times:
-            total_soc = 0
-            total_charge = 0
-            for data_array in self.h5_data_set:
-                if data_array[0] == hour_val:
-                    total_soc += data_array[3]
-                    total_charge += data_array[6]
-            self.h5_soc_avg.append(total_soc)
-            self.h5_charge_avg.append(total_charge)
-            self.h5_unique_hours.append(hour_val / 60 / 60)
-        self.h5_soc_max = np.max(self.h5_soc_avg)
-        print(self.h5_soc_max)
-        self.h5_charge_max = np.max(self.h5_charge_avg)
-        print(self.h5_charge_max)
+        indexed_time = -999
+        total_soc = 0
+        total_charge = 0
+        first_time = True
+        hour_val = indexed_time
+        for data_array in self.h5_data_set:
+            if data_array[0] != indexed_time:
+                self.h5_soc_avg.append(total_soc)
+                self.h5_charge_avg.append(total_charge)
+                self.h5_unique_hours.append(indexed_time / 60 / 60)
+                total_soc = 0
+                total_charge = 0
+                indexed_time = data_array[0]
+            total_soc += data_array[3]
+            total_charge += data_array[6]
+            print(indexed_time / 60 /60)
+
 
 
     """plot_charge_totals generates matplotlib graph for total average charging power across all evs
