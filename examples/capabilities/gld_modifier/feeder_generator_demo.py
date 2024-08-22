@@ -16,6 +16,7 @@ import pprint
 import os
 import sys
 import networkx as nx
+import json
 
 from tesp_support.api.modify_GLM import GLMModifier
 from tesp_support.api.data import feeders_path
@@ -58,7 +59,12 @@ def _auto_run(args):
     if not success:
         print('{feeder_path}} not found or file not supported; exiting')
 
-    
+    if hasattr(args, 'coords_file'): 
+        coords_file_path = os.path.join(feeders_path, args.coords_file)
+        with open(coords_file_path) as fp:
+            pos_data = json.load(fp)
+            
+            
     # Check to see if residential module is in the model now. If not, add it in.
     # The residential module is needed to simulate houses in GridLAB-D.
     if len(glmMod.model.module_entities["residential"].instances) == 0:
@@ -91,6 +97,10 @@ def _auto_run(args):
             print(f"\tNumber of triplex meters before adding one: {num_tp_meters}")
             print(f"\tAdding triplex_meter {billing_meter_name} to model.")
         glmMod.add_object("triplex_meter", billing_meter_name, meter_params)
+        # Adding a new position element for the newly created billing meter
+        if hasattr(args, 'coords_file'): 
+            pos_data[billing_meter_name] = pos_data[new_name]
+    
         if house_num == 0:
             num_tp_meters = len(glmMod.glm.triplex_meter)
             print(f"\tNumber of triplex meters after adding one: {num_tp_meters}")
@@ -105,7 +115,10 @@ def _auto_run(args):
         # Returns a dictionary of the object we just added;
         # in this case I don't do anything with that dictionary.
         house_meter = glmMod.add_object("triplex_meter", house_meter_name, meter_params)
-
+        # Adding a new position element for the newly created house_meter
+        if hasattr(args, 'coords_file'): 
+            pos_data[house_meter_name] = pos_data[billing_meter_name]
+        
         # Add house object as a child of the house meter
         house_name = f"house_{house_num}"
 
@@ -133,7 +146,11 @@ def _auto_run(args):
             "cooling_COP": 4.5 + house_num,
         }
         house_obj = glmMod.add_object("house", house_name, house_params)
-        # Can also modify the object parameters like this after the object has been created.
+        # Adding a new position element for the newly created house
+        if hasattr(args, 'coords_file'): 
+            pos_data[house_name] = pos_data[new_name]
+    
+    # Can also modify the object parameters like this after the object has been created.
         if house_num == 0:
             print("\nDemonstrating editing of object properties after adding them "
                 "to the GridLAB-D model.")
@@ -296,11 +313,12 @@ def _auto_run(args):
     # isn't really the feeder head fuse.
     # And that's what you get for making assumptions.
     # https://emac.berkeley.edu/gridlabd/taxonomy_graphs/R1-12.47-1.pdf )
-    print(f"\tIncreasing fuse size by an arbitrary 10%")
-    fuse_obj = glm.fuse[feeder_head_fuse]
-    print(f'\t\tOld fuse current limit: {fuse_obj["current_limit"]} A')
-    fuse_obj["current_limit"] = float(fuse_obj["current_limit"]) * 1.1
-    print(f'\t\tNew fuse current limit: {fuse_obj["current_limit"]} A')
+    if len(glm.fuse) > 0:
+        print(f"\tIncreasing fuse size by an arbitrary 10%")
+        fuse_obj = glm.fuse[feeder_head_fuse]
+        print(f'\t\tOld fuse current limit: {fuse_obj["current_limit"]} A')
+        fuse_obj["current_limit"] = float(fuse_obj["current_limit"]) * 1.1
+        print(f'\t\tNew fuse current limit: {fuse_obj["current_limit"]} A')
 
     max_transformer_power = 0
     max_transformer_name = ""
@@ -320,7 +338,7 @@ def _auto_run(args):
 
     # Use networkx to plot graph of model for exploration
     print("\nPlotting image of model; this will take a minute.")
-    glmMod.model.plot_model()
+    glmMod.model.plot_model(pos_data)
     glmMod.write_model(args.output_file)
 
 
@@ -341,11 +359,17 @@ def demo():
     parser.add_argument('-n',
                         '--feeder_file',
                         nargs='?',
-                        default='R1-12.47-1.glm')
+                        default='South_D1_Alburgh_mod_tesp_reduced.glm')
+    
+    parser.add_argument('-c',
+                        '--coords_file',
+                        nargs='?',
+                        default='South_D1_Alburgh_mod_tesp_pos.json')
+    
     parser.add_argument('-o',
                         '--output_file',
                         nargs='?',
-                        default='modified_R1-12.47-1.glm')
+                        default='South_D1_Alburgh_mod_tesp_reduced_mod.glm')
     _args = parser.parse_args()
     _auto_run(_args)
 

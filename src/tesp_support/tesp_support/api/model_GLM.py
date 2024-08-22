@@ -909,7 +909,7 @@ class GLModel:
                         print('orphaned node', t, o)
         return G
 
-    def plot_model(self, node_labels=False, edge_labels=False, node_legend=True, edge_legend=True):
+    def plot_model(self, pos=None, node_labels=False, edge_labels=False, node_legend=True, edge_legend=True):
 
         def update_annot(ind):
             _node_idx = ind["ind"][0]
@@ -977,7 +977,8 @@ class GLModel:
 
         # Draw
         fig, ax = plt.subplots(num=(self.root + " network"))
-        pos = nx.kamada_kawai_layout(G)
+        if pos is None: ## If no coordinate data is provided
+            pos = nx.kamada_kawai_layout(G)
         n1 = nx.draw_networkx_nodes(G, pos, ax=ax, node_size=20, node_color=nc)
         e1 = nx.draw_networkx_edges(G, pos, ax=ax, edge_color=ec)
         if node_labels:
