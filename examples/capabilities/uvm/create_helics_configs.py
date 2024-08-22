@@ -33,6 +33,7 @@ import json
 import copy
 
 from tesp_support.api.modify_GLM import GLMModifier
+from tesp_support.api.model_GLM import GLModel
 from tesp_support.api.data import feeders_path
 
 # Setting up logging
@@ -66,45 +67,138 @@ def _open_file(file_path: str, type='r'):
     else:
         return fh
 
-def _auto_run(args):
-     # ****** Make (most hard-coded) runner and write out to file **********
+def add_helics_obj(glmMod: GLMModifier, 
+                   gld_config_path: str, 
+                   glm_out_path: str) -> None:
+    """Adds the HELICS message object to the model and writes out  
+   the new model to file.
+
+    Template of the helics message object to be added:
+    
+    object helics_msg {
+        name gld;
+        configure gld_config.json;
+
+    Args:
+        glmMod (GLMModifier): Modifier object for the model being modifed
+        gld_config_path (str): Path (including file name) to the HELICS  
+        config file relative to the location of the GridLAB-D model. This 
+        is where GridLAB-D will look for the information it uses to configure  
+        itself for co-simulation using this model.
+        glm_out_path (str): Path (including file name) where the modified
+        GridLAB-D model will be written out.
+    
+    Returns:
+        None
+    """
+     
+    params = {"configure": gld_config_path}
+    glmMod.add_object("helics_msg", "gld", params)
+    glmMod.write_model(glm_out_path)
+
+def make_helics_runner(feeder_file_name: str, 
+                       runner_config_file_path: str) -> None:
+    """Creates the HELICS runner configuration JSON and writes it out to
+    the indicated file.
+
+    Args:
+        feeder_file_name (str): Path (including the file name)to the 
+        GridLAB-D model to be runin the co-simulation relative to the 
+        location of the HELICS runner file.
+        runner_config_file_path (str): Path (including file name) 
+        relative to this script where the HELICS runner config JSON 
+        should be written.
+
+    Returns: None
+
+    Raises:
+        ValueError: Raised if writing out the runner configuration JSON fails
+        for any reason.
+    """
     federates = [
-        {
-            "directory": ".",
-            "exec": "python -u UVM_EV_charge_manager.py",
-            "host": "localhost",
-            "name": "EV charger manager"
-        },
-        {
-            "directory": ".",
-            "exec": f"gridlabd {args.feeder_file}",
-            "host": "localhost",
-            "name": "gld"
-        }
+    {
+        "directory": ".",
+        "exec": "python -u UVM_EV_charge_manager.py",
+        "host": "localhost",
+        "name": "EV charger manager"
+    },
+    {
+        "directory": ".",
+        "exec": f"gridlabd {feeder_file_name}",
+        "host": "localhost",
+        "name": "gld"
+    }
     ]
     runner = {
         "name": "UVM EV HELICS Demo",
         "broker": True,
-        "federate": federates
+        "federates": federates
     }
-    runner_fh = _open_file(args.runner_config, 'w')
+    runner_fh = _open_file(runner_config_file_path, 'w')
     try:
         json.dump(runner, runner_fh, indent=2)
-        logger.debug(f"Wrote runner config file {args.runner_config}")
+        logger.debug(f"Wrote runner config file {runner_config_file_path}")
     except:
-        raise ValueError(f"Unable to export runner dictionary to JSON file {args.runner_config}")
+        raise ValueError(f"Unable to export runner dictionary to JSON file {runner_config_file_path}")
 
 
+def write_out_helics_configs(gld_helics_config: dict, 
+                             gld_helic_config_path: str,
+                             charge_manager_helics_config:dict,
+                             charge_manager_config_path: str) -> None:
+    """Writes out the HELICS configuration files for GridLAB-D and the EV
+    charge manager Python script.
 
-    # ********* Make HELICS config JSONs for the two federates ************
+    Args:
+        gld_helics_config (dict): Dictionary of GridLAB-D configuration
+        to be written out as a HELICS JSON configuration file
+        gld_helic_config_path (str): Path (including file name) where the 
+        GridLAB-D HELICS federate configuration JSON will be written.
+        charge_manager_helics_config (dict): Dictionary of EV charge manager
+        configuration to be written out as a HELICS JSON configuration file
+        charge_manaer_config_path (str): Path (including file name) where the 
+        EV charge manager HELICS federate configuration JSON will be written.
+        
+    Returns:
+        None
+
+    Raises:
+        ValueError: Raised if GridLAB-D HELICS configuration JSON file
+        fails to be written
+        ValueError: Raised if Gthe EV charge manager HELICS configuration 
+        JSON file fails to be written
+    """
+    gld_config_fh = _open_file(gld_helic_config_path, 'w')
+    try:
+        json.dump(gld_helics_config, gld_config_fh, indent=2)
+        logger.debug(f"Wrote GridLAB-D HELICS config file {gld_helics_config}")
+    except:
+        raise ValueError(f"Unable to export runner dictionary to JSON file {gld_helics_config}")
+    
+    ev_charge_config_fh = _open_file(charge_manager_config_path, 'w')
+    try:
+        json.dump(charge_manager_helics_config, ev_charge_config_fh, indent=2)
+        logger.debug(f"Wrote EV charge manager HELICS config file {charge_manager_helics_config}")
+    except:
+        raise ValueError(f"Unable to export runner dictionary to JSON file {charge_manager_helics_config}")
+
+
+def make_helics_configs(glm:GLModel, 
+                       gld_config_out_file:str, 
+                       charge_manager_config_out_file:str) -> None:
+    """Defines the HELICS configuration files for the GridLAB-D and EV charge
+    manager federates based on the names of the "evcharger_det" objects in the
+    GridLAB-D model file. See this files docstring for details on the message
+    exchanges between the federates.
+
+    Args:
+        glm (GLModel): _description_
+        gld_helics_config (str): _description_
+        charge_manager_helics_config (str): _description_
+    """
     gld_fed_name = "gld"
     ev_charge_fed_name = "ev_charge_manager"
 
-    # Set up data object and read in file
-    glmMod = GLMModifier()
-    glm, success = glmMod.read_model(args.feeder_file)
-    if not success:
-        raise ValueError('Failed to parse GridLAB-D model file.')
 
     # Dictionaries for storing configuration
     gld_config = {
@@ -129,8 +223,6 @@ def _auto_run(args):
     pub_template = {
       "global": True,
       "key": None,
-      "type": "double",
-      "unit": None,
       "required": True
     }
     sub_template = {
@@ -148,32 +240,41 @@ def _auto_run(args):
         # Add GridLAB-D SOC publication
         gld_pub_soc = copy.deepcopy(pub_template)
         gld_pub_soc["key"] = f"{gld_fed_name}/{ev_obj_name}/battery_SOC"
+        gld_pub_soc["type"] = "double"
         gld_pub_soc["unit"] = "W"
+        gld_pub_soc["info"] = {"object": ev_obj_name, "property": "battery_SOC"}
         gld_soc_pubs.append(gld_pub_soc)
 
         # Add GridLAB-D location publication
         gld_pub_location = copy.deepcopy(pub_template)
         gld_pub_location["key"] = f"{gld_fed_name}/{ev_obj_name}/vehicle_location"
+        gld_pub_location["type"] = "string"
+        gld_pub_location["info"] = {"object": ev_obj_name, "property": "vehicle_location"}
         gld_location_pubs.append(gld_pub_location)
 
         # Add GridLAB-D charging power subscription
         gld_sub_charging_power = copy.deepcopy(sub_template)
         gld_sub_charging_power["key"] = f"{ev_charge_fed_name}/{ev_obj_name}/maximum_charge_rate"
+        gld_sub_charging_power["type"] = "double"
+        gld_sub_charging_power["info"] = {"object": ev_obj_name, "property": "maximum_charge_rate"}
         gld_config["subscriptions"].append(gld_sub_charging_power)
 
         # Add EV charge manager SOC subscription
         ev_charge_sub_soc = copy.deepcopy(sub_template)
         ev_charge_sub_soc["key"] = f"{gld_fed_name}/{ev_obj_name}/battery_SOC"
+        ev_charge_sub_soc["type"] = "double"
         ev_charge_soc_subs.append(ev_charge_sub_soc)
 
         # Add EV charge manager location subscription
         ev_charge_sub_location = copy.deepcopy(sub_template)
         ev_charge_sub_location["key"] = f"{gld_fed_name}/{ev_obj_name}/vehicle_location"
+        ev_charge_sub_location["type"] = "string"
         ev_charge_location_subs.append(ev_charge_sub_location)
 
         # Add EV charge manager charging power publication
         ev_charge_pub_charging_power = copy.deepcopy(pub_template)
         ev_charge_pub_charging_power["key"] = f"{ev_charge_fed_name}/{ev_obj_name}/maximum_charge_rate"
+        ev_charge_pub_charging_power["type"] = "double"
         charge_manager_config["publications"].append(ev_charge_pub_charging_power)
 
         logger.debug(f"Added pubs and subs for EV {ev_obj_name}")
@@ -182,27 +283,28 @@ def _auto_run(args):
     # This makes writing the code in the ev_charge_manager slightly eaiser
     # as the index of the pubs and subs depends on the order they appear
     # in the HELICS config file.
-    gld_config["publications"].append(gld_soc_pubs + gld_location_pubs)
-    charge_manager_config["subscriptions"].append(ev_charge_soc_subs + ev_charge_location_subs)
+    gld_config["publications"] = gld_soc_pubs + gld_location_pubs
+    charge_manager_config["subscriptions"] = ev_charge_soc_subs + ev_charge_location_subs
     
+    write_out_helics_configs(gld_config,
+                             gld_config_out_file, 
+                             charge_manager_config,
+                             charge_manager_config_out_file)
 
-    # Write out configuration JSONs
-    gld_config_fh = _open_file(args.gld_helics_config, 'w')
-    try:
-        json.dump(gld_config, gld_config_fh, indent=2)
-        logger.debug(f"Wrote GridLAB-D HELICS config file {args.gld_helics_config}")
-    except:
-        raise ValueError(f"Unable to export runner dictionary to JSON file {args.gld_helics_config}")
+
+def _auto_run(args):
+    # Set up data object and read in file
+    glmMod = GLMModifier()
+    glm, success = glmMod.read_model(args.feeder_file_in)
+    if not success:
+        raise ValueError('Failed to parse GridLAB-D model file.')
+
+    add_helics_obj(glmMod, args.gld_config_out_file, args.feeder_file_out)
+    make_helics_runner(args.feeder_file_out, args.runner_config)
+    make_helics_configs(glm,
+                        args.gld_config_out_file, 
+                        args.charge_manager_config_out_file),
     
-    ev_charge_config_fh = _open_file(args.charge_manager_helics_config, 'w')
-    try:
-        json.dump(charge_manager_config, ev_charge_config_fh, indent=2)
-        logger.debug(f"Wrote EV charge manager HELICS config file {args.charge_manager_helics_config}")
-    except:
-        raise ValueError(f"Unable to export runner dictionary to JSON file {args.charge_manager_helics_config}")
-
-
-
 
 
 
@@ -212,26 +314,30 @@ if __name__ == "__main__":
     # be sent to the console as well. Thus, when bad things happen
     # the user will get an error message in both places which,
     # hopefully, will aid in troubleshooting.
-    fileHandle = logging.FileHandler("feeder_generator.log", mode="w")
+    fileHandle = logging.FileHandler("create_helics_configs.log", mode="w")
     fileHandle.setLevel(logging.DEBUG)
     streamHandle = logging.StreamHandler(sys.stdout)
     streamHandle.setLevel(logging.ERROR)
     logging.basicConfig(level=logging.DEBUG, handlers=[fileHandle, streamHandle])
 
-    parser = argparse.ArgumentParser(description="GridLAB-D Feeder Generator")
+    parser = argparse.ArgumentParser(description="Creates HELICS configurations")
     # script_path = os.path.dirname(os.path.realpath(__file__))
-    parser.add_argument('-n',
-                        '--feeder_file',
+    parser.add_argument('-i',
+                        '--feeder_file_in',
                         nargs='?',
-                        default='South_D1_Alburgh_mod_tesp_v3_populated.glm')
+                        default='South_D1_Alburgh_mod_tesp_v4_populated.glm')
+    parser.add_argument('-o',
+                        '--feeder_file_out',
+                        nargs='?',
+                        default='South_D1_Alburgh_mod_tesp_v4_populated_helics.glm')
     parser.add_argument('-og',
-                        '--gld_helics_config',
+                        '--gld_config_out_file',
                         nargs='?',
                         default='gld_config.json')
     parser.add_argument('-oc',
-                        '--charge_manager_helics_config',
+                        '--charge_manager_config_out_file',
                         nargs='?',
-                        default='charge_manager_congfig.json')
+                        default='charge_manager_config.json')
     parser.add_argument('-or',
                         '--runner_config',
                         nargs='?',
