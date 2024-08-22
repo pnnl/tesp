@@ -1043,6 +1043,7 @@ class Residential_Build:
                           "charging_efficiency": ev_charge_eff}
                 self.glm.add_object("evcharger_det", evname, params)
                 # self.glm.add_metrics_collector(evname, "evchargerdet")
+                self.glm.add_collector("class=evcharger_det", "sum(actual_charge_rate)", "EV_charging_total.csv")
                 self.glm.add_group_recorder("class=evcharger_det", "actual_charge_rate", "EV_charging_power.csv")
                 self.glm.add_group_recorder("class=evcharger_det", "battery_SOC", "EV_SOC.csv")
 
