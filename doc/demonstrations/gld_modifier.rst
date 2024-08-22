@@ -93,12 +93,12 @@ Now that we have a billing meter, we can add a house object. It is good practice
         "cooling_system_type": "ELECTRIC"
     }
 
-This is a very simple house, with the majority of its parameters left to GridLAB-D default values. For a comprehensive look at the house model, check out `house_e.cpp <https://github.com/gridlab-d/gridlab-d/blob/master/residential/house_e.cpp>` 
+This is a very simple house, with the majority of its parameters left to GridLAB-D default values. For a comprehensive look at the house model, check out `house_e.cpp <https://github.com/gridlab-d/gridlab-d/blob/master/residential/house_e.cpp>`_ 
 
 Adding Solar and Storage
 ------------------------
 
-Now that we have a house and a billing meter, we can add solar and storage to it. In order for GridLAB-D to parse the relationship between the house, rooftop solar, and behind-the-meter energy storage correctly, and allow us to individually manage and meter each object, the parent/child hierarchy would be as follows: ::
+Now that we have a house and a billing meter, we can add solar and storage to it. In order for GridLAB-D to parse the relationship between the house, rooftop solar, and behind-the-meter energy storage correctly, and allow us to individually manage and meter each object, the parent/child hierarchy would be as follows: 
 
 * Customer Billing Meter
     * House Meter  
@@ -158,7 +158,7 @@ Note that because the house meter, solar meter, and battery meter all have the s
              	}
     glmMod.add_object('battery', f"{new_name}_battery", battery_params)
 
-These are very simple solar and battery definitions, with the majority of their parameters left to GridLAB-D default values. For a comprehensive look at the solar, battery, and inverter models, check out `solar <https://github.com/gridlab-d/gridlab-d/blob/master/generators/solar.cpp>`, `battery.cpp <https://github.com/gridlab-d/gridlab-d/blob/master/generators/battery.cpp>`, and `inverter.cpp <https://github.com/gridlab-d/gridlab-d/blob/master/generators/inverter.cpp>`. 
+These are very simple solar and battery definitions, with the majority of their parameters left to GridLAB-D default values. For a comprehensive look at the solar, battery, and inverter models, check out `solar <https://github.com/gridlab-d/gridlab-d/blob/master/generators/solar.cpp>`_, `battery.cpp <https://github.com/gridlab-d/gridlab-d/blob/master/generators/battery.cpp>`_, and `inverter.cpp <https://github.com/gridlab-d/gridlab-d/blob/master/generators/inverter.cpp>`_. 
 
 We now have a house attached to a triplex meter, that has both rooftop solar and behind-the-meter energy storage. We can add recorder objects in similar fashion, parented to the object under investigation, to monitor the solar generation (property: measured_real_energy), or the state of charge of the battery (property: state_of_charge), for example. 
 
