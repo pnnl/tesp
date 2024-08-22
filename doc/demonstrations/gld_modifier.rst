@@ -98,7 +98,7 @@ This is a very simple house, with the majority of its parameters left to GridLAB
 Adding Solar and Storage
 ------------------------
 
-Now that we have a house and a billing meter, we can add solar and storage to it. In order for GridLAB-D to parse the relationship between the house, rooftop solar, and behind-the-meter energy storage correctly, and allow us to individually manage and meter each object, the parent/child hierarchy would be as follows: 
+Now that we have a house and a billing meter, we can add solar and storage to it. In order for GridLAB-D to parse the relationship between the house, rooftop solar, and behind-the-meter energy storage correctly, and allow us to individually manage and meter each object, the parent/child hierarchy would be as follows
 
 * Customer Billing Meter
     * House Meter  
