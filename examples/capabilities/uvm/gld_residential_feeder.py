@@ -984,7 +984,6 @@ class Residential_Build:
 
         if np.random.uniform(0, 1) <= ev_percentage_il:
             # first lets select an ev model:
-            #ev_name = Electric_Vehicle.selectEVmodel(self, self.config.ev_metadata['sale_probability'], np.random.uniform(0, 1))
             ev_name = Electric_Vehicle.selectEVmodel(self.config.ev_metadata.sale_probability, np.random.uniform(0, 1))
             ev_range = self.config.ev_metadata.Range_miles[ev_name]
             ev_mileage = self.config.ev_metadata.Miles_per_kWh[ev_name]
@@ -1000,8 +999,6 @@ class Residential_Build:
             # now, let's map a random driving schedule with this vehicle ensuring daily miles
             # doesn't exceed the vehicle range and home duration is enough to charge the vehicle
             drive_sch = self.config.ev_metadata.match_driving_schedule(ev_range, ev_mileage, ev_max_charge)
-            # ['daily_miles','home_arr_time','home_duration','work_arr_time','work_duration']
-
             # Should be able to turn off ev entirely using ev_percentage, definitely in debugging
             if self.config.case_type['ev']:  # evs are populated when its pvCase i.e. high renewable case
                 # few sanity checks
@@ -1034,6 +1031,7 @@ class Residential_Build:
                           "charging_efficiency": ev_charge_eff}
                 self.glm.add_object("evcharger_det", evname, params)
                 # self.glm.add_metrics_collector(evname, "evchargerdet")
+                self.glm.add_collector("class=evcharger_det", "sum(actual_charge_rate)", "EV_charging_total.csv")
                 self.glm.add_group_recorder("class=evcharger_det", "actual_charge_rate", "EV_charging_power.csv")
                 self.glm.add_group_recorder("class=evcharger_det", "battery_SOC", "EV_SOC.csv")
 
