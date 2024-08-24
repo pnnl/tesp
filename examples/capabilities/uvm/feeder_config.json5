@@ -3,13 +3,13 @@
 
 {
     // general
-    "in_file_glm": "South_D1_Alburgh_mod_tesp_v2.glm", // the input feeder model. If None, taxonomy feeder used
-    "out_file_glm": "test.glm", // REQUIRED: the output populated feeder
+    "in_file_glm": "South_D1_Alburgh_mod_tesp_v4.glm", // the input feeder model. If None, taxonomy feeder used
+    "out_file_glm": "South_D1_Alburgh_mod_tesp_v4_populated.glm", // REQUIRED: the output populated feeder
     "case_name": "MyCase", // REQUIRED: a name for your case
     "substation_name": "MySub", // REQUIRED: a name for the substation
-    "starttime": "2023-01-01 00:00:00", // REQUIRED: format "2023-01-01 00:00:00"
-    "stoptime": "2023-01-01 01:00:00", // REQUIRED: format "2023-01-02 00:00:00"
-    "timestep": 60, // REQUIRED: in seconds
+    "starttime": "2023-01-01 07:00:00", // REQUIRED: format "2023-01-01 00:00:00"
+    "stoptime": "2023-01-02 07:00:00", // REQUIRED: format "2023-01-02 00:00:00"
+    "timestep": 300, // REQUIRED: in seconds
     "timezone": "EST+5EDT", // REQUIRED
     "metrics_interval": 300, // DEFAULT: 300s, update frequency of the metrics collector
     "random seed": 13, // DEFAULT: 1 - seeds randomizer used in populating the models
@@ -68,8 +68,9 @@
     "region": 2,
     "vll": 12470.0,
     "vln": 7200.0,
-    "avg_house": 4500.0, // Average house size, Todo: what unit in kVA?
-    "avg_commercial": 30000.0, // Average commercial bldg size, Todo: what unit in kVA
+    "avg_house": 4500.0, // Average house size, in kVA
+    "avg_commercial": 30000.0, // Averate commercial bldg size, in kVA
+    "water_heater_model": "TWONODE", // MULTILAYER, TWONODE
 
     // add schedules
     "includes": [
@@ -80,7 +81,7 @@
 
     // add sets
     "sets": {
-        "minimum_timestep": 60,
+        "minimum_timestep": 300,
         "relax_naming_rules": 1,
         "warn": 0
     },
@@ -90,9 +91,9 @@
     },
 
     "case_type":{"bt": 1, "fl": 1, "ev": 1, "pv": 1},
-    "solar_percentage": 11,
-    "storage_percentage": 3,
-    "ev_percentage": 8,
+    "solar_percentage": 0,
+    "storage_percentage": 0,
+    "ev_percentage": 10,
 
     // electric vehicles definitions
     "ev_reserved_soc": 20,

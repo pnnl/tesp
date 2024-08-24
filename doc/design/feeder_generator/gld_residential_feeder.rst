@@ -11,9 +11,9 @@ Pre-req: Get Required Data Files
 
 Before using gld_residential_feeder.py, we need the required metadata. Start by downloading the supporting data that is not stored in the repository due to its size and static nature. This will add a “data” folder alongside the existing “code” folder from the repository. ::
 
-    cd tesp/repository/tesp/examples/analysis/dsot/code`
+    cd tesp/repository/tesp/examples/analysis/dsot/code
 
-    ./dsotData.sh`
+    ./dsotData.sh
 
 Config
 ~~~~~~
@@ -21,7 +21,7 @@ Config
 Feeder Configuration
 --------------------
 
-The feeder_config.json5 file contains the required configurations read in by the ``Config`` class and used by the rest of gld_residential_feeder.py. The config file is organized into sections for readability.::
+The feeder_config.json5 file contains the required configurations read in by the ``Config`` class and used by the rest of gld_residential_feeder.py. The config file is organized into sections for readability.
 
 - general: contains the basic requirements to build the .glm, such as input and output file names, and simulation time information. Much of this information is used by the ``preamble`` function to add the required .glm modules.
 - input files: contains the file paths to the required metadata for the ``Residential_Build``, ``Commercial_Build``, ``Battery``, ``Electric_Vehicle``, and ``Solar`` classes. 
