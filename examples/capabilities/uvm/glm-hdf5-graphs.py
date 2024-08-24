@@ -47,12 +47,12 @@ class GraphGLMH5:
     Returns:
         (boolean): True if successful and False if unable to read the file
     """
-    def get_ev_dataset(self):
+    def get_ev_dataset(self, index_name):
         try:
-            print(list(self.h5_data.keys()))
-            self.h5_data_set = self.h5_data["index1"]
-            print(type(self.h5_data_set))
-            print(list(self.h5_data["Metadata"]))
+            # print(list(self.h5_data.keys()))
+            self.h5_data_set = self.h5_data[index_name]
+            # print(type(self.h5_data_set))
+            # print(list(self.h5_data["Metadata"]))
             return True
         except:
             return False
@@ -68,24 +68,35 @@ class GraphGLMH5:
     """
     def get_total_avg_data(self, file_path):
         self.read_h5_file(file_path)
-        self.get_ev_dataset()
-        indexed_time = -999
+        key_list = list(self.h5_data.keys())
+        tlist = list()
+        indexed_time = 0
         total_soc = 0
         total_charge = 0
-        first_time = True
-        hour_val = indexed_time
-        for data_array in self.h5_data_set:
-            if data_array[0] != indexed_time:
-                self.h5_soc_avg.append(total_soc)
-                self.h5_charge_avg.append(total_charge)
-                self.h5_unique_hours.append(indexed_time / 60 / 60)
-                total_soc = 0
-                total_charge = 0
-                indexed_time = data_array[0]
-            total_soc += data_array[3]
-            total_charge += data_array[6]
-            print(indexed_time / 60 /60)
-
+        for i in range(1,len(key_list)):
+            print(key_list[i])
+            tlist = list()
+            self.get_ev_dataset(key_list[i])
+            for j in range(len(self.h5_data_set)):
+                data_array= self.h5_data_set[j]
+                if j == 0:
+                    indexed_time =data_array[0]
+                    total_soc = 0
+                    total_charge = 0
+                if indexed_time != data_array[0]:
+                    indexed_time = data_array[0]
+                    self.h5_unique_times.append(indexed_time)
+                    self.h5_soc_avg.append(total_soc)
+                    self.h5_charge_avg.append(total_charge)
+                    self.h5_unique_hours.append(indexed_time / 3600)
+                    total_soc = 0
+                    total_charge = 0
+                else:
+                    total_soc += data_array[3]
+                    total_charge += data_array[6]
+            print(self.h5_unique_hours)
+            print(self.h5_soc_avg)
+            print(self.h5_charge_avg)
 
 
     """plot_charge_totals generates matplotlib graph for total average charging power across all evs
