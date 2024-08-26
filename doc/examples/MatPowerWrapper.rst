@@ -1,14 +1,10 @@
 ..
     _ Copyright (c) 2021-2023 Battelle Memorial Institute
-    _ file: Consensus_Usecase.rst
+    _ file: MatPowerWrapper.rst
 
-Consensus-based Transactive Communities - Example and Documents
+MatPower Wrapper - Example and Documents
 ===============================================================
 
-This section links to models and design documents for a Consensus-based Transactive Communities use-case
-that PNNL has been developing as part of the HELICS+ use-cases (4.1) in FY21. Most of this material will be incorporated
-into the main TESP documentation as the described models and agents
-are fully integrated with the platform. No technical support can be provided for material
-referenced from this section, outside of the DSO+T study team.
+This section links to models and design documents for MatPower Wrapper. This is a suite of functions to be used with MatPower in order to facilitate transmission-level market simulations, incorporating the HELICS+ platform to allow for studies on the effects of interactions between distribuition-level actors and the greater market. 
 
 
