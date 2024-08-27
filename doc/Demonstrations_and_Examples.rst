@@ -56,3 +56,4 @@ TESP Example Analysis
     ./examples/SGIP1_Example
     ./examples/DSOT_Study
     ./examples/Consensus_Usecase
+    ./examples/MatPowerWrapper
