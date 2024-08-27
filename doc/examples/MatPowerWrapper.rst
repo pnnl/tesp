@@ -32,6 +32,7 @@ The "storage_config.json" file allows for user-defined storage elements to be ad
 
 Day-Ahead Market
 ----------------
+
 * get_DAM_bids_from_wrapper: 
 * get_DA_forecast: 
 * create_DAM_profile: 
@@ -39,15 +40,18 @@ Day-Ahead Market
 
 Real-Time Market
 ----------------
+
 * get_RTM_bids_from_wrapper: 
 * run_RT_market: 
 
 Power Flow
 ----------
+
 * run_power_flow: 
 
 HELICS Interfaces
 -----------------
+
 * prepare_helics_config: 
 * start_helics_federate: 
 * get_storage_from_helics: 
