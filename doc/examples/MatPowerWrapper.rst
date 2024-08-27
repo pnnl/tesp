@@ -7,6 +7,7 @@ MatPower Wrapper - Example and Documents
 
 This work presents wrapper-based interfaces to integrate industry modeling tools targeted to specific functions within co-simulation (co-sim). These interfaces leverage MATPOWER-MOST, developed to minimize the barrier for simulating wholesale market operations and thereby facilitate comprehensive evaluation of candidate DER coordination schemes for providing grid services.  The  wrapper presented herein contains several programming language functions (PLFs) that encapsulate the complex formatting and coordination requirements between market processes and organizes the co-sim-based information exchange with other platforms working in tandem.  The wrapper aims to provide open-source easy-to-use configurable interfaces for researchers and students to  reduce the modeling complexity inherent to market operations while maintaining detailed emulation of the system. The wrapper-based interfaces are implemented on an 8-bus test system representing ERCOT to demonstrate its capabilities to model wholesale market operations and evaluate the impact of flexible resources such as DERs.This tool utilizes the existing open-source tool, Matpower, which is compatible with both MatLab and Octave. Hereafter, references to MatLab can be considered to also apply to Octave unless explicitly stated.
 It is assumed that a user for this tool has already installed:
+
 * Matpower
 * MOST
 * HELICS
