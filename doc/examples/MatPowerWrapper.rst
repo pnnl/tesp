@@ -19,7 +19,7 @@ Wrapper Architecture
 The wrapper itself contains functions to facilitate day-ahead (DA) and real-time (RT) market emulations as well as power flow emulations and functions to help interact with the co-simulation platform HELICS. These components are outlined in Figure :numref:`fig_wrapper_architecture`. 
 
 .. _fig_wrapper_architecture:
-.. figure:: ../media/matpower_wrapper/wrapper_architecture.pdf
+.. figure:: ../media/matpower_wrapper/wrapper_architecture.png
 	:name: wrapper_architecture
 
 	High-level wrapper architecture diagram
