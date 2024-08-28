@@ -4,6 +4,8 @@
 import os
 import math
 import json
+import bisect
+import csv as csv
 import logging as log
 import numpy as np
 import pandas as pd
@@ -34,6 +36,37 @@ def make_generator_plants(ppc, renewables):
 
 @bench_profile
 def tso_psst_loop(casename):
+
+    def open_ldcurve(file):
+        first = True
+        with open(file, "r") as f:
+            csv_reader = csv.reader(f)
+            for m_row in csv_reader:
+                if first:
+                    first = False
+                    continue
+                rd_curve.append(float(m_row[0]))
+                rd_adder.append(float(m_row[1]))
+            rd_curve.reverse()
+            rd_adder.reverse()
+
+    def rob_and_don(generation):
+        adder = 0
+        if r_and_d:
+            generation = generation * 1000   # convert VA to KVA
+            i1 = bisect.bisect_left(rd_curve, generation)
+            if i1:
+                if generation - rd_curve[i1] < 0.0001:
+                    adder = rd_adder[i1]
+                else:
+                    percent = (generation - rd_curve[i1]) / (rd_curve[i1+1] - rd_curve[i1])
+                    adder = ((rd_adder[i1+1] - rd_adder[i1]) * percent) + rd_adder[i1+1]
+            else:
+                if generation > rd_curve[-1]:
+                    adder = rd_adder[-1]
+                else:
+                    adder = rd_adder[0]
+        return adder
 
     def getSub(subIndex):
         try:
@@ -114,6 +147,20 @@ def tso_psst_loop(casename):
             else:
                 log.critical('ERROR - No DA starting point')
                 exit()
+
+        # rob and don adder if used
+        adder = [0 for _ in range(hours_in_a_day)]
+        generation = [0 for _ in range(hours_in_a_day)]
+        if r_and_d:
+            for g in dispatch:
+                row = dispatch[g]
+                for ii in range(hours_in_a_day):
+                    generation[ii] += row[ii]
+            for ii in range(hours_in_a_day):
+                adder[ii] = rob_and_don(generation[ii])
+                log.info(f"generation: {generation[ii]}, adder: {adder[ii]}")
+                for jj in range(dsoBus.shape[0]):
+                    DA_LMPs[jj][ii] += adder[ii]
 
         for ii in range(dsoBus.shape[0]):
             pub = getPub('lmp_da_' + str(ii + 1))
@@ -219,7 +266,7 @@ def tso_psst_loop(casename):
                     row[18], row[19], row[20], row[21], row[22], row[23]
                 )
 
-        return status, uc_df, dispatch, DA_LMPs
+        return adder, status, uc_df, dispatch, DA_LMPs
 
     def scedRTM(data, uc_df):
         c, ZonalDataComplete, priceSenLoadData = pst.read_model(data.strip("'"))
@@ -288,11 +335,9 @@ def tso_psst_loop(casename):
                 log.critical('ERROR - No RT starting point')
                 exit()
 
-        # set the lmps and generator dispatch and publish
-        for ii in range(bus.shape[0]):
-            pub = getPub('lmp_rt_' + str(ii + 1))  # publishing $/kwh
-            helics.helicsPublicationPublishString(pub, json.dumps(RT_LMPs[ii]))
-            bus[ii, 13] = RT_LMPs[ii][0]
+        # set the lmps and generator dispatch and publish LMP
+        adder = 0.0
+        generation = 0.0
         for ii in range(numGen):
             # if using gridpiq to gauge environmental emission concerns
             if piq and day > 1:
@@ -300,9 +345,23 @@ def tso_psst_loop(casename):
             if genFuel[ii][0] not in renewables:
                 name = "GenCo" + str(ii + 1)
                 gen[ii, 1] = dispatch[name][0]
+                generation += gen[ii, 1]
             # else:
                 # dispatch for renewables i.e. curtail
                 # gen[ii, 1] this was set in rt_curtail_renewables()
+
+        if r_and_d:
+            adder = rob_and_don(generation)
+            log.debug(f"generation: {generation}, adder: {adder}")
+            if adder > 0:
+                for ii in range(total_bus_num):
+                    for jj in range(TAU):
+                        RT_LMPs[ii][jj] = RT_LMPs[ii][jj] + adder
+
+        for ii in range(bus.shape[0]):
+            pub = getPub('lmp_rt_' + str(ii + 1))  # publishing $/kwh
+            helics.helicsPublicationPublishString(pub, json.dumps(RT_LMPs[ii]))
+            bus[ii, 13] = RT_LMPs[ii][0]
 
         # log.debug("RT line power")
         # log.debug(model.results.line_power)
@@ -370,6 +429,7 @@ def tso_psst_loop(casename):
                 row = []
                 for z in range(TAU):
                     row.append(ld)
+
                 pub = getPub('cleared_q_rt_' + str(bus_num))
                 helics.helicsPublicationPublishString(pub, json.dumps(row[0]))
                 rt_q_store.append_data(
@@ -377,8 +437,7 @@ def tso_psst_loop(casename):
                     'rt_q{}'.format(str(bus_num)),
                     row[0]
                 )
-
-        return status, dispatch, RT_LMPs
+        return adder, status, dispatch, RT_LMPs
 
     def write_rtm_schedule(uc_df1):
         data = []
@@ -1206,6 +1265,7 @@ def tso_psst_loop(casename):
             da_status_cnt = 0
             da_run_cnt = 0
             da_percent = 0
+            da_adder = []
             da_schedule = {}
             da_lmps = {}
             da_dispatch = {}
@@ -1215,9 +1275,17 @@ def tso_psst_loop(casename):
             rt_status_cnt = 0
             rt_run_cnt = 0
             rt_percent = 0
+            rt_adder = 0
             rt_schedule = {}
             rt_lmps = {}
             rt_dispatch = {}
+
+
+            rd_curve = []
+            rd_adder = []
+            r_and_d = ppc["RandD"]
+            if r_and_d:
+                open_ldcurve(ppc["LDCurve"])
 
             # listening to message objects key on bus number
             gld_load = {}
@@ -1328,7 +1396,7 @@ def tso_psst_loop(casename):
             line += ", solar" + str(genFuel[i][2])
         else:
             line += ", gas" + str(genFuel[i][2])
-    line += ", TotRenGen, TotRenGenHr, TotalGLDLoad, DALoad, DAGen, DAGen+TotRenGenHR, Percent, Status"
+    line += ", TotRenGen, TotRenGenHr, TotalGLDLoad, DALoad, DAGen, DAGen+TotRenGenHR, Percent, Status, Adder"
 
     op = open(os.path.join(output_Path, 'opf.csv'), 'w')
     vp = open(os.path.join(output_Path, 'pf.csv'), 'w')
@@ -1489,14 +1557,15 @@ def tso_psst_loop(casename):
 
                 psst_case = os.path.join(output_Path, file_time + "dam.dat")
                 write_psst_file(psst_case, True, da_gen, da_genCost, da_genFuel, da_numGen)
-                da_status, da_schedule, da_dispatch, da_lmps = scucDAM(psst_case)
+                da_adder, da_status, da_schedule, da_dispatch, da_lmps = scucDAM(psst_case)
                 da_run_cnt += 1
                 if da_status:
                     da_status_cnt += 1
                 da_percent = da_status_cnt / da_run_cnt
                 log.info("DA Status: " + str(da_status))
-                log.info("DA Percent Status: " + str(da_percent))
-                log.info("DA LMPs: \n" + str(print_time) + str(da_lmps))
+                log.info("   Percent Status: " + str(da_percent))
+                log.info("   Surcharge: " + str(da_adder))
+                log.info("   LMPs: \n" + str(print_time) + str(da_lmps))
                 log.debug("DA Gen dispatches: \n" + str(da_dispatch))
                 log.debug("DA Unit Schedule:\n" + str(da_schedule))
 
@@ -1572,14 +1641,15 @@ def tso_psst_loop(casename):
                 # Run the real time and publish the LMP
                 psst_case = os.path.join(output_Path, file_time + "rtm.dat")
                 write_psst_file(psst_case, False, gen, genCost, genFuel, numGen)
-                rt_status, rt_dispatch, rt_lmps = scedRTM(psst_case, rt_schedule)
+                rt_adder, rt_status, rt_dispatch, rt_lmps = scedRTM(psst_case, rt_schedule)
                 rt_run_cnt += 1
                 if rt_status:
                     rt_status_cnt += 1
                 rt_percent = rt_status_cnt / rt_run_cnt
                 log.info("RT Status: " + str(rt_status))
-                log.info("RT Percent Status: " + str(rt_percent))
-                log.info("RT LMPs: \n" + str(print_time) + str(rt_lmps))
+                log.info("   Percent Status: " + str(rt_percent))
+                log.info("   Surcharge: " + str(rt_adder))
+                log.info("   LMPs: \n" + str(print_time) + str(rt_lmps))
                 log.debug("RT Gen dispatches: \n" + str(rt_dispatch))
                 log.debug("RT Unit Schedule:\n" + str(rt_schedule))
 
@@ -1637,6 +1707,7 @@ def tso_psst_loop(casename):
             # TotRenGenHR
             line += '{: .2f}'.format(da_sum + sum_hr) + ','
             line += '{: .2f}'.format(rt_percent) + ', ' + str(rt_status)
+            line += '{: .2f}'.format(rt_adder) + ', ' + str(rt_adder)
 
             print(line, sep=', ', file=op, flush=True)
 
@@ -1867,7 +1938,6 @@ def tso_psst_loop(casename):
     vp.close()
     log.info('finalizing HELICS tso federate')
     helics.helicsFederateDestroy(hFed)
-
 
 if __name__ == "__main__":
     tso_psst_loop('./generate_case_config')
