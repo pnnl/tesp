@@ -158,7 +158,7 @@ def tso_psst_loop(casename):
                     generation[ii] += row[ii]
             for ii in range(hours_in_a_day):
                 adder[ii] = rob_and_don(generation[ii])
-                log.info(f"generation: {generation[ii]}, adder: {adder[ii]}")
+                log.debug(f"generation: {generation[ii]}, adder: {adder[ii]}")
                 for jj in range(dsoBus.shape[0]):
                     DA_LMPs[jj][ii] += adder[ii]
 
