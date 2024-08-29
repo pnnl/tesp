@@ -19,7 +19,7 @@ Wrapper Architecture
 The wrapper itself contains functions to facilitate day-ahead (DA) and real-time (RT) market emulations as well as power flow emulations and functions to help interact with the co-simulation platform HELICS. These components are outlined in Figure :numref:`fig_wrapper_architecture`. 
 
 .. _fig_wrapper_architecture:
-.. figure:: ../media/matpower_wrapper/wrapper_architecture.pdf
+.. figure:: ../media/matpower_wrapper/wrapper_architecture.png
 	:name: wrapper_architecture
 
 	High-level wrapper architecture diagram
@@ -39,31 +39,31 @@ The "storage_config.json" file allows for user-defined storage elements to be ad
 Day-Ahead Market
 ----------------
 
-* get_DAM_bids_from_wrapper: 
-* get_DA_forecast: 
-* create_DAM_profile: 
+* get_DAM_bids_from_wrapper: Used when not relying on co-simulation for DA generator bids. Bids are taken from local files.
+* get_DA_forecast: Forecasted load values for the next day are taken from local files.
+* create_DAM_profile: Combines the load forecasts with any other profiles to compile a DA profile before running the "most" function.
 
 
 Real-Time Market
 ----------------
 
-* get_RTM_bids_from_wrapper: 
-* run_RT_market: 
+* get_RTM_bids_from_wrapper: Used when not relying on co-simulation for RT generator bids. Bids are taken from local files.
+* run_RT_market: Runs a RT market with the current wrapper configuration.
 
 Power Flow
 ----------
 
-* run_power_flow: 
+* run_power_flow: Runsa power flow with the current wrapper configuration.
 
 HELICS Interfaces
 -----------------
 
-* prepare_helics_config: 
-* start_helics_federate: 
-* get_storage_from_helics: 
-* get_loads_from_helics: 
-* send_voltages_to_helics: 
-* get_RTM_bids_from_helics: 
-* get_DAM_bids_from_helics: 
-* send_DA_allocations_to_helics: 
-* send_RTM_allocations_to_helics: 
+* prepare_helics_config: Creates the "helics_config.json" file based on your settings in other configuration files.
+* start_helics_federate: Beings the federate, allowing communication through HELICS to begin.
+* get_storage_from_helics: Reads in storage specs from the co-simulation rather than using the values defined in storage_config.json.
+* get_loads_from_helics: Receives updated load information for the current time for the defined co-simulation bus(es) as defined in wrapper_config.json.
+* send_voltages_to_helics: Sends cleared voltages for the defined co-simulation bus(es) from the last power flow. 
+* get_RTM_bids_from_helics: Receives generator bids for the real-time market sent from HELICS.
+* get_DAM_bids_from_helics: Receives generator bids for the day-ahead market sent from HELICS.
+* send_DA_allocations_to_helics: Sends the generator allocations from the last day-ahead market to HELICS.
+* send_RTM_allocations_to_helics: Sends the generator allocations from the last real-time market to HELICS.
