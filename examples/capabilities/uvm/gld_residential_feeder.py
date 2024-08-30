@@ -1768,7 +1768,9 @@ class Feeder:
             if not success:
                 exit()
         else:
-            glm.read_model(config.in_file_glm)
+            i_glm, success = glm.read_model(config.in_file_glm)
+            if not success:
+                exit()
 
         config.preamble()
 

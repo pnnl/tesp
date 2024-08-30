@@ -506,7 +506,9 @@ class GLMModifier:
 
     
     def add_group_recorder(self, group: str, property_name: str, file: str) -> None:
-        """Adds a GridLAB-D group recorder object to the GLModel object
+        """Adds a GridLAB-D group recorder object to the GLModel object. Group
+        recorders collect data on one property and present that as a table where
+        each column is that value from each of the object instances.
 
         Args:
             group (str): GridLAB-D group name that the recorder is associated with
@@ -525,7 +527,10 @@ class GLMModifier:
 
     
     def add_collector(self, group: str, property_name: str, file: str) -> None:
-        """Adds a GridLAB-D collector object to the GLModel object
+        """Adds a GridLAB-D collector object to the GLModel object. Collectors 
+        take data on one property and perform an aggregation operation on it 
+        (e.g. max, min, average) to present a single value for the whole group 
+        and put it into a single column.
 
         Args:
             group (str): GridLAB-D group name that the recorder is associated with
