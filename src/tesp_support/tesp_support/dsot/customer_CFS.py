@@ -15,7 +15,8 @@ import tesp_support.dsot.dso_helper_functions as dso_helper
 def customer_CFS(GLD_metadata,
                  metadata_path,
                  customer,
-                 customer_bill):
+                 customer_bill,
+                 rate_scenario):
     with open(os.path.join(metadata_path, 'metadata-general.json')) as json_file:
         metadata_gen = json.load(json_file)
     metadata_general = metadata_gen["general"]
@@ -175,8 +176,12 @@ def customer_CFS(GLD_metadata,
                             metadata_thermostat['marginal_installation_time_hrs'] *
                             Average_Hourly_Labor_Cost_maintenance_repair +
                             metadata_thermostat['marginal_installation_capital']))
-
-        Bills = customer_bill['BillsFix']['TotalFix'] + customer_bill['BillsTransactive']['TotalDyn']
+        if rate_scenario == "flat":
+            Bills = customer_bill['BillsFix']['TotalFix']
+        elif rate_scenario == "time-of-use":
+            Bills = customer_bill['BillsFix']['TotalFix'] + customer_bill['BillsTOU']['TotalTOU']
+        elif rate_scenario == "dsot":
+            Bills = customer_bill['BillsFix']['TotalFix'] + customer_bill['BillsTransactive']['TotalDyn']
         # fed_corporate_income_tax = metadata['general']['fed_corporate_income_tax']
         # state_income_tax = metadata['general']['state_income_tax']
         # Depreciation = 0 # Please retain this field in the Customer CFS but
@@ -240,13 +245,7 @@ def customer_CFS(GLD_metadata,
         ConnChargesFix = customer_bill['BillsFix']['ConnChargesFix']
         BillsFix = customer_bill['BillsFix']['TotalFix']
 
-        PurchasesDyn = dso_helper.returnDictSum(customer_bill['BillsTransactive']['PurchasesDyn'])
-        DAEnergy = customer_bill['BillsTransactive']['PurchasesDyn']['DAEnergy']
-        RTEnergy = customer_bill['BillsTransactive']['PurchasesDyn']['RTEnergy']
-        DistCharges = customer_bill['BillsTransactive']['DistCharges']
-        ConnChargesDyn = customer_bill['BillsTransactive']['ConnChargesDyn']
-        BillsTransactive = customer_bill['BillsTransactive']['TotalDyn']
-        Bills = BillsFix + BillsTransactive
+        # Bills = BillsFix + BillsTransactive
         TaxSavings = ElectricityExpense + TaxCredits
         NetEnergyCost = Capital + Expenses - TaxSavings - Revenues
         EnergyPurchased = customer_bill['EnergyQuantity']
@@ -258,11 +257,6 @@ def customer_CFS(GLD_metadata,
             'EnergyFix': EnergyFix,
             'DemandCharges': DemandCharges,
             'ConnChargesFix': ConnChargesFix,
-            'BillsTransactive': BillsTransactive,
-            'DAEnergy': DAEnergy,
-            'RTEnergy': RTEnergy,
-            'DistCharges': DistCharges,
-            'ConnChargesDyn': ConnChargesDyn,
             'Capital': Capital,
             'Investment': Investment,
             'UnitaryHVAC': UnitaryHVAC,
@@ -286,6 +280,39 @@ def customer_CFS(GLD_metadata,
             'BlendedRate': customer_bill['BlendedRate'],
             'EffectiveCostEnergy': EffectiveCostEnergy
         }
+
+        if rate_scenario == "time-of-use":
+            PeakEnergy = customer_bill['BillsTOU']['PurchasesTOU']['EnergyPeak']
+            OffPeakEnergy = customer_bill['BillsTOU']['PurchasesTOU']['EnergyOffPeak']
+            TOUTotalEnergy = customer_bill['BillsTOU']['PurchasesTOU']['EnergyTotal']
+            DemandChargesTOU = customer_bill['BillsTOU']['DemandChargesTOU']
+            ConnChargesTOU = customer_bill['BillsTOU']['ConnChargesTOU']
+            BillsTOU = customer_bill['BillsTOU']['TotalTOU']
+
+            Customer_Cash_Flows_csv = {
+                'BillsTOU': BillsTOU,
+                'PeakEnergy': PeakEnergy,
+                'OffPeakEnergy': OffPeakEnergy,
+                'TOUTotalEnergy': TOUTotalEnergy,
+                'DemandChargesTOU': DemandChargesTOU,
+                'ConnChargesTOU': ConnChargesTOU
+            }
+
+        elif rate_scenario == "dsot":
+            PurchasesDyn = dso_helper.returnDictSum(customer_bill['BillsTransactive']['PurchasesDyn'])
+            DAEnergy = customer_bill['BillsTransactive']['PurchasesDyn']['DAEnergy']
+            RTEnergy = customer_bill['BillsTransactive']['PurchasesDyn']['RTEnergy']
+            DistCharges = customer_bill['BillsTransactive']['DistCharges']
+            ConnChargesDyn = customer_bill['BillsTransactive']['ConnChargesDyn']
+            BillsTransactive = customer_bill['BillsTransactive']['TotalDyn']
+
+            Customer_Cash_Flows_csv = {
+                'BillsTransactive': BillsTransactive,
+                'DAEnergy': DAEnergy,
+                'RTEnergy': RTEnergy,
+                'DistCharges': DistCharges,
+                'ConnChargesDyn': ConnChargesDyn
+            }
 
         return Customer_Cash_Flows_dict, Customer_Cash_Flows_csv
 
