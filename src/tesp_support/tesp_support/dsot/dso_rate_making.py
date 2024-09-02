@@ -1756,6 +1756,16 @@ def calculate_tariff_prices(
 
     # Determine the months under consideration
     months = list(meter_df.columns[~meter_df.columns.str.contains("sum")])
+    # TODO: Remove column renaming once consistent month names are implemented earlier in rate-making code.
+    monthsdict = {}
+
+    for i in range(len(months)):
+        monthsdict[months[i]] = months[i][:3]
+        months[i] = months[i][:3]
+
+    meter_df.rename(columns=monthsdict, inplace=True)
+    energy_sum_df.rename(columns=monthsdict, inplace=True)
+    trans_df.rename(columns=monthsdict, inplace=True)
 
     # Specify price components that do not vary in time or by consumer type
     fixed_charge = tariff["DSO_" + dso_num]["base_connection_charge"]
