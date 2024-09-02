@@ -1766,7 +1766,7 @@ def load_duration_plot(dso, system, subsystem, variable, day, case, comp, agent_
     plt.xlabel('Duration (%)', size=12)
     plt.xlim(0, 100)
     plt.ylabel(variable, size=12)
-    plt.grid(b=True, which='major', color='k', linestyle='-')
+    plt.grid(visible=True, which='major', color='k', linestyle='-')
     plt.minorticks_on()
 
     plot_filename = datetime.now().strftime(
@@ -3024,7 +3024,7 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
     plt.xlim(0, 100)
     plt.ylabel('$/Mw-hr', size=label_size)
     plt.yscale('log')
-    plt.grid(b=True, which='both', color='k', linestyle=':')
+    plt.grid(visible=True, which='both', color='k', linestyle=':')
     plt.minorticks_on()
     ax = plt.gca()
     ax.tick_params(axis='both', which='major', labelsize=17)
@@ -3090,7 +3090,7 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
     plt.xlim(0, 100)
     plt.ylabel('$/Mw-hr', size=label_size)
     plt.yscale('log')
-    plt.grid(b=True, which='both', color='k', linestyle=':')
+    plt.grid(visible=True, which='both', color='k', linestyle=':')
     plt.minorticks_on()
     ax = plt.gca()
     ax.tick_params(axis='both', which='major', labelsize=17)
@@ -3151,7 +3151,7 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
     plt.xlim(0, 100)
     plt.ylabel('$/Mw-hr', size=label_size)
     plt.yscale('log')
-    plt.grid(b=True, which='both', color='k', linestyle=':')
+    plt.grid(visible=True, which='both', color='k', linestyle=':')
     plt.minorticks_on()
     ax = plt.gca()
     ax.tick_params(axis='both', which='major', labelsize=17)
@@ -3207,7 +3207,7 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
     plt.xlim(0, 100)
     plt.ylabel('$/Mw-hr', size=label_size)
     plt.yscale('log')
-    plt.grid(b=True, which='both', color='k', linestyle=':')
+    plt.grid(visible=True, which='both', color='k', linestyle=':')
     plt.minorticks_on()
     ax = plt.gca()
     ax.tick_params(axis='both', which='major', labelsize=17)
@@ -3262,7 +3262,7 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
     plt.xlim(0, 100)
     plt.ylabel('$/Mw-hr', size=label_size)
     plt.yscale('log')
-    plt.grid(b=True, which='both', color='k', linestyle=':')
+    plt.grid(visible=True, which='both', color='k', linestyle=':')
     plt.minorticks_on()
     ax = plt.gca()
     ax.tick_params(axis='both', which='major', labelsize=17)
@@ -5597,7 +5597,7 @@ def run_plots():
         plt.xlabel('Duration (%)', size=12)
         plt.xlim(0, 100)
         plt.ylabel('Wind Power', size=12)
-        plt.grid(b=True, which='major', color='k', linestyle='-')
+        plt.grid(visible=True, which='major', color='k', linestyle='-')
         plt.minorticks_on()
 
         plot_filename = datetime.now().strftime(
@@ -5768,7 +5768,7 @@ def run_plots():
         plt.xlim(0, 100)
         plt.ylabel('$/Mw-hr', size=12)
         plt.yscale('log')
-        plt.grid(b=True, which='both', color='k', linestyle=':')
+        plt.grid(visible=True, which='both', color='k', linestyle=':')
         plt.minorticks_on()
 
         plot_filename = datetime.now().strftime(
