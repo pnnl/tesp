@@ -3975,44 +3975,80 @@ def DSO_rate_making(
     return DSO_Cash_Flows, DSO_Revenues_and_Energy_Sales, tariff, surplus
 
 
-def get_cust_bill(cust, bill_df, bill_metadata, energy_df):
+def get_cust_bill(cust, bill_df, bill_metadata, energy_df, rate_scenario):
     """ Populates dictionary of individual customer's annual bill.
     Args:
         cust (str): customer name (meter name from GLD dictionary)
         bill_df (dataframe): dataframe of annual and monthly customer bills
         bill_metadata (dict): dictionary of GLD metadata including tarrif and building type for each meter
-        energy_df:
+        energy_df
+        rate_scenario (str): A str specifying the rate scenario under investigation: flat,
+        time-of-use, subscription, or transactive. If None, this function defaults to DSO+T.
     Returns:
         customer_annual_bill (dict): dictionary of customers annual energy bill
         """
 
+    # TODO: Generalize this format - e.g. average rate - inclusion of transactive and subscription etc...
+
     customer_annual_bill = {
         'BillsFix': {
             'PurchasesFix': {
-                'EnergyFix': bill_df.loc[(cust, 'fix_energy'), 'sum'],
-                'DemandCharges': bill_df.loc[(cust, 'demand'), 'sum']
+                'EnergyFix': bill_df.loc[(cust, 'flat_energy_charge'), 'sum'],
+                'DemandCharges': bill_df.loc[(cust, 'flat_demand_charge'), 'sum']
             },
-            'ConnChargesFix': bill_df.loc[(cust, 'fix_connect'), 'sum'],
-            'TotalFix': bill_df.loc[(cust, 'fix_total'), 'sum']
+            'ConnChargesFix': bill_df.loc[(cust, 'flat_fixed_charge'), 'sum'],
+            'TotalFix': bill_df.loc[(cust, 'flat_total_charge'), 'sum']
         },
-        'BillsTransactive': {
-            'PurchasesDyn': {
-                'DAEnergy': bill_df.loc[(cust, 'DA_energy'), 'sum'],
-                'RTEnergy': bill_df.loc[(cust, 'RT_energy'), 'sum']
-            },
-            'DistCharges': bill_df.loc[(cust, 'distribution'), 'sum'],
-            'ConnChargesDyn': bill_df.loc[(cust, 'trans_connect'), 'sum'],
-            'TotalDyn': bill_df.loc[(cust, 'trans_total'), 'sum'],
-        },
-        'EnergyQuantity': bill_df.loc[(cust, 'quantity_purchased'), 'sum'],
+        'EnergyQuantity': bill_df.loc[(cust, 'flat_energy_purchased'), 'sum'],
         'MaxLoad': energy_df.loc[(cust, 'max_kw'), 'sum'],
         'LoadFactor': energy_df.loc[(cust, 'load_factor'), 'sum'],
-        'BlendedRate': bill_df.loc[(cust, 'blended_rate'), 'sum'],
+        'BlendedRate': bill_df.loc[(cust, 'flat_average_price'), 'sum'],
+        'RateDesign': rate_scenario,
         'CustomerType': {
             'BuildingType': bill_metadata['billingmeters'][cust]['building_type'],
-            'TariffClass': bill_metadata['billingmeters'][cust]['tariff_class']
+            'TariffClass': bill_metadata['billingmeters'][cust]['tariff_class'],
+
         }
     }
+
+    if rate_scenario == "time-of-use":
+        customer_annual_bill.update({
+            'BillsTOU': {
+                'PurchasesTOU': {
+                    'EnergyTotal': bill_df.loc[(cust, 'tou_energy_charge'), 'sum'],
+                    'EnergyPeak': bill_df.loc[(cust, 'tou_peak_energy_charge'), 'sum'],
+                    'EnergyOffPeak': bill_df.loc[(cust, 'tou_off-peak_energy_charge'), 'sum']
+                },
+                'DemandChargesTOU': bill_df.loc[(cust, 'tou_demand_charge'), 'sum'],
+                'ConnChargesTOU': bill_df.loc[(cust, 'tou_fixed_charge'), 'sum'],
+                'TotalTOU': bill_df.loc[(cust, 'tou_total_charge'), 'sum'],
+            },
+            'BlendedRate': bill_df.loc[(cust, 'flat_average_price'), 'sum'] +
+                           bill_df.loc[(cust, 'tou_average_price'), 'sum'],
+            'EnergyQuantity': bill_df.loc[(cust, 'flat_energy_purchased'), 'sum'] +
+                              bill_df.loc[(cust, 'tou_energy_purchased'), 'sum']
+        })
+
+    # elif rate_scenario == "subscription":
+    #
+    # elif rate_scenario == "transactive":
+
+    elif rate_scenario == "dsot":
+        customer_annual_bill.update({
+            'BillsTransactive': {
+                'PurchasesDyn': {
+                    'DAEnergy': bill_df.loc[(cust, 'dsot_DA_energy_charge'), 'sum'],
+                    'RTEnergy': bill_df.loc[(cust, 'dsot_RT_energy_charge'), 'sum']
+                },
+                'DistCharges': bill_df.loc[(cust, 'dsot_volumetric_charge'), 'sum'],
+                'ConnChargesDyn': bill_df.loc[(cust, 'dsot_fixed_charge'), 'sum'],
+                'TotalDyn': bill_df.loc[(cust, 'dsot_total_charge'), 'sum'],
+            },
+            'BlendedRate': bill_df.loc[(cust, 'flat_average_price'), 'sum'] +
+                           bill_df.loc[(cust, 'dsot_average_price'), 'sum'],
+            'EnergyQuantity': bill_df.loc[(cust, 'flat_energy_purchased'), 'sum'] + bill_df.loc[
+                (cust, 'dsot_energy_purchased'), 'sum']
+        })
 
     return customer_annual_bill
 
