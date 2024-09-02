@@ -401,23 +401,23 @@ def dso_CFS(
                 for c in ["Res", "Comm", "Ind"]
             )
         elif rate_scenario == "dsot":
-            RetailDAEnergy = sum(
-                DSO_Revenues_and_Energy_Sales["RetailSales"]["DSOTSales" + c][
-                    "RetailDAEnergy" + c
+            RetailEnergy = sum(
+                DSO_Revenues_and_Energy_Sales["RetailSales"]['DSOTSales']["DSOTSales" + c][
+                    "DSOTEnergySales" + c
                 ]
                 for c in ["Res", "Comm", "Ind"]
             )
-            RetailRTEnergy = sum(
-                DSO_Revenues_and_Energy_Sales["RetailSales"]["DSOTSales" + c][
-                    "RetailRTEnergy" + c
-                ]
-                for c in ["Res", "Comm", "Ind"]
-            )
+            # RetailRTEnergy = sum(
+            #     DSO_Revenues_and_Energy_Sales["RetailSales"]['DSOTSales']["DSOTSales" + c][
+            #         "DSORTEnergySales" + c
+            #     ]
+            #     for c in ["Res", "Comm", "Ind"]
+            # )
         else:
-            RetailDAEnergy = 0
-            RetailRTEnergy = 0
+            RetailEnergy = 0
 
-    TransactFees = metadata_general['dso_transaction_fee_per_KWh'] * (RetailDAEnergy + RetailRTEnergy) / 1000 * 1000
+    # TransactFees = metadata_general['dso_transaction_fee_per_KWh'] * (RetailDAEnergy + RetailRTEnergy) / 1000 * 1000
+    TransactFees = metadata_general['dso_transaction_fee_per_KWh'] * RetailEnergy / 1000 * 1000
 
     EnergySold = DSO_Revenues_and_Energy_Sales['EnergySold']
 
