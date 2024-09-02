@@ -2565,12 +2565,10 @@ def dso_load_stats(dso_range, month_list, data_path, metadata_path, plot=False):
 
 
 def non_participating_dso_loads(dso_range, case, metadata_path):
-    """For a specified dso range and list of month path information this function will load in the required data,
-    and summarize DSO LMPs versus loads for all months, and plot comparisons.
+    """For a specified dso range case, and metadata path information this function will load in the required data
+    (ERCOT load profiles for non-participating DSOS).
     Arguments:
-        month_list (list): list of lists.  Each sub list has month name (str), directory path (str)
-        output_path (str): path of the location where output (plots, csv) should be saved
-        renew_forecast_file (str): path and name of ercot renewable generation forecast csv file
+        case (str): path where the annual case lives
         dso_range (list): List of DSOs that are being modeled in the system
     Returns:
         saves dso load comparison plots to file
@@ -2733,7 +2731,7 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
 
     # Create summary comparison plots of simulation LMP versus actual data.
     stats = True
-
+    # TODO: Add default mode that does not compare to real data
     ERCOTDApricerange = pd.read_hdf(data_path + '/ERCOT_LMP.h5', key='DADeltaLMP_data', mode='r')
     ERCOTDAPrices = pd.read_hdf(data_path + '/ERCOT_LMP.h5', key='DALMP_data', mode='r')
 
@@ -2929,16 +2927,16 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
 
     range_rt_lmp_comparison_df = rt_lmps_daily_df[[' LMP' + dso_num, 'Month']]
     range_rt_lmp_comparison_df.rename(columns={' LMP' + dso_num: 'RT LMP'}, inplace=True)
-    # range_rt_lmp_comparison_df['RT LMP STD'] = rt_lmps_daily_df['stdev']
+    range_rt_lmp_comparison_df['RT LMP STD'] = rt_lmps_daily_df['stdev']
     range_rt_lmp_comparison_df['Case'] = 'DSO+T'
     range_rt_ERCOTcompare_df = ERCOTRTpricerange[['Houston $_mwh', 'Month']]
     range_rt_ERCOTcompare_df['Case'] = 'ERCOT'
-    # range_rt_ERCOTcompare_df['RT LMP STD'] = ERCOTRTpricerange['stdev']
+    range_rt_ERCOTcompare_df['RT LMP STD'] = ERCOTRTpricerange['stdev']
     range_rt_ERCOTcompare_df.rename(columns={'Houston $_mwh': 'RT LMP'}, inplace=True)
     range_rt_PJMcompare_df = PJMRTpricerange[['total_lmp_rt', 'Month']]
     range_rt_PJMcompare_df['Case'] = 'PJM'
     range_rt_PJMcompare_df.rename(columns={'total_lmp_rt': 'RT LMP'}, inplace=True)
-    # range_rt_PJMcompare_df['RT LMP STD'] = PJMRTpricerange['stdev']
+    range_rt_PJMcompare_df['RT LMP STD'] = PJMRTpricerange['stdev']
     range_rt_lmp_comparison_df = pd.concat(
         [range_rt_PJMcompare_df, range_rt_ERCOTcompare_df, range_rt_lmp_comparison_df])
 
@@ -3290,96 +3288,96 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
     month_to_plot = month_list[month_index]
     date = datetime.strptime(month_to_plot, "%Y-%m")
     month = datetime.date(date).strftime('%B')
+    # TODO: Debug this - ERCOT RT call crashing
+    # plt.figure(figsize=(11, 10))
+    # plt.scatter(ERCOTDAPrices.loc[month_to_plot, 'ERCOT Net Load'],
+    #             ERCOTDAPrices.loc[month_to_plot, place + ' $_mwh'], label='ERCOT DA LMP', marker='o',
+    #             linestyle='-', alpha=0.8)
+    # plt.scatter(ERCOTRTPrices.loc[month_to_plot, 'ERCOT Net Load'],
+    #             ERCOTRTPrices.loc[month_to_plot, place + ' $_mwh'], label='ERCOT RT LMP', marker='o',
+    #             linestyle='-', alpha=0.5)
+    # plt.scatter(rt_lmps_df.loc[month_to_plot, 'NetLoad'],
+    #             rt_lmps_df.loc[month_to_plot, ' LMP' + dso_num], label='DSO+T RT LMP', marker='o',
+    #             linestyle='-', alpha=0.5)
+    # plt.scatter(da_lmps_df.loc[month_to_plot, 'NetLoad'],
+    #             da_lmps_df.loc[month_to_plot, 'da_lmp' + dso_num], label='DSO+T DA LMP', marker='o',
+    #             linestyle='-', alpha=0.5)
+    # # axes[1].set_title(month + ' - Daily Delta Load')
+    # plt.legend(loc='upper left', fontsize=17)
+    # plt.ylabel('$/MW-hr', size=17)
+    # plt.xlabel('Net Load (MW)', size=17)
+    # ax = plt.gca()
+    # ax.tick_params(axis='both', which='major', labelsize=17)
+    #
+    # plot_filename = datetime.now().strftime(
+    #     '%Y%m%d') + ' ' + place + '_ERCOT_LMP_vs_netload' + month + '.png'
+    # file_path_fig = os.path.join(data_path, 'plots', plot_filename)
+    # plt.savefig(file_path_fig, bbox_inches='tight')
+    #
+    # plt.ylim(top=80, bottom=0)
+    # plot_filename = datetime.now().strftime(
+    #     '%Y%m%d') + ' ' + place + '_ERCOT_LMP_vs_netload' + month + '_focused.png'
+    # file_path_fig = os.path.join(data_path, 'plots', plot_filename)
+    # plt.savefig(file_path_fig, bbox_inches='tight')
 
-    plt.figure(figsize=(11, 10))
-    plt.scatter(ERCOTDAPrices.loc[month_to_plot, 'ERCOT Net Load'],
-                ERCOTDAPrices.loc[month_to_plot, place + ' $_mwh'], label='ERCOT DA LMP', marker='o',
-                linestyle='-', alpha=0.8)
-    plt.scatter(ERCOTRTPrices.loc[month_to_plot, 'ERCOT Net Load'],
-                ERCOTRTPrices.loc[month_to_plot, place + ' $_mwh'], label='ERCOT RT LMP', marker='o',
-                linestyle='-', alpha=0.5)
-    plt.scatter(rt_lmps_df.loc[month_to_plot, 'NetLoad'],
-                rt_lmps_df.loc[month_to_plot, ' LMP' + dso_num], label='DSO+T RT LMP', marker='o',
-                linestyle='-', alpha=0.5)
-    plt.scatter(da_lmps_df.loc[month_to_plot, 'NetLoad'],
-                da_lmps_df.loc[month_to_plot, 'da_lmp' + dso_num], label='DSO+T DA LMP', marker='o',
-                linestyle='-', alpha=0.5)
-    # axes[1].set_title(month + ' - Daily Delta Load')
-    plt.legend(loc='upper left', fontsize=17)
-    plt.ylabel('$/MW-hr', size=17)
-    plt.xlabel('Net Load (MW)', size=17)
-    ax = plt.gca()
-    ax.tick_params(axis='both', which='major', labelsize=17)
-
-    plot_filename = datetime.now().strftime(
-        '%Y%m%d') + ' ' + place + '_ERCOT_LMP_vs_netload' + month + '.png'
-    file_path_fig = os.path.join(data_path, 'plots', plot_filename)
-    plt.savefig(file_path_fig, bbox_inches='tight')
-
-    plt.ylim(top=80, bottom=0)
-    plot_filename = datetime.now().strftime(
-        '%Y%m%d') + ' ' + place + '_ERCOT_LMP_vs_netload' + month + '_focused.png'
-    file_path_fig = os.path.join(data_path, 'plots', plot_filename)
-    plt.savefig(file_path_fig, bbox_inches='tight')
-
-    #  Plot comparison time series
-    start_time = datetime.strptime("2016-08-03 00:00:00", '%Y-%m-%d %H:%M:%S')
-    end_time = datetime.strptime("2016-08-17 00:00:00", '%Y-%m-%d %H:%M:%S')
-
-    place = 'Houston'
-    month_to_plot = month_list[month_index]
-    date = datetime.strptime(month_to_plot, "%Y-%m")
-    month = datetime.date(date).strftime('%B')
-
-    plt.figure(figsize=(11, 8))
-    # name = 'RT LMP'
-    # sns.lineplot(data=lmp_rt_comparison_df, x='Month', y=name, hue='Case', palette=pal)
-    plt.plot(ERCOTRTPrices.loc[start_time:end_time, place + ' $_mwh'], label='ERCOT RT LMP', marker='o',
-             linestyle='-', alpha=0.5)
-    plt.plot(rt_lmps_df.loc[start_time:end_time, ' LMP' + dso_num], label='DSO+T RT LMP', marker='o',
-             linestyle='-', alpha=0.5)
-    # axes[1].set_title(month + ' - Daily Delta Load')
-    plt.legend(loc='upper left', fontsize=20)
-    plt.ylabel('$/MW-hr', size=20)
-    plt.xlabel('Time', size=20)
-    ax = plt.gca()
-    ax.tick_params(axis='both', which='major', labelsize=13)
-
-    plot_filename = datetime.now().strftime(
-        '%Y%m%d') + ' ' + place + '_ERCOT_RT_LMP_vs_time' + month + '.png'
-    file_path_fig = os.path.join(data_path, 'plots', plot_filename)
-    plt.savefig(file_path_fig, bbox_inches='tight')
-
-    plt.ylim(top=80, bottom=0)
-    plot_filename = datetime.now().strftime(
-        '%Y%m%d') + ' ' + place + '_ERCOT_RT_LMP_vs_time' + month + '_focused.png'
-    file_path_fig = os.path.join(data_path, 'plots', plot_filename)
-    plt.savefig(file_path_fig, bbox_inches='tight')
-
-    plt.figure(figsize=(11, 8))
-    # name = 'RT LMP'
-    # sns.lineplot(data=lmp_rt_comparison_df, x='Month', y=name, hue='Case', palette=pal)
-    plt.plot(ERCOTDAPrices.loc[start_time:end_time, place + ' $_mwh'], label='ERCOT DA LMP', marker='o',
-             linestyle='-', alpha=0.5)
-    plt.plot(da_lmps_df.loc[start_time:end_time, 'da_lmp' + dso_num], label='DSO+T DA LMP', marker='o',
-             linestyle='-', alpha=0.5)
-    # axes[1].set_title(month + ' - Daily Delta Load')
-    plt.legend(loc='upper left', fontsize=20)
-    plt.ylabel('$/MW-hr', size=20)
-    plt.xlabel('Time', size=20)
-    ax = plt.gca()
-    ax.tick_params(axis='both', which='major', labelsize=13)
-
-    plot_filename = datetime.now().strftime(
-        '%Y%m%d') + ' ' + place + '_ERCOT_DA_LMP_vs_time' + month + '.png'
-    file_path_fig = os.path.join(data_path, 'plots', plot_filename)
-    plt.savefig(file_path_fig, bbox_inches='tight')
-
-    plt.ylim(top=80, bottom=0)
-    plot_filename = datetime.now().strftime(
-        '%Y%m%d') + ' ' + place + '_ERCOT_DA_LMP_vs_time' + month + '_focused.png'
-    file_path_fig = os.path.join(data_path, 'plots', plot_filename)
-    plt.savefig(file_path_fig, bbox_inches='tight')
+    # #  Plot comparison time series
+    # start_time = datetime.strptime("2016-08-03 00:00:00", '%Y-%m-%d %H:%M:%S')
+    # end_time = datetime.strptime("2016-08-17 00:00:00", '%Y-%m-%d %H:%M:%S')
+    #
+    # place = 'Houston'
+    # month_to_plot = month_list[month_index]
+    # date = datetime.strptime(month_to_plot, "%Y-%m")
+    # month = datetime.date(date).strftime('%B')
+    #
+    # plt.figure(figsize=(11, 8))
+    # # name = 'RT LMP'
+    # # sns.lineplot(data=lmp_rt_comparison_df, x='Month', y=name, hue='Case', palette=pal)
+    # plt.plot(ERCOTRTPrices.loc[start_time:end_time, place + ' $_mwh'], label='ERCOT RT LMP', marker='o',
+    #          linestyle='-', alpha=0.5)
+    # plt.plot(rt_lmps_df.loc[start_time:end_time, ' LMP' + dso_num], label='DSO+T RT LMP', marker='o',
+    #          linestyle='-', alpha=0.5)
+    # # axes[1].set_title(month + ' - Daily Delta Load')
+    # plt.legend(loc='upper left', fontsize=20)
+    # plt.ylabel('$/MW-hr', size=20)
+    # plt.xlabel('Time', size=20)
+    # ax = plt.gca()
+    # ax.tick_params(axis='both', which='major', labelsize=13)
+    #
+    # plot_filename = datetime.now().strftime(
+    #     '%Y%m%d') + ' ' + place + '_ERCOT_RT_LMP_vs_time' + month + '.png'
+    # file_path_fig = os.path.join(data_path, 'plots', plot_filename)
+    # plt.savefig(file_path_fig, bbox_inches='tight')
+    #
+    # plt.ylim(top=80, bottom=0)
+    # plot_filename = datetime.now().strftime(
+    #     '%Y%m%d') + ' ' + place + '_ERCOT_RT_LMP_vs_time' + month + '_focused.png'
+    # file_path_fig = os.path.join(data_path, 'plots', plot_filename)
+    # plt.savefig(file_path_fig, bbox_inches='tight')
+    #
+    # plt.figure(figsize=(11, 8))
+    # # name = 'RT LMP'
+    # # sns.lineplot(data=lmp_rt_comparison_df, x='Month', y=name, hue='Case', palette=pal)
+    # plt.plot(ERCOTDAPrices.loc[start_time:end_time, place + ' $_mwh'], label='ERCOT DA LMP', marker='o',
+    #          linestyle='-', alpha=0.5)
+    # plt.plot(da_lmps_df.loc[start_time:end_time, 'da_lmp' + dso_num], label='DSO+T DA LMP', marker='o',
+    #          linestyle='-', alpha=0.5)
+    # # axes[1].set_title(month + ' - Daily Delta Load')
+    # plt.legend(loc='upper left', fontsize=20)
+    # plt.ylabel('$/MW-hr', size=20)
+    # plt.xlabel('Time', size=20)
+    # ax = plt.gca()
+    # ax.tick_params(axis='both', which='major', labelsize=13)
+    #
+    # plot_filename = datetime.now().strftime(
+    #     '%Y%m%d') + ' ' + place + '_ERCOT_DA_LMP_vs_time' + month + '.png'
+    # file_path_fig = os.path.join(data_path, 'plots', plot_filename)
+    # plt.savefig(file_path_fig, bbox_inches='tight')
+    #
+    # plt.ylim(top=80, bottom=0)
+    # plot_filename = datetime.now().strftime(
+    #     '%Y%m%d') + ' ' + place + '_ERCOT_DA_LMP_vs_time' + month + '_focused.png'
+    # file_path_fig = os.path.join(data_path, 'plots', plot_filename)
+    # plt.savefig(file_path_fig, bbox_inches='tight')
 
 
 def heatmap_plots(dso, system, subsystem, variable, day_range, case, agent_prefix, gld_prefix):
