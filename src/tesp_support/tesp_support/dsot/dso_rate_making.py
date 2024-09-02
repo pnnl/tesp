@@ -1019,7 +1019,7 @@ def calculate_consumer_bills(
         bill_components.append("tou_energy_charge")
         bill_components.extend(
             [
-                "tou_" * k * "_energy_charge"
+                "tou_" + k + "_energy_charge"
                 for k in tou_params["DSO_" + dso_num]["Jan"]["periods"].keys()
             ]
         )
@@ -1028,7 +1028,7 @@ def calculate_consumer_bills(
         bill_components.append("tou_total_charge")
         bill_components.extend(
             [
-                "tou_" * k * "_energy_purchased"
+                "tou_" + k + "_energy_purchased"
                 for k in tou_params["DSO_" + dso_num]["Jan"]["periods"].keys()
             ]
         )
@@ -1039,7 +1039,7 @@ def calculate_consumer_bills(
         bill_components.append("subscription_energy_charge")
         bill_components.extend(
             [
-                "subscription_" * k * "_energy_charge"
+                "subscription_" + k + "_energy_charge"
                 for k in tou_params["DSO_" + dso_num]["Jan"]["periods"].keys()
             ]
         )
@@ -1048,7 +1048,7 @@ def calculate_consumer_bills(
         bill_components.append("subscription_total_charge")
         bill_components.extend(
             [
-                "subscription_" * k * "_energy_purchased"
+                "subscription_" + k + "_energy_purchased"
                 for k in tou_params["DSO_" + dso_num]["Jan"]["periods"].keys()
             ]
         )
@@ -1884,7 +1884,7 @@ def calculate_tariff_prices(
                             * meter_df.loc[(each, k + "_kwh"), m]
                             for m in seasons_dict[s]
                         )
-                        for k in tou_params["DSO_" + dso_num]["periods"].keys()
+                        for k in tou_params["DSO_" + dso_num][m]["periods"].keys()
                     )
 
                     # Specify the demand charge based on the consumer's sector type
@@ -1925,7 +1925,7 @@ def calculate_tariff_prices(
                     * energy_sum_df.loc[("industrial", k + "_kwh"), m]
                     for m in seasons_dict[s]
                 )
-                for k in tou_params["DSO_" + dso_num]["periods"].keys()
+                for k in tou_params["DSO_" + dso_num][m]["periods"].keys()
             )
             rev_demand_charge_tou_i[s] = tariff["DSO_" + dso_num]["industrial"][
                 "demand_charge"
@@ -2682,7 +2682,7 @@ def calculate_tariff_prices(
         total_consumption_trans_rc = 0
         total_consumption_trans_i = 0
         total_consumers_trans_rc = 0
-        total_consumers_trans_i
+        total_consumers_trans_i = 0
         rev_DA_energy_charge_trans_rc = 0
         rev_DA_energy_charge_trans_i = 0
         rev_RT_energy_charge_trans_rc = 0
@@ -3003,15 +3003,15 @@ def calculate_tariff_prices(
                     # Calculate the consumer's market-related charges under the DSO+T 
                     # tariff
                     rev_DA_energy_charge_dsot += (
-                        trans_df.loc[(each, "DA_cost"), m] * trans_retail_scale
+                        trans_df.loc[(each, "DA_cost"), "sum"] * trans_retail_scale
                     )
                     rev_RT_energy_charge_dsot += (
-                        trans_df.loc[(each, "RT_cost"), m] * trans_retail_scale
+                        trans_df.loc[(each, "RT_cost"), "sum"] * trans_retail_scale
                     )
 
                     # Calculate the consumer's volumetric charge under the DSO+T tariff
                     rev_volumetric_charge_dsot += (
-                        meter_df.loc[(each, "kw-hr"), m]
+                        meter_df.loc[(each, "kw-hr"), "sum"]
                         * prices["dsot_volumetric_rate"]
                     )
 
@@ -3468,9 +3468,9 @@ def DSO_rate_making(
             # Update the variables
             tariff["DSO_" + str(dso_num)]["flat_rate"] = prices["flat_rate"]
             tou_params = load_json(case, "time_of_use_parameters.json")
-            for m in tou_params["DSO_" + dso_num].keys():
-                tou_params["DSO_" + dso_num][m]["price"] = prices[
-                    "tou_rate_" + tou_params["DSO_" + dso_num][m]["season"]
+            for m in tou_params["DSO_" + str(dso_num)].keys():
+                tou_params["DSO_" + str(dso_num)][m]["price"] = prices[
+                    "tou_rate_" + tou_params["DSO_" + str(dso_num)][m]["season"]
                 ]
 
             # Store the variables in the appropriate files, if not done later
@@ -3813,7 +3813,7 @@ def DSO_rate_making(
             for m in billsum_df:
                 if m != "sum":
                     DSO_Revenues_and_Energy_Sales["EnergySoldMonthly"][m] += billsum_df.loc[("total", "tou_energy_purchased"), m] / 1000
-            DSO_Revenues_and_Energy_Sales["RequiredRevenue"] += billsum_df.loc[("total", "tou_total_charge"), "sum"] / 1000, # Energy charges in $k
+            DSO_Revenues_and_Energy_Sales["RequiredRevenue"] += billsum_df.loc[("total", "tou_total_charge"), "sum"] / 1000 # Energy charges in $k
             DSO_Revenues_and_Energy_Sales["EffectiveCostRetailEnergy"] = (
                 billsum_df.loc[("total", "flat_total_charge"), "sum"]
                 + billsum_df.loc[("total", "tou_total_charge"), "sum"]
