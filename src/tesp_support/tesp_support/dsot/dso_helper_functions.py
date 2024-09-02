@@ -303,7 +303,7 @@ def labor_network_admin_increase(group, hourly_rate, metadata_general, metadata_
     return labor_Lev1Fte, labor_Fte, Lev1_labor_cost, LeaderRatio, labor_cost, LeaderLevel
 
 
-def get_customer_df(dso_range, case_path, metadata_path):
+def get_customer_df(dso_range, case_path, metadata_path, rate_scenario):
     customer_df = pd.DataFrame([])
     for dso_num in dso_range:
         GLD_metadata = pt.load_json(case_path, 'DSO' + str(dso_num) + '_Customer_Metadata.json')
@@ -314,10 +314,10 @@ def get_customer_df(dso_range, case_path, metadata_path):
         for i in range(len(GLD_metadata['billingmeters'].keys())):
             customer = list(GLD_metadata['billingmeters'].keys())[i]
             if GLD_metadata['billingmeters'][customer]['tariff_class'] != 'industrial':
-                customer_bill = rm.get_cust_bill(customer, cust_bills, GLD_metadata, cust_energy)
+                customer_bill = rm.get_cust_bill(customer, cust_bills, GLD_metadata, cust_energy, rate_scenario)
                 customer_metadata = GLD_metadata['billingmeters'][customer]
                 Customer_Cash_Flows_dict, Customer_Cash_Flows_csv = ccfs.customer_CFS(GLD_metadata, metadata_path,
-                                                                                      customer, customer_bill)
+                                                                                customer, customer_bill, rate_scenario)
                 customer_row = {
                     "Customer ID": 'DSO' + str(dso_num) + '_' + customer,
                     "dso": dso_num,
@@ -329,7 +329,8 @@ def get_customer_df(dso_range, case_path, metadata_path):
                 customer_row = customer_row.transpose()
                 customer_row.columns = customer_row.iloc[0]
                 customer_row = customer_row.drop(customer_row.index[[0]])
-                customer_df = customer_df.append(customer_row)
+                # customer_df = customer_df.append(customer_row)
+                customer_df = pd.concat([customer_df, customer_row])
     return customer_df
 
 
