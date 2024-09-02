@@ -23,15 +23,15 @@ It has the following elements:
 
 #  STEP 0 ---------  STEP UP ------------------------------
 #  Determine which metrics to post-process
-# annual_energy = True
-# annual_amenity = True
-# load_stats = True
-# annual_lmps = True
-# gen_stats = True
-# train_lmps = True
-# wholesale = True
-# retail = True
-# customer_cfs = True
+annual_energy = True
+annual_amenity = True
+load_stats = True
+annual_lmps = True
+gen_stats = True
+train_lmps = True
+wholesale = True
+retail = True
+customer_cfs = True
 dso_cfs = True
 
 annual_energy = False
@@ -41,64 +41,50 @@ annual_lmps = False
 gen_stats = False
 train_lmps = False
 wholesale = False
-retail = False
-customer_cfs = False
+# retail = False
+# customer_cfs = False
 # dso_cfs = False
 
-# Determine the rate scenario to investigate
-# rate_scenario = None
-# rate_scenario = "flat"
-rate_scenario = "time-of-use"
-# rate_scenario = "subscription"
-# rate_scenario = "transactive"
-# rate_scenario = "dsot"
 
 # Only set to True if you have already run cfs once and want to update billing to match expenses.
-squareup_revenue = True
+squareup_revenue = False
 
 first_data_day = 4  # First day in the simulation that data to be analyzed. Run-in days before this are discarded.
 discard_end_days = 1  # Number of days at the end of the simulation to be discarded
 
 # ------------ Select folder locations for different cases ---------
 
-# mr_bau_path = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/v1.1-1588-ge941fcf5'
-mr_bau_path = 'C:/Users/reev057/DSOT-DATA/v1.1-1694-ge9c9e7fa_mr_bau'
-mr_batt_path = 'C:/Users/reev057/DSOT-DATA/v1.1-1720-g4ddbf819_mr_batt'
-# mr_batt_path = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/v1.1-1694-ge9c9e7fa_mr_batt'
-mr_flex_path = 'C:/Users/reev057/DSOT-DATA/v1.1-1728-gb7d5ddaf'
-hr_bau_path = 'C:/Users/reev057/DSOT-DATA/v1.1-1709-gb8726a8d_hr_bau'
-# hr_batt_path = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/v1.1-1694-ge9c9e7fa_hr_batt'
-hr_batt_path = 'C:/Users/reev057/DSOT-DATA/v1.1-1720-g4ddbf819_hr_batt'
-hr_flex_path = 'C:/Users/reev057/DSOT-DATA/a9516a1_8_HR_Flex'
-mr_200_bau_path = 'C:/Users/reev057/DSOT-DATA/9cff29e_200_MR_BAU'
-mr_200_batt_path = 'C:/Users/reev057/DSOT-DATA/a9516a1_200_MR_Batt'
-mr_200_flex_path = 'C:/Users/reev057/DSOT-DATA/a9516a1_200_MR_Flex'
-hr_200_bau_path = 'C:/Users/reev057/DSOT-DATA/9cff29e_200_HR_BAU'
-hr_200_batt_path = 'C:/Users/reev057/DSOT-DATA/5306e80_200_HR_Batt'
-hr_200_flex_path = 'C:/Users/reev057/DSOT-DATA/a9516a1_200_HR_Flex'
+flat_path = 'C:/Users/reev057/DSOT-DATA/Rates/Flat'
+DSOT_path = 'C:/Users/reev057/DSOT-DATA/Rates/DSOT'
+TOU_path = 'C:/Users/reev057/DSOT-DATA/Rates/TOU'
+transactive_path = None
+subscription_path = None
 
-system_case = ""
-base_case_path = ""
-case_path = hr_200_batt_path
-# Load System Case Config
-if case_path in [mr_bau_path, mr_batt_path, mr_flex_path]:
-    system_case = '8_system_case_config.json'
-    base_case_path = mr_bau_path
-elif case_path in [hr_bau_path, hr_batt_path, hr_flex_path]:
-    system_case = '8_hi_system_case_config.json'
-    base_case_path = hr_bau_path
-elif case_path in [mr_200_bau_path, mr_200_batt_path, mr_200_flex_path]:
-    system_case = '200_system_case_config.json'
-    base_case_path = mr_200_bau_path
-elif case_path in [hr_200_bau_path, hr_200_batt_path, hr_200_flex_path]:
-    system_case = '200_hi_system_case_config.json'
-    base_case_path = hr_200_bau_path
+system_case = "8_hi_system_case_config.json"
+base_case_path = flat_path
+case_path = DSOT_path
+
+
+# # Load System Case Config
+# if case_path in [mr_bau_path, mr_batt_path, mr_flex_path]:
+#     system_case = '8_system_case_config.json'
+#     base_case_path = mr_bau_path
+# elif case_path in [hr_bau_path, hr_batt_path, hr_flex_path]:
+#     system_case = '8_hi_system_case_config.json'
+#     base_case_path = hr_bau_path
+# elif case_path in [mr_200_bau_path, mr_200_batt_path, mr_200_flex_path]:
+#     system_case = '200_system_case_config.json'
+#     base_case_path = mr_200_bau_path
+# elif case_path in [hr_200_bau_path, hr_200_batt_path, hr_200_flex_path]:
+#     system_case = '200_hi_system_case_config.json'
+#     base_case_path = hr_200_bau_path
 
 config_path = dirname(abspath(__file__))
 case_config = pt.load_json(config_path, system_case)
 
 # metadata_path = '../dso_data'
-metadata_path = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/data'
+# metadata_path = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/data'
+metadata_path = 'C:/Users/reev057/PycharmProjects/TESP_Public/examples/analysis/dsot/data'
 
 renew_forecast_file = metadata_path + "/" + case_config['genForecastHr'][5].split('/')[-1]
 dso_metadata_file = case_config['dsoPopulationFile']
@@ -114,206 +100,47 @@ for DSO in DSOmetadata.keys():
 
 case_name = ''
 month_def = []
+rate_scenario = None
+
+# Determine the rate scenario to investigate
+if case_path == flat_path:
+    case_name = 'Flat'
+    rate_scenario = "flat"
+if case_path == DSOT_path:
+    case_name = 'DSOT'
+    rate_scenario = "dsot"
+if case_path == TOU_path:
+    case_name = 'TOU'
+    rate_scenario = "time-of-use"
+if case_path == transactive_path:
+    case_name = 'RandD'
+    rate_scenario = "transactive"
+if case_path == subscription_path:
+    case_name = 'Sub'
+    rate_scenario = "subscription"
+
+
 #  Month, path of month data, first day of real data, last day of real data + 1
-if case_path == mr_bau_path:
-    case_name = '8-MR-BAU'
-    month_def = [
-        ['Jan', case_path + '/2016_01', 3, 34],
-        ['Feb', case_path + '/2016_02', 3, 32],
-        ['March', case_path + '/2016_03', 3, 34],
-        ['April', case_path + '/2016_04', 3, 33],
-        ['May', case_path + '/2016_05', 3, 34],
-        ['June', case_path + '/2016_06', 3, 33],
-        ['July', case_path + '/2016_07', 3, 34],
-        ['August', case_path + '/2016_08', 3, 34],
-        ['Sept', case_path + '/2016_09', 3, 33],
-        ['Oct', case_path + '/2016_10', 3, 34],
-        ['Nov', case_path + '/2016_11', 3, 33]
-        # ['Dec', case_path + '/2016_12', 3, 34]
-    ]
-elif case_path == hr_bau_path:
-    case_name = '8-HR-BAU'
-    month_def = [
-        ['Jan', case_path + '/2016_01_pv', 3, 34],
-        ['Feb', case_path + '/2016_02_pv', 3, 32],
-        ['March', case_path + '/2016_03_pv', 3, 34],
-        ['April', case_path + '/2016_04_pv', 3, 33],
-        ['May', case_path + '/2016_05_pv', 3, 34],
-        ['June', case_path + '/2016_06_pv', 3, 33],
-        ['July', case_path + '/2016_07_pv', 3, 34],
-        ['August', case_path + '/2016_08_pv', 3, 34],
-        ['Sept', case_path + '/2016_09_pv', 3, 33],
-        ['Oct', case_path + '/2016_10_pv', 3, 34],
-        ['Nov', case_path + '/2016_11_pv', 3, 33]
-        # ['Dec', case_path + '/2016_12_pv', 3, 34]
-    ]
-elif case_path == mr_batt_path:
-    case_name = '8-MR-Batt'
-    month_def = [
-        ['Jan', case_path + '/2016_01_bt', 3, 34],
-        ['Feb', case_path + '/2016_02_bt', 3, 32],
-        ['March', case_path + '/2016_03_bt', 3, 34],
-        ['April', case_path + '/2016_04_bt', 3, 33],
-        ['May', case_path + '/2016_05_bt', 3, 34],
-        ['June', case_path + '/2016_06_bt', 3, 33],
-        ['July', case_path + '/2016_07_bt', 3, 34],
-        ['August', case_path + '/2016_08_bt', 3, 34],
-        ['Sept', case_path + '/2016_09_bt', 3, 33],
-        ['Oct', case_path + '/2016_10_bt', 3, 34],
-        ['Nov', case_path + '/2016_11_bt', 3, 33]
-        # ['Dec', case_path + '/2016_12_bt', 3, 34]
-    ]
+month_def = [
+    ['Jan', case_path + '/8_2016_01_pv_bt_fl_ev', 3, 31],
+    ['Feb', case_path + '/8_2016_02_pv_bt_fl_ev', 3, 31],
+    ['March', case_path + '/8_2016_03_pv_bt_fl_ev', 3, 34],
+    ['April', case_path + '/8_2016_04_pv_bt_fl_ev', 3, 33],
+    ['May', case_path + '/8_2016_05_pv_bt_fl_ev', 3, 34],
+    ['June', case_path + '/8_2016_06_pv_bt_fl_ev', 3, 33],
+    ['July', case_path + '/8_2016_07_pv_bt_fl_ev', 3, 34],
+    ['August', case_path + '/8_2016_08_pv_bt_fl_ev', 3, 34],
+    ['Sept', case_path + '/8_2016_09_pv_bt_fl_ev', 3, 33],
+    ['Oct', case_path + '/8_2016_10_pv_bt_fl_ev', 3, 34],
+    ['Nov', case_path + '/8_2016_11_pv_bt_fl_ev', 3, 33],
+    ['Dec', case_path + '/8_2016_12_pv_bt_fl_ev', 3, 34]
+]
 
-elif case_path == hr_batt_path:
-    case_name = '8-HR-Batt'
-    month_def = [
-                ['Jan', case_path + '/8_2016_01_pv_bt_ev', 3, 34],
-                ['Feb', case_path + '/8_2016_02_pv_bt_ev', 3, 32],
-                ['March', case_path + '/8_2016_03_pv_bt_ev', 3, 34],
-                ['April', case_path + '/8_2016_04_pv_bt_ev', 3, 33],
-                ['May', case_path + '/8_2016_05_pv_bt_ev', 3, 34],
-                ['June', case_path + '/8_2016_06_pv_bt_ev', 3, 33],
-                ['July', case_path + '/8_2016_07_pv_bt_ev', 3, 34],
-                ['August', case_path + '/8_2016_08_pv_bt_ev', 3, 34],
-                ['Sept', case_path + '/8_2016_09_pv_bt_ev', 3, 33],
-                ['Oct', case_path + '/8_2016_10_pv_bt_ev', 3, 34],
-                ['Nov', case_path + '/8_2016_11_pv_bt_ev', 3, 33]
-                # ['Dec', case_path + '/8_2016_12_pv_bt_ev', 3, 34]
-    ]
-elif case_path == mr_flex_path:
-    case_name = '8-MR-Flex'
-    month_def = [
-                ['Jan', case_path + '/8_2016_01_fl', 3, 34],
-                ['Feb', case_path + '/8_2016_02_fl', 3, 32],
-                ['March', case_path + '/8_2016_03_fl', 3, 34],
-                ['April', case_path + '/8_2016_04_fl', 3, 33],
-                ['May', case_path + '/8_2016_05_fl', 3, 34],
-                ['June', case_path + '/8_2016_06_fl', 3, 33],
-                ['July', case_path + '/8_2016_07_fl', 3, 34],
-                ['August', case_path + '/8_2016_08_fl', 3, 34],
-                ['Sept', case_path + '/8_2016_09_fl', 3, 33],
-                ['Oct', case_path + '/8_2016_10_fl', 3, 34],
-                ['Nov', case_path + '/8_2016_11_fl', 3, 33],
-                ['Dec', case_path + '/8_2016_12_fl', 3, 34]
-    ]
-elif case_path == hr_flex_path:
-    case_name = '8-HR-Flex'
-    month_def = [
-        ['Jan', case_path + '/8_2016_01_pv_bt_ev', 3, 34],
-        ['Feb', case_path + '/8_2016_02_pv_bt_ev', 3, 32],
-        ['March', case_path + '/8_2016_03_pv_bt_ev', 3, 34],
-        ['April', case_path + '/8_2016_04_pv_bt_ev', 3, 33],
-        ['May', case_path + '/8_2016_05_pv_bt_ev', 3, 34],
-        ['June', case_path + '/8_2016_06_pv_bt_ev', 3, 33],
-        ['July', case_path + '/8_2016_07_pv_bt_ev', 3, 34],
-        ['August', case_path + '/8_2016_08_pv_bt_ev', 3, 34],
-        ['Sept', case_path + '/8_2016_09_pv_bt_ev', 3, 33],
-        ['Oct', case_path + '/8_2016_10_pv_bt_ev', 3, 34],
-        ['Nov', case_path + '/8_2016_11_pv_bt_ev', 3, 33]
-        # ['Dec', case_path + '/8_2016_12_pv_bt_ev', 3, 34]
-    ]
-
-elif case_path == mr_200_bau_path:
-    case_name = '200-MR-BAU'
-    month_def = [
-                ['Jan', case_path + '/200_2016_01', 3, 34],
-                ['Feb', case_path + '/200_2016_02', 3, 32],
-                ['March', case_path + '/200_2016_03', 3, 34],
-                ['April', case_path + '/200_2016_04', 3, 33],
-                ['May', case_path + '/200_2016_05', 3, 34],
-                ['June', case_path + '/200_2016_06', 3, 33],
-                ['July', case_path + '/200_2016_07', 3, 34],
-                ['August', case_path + '/200_2016_08', 3, 34],
-                ['Sept', case_path + '/200_2016_09', 3, 33],
-                ['Oct', case_path + '/200_2016_10', 3, 34],
-                ['Nov', case_path + '/200_2016_11', 3, 33],
-                ['Dec', case_path + '/200_2016_12', 3, 34]
-    ]
-elif case_path == mr_200_batt_path:
-    case_name = '200-MR-Batt'
-    month_def = [
-        ['Jan', case_path + '/200_2016_01_bt', 3, 34],
-        ['Feb', case_path + '/200_2016_02_bt', 3, 32],
-        ['March', case_path + '/200_2016_03_bt', 3, 34],
-        ['April', case_path + '/200_2016_04_bt', 3, 33],
-        ['May', case_path + '/200_2016_05_bt', 3, 34],
-        ['June', case_path + '/200_2016_06_bt', 3, 33],
-        ['July', case_path + '/200_2016_07_bt', 3, 34],
-        ['August', case_path + '/200_2016_08_bt', 3, 34],
-        ['Sept', case_path + '/200_2016_09_bt', 3, 33],
-        ['Oct', case_path + '/200_2016_10_bt', 3, 34],
-        ['Nov', case_path + '/200_2016_11_bt', 3, 33],
-        ['Dec', case_path + '/200_2016_12_bt', 3, 34]
-    ]
-elif case_path == mr_200_flex_path:
-    case_name = '200-MR-Flex'
-    month_def = [
-        ['Jan', case_path + '/200_2016_01_fl', 3, 34],
-        ['Feb', case_path + '/200_2016_02_fl', 3, 32],
-        ['March', case_path + '/200_2016_03_fl', 3, 34],
-        ['April', case_path + '/200_2016_04_fl', 3, 33],
-        ['May', case_path + '/200_2016_05_fl', 3, 34],
-        ['June', case_path + '/200_2016_06_fl', 3, 33],
-        ['July', case_path + '/200_2016_07_fl', 3, 34],
-        ['August', case_path + '/200_2016_08_fl', 3, 34],
-        ['Sept', case_path + '/200_2016_09_fl', 3, 33],
-        ['Oct', case_path + '/200_2016_10_fl', 3, 34],
-        ['Nov', case_path + '/200_2016_11_fl', 3, 33],
-        ['Dec', case_path + '/200_2016_12_fl', 3, 34]
-    ]
-
-elif case_path == hr_200_bau_path:
-    case_name = '200-HR-BAU'
-    month_def = [
-        ['Jan', case_path + '/200_2016_01_pv', 3, 34],
-        ['Feb', case_path + '/200_2016_02_pv', 3, 32],
-        ['March', case_path + '/200_2016_03_pv', 3, 34],
-        ['April', case_path + '/200_2016_04_pv', 3, 33],
-        ['May', case_path + '/200_2016_05_pv', 3, 34],
-        ['June', case_path + '/200_2016_06_pv', 3, 33],
-        ['July', case_path + '/200_2016_07_pv', 3, 34],
-        ['August', case_path + '/200_2016_08_pv', 3, 34],
-        ['Sept', case_path + '/200_2016_09_pv', 3, 33],
-        ['Oct', case_path + '/200_2016_10_pv', 3, 34],
-        ['Nov', case_path + '/200_2016_11_pv', 3, 33],
-        ['Dec', case_path + '/200_2016_12_pv', 3, 34]
-    ]
-elif case_path == hr_200_batt_path:
-    case_name = '200-HR-Batt'
-    month_def = [
-        ['Jan', case_path + '/200_2016_01_pv_bt_ev', 3, 34],
-        ['Feb', case_path + '/200_2016_02_pv_bt_ev', 3, 32],
-        ['March', case_path + '/200_2016_03_pv_bt_ev', 3, 34],
-        ['April', case_path + '/200_2016_04_pv_bt_ev', 3, 33],
-        ['May', case_path + '/200_2016_05_pv_bt_ev', 3, 34],
-        ['June', case_path + '/200_2016_06_pv_bt_ev', 3, 33],
-        ['July', case_path + '/200_2016_07_pv_bt_ev', 3, 34],
-        ['August', case_path + '/200_2016_08_pv_bt_ev', 3, 34],
-        ['Sept', case_path + '/200_2016_09_pv_bt_ev', 3, 33],
-        ['Oct', case_path + '/200_2016_10_pv_bt_ev', 3, 34],
-        ['Nov', case_path + '/200_2016_11_pv_bt_ev', 3, 33],
-        ['Dec', case_path + '/200_2016_12_pv_bt_ev', 3, 34]
-    ]
-elif case_path == hr_200_flex_path:
-    case_name = '200-HR-Flex'
-    month_def = [
-        ['Jan', case_path + '/200_2016_01_pv_fl_ev', 3, 34],
-        ['Feb', case_path + '/200_2016_02_pv_fl_ev', 3, 32],
-        ['March', case_path + '/200_2016_03_pv_fl_ev', 3, 34],
-        ['April', case_path + '/200_2016_04_pv_fl_ev', 3, 33],
-        ['May', case_path + '/200_2016_05_pv_fl_ev', 3, 34],
-        ['June', case_path + '/200_2016_06_pv_fl_ev', 3, 33],
-        ['July', case_path + '/200_2016_07_pv_fl_ev', 3, 34],
-        ['August', case_path + '/200_2016_08_pv_fl_ev', 3, 34],
-        ['Sept', case_path + '/200_2016_09_pv_fl_ev', 3, 33],
-        ['Oct', case_path + '/200_2016_10_pv_fl_ev', 3, 34],
-        ['Nov', case_path + '/200_2016_11_pv_fl_ev', 3, 33],
-        ['Dec', case_path + '/200_2016_12_pv_fl_ev', 3, 34]
-    ]
 
 # Verify and implement actual number of simulation days.
 total_sim_days = 0
 generate_case_config = ''
+# TODO: Copy generate_case_config file to annual level.
 for month in month_def:
     generate_case_config = pt.load_json(month[1], 'generate_case_config.json')
 
@@ -371,7 +198,7 @@ if load_stats:  # Finds Q_max amongst other things.
 # --------------- AGGREGATE ANNUAL LMPS LOADS for FORECASTER RETUNING  ------------------------------
 if annual_lmps:
     dso_num = '3'
-    pt.dso_lmp_stats(month_def, case_path, renew_forecast_file)
+    pt.dso_lmp_stats(month_def, case_path, renew_forecast_file, dso_range)
     pt.plot_lmp_stats(case_path, case_path, dso_num, 7)
 
 if gen_stats:
@@ -389,18 +216,18 @@ if wholesale:
     for dso_num in dso_range:
         qmax_df = pd.read_csv(case_path + '/Qmax.csv', index_col=[0])
         time_of_system_peak = datetime.fromisoformat(qmax_df.loc['DSO_Total', 'Time of Peak'])
-        Market_Purchases = ep.Wh_Energy_Purchases(case_path, str(dso_num), True, True, time_of_system_peak)
+        Market_Purchases = ep.Wh_Energy_Purchases(case_path, str(dso_num), True)
         print(Market_Purchases)
         os.chdir(case_path)
         with open('DSO' + str(dso_num) + '_Market_Purchases.json', 'w') as f:
             json.dump(Market_Purchases, f, indent=2)
-
+# TODO: Make month usage consistent 'Mar' versus 'March'
 # --------------- DETERMINE RETAIL BILLING  ------------------------------
 # Run Customer billing code to determine revenues
 # Run DSO cash flow to determine total DSO expense = total DSO required revenue.
 # Run Customer billing code to determine revenues and iterate tariffs to match expenses
 # Run final DSO cash flow with final customer revenues.
-
+#  TODO: break DSO CFS into two parts and execute first part here to have required revenue ready.
 if retail:
     dso_df = None
     if squareup_revenue:
@@ -464,7 +291,7 @@ if retail:
         cust_bill_file = case_path + '/bill_dso_' + str(dso_num) + '_data.h5'
         cust_bills = pd.read_hdf(cust_bill_file, key='cust_bill_data', mode='r')
         cust_energy = pd.read_hdf(case_path + '/energy_dso_' + str(dso_num) + '_data.h5', key='energy_data', mode='r')
-        customer_bill = rm.get_cust_bill(customer, cust_bills, GLD_metadata, cust_energy)
+        customer_bill = rm.get_cust_bill(customer, cust_bills, GLD_metadata, cust_energy, rate_scenario)
         print(customer_bill)
 
         print("DSO " + str(dso_num) + ": Surplus error = " + str(surplus/required_revenue*100) + "%")
@@ -485,9 +312,9 @@ if retail:
 
 if customer_cfs:
     # dso_range = [1]
-    create_customer_df = False
+    create_customer_df = True
     if create_customer_df:
-        customer_df = hf.get_customer_df(dso_range, case_path, metadata_path)
+        customer_df = hf.get_customer_df(dso_range, case_path, metadata_path, rate_scenario)
         customer_df.to_hdf(case_path + '/Master_Customer_Dataframe.h5', key='customer_data')
         customer_df.to_csv(path_or_buf=case_path + '/Master_Customer_Dataframe.csv')
     else:
