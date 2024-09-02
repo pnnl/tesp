@@ -1474,7 +1474,7 @@ def calculate_consumer_bills(
                         bill_df.loc[(each, "dsot_DA_energy_charge"), m]
                         + bill_df.loc[(each, "dsot_RT_energy_charge"), m]
                         + bill_df.loc[(each, "dsot_fixed_charge"), m]
-                        + bill_df.loc[(each, "dsot__charge"), m]
+                        + bill_df.loc[(each, "dsot_volumetric_charge"), m]
                     )
 
                     # Store the total energy purchased under the DSO+T tariff
@@ -3079,7 +3079,7 @@ def calculate_tariff_prices(
             
         # Find the energy price for the flat rate
         prices["flat_rate"] = (
-            sum(dso_expenses[s] for s in seasons_dict)
+            dso_expenses
             - sf
             * (
                 rev_total_dsot
@@ -3503,7 +3503,7 @@ def DSO_rate_making(
             # Update the variables
             tariff["DSO_" + str(dso_num)]["flat_rate"] = prices["flat_rate"]
             tariff["DSO_" + str(dso_num)]["transactive_dist_rate"] = prices[
-                "transactive_volumetric_rate"
+                "dsot_volumetric_rate"
             ]
         
         # Calculate consumer bills in the Rate Scenario analysis
@@ -3947,7 +3947,7 @@ def DSO_rate_making(
             for m in billsum_df:
                 if m != "sum":
                     DSO_Revenues_and_Energy_Sales["EnergySoldMonthly"][m] += billsum_df.loc[("total", "dsot_energy_purchased"), m] / 1000
-            DSO_Revenues_and_Energy_Sales["RequiredRevenue"] += billsum_df.loc[("total", "dsot_total_charge"), "sum"] / 1000, # Energy charges in $k
+            DSO_Revenues_and_Energy_Sales["RequiredRevenue"] += billsum_df.loc[("total", "dsot_total_charge"), "sum"] / 1000 # Energy charges in $k
             DSO_Revenues_and_Energy_Sales["EffectiveCostRetailEnergy"] = (
                 billsum_df.loc[("total", "flat_total_charge"), "sum"]
                 + billsum_df.loc[("total", "dsot_total_charge"), "sum"]
