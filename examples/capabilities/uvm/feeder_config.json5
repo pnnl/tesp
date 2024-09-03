@@ -3,8 +3,8 @@
 
 {
     // general
-    "in_file_glm": "South_D1_Alburgh_mod_tesp_v4.glm", // the input feeder model. If None, taxonomy feeder used
-    "out_file_glm": "South_D1_Alburgh_mod_tesp_v4_populated.glm", // REQUIRED: the output populated feeder
+    "in_file_glm": "", //"South_D1_Alburgh_mod_tesp_v4.glm", // the input feeder model. If empty, taxonomy feeder used
+    "out_file_glm": "test.glm", //"South_D1_Alburgh_mod_tesp_v4_populated.glm", // REQUIRED: the output populated feeder
     "case_name": "MyCase", // REQUIRED: a name for your case
     "substation_name": "MySub", // REQUIRED: a name for the substation
     "starttime": "2023-01-01 07:00:00", // REQUIRED: format "2023-01-01 00:00:00"
@@ -47,7 +47,6 @@
     "res_dso_type": "No_DSO_Type",
 
     // RECS (Residential Energy Consumption Survey) Data
-    "use_recs": true,
     "recs_exist": true, // Does 'out_file_residential_meta' exist? If false, generates RECS data based on config
     "file_recs_income_level": '../../../data/feeders/RECSwIncomeLvl.csv',
     "out_file_residential_meta": './RECS_residential_metadata.json',
@@ -61,8 +60,6 @@
     "wh_shift": 0,
 
     // Power and region to requirements for commercial and residential load parameters
-    // "use_feeder": true,
-    "use_feeder": false,
     "taxonomy": "R1-12.47-1.glm",
     // else custom configuration
     "region": 2,
