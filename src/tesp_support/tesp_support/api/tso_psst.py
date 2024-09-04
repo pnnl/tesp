@@ -46,16 +46,17 @@ def tso_psst_loop(casename):
                     first = False
                     continue
                 rd_curve.append(float(m_row[0]))
-                rd_adder.append(float(m_row[1]))
+                # publishing LMP as $/kWh/p.u.h, curve was in MWh
+                rd_adder.append(float(m_row[1])/1000.0)
             rd_curve.reverse()
             rd_adder.reverse()
 
     def rob_and_don(generation):
         adder = 0
         if r_and_d:
-            generation = generation
             ii = bisect.bisect_left(rd_curve, generation)
-            if ii:
+            log.debug(f"Rob and Don index: {ii}, curve length: {len(rd_curve)}")
+            if -1 < ii < len(rd_curve):
                 if generation - rd_curve[ii] < 0.0001:
                     adder = rd_adder[ii]
                 else:
