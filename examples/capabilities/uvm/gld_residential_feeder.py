@@ -34,7 +34,7 @@ Public Functions:
         building type and thermal integrity level
     :add_houses: puts houses, along with solar panels, batteries, and electric
         vehicle charges, onto a node
-    :replace_commercial_loads: determines the number of commercial zones that
+    :identify_commercial_loads: determines the number of commercial zones that
         loads assigned class 'C' should have
     :add_one_commercial_zone: writes a pre-configured commercial zone as a house
     :add_solar_inv_settings: writes volt-var and volt-watt settings for solar
@@ -1012,7 +1012,7 @@ class Commercial_Build:
         self.config = config
         self.glm = config.glm
 
-    def replace_commercial_loads(self, gld_class: str, avgBuilding: float):
+    def identify_commercial_loads(self, gld_class: str, avgBuilding: float):
         """For the full-order feeders, scan each load with load_class==C to
         determine the number of zones it should have.
 
@@ -1022,18 +1022,18 @@ class Commercial_Build:
         """
         print('Average Commercial Building', avgBuilding, 'kVA')
         total_commercial = 0
-        total_comm_kva = 0
-        total_zipload = 0
-        total_office = 0
-        total_warehouse_storage = 0
-        total_big_box = 0
-        total_strip_mall = 0
-        total_education = 0
-        total_food_service = 0
-        total_food_sales = 0
-        total_lodging = 0
-        total_healthcare_inpatient = 0
-        total_low_occupancy = 0
+        self.total_comm_kva = 0
+        self.total_zipload = 0
+        self.total_office = 0
+        self.total_warehouse_storage = 0
+        self.total_big_box = 0
+        self.total_strip_mall = 0
+        self.total_education = 0
+        self.total_food_service = 0
+        self.total_food_sales = 0
+        self.total_lodging = 0
+        self.total_healthcare_inpatient = 0
+        self.total_low_occupancy = 0
         sqft_kva_ratio = 0.005  # Average com building design load is 5 W/sq ft.
 
         try:
@@ -1047,7 +1047,7 @@ class Commercial_Build:
                 if e_object['load_class'] == 'C':
                     kva = self.glm.model.accumulate_load_kva(e_object)
                     total_commercial += 1
-                    total_comm_kva += kva
+                    self.total_comm_kva += kva
                     vln = float(e_object['nominal_voltage'])
                     nphs = 0
                     phases = e_object['phases']
@@ -1058,82 +1058,73 @@ class Commercial_Build:
                     if 'C' in phases:
                         nphs += 1
                     nzones = int((kva / avgBuilding) + 0.5)
-                    print('nzones equal', nzones)
                     target_sqft = kva / sqft_kva_ratio
                     sqft_error = -target_sqft
                     # TODO: Need a way to place all remaining buildings if this is the last/fourth feeder.
                     # TODO: Need a way to place link for j-modelica buildings on fourth feeder of Urban DSOs
                     # TODO: Need to work out what to do if we run out of commercial buildings before we get to the fourth feeder.
+                    remain_comm_kva = 0
                     for bldg in self.config.base.comm_bldgs_pop:
                         if 0 >= (self.config.base.comm_bldgs_pop[bldg][1] - target_sqft) > sqft_error:
                             select_bldg = bldg
                             sqft_error = self.config.base.comm_bldgs_pop[bldg][1] - target_sqft
-                    # if nzones > 14 and nphs == 3:
-                    #   comm_type = 'OFFICE'
-                    #   total_office += 1
-                    # elif nzones > 5 and nphs > 1:
-                    #   comm_type = 'BIGBOX'
-                    #   total_bigbox += 1
-                    # elif nzones > 0:
-                    #   comm_type = 'STRIPMALL'
-                    #   total_stripmall += 1
+                        remain_comm_kva += self.config.base.comm_bldgs_pop[bldg][1] * sqft_kva_ratio
+
                 if select_bldg is not None:
                     comm_name = select_bldg
                     comm_type = self.config.base.comm_bldgs_pop[select_bldg][0]
                     comm_size = self.config.base.comm_bldgs_pop[select_bldg][1]
                     if comm_type == 'office':
-                        total_office += 1
+                        self.total_office += 1
                     elif comm_type == 'warehouse_storage':
-                        total_warehouse_storage += 1
+                        self.total_warehouse_storage += 1
                     elif comm_type == 'big_box':
-                        total_big_box += 1
+                        self.total_big_box += 1
                     elif comm_type == 'strip_mall':
-                        total_strip_mall += 1
+                        self.total_strip_mall += 1
                     elif comm_type == 'education':
-                        total_education += 1
+                        self.total_education += 1
                     elif comm_type == 'food_service':
-                        total_food_service += 1
+                        self.total_food_service += 1
                     elif comm_type == 'food_sales':
-                        total_food_sales += 1
+                        self.total_food_sales += 1
                     elif comm_type == 'lodging':
-                        total_lodging += 1
+                        self.total_lodging += 1
                     elif comm_type == 'healthcare_inpatient':
-                        total_healthcare_inpatient += 1
+                        self.total_healthcare_inpatient += 1
                     elif comm_type == 'low_occupancy':
-                        total_low_occupancy += 1
+                        self.total_low_occupancy += 1
                     del (self.config.base.comm_bldgs_pop[select_bldg])
                 else:
                     if nzones > 0:
                         print('Commercial building could not be found for ', '{:.2f}'.format(kva), ' KVA load')
                     comm_name = 'streetlights'
-                    comm_type = 'ZIPLOAD'
+                    comm_type = 'ZIPload'
                     comm_size = 0
-                    total_zipload += 1
+                    self.total_zipload += 1
                 mtr = gld_strict_name(e_object['parent'])
                 extra_billing_meters.add(mtr)
                 self.config.base.comm_loads[e_name] = [mtr, comm_type, comm_size, kva, nphs, phases, vln, total_commercial, comm_name]
                 removenames.append(e_name)
         for e_name in removenames:
             self.glm.del_object(gld_class, e_name)
-        # Print commercial info
-        print('Found {} commercial loads totaling {:.2f} kVA'.
-              format(total_commercial, total_comm_kva))
-        print('  ', total_office, 'med/small offices,')
-        print('  ', total_warehouse_storage, 'warehouses,')
-        print('  ', total_big_box, 'big box retail,')
-        print('  ', total_strip_mall, 'strip malls,')
-        print('  ', total_education, 'education,')
-        print('  ', total_food_service, 'food service,')
-        print('  ', total_food_sales, 'food sales,')
-        print('  ', total_lodging, 'lodging,')
-        print('  ', total_healthcare_inpatient, 'healthcare,')
-        print('  ', total_low_occupancy, 'low occupancy,')
-        print('  ', total_zipload, 'ZIP loads')
-        remain_comm_kva = 0
-        for bldg in self.config.base.comm_bldgs_pop:
-            remain_comm_kva += self.config.base.comm_bldgs_pop[bldg][1] * sqft_kva_ratio
+        #TODO: The below statement is not consistent with individual building/zone count
         print('{} commercial buildings, approximately {} kVA still to be assigned.'.
-              format(len(self.config.base.comm_bldgs_pop), int(remain_comm_kva)))
+                        format(len(self.config.base.comm_bldgs_pop), int(remain_comm_kva)))
+        # Print commercial info
+        print('  ', self.total_office, 'med/small offices, 3 floors, 5 zones each,', self.total_office*5*3, 'total office zones' )
+        print('  ', self.total_warehouse_storage, 'warehouses,')
+        print('  ', self.total_big_box, 'big box retail, 6 zones each,', self.total_big_box*6, 'total big box zones')
+        print('  ', self.total_strip_mall, 'strip malls,')
+        print('  ', self.total_education, 'education,')
+        print('  ', self.total_food_service, 'food service,')
+        print('  ', self.total_food_sales, 'food sales,')
+        print('  ', self.total_lodging, 'lodging,')
+        print('  ', self.total_healthcare_inpatient, 'healthcare,')
+        print('  ', self.total_low_occupancy, 'low occupancy,')
+        print('  ', self.total_zipload, 'streetlights')
+        print('The {} commercial loads and {} streetlights (ZIPloads) totaling {:.2f} kVA added to this feeder are:'.
+              format(total_commercial, self.total_zipload, self.total_comm_kva))    
 
     def add_one_commercial_zone(self, bldg: dict):
         """Write one pre-configured commercial zone as a house
@@ -1187,7 +1178,7 @@ class Commercial_Build:
                   "power_pf": '{:.2f}'.format(bldg['c_p_pf']),
                   "current_pf": '{:.2f}'.format(bldg['c_i_pf']),
                   "impedance_pf": '{:.2f}'.format(bldg['c_z_pf']),
-                  "base_power": '{:.2f}'.format(bldg['base_schedule'], bldg['adj_lights'])}
+                  "base_power":  '{:s}_lights*{:.2f}'.format(bldg['base_schedule'], bldg['adj_lights'])}
         self.glm.add_object("ZIPload", "lights", params)
 
         params = {"parent": name,
@@ -1199,7 +1190,7 @@ class Commercial_Build:
                   "power_pf": '{:.2f}'.format(bldg['c_p_pf']),
                   "current_pf": '{:.2f}'.format(bldg['c_i_pf']),
                   "impedance_pf": '{:.2f}'.format(bldg['c_z_pf']),
-                  "base_power": '{:.2f}'.format(bldg['base_schedule'], bldg['adj_plugs'])}
+                  "base_power":  '{:s}_plugs*{:.2f}'.format(bldg['base_schedule'], bldg['adj_plugs'])}
         self.glm.add_object("ZIPload", "plug loads", params)
 
         params = {"parent": name,
@@ -1209,7 +1200,7 @@ class Commercial_Build:
                   "impedance_fraction": "0",
                   "current_fraction": "0",
                   "power_pf": "1",
-                  "base_power": '{:.2f}'.format(bldg['base_schedule'], bldg['adj_gas'])}
+                  "base_power": '{:s}_gas*{:.2f}'.format(bldg['base_schedule'], bldg['adj_gas'])}
         self.glm.add_object("ZIPload", "gas waterheater", params)
 
         params = {"parent": name,
@@ -1233,19 +1224,19 @@ class Commercial_Build:
                   "power_pf": "1",
                   "base_power": '{:s}_occupancy*{:.2f}'.format(bldg['base_schedule'], bldg['adj_occ'])}
         self.glm.add_object("ZIPload", "occupancy", params)
-
-        if bldg['adj_refrig'] != 0:
+        
+        #if bldg['adj_refrig'] != 0:
             # TODO: set to 0.01 to avoid a divide by zero issue in the agent code.
             #  Should be set to zero after that is fixed.
-            params = {"heatgain_fraction": "0.01",
-                      "power_fraction": '{:.2f}'.format(bldg['c_p_frac']),
-                      "impedance_fraction": '{:.2f}'.format(bldg['c_z_frac']),
-                      "current_fraction": '{:.2f}'.format(bldg['c_i_frac']),
-                      "power_pf": '{:.2f}'.format(bldg['c_p_pf']),
-                      "current_pf": '{:.2f}'.format(bldg['c_i_pf']),
-                      "impedance_pf": '{:.2f}'.format(bldg['c_z_pf']),
-                      "base_power": '{:.2f}'.format(bldg['adj_refrig'])}
-            self.glm.add_object("ZIPload", "large refrigeration", params)
+        # params = {"heatgain_fraction": "0.01",
+        #             "power_fraction": '{:.2f}'.format(bldg['c_p_frac']),
+        #             "impedance_fraction": '{:.2f}'.format(bldg['c_z_frac']),
+        #             "current_fraction": '{:.2f}'.format(bldg['c_i_frac']),
+        #             "power_pf": '{:.2f}'.format(bldg['c_p_pf']),
+        #             "current_pf": '{:.2f}'.format(bldg['c_i_pf']),
+        #             "impedance_pf": '{:.2f}'.format(bldg['c_z_pf']),
+        #             "base_power": '{:.2f}'.format(bldg['adj_refrig'])}
+        # self.glm.add_object("ZIPload", "large refrigeration", params)
 
         self.glm.add_metrics_collector(name, "house")
 
@@ -1258,15 +1249,13 @@ class Commercial_Build:
         """
         mtr = self.config.base.comm_loads[key][0]
         comm_type = self.config.base.comm_loads[key][1]
-        nz = int(self.config.base.comm_loads[key][2])
-        kva = float(self.config.base.comm_loads[key][3])
+        kva = self.total_comm_kva
         nphs = int(self.config.base.comm_loads[key][4])
         phases = self.config.base.comm_loads[key][5]
         vln = float(self.config.base.comm_loads[key][6])
         loadnum = int(self.config.base.comm_loads[key][7])
-
-        print('load', key, 'mtr', mtr, 'type', comm_type, 'nz', nz, 'kVA', '{:.3f}'.format(kva),
-              'nphs', nphs, 'phases', phases, 'vln', '{:.3f}'.format(vln))
+        print('load:', key, 'mtr:', mtr, 'type:', comm_type, 'kVA:', '{:.3f}'.format(kva),
+              'nphs:', nphs, 'phases:', phases, 'vln', '{:.3f}'.format(vln))
 
         bldg = {'parent': key,
                 'mtr': mtr,
@@ -1300,63 +1289,62 @@ class Commercial_Build:
             bldg['thermal_mass_per_floor_area'] = 1  # TODO
             bldg['exterior_ceiling_fraction'] = 1  # TODO
             bldg['base_schedule'] = 'office'
-            num_offices = int(round(nz / 15))  # each with 3 floors of 5 zones
-            for jjj in range(num_offices):
-                floor_area_choose = 40000. * (0.5 * np.random.random() + 0.5)
-                for floor in range(1, 4):
-                    bldg['skew_value'] = self.glm.randomize_commercial_skew()
-                    total_depth = math.sqrt(floor_area_choose / (3. * 1.5))
-                    total_width = 1.5 * total_depth
-                    if floor == 3:
-                        bldg['exterior_ceiling_fraction'] = 1
+            floor_area_choose = 40000. * (0.5 * np.random.random() + 0.5)
+            for floor in range(1, 4):
+                bldg['skew_value'] = self.glm.randomize_commercial_skew()
+                total_depth = math.sqrt(floor_area_choose / (3. * 1.5))
+                total_width = 1.5 * total_depth
+                if floor == 3:
+                    bldg['exterior_ceiling_fraction'] = 1
+                else:
+                    bldg['exterior_ceiling_fraction'] = 0
+                for zone in range(1, 6):
+                    if zone == 5:
+                        bldg['window_wall_ratio'] = 0  # this was not in the CCSI version
+                        bldg['exterior_wall_fraction'] = 0
+                        w = total_depth - 30.
+                        d = total_width - 30.
                     else:
-                        bldg['exterior_ceiling_fraction'] = 0
-                    for zone in range(1, 6):
-                        if zone == 5:
-                            bldg['window_wall_ratio'] = 0  # this was not in the CCSI version
-                            bldg['exterior_wall_fraction'] = 0
-                            w = total_depth - 30.
-                            d = total_width - 30.
+                        bldg['window_wall_ratio'] = 0.33
+                        d = 15.
+                        if zone == 1 or zone == 3:
+                            w = total_width - 15.
                         else:
-                            bldg['window_wall_ratio'] = 0.33
-                            d = 15.
-                            if zone == 1 or zone == 3:
-                                w = total_width - 15.
-                            else:
-                                w = total_depth - 15.
-                            bldg['exterior_wall_fraction'] = w / (2. * (w + d))
+                            w = total_depth - 15.
+                        bldg['exterior_wall_fraction'] = w / (2. * (w + d))
 
-                        floor_area = w * d
-                        bldg['floor_area'] = floor_area
-                        bldg['aspect_ratio'] = w / d
+                    floor_area = w * d
+                    bldg['floor_area'] = floor_area
+                    bldg['aspect_ratio'] = w / d
 
-                        if floor > 1:
-                            bldg['exterior_floor_fraction'] = 0
-                        else:
-                            bldg['exterior_floor_fraction'] = w / (2. * (w + d)) / (
-                                        floor_area / (floor_area_choose / 3.))
+                    if floor > 1:
+                        bldg['exterior_floor_fraction'] = 0
+                    else:
+                        bldg['exterior_floor_fraction'] = w / (2. * (w + d)) / (
+                                    floor_area / (floor_area_choose / 3.))
 
-                        bldg['thermal_mass_per_floor_area'] = 3.9 * (0.5 + 1. * np.random.random())
-                        bldg['interior_exterior_wall_ratio'] = floor_area / (bldg['ceiling_height'] * 2. * (w + d)) - 1. \
-                                                               + bldg['window_wall_ratio'] * bldg[
-                                                                   'exterior_wall_fraction']
+                    bldg['thermal_mass_per_floor_area'] = 3.9 * (0.5 + 1. * np.random.random())
+                    bldg['interior_exterior_wall_ratio'] = floor_area / (bldg['ceiling_height'] * 2. * (w + d)) - 1. \
+                                                            + bldg['window_wall_ratio'] * bldg[
+                                                                'exterior_wall_fraction']
 
-                        # will round to zero, presumably the exterior doors are treated like windows
-                        bldg['no_of_doors'] = 0.1
-                        bldg['init_temp'] = 68. + 4. * np.random.random()
-                        bldg['os_rand'] = bldg['oversize'] * (0.8 + 0.4 * np.random.random())
-                        bldg['COP_A'] = self.config.base.cooling_COP * (0.8 + 0.4 * np.random.random())
+                    # will round to zero, presumably the exterior doors are treated like windows
+                    bldg['no_of_doors'] = 0.1
+                    bldg['init_temp'] = 68. + 4. * np.random.random()
+                    bldg['os_rand'] = bldg['oversize'] * (0.8 + 0.4 * np.random.random())
+                    bldg['COP_A'] = self.config.base.cooling_COP * (0.8 + 0.4 * np.random.random())
 
-                        # randomize 10# then convert W/sf -> kW
-                        bldg['adj_lights'] = (0.9 + 0.1 * np.random.random()) * floor_area / 1000.
-                        bldg['adj_plugs'] = (0.9 + 0.2 * np.random.random()) * floor_area / 1000.
-                        bldg['adj_gas'] = (0.9 + 0.2 * np.random.random()) * floor_area / 1000.
-                        bldg['adj_ext'] = (0.9 + 0.1 * np.random.random()) * floor_area / 1000.
-                        bldg['adj_occ'] = (0.9 + 0.1 * np.random.random()) * floor_area / 1000.
+                    # randomize 10# then convert W/sf -> kW
+                    bldg['adj_lights'] = (0.9 + 0.1 * np.random.random()) * floor_area / 1000.
+                    bldg['adj_plugs'] = (0.9 + 0.2 * np.random.random()) * floor_area / 1000.
+                    #bldg['adj_refrig'] = (0.9 + 0.2 * np.random.random()) * floor_area / 1000.
+                    bldg['adj_gas'] = (0.9 + 0.2 * np.random.random()) * floor_area / 1000.
+                    bldg['adj_ext'] = (0.9 + 0.1 * np.random.random()) * floor_area / 1000.
+                    bldg['adj_occ'] = (0.9 + 0.1 * np.random.random()) * floor_area / 1000.
 
-                        bldg['zonename'] = gld_strict_name(
-                            key + '_bldg_' + str(jjj + 1) + '_floor_' + str(floor) + '_zone_' + str(zone) + '_comm_type_' + str(comm_type))
-                        Commercial_Build.add_one_commercial_zone(self, bldg)
+                    bldg['zonename'] = gld_strict_name(
+                        key + '_bldg_' + '_floor_' + str(floor) + '_zone_' + str(zone) + '_comm_type_' + str(comm_type))
+                    Commercial_Build.add_one_commercial_zone(self, bldg)
 
         elif comm_type == 'big_box':
             bldg['ceiling_height'] = 14.
@@ -1369,61 +1357,58 @@ class Commercial_Build:
             bldg['thermal_mass_per_floor_area'] = 1  # TODO
             bldg['exterior_ceiling_fraction'] = 1  # TODO
             bldg['base_schedule'] = 'bigbox'
+            bldg['skew_value'] = self.glm.randomize_commercial_skew()
+            floor_area_choose = 20000. * (0.5 + 1. * np.random.random())
+            floor_area = floor_area_choose / 6.
+            bldg['floor_area'] = floor_area
+            bldg['thermal_mass_per_floor_area'] = 3.9 * (0.8 + 0.4 * np.random.random())  # +/- 20#
+            bldg['exterior_ceiling_fraction'] = 1.
+            bldg['aspect_ratio'] = 1.28301275561855
+            total_depth = math.sqrt(floor_area_choose / bldg['aspect_ratio'])
+            total_width = bldg['aspect_ratio'] * total_depth
+            d = total_width / 3.
+            w = total_depth / 2.
 
-            num_bigboxes = int(round(nz / 6.))
-            for jjj in range(num_bigboxes):
-                bldg['skew_value'] = self.glm.randomize_commercial_skew()
-                floor_area_choose = 20000. * (0.5 + 1. * np.random.random())
-                floor_area = floor_area_choose / 6.
-                bldg['floor_area'] = floor_area
-                bldg['thermal_mass_per_floor_area'] = 3.9 * (0.8 + 0.4 * np.random.random())  # +/- 20#
-                bldg['exterior_ceiling_fraction'] = 1.
-                bldg['aspect_ratio'] = 1.28301275561855
-                total_depth = math.sqrt(floor_area_choose / bldg['aspect_ratio'])
-                total_width = bldg['aspect_ratio'] * total_depth
-                d = total_width / 3.
-                w = total_depth / 2.
+            for zone in range(1, 7):
+                if zone == 2 or zone == 5:
+                    bldg['exterior_wall_fraction'] = d / (2. * (d + w))
+                    bldg['exterior_floor_fraction'] = (0. + d) / (2. * (total_width + total_depth)) / (
+                            floor_area / floor_area_choose)
+                else:
+                    bldg['exterior_wall_fraction'] = 0.5
+                    bldg['exterior_floor_fraction'] = (w + d) / (2. * (total_width + total_depth)) / (
+                            floor_area / floor_area_choose)
+                if zone == 2:
+                    bldg['window_wall_ratio'] = 0.76
+                else:
+                    bldg['window_wall_ratio'] = 0.
 
-                for zone in range(1, 7):
-                    if zone == 2 or zone == 5:
-                        bldg['exterior_wall_fraction'] = d / (2. * (d + w))
-                        bldg['exterior_floor_fraction'] = (0. + d) / (2. * (total_width + total_depth)) / (
-                                floor_area / floor_area_choose)
-                    else:
-                        bldg['exterior_wall_fraction'] = 0.5
-                        bldg['exterior_floor_fraction'] = (w + d) / (2. * (total_width + total_depth)) / (
-                                floor_area / floor_area_choose)
-                    if zone == 2:
-                        bldg['window_wall_ratio'] = 0.76
-                    else:
-                        bldg['window_wall_ratio'] = 0.
+                if zone < 4:
+                    bldg['no_of_doors'] = 0.1  # this will round to 0
+                elif zone == 5:
+                    bldg['no_of_doors'] = 24.
+                else:
+                    bldg['no_of_doors'] = 1.
 
-                    if zone < 4:
-                        bldg['no_of_doors'] = 0.1  # this will round to 0
-                    elif zone == 5:
-                        bldg['no_of_doors'] = 24.
-                    else:
-                        bldg['no_of_doors'] = 1.
+                bldg['interior_exterior_wall_ratio'] = (floor_area + bldg['no_of_doors'] * 20.) \
+                                                        / (bldg['ceiling_height'] * 2. * (w + d)) - 1. + bldg[
+                                                            'window_wall_ratio'] * bldg['exterior_wall_fraction']
+                bldg['init_temp'] = 68. + 4. * np.random.random()
+                bldg['os_rand'] = bldg['oversize'] * (0.8 + 0.4 * np.random.random())
+                bldg['COP_A'] = self.config.base.cooling_COP * (0.8 + 0.4 * np.random.random())
 
-                    bldg['interior_exterior_wall_ratio'] = (floor_area + bldg['no_of_doors'] * 20.) \
-                                                           / (bldg['ceiling_height'] * 2. * (w + d)) - 1. + bldg[
-                                                               'window_wall_ratio'] * bldg['exterior_wall_fraction']
-                    bldg['init_temp'] = 68. + 4. * np.random.random()
-                    bldg['os_rand'] = bldg['oversize'] * (0.8 + 0.4 * np.random.random())
-                    bldg['COP_A'] = self.config.base.cooling_COP * (0.8 + 0.4 * np.random.random())
+                bldg['adj_lights'] = 1.2 * (
+                        0.9 + 0.1 * np.random.random()) * floor_area / 1000.  # randomize 10# then convert W/sf -> kW
+                bldg['adj_plugs'] = (0.9 + 0.2 * np.random.random()) * floor_area / 1000.
+                bldg['adj_gas'] = (0.9 + 0.2 * np.random.random()) * floor_area / 1000.
+                bldg['adj_ext'] = (0.9 + 0.1 * np.random.random()) * floor_area / 1000.
+                bldg['adj_occ'] = (0.9 + 0.1 * np.random.random()) * floor_area / 1000.
 
-                    bldg['adj_lights'] = 1.2 * (
-                            0.9 + 0.1 * np.random.random()) * floor_area / 1000.  # randomize 10# then convert W/sf -> kW
-                    bldg['adj_plugs'] = (0.9 + 0.2 * np.random.random()) * floor_area / 1000.
-                    bldg['adj_gas'] = (0.9 + 0.2 * np.random.random()) * floor_area / 1000.
-                    bldg['adj_ext'] = (0.9 + 0.1 * np.random.random()) * floor_area / 1000.
-                    bldg['adj_occ'] = (0.9 + 0.1 * np.random.random()) * floor_area / 1000.
-
-                    bldg['zonename'] = gld_strict_name(key + '_bldg_' + str(jjj + 1) + '_zone_' + str(zone) + '_comm_type_' + str(comm_type))
-                    Commercial_Build.add_one_commercial_zone(self, bldg)
+                bldg['zonename'] = gld_strict_name(key + '_bldg_' + '_zone_' + str(zone) + '_comm_type_' + str(comm_type))
+                Commercial_Build.add_one_commercial_zone(self, bldg)
 
         elif comm_type == 'strip_mall':
-            bldg['ceiling_height'] = 12  # T)D)
+            bldg['ceiling_height'] = 12  # T)D) TODO: What does T)D) mean?
             bldg['airchange_per_hour'] = 1.76
             bldg['Rroof'] = 19.0
             bldg['Rwall'] = 18.3
@@ -1432,8 +1417,8 @@ class Commercial_Build:
             bldg['int_gains'] = 3.6  # W/sf
             bldg['exterior_ceiling_fraction'] = 1.
             bldg['base_schedule'] = 'stripmall'
-            midzone = int(math.floor(nz / 2.0) + 1.)
-            for zone in range(1, nz + 1):
+            midzone = int(math.floor(self.total_strip_mall / 2.0) + 1.)
+            for zone in range(1, self.total_strip_mall + 1):
                 bldg['skew_value'] = self.glm.randomize_commercial_skew()
                 floor_area_choose = 2400.0 * (0.7 + 0.6 * np.random.random())
                 bldg['thermal_mass_per_floor_area'] = 3.9 * (0.5 + 1. * np.random.random())
@@ -1449,7 +1434,7 @@ class Commercial_Build:
                     floor_area = floor_area_choose / 2.0
                     bldg['aspect_ratio'] = 3.0
                     bldg['window_wall_ratio'] = 0.03
-                    if zone == nz:
+                    if zone == self.total_strip_mall:
                         bldg['exterior_wall_fraction'] = 0.63
                         bldg['exterior_floor_fraction'] = 2.0
                     else:
@@ -1463,13 +1448,14 @@ class Commercial_Build:
                 bldg['COP_A'] = self.config.base.cooling_COP * (0.8 + 0.4 * np.random.random())
                 bldg['adj_lights'] = (0.8 + 0.4 * np.random.random()) * floor_area / 1000.0
                 bldg['adj_plugs'] = (0.8 + 0.4 * np.random.random()) * floor_area / 1000.0
+                #bldg['adj_refrig'] = (0.8 + 0.4 * np.random.random()) * floor_area / 1000.0
                 bldg['adj_gas'] = (0.8 + 0.4 * np.random.random()) * floor_area / 1000.0
                 bldg['adj_ext'] = (0.8 + 0.4 * np.random.random()) * floor_area / 1000.0
                 bldg['adj_occ'] = (0.8 + 0.4 * np.random.random()) * floor_area / 1000.0
                 bldg['zonename'] = gld_strict_name(key + '_zone_' + str(zone) + '_comm_type_' + str(comm_type))
                 Commercial_Build.add_one_commercial_zone(self, bldg)
 
-        if comm_type == 'ZIPLOAD':
+        elif comm_type == 'ZIPload':
             phsva = 1000.0 * kva / nphs
             name = '{:s}'.format(key + '_streetlights')
             params = {"parent": '{:s}'.format(mtr),
@@ -1843,17 +1829,17 @@ class Feeder:
                 metrics = True
             glm.add_link_class(link, seg_loads, want_metrics=metrics)
 
-        # Identify commercial and residential loads
-        config.comm_bldg_metadata.replace_commercial_loads('load', 0.001 * config.avg_commercial)
+        # Identify and add residential loads
         self.identify_xfmr_houses('transformer', seg_loads, 0.001 * config.avg_house, config.region)
-
-        # Build the grid for commercial and residential loads
         for key in base.house_nodes:
             config.res_bldg_metadata.add_houses(key, 120.0)
         for key in base.small_nodes:
             config.res_bldg_metadata.add_small_loads(key, 120.0)
+
+        # Identify and add commercial loads
+        config.comm_bldg_metadata.identify_commercial_loads('load', 0.001 * config.avg_commercial)
         for key in base.comm_loads:
-            Commercial_Build.add_commercial_loads(self, config.region, key)
+            config.comm_bldg_metadata.add_commercial_loads(config.region, key)
 #   TODO: confirm switch from commercial feeder gen to ^ add_commercial_loads
 #            bldg_definition = comm_FG.define_comm_loads(self.glm,
 #                base.comm_loads[key][1],
@@ -1862,9 +1848,9 @@ class Feeder:
 #                config.ashrae_zone,
 #                config.comm_bldg_metadata)
             #comm_FG.add_comm_zones(self, bldg_definition, key)
-#        glm.add_voltage_class('node', self.g_config.vln, self.g_config.vll, secnode)
-#        glm.add_voltage_class('meter', self.g_config.vln, self.g_config.vll, secnode)
-#        glm.add_voltage_class('load', self.g_config.vln, self.g_config.vll, secnode)
+        glm.add_voltage_class('node', config.vln, config.vll, secnode)
+        glm.add_voltage_class('meter',config.vln, config.vll, secnode)
+        glm.add_voltage_class('load', config.vln, config.vll, secnode)
 
         print(f"cooling bins unused {base.cooling_bins}")
         print(f"heating bins unused {base.heating_bins}")

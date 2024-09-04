@@ -44,7 +44,6 @@
   "recs_state": "Texas",
   "recs_income_level": "Middle",
   "recs_housing_density": "U",
-  "use_recs_data": true,
   "recs_data_file": "TESP_RECS.db",
   "res_dso_type": "",
 
