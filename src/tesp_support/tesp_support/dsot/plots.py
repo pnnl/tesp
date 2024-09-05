@@ -1504,7 +1504,7 @@ def der_load_stack(dso, day_range, case, gld_prefix, metadata_path):
     der_loads_df.to_csv(path_or_buf=case + gld_prefix + str(dso) + '/DERstack_data.csv')
 
 
-def der_stack_plot(dso_range, day_range, metadata_path, case, comp=None):
+def der_stack_plot(dso_range, day_range, metadata_path, case, comp=None, plot_ref=False):
     """  For a specified dso range and day range this function will load in the required data, plot the stacked DER loads
     and save the plot to file.
     Args:
@@ -1513,6 +1513,7 @@ def der_stack_plot(dso_range, day_range, metadata_path, case, comp=None):
         metadata_path (str): path of folder containing metadata
         case (str): folder extension of case of interest
         comp (str): folder extension for reference case to be plotted in comparison
+        plot_ref (Bool): If True will plot line of reference data (currently 2016 ERCOT loads)
     Returns:
         saves hdf and csv data files of combined dso data
         saves DER stack plot to file
@@ -1614,8 +1615,8 @@ def der_stack_plot(dso_range, day_range, metadata_path, case, comp=None):
         #     plt.plot(compare_df.index, compare_df[['Industrial Loads', 'Plug Loads', 'HVAC Loads', 'WH Loads']].sum(axis=1)
         #              , label='BAU WH Load', color='mediumblue', linestyle='-.')
     else:
-        plot_ercot = True
-        if not pv_case and plot_ercot:
+        # plot_ercot = True
+        if plot_ref:
             bus_cols = [col for col in ercot_df.columns if 'Bus' in col]
             plt.plot(ercot_df.index, ercot_df[bus_cols].sum(axis=1), label='ERCOT Load', color='grey', linestyle='--', linewidth=3)
 
