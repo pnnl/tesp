@@ -289,14 +289,14 @@ def customer_CFS(GLD_metadata,
             ConnChargesTOU = customer_bill['BillsTOU']['ConnChargesTOU']
             BillsTOU = customer_bill['BillsTOU']['TotalTOU']
 
-            Customer_Cash_Flows_csv = {
+            Customer_Cash_Flows_csv.update({
                 'BillsTOU': BillsTOU,
                 'PeakEnergy': PeakEnergy,
                 'OffPeakEnergy': OffPeakEnergy,
                 'TOUTotalEnergy': TOUTotalEnergy,
                 'DemandChargesTOU': DemandChargesTOU,
                 'ConnChargesTOU': ConnChargesTOU
-            }
+            })
 
         elif rate_scenario == "dsot":
             PurchasesDyn = dso_helper.returnDictSum(customer_bill['BillsTransactive']['PurchasesDyn'])
@@ -306,13 +306,13 @@ def customer_CFS(GLD_metadata,
             ConnChargesDyn = customer_bill['BillsTransactive']['ConnChargesDyn']
             BillsTransactive = customer_bill['BillsTransactive']['TotalDyn']
 
-            Customer_Cash_Flows_csv = {
+            Customer_Cash_Flows_csv.update({
                 'BillsTransactive': BillsTransactive,
                 'DAEnergy': DAEnergy,
                 'RTEnergy': RTEnergy,
                 'DistCharges': DistCharges,
                 'ConnChargesDyn': ConnChargesDyn
-            }
+            })
 
         return Customer_Cash_Flows_dict, Customer_Cash_Flows_csv
 
