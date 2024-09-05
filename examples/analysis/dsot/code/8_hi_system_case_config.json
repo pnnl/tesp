@@ -303,6 +303,8 @@
   "dsoEvModelFile": "DSOT_ev_model_metadata.json",
   "dsoEvDrivingFile": "DSOT_ev_driving_metadata.csv",
   "dsoScheduleServerFile": "8_schedule_server_metadata.json",
+  "state": "TX",
+  "housing_density": "No_DSO_Type",
   "TimeZone": "CST+6CDT",
   "caseName": "test",
   "mStartTime": "2016-03-29 00:00:00",

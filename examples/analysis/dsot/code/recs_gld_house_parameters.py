@@ -4,7 +4,12 @@ import warnings
 
 import numpy as np
 import pandas as pd
+import os
 
+# We need to load in the master metadata (*system_case_config.json)
+mastercase = "8_hi_system_case_config"
+with open(mastercase + '.json', 'r', encoding='utf-8') as json_file:
+    sys_config = json.load(json_file)
 
 def bin_size_check(sample_data, recs_data, state, housing_dens, inc_lev, binsize, climate_zone, income_str):
     og_bin_size = len(sample_data)
@@ -718,8 +723,8 @@ def get_hvac_setpoints(metadata, sample_data, state, hsdens_str, inc_lev, total)
 if __name__ == "__main__":
     get_RECS_jsons(
         '../../../../data/feeders/RECSwIncomeLvl.csv',
-        '../data/DSOT_residential_metadata.json',
-        '../data/RECS_residential_metadata.json',
-        '../data/hvac_setpt_RECS.json',
-        {'state': ['TX'], 'housing_density': ['No_DSO_Type'], 'income_level': ['Middle', 'Upper', 'Low']},
+        os.path.join("../data/", sys_config["dsoResBldgFile"]),
+        os.path.join("../data/", sys_config["dsoRECSResBldgFile"]),
+        os.path.join("../data/", sys_config["hvacRECSSetPoint"]),
+        {'state': [sys_config["state"]], 'housing_density': [sys_config["housing_density"]], 'income_level': ['Middle', 'Upper', 'Low']},
         bin_size_thres=100, climate_zone=None, wh_shift=0.1)
