@@ -23,13 +23,14 @@ def rec_diff(d1, d2):
 
 
 def plot_annual_stats(cases, data_paths, output_path, dso_num, variable):
-    """ Will plot LMPS by month, duration, and versus netloads loads (for select month), and save to file.
+    """ Will plot key variables by month and duration and save to file.
     Args:
         cases (List[str]): names of the cases
         data_paths (str): location of the data files to be used.
         output_path (str): path of the location where output (plots, csv) should be saved
         dso_num (str): bus number for LMP data to be plotted
-        variable (str):
+        variable (str): variable to be plotted: 'DA LMP', 'RT LMP', 'Total Load', 'Hybrid', 'Renewable Percent',
+        'Curtailment Percent'
     Returns:
         saves dso lmps plots to file
         """
@@ -245,7 +246,7 @@ def plot_annual_stats(cases, data_paths, output_path, dso_num, variable):
         plt.xlabel('Duration (%)')
         if Log:
             plt.yscale('log')
-        plt.grid(b=True, which='both', color='k', linestyle=':')
+        plt.grid(visible=True, which='both', color='k', linestyle=':')
         plt.minorticks_on()
         ax = plt.gca()
         # axes[0].tick_params(axis='both', which='major', labelsize=17)
@@ -273,7 +274,7 @@ def plot_annual_stats(cases, data_paths, output_path, dso_num, variable):
         plt.xlabel('Duration (%)')
         if Log:
             plt.yscale('log')
-        plt.grid(b=True, which='both', color='k', linestyle=':')
+        plt.grid(visible=True, which='both', color='k', linestyle=':')
         plt.minorticks_on()
         ax = plt.gca()
         # axes[0].tick_params(axis='both', which='major', labelsize=17)
@@ -637,11 +638,10 @@ def dso_cfs_delta(cases_list, data_paths_list, dso_range, metadata_file):
     # plt.set_axis_labels("", "Body mass (g)")
 
 
-def customer_cfs_delta(cases, data_paths, output_path, metadata_file):
+def customer_cfs_delta(cases, data_paths, metadata_file, metadata_path = None):
     """Will plot customer population CFS savings comparisons.
     Arguments:
         data_paths (str): location of the data files to be used.
-        output_path (str): path of the location where output (plots, csv) should be saved
     Returns:
         saves dso lmps plots to file
         """
@@ -670,8 +670,11 @@ def customer_cfs_delta(cases, data_paths, output_path, metadata_file):
     # EnergyPurchased
     # BlendedRate
     # EffectiveCostEnergy
-
+    if metadata_path == None:
     path = "../../../examples/dsot_data"
+    else:
+        path = metadata_path
+
     metadata = pt.load_json(path, metadata_file)
 
     # Load customer CFS dataframes:
@@ -768,8 +771,8 @@ def customer_cfs_delta(cases, data_paths, output_path, metadata_file):
 
     for DSO in metadata.keys():
         if 'DSO' in DSO:
-            if DSOmetadata[DSO]['used']:
-                dso_type[DSOmetadata[DSO]['utility_type']].append(int(DSO.split('_')[-1]))
+            if metadata[DSO]['used']:
+                dso_type[metadata[DSO]['utility_type']].append(int(DSO.split('_')[-1]))
 
     # Determine participating DER mix for each customer:
 
@@ -993,13 +996,13 @@ def plot_customer_pdf(attribute, variables, metric, pop_df, case, output_path):
                    'DER_participating': 'DER Participation'}
 
     if metric in ['bill_savings_pct', 'net_energy_cost_savings_pct']:
-        x_low = -10
+        x_low = -30
         x_high = 60
         # x_low = -0
         # x_high = 30
     elif metric in ['net_energy_purchased_pct']:
-        x_low = -10
-        x_high = 10
+        x_low = -20
+        x_high = 20
     elif metric in ['peak_load_reduction_pct']:
         x_low = -25
         x_high = 25
