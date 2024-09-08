@@ -392,7 +392,7 @@ def reduction_by_class(cases, data_paths, output_path,  variable):
         #     var_df = pd.read_csv(data_path + '/DSO_Total_Loads.csv', index_col='time', parse_dates=True)
 
 
-def dso_cfs_delta(cases_list, data_paths_list, dso_range, metadata_file):
+def dso_cfs_delta(cases_list, data_paths_list, dso_range, metadata_file, metadata_path):
     """Will plot LMPS by month, duration, and versus netloads loads (for select month), and save to file.
     Arguments:
         cases
@@ -410,7 +410,10 @@ def dso_cfs_delta(cases_list, data_paths_list, dso_range, metadata_file):
         results_path = data_paths_list[i][1]
         comp_path = data_paths_list[i][0]
 
-        path = "../../../examples/dsot_data"
+        if metadata_path == None:
+            path = "../../../examples/dsot_data"
+        else:
+            path = metadata_path
 
         # data = pt.load_json(path, 'sankey_delta_cost_structure.json')
 
@@ -452,7 +455,8 @@ def dso_cfs_delta(cases_list, data_paths_list, dso_range, metadata_file):
             capital_costs_comp = pt.load_json(comp_path, 'DSO' + str(dso) + '_Capital_Costs.json')
             wholesale_comp = pt.load_json(comp_path, 'DSO' + str(dso) + '_Market_Purchases.json')
 
-            revenue_delta = rec_diff(revenue, revenue_comp)
+            # TODO: Need to overhaul revenue structure so it is consistent for all cases.  It is not used for now.
+            # revenue_delta = rec_diff(revenue, revenue_comp)
             expenses_delta = rec_diff(expenses, expenses_comp)
             capital_costs_delta = rec_diff(capital_costs, capital_costs_comp)
             wholesale_delta = rec_diff(wholesale, wholesale_comp)
@@ -671,7 +675,7 @@ def customer_cfs_delta(cases, data_paths, metadata_file, metadata_path = None):
     # BlendedRate
     # EffectiveCostEnergy
     if metadata_path == None:
-    path = "../../../examples/dsot_data"
+        path = "../../../examples/dsot_data"
     else:
         path = metadata_path
 
