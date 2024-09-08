@@ -3790,10 +3790,33 @@ def DSO_rate_making(
                         "FlatDemandCharges": billsum_df.loc[("total", "flat_demand_charge"), "sum"] / 1000, # $k
                         "FlatFixedCharges": billsum_df.loc[("total", "flat_fixed_charge"), "sum"] / 1000, # $k
                     },
+                    "TOUSales": {
+                        "TOUEnergyCharges": 0,  # $k
+                        "TOUDemandCharges": 0,  # $k
+                        "TOUFixedCharges": 0
+                    },
+                    "SubscriptionSales": {
+                        "SubscriptionEnergyCharges": 0,  # $k
+                        "SubscriptionDemandCharges": 0,  # $k
+                        "SubscriptionFixedCharges": 0,
+                        "SubscriptionNetDeviationCharges": 0
+                    },
+                    "TransactiveSales": {
+                        "TransactiveDAEnergyCharges": 0,  # $k
+                        "TransactiveRTEnergyCharges": 0,  # $k
+                        "TransactiveFixedCharges": 0,
+                        "TransactiveVolumetricCharges": 0
+                    },
+                    "DSOTSales": {
+                        "DSOTDAEnergyCharges": 0,  # $k
+                        "DSOTRTEnergyCharges": 0,  # $k
+                        "DSOTFixedCharges": 0,
+                        "DSOTVolumetricCharges": 0
+                    },
                 },
             },
         }
-        
+
         # Assign additional information based on the rate scenario
         if rate_scenario == "time-of-use":
             DSO_Revenues_and_Energy_Sales["RetailSales"]["TOUSales"] = {

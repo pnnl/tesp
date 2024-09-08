@@ -1021,6 +1021,25 @@ def dso_CFS(
             "FlatEnergySales": DSO_Cash_Flows["Revenues"]["RetailSales"]["FlatSales"]["FlatEnergyCharges"],
             "FlatDemandSales": DSO_Cash_Flows["Revenues"]["RetailSales"]["FlatSales"]["FlatDemandCharges"],
             "FlatFixedSales": DSO_Cash_Flows["Revenues"]["RetailSales"]["FlatSales"]["FlatFixedCharges"],
+            "TOUSales": 0,
+            "TOUEnergySales": 0,
+            "TOUDemandSales": 0,
+            "TOUFixedSales": 0,
+            "SubscriptionSales": 0,
+            "SubscriptionEnergySales": 0,
+            "SubscriptionDemandSales": 0,
+            "SubscriptionFixedSales": 0,
+            "SubscriptionNetDeviationCharges": 0,
+            "TransactiveSales": 0,
+            "TransactiveDAEnergySales": 0,
+            "TransactiveRTEnergySales": 0,
+            "TransactiveFixedSales": 0,
+            "TransactiveVolumetricSales": 0,
+            "DSOTSales": 0,
+            "DSOTDAEnergySales": 0,
+            "DSOTRTEnergySales": 0,
+            "DSOTFixedSales": 0,
+            "DSOTVolumetricSales": 0
         }
 
         # Update the retail sales dictionary depending on the rate scenario
