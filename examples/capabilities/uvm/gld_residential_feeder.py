@@ -57,8 +57,8 @@ import math
 import numpy as np
 import pandas as pd
 import sys
-
-import gld_commercial_feeder as comm_FG
+import logging as log
+ 
 from tesp_support.api.helpers import gld_strict_name, random_norm_trunc, randomize_residential_skew
 from tesp_support.api.modify_GLM import GLMModifier
 from tesp_support.api.time_helpers import get_secs_from_hhmm, get_hhmm_from_secs, get_duration, get_dist
@@ -67,6 +67,8 @@ from tesp_support.api.entity import assign_defaults
 
 sys.path.append("../../..") #append to find examples/analysis/dsot/code
 from examples.analysis.dsot.code import recs_gld_house_parameters
+
+log.basicConfig(filename='debug.log', filemode='w', level=log.DEBUG)
 
 extra_billing_meters = set()
 
@@ -85,6 +87,7 @@ class Config:
         self.base = self.glm.defaults
         self.res_bldg_metadata = Residential_Build(self)
         self.comm_bldg_metadata = Commercial_Build(self)
+        self.solar_metadata = Solar(self)
         self.batt_metadata = Battery(self)
         self.ev_metadata = Electric_Vehicle(self)
 
@@ -157,14 +160,15 @@ class Config:
         num_comm_customers = round(self.number_of_gld_homes *
                                    self.RCI_customer_count_mix["commercial"] / self.RCI_customer_count_mix["residential"])
         num_comm_bldgs = num_comm_customers / self.comm_customers_per_bldg
-        self.base.comm_bldgs_pop = comm_FG.define_comm_bldg(self.comm_bldg_metadata, self.utility_type, num_comm_bldgs)
+        self.base.comm_bldgs_pop = self.comm_bldg_metadata.define_comm_bldg(self.utility_type, num_comm_bldgs)
 
         assign_defaults(self.res_bldg_metadata, self.out_file_residential_meta)
+        self.res_bldg_metadata.checkResidentialBuildingTable()
         cop_mat = self.res_bldg_metadata.COP_average
         years_bin = [range(1945, 1950), range(1950, 1960), range(1960, 1970), range(1970, 1980),
                      range(1980, 1990), range(1990, 2000), range(2000, 2010), range(2010, 2016),
                      range(2016, 2020)]
-        years_bin = [list(years_bin[ind]) for ind in range(len(years_bin))]
+        years_bin = [list(years_bin[ind]) for ind in range(len(years_bin))]            
 
         self.base.cop_lookup = []
         for _bin in range(len(years_bin)):
@@ -182,7 +186,6 @@ class Residential_Build:
     def __init__(self, config):
         self.config = config
         self.glm = config.glm
-        self.solar = Solar(self)
 
     def buildingTypeLabel(self, rgn: int, bldg: int, therm_int: int):
         """Formatted name of region, building type name and thermal integrity level
@@ -201,28 +204,28 @@ class Residential_Build:
     def checkResidentialBuildingTable(self):
         """Verify that the regional building parameter histograms sum to one"""
 
-        for tbl in range(len(self.config.base.dsoThermalPct)):
-            total = 0
-            for row in range(len(self.config.base.dsoThermalPct[tbl])):
-                for col in range(len(self.config.base.dsoThermalPct[tbl][row])):
-                    total += self.config.base.dsoThermalPct[tbl][row][col]
-            print(self.config.base.rgnName[tbl], 'rgnThermalPct sums to', '{:.4f}'.format(total))
+        # for tbl in range(len(self.config.base.dsoThermalPct)):
+        #     total = 0
+        #     for row in range(len(self.config.base.dsoThermalPct[tbl])):
+        #         for col in range(len(self.config.base.dsoThermalPct[tbl][row])):
+        #             total += self.config.base.dsoThermalPct[tbl][row][col]
+        #     print(self.config.base.rgnName[tbl], 'rgnThermalPct sums to', '{:.4f}'.format(total))
         for tbl in range(len(self.config.base.bldgCoolingSetpoints)):
             total = 0
             for row in range(len(self.config.base.bldgCoolingSetpoints[tbl])):
                 total += self.config.base.bldgCoolingSetpoints[tbl][row][0]
-            print('bldgCoolingSetpoints', tbl, 'histogram sums to', '{:.4f}'.format(total))
+            log.info('bldgCoolingSetpoints %s histograms sum to %.4f', tbl, total)
         for tbl in range(len(self.config.base.bldgHeatingSetpoints)):
             total = 0
             for row in range(len(self.config.base.bldgHeatingSetpoints[tbl])):
                 total += self.config.base.bldgHeatingSetpoints[tbl][row][0]
-            print('bldgHeatingSetpoints', tbl, 'histogram sums to', '{:.4f}'.format(total))
+            log.info('bldgHeatingSetpoints %s histograms sum to %.4f', tbl, total)
         for bldg in range(3):
             binZeroReserve = self.config.base.bldgCoolingSetpoints[bldg][0][0]
             binZeroMargin = self.config.base.bldgHeatingSetpoints[bldg][0][0] - binZeroReserve
             if binZeroMargin < 0.0:
                 binZeroMargin = 0.0
-            # print(bldg, binZeroReserve, binZeroMargin)
+            # log.info(str(bldg), str(binZeroReserve), str(binZeroMargin))
             for cBin in range(1, 6):
                 denom = binZeroMargin
                 for hBin in range(1, self.config.base.allowedHeatingBins[cBin]):
@@ -231,7 +234,7 @@ class Residential_Build:
                 for hBin in range(1, self.config.base.allowedHeatingBins[cBin]):
                     self.config.base.conditionalHeatingBinProb[bldg][cBin][hBin] = \
                         self.config.base.bldgHeatingSetpoints[bldg][hBin][0] / denom
-        # print('conditionalHeatingBinProb', conditionalHeatingBinProb)
+        # log.info('conditionalHeatingBinProb', str(conditionalHeatingBinProb))
 
     def selectSetpointBins(self, bldg: int, rand: float):
         """Randomly choose a histogram row from the cooling and heating setpoints.
@@ -829,7 +832,7 @@ class Residential_Build:
         # based on income level 
 
         # P(solar and income and SF)
-        p_sol_inc_sf = self.config.base.solar_percentage * self.solar_percentage[income]
+        p_sol_inc_sf = self.config.solar_percentage * self.solar_percentage[income]
         # P(SF|income)
         p_sf_g_inc = self.housing_type[self.config.state][self.config.res_dso_type][income]['single_family_detached'] + \
                      self.housing_type[self.config.state][self.config.res_dso_type][income]['single_family_attached']
@@ -838,18 +841,21 @@ class Residential_Build:
         # P(solar|income and SF)
         sol_g_inc_sf = p_sol_inc_sf / (p_sf_g_inc * il_percentage)
         # P(battery and solar and SF and income)
-        p_bat_sol_sf_inc = self.config.base.storage_percentage * self.battery_percentage[income]
+        p_bat_sol_sf_inc = self.config.storage_percentage * self.battery_percentage[income]
         # P(battery|solar and SF and income)
-        bat_g_sol_sf_inc = p_bat_sol_sf_inc / (sol_g_inc_sf * p_sf_g_inc * il_percentage)
+        if not self.config.storage_percentage:
+            bat_g_sol_sf_inc = 0
+        else: 
+            bat_g_sol_sf_inc = p_bat_sol_sf_inc / (sol_g_inc_sf * p_sf_g_inc * il_percentage)
         # P(ev|income)
         ev_percentage_il = (self.config.ev_percentage * self.ev_percentage[income]) / il_percentage
 
         if bldg == 0:  # Single-family homes
-            Solar.add_solar(self, sol_g_inc_sf, mtrname1, sol_m_name, sol_i_name, phs, v_nom, income, floor_area)
+            self.config.solar_metadata.add_solar(sol_g_inc_sf, mtrname1, sol_m_name, sol_i_name, phs, v_nom, floor_area)
 
-        Battery.add_batt(self, bat_g_sol_sf_inc, mtrname1, bat_m_name, bat_i_name, phs, v_nom)
+        self.config.batt_metadata.add_batt(bat_g_sol_sf_inc, mtrname1, bat_m_name, bat_i_name, phs, v_nom)
 
-        Electric_Vehicle.add_ev(self, ev_percentage_il, hsename)
+        self.config.ev_metadata.add_ev(ev_percentage_il, hsename)
         
 
 class Commercial_Build:
@@ -865,7 +871,7 @@ class Commercial_Build:
             gld_class (str): the GridLAB-D class name to scan
             avgBuilding (float): the average building size in kva
         """
-        print('Average Commercial Building', avgBuilding, 'kVA')
+        print('Average Commercial Building size:', avgBuilding, 'kVA')
         total_commercial = 0
         self.total_comm_kva = 0
         self.total_zipload = 0
@@ -942,7 +948,7 @@ class Commercial_Build:
                     del (self.config.base.comm_bldgs_pop[select_bldg])
                 else:
                     if nzones > 0:
-                        print('Commercial building could not be found for ', '{:.2f}'.format(kva), ' KVA load')
+                        log.warning('Commercial building could not be found for %.2f KVA load', kva)
                     comm_name = 'streetlights'
                     comm_type = 'ZIPload'
                     comm_size = 0
@@ -968,7 +974,7 @@ class Commercial_Build:
         print('  ', self.total_healthcare_inpatient, 'healthcare,')
         print('  ', self.total_low_occupancy, 'low occupancy,')
         print('  ', self.total_zipload, 'streetlights')
-        print('The {} commercial loads and {} streetlights (ZIPloads) totaling {:.2f} kVA added to this feeder are:'.
+        log.info('The {} commercial loads and {} streetlights (ZIPloads) totaling {:.2f} kVA added to this feeder are:'.
               format(total_commercial, self.total_zipload, self.total_comm_kva))    
 
     def add_one_commercial_zone(self, bldg: dict):
@@ -1099,8 +1105,9 @@ class Commercial_Build:
         phases = self.config.base.comm_loads[key][5]
         vln = float(self.config.base.comm_loads[key][6])
         loadnum = int(self.config.base.comm_loads[key][7])
-        print('load:', key, 'mtr:', mtr, 'type:', comm_type, 'kVA:', '{:.3f}'.format(kva),
-              'nphs:', nphs, 'phases:', phases, 'vln', '{:.3f}'.format(vln))
+        log.info('load: %s, mtr: %s, type: %s, kVA: %.4f, nphs: %s, phases: %s, vln: %.3f', key, mtr, comm_type, kva, nphs, phases, vln)
+        #log.info('load:', str(key), 'mtr:', str(mtr), 'type:', str(comm_type), 'kVA:', '{:.3f}'.format(kva),
+              #'nphs:', str(nphs), 'phases:', str(phases), 'vln', '{:.3f}'.format(vln))
 
         bldg = {'parent': key,
                 'mtr': mtr,
@@ -1325,17 +1332,130 @@ class Commercial_Build:
                       "phases": '{:s}'.format(phases)}
             self.glm.add_object("load", name, params)
 
+    def define_comm_bldg(bldg_metadata, dso_type, num_bldgs):
+        """Randomly selects a set number of buildings by type and size (sq. ft.)
+
+        Args:
+            bldg_metadata: dictionary of building parameter data
+            dso_type: 'Urban', 'Suburban', or 'Rural'
+            num_bldgs: scalar value of number of buildings to be selected
+        
+        Returns:
+            bldgs: buildings
+        """
+        bldgs = {}
+        bldg_types = Commercial_Build.normalize_dict_prob(dso_type, bldg_metadata.general['building_type'][dso_type])
+        i = 0
+        while i < num_bldgs:
+            bldg_type = Commercial_Build.rand_bin_select(bldg_types, np.random.uniform(0, 1))
+            if bldg_type not in ['large_office']:
+                area = Commercial_Build.normalize_dict_prob('total_area', bldg_metadata.building_model_specifics[bldg_type]['total_area'])
+                bldg_area_bin = Commercial_Build.rand_bin_select(area, np.random.uniform(0, 1))
+                bldg_area = Commercial_Build.sub_bin_select(bldg_area_bin, 'total_area', np.random.uniform(0, 1))
+                bldgs['bldg_' + str(i + 1)] = [bldg_type, bldg_area]
+                i += 1
+
+        return bldgs
+    
+    def normalize_dict_prob(name, diction):
+        """ Ensures that the probability distribution of values in a dictionary 
+            effectively sums to one
+
+        Args:
+            name: name of dictionary to normalize
+            diction: dictionary of elements and associated non-cumulative 
+                probabilities
+        
+        Returns:
+            diction: normalized dictionary of elements and associated 
+                non-cumulative probabilities
+        """
+        sum1 = 0
+        sum2 = 0
+        for i in diction:
+            sum1 += diction[i]
+        for y in diction:
+            diction[y] = diction[y] / sum1
+        for z in diction:
+            sum2 += diction[z]
+        if sum1 != sum2:
+            log.debug("WARNING %s dictionary normalize to 1, values are > %s", name, diction)
+        return diction
+
+    def rand_bin_select(diction, probability):
+        """ Returns the element (bin) in a dictionary given a certain
+          probability
+
+        Args:
+            diction: dictionary of elements and associated non-cumulative 
+                probabilities
+            probability: scalar value between 0 and 1
+        
+        Returns:
+            None
+        """
+        total = 0
+
+        for element in diction:
+            total += diction[element]
+            if total >= probability:
+                return element
+        return None
+
+
+    def sub_bin_select(_bin, _type, _prob):
+        """ Returns a scalar value within a bin range based on a uniform 
+            probability within that bin range
+
+        Args:
+            _bin: name of bin
+            _type: building parameter describing set of bins
+            _prob: scalar value between 0 and 1
+        
+        Returns:
+            val: scalar value within bin range
+        """
+        bins = {}
+        if _type == 'vintage':
+            bins = {'pre_1960': [1945, 1959],
+                    '1960-1979': [1960, 1979],
+                    '1980-1999': [1980, 1999],
+                    '2000-2009': [2000, 2009],
+                    '2010-2015': [2010, 2015]}
+        elif _type == 'total_area':
+            bins = {'1-5': [1000, 5000],
+                    '5-10': [5001, 10000],
+                    '10-25': [10001, 25000],
+                    '25-50': [25001, 50000],
+                    '50_more': [50001, 55000]}
+        elif _type == 'occupancy':
+            bins = {'0': [0, 0],
+                    '1-39': [1, 39.99],
+                    '40-48': [40, 48.99],
+                    '49-60': [49, 60.99],
+                    '61-84': [61, 84.99],
+                    '85-167': [85, 167.99],
+                    '168': [168, 168]}
+        val = bins[_bin][0] + _prob * (bins[_bin][1] - bins[_bin][0])
+        if _type in ['vintage']:
+            val = int(val)
+        return val
+
 class Battery:
     def __init__(self, config):
         self.config = config
+        self.glm = config.glm
     
     def add_batt(self, batt_prob: float,  meter_name: str, batt_name: str, inv_name: str, phs: float, v_nom: float):
-        """_summary_
+        """Adds battery and inverter objects to house, under the parentage of
+            the meter_name.
 
         Args:
-            batt_prob (_type_): _description_
-            solar_prob (_type_): _description_
-            inc_prob (_type_): _description_
+            batt_prob (float): probability distribution of houses with batteries
+            meter_name (str): name of parent meter
+            batt_name (str): name of the battery object
+            inv_name (str): name of the inverter object
+            phs (float): phase of parent triplex meter 
         """
 
         if rng.uniform(0, 1) <= batt_prob:
@@ -1446,15 +1566,17 @@ class Solar:
             self.glm.model.define_lines.append('#define INV_VW_P2=0.0')
         # write the optional volt_dump and curr_dump for validation
     
-    def add_solar(self, solar_prob: float,  meter_name: str, solar_name: str, inv_name: str, phs: float, v_nom: float, income: float, floor_area: float):
-        """ 
+    def add_solar(self, solar_prob: float,  meter_name: str, solar_name: str, inv_name: str, phs: float, v_nom: float, floor_area: float):
+        """Adds solar and inverter to house object under parent of meter_name
 
-        Raises:
-            UserWarning: _description_
-            UserWarning: _description_
-
-        Returns:
-            _type_: _description_
+        Args:
+            solar_prob (float): probability distribution of houses with solar 
+            meter_name (str): name of parent meter
+            solar_name (str): name of solar object
+            inv_name (str): name of inverter object
+            phs (float): phase of parent triplex meter
+            v_nom (float): _description_
+            floor_area (float): _description_
         """
 
         if solar_prob > 0.0:
@@ -1519,7 +1641,8 @@ class Solar:
 class Electric_Vehicle:
     def __init__(self, config):
         self.config = config
-    
+        self.glm = config.glm
+
     def add_ev(self, ev_prob: float, house_name: str):
         if rng.uniform(0, 1) <= ev_prob:
             # first lets select an ev model:
@@ -1728,18 +1851,14 @@ class Feeder:
         self.glm = config.glm
         config.generate_and_load_recs()
 
-        # reassign for convenience
-        glm = config.glm
-        base = config.base
-
         # Read in backbone feeder to populate
         if not config.in_file_glm:
-            i_glm, success = glm.model.readBackboneModel(config.taxonomy)
+            i_glm, success = self.glm.model.readBackboneModel(config.taxonomy)
             print('User feeder not defined, using taxonomy feeder', config.taxonomy)
             if not success:
                 exit()
         else:
-            i_glm, success = glm.read_model(config.in_file_glm)
+            i_glm, success = self.glm.read_model(config.in_file_glm)
             if not success:
                 exit()
 
@@ -1749,7 +1868,7 @@ class Feeder:
         # standard size based on the downstream load
         #   - change the referenced transformer_configuration attributes
         #   - write the standard transformer_configuration instances we actually need
-        seg_loads = glm.model.identify_seg_loads()
+        seg_loads = self.glm.model.identify_seg_loads()
 
         # Power and region to requirements for commercial and residential load
         # The tax choice array are for feeder taxonomy signature glm file
@@ -1771,7 +1890,7 @@ class Feeder:
             e_config = e_object['configuration']
             sec_v = float(i_glm.transformer_configuration[e_config]['secondary_voltage'])
             if e_name not in seg_loads or sec_v > 500:
-                print(f"WARNING: {e_name} not in the seg loads")
+                log.warning(f"WARNING: %s not in the seg loads", e_name)
                 continue
             seg_kva = seg_loads[e_name][0]
             seg_phs = seg_loads[e_name][1]
@@ -1784,16 +1903,16 @@ class Feeder:
             if 'C' in seg_phs:
                 nphs += 1
             if nphs > 1:
-                kvat = glm.find_3phase_xfmr_w_margin(seg_kva)
+                kvat = self.glm.find_3phase_xfmr_w_margin(seg_kva)
             else:
-                kvat = glm.find_1phase_xfmr_w_margin(seg_kva)
+                kvat = self.glm.find_1phase_xfmr_w_margin(seg_kva)
             if 'S' in seg_phs:
                 vnom = 120.0
                 vsec = 120.0
             else:
                 if 'N' not in seg_phs:
                     seg_phs += 'N'
-                if kvat > base.max208kva:
+                if kvat > config.base.max208kva:
                     vsec = 480.0
                     vnom = 277.0
                 else:
@@ -1802,19 +1921,19 @@ class Feeder:
 
             secnode[gld_strict_name(e_object['to'])] = [kvat, seg_phs, vnom]
 
-            old_key = glm.model.hash[e_object['configuration']]
+            old_key = self.glm.model.hash[e_object['configuration']]
             install_type = i_glm.transformer_configuration[old_key]['install_type']
 
             raw_key = 'XF' + str(nphs) + '_' + install_type + '_' + seg_phs + '_' + str(kvat)
             key = raw_key.replace('.', 'p')
 
-            e_object['configuration'] = base.name_prefix + key
+            e_object['configuration'] = config.base.name_prefix + key
             e_object['phases'] = seg_phs
             if key not in xfused:
                 xfused[key] = [seg_phs, kvat, vnom, vsec, install_type]
 
         for key in xfused:
-            glm.add_xfmr_config(key, xfused[key][0], xfused[key][1], xfused[key][2], xfused[key][3],
+            self.glm.add_xfmr_config(key, xfused[key][0], xfused[key][1], xfused[key][2], xfused[key][3],
                                  xfused[key][4], config.vll, config.vln)
 
         for e_name, e_object in i_glm.capacitor.items():
@@ -1839,14 +1958,14 @@ class Feeder:
                     amps = 1000.0 * seg_kva / 2.0 / config.vln
                 else:
                     amps = 1000.0 * seg_kva / config.vln
-                e_object['current_limit'] = str(glm.find_fuse_limit_w_margin(amps))
+                e_object['current_limit'] = str(self.glm.find_fuse_limit_w_margin(amps))
 
-        glm.add_local_triplex_configurations()
+        self.glm.add_local_triplex_configurations()
 
         configurations = ['regulator_configuration', 'overhead_line_conductor', 'line_spacing', 'line_configuration',
                           'triplex_line_conductor', 'triplex_line_configuration', 'underground_line_conductor']
         for configure in configurations:
-            glm.add_config_class(configure)
+            self.glm.add_config_class(configure)
 
         links = ['fuse', 'switch', 'recloser', 'sectionalizer',
                  'overhead_line', 'underground_line', 'series_reactor',
@@ -1855,38 +1974,30 @@ class Feeder:
             metrics = False
             if link in ['regulator', 'capacitor']:
                 metrics = True
-            glm.add_link_class(link, seg_loads, want_metrics=metrics)
+            self.glm.add_link_class(link, seg_loads, want_metrics=metrics)
 
         # Identify and add residential loads
         self.identify_xfmr_houses('transformer', seg_loads, 0.001 * config.avg_house, config.region)
-        for key in base.house_nodes:
+        for key in config.base.house_nodes:
             config.res_bldg_metadata.add_houses(key, 120.0)
-        for key in base.small_nodes:
+        for key in config.base.small_nodes:
             config.res_bldg_metadata.add_small_loads(key, 120.0)
 
         # Identify and add commercial loads
         config.comm_bldg_metadata.identify_commercial_loads('load', 0.001 * config.avg_commercial)
-        for key in base.comm_loads:
+        for key in config.base.comm_loads:
             config.comm_bldg_metadata.add_commercial_loads(config.region, key)
-#   TODO: confirm switch from commercial feeder gen to ^ add_commercial_loads
-#            bldg_definition = comm_FG.define_comm_loads(self.glm,
-#                base.comm_loads[key][1],
-#                base.comm_loads[key][2],
-#                config.utility_type,
-#                config.ashrae_zone,
-#                config.comm_bldg_metadata)
-            #comm_FG.add_comm_zones(self, bldg_definition, key)
-        glm.add_voltage_class('node', config.vln, config.vll, secnode)
-        glm.add_voltage_class('meter',config.vln, config.vll, secnode)
-        glm.add_voltage_class('load', config.vln, config.vll, secnode)
+        self.glm.add_voltage_class('node', config.vln, config.vll, secnode)
+        self.glm.add_voltage_class('meter',config.vln, config.vll, secnode)
+        self.glm.add_voltage_class('load', config.vln, config.vll, secnode)
 
-        print(f"cooling bins unused {base.cooling_bins}")
-        print(f"heating bins unused {base.heating_bins}")
-        print(f"{base.solar_count} pv totaling "
-              f"{base.solar_kw:.1f} kW, with "
-              f"{base.battery_count} batteries and "
-              f"{base.ev_count} EV chargers.")
-        glm.write_model(config.out_file_glm)
+        print(f"cooling bins unused {self.config.base.cooling_bins}")
+        print(f"heating bins unused {self.config.base.heating_bins}")
+        print(f"{self.config.base.solar_count} pv totaling "
+              f"{self.config.base.solar_kw:.1f} kW, with "
+              f"{self.config.base.battery_count} batteries and "
+              f"{self.config.base.ev_count} EV chargers.")
+        self.glm.write_model(config.out_file_glm)
 
         # To plot the model using the networkx package:
         #print("\nPlotting image of model; this will take a minute.")
@@ -1901,7 +2012,7 @@ class Feeder:
             avgHouse (float): the average house load in kva
             rgn (int): the region number, 1..5
         """
-        print(f"Average House {avgHouse} kVA")
+        print(f"Average House size: {avgHouse} kVA")
         total_houses = 0
         total_sf = 0
         total_apt = 0
@@ -1940,8 +2051,8 @@ class Feeder:
                             total_mh += nhouse
                         self.config.base.house_nodes[node] = [nhouse, rgn, lg_v_sm, phs, bldg, ti, inc_lev]
         print(f"{total_small} small loads totaling {total_small_kva:.2f} kVA")
-        print(f"{total_houses} houses on {len(self.config.base.house_nodes)} transformers, "
-              f"[SF, APT, MH] = [{total_sf}, {total_apt}, {total_mh}]")
+        print(f"{total_houses} houses added to {len(self.config.base.house_nodes)} transformers. "
+              f"{total_sf} single family homes, {total_apt} apartments, and {total_mh} manufactured homes")
         for i in range(6):
             self.config.base.heating_bins[0][i] = round(total_sf * self.config.base.bldgHeatingSetpoints[0][i][0] + 0.5)
             self.config.base.heating_bins[1][i] = round(total_apt * self.config.base.bldgHeatingSetpoints[1][i][0] + 0.5)
