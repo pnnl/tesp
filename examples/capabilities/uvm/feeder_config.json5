@@ -3,8 +3,8 @@
 
 {
     // general
-    "in_file_glm": "South_D1_Alburgh_mod_tesp_v4.glm", // the input feeder model. If None, taxonomy feeder used
-    "out_file_glm": "South_D1_Alburgh_mod_tesp_v4_populated.glm", // REQUIRED: the output populated feeder
+    "in_file_glm": "South_D1_Alburgh_mod_tesp_reduced.glm", // the input feeder model. If None, taxonomy feeder used
+    "out_file_glm": "South_D1_Alburgh_mod_tesp_reduced_populated.glm", // REQUIRED: the output populated feeder
     "case_name": "MyCase", // REQUIRED: a name for your case
     "substation_name": "MySub", // REQUIRED: a name for the substation
     "starttime": "2023-01-01 07:00:00", // REQUIRED: format "2023-01-01 00:00:00"
