@@ -80,16 +80,16 @@ rng = np.random.default_rng(seed)
 
 class Config:
 
-    def __init__(self, glm_config=None):
+    def __init__(self, config=None):
         # Assign default values to those not defined in config file
-        self.keys = list(assign_defaults(self, glm_config).keys())
+        self.keys = list(assign_defaults(self, config).keys())
         self.glm = GLMModifier()
         self.base = self.glm.defaults
-        self.res_bldg_metadata = Residential_Build(self)
-        self.comm_bldg_metadata = Commercial_Build(self)
-        self.solar_metadata = Solar(self)
-        self.batt_metadata = Battery(self)
-        self.ev_metadata = Electric_Vehicle(self)
+        self.res_bld = Residential_Build(self)
+        self.com_bld = Commercial_Build(self)
+        self.sol = Solar(self)
+        self.batt = Battery(self)
+        self.ev = Electric_Vehicle(self)
 
     def preamble(self):
         # Add tape, climate, generators, connection, and residential modules
@@ -155,16 +155,16 @@ class Config:
                 self.wh_shift
             )
 
-        assign_defaults(self.comm_bldg_metadata, self.file_commercial_meta)
+        assign_defaults(self.com_bld, self.file_commercial_meta)
         # generate the total population of commercial buildings by type and size
         num_comm_customers = round(self.number_of_gld_homes *
                                    self.RCI_customer_count_mix["commercial"] / self.RCI_customer_count_mix["residential"])
         num_comm_bldgs = num_comm_customers / self.comm_customers_per_bldg
-        self.base.comm_bldgs_pop = self.comm_bldg_metadata.define_comm_bldg(self.utility_type, num_comm_bldgs)
+        self.base.comm_bldgs_pop = self.com_bld.define_comm_bldg(self.utility_type, num_comm_bldgs)
 
-        assign_defaults(self.res_bldg_metadata, self.out_file_residential_meta)
-        self.res_bldg_metadata.checkResidentialBuildingTable()
-        cop_mat = self.res_bldg_metadata.COP_average
+        assign_defaults(self.res_bld, self.out_file_residential_meta)
+        self.res_bld.checkResidentialBuildingTable()
+        cop_mat = self.res_bld.COP_average
         years_bin = [range(1945, 1950), range(1950, 1960), range(1960, 1970), range(1970, 1980),
                      range(1980, 1990), range(1990, 2000), range(2000, 2010), range(2010, 2016),
                      range(2016, 2020)]
@@ -177,9 +177,9 @@ class Config:
                 temp.append(cop_mat[str(yr)])
             self.base.cop_lookup.append(temp)
 
-        assign_defaults(self.batt_metadata, self.file_battery_meta)
-        assign_defaults(self.ev_metadata, self.file_ev_meta)
-        self.base.ev_driving_metadata = self.ev_metadata.process_nhts_data(self.file_ev_driving_meta)
+        assign_defaults(self.batt, self.file_battery_meta)
+        assign_defaults(self.ev, self.file_ev_meta)
+        self.base.ev_driving_metadata = self.ev.process_nhts_data(self.file_ev_driving_meta)
 
 
 class Residential_Build:
@@ -236,7 +236,7 @@ class Residential_Build:
                         self.config.base.bldgHeatingSetpoints[bldg][hBin][0] / denom
         # log.info('conditionalHeatingBinProb', str(conditionalHeatingBinProb))
 
-    def selectSetpointBins(self, bldg: int, rand: float):
+    def selectSetpointBins(self, bldg: int, rand: float) -> int:
         """Randomly choose a histogram row from the cooling and heating setpoints.
         The random number for the heating setpoint row is generated internally.
 
@@ -318,7 +318,7 @@ class Residential_Build:
                   "constant_power_12_reac": "8.0"}
         self.glm.add_object("triplex_load", loadname, params)
 
-    def getDsoIncomeLevelTable(self):
+    def getDsoIncomeLevelTable(self) -> list:
         """Retrieves the DSO Income Level Fraction of income level in a given 
         dso type and state:
         Index 0 is the income level:
@@ -418,7 +418,7 @@ class Residential_Build:
         col = len(rgnTable[row]) - 1
         return row, col
 
-    def selectThermalProperties(self, bldg: int, therm_int: int):
+    def selectThermalProperties(self, bldg: int, therm_int: int) -> list:
         """Retrieve the building thermal properties for a given type and
         thermal integrity level
 
@@ -851,131 +851,17 @@ class Residential_Build:
         ev_percentage_il = (self.config.ev_percentage * self.ev_percentage[income]) / il_percentage
 
         if bldg == 0:  # Single-family homes
-            self.config.solar_metadata.add_solar(sol_g_inc_sf, mtrname1, sol_m_name, sol_i_name, phs, v_nom, floor_area)
+            self.config.sol.add_solar(sol_g_inc_sf, mtrname1, sol_m_name, sol_i_name, phs, v_nom, floor_area)
 
-        self.config.batt_metadata.add_batt(bat_g_sol_sf_inc, mtrname1, bat_m_name, bat_i_name, phs, v_nom)
+        self.config.batt.add_batt(bat_g_sol_sf_inc, mtrname1, bat_m_name, bat_i_name, phs, v_nom)
 
-        self.config.ev_metadata.add_ev(ev_percentage_il, hsename)
+        self.config.ev.add_ev(ev_percentage_il, hsename)
         
 
 class Commercial_Build:
     def __init__(self, config):
         self.config = config
         self.glm = config.glm
-
-    def identify_commercial_loads(self, gld_class: str, avgBuilding: float):
-        """For the full-order feeders, scan each load with load_class==C to
-        determine the number of zones it should have.
-
-        Args:
-            gld_class (str): the GridLAB-D class name to scan
-            avgBuilding (float): the average building size in kva
-        """
-        print('Average Commercial Building size:', avgBuilding, 'kVA')
-        total_commercial = 0
-        self.total_comm_kva = 0
-        self.total_zipload = 0
-        self.total_office = 0
-        self.total_warehouse_storage = 0
-        self.total_big_box = 0
-        self.total_strip_mall = 0
-        self.total_education = 0
-        self.total_food_service = 0
-        self.total_food_sales = 0
-        self.total_lodging = 0
-        self.total_healthcare_inpatient = 0
-        self.total_low_occupancy = 0
-        sqft_kva_ratio = 0.005  # Average com building design load is 5 W/sq ft.
-
-        try:
-            entity = self.glm.glm.__getattribute__(gld_class)
-        except:
-            return
-        removenames = []
-        for e_name, e_object in entity.items():
-            if 'load_class' in e_object:
-                select_bldg = None
-                if e_object['load_class'] == 'C':
-                    kva = self.glm.model.accumulate_load_kva(e_object)
-                    total_commercial += 1
-                    self.total_comm_kva += kva
-                    vln = float(e_object['nominal_voltage'])
-                    nphs = 0
-                    phases = e_object['phases']
-                    if 'A' in phases:
-                        nphs += 1
-                    if 'B' in phases:
-                        nphs += 1
-                    if 'C' in phases:
-                        nphs += 1
-                    nzones = int((kva / avgBuilding) + 0.5)
-                    target_sqft = kva / sqft_kva_ratio
-                    sqft_error = -target_sqft
-                    # TODO: Need a way to place all remaining buildings if this is the last/fourth feeder.
-                    # TODO: Need a way to place link for j-modelica buildings on fourth feeder of Urban DSOs
-                    # TODO: Need to work out what to do if we run out of commercial buildings before we get to the fourth feeder.
-                    remain_comm_kva = 0
-                    for bldg in self.config.base.comm_bldgs_pop:
-                        if 0 >= (self.config.base.comm_bldgs_pop[bldg][1] - target_sqft) > sqft_error:
-                            select_bldg = bldg
-                            sqft_error = self.config.base.comm_bldgs_pop[bldg][1] - target_sqft
-                        remain_comm_kva += self.config.base.comm_bldgs_pop[bldg][1] * sqft_kva_ratio
-
-                if select_bldg is not None:
-                    comm_name = select_bldg
-                    comm_type = self.config.base.comm_bldgs_pop[select_bldg][0]
-                    comm_size = self.config.base.comm_bldgs_pop[select_bldg][1]
-                    if comm_type == 'office':
-                        self.total_office += 1
-                    elif comm_type == 'warehouse_storage':
-                        self.total_warehouse_storage += 1
-                    elif comm_type == 'big_box':
-                        self.total_big_box += 1
-                    elif comm_type == 'strip_mall':
-                        self.total_strip_mall += 1
-                    elif comm_type == 'education':
-                        self.total_education += 1
-                    elif comm_type == 'food_service':
-                        self.total_food_service += 1
-                    elif comm_type == 'food_sales':
-                        self.total_food_sales += 1
-                    elif comm_type == 'lodging':
-                        self.total_lodging += 1
-                    elif comm_type == 'healthcare_inpatient':
-                        self.total_healthcare_inpatient += 1
-                    elif comm_type == 'low_occupancy':
-                        self.total_low_occupancy += 1
-                    del (self.config.base.comm_bldgs_pop[select_bldg])
-                else:
-                    if nzones > 0:
-                        log.warning('Commercial building could not be found for %.2f KVA load', kva)
-                    comm_name = 'streetlights'
-                    comm_type = 'ZIPload'
-                    comm_size = 0
-                    self.total_zipload += 1
-                mtr = gld_strict_name(e_object['parent'])
-                extra_billing_meters.add(mtr)
-                self.config.base.comm_loads[e_name] = [mtr, comm_type, comm_size, kva, nphs, phases, vln, total_commercial, comm_name]
-                removenames.append(e_name)
-        for e_name in removenames:
-            self.glm.del_object(gld_class, e_name)
-        #TODO: The below statement is not consistent with individual building/zone count
-        print('{} commercial buildings, approximately {} kVA still to be assigned.'.
-                        format(len(self.config.base.comm_bldgs_pop), int(remain_comm_kva)))
-        # Print commercial info
-        print('  ', self.total_office, 'med/small offices, 3 floors, 5 zones each,', self.total_office*5*3, 'total office zones' )
-        print('  ', self.total_warehouse_storage, 'warehouses,')
-        print('  ', self.total_big_box, 'big box retail, 6 zones each,', self.total_big_box*6, 'total big box zones')
-        print('  ', self.total_strip_mall, 'strip malls,')
-        print('  ', self.total_education, 'education,')
-        print('  ', self.total_food_service, 'food service,')
-        print('  ', self.total_food_sales, 'food sales,')
-        print('  ', self.total_lodging, 'lodging,')
-        print('  ', self.total_healthcare_inpatient, 'healthcare,')
-        print('  ', self.total_low_occupancy, 'low occupancy,')
-        print('  ', self.total_zipload, 'streetlights')
-        log.info('The {} commercial loads and {} streetlights (ZIPloads) totaling {:.2f} kVA added to this feeder are:'.
-              format(total_commercial, self.total_zipload, self.total_comm_kva))    
 
     def add_one_commercial_zone(self, bldg: dict):
         """Write one pre-configured commercial zone as a house
@@ -1091,7 +977,7 @@ class Commercial_Build:
 
         self.glm.add_metrics_collector(name, "house")
 
-    def add_commercial_loads(self, rgn: int, key: str):
+    def add_commercial_loads(self, rgn: int, key: str, total_comm_kva: float):
         """Put commercial building zones and ZIP loads into the model
 
         Args:
@@ -1100,7 +986,7 @@ class Commercial_Build:
         """
         mtr = self.config.base.comm_loads[key][0]
         comm_type = self.config.base.comm_loads[key][1]
-        kva = self.total_comm_kva
+        kva = total_comm_kva
         nphs = int(self.config.base.comm_loads[key][4])
         phases = self.config.base.comm_loads[key][5]
         vln = float(self.config.base.comm_loads[key][6])
@@ -1459,14 +1345,14 @@ class Battery:
         """
 
         if rng.uniform(0, 1) <= batt_prob:
-            battery_capacity = get_dist(self.config.batt_metadata.capacity['mean'],
-                                        self.config.batt_metadata.capacity['deviation_range_per']) * 1000
-            max_charge_rate = get_dist(self.config.batt_metadata.rated_charging_power['mean'],
-                                       self.config.batt_metadata.rated_charging_power['deviation_range_per']) * 1000
+            battery_capacity = get_dist(self.config.batt.capacity['mean'],
+                                        self.config.batt.capacity['deviation_range_per']) * 1000
+            max_charge_rate = get_dist(self.config.batt.rated_charging_power['mean'],
+                                       self.config.batt.rated_charging_power['deviation_range_per']) * 1000
             max_discharge_rate = max_charge_rate
-            inverter_efficiency = self.config.batt_metadata.inv_efficiency / 100
-            charging_loss = get_dist(self.config.batt_metadata.rated_charging_loss['mean'],
-                                     self.config.batt_metadata.rated_charging_loss['deviation_range_per']) / 100
+            inverter_efficiency = self.config.batt.inv_efficiency / 100
+            charging_loss = get_dist(self.config.batt.rated_charging_loss['mean'],
+                                     self.config.batt.rated_charging_loss['deviation_range_per']) / 100
             discharging_loss = charging_loss
             round_trip_efficiency = charging_loss * discharging_loss
             rated_power = max(max_charge_rate, max_discharge_rate)
@@ -1646,21 +1532,21 @@ class Electric_Vehicle:
     def add_ev(self, ev_prob: float, house_name: str):
         if rng.uniform(0, 1) <= ev_prob:
             # first lets select an ev model:
-            ev_name = Electric_Vehicle.selectEVmodel(self.config.ev_metadata.sale_probability, rng.uniform(0, 1))
-            ev_range = self.config.ev_metadata.Range_miles[ev_name]
-            ev_mileage = self.config.ev_metadata.Miles_per_kWh[ev_name]
-            ev_charge_eff = self.config.ev_metadata.charging_efficiency
+            ev_name = Electric_Vehicle.selectEVmodel(self.config.ev.sale_probability, rng.uniform(0, 1))
+            ev_range = self.config.ev.Range_miles[ev_name]
+            ev_mileage = self.config.ev.Miles_per_kWh[ev_name]
+            ev_charge_eff = self.config.ev.charging_efficiency
             # check if level 1 charger is used or level 2
-            if rng.uniform(0, 1) <= self.config.ev_metadata.Level_1_usage:
-                ev_max_charge = self.config.ev_metadata.Level_1_max_power_kW
+            if rng.uniform(0, 1) <= self.config.ev.Level_1_usage:
+                ev_max_charge = self.config.ev.Level_1_max_power_kW
                 volt_conf = 'IS110'  # for level 1 charger, 110 V is good
             else:
-                ev_max_charge = self.config.ev_metadata.Level_2_max_power_kW[ev_name]
+                ev_max_charge = self.config.ev.Level_2_max_power_kW[ev_name]
                 volt_conf = 'IS220'  # for level 2 charger, 220 V is must
 
             # now, let's map a random driving schedule with this vehicle ensuring daily miles
             # doesn't exceed the vehicle range and home duration is enough to charge the vehicle
-            drive_sch = self.config.ev_metadata.match_driving_schedule(ev_range, ev_mileage, ev_max_charge)
+            drive_sch = self.config.ev.match_driving_schedule(ev_range, ev_mileage, ev_max_charge)
             # Should be able to turn off ev entirely using ev_percentage, definitely in debugging
             if self.config.case_type['ev']:
                 #TODO: this count is too high, same as batteries for some reason
@@ -1979,14 +1865,14 @@ class Feeder:
         # Identify and add residential loads
         self.identify_xfmr_houses('transformer', seg_loads, 0.001 * config.avg_house, config.region)
         for key in config.base.house_nodes:
-            config.res_bldg_metadata.add_houses(key, 120.0)
+            config.res_bld.add_houses(key, 120.0)
         for key in config.base.small_nodes:
-            config.res_bldg_metadata.add_small_loads(key, 120.0)
+            config.res_bld.add_small_loads(key, 120.0)
 
         # Identify and add commercial loads
-        config.comm_bldg_metadata.identify_commercial_loads('load', 0.001 * config.avg_commercial)
+        self.identify_commercial_loads('load', 0.001 * config.avg_commercial)
         for key in config.base.comm_loads:
-            config.comm_bldg_metadata.add_commercial_loads(config.region, key)
+            config.com_bld.add_commercial_loads(config.region, key, self.total_comm_kva)
         self.glm.add_voltage_class('node', config.vln, config.vll, secnode)
         self.glm.add_voltage_class('meter',config.vln, config.vll, secnode)
         self.glm.add_voltage_class('load', config.vln, config.vll, secnode)
@@ -2019,7 +1905,7 @@ class Feeder:
         total_mh = 0
         total_small = 0
         total_small_kva = 0
-        dsoIncomePct = self.config.res_bldg_metadata.getDsoIncomeLevelTable()
+        dsoIncomePct = self.config.res_bld.getDsoIncomeLevelTable()
         try:
             entity = self.glm.glm.__getattribute__(gld_class)
         except:
@@ -2039,10 +1925,10 @@ class Feeder:
                         total_houses += nhouse
                         lg_v_sm = tkva / avgHouse - nhouse  # >0 if we rounded down the number of houses
                         # let's get the income level for the dso_type and state
-                        inc_lev = self.config.res_bldg_metadata.selectIncomeLevel(dsoIncomePct, rng.uniform(0, 1))
+                        inc_lev = self.config.res_bld.selectIncomeLevel(dsoIncomePct, rng.uniform(0, 1))
                         # let's get the vintage table for dso_type, state, and income level
-                        dsoThermalPct = self.config.res_bldg_metadata.getDsoThermalTable(self.config.income_level[inc_lev])
-                        bldg, ti = self.config.res_bldg_metadata.selectResidentialBuilding(dsoThermalPct, rng.uniform(0, 1))
+                        dsoThermalPct = self.config.res_bld.getDsoThermalTable(self.config.income_level[inc_lev])
+                        bldg, ti = self.config.res_bld.selectResidentialBuilding(dsoThermalPct, rng.uniform(0, 1))
                         if bldg == 0:
                             total_sf += nhouse
                         elif bldg == 1:
@@ -2060,6 +1946,120 @@ class Feeder:
             self.config.base.cooling_bins[0][i] = round(total_sf * self.config.base.bldgCoolingSetpoints[0][i][0] + 0.5)
             self.config.base.cooling_bins[1][i] = round(total_apt * self.config.base.bldgCoolingSetpoints[1][i][0] + 0.5)
             self.config.base.cooling_bins[2][i] = round(total_mh * self.config.base.bldgCoolingSetpoints[2][i][0] + 0.5)
+    
+    def identify_commercial_loads(self, gld_class: str, avgBuilding: float):
+        """For the full-order feeders, scan each load with load_class==C to
+        determine the number of zones it should have.
+
+        Args:
+            gld_class (str): the GridLAB-D class name to scan
+            avgBuilding (float): the average building size in kva
+        """
+        print('Average Commercial Building size:', avgBuilding, 'kVA')
+        total_commercial = 0
+        self.total_comm_kva = 0
+        self.total_zipload = 0
+        self.total_office = 0
+        self.total_warehouse_storage = 0
+        self.total_big_box = 0
+        self.total_strip_mall = 0
+        self.total_education = 0
+        self.total_food_service = 0
+        self.total_food_sales = 0
+        self.total_lodging = 0
+        self.total_healthcare_inpatient = 0
+        self.total_low_occupancy = 0
+        sqft_kva_ratio = 0.005  # Average com building design load is 5 W/sq ft.
+
+        try:
+            entity = self.glm.glm.__getattribute__(gld_class)
+        except:
+            return
+        removenames = []
+        for e_name, e_object in entity.items():
+            if 'load_class' in e_object:
+                select_bldg = None
+                if e_object['load_class'] == 'C':
+                    kva = self.glm.model.accumulate_load_kva(e_object)
+                    total_commercial += 1
+                    self.total_comm_kva += kva
+                    vln = float(e_object['nominal_voltage'])
+                    nphs = 0
+                    phases = e_object['phases']
+                    if 'A' in phases:
+                        nphs += 1
+                    if 'B' in phases:
+                        nphs += 1
+                    if 'C' in phases:
+                        nphs += 1
+                    nzones = int((kva / avgBuilding) + 0.5)
+                    target_sqft = kva / sqft_kva_ratio
+                    sqft_error = -target_sqft
+                    # TODO: Need a way to place all remaining buildings if this is the last/fourth feeder.
+                    # TODO: Need a way to place link for j-modelica buildings on fourth feeder of Urban DSOs
+                    # TODO: Need to work out what to do if we run out of commercial buildings before we get to the fourth feeder.
+                    remain_comm_kva = 0
+                    for bldg in self.config.base.comm_bldgs_pop:
+                        if 0 >= (self.config.base.comm_bldgs_pop[bldg][1] - target_sqft) > sqft_error:
+                            select_bldg = bldg
+                            sqft_error = self.config.base.comm_bldgs_pop[bldg][1] - target_sqft
+                        remain_comm_kva += self.config.base.comm_bldgs_pop[bldg][1] * sqft_kva_ratio
+
+                if select_bldg is not None:
+                    comm_name = select_bldg
+                    comm_type = self.config.base.comm_bldgs_pop[select_bldg][0]
+                    comm_size = self.config.base.comm_bldgs_pop[select_bldg][1]
+                    if comm_type == 'office':
+                        self.total_office += 1
+                    elif comm_type == 'warehouse_storage':
+                        self.total_warehouse_storage += 1
+                    elif comm_type == 'big_box':
+                        self.total_big_box += 1
+                    elif comm_type == 'strip_mall':
+                        self.total_strip_mall += 1
+                    elif comm_type == 'education':
+                        self.total_education += 1
+                    elif comm_type == 'food_service':
+                        self.total_food_service += 1
+                    elif comm_type == 'food_sales':
+                        self.total_food_sales += 1
+                    elif comm_type == 'lodging':
+                        self.total_lodging += 1
+                    elif comm_type == 'healthcare_inpatient':
+                        self.total_healthcare_inpatient += 1
+                    elif comm_type == 'low_occupancy':
+                        self.total_low_occupancy += 1
+                    del (self.config.base.comm_bldgs_pop[select_bldg])
+                else:
+                    if nzones > 0:
+                        log.warning('Commercial building could not be found for %.2f KVA load', kva)
+                    comm_name = 'streetlights'
+                    comm_type = 'ZIPload'
+                    comm_size = 0
+                    self.total_zipload += 1
+                mtr = gld_strict_name(e_object['parent'])
+                extra_billing_meters.add(mtr)
+                self.config.base.comm_loads[e_name] = [mtr, comm_type, comm_size, kva, nphs, phases, vln, total_commercial, comm_name]
+                removenames.append(e_name)
+        for e_name in removenames:
+            self.glm.del_object(gld_class, e_name)
+        #TODO: The below statement is not consistent with individual building/zone count
+        print('{} commercial buildings, approximately {} kVA still to be assigned.'.
+                        format(len(self.config.base.comm_bldgs_pop), int(remain_comm_kva)))
+        # Print commercial info
+        print('  ', self.total_office, 'med/small offices with 3 floors, 5 zones each:', self.total_office*5*3, 'total office zones' )
+        print('  ', self.total_warehouse_storage, 'warehouses,')
+        print('  ', self.total_big_box, 'big box retail with 6 zones each:', self.total_big_box*6, 'total big box zones')
+        print('  ', self.total_strip_mall, 'strip malls,')
+        print('  ', self.total_education, 'education,')
+        print('  ', self.total_food_service, 'food service,')
+        print('  ', self.total_food_sales, 'food sales,')
+        print('  ', self.total_lodging, 'lodging,')
+        print('  ', self.total_healthcare_inpatient, 'healthcare,')
+        print('  ', self.total_low_occupancy, 'low occupancy,')
+        print('  ', self.total_zipload, 'streetlights')
+        log.info('The {} commercial loads and {} streetlights (ZIPloads) totaling {:.2f} kVA added to this feeder are:'.
+              format(total_commercial, self.total_zipload, self.total_comm_kva))    
 
 
 def _test1():

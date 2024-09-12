@@ -1,0 +1,34 @@
+@startuml gld_residential_feeder_class.wsd
+
+class Config {
+    self 
+    config
+
+    preamble()
+    generate_and_load_recs()
+}
+
+class Residential_Build {
+    self
+
+    buildingTypeLabel(): list
+    checkResidentialBuildingTable(): None 
+    selectSetpointBins(): int 
+    add_small_loads(): None
+    getDsoIncomeLevelTable(): list
+    selectIncomeLevel(): int
+    getDsoThermalTable(): float
+    selectResidentialBuilding(): list
+    selectThermalProperties(): list 
+    addhouses():
+}
+
+class Commercial_Build {
+    self
+    config
+
+    add_one_commercial_zone():
+    add_commercial_loads():
+
+}
+@enduml

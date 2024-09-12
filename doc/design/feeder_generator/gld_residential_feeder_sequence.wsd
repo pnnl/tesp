@@ -1,0 +1,46 @@
+@startuml gld_residential_feeder_sequence.wsd
+database metadata
+participant Config
+participant Residential_Build
+participant Commercial_Build
+participant Solar 
+participant Battery 
+participant Electric_Vehicle
+participant Feeder
+
+metadata --> Config: residential_metadata
+metadata --> Config: commercial_metadata
+metadata --> Config: batt_metadata
+metadata --> Config: ev_metadata
+metadata --> Config: ev_driving_metadata
+
+Feeder -> Config: generate_and_load_recs
+Config --> Residential_Build: assign_defaults
+Config --> Commercial_Build: assign_defaults
+Config --> Battery: assign_defaults
+Config --> Electric_Vehicle: assign_defaults
+Feeder -> Config: preamble
+Config -->  Feeder: add_module, add_class, set_clock, add_include, add_set, add_defines, add_voltage_dump, add_object(): metrics_collector_writer, climate
+
+== Residential_Build.add_houses() ==
+Feeder -> Feeder: identify_xfmr_houses
+Feeder -> Residential_Build: add_houses
+return add_object(): triplex_node, triplex_line, triplex_meter, house, ZIPload, waterheater
+Residential_Build -> Solar: add_solar
+Solar --> Feeder: add_object(): solar, inverter
+Residential_Build -> Battery: add_bat
+Battery --> Feeder: add_object(): battery, inverter
+Residential_Build -> Electric_Vehicle: add_ev
+Electric_Vehicle --> Feeder: add_object(): ev_charger
+
+== Residential_Build.add_small_loads() ==
+Feeder -> Residential_Build: add_small_loads
+Residential_Build --> Feeder: add_object: triplex_node, triplex_line, triplex_meter, triplex_load
+
+== Commercial_Build.identify_commercial_loads() ==
+Feeder -> Feeder: identify_commercial_loads
+Feeder -> Commercial_Build: add_commercial_loads
+
+Commercial_Build --> Feeder: add_object(): house, ZIPload
+
+@enduml
