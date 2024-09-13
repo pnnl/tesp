@@ -1155,8 +1155,8 @@ class Commercial_Build:
             bldg['int_gains'] = 3.6  # W/sf
             bldg['exterior_ceiling_fraction'] = 1.
             bldg['base_schedule'] = 'stripmall'
-            midzone = int(math.floor(self.total_strip_mall / 2.0) + 1.)
-            for zone in range(1, self.total_strip_mall + 1):
+            midzone = int(math.floor(total_strip_mall / 2.0) + 1.)
+            for zone in range(1, total_strip_mall + 1):
                 bldg['skew_value'] = self.glm.randomize_commercial_skew()
                 floor_area_choose = 2400.0 * (0.7 + 0.6 * rng.random())
                 bldg['thermal_mass_per_floor_area'] = 3.9 * (0.5 + 1. * rng.random())
@@ -1172,7 +1172,7 @@ class Commercial_Build:
                     floor_area = floor_area_choose / 2.0
                     bldg['aspect_ratio'] = 3.0
                     bldg['window_wall_ratio'] = 0.03
-                    if zone == self.total_strip_mall:
+                    if zone == total_strip_mall:
                         bldg['exterior_wall_fraction'] = 0.63
                         bldg['exterior_floor_fraction'] = 2.0
                     else:
@@ -1218,16 +1218,16 @@ class Commercial_Build:
                       "phases": '{:s}'.format(phases)}
             self.glm.add_object("load", name, params)
 
-    def define_comm_bldg(bldg_metadata, dso_type, num_bldgs):
+    def define_comm_bldg(bldg_metadata, dso_type, num_bldgs) -> list:
         """Randomly selects a set number of buildings by type and size (sq. ft.)
 
         Args:
-            bldg_metadata: dictionary of building parameter data
-            dso_type: 'Urban', 'Suburban', or 'Rural'
-            num_bldgs: scalar value of number of buildings to be selected
+            bldg_metadata (dict): dictionary of building parameter data
+            dso_type (str): 'Urban', 'Suburban', or 'Rural'
+            num_bldgs (float): scalar value of number of buildings to be selected
         
         Returns:
-            bldgs: buildings
+            bldgs (list): buildings
         """
         bldgs = {}
         bldg_types = Commercial_Build.normalize_dict_prob(dso_type, bldg_metadata.general['building_type'][dso_type])
@@ -1248,12 +1248,12 @@ class Commercial_Build:
             effectively sums to one
 
         Args:
-            name: name of dictionary to normalize
-            diction: dictionary of elements and associated non-cumulative 
+            name (str): name of dictionary to normalize
+            diction (dict): dictionary of elements and associated non-cumulative 
                 probabilities
         
         Returns:
-            diction: normalized dictionary of elements and associated 
+            diction (dict): normalized dictionary of elements and associated 
                 non-cumulative probabilities
         """
         sum1 = 0
@@ -1289,7 +1289,7 @@ class Commercial_Build:
         return None
 
 
-    def sub_bin_select(_bin, _type, _prob):
+    def sub_bin_select(_bin, _type, _prob) -> int:
         """ Returns a scalar value within a bin range based on a uniform 
             probability within that bin range
 
@@ -1299,7 +1299,7 @@ class Commercial_Build:
             _prob: scalar value between 0 and 1
         
         Returns:
-            val: scalar value within bin range
+            val (int): scalar value within bin range
         """
         bins = {}
         if _type == 'vintage':
@@ -1342,6 +1342,7 @@ class Battery:
             batt_name (str): name of the battery object
             inv_name (str): name of the inverter object
             phs (float): phase of parent triplex meter 
+            v_nom (float): nominal line-to-neutral voltage at basenode
         """
 
         if rng.uniform(0, 1) <= batt_prob:
@@ -1461,8 +1462,8 @@ class Solar:
             solar_name (str): name of solar object
             inv_name (str): name of inverter object
             phs (float): phase of parent triplex meter
-            v_nom (float): _description_
-            floor_area (float): _description_
+            v_nom (float): nominal line-to-neutral voltage at basenode
+            floor_area (float): area of house in sqft
         """
 
         if solar_prob > 0.0:
@@ -1619,12 +1620,13 @@ class Electric_Vehicle:
         hours.
 
         Args:
-            ev_range (float): _description_
-            ev_mileage (float): _description_
-            ev_max_charge (float): _description_
+            ev_range (float): range of EV, in miles
+            ev_mileage (float): daily drive miles
+            ev_max_charge (float): max charge level of the vehicle
 
         Raises:
-            UserWarning: _description_
+            UserWarning: if the required charge time exceeds 23 hours, raise: 
+                'A particular EV can not be charged fully even within 23 hours!'
 
         Returns:
             dict: driving_sch containing {daily_miles, home_arr_time,
@@ -1703,7 +1705,7 @@ class Electric_Vehicle:
             data_file (str): path of the file
 
         Returns:
-            pd.DataFrame: dataframe containing start_time, end_time, travel_day
+            df_fin (pd.DataFrame): dataframe containing start_time, end_time, travel_day
             (weekday/weekend) and daily miles driven
         """
         # Read data from NHTS survey
@@ -1737,49 +1739,82 @@ class Feeder:
         self.glm = config.glm
         config.generate_and_load_recs()
 
-        # Read in backbone feeder to populate
-        if not config.in_file_glm:
-            i_glm, success = self.glm.model.readBackboneModel(config.taxonomy)
-            print('User feeder not defined, using taxonomy feeder', config.taxonomy)
-            if not success:
-                exit()
-        else:
-            i_glm, success = self.glm.read_model(config.in_file_glm)
-            if not success:
-                exit()
+        self.feeder_gen()
 
         config.preamble()
 
-        # NEW STRATEGY - loop through transformer instances and assign a
-        # standard size based on the downstream load
-        #   - change the referenced transformer_configuration attributes
-        #   - write the standard transformer_configuration instances we actually need
-        seg_loads = self.glm.model.identify_seg_loads()
+        # Identify and add residential loads
+        self.identify_xfmr_houses('transformer', self.seg_loads, 0.001 * config.avg_house, config.region)
+        for key in config.base.house_nodes:
+            config.res_bld.add_houses(key, 120.0)
+        for key in config.base.small_nodes:
+            config.res_bld.add_small_loads(key, 120.0)
 
-        # Power and region to requirements for commercial and residential load
-        # The tax choice array are for feeder taxonomy signature glm file
-        # and are size accordingly with file name, the transformer configuration,
-        # setting current_limit for fuse, setting cap_nominal_voltage
-        # and current_limit for capacitor
+        # Identify and add commercial loads
+        self.identify_commercial_loads('load', 0.001 * config.avg_commercial)
+        for key in config.base.comm_loads:
+            config.com_bld.add_commercial_loads(config.region, key, total_comm_kva)
+        self.glm.add_voltage_class('node', config.vln, config.vll, self.secnode)
+        self.glm.add_voltage_class('meter',config.vln, config.vll, self.secnode)
+        self.glm.add_voltage_class('load', config.vln, config.vll, self.secnode)
 
-        # taxchoice array [taxonomy, vll, vln, avg_house, avg_commercial, region]
-        # and are configure in the config file with above names.
+        print(f"cooling bins unused {self.config.base.cooling_bins}")
+        print(f"heating bins unused {self.config.base.heating_bins}")
+        print(f"{self.config.base.solar_count} pv totaling "
+              f"{self.config.base.solar_kw:.1f} kW, with "
+              f"{self.config.base.battery_count} batteries and "
+              f"{self.config.base.ev_count} EV chargers.")
+        self.glm.write_model(config.out_file_glm)
+
+        # To plot the model using the networkx package:
+        #print("\nPlotting image of model; this will take a minute.")
+        #glm.model.plot_model()
+
+    def feeder_gen(self):
+        """ Reads in the backbone feeder, then loops through transformer 
+        instances and assign a standard size based on the downstream load. 
+        Changes the referenced transformer_configuration attributes. Writes the
+        standard transformer_configuration instances we actually need.
+
+        Power and region to requirements for commercial and residential load
+        The tax choice array are for feeder taxonomy signature glm file
+        and are sized accordingly with file name, the transformer configuration,
+        setting current_limit for fuse, setting cap_nominal_voltage and
+        current_limit for capacitor
+
+        Args:
+            None            
+
+        Returns:
+            None
+        """
+        # Read in backbone feeder to populate
+        if not self.config.in_file_glm:
+            i_glm, success = self.glm.model.readBackboneModel(self.config.taxonomy)
+            print('User feeder not defined, using taxonomy feeder', self.config.taxonomy)
+            if not success:
+                exit()
+        else:
+            i_glm, success = self.glm.read_model(self.config.in_file_glm)
+            if not success:
+                exit()
 
         xfused = {}  # ID, phases, total kva, vnom (LN), vsec, poletop/padmount
-        secnode = {}  # Node, st, phases, vnom
+        self.secnode = {}  # Node, st, phases, vnom
+        self.seg_loads = self.glm.model.identify_seg_loads()
 
         for e_name, e_object in i_glm.transformer.items():
             # "identify_seg_loads" does not account for parallel paths in the
             # model. This test allows us to skip paths that have not been
-            # had load accumulated with them, including parallel paths.
-            # Also skipping population for transformers with secondary more than 500 V
+            # had load accumulated with them, including parallel paths. Also 
+            # skipping population for transformers with secondary more than 500 V
             e_config = e_object['configuration']
             sec_v = float(i_glm.transformer_configuration[e_config]['secondary_voltage'])
-            if e_name not in seg_loads or sec_v > 500:
+            if e_name not in self.seg_loads or sec_v > 500:
                 log.warning(f"WARNING: %s not in the seg loads", e_name)
                 continue
-            seg_kva = seg_loads[e_name][0]
-            seg_phs = seg_loads[e_name][1]
+            seg_kva = self.seg_loads[e_name][0]
+            seg_phs = self.seg_loads[e_name][1]
 
             nphs = 0
             if 'A' in seg_phs:
@@ -1798,14 +1833,14 @@ class Feeder:
             else:
                 if 'N' not in seg_phs:
                     seg_phs += 'N'
-                if kvat > config.base.max208kva:
+                if kvat > self.config.base.max208kva:
                     vsec = 480.0
                     vnom = 277.0
                 else:
                     vsec = 208.0
                     vnom = 120.0
 
-            secnode[gld_strict_name(e_object['to'])] = [kvat, seg_phs, vnom]
+            self.secnode[gld_strict_name(e_object['to'])] = [kvat, seg_phs, vnom]
 
             old_key = self.glm.model.hash[e_object['configuration']]
             install_type = i_glm.transformer_configuration[old_key]['install_type']
@@ -1813,23 +1848,23 @@ class Feeder:
             raw_key = 'XF' + str(nphs) + '_' + install_type + '_' + seg_phs + '_' + str(kvat)
             key = raw_key.replace('.', 'p')
 
-            e_object['configuration'] = config.base.name_prefix + key
+            e_object['configuration'] = self.config.base.name_prefix + key
             e_object['phases'] = seg_phs
             if key not in xfused:
                 xfused[key] = [seg_phs, kvat, vnom, vsec, install_type]
 
         for key in xfused:
             self.glm.add_xfmr_config(key, xfused[key][0], xfused[key][1], xfused[key][2], xfused[key][3],
-                                 xfused[key][4], config.vll, config.vln)
+                                xfused[key][4], self.config.vll, self.config.vln)
 
         for e_name, e_object in i_glm.capacitor.items():
-            e_object['nominal_voltage'] = str(int(config.vln))
-            e_object['cap_nominal_voltage'] = str(int(config.vln))
+            e_object['nominal_voltage'] = str(int(self.config.vln))
+            e_object['cap_nominal_voltage'] = str(int(self.config.vln))
 
         for e_name, e_object in i_glm.fuse.items():
-            if e_name in seg_loads:
-                seg_kva = seg_loads[e_name][0]
-                seg_phs = seg_loads[e_name][1]
+            if e_name in self.seg_loads:
+                seg_kva = self.seg_loads[e_name][0]
+                seg_phs = self.seg_loads[e_name][1]
 
                 nphs = 0
                 if 'A' in seg_phs:
@@ -1839,62 +1874,37 @@ class Feeder:
                 if 'C' in seg_phs:
                     nphs += 1
                 if nphs == 3:
-                    amps = 1000.0 * seg_kva / math.sqrt(3.0) / config.vll
+                    amps = 1000.0 * seg_kva / math.sqrt(3.0) / self.config.vll
                 elif nphs == 2:
-                    amps = 1000.0 * seg_kva / 2.0 / config.vln
+                    amps = 1000.0 * seg_kva / 2.0 / self.config.vln
                 else:
-                    amps = 1000.0 * seg_kva / config.vln
+                    amps = 1000.0 * seg_kva / self.config.vln
                 e_object['current_limit'] = str(self.glm.find_fuse_limit_w_margin(amps))
 
         self.glm.add_local_triplex_configurations()
 
         configurations = ['regulator_configuration', 'overhead_line_conductor', 'line_spacing', 'line_configuration',
-                          'triplex_line_conductor', 'triplex_line_configuration', 'underground_line_conductor']
+                        'triplex_line_conductor', 'triplex_line_configuration', 'underground_line_conductor']
         for configure in configurations:
             self.glm.add_config_class(configure)
 
         links = ['fuse', 'switch', 'recloser', 'sectionalizer',
-                 'overhead_line', 'underground_line', 'series_reactor',
-                 'regulator', 'transformer', 'capacitor']
+                'overhead_line', 'underground_line', 'series_reactor',
+                'regulator', 'transformer', 'capacitor']
         for link in links:
             metrics = False
             if link in ['regulator', 'capacitor']:
                 metrics = True
-            self.glm.add_link_class(link, seg_loads, want_metrics=metrics)
-
-        # Identify and add residential loads
-        self.identify_xfmr_houses('transformer', seg_loads, 0.001 * config.avg_house, config.region)
-        for key in config.base.house_nodes:
-            config.res_bld.add_houses(key, 120.0)
-        for key in config.base.small_nodes:
-            config.res_bld.add_small_loads(key, 120.0)
-
-        # Identify and add commercial loads
-        self.identify_commercial_loads('load', 0.001 * config.avg_commercial)
-        for key in config.base.comm_loads:
-            config.com_bld.add_commercial_loads(config.region, key, self.total_comm_kva)
-        self.glm.add_voltage_class('node', config.vln, config.vll, secnode)
-        self.glm.add_voltage_class('meter',config.vln, config.vll, secnode)
-        self.glm.add_voltage_class('load', config.vln, config.vll, secnode)
-
-        print(f"cooling bins unused {self.config.base.cooling_bins}")
-        print(f"heating bins unused {self.config.base.heating_bins}")
-        print(f"{self.config.base.solar_count} pv totaling "
-              f"{self.config.base.solar_kw:.1f} kW, with "
-              f"{self.config.base.battery_count} batteries and "
-              f"{self.config.base.ev_count} EV chargers.")
-        self.glm.write_model(config.out_file_glm)
-
-        # To plot the model using the networkx package:
-        #print("\nPlotting image of model; this will take a minute.")
-        #glm.model.plot_model()
+            self.glm.add_link_class(link, self.seg_loads, want_metrics=metrics)
+        return self.secnode, self.seg_loads
 
     def identify_xfmr_houses(self, gld_class: str, seg_loads: dict, avgHouse: float, rgn: int):
         """For the full-order feeders, scan each service transformer to
         determine the number of houses it should have
         Args:
             gld_class (str): the GridLAB-D class name to scan
-            seg_loads (dict): dictionary of downstream load (kva) served by each GridLAB-D link
+            seg_loads (dict): dictionary of downstream load (kva) served by each
+               GridLAB-D link
             avgHouse (float): the average house load in kva
             rgn (int): the region number, 1..5
         """
@@ -1955,20 +1965,34 @@ class Feeder:
             gld_class (str): the GridLAB-D class name to scan
             avgBuilding (float): the average building size in kva
         """
+        global total_commercial
+        global total_comm_kva
+        global total_zipload
+        global total_office
+        global total_warehouse_storage
+        global total_big_box
+        global total_strip_mall
+        global total_education
+        global total_food_service
+        global total_food_sales
+        global total_lodging
+        global total_healthcare_inpatient
+        global total_low_occupancy
+
         print('Average Commercial Building size:', avgBuilding, 'kVA')
         total_commercial = 0
-        self.total_comm_kva = 0
-        self.total_zipload = 0
-        self.total_office = 0
-        self.total_warehouse_storage = 0
-        self.total_big_box = 0
-        self.total_strip_mall = 0
-        self.total_education = 0
-        self.total_food_service = 0
-        self.total_food_sales = 0
-        self.total_lodging = 0
-        self.total_healthcare_inpatient = 0
-        self.total_low_occupancy = 0
+        total_comm_kva = 0
+        total_zipload = 0
+        total_office = 0
+        total_warehouse_storage = 0
+        total_big_box = 0
+        total_strip_mall = 0
+        total_education = 0
+        total_food_service = 0
+        total_food_sales = 0
+        total_lodging = 0
+        total_healthcare_inpatient = 0
+        total_low_occupancy = 0
         sqft_kva_ratio = 0.005  # Average com building design load is 5 W/sq ft.
 
         try:
@@ -1982,7 +2006,7 @@ class Feeder:
                 if e_object['load_class'] == 'C':
                     kva = self.glm.model.accumulate_load_kva(e_object)
                     total_commercial += 1
-                    self.total_comm_kva += kva
+                    total_comm_kva += kva
                     vln = float(e_object['nominal_voltage'])
                     nphs = 0
                     phases = e_object['phases']
@@ -2010,25 +2034,25 @@ class Feeder:
                     comm_type = self.config.base.comm_bldgs_pop[select_bldg][0]
                     comm_size = self.config.base.comm_bldgs_pop[select_bldg][1]
                     if comm_type == 'office':
-                        self.total_office += 1
+                        total_office += 1
                     elif comm_type == 'warehouse_storage':
-                        self.total_warehouse_storage += 1
+                        total_warehouse_storage += 1
                     elif comm_type == 'big_box':
-                        self.total_big_box += 1
+                        total_big_box += 1
                     elif comm_type == 'strip_mall':
-                        self.total_strip_mall += 1
+                        total_strip_mall += 1
                     elif comm_type == 'education':
-                        self.total_education += 1
+                        total_education += 1
                     elif comm_type == 'food_service':
-                        self.total_food_service += 1
+                        total_food_service += 1
                     elif comm_type == 'food_sales':
-                        self.total_food_sales += 1
+                        total_food_sales += 1
                     elif comm_type == 'lodging':
-                        self.total_lodging += 1
+                        total_lodging += 1
                     elif comm_type == 'healthcare_inpatient':
-                        self.total_healthcare_inpatient += 1
+                        total_healthcare_inpatient += 1
                     elif comm_type == 'low_occupancy':
-                        self.total_low_occupancy += 1
+                        total_low_occupancy += 1
                     del (self.config.base.comm_bldgs_pop[select_bldg])
                 else:
                     if nzones > 0:
@@ -2036,7 +2060,7 @@ class Feeder:
                     comm_name = 'streetlights'
                     comm_type = 'ZIPload'
                     comm_size = 0
-                    self.total_zipload += 1
+                    total_zipload += 1
                 mtr = gld_strict_name(e_object['parent'])
                 extra_billing_meters.add(mtr)
                 self.config.base.comm_loads[e_name] = [mtr, comm_type, comm_size, kva, nphs, phases, vln, total_commercial, comm_name]
@@ -2047,19 +2071,19 @@ class Feeder:
         print('{} commercial buildings, approximately {} kVA still to be assigned.'.
                         format(len(self.config.base.comm_bldgs_pop), int(remain_comm_kva)))
         # Print commercial info
-        print('  ', self.total_office, 'med/small offices with 3 floors, 5 zones each:', self.total_office*5*3, 'total office zones' )
-        print('  ', self.total_warehouse_storage, 'warehouses,')
-        print('  ', self.total_big_box, 'big box retail with 6 zones each:', self.total_big_box*6, 'total big box zones')
-        print('  ', self.total_strip_mall, 'strip malls,')
-        print('  ', self.total_education, 'education,')
-        print('  ', self.total_food_service, 'food service,')
-        print('  ', self.total_food_sales, 'food sales,')
-        print('  ', self.total_lodging, 'lodging,')
-        print('  ', self.total_healthcare_inpatient, 'healthcare,')
-        print('  ', self.total_low_occupancy, 'low occupancy,')
-        print('  ', self.total_zipload, 'streetlights')
+        print('  ', total_office, 'med/small offices with 3 floors, 5 zones each:', total_office*5*3, 'total office zones' )
+        print('  ', total_warehouse_storage, 'warehouses,')
+        print('  ', total_big_box, 'big box retail with 6 zones each:', total_big_box*6, 'total big box zones')
+        print('  ', total_strip_mall, 'strip malls,')
+        print('  ', total_education, 'education,')
+        print('  ', total_food_service, 'food service,')
+        print('  ', total_food_sales, 'food sales,')
+        print('  ', total_lodging, 'lodging,')
+        print('  ', total_healthcare_inpatient, 'healthcare,')
+        print('  ', total_low_occupancy, 'low occupancy,')
+        print('  ', total_zipload, 'streetlights')
         log.info('The {} commercial loads and {} streetlights (ZIPloads) totaling {:.2f} kVA added to this feeder are:'.
-              format(total_commercial, self.total_zipload, self.total_comm_kva))    
+              format(total_commercial, total_zipload, total_comm_kva))    
 
 
 def _test1():
