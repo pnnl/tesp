@@ -1456,7 +1456,7 @@ def calculate_consumer_bills(
                     bill_df.loc[(each, "dsot_DA_energy_charge"), m] = (
                         trans_df.loc[(each, "DA_cost"), m] * trans_retail_scale
                     )
-                    bill_df.loc[(each, "dsot_RT_energy_cahrge"), m] = (
+                    bill_df.loc[(each, "dsot_RT_energy_charge"), m] = (
                         trans_df.loc[(each, "RT_cost"), m] * trans_retail_scale
                     )
 
@@ -1499,7 +1499,7 @@ def calculate_consumer_bills(
                 # Calculate the consumer's tier credit (due to the declining block)
                 # rate, if the consumer is eligible
                 if metadata["billingmeters"][each]["tariff_class"] in [
-                    #"residential",
+                    "residential",
                     "commercial",
                     "industrial",
                 ]:
@@ -2776,10 +2776,12 @@ def calculate_tariff_prices(
                     rev_DA_energy_charge_trans_rc
                     + rev_RT_energy_charge_trans_rc
                     + rev_fixed_charge_trans_rc
-                    + rev_DA_energy_charge_trans_i
-                    + rev_RT_energy_charge_trans_i
                 )
-                - rev_fixed_charge_trans_i
+                - (
+                    rev_fixed_charge_trans_i
+                  + rev_DA_energy_charge_trans_i
+                  + rev_RT_energy_charge_trans_i
+                )
             ) / (sf * total_consumption_trans_rc + total_consumption_trans_i)
         elif trans_cost_balance_method == "fixed":
             prices["transactive_fixed_charge"] = (
@@ -2984,10 +2986,12 @@ def calculate_tariff_prices(
                 rev_DA_energy_charge_dsot_rc
                 + rev_RT_energy_charge_dsot_rc
                 + rev_fixed_charge_dsot_rc
+            )
+            - (
+                rev_fixed_charge_dsot_i
                 + rev_DA_energy_charge_dsot_i
                 + rev_RT_energy_charge_dsot_i
-            )
-            - rev_fixed_charge_dsot_i
+                )
         ) / (sf * total_consumption_dsot_rc + total_consumption_dsot_i)
 
         # Initialize some of the closed-form solution components
@@ -3026,7 +3030,7 @@ def calculate_tariff_prices(
                     )
 
                     #Calculate the consumer's fixed charge under the DSO+T tariff
-                    rev_fixed_charge_dsot += trans_fixed_charge
+                    rev_fixed_charge_dsot += trans_fixed_charge * len(months)
                 else:
                     # Update total consumption for the flat rate consumers
                     total_consumption_flat_rc += meter_df.loc[(each, "kw-hr"), "sum"]
@@ -3049,7 +3053,7 @@ def calculate_tariff_prices(
                     # Update the total tier credit for the flat rate consumers, if the 
                     # consumer qualifies
                     if metadata["billingmeters"][each]["tariff_class"] in [
-                        #"residential",
+                        "residential",
                         "commercial",
                     ]:
                         total_tier_credit_flat_rc += sum(
