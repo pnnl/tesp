@@ -46,8 +46,8 @@ def tso_psst_loop(casename):
                     first = False
                     continue
                 rd_curve.append(float(m_row[0]))
-                # publishing LMP as $/kWh/p.u.h, curve was in MWh
-                rd_adder.append(float(m_row[1])/1000.0)
+                # publishing LMP as $/kWh/p.u.h
+                rd_adder.append(float(m_row[1]))
             rd_curve.reverse()
             rd_adder.reverse()
 
@@ -60,6 +60,7 @@ def tso_psst_loop(casename):
                 if generation - rd_curve[ii] < 0.0001:
                     adder = rd_adder[ii]
                 else:
+                    # interpolation between upper and lower bounds
                     percent = (generation - rd_curve[ii]) / (rd_curve[ii+1] - rd_curve[ii])
                     adder = ((rd_adder[ii+1] - rd_adder[ii]) * percent) + rd_adder[ii+1]
             else:
@@ -85,7 +86,7 @@ def tso_psst_loop(casename):
             _pub = cache_pub[pub_key]
         return _pub
 
-    def scucDAM(data):
+    def scucDAM(data, renew):
         c, ZonalDataComplete, priceSenLoadData = pst.read_model(data.strip("'"))
         if day > -1:
             model = pst.build_model(c, ZonalDataComplete=ZonalDataComplete, PriceSenLoadData=priceSenLoadData, Op='scuc')
@@ -151,13 +152,16 @@ def tso_psst_loop(casename):
 
         # rob and don adder if used
         adder = [0 for _ in range(hours_in_a_day)]
-        generation = [0 for _ in range(hours_in_a_day)]
         if r_and_d:
+            log.debug(f"Renewables: {renew}")
+            generation = [0 for _ in range(hours_in_a_day)]
             for g in dispatch:
                 row = dispatch[g]
                 for ii in range(hours_in_a_day):
                     generation[ii] += row[ii]
             for ii in range(hours_in_a_day):
+                for _ in range(total_bus_num):
+                    generation[ii] += renew[ii][_]
                 adder[ii] = rob_and_don(generation[ii])
                 log.debug(f"generation: {generation[ii]}, adder: {adder[ii]}")
                 for jj in range(dsoBus.shape[0]):
@@ -269,7 +273,7 @@ def tso_psst_loop(casename):
 
         return adder, status, uc_df, dispatch, DA_LMPs
 
-    def scedRTM(data, uc_df):
+    def scedRTM(data, uc_df, renew):
         c, ZonalDataComplete, priceSenLoadData = pst.read_model(data.strip("'"))
         c.gen_status = uc_df.astype(int)
 
@@ -339,6 +343,7 @@ def tso_psst_loop(casename):
         # set the lmps and generator dispatch and publish LMP
         adder = 0.0
         generation = 0.0
+        log.info(f"Renewables: {renew}")
         for ii in range(numGen):
             # if using gridpiq to gauge environmental emission concerns
             if piq and day > 1:
@@ -346,13 +351,16 @@ def tso_psst_loop(casename):
             if genFuel[ii][0] not in renewables:
                 name = "GenCo" + str(ii + 1)
                 gen[ii, 1] = dispatch[name][0]
-                generation += gen[ii, 1]
             # else:
-                # dispatch for renewables i.e. curtail
-                # gen[ii, 1] this was set in rt_curtail_renewables()
+            #     dispatch for renewables i.e. curtail
+            #     gen[ii, 1] this was set in rt_curtail_renewables()
+            generation += gen[ii, 1]
+        for _ in range(total_bus_num):
+            generation += renew[_]
+
 
         if r_and_d:
-            adder = rob_and_don(generation)
+            adder = rob_and_don(generation)/12.0
             log.debug(f"generation: {generation}, adder: {adder}")
             if adder > 0:
                 for ii in range(total_bus_num):
@@ -821,8 +829,10 @@ def tso_psst_loop(casename):
         if dso_bid:
             if dayahead:
                 net = da_curtail_renewables(Pmin_avail, Pmax_avail)
+                renew = net
             else:
                 net = rt_curtail_renewables(znumGen, zgenFuel, zgen, Pmin_avail, Pmax_avail)
+                renew = net
 
             print('param: NetFixedLoadForecast :=', file=fp)
             for ii in range(bus.shape[0]):
@@ -871,6 +881,7 @@ def tso_psst_loop(casename):
         else:
             # no bid using gld_load (tape player/gridlab)
             print('param: NetFixedLoadForecast :=', file=fp)
+            renew = [0] * hours_in_a_day
             for ii in range(bus.shape[0]):
                 bus_num = ii + 1
                 if dayahead:
@@ -884,6 +895,7 @@ def tso_psst_loop(casename):
                         else:
                             net = - ndg
                         print('Bus' + str(bus_num) + ' ' + str(jj + 1) + ' {:.4f}'.format(net / baseS), file=fp)
+                        renew[jj] += net
                 else:
                     ndg = 0
                     for key, row in generator_plants.items():
@@ -897,6 +909,7 @@ def tso_psst_loop(casename):
                         net = - ndg
                     for jj in range(TAU):
                         print('Bus' + str(bus_num) + ' ' + str(jj + 1) + ' {:.4f}'.format(net / baseS), file=fp)
+                    renew = net
                 print('', file=fp)
             print(';\n', file=fp)
 
@@ -913,6 +926,7 @@ def tso_psst_loop(casename):
                       '{: .5f}'.format(c1) + '{: .5f}'.format(c2) + ' ' + ns, file=fp)
         print(';\n', file=fp)
         fp.close()
+        return renew
 
     def update_cost_and_load():
         # update cost coefficients, set dispatchable load, put unresp load on bus
@@ -1210,6 +1224,7 @@ def tso_psst_loop(casename):
             if outagesUnplanned:
                 unplanned_df = pd.read_csv(ppc['unplanned'], index_col=0)
 
+            net = []
             # initialize for variable wind/solar generator plants
             generator_plants = {}
             if ppc['genPower']:
@@ -1555,8 +1570,8 @@ def tso_psst_loop(casename):
                 da_gen, da_genCost, da_genFuel, da_numGen = use_generator(idx_add, idx_del)
 
                 psst_case = os.path.join(output_Path, file_time + "dam.dat")
-                write_psst_file(psst_case, True, da_gen, da_genCost, da_genFuel, da_numGen)
-                da_adder, da_status, da_schedule, da_dispatch, da_lmps = scucDAM(psst_case)
+                renew = write_psst_file(psst_case, True, da_gen, da_genCost, da_genFuel, da_numGen)
+                da_adder, da_status, da_schedule, da_dispatch, da_lmps = scucDAM(psst_case, renew)
                 da_run_cnt += 1
                 if da_status:
                     da_status_cnt += 1
@@ -1639,8 +1654,8 @@ def tso_psst_loop(casename):
 
                 # Run the real time and publish the LMP
                 psst_case = os.path.join(output_Path, file_time + "rtm.dat")
-                write_psst_file(psst_case, False, gen, genCost, genFuel, numGen)
-                rt_adder, rt_status, rt_dispatch, rt_lmps = scedRTM(psst_case, rt_schedule)
+                renew = write_psst_file(psst_case, False, gen, genCost, genFuel, numGen)
+                rt_adder, rt_status, rt_dispatch, rt_lmps = scedRTM(psst_case, rt_schedule, renew)
                 rt_run_cnt += 1
                 if rt_status:
                     rt_status_cnt += 1
@@ -1704,9 +1719,9 @@ def tso_psst_loop(casename):
             else:
                 line += ' 0,'
             # TotRenGenHR
-            line += '{: .2f}'.format(da_sum + sum_hr) + ','
-            line += '{: .2f}'.format(rt_percent) + ', ' + str(rt_status)
-            line += '{: .2f}'.format(rt_adder) + ', ' + str(rt_adder)
+            line += '{: .2f}'.format(da_sum + sum_hr) + ', '
+            line += '{: .2f}'.format(rt_percent) + ', '
+            line += str(rt_status) + ', ' + str(rt_adder)
 
             print(line, sep=', ', file=op, flush=True)
 
