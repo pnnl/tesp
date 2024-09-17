@@ -183,6 +183,8 @@
   "solver": "cbc",
   "numCore": 12,
   "market": false,
+  "howToConfigRate": "['', 'DNR', 'TOU']",
+  "rate": "",
   "priceSensLoad": false,
   "noScale": true,
   "curve": false,
@@ -192,6 +194,8 @@
   "reserveUp": 0.15,
   "quadratic": true,
   "priceCap": 1000.0,
+  "RandD": true,
+  "LDCurve": "../data/RandD.csv",
   "zonalReserves": false,
   "simplifiedFeeders": false,
   "howToConfigureOutputPath": "Leave it blank for default, otherwise use full path",
@@ -200,7 +204,7 @@
   "archivePath": "/mnt/simdata/done",
   "version": "2",
   "baseMVA": 100.0,
-  "genPowerLevel": 0.85,
+  "genPowerLevel": 0.5,
   "genPower": true,
   "renewables": [
     "wind"
