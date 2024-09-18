@@ -853,7 +853,7 @@ class GLModel:
             return self.glm, True
         self.in_file = filename
         self.model = {}
-        return False
+        return None, False
 
     def read(self, filename):
         if self.readModel(filename):
@@ -863,7 +863,7 @@ class GLModel:
             return self.glm, True
         self.in_file = filename
         self.model = {}
-        return False
+        return None, False
 
     def write(self, filepath):
         try:
@@ -1010,6 +1010,7 @@ class GLModel:
         clock['starttime'] = "'" + starttime + "'"
         clock['stoptime'] = "'" + stoptime + "'"
         clock['timezone'] = timezone
+        del clock['timestamp'] #remove timestamp, conflicts with starttime
 
     def add_include(self, file: str):
         self.include_lines.append(f"#include \"{file}\"")

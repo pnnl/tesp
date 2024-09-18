@@ -12,7 +12,6 @@
     "timestep": 300, // REQUIRED: in seconds
     "timezone": "EST+5EDT", // REQUIRED
     "metrics_interval": 300, // DEFAULT: 300s, update frequency of the metrics collector
-    "random seed": 13, // DEFAULT: 1 - seeds randomizer used in populating the models
     "message_broker": "",   // "" | "helics_msg" | "fncs_msg"
 
     // input files
@@ -47,7 +46,7 @@
     "res_dso_type": "No_DSO_Type",
 
     // RECS (Residential Energy Consumption Survey) Data
-    "recs_exist": true, // Does 'out_file_residential_meta' exist? If false, generates RECS data based on config
+    "recs_exist": "True", // Does 'out_file_residential_meta' exist? If false, generates RECS data based on config
     "file_recs_income_level": '../../../data/feeders/RECSwIncomeLvl.csv',
     "out_file_residential_meta": './RECS_residential_metadata.json',
     "out_file_hvac_set_point": './hvac_setpt_RECS.json',
@@ -88,9 +87,11 @@
     },
 
     "case_type":{"bt": 1, "fl": 1, "ev": 1, "pv": 1},
-    "solar_percentage": 0,
-    "storage_percentage": 0,
-    "ev_percentage": 10,
+    "use_recs": 0, // default: 1 (true), populates solar, battery and ev based on RECS income and building type distribution
+    // if not use_recs, use the below percentages to populate the residential DER on the feeder, without accounting for income or building type distribution
+    "solar_percentage": 0.80,
+    "storage_percentage": 0.40,
+    "ev_percentage": 1,
 
     // electric vehicles definitions
     "ev_reserved_soc": 20,
