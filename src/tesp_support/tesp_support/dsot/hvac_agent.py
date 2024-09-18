@@ -1244,24 +1244,23 @@ class HVACDSOT:  # TODO: update class name
         Returns:
             bool: True if the setting changed, False if not
         """
-        hod = self.hour
 
         if self.day > 4:  # a weekend
             val_cool = self.weekend_night_set_cool
             val_heat = self.weekend_night_set_heat
-            if self.weekend_day_start <= hod < self.weekend_night_start:
+            if self.weekend_day_start <= self.hour < self.weekend_night_start:
                 val_cool = self.weekend_day_set_cool
                 val_heat = self.weekend_day_set_heat
         else:  # a weekday
             val_cool = self.night_set_cool
             val_heat = self.night_set_heat
-            if self.wakeup_start <= hod < self.daylight_start:
+            if self.wakeup_start <= self.hour < self.daylight_start:
                 val_cool = self.wakeup_set_cool
                 val_heat = self.wakeup_set_heat
-            elif self.daylight_start <= hod < self.evening_start:
+            elif self.daylight_start <= self.hour < self.evening_start:
                 val_cool = self.daylight_set_cool
                 val_heat = self.daylight_set_heat
-            elif self.evening_start <= hod < self.night_start:
+            elif self.evening_start <= self.hour < self.night_start:
                 val_cool = self.evening_set_cool
                 val_heat = self.evening_set_heat
         if abs(self.basepoint_cooling - val_cool) > 0.1 or abs(self.basepoint_heating - val_heat) > 0.1:

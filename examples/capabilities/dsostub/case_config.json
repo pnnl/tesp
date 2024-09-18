@@ -24,6 +24,8 @@
   "reserveUp": 0.15,
   "quadratic": true,
   "priceCap": 1000.0,
+  "RandD": true,
+  "LDCurve": "../data/RandD.csv",
   "zonalReserves": false,
   "simplifiedFeeders": false,
   "howToConfigureOutputPath": "Leave it blank for default, otherwise use full path",
