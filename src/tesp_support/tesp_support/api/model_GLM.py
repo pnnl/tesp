@@ -1028,7 +1028,7 @@ class GLModel:
                 del self.set_lines[idx]
 
     def add_define(self, name:str, value: any):
-        self.define_lines.append("#define {name}={value}")
+        self.define_lines.append(f"#define {name}={value}")
 
     def del_define(self, name:str):
         find = f"#define {name}="

@@ -59,10 +59,6 @@ import pandas as pd
 import sys
 import logging as log
  
-# Random seed
-seed = 13
-rng = np.random.default_rng(seed)
-
 from tesp_support.api.helpers import gld_strict_name, random_norm_trunc, randomize_residential_skew
 from tesp_support.api.modify_GLM import GLMModifier
 from tesp_support.api.time_helpers import get_secs_from_hhmm, get_hhmm_from_secs, get_duration, get_dist
@@ -88,6 +84,16 @@ class Config:
         self.sol = Solar(self)
         self.batt = Battery(self)
         self.ev = Electric_Vehicle(self)
+        global rng
+        rng = np.random.default_rng(self.seed)
+
+        # Lookup vll and vln values based on taxonomy feeder
+        if self.in_file_glm:
+            log.warning("vll and vln not known for user-defined feeder. Using defaults.")
+        for key in self.base.taxchoice:
+            if key[0] == self.taxonomy[:-4]:
+                self.vll = key[1]
+                self.vln = key[2]
 
     def preamble(self):
         # Add tape, climate, generators, connection, and residential modules
@@ -98,7 +104,7 @@ class Config:
         self.glm.add_module("residential", {"implicit_enduses": "NONE"})
 
         # Add player files if pre-defining solar generation
-        if "solar_P_player" in self.keys:
+        if self.use_solar_player == "True":
             player = self.solar_P_player
             self.glm.model.add_class(player["name"], player["datatype"], player["attr"], player["static"], player["data"])
 
@@ -134,11 +140,12 @@ class Config:
                   "latitude": str(self.latitude),
                   "longitude": str(self.longitude),
                   "tmyfile": str(self.tmyfile)}
-        self.glm.add_object("climate", self.weather_name, params)
+        self.glm.add_object("climate", self.base.weather_name, params)
 
     def generate_and_load_recs(self):
         # if RECS metadata does not already exist, generate it
-        if not self.recs_exist:
+        if not self.out_file_residential_meta:
+            self.out_file_residential_meta = "RECS_residential_metadata.json"
             recs_gld_house_parameters.get_RECS_jsons(
                 self.file_recs_income_level,
                 self.file_residential_meta,
@@ -213,7 +220,7 @@ class Residential_Build:
             binZeroMargin = self.config.base.bldgHeatingSetpoints[bldg][0][0] - binZeroReserve
             if binZeroMargin < 0.0:
                 binZeroMargin = 0.0
-            log.info(str(bldg), str(binZeroReserve), str(binZeroMargin))
+            log.info('bldg %s, binZeroReserve %s, binZeroMargin %s', bldg, binZeroReserve, binZeroMargin)
             for cBin in range(1, 6):
                 denom = binZeroMargin
                 for hBin in range(1, self.config.base.allowedHeatingBins[cBin]):
@@ -250,8 +257,6 @@ class Residential_Build:
             if total >= rand_heat:
                 hBin = col
                 break
-        self.config.base.cooling_bins[bldg][cBin] -= 1
-        self.config.base.heating_bins[bldg][hBin] -= 1
         return self.config.base.bldgCoolingSetpoints[bldg][cBin], self.config.base.bldgHeatingSetpoints[bldg][hBin]
 
     def add_small_loads(self, basenode: str, v_nom: float):
@@ -380,7 +385,7 @@ class Residential_Build:
                 total += dsoThermalPct[row][col]
         if total > 1.01 or total < 0.99:
             raise UserWarning('House vintage distribution does not sum to 1!')
-        log.info('dsoThermalPct sums to %.4f', total)
+        #log.info('dsoThermalPct sums to %.4f', total)
         return dsoThermalPct
 
     def selectResidentialBuilding(self, rgnTable: list, prob: float) -> list:
@@ -718,10 +723,17 @@ class Residential_Build:
             else:
                 params["cooling_system_type"] = "NONE"
 
-        # Default heating and cooling setpoints are 70 and 75 degrees in GridLAB-D
-        # we need more separation to assure no overlaps during transactive simulations
-        params["cooling_setpoint"] = "80.0"
-        params["heating_setpoint"] = "60.0"
+        # Randomly choose cooling and heating setpoints within bins
+        cooling_bin, heating_bin = self.selectSetpointBins(bldg, rng.random())
+        # Adjust separation to account for deadband
+        cooling_set = cooling_bin[3] + rng.random() * (cooling_bin[2] - cooling_bin[3])
+        heating_set = heating_bin[3] + rng.random() * (heating_bin[2] - heating_bin[3])
+        params["cooling_setpoint"] = np.round(cooling_set)
+        params["heating_setpoint"] = np.round(heating_set)
+        # For transactive case, override defaults for larger separation to 
+        # assure no overlaps during transactive simulations
+        # params["cooling_setpoint"] = "80.0"
+        # params["heating_setpoint"] = "60.0"
         self.glm.add_object("house", hsename, params)
 
         # heatgain fraction, Zpf, Ipf, Ppf, Z, I, P
@@ -827,7 +839,7 @@ class Residential_Build:
         prob_bat = self.battery_percentage[income]
 
         # add solar, ev, and battery based on RECS data or user-input
-        if self.config.use_recs: 
+        if self.config.use_recs == "True": 
             self.config.sol.add_solar(prob_solar, mtrname1, sol_m_name, sol_name, sol_i_name, phs, v_nom, floor_area)
 
             self.config.ev.add_ev(prob_ev, hsename)  
@@ -958,6 +970,7 @@ class Commercial_Build:
         """
         mtr = self.config.base.comm_loads[key][0]
         comm_type = self.config.base.comm_loads[key][1]
+        comm_size = self.config.base.comm_loads[key][2]
         nphs = int(self.config.base.comm_loads[key][4])
         phases = self.config.base.comm_loads[key][5]
         vln = float(self.config.base.comm_loads[key][6])
@@ -983,7 +996,8 @@ class Commercial_Build:
                 'c_p_frac': 1.0 - self.config.base.c_z_frac - self.config.base.c_i_frac,
                 'c_z_pf': self.config.base.c_z_pf,
                 'c_i_pf': self.config.base.c_i_pf,
-                'c_p_pf': self.config.base.c_p_pf}
+                'c_p_pf': self.config.base.c_p_pf
+                }
 
         if comm_type == 'office':
             bldg['ceiling_height'] = 13.0
@@ -1178,6 +1192,28 @@ class Commercial_Build:
                     params["base_power_" + phs] = '{:.2f}'.format(self.config.base.light_scalar_comm * phsva)
             self.glm.add_object("load", name, params)
         else:
+            # bldg['zonename'] = gld_strict_name('_bldg_' + key + '_comm_type_' + str(comm_type))
+            # bldg['skew_value'] = self.glm.randomize_commercial_skew()
+            # bldg['floor_area'] = comm_size * rng.random()
+            # bldg['int_gains'] = 3.24
+            # bldg['no_of_doors'] = 2
+            # bldg['aspect_ratio'] = 1.5
+            # bldg['thermal_mass_per_floor_area'] = 1
+            # bldg['interior_exterior_wall_ratio'] = -0.40
+            # bldg['exterior_floor_fraction'] = 2.0
+            # bldg['exterior_ceiling_fraction'] = 2.0
+            # bldg['exterior_wall_fraction'] = 2.0
+            # bldg['Rroof'] = 19.
+            # bldg['Rwall'] = 18.3
+            # bldg['Rfloor'] = 46.
+            # bldg['Rdoors'] = 3.
+            # bldg['airchange_per_hour'] = 0.69
+            # bldg['window_wall_ratio'] = 0.33
+            # bldg['init_temp'] = 68. + 4. * rng.random()
+            # bldg['os_rand'] = bldg['oversize'] * (0.8 + 0.4 * rng.random())
+            # bldg['COP_A'] = self.config.base.cooling_COP * (0.8 + 0.4 * rng.random())
+            # Commercial_Build.add_one_commercial_zone(self, bldg)
+            # TODO: replace load object with more realistic building def
             name = '{:s}'.format(key)
             params = {"parent": '{:s}'.format(mtr),
                       "groupid": '{:s}'.format(comm_type),
@@ -1312,7 +1348,7 @@ class Battery:
             phs (float): phase of parent triplex meter 
             v_nom (float): nominal line-to-neutral voltage at basenode
         """
-        if self.config.case_type['bt'] and rng.random() <= bat_prob:
+        if rng.random() <= bat_prob:
             battery_capacity = get_dist(self.config.batt.capacity['mean'],
                                         self.config.batt.capacity['deviation_range_per']) * 1000
             max_charge_rate = get_dist(self.config.batt.rated_charging_power['mean'],
@@ -1368,59 +1404,7 @@ class Solar:
         self.glm = config.glm
         self.solar_count = 0
         self.solar_kw = 0
-
-    def add_solar_inv_settings(self, params: dict):
-        """ Writes volt-var and volt-watt settings for solar inverters
-
-        Args:
-            params (dict): solar inverter parameters. Contains:
-                {four_quadrant_control_mode, V1, Q1, V2, Q2, V3, Q3, V4, Q4,
-                V_In, I_In, volt_var_control_lockout, VW_V1, VW_V2, VW_P1, VW_P2}
-        """
-        params["four_quadrant_control_mode"] = self.config.base.name_prefix + 'INVERTER_MODE'
-        params["V_base"] = '${INV_VBASE}'
-        params["V1"] = '${INV_V1}'
-        params["Q1"] = '${INV_Q1}'
-        params["V2"] = '${INV_V2}'
-        params["Q2"] = '${INV_Q2}'
-        params["V3"] = '${INV_V3}'
-        params["Q3"] = '${INV_Q3}'
-        params["V4"] = '${INV_V4}'
-        params["Q4"] = '${INV_Q4}'
-        params["V_In"] = '${INV_VIN}'
-        params["I_In"] = '${INV_IIN}'
-        params["volt_var_control_lockout"] = '${INV_VVLOCKOUT}'
-        params["VW_V1"] = '${INV_VW_V1}'
-        params["VW_V2"] = '${INV_VW_V2}'
-        params["VW_P1"] = '${INV_VW_P1}'
-        params["VW_P2"] = '${INV_VW_P2}'
-
-    def add_solar_defines(self):
-
-        if self.config.base.solar_percentage > 0.0:
-            # TODO: Waiting for the add comment method to be added to the modify class
-            #    default IEEE 1547-2018 settings for Category B'
-            #    solar inverter mode on this feeder
-            self.glm.model.define_lines.append(
-                '#define ' + self.config.base.name_prefix + 'INVERTER_MODE=' + self.config.base.solar_inv_mode)
-            self.glm.model.define_lines.append('#define INV_VBASE=240.0')
-            self.glm.model.define_lines.append('#define INV_V1=0.92')
-            self.glm.model.define_lines.append('#define INV_V2=0.98')
-            self.glm.model.define_lines.append('#define INV_V3=1.02')
-            self.glm.model.define_lines.append('#define INV_V4=1.08')
-            self.glm.model.define_lines.append('#define INV_Q1=0.44')
-            self.glm.model.define_lines.append('#define INV_Q2=0.00')
-            self.glm.model.define_lines.append('#define INV_Q3=0.00')
-            self.glm.model.define_lines.append('#define INV_Q4=-0.44')
-            self.glm.model.define_lines.append('#define INV_VIN=200.0')
-            self.glm.model.define_lines.append('#define INV_IIN=32.5')
-            self.glm.model.define_lines.append('#define INV_VVLOCKOUT=300.0')
-            self.glm.model.define_lines.append('#define INV_VW_V1=1.05 // 1.05833')
-            self.glm.model.define_lines.append('#define INV_VW_V2=1.10')
-            self.glm.model.define_lines.append('#define INV_VW_P1=1.0')
-            self.glm.model.define_lines.append('#define INV_VW_P2=0.0')
-        # TODO: write the optional volt_dump and curr_dump for validation
-    
+  
     def add_solar(self, solar_prob: float,  parent_mtr: str, solar_mtr: str, solar_name: str, inv_name: str, phs: float, v_nom: float, floor_area: float):
         """Adds solar and inverter to house object under parent of meter_name
 
@@ -1434,9 +1418,8 @@ class Solar:
             v_nom (float): nominal line-to-neutral voltage at basenode
             floor_area (float): area of house in sqft
         """
-        if solar_prob > 0.0:
-            pass
-        if self.config.case_type['pv'] and rng.random() <= solar_prob: 
+
+        if rng.random() <= solar_prob: 
             # Find solar capacity directly proportional to sq. ft.
             # typical PV panel is 350 Watts and avg home has 5kW installed.
             # If we assume 2500 sq. ft as avg area of a single family house,
@@ -1444,7 +1427,6 @@ class Solar:
             num_panel = np.floor(floor_area / 175)
             inverter_undersizing = 1.0
             inv_power = num_panel * 350 * inverter_undersizing
-            pv_scaling_factor = inv_power / self.config.rooftop_pv_rating_MW
             
             self.solar_count += 1
             self.solar_kw += 0.001 * inv_power
@@ -1463,35 +1445,33 @@ class Solar:
                         "generator_mode": self.config.base.solar_inv_mode,
                         "four_quadrant_control_mode": self.config.base.solar_inv_mode}
 
-            if "solar_P_player" in self.config.keys:
+            if self.config.use_solar_player == "True": 
+                pv_scaling_factor = inv_power / self.config.rooftop_pv_rating_MW
                 params["P_Out"] = f"{self.config.solar_P_player['attr']}.value * {pv_scaling_factor}"
-                if "solar_Q_player" in self.config.keys:
-                    params["Q_Out"] = f"{self.config.solar_Q_player['attr']}.value * 0.0"
-                else:
-                    params["Q_Out"] = "0"
-                # Instead of solar object, write a fake V_in and I_in sufficient high so
-                # that it doesn't limit the player output
-                # TODO: change if not using player files
+                params["Q_Out"] = f"{self.config.solar_Q_player['attr']}.value * 0.0"
+            else:
+                params["Q_Out"] = "0"
+                # Instead of solar object, write a fake V_in and I_in 
+                # sufficiently high so that it doesn't limit the player output
                 params["V_In"] = "10000000"
                 params["I_In"] = "10000000"
 
             self.glm.add_object("inverter", inv_name, params)
             self.glm.add_metrics_collector(inv_name, "inverter")
 
-            if ("solar" in self.config.keys and
-                    not "solar_P_player" in self.config.keys):
+            if self.config.use_solar_player == "False":
                 params = {
                     "parent": solar_mtr,
-                    "panel_type": 'SINGLE_CRYSTAL_SILICON',
+                    "panel_type": self.config.solar["panel_type"],
                     # "area": '{:.2f}'.format(panel_area),
                     "rated_power":  self.config.solar["rated_power"],
                     "tilt_angle": self.config.solar["tilt_angle"],
                     "efficiency": self.config.solar["efficiency"],
                     "shading_factor": self.config.solar["shading_factor"],
                     "orientation_azimuth": self.config.solar["orientation_azimuth"],
-                    "orientation": "FIXED_AXIS",
-                    "SOLAR_TILT_MODEL": "SOLPOS",
-                    "SOLAR_POWER_MODEL": "FLATPLATE"  }
+                    "orientation": self.config.solar["orientation"],
+                    "SOLAR_TILT_MODEL": self.config.solar["SOLAR_TILT_MODEL"],
+                    "SOLAR_POWER_MODEL": self.config.solar["SOLAR_POWER_MODEL"]}
                 self.glm.add_object("solar", solar_name, params)
 
 class Electric_Vehicle:
@@ -1528,7 +1508,7 @@ class Electric_Vehicle:
         if not Electric_Vehicle.is_drive_time_valid(drive_sch):
             raise UserWarning('home and work arrival time are not consistent with durations!')
 
-        if self.config.case_type['ev'] and rng.random() <= ev_prob:
+        if rng.random() <= ev_prob:
             self.ev_count += 1
             params = {"parent": house_name,
                         "configuration": volt_conf,
@@ -1707,31 +1687,31 @@ class Feeder:
     def __init__(self, config: Config):
         self.config = config
         self.glm = config.glm
-        config.generate_and_load_recs()
+        
+        # Generate RECS metadata, if it does not exist
+        self.config.generate_and_load_recs()
 
-        # Populate the feeder 
+        # Populate the feeder
         self.feeder_gen()
 
         # Configure the .glm
-        config.preamble()
+        self.config.preamble()
 
         # Identify and add residential loads
-        self.identify_xfmr_houses('transformer', self.seg_loads, 0.001 * config.avg_house, config.region)
-        for key in config.base.house_nodes:
-            config.res_bld.add_houses(key, 120.0)
-        for key in config.base.small_nodes:
-            config.res_bld.add_small_loads(key, 120.0)
+        self.identify_xfmr_houses('transformer', self.seg_loads, 0.001 * self.config.avg_house, self.config.region)
+        for key in self.config.base.house_nodes:
+            self.config.res_bld.add_houses(key, 120.0)
+        for key in self.config.base.small_nodes:
+            self.config.res_bld.add_small_loads(key, 120.0)
 
         # Identify and add commercial loads
-        self.identify_commercial_loads('load', 0.001 * config.avg_commercial)
-        for key in config.base.comm_loads:
-            config.com_bld.add_commercial_loads(config.region, key, self.config.com_bld.total_comm_kva)
-        self.glm.add_voltage_class('node', config.vln, config.vll, self.secnode)
-        self.glm.add_voltage_class('meter',config.vln, config.vll, self.secnode)
-        self.glm.add_voltage_class('load', config.vln, config.vll, self.secnode)
+        self.identify_commercial_loads('load', 0.001 * self.config.avg_commercial)
+        for key in self.config.base.comm_loads:
+            self.config.com_bld.add_commercial_loads(config.region, key, self.config.com_bld.total_comm_kva)
+        self.glm.add_voltage_class('node', self.config.vln, self.config.vll, self.secnode)
+        self.glm.add_voltage_class('meter',config.vln, self.config.vll, self.secnode)
+        self.glm.add_voltage_class('load', self.config.vln, self.config.vll, self.secnode)
 
-        print(f"cooling bins unused {self.config.base.cooling_bins}")
-        print(f"heating bins unused {self.config.base.heating_bins}")
         print(f"{self.config.sol.solar_count} pv totaling "
               f"{self.config.sol.solar_kw:.1f} kW, with "
               f"{self.config.batt.battery_count} batteries and "
@@ -1921,13 +1901,13 @@ class Feeder:
         print(f"{total_small} small loads totaling {total_small_kva:.2f} kVA")
         print(f"{total_houses} houses added to {len(self.config.base.house_nodes)} transformers. "
               f"{total_sf} single family homes, {total_apt} apartments, and {total_mh} mobile homes")
-        for i in range(6):
-            self.config.base.heating_bins[0][i] = round(total_sf * self.config.base.bldgHeatingSetpoints[0][i][0] + 0.5)
-            self.config.base.heating_bins[1][i] = round(total_apt * self.config.base.bldgHeatingSetpoints[1][i][0] + 0.5)
-            self.config.base.heating_bins[2][i] = round(total_mh * self.config.base.bldgHeatingSetpoints[2][i][0] + 0.5)
-            self.config.base.cooling_bins[0][i] = round(total_sf * self.config.base.bldgCoolingSetpoints[0][i][0] + 0.5)
-            self.config.base.cooling_bins[1][i] = round(total_apt * self.config.base.bldgCoolingSetpoints[1][i][0] + 0.5)
-            self.config.base.cooling_bins[2][i] = round(total_mh * self.config.base.bldgCoolingSetpoints[2][i][0] + 0.5)
+        # for i in range(6):
+        #     self.config.base.heating_bins[0][i] = round(total_sf * self.config.base.bldgHeatingSetpoints[0][i][0] + 0.5)
+        #     self.config.base.heating_bins[1][i] = round(total_apt * self.config.base.bldgHeatingSetpoints[1][i][0] + 0.5)
+        #     self.config.base.heating_bins[2][i] = round(total_mh * self.config.base.bldgHeatingSetpoints[2][i][0] + 0.5)
+        #     self.config.base.cooling_bins[0][i] = round(total_sf * self.config.base.bldgCoolingSetpoints[0][i][0] + 0.5)
+        #     self.config.base.cooling_bins[1][i] = round(total_apt * self.config.base.bldgCoolingSetpoints[1][i][0] + 0.5)
+        #     self.config.base.cooling_bins[2][i] = round(total_mh * self.config.base.bldgCoolingSetpoints[2][i][0] + 0.5)
     
     def identify_commercial_loads(self, gld_class: str, avgBuilding: float):
         """For the full-order feeders, scan each load with load_class==C to
@@ -1959,7 +1939,11 @@ class Feeder:
             return
         removenames = []
         for e_name, e_object in entity.items():
-            if 'load_class' in e_object:
+            if 'load_class' not in e_object:
+                log.warning("load_class not defined! Cannot add commercial loads")
+                print("load_class not defined! Could not add commercial loads.")
+                return None
+            else:
                 select_bldg = None
                 if e_object['load_class'] == 'C':
                     kva = self.glm.model.accumulate_load_kva(e_object)
@@ -1986,7 +1970,7 @@ class Feeder:
                             select_bldg = bldg
                             sqft_error = self.config.base.comm_bldgs_pop[bldg][1] - target_sqft
                         remain_comm_kva += self.config.base.comm_bldgs_pop[bldg][1] * sqft_kva_ratio
-
+           
                 if select_bldg is not None:
                     comm_name = select_bldg
                     comm_type = self.config.base.comm_bldgs_pop[select_bldg][0]
@@ -2025,7 +2009,7 @@ class Feeder:
                 removenames.append(e_name)
         for e_name in removenames:
             self.glm.del_object(gld_class, e_name)
-        #TODO: The below statement is not consistent with individual building/zone count
+        
         print('{} commercial loads identified, {} buildings added, approximately {} kVA still to be assigned.'.
                         format(len(self.config.base.comm_bldgs_pop), total_commercial, int(remain_comm_kva)))
         # Print commercial info
@@ -2047,7 +2031,6 @@ class Feeder:
 def _test1():
     config = Config("./feeder_config.json5")
     feeder = Feeder(config)
-
 
 
 if __name__ == "__main__":
