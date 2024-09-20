@@ -32,7 +32,7 @@
         "income_level": ["Low", "Middle", "Upper"]
     },
     "bin_size_threshold": 100,
-    "climate_zone": 2, 
+    "climate": "2A", 
     "wh_shift": 0,
 
     // Climate/Location (Note: check that all location data is consistent!)
