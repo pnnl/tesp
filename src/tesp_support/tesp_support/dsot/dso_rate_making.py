@@ -454,9 +454,9 @@ def create_demand_profiles_for_each_meter(
         each meter in five-minute time steps.
         dso_num (int): The number of a valid substation in the system model.
         day_range (list): List of day numbers in a month to be considered.
-        save (bool): Indicates whether or not the output data should be saved in a .h5
+        save (bool): Indicates whether the output data should be saved in a .h5
         file. If True, data is saved to the same location as what is provided in 
-        `dir_path'.
+        'dir_path'.
     Returns:
         demand_df (pandas.DataFrame): Monthly hourly demand data for each meter.
     """
@@ -467,6 +467,7 @@ def create_demand_profiles_for_each_meter(
         _, meter_data_df = load_system_data(
             dir_path, "/Substation_", str(dso_num), str(day), "billing_meter"
         )
+        meter_data_df["date"] = meter_data_df["date"].str.replace("CST", "", regex=True)
         meter_data_df["date"] = meter_data_df["date"].str.replace("CDT", "", regex=True)
         meter_data_df["date"] = pd.to_datetime(meter_data_df["date"])
         meter_data_df = meter_data_df.set_index(["time", "name"])
@@ -509,7 +510,7 @@ def create_demand_profiles_for_each_meter(
     demand_df.set_index(index, inplace=True)
 
     # Convert to an hourly profile
-    demand_df = demand_df.resample("H").sum().div(1000).div(12)
+    demand_df = demand_df.resample("h").sum().div(1000).div(12)
 
     # Save the demand data, if specified
     if save:
@@ -2422,29 +2423,16 @@ def calculate_tariff_prices(
             indust_df = load_indust_data(industrial_file, range(1, 2)) * 1000
             for k in tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"].keys():
                 num_hours = 0
-                for i in range(
-                    len(
-                        tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"][k][
-                            "hour_start"
-                        ]
-                    )
-                ):
+                for i in range(len(tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"][k]["hour_start"])):
                     num_hours += (
-                        tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"][k][
-                            "hour_end"
-                        ][i]
-                        - tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"][
-                            k
-                        ]["hour_start"][i]
+                        tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"][k]["hour_end"][i]
+                        - tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"][k]["hour_start"][i]
                     )
                 total_weighted_consumption_sub_i[s] += (
-                    tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"][k][
-                        "ratio"
-                    ]
+                    tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"][k]["ratio"]
                     * indust_df.loc[0, "Bus" + dso_num]
                     * bl_demand_df[s].shape[0]
-                    * num_hours
-                    / 24
+                    * num_hours / 24
                 )
             rev_demand_charge_sub_i[s] += (
                 tariff["DSO_" + dso_num]["industrial"]["demand_charge"]
@@ -2706,10 +2694,7 @@ def calculate_tariff_prices(
         for each in metadata["billingmeters"]:
             # Calculate the necessary rate components for residential and commercial 
             # consumers
-            if metadata["billingmeters"][each]["tariff_class"] in [
-                "residential",
-                "commercial",
-            ]:
+            if metadata["billingmeters"][each]["tariff_class"] in ["residential", "commercial"]:
                 if trans_cost_balance_method in [None, "volumetric"]:
                     # Update the total consumption
                     total_consumption_trans_rc += meter_df.loc[(each, "kw-hr"), "sum"]
@@ -3579,8 +3564,7 @@ def DSO_rate_making(
                 tariff,
                 str(dso_num),
                 dso_scaling_factor,
-                num_indust_cust,
-                rate_scenario,
+                num_indust_cust
             )
 
             surplus = (

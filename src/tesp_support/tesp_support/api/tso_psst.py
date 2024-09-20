@@ -360,7 +360,7 @@ def tso_psst_loop(casename):
 
 
         if r_and_d:
-            adder = rob_and_don(generation)/12.0
+            adder = rob_and_don(generation)
             log.debug(f"generation: {generation}, adder: {adder}")
             if adder > 0:
                 for ii in range(total_bus_num):

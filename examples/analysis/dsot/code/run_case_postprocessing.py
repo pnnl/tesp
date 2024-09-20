@@ -166,8 +166,8 @@ def post_process():
     # der_stack_plots = False
     # bldg_stack_plots = False
     # forecast_plots = False
-    create_baseline_demand_profiles = False
-    create_demand_profiles = False
+    # create_baseline_demand_profiles = False
+    # create_demand_profiles = False
 
     system_case = 'generate_case_config.json'
     first_data_day = 4  # First day in the simulation that data to be analyzed. Run-in days before this are discarded.
