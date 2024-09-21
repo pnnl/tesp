@@ -19,19 +19,11 @@ from .plots import load_da_retail_price, customer_meta_data, load_json, load_age
     load_system_data, get_date, tic, toc, load_retail_data, load_ames_data, load_gen_data, load_indust_data
 
 
-def read_meters(
-    metadata,
-    dir_path,
-    folder_prefix,
-    dso_num,
-    day_range,
-    SF,
-    dso_data_path,
-    rate_scenario=None,
-):
-    """ Determines the total energy consumed and max power consumption for all meters within a DSO for a series of days.
-    Also collects information on day ahead and real time quantities consumed by transactive customers.
-    Creates summation of these statistics by customer class.
+def read_meters(metadata, dir_path, folder_prefix, dso_num,
+                day_range, SF, dso_data_path, rate_scenario=None):
+    """ Determines the total energy consumed and max power consumption for all meters within a
+    DSO for a series of days. Also collects information on day ahead and real time quantities
+    consumed by transactive customers. Creates summation of these statistics by customer class.
     Args:
         metadata (dict): metadata structure for the DSO to be analyzed
         dir_path (str): directory path for the case to be analyzed
@@ -39,14 +31,15 @@ def read_meters(
         dso_num (str): number of the DSO folder to be opened
         day_range (list): range of days to be summed (for example a month).
         SF (float): Scaling factor to scale GLD results to TSO scale (e.g. 1743)
-        dso_path (str): A str specifying the directory in which the time-of-use rate
-        rate_scenario (str): A str specifying the rate scenario under investigation:
-                flat, time-of-use (or TOU), subscription, or transactive. Defaults to None.
+        dso_data_path (str): A str specifying the directory in which the time-of-use rate
+        rate_scenario (str): A str specifying the rate scenario under investigation (e.g.
+        flat, time-of-use or TOU, subscription, or transactive), defaults to None.
     Returns:
         meter_df: dataframe of energy consumption and max 15 minute power consumption for each month and total
-        energysum_df: dataframe of energy consumption summations by customer class (residential, commercial, and industial)
+        energysum_df: dataframe of energy consumption summations by customer class (residential, commercial, and industrial)
         saves the two dataframe above to an h5 file in the dir_path
         """
+
     # Load in bulk industrial loads
     case_config = load_json(dir_path, 'generate_case_config.json')
     industrial_file = os.path.join("../" + dso_data_path, case_config['indLoad'][5].split('/')[-1])
@@ -543,9 +536,9 @@ def create_baseline_demand_profiles_for_each_meter(
         demand_df (pandas.DataFrame): Monthly hourly demand data for each meter.
         dso_num (int): The number of a valid substation in the system model.
         type_of_baseline (str): The type of baseline demand that should be considered. 
-        There are four types of baselines supported by this function: `daily', 
-        `day_of_week', `weekdays_and_weekends', and `monthly'.
-        save (bool): Indicates whether or not the output data should be saved in a .h5
+        There are four types of baselines supported by this function: 'daily',
+        'day_of_week', 'weekdays_and_weekends', and 'monthly'.
+        save (bool): Indicates whether the output data should be saved in a .h5
         file. If True, data is saved to the location specified by 'save_path'.
         save_path (str): File path that indicates where the resultant baseline demand 
         profile should be saved, if allowed by 'save'.
@@ -3456,7 +3449,7 @@ def DSO_rate_making(
             num_indust_cust,
             industrial_file,
             rate_scenario,
-            trans_cost_balance_method,
+            trans_cost_balance_method
         )
 
         # Update the price datasets accordingly
@@ -3516,7 +3509,7 @@ def DSO_rate_making(
             str(dso_num),
             dso_scaling_factor,
             num_indust_cust,
-            rate_scenario,
+            rate_scenario
         )
 
     # Initialize surplus for export purposes when rate_scenario is not None

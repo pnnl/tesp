@@ -1,19 +1,23 @@
 #!/bin/bash
 
-#sudo mount -t cifs -o file_mode=0777,dir_mode=0777,username=?,password=? //pnnlfs09.pnl.gov/sharedata37_op$/DSOT  /mnt/dsot
-#sudo mount -t cifs -o file_mode=0777,dir_mode=0777,username=?,password=? //pnnlfs09.pnl.gov/sharedata13_op$/TSP_Rates  /mnt/post
+if [[ -z ${SIM_DATA} ]]; then
+  echo "Mounting point for sims has not been run!"
+  echo "Edit 'mount.sh' in this files directory and"
+  echo "then run './mount.sh' in that same directory"
+  exit
+fi
 
-# sub="dsot"
-# sub="flat-rate"
-sub="time-of-use"
-# sub="rob-don"
-share="/mnt/dsot/run_outputs/Rates_Scenario/$sub"
-target_post="/mnt/post/Rates_Scenario/$sub/post"
+echo "This script will unzip the results from $1 case(s) to current directory"
+echo "and then run post processing code after that the shell will zip the"
+echo "post processing results to $SIM_DATA/post and then remove the case(s)"
+
+target_data="$SIM_DATA/data"
+target_post="$SIM_DATA/post"
 
 for j in 04; do
   d1=8_2016_$j\_pv_bt_fl_ev
 
-  unzip -q "$share/$d1.zip"
+  unzip -q "$target_data/$d1.zip"
   cd "$d1" || exit
 #  python3 ../run_case_postprocessing.py > postprocessing.log
   cd .. || exit

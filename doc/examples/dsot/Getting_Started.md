@@ -50,16 +50,18 @@ Start by downloading supporting data that is not stored in the repository due to
 
 Edit the following files to setup your case:
 - 8_hi_system_case_config.json
-	- Market
-	- Start Time
-	- End Time
-	- Tmax (this is the alloted time based on your simulation window. Existing definitions stored based on number of days, e.g., 7Tmax for 7 days)
+  - Market
+  - Start Time
+  - End Time
+  - Tmax (this is the alloted time based on your simulation window. Existing definitions stored based on number of days, e.g., 7Tmax for 7 days)
+
 - generate_case.py (For generating a year's worth of runs, one month at a time)
-	- Looks at prepare_case_dsot.py for most of its config
+  - Looks at prepare_case_dsot.py for most of its config
+
 - prepare_case_dsot.py (For generating a run of duration set in 8_hi_system_case_config.json)
-	- RECS_data = True
-	- Set agent flags, pv, bt, ev, and fl to 1 or 0
-	- Select whether to use 8 or 200 node test case
+  - RECS_data = True
+  - Set agent flags, pv, bt, ev, and fl to 1 or 0
+  - Select whether to use 8 or 200 node test case
 
 `python3 prepare_case_dsot.py`
 
@@ -93,16 +95,17 @@ Preferable to execute these from the terminal in mobaxterm rather than VSCode, a
 1. Navigate to folder one directory above the run folder you'd like to move
 2. `sudo mount -t cifs //pnnlfs09.pnl.gov/sharedata37_op$/DSOT  /mnt/dsot -o username=[USER]`
 3. `sudo cp -r [run_folder] /mnt/dsot/run_outputs/Rates_Scenario/.`
+
 *Note instructions will change based on mount location, folder, and target directory.*
 
 If choosing to delete run folders to clear up room, do so from the mobaxterm terminal rather than VSCode to ensure they are cleared from the disk.
 
 ## Troubleshooting Runs
 - Prepare case or generate case fails: 
-	- Did you update RECS parameters? If so, remember to re-run recs_gld_house_parameters.py
+  - Did you update RECS parameters? If so, remember to re-run recs_gld_house_parameters.py.
 - Address already in use:
-	- Are you already running something? Make sure it's finished. I.e., don't try to postprocess and run something new at the same time.
+  - Are you already running something? Make sure it's finished. I.e., don't try to postprocess and run something new at the same time.
 - Infeasible solution/ No RT starting point:
-	- genPowerLevel needs to be adjusted in 8_hi_system_case_config.json
-		- Defines the initial power output for generators when running the very first timestep. This allows them to be put in such a state that, when respecting ramp rates, they can reach a reasonable dispatch.
-		- 0.6 - 0.7 usually works, for high-demand months, might need to go up to 0.85. 
+  - genPowerLevel needs to be adjusted in 8_hi_system_case_config.json
+    - Defines the initial power output for generators when running the very first timestep. This allows them to be put in such a state that, when respecting ramp rates, they can reach a reasonable dispatch.
+    - 0.6 - 0.7 usually works, for high-demand months, might need to go up to 0.85.

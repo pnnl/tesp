@@ -169,6 +169,14 @@ tesp\_support.dsot.load\_less\_solar module
    :undoc-members:
    :show-inheritance:
 
+tesp\_support.dsot.map\_results module
+--------------------------------------
+
+.. automodule:: tesp_support.dsot.map_results
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 tesp\_support.dsot.plots module
 -------------------------------
 
@@ -229,6 +237,14 @@ tesp\_support.dsot.substation\_f module
 ---------------------------------------
 
 .. automodule:: tesp_support.dsot.substation_f
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+tesp\_support.dsot.tou module
+-----------------------------
+
+.. automodule:: tesp_support.dsot.tou
    :members:
    :undoc-members:
    :show-inheritance:
