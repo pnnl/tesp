@@ -10,6 +10,7 @@ class Config {
 
 class Residential_Build {
     self
+    config
 
     buildingTypeLabel(): list
     checkResidentialBuildingTable(): None 
@@ -28,11 +29,12 @@ class Commercial_Build {
     config
 
     add_one_commercial_zone(): None
-    add_commercial_loads(): None
+    define_commercial_zones(): None
     define_comm_bldg(): list
     normalize_dict_prob(): None
     rand_bin_select(): None
     sub_bin_select(): int
+    find_envelope_prop(): float
 }
 
 class Battery {
@@ -46,8 +48,6 @@ class Solar {
     self
     config
 
-    add_solar_inv_settings(): None
-    add_solar_defines(): None
     add_solar(): None
 }
 
@@ -65,6 +65,11 @@ class Electric_Vehicle {
 class Feeder {
     self
     config
+
+    feeder_gen(): None
+    identify_xfrm_houses(): None
+    identify_commercial_loads(): None
+
 
     
 

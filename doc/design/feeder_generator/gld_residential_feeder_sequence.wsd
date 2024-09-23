@@ -20,18 +20,18 @@ Config --> Commercial_Build: assign_defaults
 Config --> Battery: assign_defaults
 Config --> Electric_Vehicle: assign_defaults
 Feeder -> Config: preamble
-Config -->  Feeder: add_module, add_class, set_clock, add_include, add_set, add_defines, add_voltage_dump, add_object(): metrics_collector_writer, climate
+Config -->  Feeder: add_module, add_class, set_clock, add_include, add_set, add_defines, add_voltage_dump, add_object: metrics_collector_writer, climate
 
 == Residential_Build.add_houses() ==
 Feeder -> Feeder: identify_xfmr_houses
 Feeder -> Residential_Build: add_houses
-return add_object(): triplex_node, triplex_line, triplex_meter, house, ZIPload, waterheater
+return add_object: triplex_node, triplex_line, triplex_meter, house, ZIPload, waterheater
 Residential_Build -> Solar: add_solar
-Solar --> Feeder: add_object(): solar, inverter
+Solar --> Feeder: add_object: solar, inverter
 Residential_Build -> Battery: add_bat
-Battery --> Feeder: add_object(): battery, inverter
+Battery --> Feeder: add_object: battery, inverter
 Residential_Build -> Electric_Vehicle: add_ev
-Electric_Vehicle --> Feeder: add_object(): ev_charger
+Electric_Vehicle --> Feeder: add_object: ev_charger
 
 == Residential_Build.add_small_loads() ==
 Feeder -> Residential_Build: add_small_loads
@@ -39,8 +39,11 @@ Residential_Build --> Feeder: add_object: triplex_node, triplex_line, triplex_me
 
 == Commercial_Build.identify_commercial_loads() ==
 Feeder -> Feeder: identify_commercial_loads
-Feeder -> Commercial_Build: add_commercial_loads
-
-Commercial_Build --> Feeder: add_object(): house, ZIPload
+Feeder -> Commercial_Build: define_commercial_zones
+Commercial_Build --> Commercial_Build: normalize_dict_prob
+Commercial_Build --> Commercial_Build: rand_bin_select 
+Commercial_Build --> Commercial_Build: sub_bin_select
+Commercial_Build --> Commercial_Build: find_envelop_prop
+Commercial_Build --> Feeder: add_one_commercial_zone
 
 @enduml
