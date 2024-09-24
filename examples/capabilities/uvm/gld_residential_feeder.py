@@ -991,7 +991,7 @@ class Commercial_Build:
                   "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
                   "heatgain_fraction": "0.8",
                   "power_fraction": '{:.2f}'.format(bldg['c_p_frac']),
-                  "impedance_fraction": 'impedance_fraction {:.2f}'.format(bldg['c_z_frac']),
+                  "impedance_fraction": '{:.2f}'.format(bldg['c_z_frac']),
                   "current_fraction": '{:.2f}'.format(bldg['c_i_frac']),
                   "power_pf": '{:.2f}'.format(bldg['c_p_pf']),
                   "current_pf": '{:.2f}'.format(bldg['c_i_pf']),
@@ -1066,8 +1066,7 @@ class Commercial_Build:
         loadnum = int(self.config.base.comm_loads[key][7])
         log.info('load: %s, mtr: %s, type: %s, kVA: %.4f, nphs: %s, phases: %s, vln: %.3f', key, mtr, comm_type, kva, nphs, phases, vln)
 
-        bldg = {'parent': key,
-                'mtr': mtr,
+        bldg = {'parent': mtr,
                 'groupid': comm_type + '_' + str(loadnum),
                 'fan_type': 'ONE_SPEED',
                 'heat_type': 'GAS',
@@ -1093,8 +1092,7 @@ class Commercial_Build:
             name = '{:s}'.format(key + '_streetlights')
             params = {"parent": '{:s}'.format(mtr),
                       "groupid": "STREETLIGHTS",
-                      "nominal_voltage": '{:2f}'.format(vln),
-                      "phases": '{:s}'.format(phases)}
+                      "nominal_voltage": '{:2f}'.format(vln)}
             for phs in ['A', 'B', 'C']:
                 if phs in phases:
                     params["impedance_fraction_" + phs] = '{:f}'.format(self.config.base.c_z_frac)
@@ -1532,7 +1530,7 @@ class Battery:
                         "nominal_voltage": str(v_nom)}
             self.glm.add_object("triplex_meter", bat_mtr, params)
 
-            params = {"parent": bat_name,
+            params = {"parent": bat_mtr,
                         "phases": phs,
                         "groupid": "batt_inverter",
                         "generator_status": "ONLINE",
@@ -1604,7 +1602,7 @@ class Solar:
                         "nominal_voltage": str(v_nom)}
             self.glm.add_object("triplex_meter", solar_mtr, params)
 
-            params = {"parent": solar_name,
+            params = {"parent": solar_mtr,
                         "phases": phs,
                         "groupid": "sol_inverter",
                         "generator_status": "ONLINE",
@@ -1630,7 +1628,7 @@ class Solar:
 
             if self.config.use_solar_player == "False":
                 params = {
-                    "parent": solar_mtr,
+                    "parent": inv_name,
                     "panel_type": self.config.solar["panel_type"],
                     # "area": '{:.2f}'.format(panel_area),
                     "rated_power":  self.config.solar["rated_power"],
@@ -1910,8 +1908,8 @@ class Feeder:
         self.glm.write_model(config.out_file_glm)
 
         # To plot the model using the networkx package:
-        print("\nPlotting image of model; this may take several minutes.")
-        self.glm.model.plot_model()
+        # print("\nPlotting image of model; this may take several minutes.")
+        # self.glm.model.plot_model()
 
     def feeder_gen(self) -> None:
         """ Read in the backbone feeder, then loops through transformer 
