@@ -17,8 +17,9 @@ Public Functions:
     Config
     :preamble: Add required modules, objects, includes, defines, and sets 
         required to run a .glm model
-    :generate_and_load_recs: Generate RECS metadata if it does not yet exist. 
-        Assign default values for residential buildings, commercial buildings, 
+    :generate_recs: Generate RECS metadata if it does not yet exist based on 
+        user config.
+    :load_recs: Assign default values for residential and commercial buildings, 
         batteries, and electric vehicles, based on imported metadata for each.
 
     Residential_Build
@@ -59,7 +60,7 @@ Public Functions:
         based on the age and (ASHRAE) climate zone of the building
     
     Battery
-    :add_bat: Define and add battery and inverter objects to house, under the 
+    :add_batt: Define and add battery and inverter objects to house, under the 
         parentage of meter_name.
     
     Solar
@@ -187,16 +188,14 @@ class Config:
                   "tmyfile": str(self.tmyfile)}
         self.glm.add_object("climate", self.base.weather_name, params)
 
-    def generate_and_load_recs(self) -> None:
-        """ Generate RECS metadata if it does not yet exist. Assign
-        default values for residential buildings, commercial buildings,
-        batteries, and electric vehicles, based on imported metadata for each.
+    def generate_recs(self) -> None:
+        """Generate RECS metadata if it does not yet exist based on user config.
         Args:
             None
         Returns:
             None
         """
-        # if RECS metadata does not already exist, generate it
+
         if not self.out_file_residential_meta:
             self.out_file_residential_meta = "RECS_residential_metadata.json"
             recs_gld_house_parameters.get_RECS_jsons(
@@ -210,6 +209,14 @@ class Config:
                 self.wh_shift
             )
 
+    def load_recs(self) -> None:
+        """ Assign default values for residential and commercial buildings,
+        batteries, and electric vehicles, based on imported metadata for each.
+        Args:
+            None
+        Returns:
+            None
+        """
         assign_defaults(self.com_bld, self.file_commercial_meta)
         # generate the total population of commercial buildings by type and size
         num_comm_customers = round(self.number_of_gld_homes *
@@ -913,7 +920,7 @@ class Residential_Build:
             prob_solar = self.solar_percentage[income] * self.solar_pv[self.config.state][self.config.res_dso_type][income]["mobile_home"]
             prob_ev = self.ev_percentage[income] * self.ev[self.config.state][self.config.res_dso_type][income]["mobile_home"]
         # Calculate probability of battery by income (No RECS data for building type)
-        prob_bat = self.battery_percentage[income]
+        prob_batt = self.battery_percentage[income]
 
         # add solar, ev, and battery based on RECS data or user-input
         if self.config.use_recs == "True": 
@@ -921,13 +928,13 @@ class Residential_Build:
 
             self.config.ev.add_ev(prob_ev, hsename)  
             
-            self.config.batt.add_bat(prob_bat, mtrname1, bat_m_name, bat_name, bat_i_name, phs, v_nom)
+            self.config.batt.add_batt(prob_batt, mtrname1, bat_m_name, bat_name, bat_i_name, phs, v_nom)
         else: 
             self.config.sol.add_solar(self.config.solar_percentage, mtrname1, sol_m_name, sol_name, sol_i_name, phs, v_nom, floor_area)
 
             self.config.ev.add_ev(self.config.ev_percentage, hsename)  
             
-            self.config.batt.add_bat(self.config.storage_percentage, mtrname1, bat_m_name, bat_name, bat_i_name, phs, v_nom)
+            self.config.batt.add_batt(self.config.storage_percentage, mtrname1, bat_m_name, bat_name, bat_i_name, phs, v_nom)
 
 class Commercial_Build:
 
@@ -1490,7 +1497,7 @@ class Battery:
         self.glm = config.glm
         self.battery_count = 0
     
-    def add_bat(self, bat_prob: float, parent_mtr: str, bat_mtr: str, bat_name: str, inv_name: str, phs: float, v_nom: float) -> None:
+    def add_batt(self, bat_prob: float, parent_mtr: str, bat_mtr: str, bat_name: str, inv_name: str, phs: float, v_nom: float) -> None:
         """Define and add battery and inverter objects to house, under the 
         parentage of the meter_name.
 
@@ -1563,7 +1570,7 @@ class Solar:
         self.solar_count = 0
         self.solar_kw = 0
   
-    def add_solar(self, solar_prob: float,  parent_mtr: str, solar_mtr: str, solar_name: str, inv_name: str, phs: float, v_nom: float, floor_area: float):
+    def add_solar(self, solar_prob: float,  parent_mtr: str, solar_mtr: str, solar_name: str, inv_name: str, phs: float, v_nom: float, floor_area: float) -> None:
         """ Define and add solar and inverter to house under the parentage of
         meter_name
 
@@ -1576,6 +1583,9 @@ class Solar:
             phs (float): phase of parent triplex meter
             v_nom (float): nominal line-to-neutral voltage at basenode
             floor_area (float): area of house in sqft
+        
+        Returns:
+            None
         """
 
         if rng.random() <= solar_prob: 
@@ -1868,7 +1878,9 @@ class Feeder:
         self.glm = config.glm
         
         # Generate RECS metadata, if it does not exist
-        self.config.generate_and_load_recs()
+        self.config.generate_recs()
+        # Assign defaults based on RECS data
+        self.config.load_recs()
 
         # Populate the feeder
         self.feeder_gen()
@@ -1887,9 +1899,9 @@ class Feeder:
         self.identify_commercial_loads('load', 0.001 * self.config.avg_commercial)
         for key in self.config.base.comm_loads:
             self.config.com_bld.define_commercial_zones(config.region, key, self.config.com_bld.total_comm_kva)
-        self.glm.add_voltage_class('node', self.config.vln, self.config.vll, self.secnode)
-        self.glm.add_voltage_class('meter',config.vln, self.config.vll, self.secnode)
-        self.glm.add_voltage_class('load', self.config.vln, self.config.vll, self.secnode)
+        #self.glm.add_voltage_class('node', self.config.vln, self.config.vll, self.secnode)
+        #self.glm.add_voltage_class('meter',config.vln, self.config.vll, self.secnode)
+        #self.glm.add_voltage_class('load', self.config.vln, self.config.vll, self.secnode)
 
         print(f"{self.config.sol.solar_count} pv totaling "
               f"{self.config.sol.solar_kw:.1f} kW, with "
@@ -1898,8 +1910,8 @@ class Feeder:
         self.glm.write_model(config.out_file_glm)
 
         # To plot the model using the networkx package:
-        #print("\nPlotting image of model; this will take a minute.")
-        #glm.model.plot_model()
+        print("\nPlotting image of model; this may take several minutes.")
+        self.glm.model.plot_model()
 
     def feeder_gen(self) -> None:
         """ Read in the backbone feeder, then loops through transformer 

@@ -5,7 +5,8 @@ class Config {
     config
 
     preamble(): None
-    generate_and_load_recs(): None
+    generate_recs(): None
+    load_recs(): None
 }
 
 class Residential_Build {
@@ -69,10 +70,6 @@ class Feeder {
     feeder_gen(): None
     identify_xfrm_houses(): None
     identify_commercial_loads(): None
-
-
-    
-
 }
 
 @enduml
