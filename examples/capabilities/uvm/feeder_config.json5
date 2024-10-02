@@ -11,7 +11,7 @@
 
     // Input and Output Files
     "in_file_glm": "", // input feeder model ("myfeeder.glm"). If empty, taxonomy feeder used
-    "taxonomy": "R1-12.47-1.glm", // taxonomy feeder model
+    "taxonomy": "R1-12.47-3.glm", // taxonomy feeder model
     "out_file_glm": "test.glm", // REQUIRED: output populated feeder ("myfeeder_populated.glm").
     "case_name": "MyCase", // REQUIRED: a name for your case
     "substation_name": "MySub", // REQUIRED: a name for the substation
@@ -63,7 +63,7 @@
     "storage_percentage": 0.40,
     "ev_percentage": 0.30,
 
-    // Solar diction
+    // Solar Diction
     "solar": {
         "panel_type": "SINGLE_CRYSTAL_SILICON",
         "rated_power": 7.5,

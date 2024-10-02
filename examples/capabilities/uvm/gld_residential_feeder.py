@@ -1009,7 +1009,7 @@ class Commercial_Build:
                   "current_pf": '{:.2f}'.format(bldg['c_i_pf']),
                   "impedance_pf": '{:.2f}'.format(bldg['c_z_pf']),
                   "base_power":  '{:s}_plugs*{:.2f}'.format(bldg['base_schedule'], bldg['adj_plugs'])}
-        self.glm.add_object("ZIPload", "plug loads", params)
+        self.glm.add_object("ZIPload", "plug_loads", params)
 
         params = {"parent": name,
                   "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
@@ -1019,7 +1019,7 @@ class Commercial_Build:
                   "current_fraction": "0",
                   "power_pf": "1",
                   "base_power": '{:s}_gas*{:.2f}'.format(bldg['base_schedule'], bldg['adj_gas'])}
-        self.glm.add_object("ZIPload", "gas waterheater", params)
+        self.glm.add_object("ZIPload", "gas_waterheater", params)
 
         params = {"parent": name,
                   "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
@@ -1031,7 +1031,7 @@ class Commercial_Build:
                   "current_pf": '{:.2f}'.format(bldg['c_i_pf']),
                   "impedance_pf": '{:.2f}'.format(bldg['c_z_pf']),
                   "base_power": '{:s}_exterior*{:.2f}'.format(bldg['base_schedule'], bldg['adj_ext'])}
-        self.glm.add_object("ZIPload", "exterior lights", params)
+        self.glm.add_object("ZIPload", "exterior_lights", params)
 
         params = {"parent": name,
                   "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
@@ -1399,7 +1399,7 @@ class Commercial_Build:
             total += diction[element]
             if total >= probability:
                 return element
-        return None
+        return element
 
 
     def sub_bin_select(bin: str, type: str, prob: float) -> int:
@@ -1908,8 +1908,8 @@ class Feeder:
         self.glm.write_model(config.out_file_glm)
 
         # To plot the model using the networkx package:
-        # print("\nPlotting image of model; this may take several minutes.")
-        # self.glm.model.plot_model()
+        #print("\nPlotting image of model; this may take several minutes.")
+        #self.glm.model.plot_model()
 
     def feeder_gen(self) -> None:
         """ Read in the backbone feeder, then loops through transformer 
@@ -1950,6 +1950,7 @@ class Feeder:
             # skipping population for transformers with secondary more than 500 V
             e_config = e_object['configuration']
             sec_v = float(i_glm.transformer_configuration[e_config]['secondary_voltage'])
+
             if e_name not in self.seg_loads or sec_v > 500:
                 log.warning(f"WARNING: %s not in the seg loads", e_name)
                 continue
@@ -1992,7 +1993,7 @@ class Feeder:
             e_object['phases'] = seg_phs
             if key not in xfused:
                 xfused[key] = [seg_phs, kvat, vnom, vsec, install_type]
-
+        
         for key in xfused:
             self.glm.add_xfmr_config(key, xfused[key][0], xfused[key][1], xfused[key][2], xfused[key][3],
                                 xfused[key][4], self.config.vll, self.config.vln)
@@ -2132,7 +2133,9 @@ class Feeder:
                 return None
             else:
                 select_bldg = None
-                if e_object['load_class'] == 'C':
+                if e_object['load_class'] != 'C':
+                    continue
+                elif e_object['load_class'] == 'C':
                     kva = self.glm.model.accumulate_load_kva(e_object)
                     total_commercial += 1
                     self.config.com_bld.total_comm_kva += kva
@@ -2196,6 +2199,10 @@ class Feeder:
                 removenames.append(e_name)
         for e_name in removenames:
             self.glm.del_object(gld_class, e_name)
+        
+        if e_object['load_class'] != 'C':
+            print("No commercial 'C' load classes defined. Cannot add commercial loads.")
+            return None
         
         print('{} commercial loads identified, {} buildings added, approximately {} kVA still to be assigned.'.
                         format(len(self.config.base.comm_bldgs_pop), total_commercial, int(remain_comm_kva)))
