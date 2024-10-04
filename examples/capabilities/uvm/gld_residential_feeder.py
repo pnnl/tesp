@@ -895,6 +895,7 @@ class Residential_Build:
                         "tank_setpoint": '{:.1f}'.format(tank_set - 5.0)}
             self.glm.add_object("waterheater", whname, params)
             self.glm.add_metrics_collector(whname, "waterheater")
+            self.glm.add_group_recorder("class=waterheater", "actual_voltage", "waterheater.csv")
 
         self.glm.add_metrics_collector(hsename, "house")
 
@@ -1315,7 +1316,6 @@ class Commercial_Build:
                 bldg['Rfloor'] = 22. # Value from previous study
                 bldg['Rdoors'] = 3. # Value from previous study
                 bldg['no_of_doors'] = 3 # Value from previous study
-                
                 bldg['airchange_per_hour'] = bld_specs['ventilation_requirements']['air_change_per_hour']
                 bldg['init_temp'] = 68. + 4. * rng.random()
                 bldg['os_rand'] = rng.normal(self.general['HVAC']['oversizing_factor']['mean'],

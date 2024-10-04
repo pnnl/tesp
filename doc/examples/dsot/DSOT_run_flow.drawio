@@ -1,162 +1,162 @@
 <mxfile host="65bd71144e">
     <diagram id="zx20I-B725z4pgMH4ESO" name="Page-1">
-        <mxGraphModel dx="2400" dy="651" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+        <mxGraphModel dx="2284" dy="787" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
-                <mxCell id="64" value="" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-                    <mxGeometry x="-447" y="30" width="180" height="60" as="geometry"/>
+                <mxCell id="64" value="" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="-445" y="50" width="247" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="53" value="" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+                <mxCell id="53" value="" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" parent="1" vertex="1">
                     <mxGeometry x="-30" y="210" width="580" height="400" as="geometry"/>
                 </mxCell>
-                <mxCell id="2" value="Files" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-                    <mxGeometry x="-437" y="45" width="60" height="30" as="geometry"/>
+                <mxCell id="2" value="Output Files" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="-278" y="65" width="60" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="5" value="Process" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
-                    <mxGeometry x="-357" y="45" width="80" height="30" as="geometry"/>
+                <mxCell id="5" value="Process" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" parent="1" vertex="1">
+                    <mxGeometry x="-368" y="65" width="80" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="23" value="" style="edgeStyle=none;html=1;" edge="1" parent="1" source="6" target="8">
+                <mxCell id="23" value="" style="edgeStyle=none;html=1;" parent="1" source="6" target="8" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="6" value="8_hi_system_case_config.json&lt;br&gt;&lt;i&gt;(select case and rate options)&lt;/i&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="6" value="8_hi_system_case_config.json&lt;br&gt;&lt;i&gt;(select case and rate options)&lt;/i&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="80" y="230" width="180" height="50" as="geometry"/>
                 </mxCell>
-                <mxCell id="14" style="edgeStyle=none;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="8" target="13">
+                <mxCell id="14" style="edgeStyle=none;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" source="8" target="13" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="39" value="" style="edgeStyle=none;html=1;" edge="1" parent="1" source="8" target="38">
+                <mxCell id="39" value="" style="edgeStyle=none;html=1;" parent="1" source="8" target="38" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="8" value="prepare_case_dsot.py&lt;br&gt;&lt;i&gt;(select case options)&lt;/i&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+                <mxCell id="8" value="prepare_case_dsot.py&lt;br&gt;&lt;i&gt;(select case options)&lt;/i&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" parent="1" vertex="1">
                     <mxGeometry x="85" y="300" width="170" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="10" value="prep_substation.py&lt;br&gt;commercial_feeder_glm.py&lt;br&gt;residential_feeder_glm.py&lt;br&gt;copperplate_feeder_glm.py" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+                <mxCell id="10" value="prep_substation.py&lt;br&gt;commercial_feeder_glm.py&lt;br&gt;residential_feeder_glm.py&lt;br&gt;copperplate_feeder_glm.py" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" parent="1" vertex="1">
                     <mxGeometry x="10" y="505" width="170" height="75" as="geometry"/>
                 </mxCell>
-                <mxCell id="12" value="prep_substation_recs.py&lt;br&gt;commercial_feeder_glm.py&lt;br&gt;residential_feeder.glm.py&lt;br&gt;copperplate_feeder_glm.py" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+                <mxCell id="12" value="prep_substation_recs.py&lt;br&gt;commercial_feeder_glm.py&lt;br&gt;residential_feeder.glm.py&lt;br&gt;copperplate_feeder_glm.py" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" parent="1" vertex="1">
                     <mxGeometry x="190" y="505" width="180" height="75" as="geometry"/>
                 </mxCell>
-                <mxCell id="13" value="recs_data" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="13" value="recs_data" style="rhombus;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="130" y="390" width="80" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="17" value="" style="edgeStyle=segmentEdgeStyle;endArrow=classic;html=1;curved=0;rounded=0;endSize=8;startSize=8;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="13" target="10">
+                <mxCell id="17" value="" style="edgeStyle=segmentEdgeStyle;endArrow=classic;html=1;curved=0;rounded=0;endSize=8;startSize=8;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="13" target="10" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="390" y="557" as="sourcePoint"/>
                         <mxPoint x="440" y="507" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="18" value="" style="edgeStyle=segmentEdgeStyle;endArrow=classic;html=1;curved=0;rounded=0;endSize=8;startSize=8;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="13" target="12">
+                <mxCell id="18" value="" style="edgeStyle=segmentEdgeStyle;endArrow=classic;html=1;curved=0;rounded=0;endSize=8;startSize=8;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="13" target="12" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="390" y="557" as="sourcePoint"/>
                         <mxPoint x="440" y="507" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="20" value="True" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                <mxCell id="20" value="True" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
                     <mxGeometry x="275" y="410" width="50" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="21" value="False" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                <mxCell id="21" value="False" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
                     <mxGeometry x="35" y="410" width="50" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="26" value="tesp_support.dsot.gen_map.&lt;i&gt;py&lt;br&gt;(select case options)&lt;/i&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+                <mxCell id="26" value="tesp_support.dsot.gen_map.&lt;i&gt;py&lt;br&gt;(select case options)&lt;/i&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" parent="1" vertex="1">
                     <mxGeometry x="-50" y="95" width="220" height="50" as="geometry"/>
                 </mxCell>
-                <mxCell id="33" value="" style="edgeStyle=none;html=1;endArrow=none;" edge="1" parent="1" source="26" target="34">
+                <mxCell id="33" value="" style="edgeStyle=none;html=1;endArrow=none;" parent="1" source="26" target="34" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="60" y="145" as="sourcePoint"/>
                         <mxPoint x="60" y="195" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="34" value="generation_map.m" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                <mxCell id="34" value="generation_map.m" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
                     <mxGeometry x="30" y="150" width="60" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="37" style="edgeStyle=none;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="35" target="26">
+                <mxCell id="37" style="edgeStyle=none;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" source="35" target="26" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="35" value="bus_generators.xlsx" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="35" value="bus_generators.xlsx" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="-5" y="45" width="130" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="45" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="38" target="44">
+                <mxCell id="45" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="38" target="44" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="38" value="&amp;nbsp;- DSO_(1-n)&lt;br&gt;&amp;nbsp;- PyomoTempFiles&lt;br&gt;&amp;nbsp;- Substation_(1-n)&lt;br&gt;&amp;nbsp;- weather_Substation_(1-n)&lt;br&gt;&amp;nbsp;- case_config_(1-n).json&lt;br&gt;&amp;nbsp;- Run, Kill, Clean shell files&lt;br&gt;&amp;nbsp;- etc." style="whiteSpace=wrap;html=1;align=left;" vertex="1" parent="1">
+                <mxCell id="38" value="&amp;nbsp;- DSO_(1-n)&lt;br&gt;&amp;nbsp;- PyomoTempFiles&lt;br&gt;&amp;nbsp;- Substation_(1-n)&lt;br&gt;&amp;nbsp;- weather_Substation_(1-n)&lt;br&gt;&amp;nbsp;- case_config_(1-n).json&lt;br&gt;&amp;nbsp;- Run, Kill, Clean shell files&lt;br&gt;&amp;nbsp;- etc." style="whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
                     <mxGeometry x="340" y="270" width="160" height="120" as="geometry"/>
                 </mxCell>
-                <mxCell id="42" value="dsot/" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                <mxCell id="42" value="dsot/" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
                     <mxGeometry x="30" y="475" width="50" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="43" value="recs/" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                <mxCell id="43" value="recs/" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
                     <mxGeometry x="210" y="475" width="50" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="47" style="edgeStyle=none;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="44" target="46">
+                <mxCell id="47" style="edgeStyle=none;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="44" target="46" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="44" value="run.sh" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+                <mxCell id="44" value="run.sh" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" parent="1" vertex="1">
                     <mxGeometry x="560" y="310" width="90" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="49" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="46" target="48">
+                <mxCell id="49" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="46" target="48" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="46" value=".log&lt;br&gt;.h5&lt;br&gt;.dat&lt;br&gt;.csv&lt;br&gt;" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+                <mxCell id="46" value=".log&lt;br&gt;.h5&lt;br&gt;.dat&lt;br&gt;.csv&lt;br&gt;" style="whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
                     <mxGeometry x="690" y="297.5" width="65" height="65" as="geometry"/>
                 </mxCell>
-                <mxCell id="51" style="edgeStyle=none;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="48" target="50">
+                <mxCell id="51" style="edgeStyle=none;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="48" target="50" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="48" value="run_case_postprocesssing.py" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+                <mxCell id="48" value="run_case_postprocesssing.py" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" parent="1" vertex="1">
                     <mxGeometry x="621" y="411" width="203" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="61" value="" style="edgeStyle=none;html=1;startArrow=none;" edge="1" parent="1" source="62" target="60">
+                <mxCell id="61" value="" style="edgeStyle=none;html=1;startArrow=none;" parent="1" source="62" target="60" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
                             <mxPoint x="720" y="655"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="50" value="plots&lt;br&gt;.csv" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="50" value="plots&lt;br&gt;.csv" style="whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="686.25" y="516" width="72.5" height="53" as="geometry"/>
                 </mxCell>
-                <mxCell id="55" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;startArrow=none;" edge="1" parent="1" source="58" target="53">
+                <mxCell id="55" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;startArrow=none;" parent="1" source="58" target="53" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="52" value="generate_case.py&lt;br&gt;&lt;i&gt;(select case options)&lt;/i&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+                <mxCell id="52" value="generate_case.py&lt;br&gt;&lt;i&gt;(select case options)&lt;/i&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" parent="1" vertex="1">
                     <mxGeometry x="-360" y="375" width="170" height="70" as="geometry"/>
                 </mxCell>
-                <mxCell id="59" value="" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=none;" edge="1" parent="1" source="52" target="58">
+                <mxCell id="59" value="" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=none;" parent="1" source="52" target="58" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="-200" y="410" as="sourcePoint"/>
                         <mxPoint x="-20" y="410" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="58" value="Monthly Cases" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                <mxCell id="58" value="Monthly Cases" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
                     <mxGeometry x="-170" y="395" width="100" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="73" value="" style="edgeStyle=none;html=1;" edge="1" parent="1" source="60" target="72">
+                <mxCell id="73" value="" style="edgeStyle=none;html=1;" parent="1" source="60" target="72" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="60" value="run_annual_postprocessing.py" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+                <mxCell id="60" value="run_annual_postprocessing.py" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" parent="1" vertex="1">
                     <mxGeometry x="607.5" y="665" width="230" height="50" as="geometry"/>
                 </mxCell>
-                <mxCell id="63" value="" style="edgeStyle=none;html=1;endArrow=none;" edge="1" parent="1" source="50" target="62">
+                <mxCell id="63" value="" style="edgeStyle=none;html=1;endArrow=none;" parent="1" source="50" target="62" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="721.9361702127658" y="569" as="sourcePoint"/>
                         <mxPoint x="720.7142857142858" y="670" as="targetPoint"/>
                         <Array as="points"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="62" value="Year of Data" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                <mxCell id="62" value="Year of Data" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
                     <mxGeometry x="677.5" y="600" width="90" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="65" value="&amp;nbsp; rate" style="triangle;whiteSpace=wrap;html=1;align=left;" vertex="1" parent="1">
+                <mxCell id="65" value="&amp;nbsp; rate" style="triangle;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
                     <mxGeometry x="28" y="230" width="50" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="66" value="&amp;nbsp; pv, bt, fl, ev&lt;br&gt;&amp;nbsp; recs_data" style="triangle;whiteSpace=wrap;html=1;align=left;" vertex="1" parent="1">
+                <mxCell id="66" value="&amp;nbsp; pv, bt, fl, ev&lt;br&gt;&amp;nbsp; recs_data" style="triangle;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
                     <mxGeometry y="295" width="90" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="67" value="[dso/rate]AgentFile:&lt;br&gt;dso[RECS]PopulationFile:&lt;br&gt;hvac[RECS]SetPoint:&lt;br&gt;dso[RECS]ResBldgFile:&lt;br&gt;[dso/rate]QuadraticFile:&lt;br&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="67" value="[dso/rate]AgentFile:&lt;br&gt;dso[RECS]PopulationFile:&lt;br&gt;hvac[RECS]SetPoint:&lt;br&gt;dso[RECS]ResBldgFile:&lt;br&gt;[dso/rate]QuadraticFile:&lt;br&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="210" y="50" width="180" height="95" as="geometry"/>
                 </mxCell>
-                <mxCell id="69" value="" style="edgeStyle=elbowEdgeStyle;elbow=vertical;endArrow=classic;html=1;curved=0;rounded=0;endSize=8;startSize=8;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="67" target="6">
+                <mxCell id="69" value="" style="edgeStyle=elbowEdgeStyle;elbow=vertical;endArrow=classic;html=1;curved=0;rounded=0;endSize=8;startSize=8;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="67" target="6" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="190" y="410" as="sourcePoint"/>
                         <mxPoint x="240" y="360" as="targetPoint"/>
@@ -165,7 +165,7 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="70" value="" style="edgeStyle=elbowEdgeStyle;elbow=vertical;endArrow=classic;html=1;curved=0;rounded=0;endSize=8;startSize=8;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="34" target="6">
+                <mxCell id="70" value="" style="edgeStyle=elbowEdgeStyle;elbow=vertical;endArrow=classic;html=1;curved=0;rounded=0;endSize=8;startSize=8;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="34" target="6" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="190" y="410" as="sourcePoint"/>
                         <mxPoint x="240" y="360" as="targetPoint"/>
@@ -174,10 +174,10 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="71" value="&amp;nbsp; pv, bt, fl, ev" style="triangle;whiteSpace=wrap;html=1;align=left;" vertex="1" parent="1">
+                <mxCell id="71" value="&amp;nbsp; pv, bt, fl, ev" style="triangle;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
                     <mxGeometry x="-445" y="370" width="90" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="74" style="edgeStyle=none;html=1;" edge="1" parent="1" source="72">
+                <mxCell id="74" style="edgeStyle=none;html=1;" parent="1" source="72" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="170" y="220" as="targetPoint"/>
                         <Array as="points">
@@ -187,8 +187,11 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="72" value="8_hi_DSO_quadratic_curves.json" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="72" value="8_hi_DSO_quadratic_curves.json" style="whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="616.25" y="770" width="212.5" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="77" value="Config" style="triangle;whiteSpace=wrap;html=1;align=left;" vertex="1" parent="1">
+                    <mxGeometry x="-423" y="55" width="50" height="50" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>

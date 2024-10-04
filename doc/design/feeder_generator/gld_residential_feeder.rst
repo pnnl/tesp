@@ -2,40 +2,48 @@
 Residential Feeder Generator 
 ============================
 
-This residential feeder generator module (gld_residential_feeder.py) takes a model feeder.glm (GridLAB-D readable format), identifies existing transformers on the feeder with downstream load, determines how many houses each transformer can support based on the average house load in kVA, and adds that many houses. This module also adds commercial buildings as well as small ZIP loads based on identified commerical loads. The newly populated feeder is saved as a separate .glm, which can be used for subsequent analysis in GridLAB-D.
+This residential feeder generator module, ``gld_residential_feeder.py``, takes a model ``[feeder].glm`` (GridLAB-D readable format), identifies existing transformers on the feeder with downstream load, determines how many houses each transformer can support based on the average house load in kVA, and adds that many houses and small ZIPloads. This module also adds commercial buildings and ZIP loads based on identified commerical loads. The newly populated feeder is saved as a separate .glm, which can be used for subsequent analysis in GridLAB-D.
 
 Before proceeding, please be sure you have successfully installed TESP.
 
 Pre-req: Get Required Data Files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Before using gld_residential_feeder.py, we need the required metadata. Start by downloading the supporting data that is not stored in the repository due to its size and static nature. This will add a “data” folder alongside the existing “code” folder from the repository. From the terminal: ::
+Before using ``gld_residential_feeder.py``, we need the required metadata. Start by downloading the supporting data that is not stored in the repository due to its size and static nature. This will add a ``data`` folder alongside the existing ``code`` folder from the repository. From the terminal: ::
 
     cd tesp/repository/tesp/examples/analysis/dsot/code
 
     ./dsotData.sh
 
+Using the Feeder Generator
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Config
 ~~~~~~
+
+The Config class reads in the required user-defined configuration and metadata and makes them available to the other classes in the script.
 
 Feeder Configuration
 --------------------
 
-The feeder_config.json5 file contains the required configurations read in by the ``Config`` class and used by the rest of gld_residential_feeder.py. The config file is organized into sections for readability.
+The ``feeder_config.json5`` file contains the required configurations read in by the ``Config`` class and used by the rest of ``gld_residential_feeder.py``. This config file is organized into the following sections for readability.
 
-- Simulation: the basic information to run a simulation, including start and stop times, timesteps, time zone, and the interval for the metrics collector.
-- Input and Outupt Files: file names of the input feeder.glm, a name for the output populated feeder.glm, case name, substation name, and the names of the required residential, commercial, battery, and electric vehicle metadata files.
-- RECS (Residential Energy Consumption Survey) Data: required RECS metadata files and/or the parameters required to generate the RECS metadata.
-- Residential & Commercial Population: desired characteristics of the populated feeder, including the average size of a residential and commercial building (in kVA), and the mix of customer classes along the feeder.
-- Distributed Energy Resources: specifies whether DERs are populated on the feeder according to RECS data based on income and building type distribution, or if a custom distribution is used.
-- Solar Diction: parameters defining the solar panels added to houses on the feeder, including panel type, efficiency, and tilt angle.
+- *Simulation*: the basic information to run a simulation, including start and stop times, timesteps, time zone, and the interval for the metrics collector.
+- *Input and Outupt Files*: file names of the input ``[feeder].glm``, a name for the output ``[populated_feeder].glm``, case name, substation name, and the names of the required residential, commercial, battery, and electric vehicle metadata files obtained in the pre-req.
+
+    **Note: this section is where you define the feeder model that you wish to populate. If using your own feeder, rather than one of PNNL's taxonomy feeders (see**  ``tesp\data\feeders`` **for available .glm files), the file path to your feeder must be specified with ** ``in_file_glm`` **. If empty, a taxonomy feeder is used.**
+
+- *RECS (Residential Energy Consumption Survey) Data*: required RECS metadata files and/or the parameters required to generate the RECS metadata using ``recs_gld_house_parameters.py``.
+- *Residential & Commercial Population*: desired characteristics of the populated feeder, including the average size of a residential and commercial building (in kVA), and the mix of customer classes along the feeder.
+- *Distributed Energy Resources*: specifies whether DERs are populated on the feeder according to RECS income and building type distribution data, or if a user-defined distribution is used.
+- *Solar Diction*: parameters defining the solar panels added to houses on the feeder, including panel type, efficiency, and tilt angle.
 
 These are the main parameters a user might adjust to customize this module. Additional parameters that are required, but less likely to be modified, are defined in sections that end in (continued).
 
 Define Residential Population
 -----------------------------
 
-The 2020 Residential Energy Consumption Survey data are the backbone of how TESP creates a realistic distribution of residential housing stock on the feeder. The recs_gld_house_parameters.py script responsible for creating the residential metadata file (RECS_residential_metadata.json) fetches this metadata based on ``state``, ``housing_density``, and ``income_level``.
+The 2020 Residential Energy Consumption Survey data are the foundation of how TESP creates a realistic distribution of residential housing stock on the feeder. The ``recs_gld_house_parameters.py`` script responsible for creating the residential metadata file ``RECS_residential_metadata.json`` fetches this metadata based on ``state``, ``housing_density``, and ``income_level``.
 
 Consider the following test case, in which those parameters are:::
 
@@ -43,7 +51,7 @@ Consider the following test case, in which those parameters are:::
     "housing_density": ['No_DSO_Type']
     "income_level": ['Low', 'Middle', 'Upper']
 
-This information is used by the ``generate_and_load_recs`` function to assign the default commercial, residential, battery, solar, and ev metadata if a RECS metadata file is not specified in this configuration file.
+This information is used by the ``generate_recs`` function to assign the default commercial, residential, battery, solar, and ev metadata if that RECS metadata file does not already exist as specified in the configuration file.
 
 Residential_Build
 ~~~~~~~~~~~~~~~~~
@@ -54,7 +62,7 @@ The primary function of this class is to ``add_houses`` to the feeder. The depen
 Commercial_Build
 ~~~~~~~~~~~~~~~~
 
-The primary function of this class is to scan loads assigned with a 'C' class by the ``buildingTypeLabel`` function within the ``Residential_Build`` class and replace those with commercial building loads. Those identified commercial loads are then used to define and add commercial zones, buildings, and ZIP loads.
+The primary function of this class is to scan loads assigned with a 'C' class by the ``buildingTypeLabel`` function within the ``Residential_Build`` class and replace those with commercial building loads. Those identified commercial loads are then used to define and add commercial zones, buildings, and ZIP loads. If the feeder does not contain loads with the parameter ``load_class`` or if none are type 'C', no commercial loads will be added to the feeder.
 
 Battery
 ~~~~~~~
@@ -64,12 +72,12 @@ The primary function of this class is to define the battery and inverter objects
 Solar
 ~~~~~
 
-This primary function of this class is to define the solar and inverter objects to add to the houses via the ``add_solar`` function.
+The primary function of this class is to define the solar and inverter objects to add to the houses via the ``add_solar`` function.
 
 Electric_Vehicle
 ~~~~~~~~~~~~~~~~
 
-This primary function of this class is to define the EVs to be added to the feeder as well as their driving and charging behavior. This is achieved by first reading available driving data from the NHTS survey via ``processs_nhts_data`` and matching that data with a reaslistic driving schedule via ``match_driving_schedule`` based on the daily miles driven, departure, and arrival times. This class contains an additional check to ensure that the driving schedules have realistic timings, via ``is_drive_time_valid``.
+The primary function of this class is to define the EVs to be added to the feeder as well as their driving and charging behavior. This is achieved by first reading available driving data from the NHTS survey via ``processs_nhts_data`` and matching that data with a reaslistic driving schedule via ``match_driving_schedule`` based on the daily miles driven, work departure, and work arrival times. This class contains an additional check to ensure that the driving schedules have realistic timings, via ``is_drive_time_valid``.
 
 Feeder
 ~~~~~~
