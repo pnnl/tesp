@@ -39,31 +39,121 @@ The "storage_config.json" file allows for user-defined storage elements to be ad
 Day-Ahead Market
 ----------------
 
-* get_DAM_bids_from_wrapper: Used when not relying on co-simulation for DA generator bids. Bids are taken from local files.
-* get_DA_forecast: Forecasted load values for the next day are taken from local files.
-* create_DAM_profile: Combines the load forecasts with any other profiles to compile a DA profile before running the "most" function.
+* get_DAM_bids_from_wrapper(obj, time, flexiblity_profile, price_range, blocks): Used when not relying on co-simulation for DA generator bids. Bids are taken from local files.
+	Inputs
+	obj: The MatPower Wrapper object
+	time: Currently unused in this function; The load profile for the upcoming day is taken from the Wrapper object
+	flexiblity_profile: An array of 24 values representing the fraction of the load at the given cosimulation bus that is part of the flexible load. The fractions are represented as decimals, so a profile with 20% flexibility for the entire day would look like [0.2, 0.2, 0.2, ...]. A profile with 10% flexibility from midnight to 1am, 20% flexibility from 1am to 2 am, and 0% flexibility for the rest of the day would look like [0.1, 0.2, 0.0, 0.0, ...]. (Both arrays have a total of 24 values representing each hour of the day)
+	price_range: An array with 2 numerical values representing the minimum and maximum prices to use for flexible load bids.
+	blocks(positive integer): The number of bidding blocks to be created for the flexible load bids.
+	Example: for a given hour of the day with a flexibility profile value of 0.2 where price_range=[20,50] and blocks=4
+	If the price<20, none of the flexible load will be shed
+	If 20<price<30, 5% of the load will be shed
+	if 30<price<40, 10% of the load will be shed
+	if 40<price<50, 15% of the load will be shed
+	if price>50, 20% of the load will be shed
+	Where price is in $/MWHr
+	Output
+	The MatPower Wrapper object will have updated values for obj.DAM_bids for the entry representing the cosimulation bus defined in wrapper_config.json 
+* get_DA_forecast(obj, input_fieldname, current_time, interval): Forecasted load values for the next day are taken from local files.
+	Inputs
+	obj: The MatPower Wrapper object
+	input_fieldname: a string representing which profile is being updated (accepted inputs: 'load_profile', 'wind_profile', or 'solar_profile').
+	current_time: the time in seconds from the start of the simulation.
+	interval: the separation between DA markets in seconds. (must match what was defined in wrapper_config.json, suggest just passing in Wrapper.config_data.day_ahead_market.interval)
+	Output
+	Updates obj.forecast.(input_fieldname) for the coming day with the data stored in obj.profiles.(input_fieldname)
 
 
 Real-Time Market
 ----------------
 
-* get_RTM_bids_from_wrapper: Used when not relying on co-simulation for RT generator bids. Bids are taken from local files.
-* run_RT_market: Runs a RT market with the current wrapper configuration.
+* get_RTM_bids_from_wrapper(obj, time, flexiblity_profile, price_range, blocks): Used when not relying on co-simulation for RT generator bids. Bids are taken from local files.
+	Inputs
+	obj: The MatPower Wrapper object
+	time: Currently unused in this function; The load profile for the upcoming time interval is taken from the Wrapper object
+	flexiblity_profile: An array of 24 values representing the fraction of the load at the given cosimulation bus that is part of the flexible load. The fractions are represented as decimals, so a profile with 20% flexibility for the entire day would look like [0.2, 0.2, 0.2, ...]. A profile with 10% flexibility from midnight to 1am, 20% flexibility from 1am to 2 am, and 0% flexibility for the rest of the day would look like [0.1, 0.2, 0.0, 0.0, ...]. (Both arrays have a total of 24 values representing each hour of the day)
+	price_range: An array with 2 numerical values representing the minimum and maximum prices to use for flexible load bids.
+	blocks(positive integer): The number of bidding blocks to be created for the flexible load bids.
+	Example: for a given hour of the day with a flexibility profile value of 0.2 where price_range=[20,50] and blocks=4
+	If the price<20, none of the flexible load will be shed
+	If 20<price<30, 5% of the load will be shed
+	if 30<price<40, 10% of the load will be shed
+	if 40<price<50, 15% of the load will be shed
+	if price>50, 20% of the load will be shed
+	Where price is in $/MWHr
+	Output
+	The MatPower Wrapper object will have updated values for obj.RTM_bids for the entry representing the cosimulation bus defined in wrapper_config.json 
+* run_RT_market(obj, time): Runs a RT market with the current wrapper configuration.
+	Inputs
+	obj: The MatPower Wrapper object
+	time: The starting time for the Real-Time market interval to be run in seconds from the start of the simulation(as defined in wrapper_config.json).
+	Example: time=900 would run a RT market starting at 12:15 am (900 seconds = 15 minutes) on the first day of the simulation
+	Output
+	Populates obj.results.RTM with the results of the market simulation for the defined time period. Results include output for each generator as well as demand and marginal prices at each bus.
 
 Power Flow
 ----------
 
-* run_power_flow: Runsa power flow with the current wrapper configuration.
-
+* run_power_flow(obj, time): Runs a power flow with the current wrapper configuration.
+	Inputs
+	obj: The MatPower Wrapper object
+	time: The starting time for the power flow interval to be run in seconds from the start of the simulation(as defined in wrapper_config.json).
+	Example: time=1200 would run a power flow starting at 12:20 am (1200 seconds = 20 minutes) on the first day of the simulation.
+	Output
+	Updates obj.mpc.bus(:,8:9) which represents the voltage magnitude and angle for each bus and obj.mpc.gen(:,2:3) which represents real and reactive power output for each generator. Also adds to obj.results.PF.VM which records the time and voltage magnitudes for each bus.
 HELICS Interfaces
 -----------------
 
-* prepare_helics_config: Creates the "helics_config.json" file based on your settings in other configuration files.
-* start_helics_federate: Beings the federate, allowing communication through HELICS to begin.
-* get_storage_from_helics: Reads in storage specs from the co-simulation rather than using the values defined in storage_config.json.
-* get_loads_from_helics: Receives updated load information for the current time for the defined co-simulation bus(es) as defined in wrapper_config.json.
-* send_voltages_to_helics: Sends cleared voltages for the defined co-simulation bus(es) from the last power flow. 
-* get_RTM_bids_from_helics: Receives generator bids for the real-time market sent from HELICS.
-* get_DAM_bids_from_helics: Receives generator bids for the day-ahead market sent from HELICS.
-* send_DA_allocations_to_helics: Sends the generator allocations from the last day-ahead market to HELICS.
-* send_RTM_allocations_to_helics: Sends the generator allocations from the last real-time market to HELICS.
+* prepare_helics_config(obj, config_file_name, SubSim): Creates the "helics_config.json" file based on your settings in other configuration files.
+	Inputs
+	obj: The MatPower Wrapper object
+	config_file_name: a string to be used in naming the configuration file (referred to as 'helics_config.json' here and in the example)
+	SubSim: a string to be used at the beginning of the Helics subscription keys. Used for naming the keys only; see Helics documentation for more information.
+	Output
+	Creates the Helics configuration file with the name specified by config_file_name using the settings defined in "Wrapper_config.json"
+	No explicit output within MatLab
+* start_helics_federate(obj, config_file_name): Beings the federate, allowing communication through HELICS to begin.
+	Inputs
+	obj: The MatPower Wrapper object
+	config_file_name: a string matching the imput used in prepare_helics_config
+	Output
+	Updates obj.helics_data.('fed') with the federate object
+	Updates obj.helics_data.('pub_keys') with a list of Helics publication keys
+	Updates obj.helics_data.('sub_keys') with a list of Helics subscription keys
+	Helics federate starts (See Helics documentation for further context)
+* get_storage_from_helics(obj): Reads in storage specs from the co-simulation rather than using the values defined in storage_config.json.
+	Inputs
+	obj: The MatPower Wrapper object
+	Output
+	Updates obj.storage_specs with the specifications sent from the co-simulation. The co-simulation should send a string in the format of a .json file. "storage_config.json" gives an example for the specs of two batteries located at bus 2, with 500MWHr capacities, 250MW maximum charging/discharging, and 96% and 93% round-trip efficiencies repsectively.
+* get_loads_from_helics(obj): Receives updated load information for the current time for the defined co-simulation bus(es) as defined in wrapper_config.json.
+	Inputs
+	obj: The MatPower Wrapper object
+	Output
+	Updates obj.mpc.bus(,3:4) with the real and imaginary components of the load at each cosimulation bus based on the complex values passed through Helics.
+* send_voltages_to_helics(obj): Sends cleared voltages for the defined co-simulation bus(es) from the last power flow. 
+	Inputs
+	obj: The MatPower Wrapper object
+	Output
+	No explicit output within MatLab. Sends the cleared volatges for the cosimulation buses from last power flow through Helics.
+* get_RTM_bids_from_helics(obj): Receives generator bids for the real-time market sent from HELICS.
+	Inputs
+	obj: The MatPower Wrapper object
+	Output
+	Updates obj.RTM_bids for each cosimulation bus based on the string recieved from the cosimulation through HELICS.
+* get_DAM_bids_from_helics(obj): Receives generator bids for the day-ahead market sent from HELICS.
+	Inputs
+	obj: The MatPower Wrapper object
+	Output
+	Updates obj.DAM_bids for each cosimulation bus based on the string recieved from the cosimulation through HELICS.
+* send_DA_allocations_to_helics(obj): Sends the generator allocations from the last day-ahead market to HELICS.
+	Inputs
+	obj: The MatPower Wrapper object
+	Output
+	No explicit output within MatLab. Sends the content of obj.RTM_allocations as a string in .json format for each cosimulation bus through HELICS.
+* send_RTM_allocations_to_helics(obj): Sends the generator allocations from the last real-time market to HELICS.
+	Inputs
+	obj: The MatPower Wrapper object
+	Output
+	No explicit output within MatLab. Sends the content of obj.DAM_allocations as a string in .json format for each cosimulation bus through HELICS.
