@@ -4,6 +4,7 @@
 """
 
 import json
+import pyjson5
 import sqlite3
 
 
@@ -17,7 +18,7 @@ def assign_defaults(obj, file_name):
         dict: a dictionary of the JSON that has been loaded
     """
     with open(file_name, 'r', encoding='utf-8') as json_file:
-        config = json.load(json_file)
+        config = pyjson5.load(json_file)
         for attr in config:
             setattr(obj, attr, config[attr])
     return config
@@ -33,7 +34,7 @@ def assign_item_defaults(obj, file_name):
         dict: a dictionary of the JSON that has been loaded
     """
     with open(file_name, 'r', encoding='utf-8') as json_file:
-        config = json.load(json_file)
+        config = pyjson5.load(json_file)
         # config format -> label, value, unit, datatype, item
         for attr in config:
             # Item format -> datatype, label, unit, item, value
@@ -160,7 +161,7 @@ class Entity:
 
         Args:
             object_name (str): the name of the instance
-            params (list<list>): list of the attribute parameters
+            params (dict): list of the attribute parameters
         Returns:
             Entity instance: an object with name and values
         """
@@ -468,7 +469,7 @@ def _test():
 
         # this a multiple config file a using dictionary list persistence
         with open(glm_entities_path, 'r', encoding='utf-8') as json_file:
-            entities = json.load(json_file)
+            entities = pyjson5.load(json_file)
             mylist = {}
             for name in entities:
                 mylist[name] = Entity(name, entities[name])

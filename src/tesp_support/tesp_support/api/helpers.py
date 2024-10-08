@@ -143,9 +143,26 @@ def gld_strict_name(val):
     Returns:
         str: val with all '-' replaced by '_', and any leading digit replaced by 'gld\_'
     """
+    val = val.replace('"', '')
     if val[0].isdigit():
         val = "gld_" + val
     return val.replace('-', '_')
+
+
+def get_region(s):
+    region = 0
+    if 'R1' in s:
+        region = 1
+    elif 'R2' in s:
+        region = 2
+    elif 'R3' in s:
+        region = 3
+    elif 'R4' in s:
+        region = 4
+    elif 'R5' in s:
+        region = 5
+    return region
+
 
 
 class HelicsMsg(object):
