@@ -859,7 +859,7 @@ class GLModel:
             raise FileNotFoundError(f"{filename} not found")
 
     def readBackboneModel(self, root_name):
-        filename = feeders_path + root_name
+        filename = os.path.join(feeders_path, root_name)
         if self.readModel(filename):
             self.root = root_name
             self.in_file = filename

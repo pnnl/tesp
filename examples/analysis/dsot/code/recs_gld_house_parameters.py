@@ -7,9 +7,9 @@ import pandas as pd
 import os
 
 # We need to load in the master metadata (*system_case_config.json)
-mastercase = "8_hi_system_case_config"
-with open(mastercase + '.json', 'r', encoding='utf-8') as json_file:
-    sys_config = json.load(json_file)
+#mastercase = "8_hi_system_case_config"
+#with open(mastercase + '.json', 'r', encoding='utf-8') as json_file:
+#    sys_config = json.load(json_file)
 
 def bin_size_check(sample_data, recs_data, state, housing_dens, inc_lev, binsize, climate_zone, income_str):
     og_bin_size = len(sample_data)

@@ -43,7 +43,6 @@ if path.isdir(tesp_path):
         tmp = path.join(tesp_path, _dir)
         if path.isdir(tmp):
             #print(tmp + " directory has been installed for TESP")
-            chdir(tmp)
             pass
         else:
             #print(tmp + " directory has NOT been installed for TESP")
