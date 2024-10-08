@@ -2,7 +2,7 @@
 Residential Feeder Generator 
 ============================
 
-This residential feeder generator module, ``gld_residential_feeder.py``, takes a model ``[feeder].glm`` (GridLAB-D readable format), identifies existing transformers on the feeder with downstream load, determines how many houses each transformer can support based on the average house load in kVA, and adds that many houses and small ZIPloads. This module also adds commercial buildings and ZIP loads based on identified commerical loads. The newly populated feeder is saved as a separate .glm, which can be used for subsequent analysis in GridLAB-D.
+This residential feeder generator module, ``gld_residential_feeder.py``, takes a model ``[feeder].glm`` (GridLAB-D readable format), identifies existing transformers on the feeder with downstream load, determines how many houses each transformer can support based on the average house load in kVA, and adds that many houses and small ZIPloads. This module also adds commercial buildings and ZIP loads based on identified commerical loads. The newly populated feeder is saved as a separate .glm, which can be used for subsequent analysis in GridLAB-D..
 
 Before proceeding, please be sure you have successfully installed TESP.
 

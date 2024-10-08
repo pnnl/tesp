@@ -58,7 +58,7 @@ Config --> GLMModifier: add_object(metrics_collector_writer)
 Config --> GLMModifier: add_object(climate)
 deactivate Config
 
-== Residential_Build ==
+== Residential_Build. ==
 Feeder -> Feeder: identify_xfmr_houses
 
 Feeder -> Residential_Build: add_houses

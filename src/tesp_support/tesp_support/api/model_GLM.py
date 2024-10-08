@@ -467,6 +467,19 @@ class GLModel:
         return None
 
     def set_object_instance(self, obj_type, object_name, params):
+        # for attr in params:
+        #     item = entity.find_item(attr)
+        #     self.instances = {}
+        #     instance = self.instances[object_name]
+        #     if type(item) == entity.Item:
+        #         try:
+        #             _ = instance[attr]
+        #         except:
+        #             if type(attr) == str:
+        #                 instance[attr] = {}
+        #             else:
+        #                 print("Attribute id is not a string in", entity, "named", object_name)
+        #                 continue
         if type(obj_type) == str and type(object_name) == str:
             try:
                 entity = self.object_entities[obj_type]

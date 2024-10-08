@@ -96,15 +96,16 @@ import numpy as np
 import pandas as pd
 import sys
 import logging as log
- 
+import pathlib
+
+sys.path.append("../../..") #append to find examples/analysis/dsot/code as-needed
+from examples.analysis.dsot.code import recs_gld_house_parameters
+
 from tesp_support.api.helpers import gld_strict_name, random_norm_trunc, randomize_residential_skew
 from tesp_support.api.modify_GLM import GLMModifier
 from tesp_support.api.time_helpers import get_secs_from_hhmm, get_hhmm_from_secs, get_duration, get_dist
 from tesp_support.api.time_helpers import is_hhmm_valid, subtract_hhmm_secs, add_hhmm_secs
 from tesp_support.api.entity import assign_defaults
-
-sys.path.append("../../..") #append to find examples/analysis/dsot/code as-needed
-from examples.analysis.dsot.code import recs_gld_house_parameters
 
 log.basicConfig(filename='debug.log', filemode='w', level=log.DEBUG)
 
@@ -894,48 +895,53 @@ class Residential_Build:
                         "waterheater_model": "TWONODE",
                         "tank_setpoint": '{:.1f}'.format(tank_set - 5.0)}
             self.glm.add_object("waterheater", whname, params)
-            self.glm.add_metrics_collector(whname, "waterheater")
-            self.glm.add_group_recorder("class=waterheater", "actual_voltage", "waterheater.csv")
 
         self.glm.add_metrics_collector(hsename, "house")
 
         # Add solar, storage, and EVs
         # Calculate the probability of solar and ev by building type and income
+        if self.config.use_recs == "True": 
+            solar_income = self.solar_percentage[income]
+            ev_income = self.ev_percentage[income]
+            batt_income = self.battery_percentage[income]
+        else: 
+            solar_income = self.config.solar_percentage[income]
+            ev_income = self.config.ev_percentage[income]
+            batt_income = self.config.battery_percentage[income]
+        for income in solar_income[income]:
+            tot_solar += solar_income[income]
+            if tot_solar != 1:
+                raise UserWarning('Solar percentage distribution does not sum to 1!')
+
         if bldg == 0:
-            prob_solar = self.solar_percentage[income] * (self.solar_pv[self.config.state][self.config.res_dso_type]
+            prob_solar = solar_income * (self.solar_pv[self.config.state][self.config.res_dso_type]
                                                           [income]["single_family_detached"] + 
                                                           self.solar_pv[self.config.state][self.config.res_dso_type]
                                                           [income]["single_family_attached"])
-            prob_ev = self.ev_percentage[income] * (self.ev[self.config.state][self.config.res_dso_type][income]
+            prob_ev = ev_income * (self.ev[self.config.state][self.config.res_dso_type][income]
                                                     ["single_family_detached"] + self.ev[self.config.state]
                                                     [self.config.res_dso_type][income]["single_family_attached"])
         elif bldg == 1:
-            prob_solar = self.solar_percentage[income] * (self.solar_pv[self.config.state][self.config.res_dso_type]
+            prob_solar = solar_income * (self.solar_pv[self.config.state][self.config.res_dso_type]
                                                           [income]["apartment_2_4_units"] + 
                                                           self.solar_pv[self.config.state][self.config.res_dso_type]
                                                           [income]["apartment_5_units"])
-            prob_ev = self.ev_percentage[income] * (self.ev[self.config.state][self.config.res_dso_type][income]
+            prob_ev = ev_income * (self.ev[self.config.state][self.config.res_dso_type][income]
                                                     ["apartment_2_4_units"] + self.ev[self.config.state]
                                                     [self.config.res_dso_type][income]["apartment_5_units"])
         else: 
-            prob_solar = self.solar_percentage[income] * self.solar_pv[self.config.state][self.config.res_dso_type][income]["mobile_home"]
-            prob_ev = self.ev_percentage[income] * self.ev[self.config.state][self.config.res_dso_type][income]["mobile_home"]
+            prob_solar = solar_income * self.solar_pv[self.config.state][self.config.res_dso_type][income]["mobile_home"]
+            prob_ev = ev_income * self.ev[self.config.state][self.config.res_dso_type][income]["mobile_home"]
         # Calculate probability of battery by income (No RECS data for building type)
-        prob_batt = self.battery_percentage[income]
+        prob_batt = batt_income
 
         # add solar, ev, and battery based on RECS data or user-input
-        if self.config.use_recs == "True": 
-            self.config.sol.add_solar(prob_solar, mtrname1, sol_m_name, sol_name, sol_i_name, phs, v_nom, floor_area)
+        self.config.sol.add_solar(prob_solar, mtrname1, sol_m_name, sol_name, sol_i_name, phs, v_nom, floor_area)
 
-            self.config.ev.add_ev(prob_ev, hsename)  
+        self.config.ev.add_ev(prob_ev, hsename)  
             
-            self.config.batt.add_batt(prob_batt, mtrname1, bat_m_name, bat_name, bat_i_name, phs, v_nom)
-        else: 
-            self.config.sol.add_solar(self.config.solar_percentage, mtrname1, sol_m_name, sol_name, sol_i_name, phs, v_nom, floor_area)
+        self.config.batt.add_batt(prob_batt, mtrname1, bat_m_name, bat_name, bat_i_name, phs, v_nom)
 
-            self.config.ev.add_ev(self.config.ev_percentage, hsename)  
-            
-            self.config.batt.add_batt(self.config.storage_percentage, mtrname1, bat_m_name, bat_name, bat_i_name, phs, v_nom)
 
 class Commercial_Build:
 

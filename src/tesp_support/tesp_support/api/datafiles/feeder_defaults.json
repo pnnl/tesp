@@ -60,7 +60,6 @@
   "metrics_extension": "h5",
   "metrics_classes": [
       "house",
-      "waterheater",
       "meter",
       "line",
       "transformer",
@@ -117,7 +116,7 @@
   "Eplus_kVA": 150.0,
 
   "max208kva": 100.0,
-  "xfmrMargin": 1.20,
+  "xfmrMargin": 1.0,
   "fuseMargin": 2.50,
   "transmissionVoltage": 138000.0,
   "transmissionXfmrMVAbase": 12.0,

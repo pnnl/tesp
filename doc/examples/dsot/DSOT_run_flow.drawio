@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="zx20I-B725z4pgMH4ESO" name="Page-1">
-        <mxGraphModel dx="2284" dy="787" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+        <mxGraphModel dx="1164" dy="347" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -11,7 +11,7 @@
                     <mxGeometry x="-30" y="210" width="580" height="400" as="geometry"/>
                 </mxCell>
                 <mxCell id="2" value="Output Files" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-                    <mxGeometry x="-278" y="65" width="60" height="30" as="geometry"/>
+                    <mxGeometry x="-270" y="65" width="60" height="30" as="geometry"/>
                 </mxCell>
                 <mxCell id="5" value="Process" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" parent="1" vertex="1">
                     <mxGeometry x="-368" y="65" width="80" height="30" as="geometry"/>
@@ -190,7 +190,7 @@
                 <mxCell id="72" value="8_hi_DSO_quadratic_curves.json" style="whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="616.25" y="770" width="212.5" height="50" as="geometry"/>
                 </mxCell>
-                <mxCell id="77" value="Config" style="triangle;whiteSpace=wrap;html=1;align=left;" vertex="1" parent="1">
+                <mxCell id="77" value="Config" style="triangle;whiteSpace=wrap;html=1;align=left;" parent="1" vertex="1">
                     <mxGeometry x="-423" y="55" width="50" height="50" as="geometry"/>
                 </mxCell>
             </root>

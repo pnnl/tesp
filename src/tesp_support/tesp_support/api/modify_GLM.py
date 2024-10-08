@@ -277,7 +277,7 @@ class GLMModifier:
         return self.find_1phase_xfmr_w_margin(kva)
 
     def find_3phase_xfmr_w_margin(self, kva: float, margin: float = None) -> float:
-        """Select a standard 1-phase transformer size  with some design margin
+        """Select a standard 3-phase transformer size with some design margin
         (optionally defined by caller) based on provided kVA load value
 
         Standard sizes are defined in feeder_defaults.json and historically
@@ -294,7 +294,6 @@ class GLMModifier:
             kva *= margin
         else:
             kva *= self.defaults.xfmrMargin
-        kva *= self.defaults.xfmrMargin
         for row in self.defaults.three_phase:
             if row[0] >= kva:
                 return row[0]
@@ -481,7 +480,7 @@ class GLMModifier:
         Returns:
             None
         """
-        if self.defaults.metrics_interval > 0:  # and metrics_class in self.defaults.metrics_classes:
+        if self.defaults.metrics_interval > 0 and metrics_class in self.defaults.metrics_classes:
             params = {"parent": parent,
                       "interval": str(self.defaults.metrics_interval)}
             self.add_object("metrics_collector", "mc_" + parent, params)

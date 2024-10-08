@@ -11,7 +11,7 @@
 
     // Input and Output Files
     "in_file_glm": "", // input feeder model ("myfeeder.glm"). If empty, taxonomy feeder used
-    "taxonomy": "R1-12.47-3.glm", // taxonomy feeder model
+    "taxonomy": "R1-12.47-2.glm", // taxonomy feeder model
     "out_file_glm": "test.glm", // REQUIRED: output populated feeder ("myfeeder_populated.glm").
     "case_name": "MyCase", // REQUIRED: a name for your case
     "substation_name": "MySub", // REQUIRED: a name for the substation
@@ -55,13 +55,25 @@
     },
 
     // Distributed Energy Resources
-    "use_recs": "True", // populates solar, battery, and ev based on RECS income and building type distributions
+    "use_recs": "False", // populates solar, battery, and ev based on RECS income and building type distributions
     "ev_reserved_soc": 20, // Reserve state of charge of EVs
     // if not use_recs, the below percentages are used to populate residential
     // DER on the feeder, agnostic of income or building type distribution
-    "solar_percentage": 0.80,
-    "storage_percentage": 0.40,
-    "ev_percentage": 0.30,
+    "solar_percentage": {
+        "Low": 0.12,
+        "Middle": 0.3,
+        "Upper": 0.58
+    },
+    "battery_percentage": {
+        "Low": 0.12,
+        "Middle": 0.3,
+        "Upper": 0.58
+    },
+    "ev_percentage": {
+        "Low": 0.1,
+        "Middle": 0.3,
+        "Upper": 0.6
+    },
 
     // Solar Diction
     "solar": {
