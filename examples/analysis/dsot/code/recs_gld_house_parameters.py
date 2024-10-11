@@ -6,11 +6,6 @@ import numpy as np
 import pandas as pd
 import os
 
-# We need to load in the master metadata (*system_case_config.json)
-#mastercase = "8_hi_system_case_config"
-#with open(mastercase + '.json', 'r', encoding='utf-8') as json_file:
-#    sys_config = json.load(json_file)
-
 def bin_size_check(sample_data, recs_data, state, housing_dens, inc_lev, binsize, climate_zone, income_str):
     og_bin_size = len(sample_data)
     print('Bin Size', inc_lev, " ", og_bin_size)
@@ -625,6 +620,15 @@ def get_hvac_setpoints(metadata, sample_data, state, hsdens_str, inc_lev, total)
     occ_cool_str = 'TEMPHOMEAC'
     unocc_cool_str = 'TEMPGONEAC'
     night_cool_str = 'TEMPNITEAC'
+    gld_residential_feeder.py
+    1 file changed
+    +273
+    -244
+    lines changed
+    ‎examples/capabilities/uvm/gld_residential_feeder.py
+    +273
+    -244
+    
     occ_heat_str = 'TEMPHOME'
     unocc_heat_str = 'TEMPGONE'
     night_heat_str = 'TEMPNITE'
@@ -721,6 +725,10 @@ def get_hvac_setpoints(metadata, sample_data, state, hsdens_str, inc_lev, total)
 
 
 if __name__ == "__main__":
+    # We need to load in the master metadata (*system_case_config.json)
+    mastercase = "8_hi_system_case_config"
+    with open(mastercase + '.json', 'r', encoding='utf-8') as json_file:
+        sys_config = json.load(json_file)
     get_RECS_jsons(
         '../../../../data/feeders/RECSwIncomeLvl.csv',
         os.path.join("../data/", sys_config["dsoResBldgFile"]),

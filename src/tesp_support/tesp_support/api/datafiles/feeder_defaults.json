@@ -81,11 +81,11 @@
   "comm_bldgs_pop": null,
 
   "ev_count": 0,
-  "ev_percentage": 0,
+  "ev_percentage": 0.08,
   "ev_reserved_soc": 20,
 
   "solar_count": 0,
-  "solar_percentage": 0.2,
+  "solar_percentage": 0.11,
   "solar_kw": 0,
   "pv_rating_MW": "",
   "solar_inv_mode": "CONSTANT_PF",
@@ -94,7 +94,7 @@
   "solar_P_player":"",
 
   "battery_count": 0,
-  "storage_percentage": 0.5,
+  "storage_percentage": 0.03,
   "storage_inv_mode": "LOAD_FOLLOWING",
   "bat_rt_efficiency": 0.86,
 

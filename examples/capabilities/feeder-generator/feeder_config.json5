@@ -56,24 +56,14 @@
 
     // Distributed Energy Resources
     "use_recs": "True", // populates solar, battery, and ev based on RECS income distributions
+    // if "False", uses the rates analysis pre-defined population values by income and housing type, ignoring the below deployment level configs. 
+    
+    // DER deployment levels 
+    "solar_deployment": 0.20,
+    "battery_deployment": 0.10,
+    "ev_deployment": 0.15,
+
     "ev_reserved_soc": 20, // Reserve state of charge of EVs
-    // if not use_recs, the below percentages are used to populate residential
-    // DER distribution on the feeder by income. Used if "use_recs" = "False".
-    "solar_percentage": {
-        "Low": 0.15,
-        "Middle": 0.33,
-        "Upper": 0.52
-    },
-    "battery_percentage": {
-        "Low": 0.05,
-        "Middle": 0.15,
-        "Upper": 0.80
-    },
-    "ev_percentage": {
-        "Low": 0.2,
-        "Middle": 0.2,
-        "Upper": 0.6
-    },
 
     // Solar Diction
     "solar": {

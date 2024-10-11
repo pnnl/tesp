@@ -905,64 +905,64 @@ class Residential_Build:
 
         self.glm.add_metrics_collector(hsename, "house")
 
+        # ----------------------------------------------------------------------
         # Add solar, storage, and EVs
-        # Calculate the probability of solar and ev by building type and income
-        if self.config.use_recs == "True": 
-            solar_income = self.solar_percentage[income]
-            tot_solar = sum(self.solar_percentage.values())
+        # Calculates the probability of solar, battery and ev by building type
+        #   and income based on 2020 RECS data distributions.
+        # Note that the 2020 RECS data does not capture battery distributions.
+        #   We therefore assume batteries follow the same housing and income
+        #   trends as solar, but allow the user to specify a different 
+        #   deployment level in the config. 
+        #-----------------------------------------------------------------------
+        if self.config.use_recs == "True":
+            if bldg == 0:
+                prob_solar = self.config.solar_deployment * (self.solar_pv[self.config.state][self.config.res_dso_type]
+                                                            [income]["single_family_detached"] + 
+                                                            self.solar_pv[self.config.state][self.config.res_dso_type]
+                                                            [income]["single_family_attached"])
+                prob_batt = self.config.battery_deployment * (self.solar_pv[self.config.state][self.config.res_dso_type]
+                                                            [income]["single_family_detached"] + 
+                                                            self.solar_pv[self.config.state][self.config.res_dso_type]
+                                                            [income]["single_family_attached"])
+                prob_ev = self.config.ev_deployment * (self.ev[self.config.state][self.config.res_dso_type][income]
+                                                        ["single_family_detached"] + self.ev[self.config.state]
+                                                        [self.config.res_dso_type][income]["single_family_attached"])
+            elif bldg == 1:
+                prob_solar = self.config.solar_deployment * (self.solar_pv[self.config.state][self.config.res_dso_type]
+                                                            [income]["apartment_2_4_units"] + 
+                                                            self.solar_pv[self.config.state][self.config.res_dso_type]
+                                                            [income]["apartment_5_units"])
+                prob_batt = self.config.battery_deployment * (self.solar_pv[self.config.state][self.config.res_dso_type]
+                                                            [income]["apartment_2_4_units"] + 
+                                                            self.solar_pv[self.config.state][self.config.res_dso_type]
+                                                            [income]["apartment_5_units"])
+                prob_ev = self.config.ev_deployment * (self.ev[self.config.state][self.config.res_dso_type][income]
+                                                        ["apartment_2_4_units"] + self.ev[self.config.state]
+                                                        [self.config.res_dso_type][income]["apartment_5_units"])
+            else: 
+                prob_solar = self.config.solar_deployment * self.solar_pv[self.config.state][self.config.res_dso_type][income]["mobile_home"]
+                prob_batt = self.config.battery_deployment * self.solar_pv[self.config.state][self.config.res_dso_type][income]["mobile_home"]
+                prob_ev = self.config.ev_deployment * self.ev[self.config.state][self.config.res_dso_type][income]["mobile_home"]
 
-            ev_income = self.ev_percentage[income]
-            tot_ev = sum(self.ev_percentage.values())
-
-            batt_income = self.battery_percentage[income]
-            tot_batt = sum(self.battery_percentage.values())
-
+        # This is a special case, implemented for the Rates Analysis work        
         else: 
-            solar_income = self.config.solar_percentage[income]
-            tot_solar = sum(self.config.solar_percentage.values())
+            prob_sf = self.housing_type[self.config.state][self.config.res_dso_type][income]['single_family_attached'] + \
+                     self.housing_type[self.config.state][self.config.res_dso_type][income]['single_family_attached']
+            
+            prob_inc = self.income_level[self.config.state][self.config.res_dso_type][income]
+            
+            prob_solar = (self.config.base.solar_percentage * self.solar_percentage[income])/(prob_sf * prob_inc)
 
-            ev_income = self.config.ev_percentage[income]
-            tot_ev = sum(self.config.ev_percentage.values())
+            prob_batt = (self.config.base.storage_percentage * self.battery_percentage[income])/(self.config.base.solar_percentage * self.solar_percentage[income])
 
-            batt_income = self.config.battery_percentage[income]
-            tot_batt = sum(self.config.battery_percentage.values())
-
-        if tot_solar != 1:
-                raise UserWarning('Solar percentage distribution does not sum to 1!')
-        if tot_ev != 1:
-                raise UserWarning('EV percentage distribution does not sum to 1!')
-        if tot_batt != 1:
-                raise UserWarning('Battery percentage distribution does not sum to 1!')
-
-        if bldg == 0:
-            prob_solar = solar_income * (self.solar_pv[self.config.state][self.config.res_dso_type]
-                                                          [income]["single_family_detached"] + 
-                                                          self.solar_pv[self.config.state][self.config.res_dso_type]
-                                                          [income]["single_family_attached"])
-            prob_ev = ev_income * (self.ev[self.config.state][self.config.res_dso_type][income]
-                                                    ["single_family_detached"] + self.ev[self.config.state]
-                                                    [self.config.res_dso_type][income]["single_family_attached"])
-        elif bldg == 1:
-            prob_solar = solar_income * (self.solar_pv[self.config.state][self.config.res_dso_type]
-                                                          [income]["apartment_2_4_units"] + 
-                                                          self.solar_pv[self.config.state][self.config.res_dso_type]
-                                                          [income]["apartment_5_units"])
-            prob_ev = ev_income * (self.ev[self.config.state][self.config.res_dso_type][income]
-                                                    ["apartment_2_4_units"] + self.ev[self.config.state]
-                                                    [self.config.res_dso_type][income]["apartment_5_units"])
-        else: 
-            prob_solar = solar_income * self.solar_pv[self.config.state][self.config.res_dso_type][income]["mobile_home"]
-            prob_ev = ev_income * self.ev[self.config.state][self.config.res_dso_type][income]["mobile_home"]
-        # Calculate probability of battery by income (No RECS data for building type)
-        prob_batt = batt_income
+            prob_ev = (self.config.base.ev_percentage * self.ev_percentage[income])/prob_inc
 
         # add solar, ev, and battery based on RECS data or user-input
         self.config.sol.add_solar(prob_solar, mtrname1, sol_m_name, sol_name, sol_i_name, phs, v_nom, floor_area)
 
-        self.config.ev.add_ev(prob_ev, hsename)  
-            
         self.config.batt.add_batt(prob_batt, mtrname1, bat_m_name, bat_name, bat_i_name, phs, v_nom)
-
+        
+        self.config.ev.add_ev(prob_ev, hsename)  
 
 class Commercial_Build:
 
