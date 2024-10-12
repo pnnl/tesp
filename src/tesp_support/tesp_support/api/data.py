@@ -65,14 +65,14 @@ else:
 
 
 tesp_share = path.expandvars(tesp_path + '/data/')
-comm_path = path.join(tesp_share, "comm")
-energyplus_path = path.join(tesp_share, "energyplus")
-feeders_path = path.join(tesp_share, "feeders")
-scheduled_path = path.join(tesp_share, "schedules")
-weather_path = path.join(tesp_share, "weather")
+comm_path = path.join(tesp_share, "comm/")
+energyplus_path = path.join(tesp_share, "energyplus/")
+feeders_path = path.join(tesp_share, "feeders/")
+scheduled_path = path.join(tesp_share, "schedules/")
+weather_path = path.join(tesp_share, "weather/")
 
 tesp_model = path.expandvars(tesp_path + '/models/')
-pypower_path = path.join(tesp_model, "pypower")
+pypower_path = path.join(tesp_model, "pypower/")
 
 tesp_test = path.expandvars(tesp_path + '/src/tesp_support/test/')
 

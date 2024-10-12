@@ -119,7 +119,6 @@ config_file = 'feeder_config.json5'
 log.basicConfig(filename=os.path.join(config_path,'debug.log'), filemode='w', level=log.DEBUG)
 
 class Config:
-
     def __init__(self, config=None):
         # Assign default values to those not defined in config file
         self.keys = list(assign_defaults(self, config).keys())
@@ -911,17 +910,17 @@ class Residential_Build:
         #   and income based on 2020 RECS data distributions.
         # Note that the 2020 RECS data does not capture battery distributions.
         #   We therefore assume batteries follow the same housing and income
-        #   trends as solar, but allow the user to specify a different 
-        #   deployment level in the config. 
+        #   trends as solar, but allow the user to specify a different
+        #   deployment level in the config.
         #-----------------------------------------------------------------------
         if self.config.use_recs == "True":
             if bldg == 0:
                 prob_solar = self.config.solar_deployment * (self.solar_pv[self.config.state][self.config.res_dso_type]
-                                                            [income]["single_family_detached"] + 
+                                                            [income]["single_family_detached"] +
                                                             self.solar_pv[self.config.state][self.config.res_dso_type]
                                                             [income]["single_family_attached"])
                 prob_batt = self.config.battery_deployment * (self.solar_pv[self.config.state][self.config.res_dso_type]
-                                                            [income]["single_family_detached"] + 
+                                                            [income]["single_family_detached"] +
                                                             self.solar_pv[self.config.state][self.config.res_dso_type]
                                                             [income]["single_family_attached"])
                 prob_ev = self.config.ev_deployment * (self.ev[self.config.state][self.config.res_dso_type][income]
@@ -929,28 +928,28 @@ class Residential_Build:
                                                         [self.config.res_dso_type][income]["single_family_attached"])
             elif bldg == 1:
                 prob_solar = self.config.solar_deployment * (self.solar_pv[self.config.state][self.config.res_dso_type]
-                                                            [income]["apartment_2_4_units"] + 
+                                                            [income]["apartment_2_4_units"] +
                                                             self.solar_pv[self.config.state][self.config.res_dso_type]
                                                             [income]["apartment_5_units"])
                 prob_batt = self.config.battery_deployment * (self.solar_pv[self.config.state][self.config.res_dso_type]
-                                                            [income]["apartment_2_4_units"] + 
+                                                            [income]["apartment_2_4_units"] +
                                                             self.solar_pv[self.config.state][self.config.res_dso_type]
                                                             [income]["apartment_5_units"])
                 prob_ev = self.config.ev_deployment * (self.ev[self.config.state][self.config.res_dso_type][income]
                                                         ["apartment_2_4_units"] + self.ev[self.config.state]
                                                         [self.config.res_dso_type][income]["apartment_5_units"])
-            else: 
+            else:
                 prob_solar = self.config.solar_deployment * self.solar_pv[self.config.state][self.config.res_dso_type][income]["mobile_home"]
                 prob_batt = self.config.battery_deployment * self.solar_pv[self.config.state][self.config.res_dso_type][income]["mobile_home"]
                 prob_ev = self.config.ev_deployment * self.ev[self.config.state][self.config.res_dso_type][income]["mobile_home"]
 
-        # This is a special case, implemented for the Rates Analysis work        
+        # This is a special case, implemented for the Rates Analysis work
         else: 
             prob_sf = self.housing_type[self.config.state][self.config.res_dso_type][income]['single_family_attached'] + \
                      self.housing_type[self.config.state][self.config.res_dso_type][income]['single_family_attached']
-            
+
             prob_inc = self.income_level[self.config.state][self.config.res_dso_type][income]
-            
+
             prob_solar = (self.config.base.solar_percentage * self.solar_percentage[income])/(prob_sf * prob_inc)
 
             prob_batt = (self.config.base.storage_percentage * self.battery_percentage[income])/(self.config.base.solar_percentage * self.solar_percentage[income])
@@ -961,11 +960,10 @@ class Residential_Build:
         self.config.sol.add_solar(prob_solar, mtrname1, sol_m_name, sol_name, sol_i_name, phs, v_nom, floor_area)
 
         self.config.batt.add_batt(prob_batt, mtrname1, bat_m_name, bat_name, bat_i_name, phs, v_nom)
-        
-        self.config.ev.add_ev(prob_ev, hsename)  
+
+        self.config.ev.add_ev(prob_ev, hsename)
 
 class Commercial_Build:
-
     def __init__(self, config):
         self.config = config
         self.glm = config.glm
@@ -1359,7 +1357,7 @@ class Commercial_Build:
                 bldg['zonename'] = gld_strict_name('_bldg_' + key + '_comm_type_' + str(comm_type))
                 Commercial_Build.add_one_commercial_zone(self, bldg)
 
-    def define_comm_bldg(bldg_metadata: dict, dso_type: str, num_bldgs: float) -> list:
+    def define_comm_bldg(self, bldg_metadata: dict, dso_type: str, num_bldgs: float) -> list:
         """Randomly selects a set number of buildings by type and size (sqft).
 
         Args:
@@ -1383,7 +1381,7 @@ class Commercial_Build:
             i += 1
         return bldgs
     
-    def normalize_dict_prob(name: str, diction: dict) -> dict:
+    def normalize_dict_prob(self, name: str, diction: dict) -> dict:
         """ Ensure that the probability distribution of values in a dictionary 
             effectively sums to one
 
@@ -1408,7 +1406,7 @@ class Commercial_Build:
             log.debug("WARNING %s dictionary normalize to 1, values are > %s", name, diction)
         return diction
 
-    def rand_bin_select(diction: dict, probability: float) -> None:
+    def rand_bin_select(self, diction: dict, probability: float) -> None:
         """ Returns the element (bin) in a dictionary given a certain
           probability
 
@@ -1428,8 +1426,7 @@ class Commercial_Build:
                 return element
         return element
 
-
-    def sub_bin_select(bin: str, type: str, prob: float) -> int:
+    def sub_bin_select(self, bin: str, type: str, prob: float) -> int:
         """ Returns a scalar value within a bin range based on a uniform 
             probability within that bin range
 
@@ -1467,7 +1464,7 @@ class Commercial_Build:
             val = int(val)
         return val
 
-    def find_envelope_prop(prop: str, age: int, env_data: dict, climate: str) -> float:
+    def find_envelope_prop(self, prop: str, age: int, env_data: dict, climate: str) -> float:
         """ Returns the envelope value for a given type of property based on the
             age and (ASHRAE) climate zone of the building
 
@@ -1588,7 +1585,6 @@ class Battery:
             self.glm.add_metrics_collector(inv_name, "inverter")
 
 class Solar:
-
     def __init__(self, config):
         self.config = config
         self.glm = config.glm
@@ -1897,7 +1893,6 @@ class Electric_Vehicle:
         return df_fin
 
 class Feeder:
-
     def __init__(self, config: Config):
         self.config = config
         self.glm = config.glm

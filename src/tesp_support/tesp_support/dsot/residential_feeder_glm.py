@@ -1,7 +1,6 @@
 # Copyright (C) 2018-2023 Battelle Memorial Institute
 # file: residential_feeder_glm.py
-"""Replaces ZIP loads with houses, and, optionally storage and solar 
-generation.
+"""Replaces ZIP loads with houses, and optional storage and solar generation.
 
 As this module populates the feeder backbone with houses and DER, it uses
 the Networkx package to perform graph-based capacity analysis, upgrading

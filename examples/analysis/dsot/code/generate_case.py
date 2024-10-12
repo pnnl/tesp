@@ -4,7 +4,9 @@
 """
 
 import json
-import prepare_case_dsot as prep_case
+import sys
+
+import prepare_case_dsot_f as prep_case
 
 
 def generate_case(case_name, port, pv=None, bt=None, fl=None, ev=None):
@@ -46,14 +48,17 @@ def generate_case(case_name, port, pv=None, bt=None, fl=None, ev=None):
                 break
             case_start_year += 1
 
+if __name__ == "__main__":
+    if len(sys.argv) > 6:
+        generate_case(int(sys.argv[1]), sys.argv[2], pv=int(sys.argv[3]), bt=int(sys.argv[4]), fl=int(sys.argv[5]), ev=int(sys.argv[6]))
+    else:
+        node = "8"
+        # node = "200"
 
-node = "8"
-# node = "200"
-
-generate_case(node + "_hi_system_case_config", 5570, pv=1, bt=1, fl=1, ev=1)
-# generate_case(node + "_system_case_config", 5570, pv=0, bt=0, fl=0, ev=0)
-# generate_case(node + "_system_case_config", 5570, pv=0, bt=1, fl=0, ev=0)
-# generate_case(node + "_system_case_config", 5570, pv=0, bt=0, fl=1, ev=0)
-# generate_case(node + "_hi_system_case_config", 5570, pv=1, bt=0, fl=0, ev=0)
-# generate_case(node + "_hi_system_case_config", 5570, pv=1, bt=1, fl=0, ev=1)
-# generate_case(node + "_hi_system_case_config", 5570, pv=1, bt=0, fl=1, ev=1)
+        # generate_case(node + "_system_case_config", 5570, pv=0, bt=0, fl=0, ev=0)
+        # generate_case(node + "_system_case_config", 5570, pv=0, bt=1, fl=0, ev=0)
+        # generate_case(node + "_system_case_config", 5570, pv=0, bt=0, fl=1, ev=0)
+        # generate_case(node + "_hi_system_case_config", 5570, pv=1, bt=0, fl=0, ev=0)
+        # generate_case(node + "_hi_system_case_config", 5570, pv=1, bt=1, fl=0, ev=1)
+        # generate_case(node + "_hi_system_case_config", 5570, pv=1, bt=0, fl=1, ev=1)
+        generate_case(node + "_hi_system_case_config", 5570, pv=1, bt=1, fl=1, ev=1)
