@@ -21,11 +21,11 @@ setup(
         'h5py~=3.11.0',
         'helics~=3.4.0',
         'pandas~=2.2.2',
-        'numpy~=2.1.1',
+        'numpy~=1.26.4',
         'scipy~=1.14.1',
         'matplotlib~=3.9.2',
         'networkx~=3.3',
-        'PYPOWER==5.1.17',
+        'PYPOWER==5.1.16',
         'pyutilib==6.0.0',
         'Pyomo==6.5.0'
     ],

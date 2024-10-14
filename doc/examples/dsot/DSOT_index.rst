@@ -31,6 +31,7 @@ This documentation is a brief summary of a much more extensive series of reports
 
    DSOT_Study
    DSOT_agents_sliders
+   DSOT_hvac_agent
 
 Indices and tables
 ==================

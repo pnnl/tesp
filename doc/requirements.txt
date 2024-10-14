@@ -15,7 +15,7 @@ importlib-resources
 joblib
 matplotlib
 networkx
-numpy
+numpy~=1.26.4
 openpyxl
 pandas
 plotly

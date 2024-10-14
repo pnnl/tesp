@@ -1,0 +1,108 @@
+@startuml gld_residential_feeder_sequence.wsd
+
+participant GLMModifier #LightGoldenRodYellow
+actor main #blue
+participant Config
+participant Residential_Build
+participant Commercial_Build
+participant Solar 
+participant Battery 
+participant Electric_Vehicle
+participant Feeder
+
+==Config==
+main -[#blue]> Config: Config()
+activate Config
+Config --> GLMModifier: glm
+Config --> Residential_Build: res_bld
+Config --> Commercial_Build: com_bld
+Config --> Solar: solar
+Config --> Battery: batt
+Config --> Electric_Vehicle: ev
+deactivate Config
+==Feeder== 
+main -[#blue]> Feeder: Feeder(Config)
+Feeder -> Config: generate_recs()
+Feeder -> Config: load_recs()
+activate Config 
+Config --> Residential_Build: assign_defaults(res_bld, metadata)
+Config --> Commercial_Build: assign_defaults(com_bld, metadata)
+Config --> Battery: assign_defaults(batt, metadata)
+Config --> Electric_Vehicle: assign_defaults(ev, metadata)
+deactivate Config
+
+Feeder -> Feeder: feeder_gen() 
+activate Feeder
+Feeder --> GLMModifier: readBackBoneModel()
+Feeder --> GLMModifier: read_model()
+Feeder --> GLMModifier: identify_seg_loads()
+Feeder --> GLMModifier: find_3phase_xfmr_w_margin()
+Feeder --> GLMModifier: find_1phase_xfmr_w_margin()
+Feeder --> GLMModifier: add_xfmr_config()
+Feeder --> GLMModifier: find_fuse_limit_w_margin()
+Feeder --> GLMModifier: add_local_triplex_configurations()
+Feeder --> GLMModifier: add_config_class()
+Feeder --> GLMModifier: add_link_class()
+deactivate Feeder
+
+Feeder -> Config: preamble()
+activate Config
+Config --> GLMModifier: add_module() 
+Config --> GLMModifier: add_class()
+Config --> GLMModifier: set_clock()
+Config --> GLMModifier: add_include()
+Config --> GLMModifier: add_set()
+Config --> GLMModifier: add_define()
+Config --> GLMModifier: add_voltage_dump()
+Config --> GLMModifier: add_object(metrics_collector_writer)
+Config --> GLMModifier: add_object(climate)
+deactivate Config
+
+== Residential_Build. ==
+Feeder -> Feeder: identify_xfmr_houses
+
+Feeder -> Residential_Build: add_houses
+activate Residential_Build
+Residential_Build --> Residential_Build: selectThermalProperties
+Residential_Build --> Residential_Build: selectSetpointBins
+Residential_Build --> GLMModifier: add_object
+Residential_Build -> Solar: add_solar
+Solar --> GLMModifier: add_object(inverter)
+Solar --> GLMModifier: add_object(solar)
+Solar --> GLMModifier: add_metrics_collector
+Residential_Build -> Battery: add_batt
+Battery --> GLMModifier: add_object(inverter)
+Battery --> GLMModifier: add_object(battery)
+Battery --> GLMModifier: add_metrics_collector
+Residential_Build -> Electric_Vehicle: add_ev
+Electric_Vehicle --> GLMModifier: add_object(evcharger_det)
+Electric_Vehicle --> GLMModifier: add_collector
+Electric_Vehicle --> GLMModifier: add_group_recorder
+deactivate Residential_Build
+
+
+Feeder -> Residential_Build: add_small_loads
+activate Residential_Build
+Residential_Build --> GLMModifier: add_object(triplex_node)
+Residential_Build --> GLMModifier: add_object(triplex_line)
+Residential_Build --> GLMModifier: add_object(triplex_meter)
+Residential_Build --> GLMModifier: add_object(triplex_load)
+Residential_Build --> GLMModifier: add_tariff
+Residential_Build --> GLMModifier: add_metrics_collector
+deactivate Residential_Build
+
+== Commercial_Build ==
+Feeder -> Feeder: identify_commercial_loads
+Feeder -> Commercial_Build: define_commercial_zones
+activate Commercial_Build
+Commercial_Build --> Commercial_Build: normalize_dict_prob
+Commercial_Build --> Commercial_Build: rand_bin_select 
+Commercial_Build --> Commercial_Build: sub_bin_select
+Commercial_Build --> Commercial_Build: find_envelop_prop
+Commercial_Build --> Commercial_Build: add_one_commercial_zone
+Commercial_Build --> GLMModifier: add_object(house)
+Commercial_Build --> GLMModifier: add_object(ZIPload)
+Commercial_Build --> GLMModifier: add_metrics_collector
+deactivate Commercial_Build
+
+@enduml

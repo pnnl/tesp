@@ -19,19 +19,11 @@ from .plots import load_da_retail_price, customer_meta_data, load_json, load_age
     load_system_data, get_date, tic, toc, load_retail_data, load_ames_data, load_gen_data, load_indust_data
 
 
-def read_meters(
-    metadata,
-    dir_path,
-    folder_prefix,
-    dso_num,
-    day_range,
-    SF,
-    dso_data_path,
-    rate_scenario=None,
-):
-    """ Determines the total energy consumed and max power consumption for all meters within a DSO for a series of days.
-    Also collects information on day ahead and real time quantities consumed by transactive customers.
-    Creates summation of these statistics by customer class.
+def read_meters(metadata, dir_path, folder_prefix, dso_num,
+                day_range, SF, dso_data_path, rate_scenario=None):
+    """ Determines the total energy consumed and max power consumption for all meters within a
+    DSO for a series of days. Also collects information on day ahead and real time quantities
+    consumed by transactive customers. Creates summation of these statistics by customer class.
     Args:
         metadata (dict): metadata structure for the DSO to be analyzed
         dir_path (str): directory path for the case to be analyzed
@@ -39,14 +31,15 @@ def read_meters(
         dso_num (str): number of the DSO folder to be opened
         day_range (list): range of days to be summed (for example a month).
         SF (float): Scaling factor to scale GLD results to TSO scale (e.g. 1743)
-        dso_path (str): A str specifying the directory in which the time-of-use rate
-        rate_scenario (str): A str specifying the rate scenario under investigation:
-                flat, time-of-use (or TOU), subscription, or transactive. Defaults to None.
+        dso_data_path (str): A str specifying the directory in which the time-of-use rate
+        rate_scenario (str): A str specifying the rate scenario under investigation (e.g.
+        flat, time-of-use or TOU, subscription, or transactive), defaults to None.
     Returns:
         meter_df: dataframe of energy consumption and max 15 minute power consumption for each month and total
-        energysum_df: dataframe of energy consumption summations by customer class (residential, commercial, and industial)
+        energysum_df: dataframe of energy consumption summations by customer class (residential, commercial, and industrial)
         saves the two dataframe above to an h5 file in the dir_path
         """
+
     # Load in bulk industrial loads
     case_config = load_json(dir_path, 'generate_case_config.json')
     industrial_file = os.path.join("../" + dso_data_path, case_config['indLoad'][5].split('/')[-1])
@@ -454,9 +447,9 @@ def create_demand_profiles_for_each_meter(
         each meter in five-minute time steps.
         dso_num (int): The number of a valid substation in the system model.
         day_range (list): List of day numbers in a month to be considered.
-        save (bool): Indicates whether or not the output data should be saved in a .h5
+        save (bool): Indicates whether the output data should be saved in a .h5
         file. If True, data is saved to the same location as what is provided in 
-        `dir_path'.
+        'dir_path'.
     Returns:
         demand_df (pandas.DataFrame): Monthly hourly demand data for each meter.
     """
@@ -467,6 +460,7 @@ def create_demand_profiles_for_each_meter(
         _, meter_data_df = load_system_data(
             dir_path, "/Substation_", str(dso_num), str(day), "billing_meter"
         )
+        meter_data_df["date"] = meter_data_df["date"].str.replace("CST", "", regex=True)
         meter_data_df["date"] = meter_data_df["date"].str.replace("CDT", "", regex=True)
         meter_data_df["date"] = pd.to_datetime(meter_data_df["date"])
         meter_data_df = meter_data_df.set_index(["time", "name"])
@@ -509,7 +503,7 @@ def create_demand_profiles_for_each_meter(
     demand_df.set_index(index, inplace=True)
 
     # Convert to an hourly profile
-    demand_df = demand_df.resample("H").sum().div(1000).div(12)
+    demand_df = demand_df.resample("h").sum().div(1000).div(12)
 
     # Save the demand data, if specified
     if save:
@@ -542,9 +536,9 @@ def create_baseline_demand_profiles_for_each_meter(
         demand_df (pandas.DataFrame): Monthly hourly demand data for each meter.
         dso_num (int): The number of a valid substation in the system model.
         type_of_baseline (str): The type of baseline demand that should be considered. 
-        There are four types of baselines supported by this function: `daily', 
-        `day_of_week', `weekdays_and_weekends', and `monthly'.
-        save (bool): Indicates whether or not the output data should be saved in a .h5
+        There are four types of baselines supported by this function: 'daily',
+        'day_of_week', 'weekdays_and_weekends', and 'monthly'.
+        save (bool): Indicates whether the output data should be saved in a .h5
         file. If True, data is saved to the location specified by 'save_path'.
         save_path (str): File path that indicates where the resultant baseline demand 
         profile should be saved, if allowed by 'save'.
@@ -2422,29 +2416,16 @@ def calculate_tariff_prices(
             indust_df = load_indust_data(industrial_file, range(1, 2)) * 1000
             for k in tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"].keys():
                 num_hours = 0
-                for i in range(
-                    len(
-                        tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"][k][
-                            "hour_start"
-                        ]
-                    )
-                ):
+                for i in range(len(tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"][k]["hour_start"])):
                     num_hours += (
-                        tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"][k][
-                            "hour_end"
-                        ][i]
-                        - tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"][
-                            k
-                        ]["hour_start"][i]
+                        tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"][k]["hour_end"][i]
+                        - tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"][k]["hour_start"][i]
                     )
                 total_weighted_consumption_sub_i[s] += (
-                    tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"][k][
-                        "ratio"
-                    ]
+                    tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"][k]["ratio"]
                     * indust_df.loc[0, "Bus" + dso_num]
                     * bl_demand_df[s].shape[0]
-                    * num_hours
-                    / 24
+                    * num_hours / 24
                 )
             rev_demand_charge_sub_i[s] += (
                 tariff["DSO_" + dso_num]["industrial"]["demand_charge"]
@@ -2706,10 +2687,7 @@ def calculate_tariff_prices(
         for each in metadata["billingmeters"]:
             # Calculate the necessary rate components for residential and commercial 
             # consumers
-            if metadata["billingmeters"][each]["tariff_class"] in [
-                "residential",
-                "commercial",
-            ]:
+            if metadata["billingmeters"][each]["tariff_class"] in ["residential", "commercial"]:
                 if trans_cost_balance_method in [None, "volumetric"]:
                     # Update the total consumption
                     total_consumption_trans_rc += meter_df.loc[(each, "kw-hr"), "sum"]
@@ -3471,7 +3449,7 @@ def DSO_rate_making(
             num_indust_cust,
             industrial_file,
             rate_scenario,
-            trans_cost_balance_method,
+            trans_cost_balance_method
         )
 
         # Update the price datasets accordingly
@@ -3531,7 +3509,7 @@ def DSO_rate_making(
             str(dso_num),
             dso_scaling_factor,
             num_indust_cust,
-            rate_scenario,
+            rate_scenario
         )
 
     # Initialize surplus for export purposes when rate_scenario is not None
@@ -3579,8 +3557,7 @@ def DSO_rate_making(
                 tariff,
                 str(dso_num),
                 dso_scaling_factor,
-                num_indust_cust,
-                rate_scenario,
+                num_indust_cust
             )
 
             surplus = (

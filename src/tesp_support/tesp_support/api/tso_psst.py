@@ -20,7 +20,6 @@ from .tso_helpers import load_json_case, make_dictionary, dist_slack, print_m_ca
 from .metrics_collector import MetricsStore, MetricsCollector
 from .bench_profile import bench_profile
 
-
 def make_generator_plants(ppc, renewables):
     gen = ppc['gen']
     genFuel = ppc['genfuel']
@@ -32,7 +31,6 @@ def make_generator_plants(ppc, renewables):
             unRespMW = [0] * 48
             plants[str(genFuel[i][2])] = [bus_num, MW, unRespMW, genFuel[i][2]]
     return plants
-
 
 @bench_profile
 def tso_psst_loop(casename):
@@ -360,7 +358,7 @@ def tso_psst_loop(casename):
 
 
         if r_and_d:
-            adder = rob_and_don(generation)/12.0
+            adder = rob_and_don(generation)
             log.debug(f"generation: {generation}, adder: {adder}")
             if adder > 0:
                 for ii in range(total_bus_num):
@@ -438,7 +436,6 @@ def tso_psst_loop(casename):
                 row = []
                 for z in range(TAU):
                     row.append(ld)
-
                 pub = get_pub('cleared_q_rt_' + str(bus_num))
                 helics.helicsPublicationPublishString(pub, json.dumps(row[0]))
                 rt_q_store.append_data(

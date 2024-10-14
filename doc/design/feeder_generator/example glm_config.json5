@@ -1,0 +1,104 @@
+// This file is an example of the glm_config.json5 that is used to
+// configure the process of populating a feeder. 
+
+{
+// General
+    "glmfile": <string>, // REQUIRED
+    "state": <string>, // REQUIRED
+    "timezone": <string>, // REQUIRED
+    "tmyfile": <string>, // REQUIRED
+
+    "RECS data file": <string>, //DEFAULT is path that is same as GLD model file
+    "income distribution": { // Must sum to 1
+        "low": <float>, // DEFAULT: defined by RECS data
+        "middle": <float>, // DEFAULT: defined by RECS data
+        "upper": <float>, // DEFAULT: defined by RECS data
+    },
+    "random seed": <int>, // DEFAULT: 1 - seeds randomizer used in populating the models
+
+ // Preamble Definitions
+    "starttime": <string>, // DEFAULT: "2023-01-01 00:00:00"
+    "stoptime": <string>, // DEFAULT: "2023-01-02 00:00:00"
+    "minimum timestep": <int>, // DEFAULT: 60
+
+    "includes": [
+        "${TESPDIR}/data/schedules/appliance_schedules.glm",
+        "${TESPDIR}/data/schedules/water_and_setpoint_schedule_v5.glm",
+        "${TESPDIR}/data/schedules/commercial_schedules.glm"
+        ],
+
+    "set": [
+        "minimum_timestep=15",
+        "relax_naming_rules=1",
+        "warn=0"
+        ],
+    "defines": [],
+    "players": {"name": "lp","file": "your_file","type": "double"},
+    "avghouse": 4500.0,
+    "region": 1,
+
+
+// Co-simulation
+    "HELICS config": <string>, //DEFAULT is "none", value is the path to the HELICS config file
+    // If "none", don't include the "object helics_msg" in the preamble
+
+// Metrics collectors
+    "metrics collectors": {
+        "house": <float>, // DEFAULT 300 seconds; "0" = don't collect
+        "waterheater": <float>, // DEFAULT 300 seconds; "0" = don't collect
+        "line": <float>, // DEFAULT 300 seconds; "0" = don't collect
+        "transformer": <float>, // DEFAULT 300 seconds; "0" = don't collect
+        "capacitor": <float>, // DEFAULT 300 seconds; "0" = don't collect
+        "inverter": <float>, // DEFAULT 300 seconds; "0" = don't collect
+        "regulator": <float>, // DEFAULT 300 seconds; "0" = don't collect
+        "substation": <float>, // DEFAULT 300 seconds; "0" = don't collect
+    },
+
+// add_houses Defininitions
+    "enduses": {
+        "lights": <string "none" or "gld implicit" or "ZIPload">, //DEFAULT: gld implicit
+        "plugs": <string "none" or "gld implicit" or "ZIPload">, //DEFAULT: gld implicit
+        "clotheswasher": <string "none" or "gld implicit" or "ZIPload">, //DEFAULT: gld implicit
+        "refrigerator": <string "none" or "gld implicit" or "ZIPload">, //DEFAULT: gld implicit
+        "dryer": <string "none" or "gld implicit" or "ZIPload">, //DEFAULT: gld implicit
+        "freezer": <string "none" or "gld implicit" or "ZIPload">, //DEFAULT: gld implicit
+        "dishwasher": <string "none" or "gld implicit" or "ZIPload">, //DEFAULT: gld implicit
+        "range": <string "none" or "gld implicit" or "ZIPload">, //DEFAULT: gld implicit
+        "microwave": <string "none" or "gld implicit" or "ZIPload">, //DEFAULT: gld implicit
+    }
+    "average house load": <float>, // Used to determine how many houses are used to replace a given zip load. DEFAULT: 5000 W
+    "waterheater heat_mode distribution": {// Must sum to 1 
+        "electric": <float>, // DEFAULT: determined by RECS data
+        "gas": <float>, // DEFAULT: determined by RECS data
+        "heat pump": <float>, //DEFAULT: determined by RECS data
+        },
+
+// add_ev Definitions
+    "EV penetration": <float>, // fraction of households with EVs, DEFAULT: determined by RECS data
+    "battery size distribution": { // uniform distribution
+        "min battery size": <float>, //DEFAULT: 50 kWh, https://insideevs.com/reviews/344001/compare-evs/
+        "max battery size": <float>, //DEFAULT: 125 kWh, https://insideevs.com/reviews/344001/compare-evs/
+    },
+    "charging power distribution": { // must sum to 1
+        "level 1": <float>, // DEFAULT: 0.1 made up by Trevor, charging power is 3.5 kW
+        "level 2": <float>, // DEFAULT: 0.9, made up by Trevor, charging power is 5-12 kW, https://www.evchargerreviews.net/best-ev-chargers-for-home-use/
+    },
+
+// add_solar Definitions
+    "solar penetration": <float>, // the percentage of households with solar, DEFAULT: determined by RECS data
+    "solar installation rated power": { // uniform distribution
+        "min solar size": <float>, //DEFAULT: 6 kW
+        "max solar size": <float> //DEFAULT: 8 kW
+    },
+    "inverter rated power": <float>, // DEFAULT: same as solar installation rated power
+    
+
+// add_battery Definitions
+    "battery penetration": <float>, // the percentage of households with batteries, DEFAULT: determined by RECS data
+    "battery installation rated power": { // uniform distribution
+        "min battery size": <float>, //DEFAULT: 9 kWh Generac power cell
+        "max batter size": <float>, //DEFAULT: 18 kWh Panasonic Evervolt
+    },
+    "battery roundtrip efficiency": <float>, // DEAFULT: 0.93
+    "inverter efficiency": <float>, // DEFAULT: 0.98
+}

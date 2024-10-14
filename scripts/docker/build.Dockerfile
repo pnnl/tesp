@@ -57,8 +57,8 @@ USER $COSIM_USER
 WORKDIR $COSIM_HOME
 RUN echo "Cloning or download all relevant repositories..." && \
   cd "${REPO_DIR}" || exit && \
-  echo ++++++++++++++ TESP && \
-  git clone -b main https://github.com/pnnl/tesp.git && \
+  echo "++++++++++++++ TESP" && \
+  git clone -b develop https://github.com/pnnl/tesp.git && \
 #  ${BUILD_DIR}/patch.sh tesp tesp && \
   echo "++++++++++++++ PSST" && \
   git clone -b master https://github.com/ames-market/AMES-V5.0.git && \
@@ -113,8 +113,8 @@ RUN echo "Cloning or download all relevant repositories..." && \
   /bin/rm -r ${REPO_DIR}/Ipopt && \
   /bin/rm -r ${REPO_DIR}/ThirdParty-ASL && \
   /bin/rm -r ${REPO_DIR}/ThirdParty-Mumps && \
-  echo "Compiling and Installing TESP EnergyPlus agents and TMY converter..." && \
-  ./tesp_b.sh clean > tesp.log 2>&1 && \
+#   echo "Compiling and Installing TESP EnergyPlus agents and TMY converter..." && \
+#   ./tesp_b.sh clean > tesp.log 2>&1 && \
   echo "Install Misc Python Libraries..." && \
   pip install --no-warn-script-location --upgrade pip  > "pypi.log" && \
   pip install --no-warn-script-location --no-cache-dir -r ${REPO_DIR}/tesp/requirements.txt  >> "pypi.log" && \

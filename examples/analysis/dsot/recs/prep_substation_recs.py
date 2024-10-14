@@ -1,5 +1,5 @@
 # Copyright (C) 2018-2023 Battelle Memorial Institute
-# file: prep_substation_dsot.py
+# file: prep_substation_recs.py
 """ Sets up the HELICS and agent configurations for DSOT ercot case 8 example
 
 Public Functions:
@@ -133,7 +133,7 @@ def telework(prob, st, hd, inc_lev):
     return n_days, tw_dow
 
 
-def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, state, dso_type):
+def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
     """ Helper function that processes one GridLAB-D file
 
     Reads fileroot.glm and writes:
@@ -153,10 +153,13 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, sta
     glmname = substationfileroot + '_glm_dict.json'
 
     bus = str(case_config["MarketPrep"]["DSO"]["Bus"])
-    #    substation_name = 'substation_' + basename
-    substation_name = case_config['SimulationConfig']['Substation']  # 'Substation_' + bus
-    ip = open(glmname).read()
+    substation_name = case_config['SimulationConfig']['Substation']
+    Q_dso_key = case_config['SimulationConfig']['DSO']
+    Q_forecast = case_config['SimulationConfig']['Q_bid_forecast_correction']
+    state = case_config['SimulationConfig']['state']
+    dso_type = case_config['SimulationConfig']['DSO_type']
 
+    ip = open(glmname).read()
     gd = json.loads(ip)
     gld_sim_name = gd['message_name']
 
@@ -749,10 +752,10 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, sta
 
     print('configured', num_market_agents, 'agents for', num_markets, 'markets')
 
-    if Q_dso_key_g in list(Q_forecast_g.keys()):
-        dso_Q_bid_forecast_correction = Q_forecast_g[Q_dso_key_g]
+    if Q_dso_key in list(Q_forecast.keys()):
+        dso_Q_bid_forecast_correction = Q_forecast[Q_dso_key]
     else:
-        dso_Q_bid_forecast_correction = Q_forecast_g['default']
+        dso_Q_bid_forecast_correction = Q_forecast['default']
         print('WARNING: utilizing default configuration for dso_Q_bid_forecast_correction')
     markets['Q_bid_forecast_correction'] = dso_Q_bid_forecast_correction
 
@@ -901,7 +904,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, sta
 
 
 def prep_substation(gldfileroot, substationfileroot, weatherfileroot, feedercnt,
-                    config=None, hvacSetpt=None, jsonfile='', Q_forecast=None, Q_dso_key=None, usState=None, dsoType=None):
+                    config=None, hvacSetpt=None, jsonfile=''):
     """ Process a base GridLAB-D file with supplemental JSON configuration data
 
     Always reads gldfileroot.glm and writes:
@@ -919,17 +922,13 @@ def prep_substation(gldfileroot, substationfileroot, weatherfileroot, feedercnt,
         gldfileroot (str): path to and base file name for the GridLAB-D file, without an extension
         substationfileroot (str): path to and base file name for the Substation file, without an extension
         weatherfileroot (str): path to the weather agent file location
+        feedercnt (int):
         config (dict): dictionary of feeder population data already read in, mutually exclusive with jsonfile
+        hvacSetpt (str): default=None
         jsonfile (str): fully qualified path to an optional JSON configuration file
     """
     global case_config
     global hvac_setpt
-
-    global Q_forecast_g
-    global Q_dso_key_g
-
-    Q_forecast_g = Q_forecast
-    Q_dso_key_g = Q_dso_key
 
     if config is not None or len(jsonfile) > 1:
         if len(jsonfile) > 1:
@@ -941,4 +940,4 @@ def prep_substation(gldfileroot, substationfileroot, weatherfileroot, feedercnt,
         print('WARNING: neither configuration dictionary or json file provided')
 
     hvac_setpt = hvacSetpt
-    process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, usState, dsoType)
+    process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt)

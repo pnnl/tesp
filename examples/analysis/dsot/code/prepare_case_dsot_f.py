@@ -337,10 +337,10 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         except:
             pass
 
-        # (Laurentiu Marinovici 11/07/2019)
         # we are going to copy the .dat file from its location into the weather agent folder
-        shutil.copy(os.path.join(os.path.abspath(sys_config['WeatherDataSourcePath']), dso_val['weather_file']),
-                    os.path.join(os.path.abspath(caseName), weather_agent_name, 'weather.dat'))
+        src = os.path.join(os.path.abspath(sys_config['WeatherDataSourcePath']), dso_val['weather_file'])
+        dst = os.path.join(os.path.abspath(caseName), weather_agent_name, 'weather.dat')
+        shutil.copy(src, dst)
 
         # We need to generate the total population of commercial buildings by type and size
         num_res_customers = dso_val['number_of_gld_homes']
@@ -385,26 +385,12 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
                         caseName + '/' + dso_key + '/' + feed_key + '_glm_dict.json')
 
             # Next we create the agent dictionary along with the substation YAML file
-            if recs_data:
-                prep.prep_substation(caseName + '/' + feed_key + '/' + feed_key,
-                                     caseName + '/' + dso_key + '/' + feed_key,
-                                     caseName + '/' + weather_agent_name + '/',
-                                     feedercnt,
-                                     config=case_config,
-                                     hvacSetpt=hvac_setpt,
-                                     Q_forecast=sim['Q_bid_forecast_correction'],
-                                     Q_dso_key=dso_key,
-                                     usState=sim['state'],
-                                     dsoType=dso_val['utility_type'])
-            else:
-                prep.prep_substation(caseName + '/' + feed_key + '/' + feed_key,
-                                     caseName + '/' + dso_key + '/' + feed_key,
-                                     caseName + '/' + weather_agent_name + '/',
-                                     feedercnt,
-                                     config=case_config,
-                                     hvacSetpt=hvac_setpt,
-                                     Q_forecast=sim['Q_bid_forecast_correction'],
-                                     Q_dso_key=dso_key)
+            prep.prep_substation(caseName + '/' + feed_key + '/' + feed_key,
+                                 caseName + '/' + dso_key + '/' + feed_key,
+                                 caseName + '/' + weather_agent_name + '/',
+                                 feedercnt,
+                                 config=case_config,
+                                 hvacSetpt=hvac_setpt)
             feedercnt += 1
             print("=== DONE WITH FEEDER {0:s} for {1:s}. ======\n".format(feed_key, dso_key))
 
@@ -430,26 +416,12 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
                             caseName + '/' + dso_key + '/' + feed_key + '_glm_dict.json')
 
                 # Next we create the agent dictionary along with the substation YAML file
-                if recs_data:
-                    prep.prep_substation(caseName + '/' + feed_key + '/' + feed_key,
-                                         caseName + '/' + dso_key + '/' + feed_key,
-                                         caseName + '/' + weather_agent_name + '/',
-                                         feedercnt,
-                                         config=case_config,
-                                         hvacSetpt=hvac_setpt,
-                                         Q_forecast=sim['Q_bid_forecast_correction'],
-                                         Q_dso_key=dso_key,
-                                         usState=sim['state'],
-                                         dsoType=dso_val['utility_type'])
-                else:
-                    prep.prep_substation(caseName + '/' + feed_key + '/' + feed_key,
-                                         caseName + '/' + dso_key + '/' + feed_key,
-                                         caseName + '/' + weather_agent_name + '/',
-                                         feedercnt,
-                                         config=case_config,
-                                         hvacSetpt=hvac_setpt,
-                                         Q_forecast=sim['Q_bid_forecast_correction'],
-                                         Q_dso_key=dso_key)
+                prep.prep_substation(caseName + '/' + feed_key + '/' + feed_key,
+                                     caseName + '/' + dso_key + '/' + feed_key,
+                                     caseName + '/' + weather_agent_name + '/',
+                                     feedercnt,
+                                     config=case_config,
+                                     hvacSetpt=hvac_setpt)
                 feedercnt += 1
                 print("=== DONE WITH COPPERPLATE FEEDER {0:s} for {1:s}. ======\n".format(feed_key, dso_key))
 
@@ -552,17 +524,13 @@ if __name__ == "__main__":
     if len(sys.argv) > 6:
         prepare_case(int(sys.argv[1]), sys.argv[2], pv=int(sys.argv[3]), bt=int(sys.argv[4]), fl=int(sys.argv[5]), ev=int(sys.argv[6]))
     else:
-        # prepare_case(8, "8_system_case_config", pv=0, bt=0, fl=0, ev=0)
-        # prepare_case(8, "8_system_case_config", pv=0, bt=1, fl=0, ev=0)
-        # prepare_case(8, "8_system_case_config", pv=0, bt=0, fl=1, ev=0)
-        # prepare_case(8, "8_hi_system_case_config", pv=1, bt=0, fl=0, ev=0)
-        # prepare_case(8, "8_hi_system_case_config", pv=1, bt=1, fl=0, ev=1)
-        # prepare_case(8, "8_hi_system_case_config", pv=1, bt=0, fl=1, ev=1)
-        prepare_case(8, "8_hi_system_case_config", pv=1, bt=1, fl=1, ev=1)
+        node = 8
+        # node = 200
 
-        # prepare_case(200, "200_system_case_config", pv=0, bt=0, fl=0, ev=0)
-        # prepare_case(200, "200_system_case_config", pv=0, bt=1, fl=0, ev=0)
-        # prepare_case(200, "200_system_case_config", pv=0, bt=0, fl=1, ev=0)
-        # prepare_case(200, "200_hi_system_case_config", pv=1, bt=0, fl=0, ev=0)
-        # prepare_case(200, "200_hi_system_case_config", pv=1, bt=1, fl=0, ev=1)
-        # prepare_case(200, "200_hi_system_case_config", pv=1, bt=0, fl=1, ev=1)
+        # prepare_case(node, f"{node}_system_case_config", pv=0, bt=0, fl=0, ev=0)
+        # prepare_case(node, f"{node}_system_case_config", pv=0, bt=1, fl=0, ev=0)
+        # prepare_case(node, f"{node}_system_case_config", pv=0, bt=0, fl=1, ev=0)
+        # prepare_case(node, f"{node}_hi_system_case_config", pv=1, bt=0, fl=0, ev=0)
+        # prepare_case(node, f"{node}_hi_system_case_config", pv=1, bt=1, fl=0, ev=1)
+        # prepare_case(node, f"{node}_hi_system_case_config", pv=1, bt=0, fl=1, ev=1)
+        prepare_case(node, f"{node}_hi_system_case_config", pv=1, bt=1, fl=1, ev=1)
