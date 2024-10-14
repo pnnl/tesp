@@ -57,12 +57,12 @@ discard_end_days = 1  # Number of days at the end of the simulation to be discar
 flat_path = 'C:/Users/reev057/DSOT-DATA/Rates/Flat'
 DSOT_path = 'C:/Users/reev057/DSOT-DATA/Rates/DSOT'
 TOU_path = 'C:/Users/reev057/DSOT-DATA/Rates/TOU'
-transactive_path = None
+transactive_path = 'C:/Users/reev057/DSOT-DATA/Rates/DSOT'
 subscription_path = None
 
 system_case = "8_hi_system_case_config.json"
 base_case_path = flat_path
-case_path = DSOT_path
+case_path = transactive_path
 
 
 # # Load System Case Config

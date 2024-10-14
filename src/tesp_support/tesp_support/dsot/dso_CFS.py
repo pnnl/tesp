@@ -388,18 +388,18 @@ def dso_CFS(
             DSO_Revenues_and_Energy_Sales['RetailSales']['TransactiveSales']['RetailRTEnergy'])
     else:
         if rate_scenario == "transactive":
-            RetailDAEnergy = sum(
-                DSO_Revenues_and_Energy_Sales["RetailSales"]["TransactiveSales" + c][
-                    "RetailDAEnergy" + c
+            RetailEnergy = sum(
+                DSO_Revenues_and_Energy_Sales["RetailSales"]['TransactiveSales']["TransactiveSales" + c][
+                    "TransactiveEnergySales" + c
                 ]
                 for c in ["Res", "Comm", "Ind"]
             )
-            RetailRTEnergy = sum(
-                DSO_Revenues_and_Energy_Sales["RetailSales"]["TransactiveSales" + c][
-                    "RetailRTEnergy" + c
-                ]
-                for c in ["Res", "Comm", "Ind"]
-            )
+            # RetailRTEnergy = sum(
+            #     DSO_Revenues_and_Energy_Sales["RetailSales"]["TransactiveSales" + c][
+            #         "RetailRTEnergy" + c
+            #     ]
+            #     for c in ["Res", "Comm", "Ind"]
+            # )
         elif rate_scenario == "dsot":
             RetailEnergy = sum(
                 DSO_Revenues_and_Energy_Sales["RetailSales"]['DSOTSales']["DSOTSales" + c][

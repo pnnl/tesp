@@ -180,6 +180,8 @@ def customer_CFS(GLD_metadata,
             Bills = customer_bill['BillsFix']['TotalFix']
         elif rate_scenario == "time-of-use":
             Bills = customer_bill['BillsFix']['TotalFix'] + customer_bill['BillsTOU']['TotalTOU']
+        elif rate_scenario == "transactive":
+            Bills = customer_bill['BillsFix']['TotalFix'] + customer_bill['BillsTransactive']['TotalDyn']
         elif rate_scenario == "dsot":
             Bills = customer_bill['BillsFix']['TotalFix'] + customer_bill['BillsTransactive']['TotalDyn']
         # fed_corporate_income_tax = metadata['general']['fed_corporate_income_tax']
