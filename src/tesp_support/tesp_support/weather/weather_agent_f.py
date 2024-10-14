@@ -1,4 +1,5 @@
-# Copyright (C) 2021-2023 Battelle Memorial Institute
+# Copyright (C) 2019-2023 Battelle Memorial Institute
+# See LICENSE file at https://github.com/pnnl/tesp
 # file: weatherAgent.py
 
 """Weather Agent
