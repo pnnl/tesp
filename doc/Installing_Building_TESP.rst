@@ -1,10 +1,15 @@
-..
+.. 
     _ Copyright (c) 2021-2023 Battelle Memorial Institute
     _ file: Installing_Building_TESP.rst
+    
 
 
 .. toctree::
     :maxdepth: 2
+
+    docker_install
+
+.. _local_build_installation:
 
 Installing and Building TESP
 ****************************
