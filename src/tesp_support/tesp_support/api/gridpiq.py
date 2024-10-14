@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022-2023 Battelle Memorial Institute
+# Copyright (C) 2022-2024 Battelle Memorial Institute
+# See LICENSE file at https://github.com/pnnl/tesp
 # file: gridpiq.py
 # Created on 1/23/2023
 # @author: d3j331 - Mitch Pelton

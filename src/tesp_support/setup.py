@@ -1,4 +1,5 @@
 # Copyright (C) 2017-2023 Battelle Memorial Institute
+# See LICENSE file at https://github.com/pnnl/tesp
 # file: setup.py
 
 from setuptools import setup, find_packages, installer

@@ -1,4 +1,5 @@
-# Copyright (C) 2017-2023 Battelle Memorial Institute
+# Copyright (C) 2017-2024 Battelle Memorial Institute
+# See LICENSE file at https://github.com/pnnl/tesp
 # file: tso_PYPOWER.py
 """ PYPOWER solutions under control of HELICS for te30 and dsot, sgip1 examples
 
