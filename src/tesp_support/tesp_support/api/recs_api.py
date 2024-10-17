@@ -1,11 +1,10 @@
-import sys
+# Copyright (C) 2022-2023 Battelle Memorial Institute
+# file: recs_api.py
+
 import pandas as pd
-import numpy as np
 import sqlite3 as sqlite
-import datetime
 import duckdb as dkdb
 import random
-sys.path.append('./')
 
 pd.options.mode.chained_assignment = None
 
@@ -36,8 +35,6 @@ def get_recs_data(file_name):
             return t_recs_df
         except:
             return None
-    else:
-        return None
 
 
 # *******************************************************************************************************************
@@ -139,7 +136,7 @@ Args:
             for param_name in params[param_id]:
                 if param == param_name:
                     in_check = True
-            if in_check == False:
+            if not in_check:
                 return in_check
             else:
                 in_check = False
@@ -150,7 +147,6 @@ Args:
 
     def check_base_param(self, param_name, param_type):
         param_list = []
-        temp_type = type(param_name)
         if str(type(param_name)) == "<class 'str'>":
             if self.is_base_param_valid(param_name, param_type):
                 param_list.append(param_name)
@@ -196,11 +192,11 @@ Args:
 
     def get_all_params_list(self, param_type):
         param_list = []
-        if (param_type == "state_name"):
+        if param_type == "state_name":
             param_df = self.get_state_names()
-        elif (param_type == "income_cat"):
+        elif param_type == "income_cat":
             param_df = self.get_income_levels()
-        elif (param_type == "housing_density"):
+        elif param_type == "housing_density":
             param_df = self.get_density_levels()
         else:
             return None
@@ -255,7 +251,6 @@ Args:
     def sample_type_vintage(self, distribution_df, num_samples):
         indices = []
         sampled_weights = []
-        sampled_indices = []
         sampled_types = []
         sampled_vintages = []
         i = 0
@@ -275,11 +270,8 @@ Args:
 
     def get_house_type_vintage(self, state, income_level, housing_density):
         distribution_df = pd.DataFrame()
-        house_vintage_df = pd.DataFrame()
         housing_lst = ["1", "2", "3", "4", "5"]
         vintage_lst = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
-        housing_sampled_lst = []
-        vintage_sampled_lst = []
         income_search_string = self.get_parameter_search_string(income_level, "Income_cat")
         density_search_string = self.get_parameter_search_string(housing_density, "UATYP10")
         xlrd = self.recs_data
@@ -325,7 +317,6 @@ Args:
     def sample_parameter_distribution(self, distribution_df, num_samples, parameter_name):
         indices = []
         sampled_weights = []
-        sampled_indices = []
         sampled_values = []
         i = 0
         for row in distribution_df.iterrows():
@@ -341,8 +332,7 @@ Args:
     #*******************************************************************************************************************
     #*******************************************************************************************************************
 
-    def get_parameter_sample(self, state_name, income_level, housing_density, house_type, house_vintage, parameter_name):
-        sampled_values = []
+    def get_parameter_sample(self, state_name, income_level, housing_density, parameter_name):
         xlrd = self.recs_data
         sql_query = "SELECT state_name, Income_cat, UATYP10," + parameter_name + ", SUM(nweight) as 'summed_nweight',COUNT(nweight) as 'count' FROM xlrd WHERE state_name='" + state_name + "'" + " AND " + self.get_parameter_search_string(
             income_level, "Income_cat") + " AND " + self.get_parameter_search_string(housing_density,
@@ -502,8 +492,8 @@ Args:
         building_types = dkdb.query(sql_query).to_df()
         return building_types
 
-    def run_test(self, filename):
-        house_vintage_df, house_type_df = self.get_house_type_vintage("California", "Middle&Moderate", "U")
+    def run_test(self):
+#        house_vintage_df, house_type_df = self.get_house_type_vintage("California", "Middle&Moderate", "U")
 #        dist_df = self.get_parameter_distribution('California', 'Middle&Moderate', 'U', 2, 5, 'ROOFTYPE')
         solar_percent = self.calc_solar_percentage("California", "Upper", "U")
         print(solar_percent)
@@ -513,5 +503,5 @@ Args:
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    recs_ds = recs_data_set("TESP_RECS.db")
-    recs_ds.run_test("/home/d3k205/recs_All_testing.xls")
+    recs_ds = recs_data_set("datafiles/TESP_RECS.db")
+    recs_ds.run_test()

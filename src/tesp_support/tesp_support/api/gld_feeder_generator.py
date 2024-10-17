@@ -94,12 +94,13 @@ Public Functions:
 
 """
 
+import logging as log
 import math
+import os
+import sys
+
 import numpy as np
 import pandas as pd
-import sys
-import logging as log
-import os
 
 sys.path.append("..\..\..\..") #append to find examples/analysis/dsot/code as-needed
 from examples.analysis.dsot.code.recs_gld_house_parameters import get_RECS_jsons
@@ -112,11 +113,7 @@ from tesp_support.api.entity import assign_defaults
 
 extra_billing_meters = set()
 
-# Set the path to your config file and required metadata
-config_path = os.path.expandvars('$TESPDIR/examples/capabilities/feeder-generator/')
-config_file = 'feeder_config.json5'
-
-log.basicConfig(filename=os.path.join(config_path,'debug.log'), filemode='w', level=log.DEBUG)
+log.basicConfig(level=log.DEBUG)
 
 class Config:
     def __init__(self, config=None):
@@ -143,8 +140,6 @@ class Config:
     def preamble(self) -> None:
         """ Add required modules, objects, includes, defines, and sets required
         to run a .glm model
-        Args:
-            None
         Returns:
             None
         """
@@ -159,7 +154,7 @@ class Config:
         # Add player files if pre-defining solar generation
         if self.use_solar_player == "True":
             player = self.solar_P_player
-            self.glm.model.add_class(player["name"], player["datatype"], player["attr"], player["static"], os.path.join(config_path, player["data"]))
+            self.glm.model.add_class(player["name"], player["datatype"], player["attr"], player["static"], os.path.join(self.data_path, player["data"]))
 
         self.glm.model.set_clock(self.starttime, self.stoptime, self.timezone)
 
@@ -204,12 +199,11 @@ class Config:
         """
 
         if not self.out_file_residential_meta:
-            self.out_file_residential_meta = "RECS_residential_metadata.json"
+            # self.out_file_residential_meta = "RECS_residential_metadata.json"
             get_RECS_jsons(
-                os.path.join(os.path.expandvars('$TESPDIR/data/feeders/'), self.file_recs_income_level),
-                os.path.join(config_path, self.file_residential_meta),
-                os.path.join(config_path, self.out_file_residential_meta),
-                os.path.join(config_path, self.out_file_hvac_set_point),
+                os.path.join(self.data_path, self.file_residential_meta),
+                os.path.join(self.data_path, self.out_file_residential_meta),
+                os.path.join(self.data_path, self.out_file_hvac_set_point),
                 self.sample,
                 self.bin_size_threshold,
                 self.region,
@@ -224,14 +218,15 @@ class Config:
         Returns:
             None
         """
-        assign_defaults(self.com_bld, os.path.join(config_path, self.file_commercial_meta))
+        assign_defaults(self.com_bld, os.path.join(self.data_path, self.file_commercial_meta))
         # generate the total population of commercial buildings by type and size
         num_comm_customers = round(self.number_of_gld_homes *
-                                   self.RCI_customer_count_mix["commercial"] / self.RCI_customer_count_mix["residential"])
+                                   self.RCI_customer_count_mix["commercial"] /
+                                   self.RCI_customer_count_mix["residential"])
         num_comm_bldgs = num_comm_customers / self.comm_customers_per_bldg
         self.base.comm_bldgs_pop = self.com_bld.define_comm_bldg(self.utility_type, num_comm_bldgs)
 
-        assign_defaults(self.res_bld, os.path.join(config_path, self.out_file_residential_meta))
+        assign_defaults(self.res_bld, os.path.join(self.data_path, self.out_file_residential_meta))
         self.res_bld.checkResidentialBuildingTable()
         cop_mat = self.res_bld.COP_average
         years_bin = [range(1945, 1950), range(1950, 1960), range(1960, 1970), range(1970, 1980),
@@ -246,9 +241,9 @@ class Config:
                 temp.append(cop_mat[str(yr)])
             self.base.cop_lookup.append(temp)
 
-        assign_defaults(self.batt, os.path.join(config_path, self.file_battery_meta))
-        assign_defaults(self.ev, os.path.join(config_path, self.file_ev_meta))
-        self.base.ev_driving_metadata = self.ev.process_nhts_data(os.path.join(config_path, self.file_ev_driving_meta))
+        assign_defaults(self.batt, os.path.join(self.data_path, self.file_battery_meta))
+        assign_defaults(self.ev, os.path.join(self.data_path, self.file_ev_meta))
+        self.base.ev_driving_metadata = self.ev.process_nhts_data(os.path.join(self.data_path, self.file_ev_driving_meta))
 
 class Residential_Build:
     def __init__(self, config):
@@ -1207,7 +1202,7 @@ class Commercial_Build:
                         bldg['adj_occ'] = (0.9 + 0.1 * rng.random()) * floor_area / 1000.
 
                         bldg['zonename'] = gld_strict_name(
-                            key + '_bldg_' + '_floor_' + str(floor) + '_zone_' + str(zone) + '_comm_type_' + str(comm_type))
+                            key + '_floor_' + str(floor) + '_zone_' + str(zone) + '_' + str(comm_type))
                         Commercial_Build.add_one_commercial_zone(self, bldg)
 
             elif comm_type == 'big_box':
@@ -1266,7 +1261,7 @@ class Commercial_Build:
                     bldg['adj_ext'] = (0.9 + 0.1 * rng.random()) * floor_area / 1000.
                     bldg['adj_occ'] = (0.9 + 0.1 * rng.random()) * floor_area / 1000.
 
-                    bldg['zonename'] = gld_strict_name(key + '_bldg_' + '_zone_' + str(zone) + '_comm_type_' + str(comm_type))
+                    bldg['zonename'] = gld_strict_name(key + '_zone_' + str(zone) + '_' + str(comm_type))
                     Commercial_Build.add_one_commercial_zone(self, bldg)
 
             elif comm_type == 'strip_mall':
@@ -1312,7 +1307,7 @@ class Commercial_Build:
                     bldg['adj_gas'] = (0.8 + 0.4 * rng.random()) * floor_area / 1000.0
                     bldg['adj_ext'] = (0.8 + 0.4 * rng.random()) * floor_area / 1000.0
                     bldg['adj_occ'] = (0.8 + 0.4 * rng.random()) * floor_area / 1000.0
-                    bldg['zonename'] = gld_strict_name(key + '_zone_' + str(zone) + '_comm_type_' + str(comm_type))
+                    bldg['zonename'] = gld_strict_name(key + '_zone_' + str(zone) + '_' + str(comm_type))
                     Commercial_Build.add_one_commercial_zone(self, bldg)
 
             else: # For all other building types
@@ -1333,18 +1328,18 @@ class Commercial_Build:
                 bldg['roof_type'] = Commercial_Build.rand_bin_select(bld_specs['roof_construction_insulation'], rng.random())
                 bldg['wall_type'] = Commercial_Build.rand_bin_select(bld_specs['wall_construction'], rng.random())
                 bldg['Rroof'] = 1 / Commercial_Build.find_envelope_prop(bldg['roof_type'], bldg['age'],
-                                                self.general['thermal_integrity'],
-                                                self.config.climate) * 1.3 * rng.normal(1, 0.1)
+                                                                        self.general['thermal_integrity'],
+                                                                        self.config.climate) * 1.3 * rng.normal(1, 0.1)
                 bldg['Rwall'] = 1 / Commercial_Build.find_envelope_prop(bldg['wall_type'], bldg['age'],
-                                                self.general['thermal_integrity'],
-                                                self.config.climate) * 1.3 * rng.normal(1, 0.1)
+                                                                        self.general['thermal_integrity'],
+                                                                        self.config.climate) * 1.3 * rng.normal(1, 0.1)
                 bldg['Rfloor'] = 22. # Value from previous study
                 bldg['Rdoors'] = 3. # Value from previous study
                 bldg['no_of_doors'] = 3 # Value from previous study
                 bldg['airchange_per_hour'] = bld_specs['ventilation_requirements']['air_change_per_hour']
                 bldg['init_temp'] = 68. + 4. * rng.random()
                 bldg['os_rand'] = rng.normal(self.general['HVAC']['oversizing_factor']['mean'],
-                                            self.general['HVAC']['oversizing_factor']['std_dev'])
+                                             self.general['HVAC']['oversizing_factor']['std_dev'])
                 bldg['COP_A'] = self.general['HVAC']['COP'][str(bldg['age'])] * rng.normal(1, 0.05)
                 if comm_type == 'lodging':
                     bldg['base_schedule'] = 'alwaysocc'
@@ -1354,14 +1349,13 @@ class Commercial_Build:
                     bldg['base_schedule'] = 'retail'
                 elif comm_type == 'low_occupancy':
                     bldg['base_schedule'] = 'lowocc'
-                bldg['zonename'] = gld_strict_name('_bldg_' + key + '_comm_type_' + str(comm_type))
+                bldg['zonename'] = gld_strict_name(key + '_' + str(comm_type))
                 Commercial_Build.add_one_commercial_zone(self, bldg)
 
-    def define_comm_bldg(self, bldg_metadata: dict, dso_type: str, num_bldgs: float) -> list:
+    def define_comm_bldg(self, dso_type: str, num_bldgs: float) -> list:
         """Randomly selects a set number of buildings by type and size (sqft).
 
         Args:
-            bldg_metadata (dict): dictionary of building parameter data
             dso_type (str): 'Urban', 'Suburban', or 'Rural'
             num_bldgs (float): scalar value of number of buildings to be selected
         
@@ -1370,18 +1364,19 @@ class Commercial_Build:
         """
         global bldg_area
         bldgs = {}
-        bldg_types = Commercial_Build.normalize_dict_prob(dso_type, bldg_metadata.general['building_type'][dso_type])
+        bldg_types = Commercial_Build.normalize_dict_prob(dso_type, self.general['building_type'][dso_type])
         i = 0
         while i < num_bldgs:
             bldg_type = Commercial_Build.rand_bin_select(bldg_types, rng.random())
-            area = Commercial_Build.normalize_dict_prob('total_area', bldg_metadata.building_model_specifics[bldg_type]['total_area'])
+            area = Commercial_Build.normalize_dict_prob(bldg_type, self.building_model_specifics[bldg_type]['total_area'])
             bldg_area_bin = Commercial_Build.rand_bin_select(area, rng.random())
             bldg_area = Commercial_Build.sub_bin_select(bldg_area_bin, 'total_area', rng.random())
             bldgs['bldg_' + str(i + 1)] = [bldg_type, bldg_area]
             i += 1
         return bldgs
     
-    def normalize_dict_prob(self, name: str, diction: dict) -> dict:
+    @staticmethod
+    def normalize_dict_prob(name: str, diction: dict) -> dict:
         """ Ensure that the probability distribution of values in a dictionary 
             effectively sums to one
 
@@ -1406,7 +1401,8 @@ class Commercial_Build:
             log.debug("WARNING %s dictionary normalize to 1, values are > %s", name, diction)
         return diction
 
-    def rand_bin_select(self, diction: dict, probability: float) -> None:
+    @staticmethod
+    def rand_bin_select(diction: dict, probability: float) -> str | None:
         """ Returns the element (bin) in a dictionary given a certain
           probability
 
@@ -1416,7 +1412,7 @@ class Commercial_Build:
             probability: scalar value between 0 and 1
         
         Returns:
-            None
+            str:
         """
         total = 0
 
@@ -1424,34 +1420,35 @@ class Commercial_Build:
             total += diction[element]
             if total >= probability:
                 return element
-        return element
+        return None
 
-    def sub_bin_select(self, bin: str, type: str, prob: float) -> int:
-        """ Returns a scalar value within a bin range based on a uniform 
+    @staticmethod
+    def sub_bin_select(bin_range: str, bin_type: str, prob: float) -> int:
+        """ Returns a scalar value within a bin type based on a uniform
             probability within that bin range
 
         Args:
-            bin (str): name of bin
-            type (str): building parameter describing set of bins
+            bin_range (str): name of bin range
+            bin_type (str): building parameter describing set of bins
             prob (float): scalar value between 0 and 1
         
         Returns:
             val (int): scalar value within bin range
         """
         bins = {}
-        if type == 'vintage':
+        if bin_type == 'vintage':
             bins = {'pre_1960': [1945, 1959],
                     '1960-1979': [1960, 1979],
                     '1980-1999': [1980, 1999],
                     '2000-2009': [2000, 2009],
                     '2010-2015': [2010, 2015]}
-        elif type == 'total_area':
+        elif bin_type == 'total_area':
             bins = {'1-5': [1000, 5000],
                     '5-10': [5001, 10000],
                     '10-25': [10001, 25000],
                     '25-50': [25001, 50000],
                     '50_more': [50001, 55000]}
-        elif type == 'occupancy':
+        elif bin_type == 'occupancy':
             bins = {'0': [0, 0],
                     '1-39': [1, 39.99],
                     '40-48': [40, 48.99],
@@ -1459,12 +1456,13 @@ class Commercial_Build:
                     '61-84': [61, 84.99],
                     '85-167': [85, 167.99],
                     '168': [168, 168]}
-        val = bins[bin][0] + prob * (bins[bin][1] - bins[bin][0])
-        if type in ['vintage']:
+        val = bins[bin_range][0] + prob * (bins[bin_range][1] - bins[bin_range][0])
+        if bin_type in ['vintage']:
             val = int(val)
         return val
 
-    def find_envelope_prop(self, prop: str, age: int, env_data: dict, climate: str) -> float:
+    @staticmethod
+    def find_envelope_prop(prop: str, age: int, env_data: dict, climate: str) -> float:
         """ Returns the envelope value for a given type of property based on the
             age and (ASHRAE) climate zone of the building
 
@@ -1927,7 +1925,7 @@ class Feeder:
               f"{self.config.sol.solar_kw:.1f} kW, with "
               f"{self.config.batt.battery_count} batteries and "
               f"{self.config.ev.ev_count} EV chargers.")
-        self.glm.write_model(os.path.join(config_path, config.out_file_glm))
+        self.glm.write_model(os.path.join(config.data_path, config.out_file_glm))
 
         # To plot the model using the networkx package:
         #print("\nPlotting image of model; this may take several minutes.")
@@ -1957,7 +1955,7 @@ class Feeder:
             if not success:
                 exit()
         else:
-            i_glm, success = self.glm.read_model(os.path.join(config_path, self.config.in_file_glm))
+            i_glm, success = self.glm.read_model(os.path.join(self.data_path, self.config.in_file_glm))
             if not success:
                 exit()
 
@@ -2113,8 +2111,8 @@ class Feeder:
                             total_mh += 1
                         self.config.base.house_nodes[node] = [self.config.res_bld.nhouse, rgn, lg_v_sm, phs, bldg, ti, inc_lev]
         print(f"{total_small} small loads totaling {total_small_kva:.2f} kVA")
-        print(f"{total_houses} houses added to {len(self.config.base.house_nodes)} transformers. "
-              f"{total_sf} single family homes, {total_apt} apartments, and {total_mh} mobile homes")
+        print(f"{total_houses} houses added to {len(self.config.base.house_nodes)} transformers")
+        print(f"{total_sf} single family homes, {total_apt} apartments, and {total_mh} mobile homes")
     
     def identify_commercial_loads(self, gld_class: str, avgBuilding: float) -> None:
         """For the full-order feeders, scan each load with load_class==C to
@@ -2226,9 +2224,9 @@ class Feeder:
             print("No commercial 'C' load classes defined. Cannot add commercial loads.")
             return None
         
-        print('{} commercial loads identified, {} buildings added, approximately {} kVA still to be assigned.'.
-                        format(len(self.config.base.comm_bldgs_pop), total_commercial, int(remain_comm_kva)))
         # Print commercial info
+        print('{} commercial loads identified, {} buildings added, approximately {} kVA still to be assigned.'.
+              format(len(self.config.base.comm_bldgs_pop), total_commercial, int(remain_comm_kva)))
         print('  ', total_office, 'med/small offices with 3 floors, 5 zones each:', total_office*5*3, 'total office zones' )
         print('  ', total_warehouse_storage, 'warehouses,')
         print('  ', total_big_box, 'big box retail with 6 zones each:', total_big_box*6, 'total big box zones')
@@ -2240,14 +2238,15 @@ class Feeder:
         print('  ', total_healthcare_inpatient, 'healthcare,')
         print('  ', total_low_occupancy, 'low occupancy,')
         print('  ', total_zipload, 'streetlights')
-        log.info('The {} commercial loads and {} streetlights (ZIPloads) totaling {:.2f} kVA added to this feeder are:'.
-              format(total_commercial, total_zipload, self.config.com_bld.total_comm_kva))    
+        log.info('The {} commercial loads and {} streetlights (ZIPloads) totaling {:.2f} kVA added to this feeder'.
+                 format(total_commercial, total_zipload, self.config.com_bld.total_comm_kva))
 
-
-def _test1():   
-    config = Config(os.path.join(config_path, config_file))
+def _test1():
+    data_path = os.path.expandvars('$TESPDIR/examples/capabilities/feeder-generator/')
+    config_file = 'feeder_config.json5'
+    config = Config(os.path.join(data_path, config_file))
+    config.data_path = data_path
     feeder = Feeder(config)
-
 
 if __name__ == "__main__":
     _test1()

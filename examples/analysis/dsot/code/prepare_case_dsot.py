@@ -500,7 +500,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 6:
+    if len(sys.argv) > 5:
         prepare_case(int(sys.argv[1]), sys.argv[2], pv=int(sys.argv[3]), bt=int(sys.argv[4]), fl=int(sys.argv[5]), ev=int(sys.argv[6]))
     else:
         node = 8
