@@ -320,7 +320,7 @@ if customer_cfs:
     else:
         customer_df = pd.read_hdf(case_path + '/Master_Customer_Dataframe.h5', key='customer_data', mode='r')
 
-    main_variables = ['dso', 'tariff_class', 'building_type', 'cust_participating', 'cooling', 'heating']
+    main_variables = ['dso', 'tariff_class', 'building_type', 'cust_participating', 'cooling', 'heating', 'income_level']
     variables_combs = [['tariff_class', 'cust_participating'],
                        ['tariff_class', 'cust_participating', 'cooling', 'heating'],
                        ['building_type', 'cust_participating'],
@@ -330,7 +330,7 @@ if customer_cfs:
                        # ['tariff_class', 'cust_participating', 'ev_participating']
     ]
 
-    customer_mean_df = hf.get_mean_for_diff_groups(customer_df, main_variables, variables_combs, cfs_start_position=24)
+    customer_mean_df = hf.get_mean_for_diff_groups(customer_df, main_variables, variables_combs, cfs_start_position=25)
     customer_mean_df.to_csv(path_or_buf=case_path + '/Customer_CFS_Summary.csv')
 
 if dso_cfs:

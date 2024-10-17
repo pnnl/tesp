@@ -141,6 +141,7 @@ def customer_meta_data(glm_meta, agent_meta, dso_metadata_path):
         glm_meta['billingmeters'][meter]['cooling'] = glm_meta['houses'][house]['cooling']
         glm_meta['billingmeters'][meter]['heating'] = glm_meta['houses'][house]['heating']
         glm_meta['billingmeters'][meter]['wh_gallons'] = glm_meta['houses'][house]['wh_gallons']
+        glm_meta['billingmeters'][meter]['income_level'] = glm_meta['houses'][house]['income_level']
 
     for wh in agent_meta['water_heaters']:
         meter = agent_meta['water_heaters'][wh]['meterName']

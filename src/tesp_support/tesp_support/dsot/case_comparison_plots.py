@@ -768,6 +768,7 @@ def customer_cfs_delta(cases, data_paths, metadata_file, metadata_path = None):
     der_participation = [' None', ' EV', ' Battery', ' EV, Battery', ' HVAC', ' WH', ' HVAC, WH', ' HVAC, EV', ' WH, EV', ' HVAC, WH, EV']
     participation = [True, False]
     hr_bau_participation = ['None', ' EV', ' PV', ' EV, PV']
+    income_level = ['Low', 'Middle', 'Upper']
 
     dso_type = {'Urban': [],
                 'Suburban': [],
@@ -840,7 +841,7 @@ def customer_cfs_delta(cases, data_paths, metadata_file, metadata_path = None):
     file_path_fig = os.path.join(data_paths[0], 'plots', plot_filename)
     plt.savefig(file_path_fig, bbox_inches='tight')
 
-
+    # Plot base case attributes of residential customers.
     plot_customer_pdf('heating', heating, 'Bills', pop_comp_subset, cases[0], data_paths[0])
     plot_customer_pdf('heating', heating, 'EnergyPurchased', pop_comp_subset, cases[0], data_paths[0])
     plot_customer_pdf('heating', heating, 'PeakLoad', pop_comp_subset, cases[0], data_paths[0])
@@ -853,9 +854,15 @@ def customer_cfs_delta(cases, data_paths, metadata_file, metadata_path = None):
     plot_customer_pdf('DER_participating', hr_bau_participation, 'EnergyPurchased', pop_comp_subset, cases[0], data_paths[0])
     plot_customer_pdf('DER_participating', hr_bau_participation, 'PeakLoad', pop_comp_subset, cases[0], data_paths[0])
 
-    plot_customer_pdf('pv_participating', participation, 'Bills', pop_subset, cases[0], data_paths[0])
+    plot_customer_pdf('pv_participating', participation, 'Bills', pop_comp_subset, cases[0], data_paths[0])
     plot_customer_pdf('pv_participating', participation, 'EnergyPurchased', pop_comp_subset, cases[0], data_paths[0])
     plot_customer_pdf('pv_participating', participation, 'PeakLoad', pop_comp_subset, cases[0], data_paths[0])
+
+    plot_customer_pdf('income_level', income_level, 'Bills', pop_comp_subset, cases[0], data_paths[0])
+    plot_customer_pdf('income_level', income_level, 'EnergyPurchased', pop_comp_subset, cases[0], data_paths[0])
+    plot_customer_pdf('income_level', income_level, 'PeakLoad', pop_comp_subset, cases[0], data_paths[0])
+    plot_customer_pdf('income_level', income_level, 'sqft', pop_comp_subset, cases[0], data_paths[0])
+    plot_customer_pdf('income_level', income_level, 'slider_setting', pop_comp_subset, cases[0], data_paths[0])
 
     # 'pv_participating': 'Rooftop Solar',
     # 'DER_participating'
@@ -903,6 +910,10 @@ def customer_cfs_delta(cases, data_paths, metadata_file, metadata_path = None):
     plot_customer_pdf('cust_participating', participation, 'peak_load_reduction_pct', pop_subset, cases[1], data_paths[1])
     plot_customer_pdf('cust_participating', participation, 'bill_savings_pct', pop_subset, cases[1],
                       data_paths[1])
+
+    # Plot residential customer savings by income
+    plot_customer_pdf('income_level', income_level, 'peak_load_reduction_pct', pop_subset, cases[1], data_paths[1])
+    plot_customer_pdf('income_level', income_level, 'bill_savings_pct', pop_subset, cases[1], data_paths[1])
 
     # Plot annual bills by heating type
     plot_customer_pdf('heating', heating, 'Bills', pop_subset, cases[1], data_paths[1])
@@ -986,6 +997,8 @@ def plot_customer_pdf(attribute, variables, metric, pop_df, case, output_path):
                    'net_energy_purchased_pct': 'Annual Energy Savings (%)',
                    'peak_load_reduction': 'Annual Peak Load (kW)',
                    'peak_load_reduction_pct': 'Annual Peak Load Reduction (%)',
+                   'sqft': 'Building Size (sq-ft)',
+                   'slider_setting': 'Slider Setting (-)',
                    'Bills': 'Annual Electricity Bill ($)',
                    'PeakLoad': 'Annual Peak Load (kW)',
                    'EnergyPurchased': 'Energy Purchased (kw-hrs/year)'}
@@ -997,6 +1010,7 @@ def plot_customer_pdf(attribute, variables, metric, pop_df, case, output_path):
                    'heating': 'Heating Type',
                    'Building Type': 'Building Type',
                    'pv_participating': 'Rooftop Solar',
+                   'income_level': 'Income Level',
                    'DER_participating': 'DER Participation'}
 
     if metric in ['bill_savings_pct', 'net_energy_cost_savings_pct']:
@@ -1019,6 +1033,12 @@ def plot_customer_pdf(attribute, variables, metric, pop_df, case, output_path):
     elif metric in ['PeakLoad']:
         x_low = 0
         x_high = 50
+    elif metric in ['sqft']:
+        x_low = 0
+        x_high = 5000
+    elif metric in ['slider_setting']:
+        x_low = 0
+        x_high = 1
     else:
         x_low = -50
         x_high = 50

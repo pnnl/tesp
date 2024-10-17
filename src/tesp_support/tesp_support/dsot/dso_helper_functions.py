@@ -334,7 +334,7 @@ def get_customer_df(dso_range, case_path, metadata_path, rate_scenario):
     return customer_df
 
 
-def get_mean_for_diff_groups(df, main_variables, variables_combs, cfs_start_position=24):
+def get_mean_for_diff_groups(df, main_variables, variables_combs, cfs_start_position=25):
     customer_mean_df = pd.DataFrame([])
     customer_mean_df['all'] = df.iloc[:, cfs_start_position:].mean()
     for main_variable in main_variables:
