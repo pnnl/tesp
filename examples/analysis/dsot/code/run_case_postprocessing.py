@@ -239,12 +239,13 @@ def post_process():
     if forecast_plots:
         for day_num in day_range:
             processlist.append([Daily_market_plot, day_num])
-    
-    if create_baseline_demand_profiles and (rate_scenario == "TOU"):
+
+    #market=false is "Flat"
+    if create_baseline_demand_profiles and (rate_scenario == "Flat" or rate_scenario == "TOU"):
         for dso_num in dso_range:
             processlist.append([determine_baseline_demand_profiles, dso_num])
-
-    if create_demand_profiles and (rate_scenario == "DNR"):
+    # "" = DSOT
+    if create_demand_profiles and (rate_scenario == "" or rate_scenario == "RND"):
         for dso_num in dso_range:
             processlist.append([determine_demand_profiles, dso_num])
 
