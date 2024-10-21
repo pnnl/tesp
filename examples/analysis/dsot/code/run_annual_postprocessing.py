@@ -57,12 +57,13 @@ discard_end_days = 1  # Number of days at the end of the simulation to be discar
 flat_path = 'C:/Users/reev057/DSOT-DATA/Rates/Flat'
 DSOT_path = 'C:/Users/reev057/DSOT-DATA/Rates/DSOT'
 TOU_path = 'C:/Users/reev057/DSOT-DATA/Rates/TOU'
-transactive_path = 'C:/Users/reev057/DSOT-DATA/Rates/DSOT'
-subscription_path = None
+transactive_path = 'C:/Users/reev057/DSOT-DATA/Rates/Transactive'
+subscription_path = 'C:/Users/reev057/DSOT-DATA/Rates/Subscription'
 
 system_case = "8_hi_system_case_config.json"
 base_case_path = flat_path
-case_path = transactive_path
+demand_case_path = TOU_path
+case_path = subscription_path
 
 
 # # Load System Case Config
@@ -274,6 +275,7 @@ if retail:
         trans_cost_balance_method = None
         DSO_Cash_Flows, DSO_Revenues_and_Energy_Sales, tariff, surplus = rm.DSO_rate_making(
             case_path,
+            demand_case_path,
             dso_num,
             GLD_metadata,
             required_revenue,

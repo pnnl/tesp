@@ -963,6 +963,7 @@ def calc_cust_bill(metadata, meter_df, trans_df, energy_sum_df, tariff, dso_num,
 
 def calculate_consumer_bills(
     case_path,
+    base_path,
     metadata,
     meter_df,
     trans_df,
@@ -977,6 +978,7 @@ def calculate_consumer_bills(
     the Rates Analysis work.
     Args:
         case_path (str): A string specifying the directory path of the case being analyzed.
+        base_path (str): A string specifying the directory path of the reference case (containing baseline demand).
         metadata (dict): A dictionary containing the metadata structure of the DSO.
         meter_df (pandas.DataFrame): DataFrame containing consumers' consumption information.
         trans_df (pandas.DataFrame): DataFrame containing consumers' transactive consumption
@@ -1124,8 +1126,13 @@ def calculate_consumer_bills(
             # profile and the month's hourly demand profile
             bl_demand_df = pd.read_hdf(
                 os.path.join(
-                    case_path,
-                    [p for p in os.listdir(case_path) if p[6:9] == month_map[m]][0],
+                    base_path,
+                    [
+                        p
+                        for p in os.listdir(case_path)
+                        if len(p) > 10
+                        if p[7:9] == month_map[m]
+                    ][0],
                     "Substation_" + dso_num,
                     "Substation_" + dso_num + "_baseline_demand_by_meter.h5",
                 ),
@@ -1135,7 +1142,12 @@ def calculate_consumer_bills(
             demand_df = pd.read_hdf(
                 os.path.join(
                     case_path,
-                    [p for p in os.listdir(case_path) if p[6:9] == month_map[m]][0],
+                    [
+                        p
+                        for p in os.listdir(case_path)
+                        if len(p) > 10
+                        if p[7:9] == month_map[m]
+                    ][0],
                     "Substation_" + dso_num,
                     "Substation_" + dso_num + "_demand_by_meter.h5",
                 ),
@@ -1231,7 +1243,6 @@ def calculate_consumer_bills(
                 elif rate_scenario == "subscription":
                     # Calculate the consumer's net deviation charge under the
                     # subscription rate
-                    # TODO: Incorporate dynamic capital cost recovery price
                     bill_df.loc[(each, "subscription_net_deviation_charge"), m] = sum(
                         da_lmp_stats.loc[str(t), "da_lmp" + dso_num]
                         * (demand_df.loc[t, each] - bl_demand_df.loc[t, each])
@@ -1330,7 +1341,7 @@ def calculate_consumer_bills(
 
                     # Calculate the consumer's total bill under the subscription tariff
                     bill_df.loc[(each, "subscription_total_charge"), m] = (
-                        bill_df.loc[(each, "subscription_net_deviation_charge")]
+                        bill_df.loc[(each, "subscription_net_deviation_charge"), m]
                         + bill_df.loc[(each, "subscription_energy_charge"), m]
                         + bill_df.loc[(each, "subscription_demand_charge"), m]
                         + bill_df.loc[(each, "subscription_fixed_charge"), m]
@@ -1394,21 +1405,6 @@ def calculate_consumer_bills(
                     bill_df.loc[(each, "transactive_RT_energy_charge"), m] = (
                         trans_df.loc[(each, "RT_cost"), m] * trans_retail_scale
                     )
-
-                    # Calculate the consumer's dynamic capacity charges under the
-                    # transactive tariff
-                    # TODO: Revisit later to split the DA and RT LMPs and dynamic 
-                    # capacity charges
-                    """
-                    bill_df.loc[(each, "transactive_DA_capacity_charge"), m] = (
-                        trans_df.loc[(each, "DA_capacity_charge"), m]
-                        * trans_retail_scale
-                    )
-                    bill_df.loc[(each, "transactive_RT_capacity_cahrge"), m] = (
-                        trans_df.loc[(each, "RT_capacity_charge"), m]
-                        * trans_retail_scale
-                    )
-                    """
 
                     # Calculate the consumer's fixed charge under the transactive tariff
                     bill_df.loc[
@@ -1711,6 +1707,7 @@ def calculate_tier_credit(dso_num, tariff_class, tariff, total_energy):
 
 def calculate_tariff_prices(
     case_path,
+    base_case_path,
     metadata,
     meter_df,
     trans_df,
@@ -1727,6 +1724,7 @@ def calculate_tariff_prices(
     DSO's expenses.
     Args:
         case_path (str): A string specifying the directory path of the case being analyzed.
+        base_case_path (str): A string specifying the directory path of the base_case being used as a reference.
         metadata (dict): A dictionary containing the metadata structure of the DSO.
         meter_df (pandas.DataFrame): DataFrame containing consumers' consumption information.
         trans_df (pandas.DataFrame): DataFrame containing consumers' transactive consumption
@@ -2165,34 +2163,36 @@ def calculate_tariff_prices(
         total_tier_credit_sub_rc = {s: 0 for s in seasons_dict}
         total_tier_credit_sub_i = {s: 0 for s in seasons_dict}
 
-        # Iterate through each consumer as if they are all participating under 
-        # the subscription rate
+        # Iterate through each seasons that makes up separate TOU rates for the base subscription
         for s in seasons_dict:
             # Load in and combine the hourly baseline demand profiles and the hourly 
             # demand profiles for each month in the season being considered
             for m in seasons_dict[s]:
                 if m == seasons_dict[s][0]:
-                    bl_demand_df[s] = pd.read_df(
+                    bl_demand_df[s] = pd.read_hdf(
                         os.path.join(
-                            case_path,
+                            base_case_path,
                             [
                                 p
                                 for p in os.listdir(case_path)
-                                if p[6:9] == month_map[m]
+                                if len(p)>10
+                                    if p[7:9] == month_map[m]
                             ][0],
                             "Substation_" + dso_num,
                             "Substation_" + dso_num + "_baseline_demand_by_meter.h5",
                         ),
                         key="demand",
                         mode="r",
+                        # format="table",
                     )
-                    demand_df[s] = pd.read_df(
+                    demand_df[s] = pd.read_hdf(
                         os.path.join(
                             case_path,
                             [
                                 p
                                 for p in os.listdir(case_path)
-                                if p[6:9] == month_map[m]
+                                if len(p)>10
+                                    if p[7:9] == month_map[m]
                             ][0],
                             "Substation_" + dso_num,
                             "Substation_" + dso_num + "_demand_by_meter.h5",
@@ -2204,13 +2204,14 @@ def calculate_tariff_prices(
                     bl_demand_df[s] = pd.concat(
                         [
                             bl_demand_df[s],
-                            pd.read_df(
+                            pd.read_hdf(
                                 os.path.join(
-                                    case_path,
+                                    base_case_path,
                                     [
                                         p
                                         for p in os.listdir(case_path)
-                                        if p[6:9] == month_map[m]
+                                        if len(p) > 10
+                                            if p[7:9] == month_map[m]
                                     ][0],
                                     "Substation_" + dso_num,
                                     "Substation_"
@@ -2225,13 +2226,14 @@ def calculate_tariff_prices(
                     demand_df[s] = pd.concat(
                         [
                             demand_df[s],
-                            pd.read_df(
+                            pd.read_hdf(
                                 os.path.join(
                                     case_path,
                                     [
                                         p
                                         for p in os.listdir(case_path)
-                                        if p[6:9] == month_map[m]
+                                        if len(p) > 10
+                                            if p[7:9] == month_map[m]
                                     ][0],
                                     "Substation_" + dso_num,
                                     "Substation_" + dso_num + "_demand_by_meter.h5",
@@ -2242,7 +2244,7 @@ def calculate_tariff_prices(
                         ]
                     )
 
-            # Calculate the necessary rate components for the metered consumers
+            # For each customer calculate the necessary rate components for the metered consumers
             for each in metadata["billingmeters"]:
                 if metadata["billingmeters"][each]["tariff_class"] in [
                     "residential",
@@ -2320,10 +2322,10 @@ def calculate_tariff_prices(
                     # Update the total tier credit for each consumer during each season,
                     # if the consumer qualifies
                     if metadata["billingmeters"][each]["tariff_class"] in [
-                        # "residential",
+                        "residential",
                         "commercial",
                     ]:
-                        total_tier_credit_tou_rc[s] += sum(
+                        total_tier_credit_sub_rc[s] += sum(
                             calculate_tier_credit(
                                 dso_num,
                                 metadata["billingmeters"][each]["tariff_class"],
@@ -2504,7 +2506,7 @@ def calculate_tariff_prices(
                         # Update the total revenue from energy charges for subscription
                         # consumers durng each season
                         rev_energy_charge_sub[s] += sum(
-                            prices["subscription_rate_" * s]
+                            prices["subscription_rate_" + s]
                             * tou_params["DSO_" + dso_num][seasons_dict[s][0]][
                                 "periods"
                             ][k]["ratio"]
@@ -3243,6 +3245,7 @@ def get_total_dso_costs(case_path, dso_num, rate_scenario, seasons_dict=None):
 
 def DSO_rate_making(
         case,
+        base_case,
         dso_num,
         metadata,
         dso_expenses,
@@ -3258,6 +3261,7 @@ def DSO_rate_making(
     ensure revenue matches expenses.  Saves meter and bill dataframes to a hdf5 file.
     Args:
         case (str): directory path for the case to be analyzed
+        base_case (str): directory path for the base case containing baseline demand values
         dso_num (str): number of the DSO folder to be opened
         metadata:
         dso_expenses (TBD): dso expenses that need to be matched by customer revenue
@@ -3439,6 +3443,7 @@ def DSO_rate_making(
         # DSO's expenses in the Rate Scenario analysis
         prices = calculate_tariff_prices(
             case,
+            base_case,
             metadata,
             year_meter_df,
             year_trans_df,
@@ -3472,9 +3477,9 @@ def DSO_rate_making(
             # Update the variables
             tariff["DSO_" + str(dso_num)]["flat_rate"] = prices["flat_rate"]
             tou_params = load_json(case, "time_of_use_parameters.json")
-            for m in tou_params["DSO_" + dso_num].keys():
-                tou_params["DSO_" + dso_num][m]["price"] = prices[
-                    "subscription_rate_" + tou_params["DSO_" + dso_num][m]["season"]
+            for m in tou_params["DSO_" + str(dso_num)].keys():
+                tou_params["DSO_" + str(dso_num)][m]["price"] = prices[
+                    "subscription_rate_" + tou_params["DSO_" + str(dso_num)][m]["season"]
                 ]
 
             # Store the variables in the appropriate files, if not done later
@@ -3501,6 +3506,7 @@ def DSO_rate_making(
         # Calculate consumer bills in the Rate Scenario analysis
         cust_bill_df, billsum_df = calculate_consumer_bills(
             case,
+            base_case,
             metadata,
             year_meter_df,
             year_trans_df,
@@ -3871,7 +3877,7 @@ def DSO_rate_making(
             for m in billsum_df:
                 if m != "sum":
                     DSO_Revenues_and_Energy_Sales["EnergySoldMonthly"][m] += billsum_df.loc[("total", "subscription_energy_purchased"), m] / 1000
-            DSO_Revenues_and_Energy_Sales["RequiredRevenue"] += billsum_df.loc[("total", "subscription_total_charge"), "sum"] / 1000, # Energy charges in $k
+            DSO_Revenues_and_Energy_Sales["RequiredRevenue"] += billsum_df.loc[("total", "subscription_total_charge"), "sum"] / 1000 # Energy charges in $k
             DSO_Revenues_and_Energy_Sales["EffectiveCostRetailEnergy"] = (
                 billsum_df.loc[("total", "flat_total_charge"), "sum"]
                 + billsum_df.loc[("total", "subscription_total_charge"), "sum"]
@@ -4037,8 +4043,27 @@ def get_cust_bill(cust, bill_df, bill_metadata, energy_df, rate_scenario):
                               bill_df.loc[(cust, 'tou_energy_purchased'), 'sum']
         })
 
-    # elif rate_scenario == "subscription":
-    #
+    elif rate_scenario == "subscription":
+        customer_annual_bill.update({
+            'BillsSubscription': {
+                'PurchasesSub': {
+                    'EnergySub': bill_df.loc[(cust, 'subscription_energy_charge'), 'sum'],
+                    'EnergyDeviationSub': bill_df.loc[(cust, 'subscription_net_deviation_charge'), 'sum']
+                },
+                'DemandChargesSub': bill_df.loc[(cust, 'subscription_demand_charge'), 'sum'],
+                'ConnChargesSub': bill_df.loc[(cust, 'subscription_fixed_charge'), 'sum'],
+                'TotalSub': bill_df.loc[(cust, 'subscription_total_charge'), 'sum'],
+            },
+            'BlendedRate': (bill_df.loc[(cust, 'flat_average_price'), 'sum'] *
+                           bill_df.loc[(cust, 'flat_energy_purchased'), 'sum'] +
+                           bill_df.loc[(cust, 'subscription_average_price'), 'sum'] *
+                            bill_df.loc[(cust, 'subscription_energy_purchased'), 'sum'])
+                            / (bill_df.loc[(cust, 'flat_energy_purchased'), 'sum'] +
+                              bill_df.loc[(cust, 'subscription_energy_purchased'), 'sum']),
+            'EnergyQuantity': bill_df.loc[(cust, 'flat_energy_purchased'), 'sum'] + bill_df.loc[
+                (cust, 'subscription_energy_purchased'), 'sum']
+        })
+
     # TODO: Blended rate needs to be weighted and corrected by quantity.
     elif rate_scenario == "transactive":
         customer_annual_bill.update({

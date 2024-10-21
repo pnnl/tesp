@@ -184,6 +184,9 @@ def customer_CFS(GLD_metadata,
             Bills = customer_bill['BillsFix']['TotalFix'] + customer_bill['BillsTransactive']['TotalDyn']
         elif rate_scenario == "dsot":
             Bills = customer_bill['BillsFix']['TotalFix'] + customer_bill['BillsTransactive']['TotalDyn']
+        elif rate_scenario == "subscription":
+            Bills = customer_bill['BillsFix']['TotalFix'] + customer_bill['BillsSubscription']['TotalSub']
+
         # fed_corporate_income_tax = metadata['general']['fed_corporate_income_tax']
         # state_income_tax = metadata['general']['state_income_tax']
         # Depreciation = 0 # Please retain this field in the Customer CFS but
