@@ -49,6 +49,9 @@ wholesale = False
 # Only set to True if you have already run cfs once and want to update billing to match expenses.
 squareup_revenue = False
 
+# Set True if you want to automatically determine start and end days of month (versus manually set them).
+determine_days = False
+
 first_data_day = 4  # First day in the simulation that data to be analyzed. Run-in days before this are discarded.
 discard_end_days = 1  # Number of days at the end of the simulation to be discarded
 
@@ -122,20 +125,36 @@ if case_path == subscription_path:
 
 
 #  Month, path of month data, first day of real data, last day of real data + 1
-month_def = [
-    ['Jan', case_path + '/8_2016_01_pv_bt_fl_ev', 3, 31],
-    ['Feb', case_path + '/8_2016_02_pv_bt_fl_ev', 3, 31],
-    ['March', case_path + '/8_2016_03_pv_bt_fl_ev', 3, 34],
-    ['April', case_path + '/8_2016_04_pv_bt_fl_ev', 3, 33],
-    ['May', case_path + '/8_2016_05_pv_bt_fl_ev', 3, 34],
-    ['June', case_path + '/8_2016_06_pv_bt_fl_ev', 3, 33],
-    ['July', case_path + '/8_2016_07_pv_bt_fl_ev', 3, 34],
-    ['August', case_path + '/8_2016_08_pv_bt_fl_ev', 3, 34],
-    ['Sept', case_path + '/8_2016_09_pv_bt_fl_ev', 3, 33],
-    ['Oct', case_path + '/8_2016_10_pv_bt_fl_ev', 3, 34],
-    ['Nov', case_path + '/8_2016_11_pv_bt_fl_ev', 3, 33],
-    ['Dec', case_path + '/8_2016_12_pv_bt_fl_ev', 3, 34]
-]
+if case_path == TOU_path:
+    month_def = [
+        ['Jan', case_path + '/8_2016_01_pv_bt_fl_ev', 4, 31],
+        ['Feb', case_path + '/8_2016_02_pv_bt_fl_ev', 4, 32],
+        ['March', case_path + '/8_2016_03_pv_bt_fl_ev', 5, 33],   #Start and end a day later due to sim issues
+        ['April', case_path + '/8_2016_04_pv_bt_fl_ev', 6, 35],   #Start and end two days later due to sim issues
+        ['May', case_path + '/8_2016_05_pv_bt_fl_ev', 4, 33],
+        ['June', case_path + '/8_2016_06_pv_bt_fl_ev', 4, 33],
+        ['July', case_path + '/8_2016_07_pv_bt_fl_ev', 4, 33],
+        ['August', case_path + '/8_2016_08_pv_bt_fl_ev', 4, 34],
+        ['Sept', case_path + '/8_2016_09_pv_bt_fl_ev', 4, 33],
+        ['Oct', case_path + '/8_2016_10_pv_bt_fl_ev', 4, 33],
+        ['Nov', case_path + '/8_2016_11_pv_bt_fl_ev', 4, 33],
+        ['Dec', case_path + '/8_2016_12_pv_bt_fl_ev', 4, 31]
+    ]
+else:
+    month_def = [
+        ['Jan', case_path + '/8_2016_01_pv_bt_fl_ev', 4, 31],
+        ['Feb', case_path + '/8_2016_02_pv_bt_fl_ev', 4, 32],
+        ['March', case_path + '/8_2016_03_pv_bt_fl_ev', 4, 32],
+        # ['April', case_path + '/8_2016_04_pv_bt_fl_ev', 4, 33],
+        # ['May', case_path + '/8_2016_05_pv_bt_fl_ev', 4, 33],
+        ['June', case_path + '/8_2016_06_pv_bt_fl_ev', 4, 33],
+        ['July', case_path + '/8_2016_07_pv_bt_fl_ev', 4, 33],
+        ['August', case_path + '/8_2016_08_pv_bt_fl_ev', 4, 34],
+        ['Sept', case_path + '/8_2016_09_pv_bt_fl_ev', 4, 33],
+        ['Oct', case_path + '/8_2016_10_pv_bt_fl_ev', 4, 33]
+        # ['Nov', case_path + '/8_2016_11_pv_bt_fl_ev', 4, 33],
+        # ['Dec', case_path + '/8_2016_12_pv_bt_fl_ev', 4, 31]
+    ]
 
 
 # Verify and implement actual number of simulation days.
@@ -150,8 +169,11 @@ for month in month_def:
 
     # Start at day 'n' after first few days are discarded.  
     # Assumes that simulation runs to end of month with 'm' extra days at the end.
-    month[2] = first_data_day
-    month[3] = num_sim_days - discard_end_days + 1
+    if determine_days:
+        month[2] = first_data_day
+        month[3] = num_sim_days - discard_end_days + 1
+    month.append(generate_case_config['StartTime'])
+    month.append(generate_case_config['EndTime'])
     total_sim_days += month[3] - month[2]
 
 total_day_range = range(1, total_sim_days + 1)

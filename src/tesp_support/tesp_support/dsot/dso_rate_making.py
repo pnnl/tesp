@@ -2470,7 +2470,7 @@ def calculate_tariff_prices(
                 sf
                 * total_weighted_consumption_sub_rc[s]
                     + total_weighted_consumption_sub_i[s]
-                )
+            )
 
         # Initialize some of the closed-form solution components
         total_consumption_flat_rc = 0
