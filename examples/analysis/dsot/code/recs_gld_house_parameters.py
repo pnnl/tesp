@@ -1,10 +1,13 @@
 import json
 import math
+import os
 import warnings
 
 import numpy as np
 import pandas as pd
-import os
+
+from tesp_support.api.data import feeders_path
+
 
 def bin_size_check(sample_data, recs_data, state, housing_dens, inc_lev, binsize, climate_zone, income_str):
     og_bin_size = len(sample_data)
@@ -486,10 +489,14 @@ def get_residential_metadata(metadata, sample_data, state, hsdens_str, inc_lev, 
     return metadata, total_dict
 
 
-def get_RECS_jsons(recs_data_file, dsot_metadata_file, output_file_resmeta, output_file_hvacsp,
-                   sample={'state': [], 'housing_density': [], 'income_level': []}, bin_size_thres=100, climate_zone=None,
-                   wh_shift=0):
+def get_RECS_jsons(bldg_in, bldg_out, hvac_out,
+                   sample=None, bin_size_thres=100, climate_zone=None, wh_shift=0.0):
+
+
     # Read RECS data file
+    if sample is None:
+        sample = {'state': [], 'housing_density': [], 'income_level': []}
+    recs_data_file = os.path.join(feeders_path,'RECSwIncomeLvl.csv')
     recs = pd.read_csv(recs_data_file)
     # Use the right income level data from RECS
     inc_str = 'Income_cat2'
@@ -497,13 +504,13 @@ def get_RECS_jsons(recs_data_file, dsot_metadata_file, output_file_resmeta, outp
     order = {key: i for i, key in enumerate(['Low', 'Middle', 'Upper'])}
     sample['income_level'] = sorted(sample['income_level'], key=lambda d: order[d])
     # Read DSOT_residential_parameters_metadata.json
-    with open(dsot_metadata_file) as json_file:
-        dsot_metadata = json.load(json_file)
+    with open(bldg_in, "r") as infile:
+        bldg_metadata = json.load(infile)
 
     # RECS Codebook for housing density
     housing_density_dict = {'C': 'Suburban', 'R': 'Rural', 'U': 'Urban', 'No_DSO_Type': 'No_DSO_Type'}
 
-    # Define probability distribtutions based on RECS data
+    # Define probability distributions based on RECS data
     # Sample data based on inputted state, housing density, and income level
     res_metadata = {
         'income_level': {}, 'housing_type': {}, 'housing_vintage': {}, 'num_stories': {}, 'floor_area': {},
@@ -563,25 +570,23 @@ def get_RECS_jsons(recs_data_file, dsot_metadata_file, output_file_resmeta, outp
                 # Check if bin size is less than threshold.
                 # If it is, use census region, then climate zone, and then finally widen income level input if needed.
                 sample_df, total = bin_size_check(sample_df, recs, st, hd, il, bin_size_thres, climate_zone, inc_str)
-
-                res_metadata, total_dict = get_residential_metadata(res_metadata, sample_df, st, hd_str, il, total,
-                                                                    wh_shift)
+                res_metadata, total_dict = get_residential_metadata(res_metadata, sample_df, st, hd_str, il, total, wh_shift)
                 hvac_setpoints = get_hvac_setpoints(hvac_setpoints, sample_df, st, hd_str, il, total)
-    # Add distributions from DSO+T
-    # metadata['floor_area'] = dsot_metadata['floor_area']
-    res_metadata['aspect_ratio'] = dsot_metadata['aspect_ratio']
-    # metadata['mobile_home_single_wide'] = dsot_metadata['mobile_home_single_wide']
-    res_metadata['window_wall_ratio'] = dsot_metadata['window_wall_ratio']
-    res_metadata['water_heater_tank_size'] = dsot_metadata['water_heater_tank_size']
-    res_metadata['hvac_oversize'] = dsot_metadata['hvac_oversize']
-    res_metadata['window_shading'] = dsot_metadata['window_shading']
-    res_metadata['COP_average'] = dsot_metadata['COP_average']
+
+    # Add distributions from bldg_in file
+    res_metadata['aspect_ratio'] = bldg_metadata['aspect_ratio']
+    res_metadata['window_wall_ratio'] = bldg_metadata['window_wall_ratio']
+    res_metadata['water_heater_tank_size'] = bldg_metadata['water_heater_tank_size']
+    res_metadata['hvac_oversize'] = bldg_metadata['hvac_oversize']
+    res_metadata['window_shading'] = bldg_metadata['window_shading']
+    res_metadata['COP_average'] = bldg_metadata['COP_average']
     res_metadata['COP_average']['2016'] = 3.9359
     res_metadata['COP_average']['2017'] = 3.9359
     res_metadata['COP_average']['2018'] = 3.9359
     res_metadata['COP_average']['2019'] = 3.9359
     res_metadata['COP_average']['2020'] = 3.9359
-    res_metadata['GLD_residential_house_classes'] = dsot_metadata['GLD_residential_house_classes']
+    res_metadata['GLD_residential_house_classes'] = bldg_metadata['GLD_residential_house_classes']
+
     # Add income level dependent solar, storage, and ev percentages
     res_metadata['solar_percentage'] = {}
     res_metadata['solar_percentage']['Low'] = 0.12
@@ -596,11 +601,10 @@ def get_RECS_jsons(recs_data_file, dsot_metadata_file, output_file_resmeta, outp
     res_metadata['ev_percentage']['Middle'] = 0.3
     res_metadata['ev_percentage']['Upper'] = 0.6
 
-    with open(output_file_resmeta, 'w') as outfile:
-        json.dump(res_metadata, outfile, indent=4)
-    with open(output_file_hvacsp, 'w') as outfile:
-        json.dump(hvac_setpoints, outfile, indent=4)
-
+    with open(bldg_out, 'w') as outfile:
+        json.dump(res_metadata, outfile, indent=2)
+    with open(hvac_out, 'w') as outfile:
+        json.dump(hvac_setpoints, outfile, indent=2)
 
 def get_hvac_setpoints(metadata, sample_data, state, hsdens_str, inc_lev, total):
     """
@@ -620,15 +624,6 @@ def get_hvac_setpoints(metadata, sample_data, state, hsdens_str, inc_lev, total)
     occ_cool_str = 'TEMPHOMEAC'
     unocc_cool_str = 'TEMPGONEAC'
     night_cool_str = 'TEMPNITEAC'
-    gld_residential_feeder.py
-    1 file changed
-    +273
-    -244
-    lines changed
-    ‎examples/capabilities/uvm/gld_residential_feeder.py
-    +273
-    -244
-    
     occ_heat_str = 'TEMPHOME'
     unocc_heat_str = 'TEMPGONE'
     night_heat_str = 'TEMPNITE'
@@ -724,15 +719,22 @@ def get_hvac_setpoints(metadata, sample_data, state, hsdens_str, inc_lev, total)
     return metadata
 
 
-if __name__ == "__main__":
+def _test():
     # We need to load in the master metadata (*system_case_config.json)
-    mastercase = "8_hi_system_case_config"
-    with open(mastercase + '.json', 'r', encoding='utf-8') as json_file:
+    case = "8_hi_system_case_config"
+    with open(case + '.json', 'r', encoding='utf-8') as json_file:
         sys_config = json.load(json_file)
+
     get_RECS_jsons(
-        '../../../../data/feeders/RECSwIncomeLvl.csv',
-        os.path.join("../data/", sys_config["dsoResBldgFile"]),
-        os.path.join("../data/", sys_config["dsoRECSResBldgFile"]),
-        os.path.join("../data/", sys_config["hvacRECSSetPoint"]),
-        {'state': [sys_config["state"]], 'housing_density': [sys_config["housing_density"]], 'income_level': ['Middle', 'Upper', 'Low']},
+        os.path.join(sys_config["dataPath"], sys_config["dsoResBldgFile"]),
+        os.path.join(sys_config["dataPath"], sys_config["dsoRECSResBldgFile"]),
+        os.path.join(sys_config["dataPath"], sys_config["hvacRECSSetPoint"]),
+        sample={
+            'state': ["TX"],
+            'housing_density': ["No_DSO_Type"],
+            'income_level': ["Middle", "Upper", "Low"]
+        },
         bin_size_thres=100, climate_zone=None, wh_shift=0.1)
+
+if __name__ == "__main__":
+    _test()

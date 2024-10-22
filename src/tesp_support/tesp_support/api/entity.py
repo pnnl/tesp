@@ -3,7 +3,6 @@
 """
 """
 
-import json
 import pyjson5
 import sqlite3
 

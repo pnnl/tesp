@@ -16,16 +16,16 @@
     "case_name": "MyCase", // REQUIRED: a name for your case
     "substation_name": "MySub", // REQUIRED: a name for the substation
     // Metadata Files
-    "file_residential_meta": "./residential_metadata.json",
-    "file_commercial_meta": "./commercial_metadata.json",
-    "file_battery_meta": "./battery_metadata.json",
-    "file_ev_meta": "./ev_model_metadata.json",
-    "file_ev_driving_meta": "./ev_driving_metadata.csv",
+    "data_path": ".",
+    "file_residential_meta": "residential_metadata.json",
+    "file_commercial_meta": "commercial_metadata.json",
+    "file_battery_meta": "battery_metadata.json",
+    "file_ev_meta": "ev_model_metadata.json",
+    "file_ev_driving_meta": "ev_driving_metadata.csv",
 
     // RECS (Residential Energy Consumption Survey) Data
     "out_file_residential_meta": "RECS_residential_metadata.json", // If empty, will be generated using inputs below:
-    "file_recs_income_level": "./RECSwIncomeLvl.csv",
-    "out_file_hvac_set_point": "./hvac_setpt_RECS.json",
+    "out_file_hvac_set_point": "hvac_setpt_RECS.json",
     "sample": {
         "state": ["VT"],
         "housing_density": ["No_DSO_Type"],   //"No_DSO_Type", U, R, C possibly = S
@@ -119,7 +119,7 @@
         "attr": "P_out_inj",   // attribute being played
         "datatype": "double",  // the data type of the attribute
         "static": "False",     // static value if True, data = static value
-        "data": "./DSO_2_5_minute_dist_power.csv"  // if static value is false
+        "data": "DSO_2_5_minute_dist_power.csv"  // if static value is false
     },
     "solar_Q_player": null,
 

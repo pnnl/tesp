@@ -19,7 +19,7 @@ def generate_case(case_name, port, pv=None, bt=None, fl=None, ev=None):
 
     if split_case:
         while True:
-            for i in range(12):
+            for i in range(6, 9):
                 directory_name = str(case_start_year) + "_" + '{0:0>2}'.format(i+1)
                 ppc['caseName'] = node + "_" + directory_name
                 ppc['port'] = int(port + i)
@@ -40,8 +40,8 @@ def generate_case(case_name, port, pv=None, bt=None, fl=None, ev=None):
                     month = '12'
                 ppc['EndTime'] = str(year) + "-" + month + daytime
 
-                with open("generate_case_config.json", 'w') as outfile:
-                    json.dump(ppc, outfile, indent=2)
+                with open("generate_case_config.json", 'w') as out_file:
+                    json.dump(ppc, out_file, indent=2)
                 prep_case.prepare_case(int(node), "generate_case_config", pv=pv, bt=bt, fl=fl, ev=ev)
 
             if case_start_year == case_end_year:
