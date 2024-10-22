@@ -2459,19 +2459,18 @@ def calculate_tariff_prices(
                     rev_net_deviation_charge_sub_rc[s]
                     + rev_demand_charge_sub_rc[s]
                     + rev_fixed_charge_sub_rc[s]
-                    + total_tier_credit_sub_rc[s]
-                    + rev_net_deviation_charge_sub_i[s]
+                    + total_tier_credit_sub_rc[s])
+                -(
+                    rev_net_deviation_charge_sub_i[s]
                     + rev_demand_charge_sub_i[s]
                     + rev_fixed_charge_sub_i[s]
                     + total_tier_credit_sub_i[s]
                 )
             ) / (
                 sf
-                * (
-                    total_weighted_consumption_sub_rc[s]
+                * total_weighted_consumption_sub_rc[s]
                     + total_weighted_consumption_sub_i[s]
                 )
-            )
 
         # Initialize some of the closed-form solution components
         total_consumption_flat_rc = 0
@@ -2496,7 +2495,6 @@ def calculate_tariff_prices(
                     for s in seasons_dict:
                         # Update the total revenue from the net deviation charges for 
                         # subscription consumers during each season
-                        # TODO: Incorporate dynamic capital cost recovery price
                         rev_net_deviation_charge_sub[s] += sum(
                             da_lmp_stats.loc[str(t), "da_lmp" + dso_num]
                             * (demand_df[s].loc[t, each] - bl_demand_df[s].loc[t, each])
@@ -3853,7 +3851,7 @@ def DSO_rate_making(
                     "SubscriptionEnergyChargesRes": billsum_df.loc[("residential", "subscription_energy_charge"), "sum"] / 1000, # $k
                     "SubscriptionDemandChargesRes": billsum_df.loc[("residential", "subscription_demand_charge"), "sum"] / 1000, # $k
                     "SubscriptionFixedChargesRes": billsum_df.loc[("residential", "subscription_fixed_charge"), "sum"] / 1000, # $k
-                    "SubsctiptionNetDeviationChargesRes": billsum_df.loc[("residential", "subscription_net_deviation_charge"), "sum"] / 1000, # $k
+                    "SubscriptionNetDeviationChargesRes": billsum_df.loc[("residential", "subscription_net_deviation_charge"), "sum"] / 1000, # $k
                     "SubscriptionAveragePriceRes": billsum_df.loc[("residential", "subscription_average_price"), "sum"], # $/kW-hr
                 },
                 "SubscriptionSalesComm": {
@@ -3861,7 +3859,7 @@ def DSO_rate_making(
                     "SubscriptionEnergyChargesComm": billsum_df.loc[("commercial", "subscription_energy_charge"), "sum"] / 1000, # $k
                     "SubscriptionDemandChargesComm": billsum_df.loc[("commercial", "subscription_demand_charge"), "sum"] / 1000, # $k
                     "SubscriptionFixedChargesComm": billsum_df.loc[("commercial", "subscription_fixed_charge"), "sum"] / 1000, # $k
-                    "SubsctiptionNetDeviationChargesComm": billsum_df.loc[("commercial", "subscription_net_deviation_charge"), "sum"] / 1000, # $k
+                    "SubscriptionNetDeviationChargesComm": billsum_df.loc[("commercial", "subscription_net_deviation_charge"), "sum"] / 1000, # $k
                     "SubscriptionAveragePriceComm": billsum_df.loc[("commercial", "subscription_average_price"), "sum"], # $/kW-hr
                 },
                 "SubscriptionSalesInd": {
@@ -3869,7 +3867,7 @@ def DSO_rate_making(
                     "SubscriptionEnergyChargesInd": billsum_df.loc[("industrial", "subscription_energy_charge"), "sum"] / 1000, # $k
                     "SubscriptionDemandChargesInd": billsum_df.loc[("industrial", "subscription_demand_charge"), "sum"] / 1000, # $k
                     "SubscriptionFixedChargesInd": billsum_df.loc[("industrial", "subscription_fixed_charge"), "sum"] / 1000, # $k
-                    "SubsctiptionNetDeviationChargesInd": billsum_df.loc[("industrial", "subscription_net_deviation_charge"), "sum"] / 1000, # $k
+                    "SubscriptionNetDeviationChargesInd": billsum_df.loc[("industrial", "subscription_net_deviation_charge"), "sum"] / 1000, # $k
                     "SubscriptionAveragePriceInd": billsum_df.loc[("industrial", "subscription_average_price"), "sum"], # $/kW-hr
                 },
             }
@@ -4064,7 +4062,6 @@ def get_cust_bill(cust, bill_df, bill_metadata, energy_df, rate_scenario):
                 (cust, 'subscription_energy_purchased'), 'sum']
         })
 
-    # TODO: Blended rate needs to be weighted and corrected by quantity.
     elif rate_scenario == "transactive":
         customer_annual_bill.update({
             'BillsTransactive': {
