@@ -22,6 +22,86 @@ def rec_diff(d1, d2):
     return diff
 
 
+def customer_monthly_stats(cases, data_paths, output_path, dso_num):
+    """ Will plot key variables by month and duration and save to file.
+    Args:
+        cases (List[str]): names of the cases
+        data_paths (str): location of the data files to be used.
+        output_path (str): path of the location where output (plots, csv) should be saved
+        dso_num (str): bus number for LMP data to be plotted
+
+    Returns:
+        saves customer monthly bill plots to file
+        """
+
+    title_name = 'Customer Monthly Bills ($)'
+    upper_limit = 600
+    lower_limit = 0
+    units = '$'
+    months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+    for i in range(len(cases)):
+        case = cases[i]
+        data_path = data_paths[i]
+        var_df = pd.read_csv(data_path + '/cust_bill_dso_' + str(dso_num) + '_data.csv', index_col=[0])
+
+        var_df = var_df[var_df[var_df.columns[0]].str.contains('total')]
+
+        if case == cases[0]:
+            customers = list(set(var_df.index.tolist()))
+            # Create empty DataFrame for all consumer bills
+            meters = []
+            case_list = []
+            month_list = []
+            for meter in customers:
+                for case2 in cases:
+                    for month in months:
+                        meters.append(meter)
+                        case_list.append(case2)
+                        month_list.append(month)
+
+            results_df = pd.DataFrame(
+                index=[meters, case_list, month_list],
+                columns=['total bill', 'month', 'case', 'change'])
+
+        for customer in customers:
+            for month in months:
+                    results_df.loc[(customer, case, month), 'total bill'] = var_df.loc[(customer), month].sum()
+                    results_df.loc[(customer, case, month), 'month'] = month
+                    results_df.loc[(customer, case, month), 'case'] = case
+                    results_df.loc[(customer, case, month), 'change'] = results_df.loc[(customer, case, month), 'total bill'] \
+                                                                            - results_df.loc[(customer, cases[0], month), 'total bill']
+
+    plt.clf()
+
+    fig, axes = plt.subplots(2, 1, figsize=(11, 10), sharex=True)
+    pal = ['violet'] + ['lightgreen'] + ["gold"] + ['skyblue']
+    # pal = sns.color_palette("Paired")
+    pal = pal[0:len(cases)]
+
+    sns.boxplot(data=results_df, x='month', y='total bill', hue='case', ax=axes[0], palette=pal)
+
+    axes[0].set_ylabel(units)
+    axes[0].set_title('Variation in ' + title_name + ' over the Year')
+    axes[0].set_xlabel('')
+    axes[0].set_ylim(top=upper_limit, bottom=lower_limit)
+    handles, labels = axes[0].get_legend_handles_labels()
+    axes[0].legend(handles=handles, labels=labels, framealpha=1)
+
+    sns.boxplot(data=results_df, x='month', y='change', hue='case', ax=axes[1], palette=pal)
+    axes[1].set_ylabel(units)
+    axes[1].set_title('Change in ' + title_name + ' compared to ' + cases[0] + ' case')
+    axes[1].set_xlabel('Month')
+    axes[1].set_ylim(top=upper_limit / 6, bottom=-upper_limit / 6)
+    handles, labels = axes[1].get_legend_handles_labels()
+    axes[1].legend(handles=handles, labels=labels, framealpha=1)
+
+    plot_filename = datetime.now().strftime(
+        '%Y%m%d') + 'Case_Compare_Customer_Monthly_Bills.png'
+    file_path_fig = os.path.join(output_path, 'plots', plot_filename)
+    plt.savefig(file_path_fig, bbox_inches='tight')
+
+
 def plot_annual_stats(cases, data_paths, output_path, dso_num, variable):
     """ Will plot key variables by month and duration and save to file.
     Args:
@@ -32,7 +112,7 @@ def plot_annual_stats(cases, data_paths, output_path, dso_num, variable):
         variable (str): variable to be plotted: 'DA LMP', 'RT LMP', 'Total Load', 'Hybrid', 'Renewable Percent',
         'Curtailment Percent'
     Returns:
-        saves dso lmps plots to file
+        saves annual monthly stats plots to file
         """
 
     large_font = True
@@ -942,6 +1022,8 @@ def customer_cfs_delta(cases, data_paths, metadata_file, metadata_path = None):
     plot_customer_pdf('pv_participating', participation, 'net_energy_cost_savings_pct', pop_subset, cases[1], data_paths[1])
     plot_customer_pdf('pv_participating', participation, 'bill_savings_pct', pop_subset, cases[1], data_paths[1])
 
+    plot_customer_pdf('ev_participating', participation, 'net_energy_cost_savings_pct', pop_subset, cases[1], data_paths[1])
+    plot_customer_pdf('ev_participating', participation, 'bill_savings_pct', pop_subset, cases[1], data_paths[1])
 
     pop_subset = customer_cfs_df[customer_cfs_df['dso'] == 1]
     pop_subset = pop_subset[pop_subset['tariff_class'] == 'Residential']
@@ -1010,6 +1092,7 @@ def plot_customer_pdf(attribute, variables, metric, pop_df, case, output_path):
                    'heating': 'Heating Type',
                    'Building Type': 'Building Type',
                    'pv_participating': 'Rooftop Solar',
+                   'ev_participating': 'EV Ownership',
                    'income_level': 'Income Level',
                    'DER_participating': 'DER Participation'}
 
