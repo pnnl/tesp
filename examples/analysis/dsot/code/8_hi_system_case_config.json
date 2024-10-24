@@ -183,7 +183,7 @@
   "solver": "cbc",
   "numCore": 12,
   "market": false,
-  "howToConfigRate": "['', 'RND', 'TOU']",
+  "howToConfigRate": "['', 'Flat', 'RND', 'TOU']",
   "rate": "RND",
   "priceSensLoad": false,
   "noScale": true,
