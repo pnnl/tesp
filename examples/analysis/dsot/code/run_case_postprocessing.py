@@ -170,9 +170,6 @@ def post_process():
     # create_demand_profiles = False
 
     system_case = 'generate_case_config.json'
-    first_data_day = 4  # First day in the simulation that data to be analyzed. Run-in days before this are discarded.
-    discard_end_days = 1  # Number of days at the end of the simulation to be discarded
-
     # ------------ Select folder locations for different cases ---------
     # Load System Case Config
     config_path = os.getcwd()
@@ -206,6 +203,8 @@ def post_process():
     # Not sure how to find dso number that is running on a compute node
     DSOmetadata = pt.load_json(metadata_path, dso_metadata_file)
 
+    first_data_day = 4  # First day in the simulation that data to be analyzed. Run-in days before this are discarded.
+    discard_end_days = 1  # Number of days at the end of the simulation to be discarded
     num_sim_days = (datetime.strptime(case_config['EndTime'], '%Y-%m-%d %H:%M:%S') -
                     datetime.strptime(case_config['StartTime'], '%Y-%m-%d %H:%M:%S')).days
     month_dict = {1: "January", 2: "February", 3: "March", 4: "April", 5: "May", 6: "June", 7: "July",
@@ -215,8 +214,7 @@ def post_process():
         + timedelta(days=first_data_day)
     ).month
     month_name = month_dict[month_num]
-
-    day_range = range(first_data_day, num_sim_days - discard_end_days + 1)
+    day_range = list(range(first_data_day, num_sim_days - discard_end_days + 1))
 
     dso_range = []
     for DSO in DSOmetadata.keys():

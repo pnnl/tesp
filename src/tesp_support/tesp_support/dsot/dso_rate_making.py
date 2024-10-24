@@ -178,9 +178,9 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num,
         meter_data_df['date'] = meter_data_df['date'].str.replace('CST', '', regex=True)
         meter_data_df['date'] = pd.to_datetime(meter_data_df['date'])  #, infer_datetime_format=True)
         meter_data_df = meter_data_df.set_index(['time', 'name'])
-        RThourprice = RT_price_df[' LMP' + dso_num].resample('H').mean() / 1000
-        RThourcongestionprice = RT_retail_df['congestion_surcharge_RT'].resample('H').mean() / 1000
-        RThourcleartype = RT_retail_df['clear_type_rt'].resample('H').mean() / 1000
+        RThourprice = RT_price_df[' LMP' + dso_num].resample('h').mean() / 1000
+        RThourcongestionprice = RT_retail_df['congestion_surcharge_RT'].resample('h').mean() / 1000
+        RThourcleartype = RT_retail_df['clear_type_rt'].resample('h').mean() / 1000
         for each in metadata['billingmeters']:
             # Calculate standard customer energy consumption metrics used for all customers (including baseline)
             # temp = meter_data_df[meter_data_df['name'].str.contains(each)]
@@ -239,7 +239,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num,
                                                      trans_df.loc[(each, 'DA_Q'), day_name]
             # TODO:  Need to interpolate day ahead Q to make RT summation every
             #  5 minutes rather than one hour average
-            RTonehour = temp.set_index('date').resample('H').mean() / 1000
+            RTonehour = temp.set_index('date').resample('h').mean() / 1000
             trans_df.loc[(each, 'DA_cost'), day_name] = (temp2['total_cleared_quantity'] *
                                                          DA_price_df['da_lmp' + dso_num] / 1000).sum()
             Real_time_purchase = (RTonehour['real_power_avg'] - temp2['total_cleared_quantity']) * RThourprice
@@ -497,6 +497,20 @@ def create_demand_profiles_for_each_meter(
         freq="5min",
         inclusive="left",
     )
+    # For some reason had another day in Novemeber
+    if not (len(index) == len(demand_dict[meter])):
+        index = pd.date_range(
+            start=start_index,
+            end=(end_index + pd.Timedelta(days=1)),
+            freq="5min",
+            inclusive="left",
+        )
+
+    # for debug
+    # print(f"dso_num {dso_num}, index {len(index)}, demand_dict {len(demand_dict[meter])}", flush=True)
+    # print(f"dso_num {dso_num}, start-> {start_index}, end-> {end_index}", flush=True)
+    # for key, value in demand_dict.items():
+    #     print(f"dso_num {dso_num}, {key} {len(value)}", flush=True)
 
     # Create DataFrame from demand_dict
     demand_df = pd.DataFrame.from_dict(demand_dict)
@@ -1841,7 +1855,6 @@ def calculate_tariff_prices(
             - rev_fixed_charge_i
             - total_tier_credit_i
         ) / (sf * total_consumption_rc + total_consumption_i)
-
     elif rate_scenario == "time-of-use":
         # Load in necessary data for the time-of-use rate
         tou_params = load_json(case_path, "time_of_use_parameters.json")
@@ -3264,7 +3277,7 @@ def DSO_rate_making(
         metadata:
         dso_expenses (TBD): dso expenses that need to be matched by customer revenue
         tariff_path:
-        dso_scaling factor (float): multiplier on customer bills to reflect the total number of customers in the DSO
+        dso_scaling_factor (float): multiplier on customer bills to reflect the total number of customers in the DSO
         num_indust_cust (int): number of industrial customers
         case_name (str): name of the case ('MR-BAU', 'MR-Batt', 'MR-Flex', 'MR-BAU', 'MR-Batt', 'MR-Flex')
         iterate (Boolean): If True will iterate once to square up revenue.
@@ -3426,9 +3439,7 @@ def DSO_rate_making(
     else:
         # Specify the file path of the bulk industrial loads
         case_config = load_json(case, "generate_case_config.json")
-        industrial_file = os.path.join(
-            tariff_path, case_config["indLoad"][5].split("/")[-1]
-        )
+        industrial_file = os.path.join(tariff_path, case_config["indLoad"][5].split("/")[-1])
 
         # Check the value of the transactive cost balance method flag
         if trans_cost_balance_method not in [None, "volumetric", "fixed"]:
@@ -3982,7 +3993,6 @@ def DSO_rate_making(
 
     return DSO_Cash_Flows, DSO_Revenues_and_Energy_Sales, tariff, surplus
 
-
 def get_cust_bill(cust, bill_df, bill_metadata, energy_df, rate_scenario):
     """ Populates dictionary of individual customer's annual bill.
     Args:
@@ -4108,9 +4118,7 @@ def get_cust_bill(cust, bill_df, bill_metadata, energy_df, rate_scenario):
 
     # ----------------------   MAIN  ------------------------
 
-
-if __name__ == '__main__':
-
+def _testing():
     '''
     Example of creating energy statistics and bills for each customer (GLD meter) and by customer class.
     '''
@@ -4175,7 +4183,7 @@ if __name__ == '__main__':
                                                                        str(day_num), 'retail_site')
                 tic()
                 meter_df, energysum_df = read_meters(metadata, month_def[i][1], GLD_prefix, str(dso_num),
-                                                     range(month_def[i][2], month_def[i][3]), dso_scaling_factor,
+                                                     list(range(month_def[i][2], month_def[i][3])), dso_scaling_factor,
                                                      metadata_path)
                 print('Meter reading complete: DSO ' + str(dso_num) + ', Month ' + month_def[i][0])
                 toc()
@@ -4208,7 +4216,7 @@ if __name__ == '__main__':
         print(customer_bill)
         print(surplus)
 
-#  Need to read-in scaling factors at DSO level to scale to correct number of buildings.
+# Need to read-in scaling factors at DSO level to scale to correct number of buildings.
 # Need separate function to calculate the aggregate industrial bill.
 # function to calculate transactive bill
 # Need function to read in cashflow (balance) sheets
@@ -4217,3 +4225,6 @@ if __name__ == '__main__':
 # add blended rate by customer class
 # Calculate load factor for each building and compare to ORNL data.
 # Calculate energy consumption by class and compare it to DSO meta-data file (both customer counts and energy consumption)
+
+if __name__ == '__main__':
+    _testing()

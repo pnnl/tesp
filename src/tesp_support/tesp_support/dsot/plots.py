@@ -343,7 +343,7 @@ def load_indust_data(indust_file, day_range):
 
     Args:
         indust_file (str): path and filename where the industrial csv load lives
-        day_range (range): range of simulation days for data to be returned
+        day_range (list): range of simulation days for data to be returned
     Returns:
         data_df: dataframe of industrial loads per DSO bus
     """
