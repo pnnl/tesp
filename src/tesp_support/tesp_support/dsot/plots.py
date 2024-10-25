@@ -2631,8 +2631,15 @@ def dso_lmp_stats(month_list, output_path, renew_forecast_file, dso_range):
 
     ames_lmps_df['NetLoad'] = ames_lmps_df[' TotalLoad'] - ames_lmps_df[' TotRenGen']
     lmp_cols = [col for col in ames_lmps_df.columns if 'LMP' in col]
-    cols = [' TotalLoad', ' TotalGen', 'NetLoad'] + lmp_cols
+    cols = [' TotalLoad', ' TotalGen', 'NetLoad', ' Adder'] + lmp_cols
     # dso_lmps_df = dso_lmps_df.join(ames_lmps_df[cols])
+
+    # Check to see if Adder was used (for example in Rob and Don method) - if so correct LMPs - e.g. remove adder).
+    if any(ames_lmps_df.columns.str.contains('Adder')):
+        for column in ames_lmps_df.columns:
+            if 'LMP' in column:
+                ames_lmps_df[column] = ames_lmps_df[column] - ames_lmps_df[' Adder']
+
     dso_lmps_df = pd.merge(dso_lmps_df, ames_lmps_df[cols], left_index=True, right_index=True)
     dso_lmps_df.to_csv(path_or_buf=output_path + '/Annual_RT_LMP_Load_data.csv')
     # Save out a multi-month (i.e. annual) opf file that can be used for generator plotting and statistics
@@ -2661,6 +2668,14 @@ def dso_lmp_stats(month_list, output_path, renew_forecast_file, dso_range):
 
     da_load_cols = [col for col in da_lmps_df.columns if 'da_q' in col]
     da_lmps_df[' TotalLoad'] = da_lmps_df[da_load_cols].sum(axis=1)
+
+    # Check to see if Adder was used (for example in Rob and Don method) - if so correct LMPs - e.g. remove adder).
+    if any(ames_lmps_df.columns.str.contains('Adder')):
+        da_lmps_df[' Adder'] = ames_lmps_df[' Adder']
+        for column in da_lmps_df.columns:
+            if 'lmp' in column:
+                da_lmps_df[column] = da_lmps_df[column] - da_lmps_df[' Adder']
+
     # renew_forecast_file = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/data/mod_renew_forecast.csv'
     renew_forecast = pd.read_csv(renew_forecast_file, index_col='time', parse_dates=True)
     renew_forecast['TotalRenewGen'] = renew_forecast.sum(axis=1)
@@ -2668,7 +2683,7 @@ def dso_lmp_stats(month_list, output_path, renew_forecast_file, dso_range):
     da_lmps_df['NetLoad'] = da_lmps_df[' TotalLoad'] - da_lmps_df['TotalRenewGen']
     # narrow down to only modeled DSOs + system load data
     dso_cols = ['da_lmp'+str(dso) for dso in dso_range] + ['da_q'+str(dso) for dso in dso_range] \
-               + [' TotalLoad', 'TotalRenewGen', 'NetLoad']
+               + [' TotalLoad', 'TotalRenewGen', 'NetLoad', ' Adder']
     da_lmps_df[dso_cols].to_csv(path_or_buf=output_path + '/Annual_DA_LMP_Load_data.csv')
 
     # Determine Annual RT LMP Stats
