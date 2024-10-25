@@ -40,7 +40,7 @@ load_stats = False
 annual_lmps = False
 gen_stats = False
 train_lmps = False
-wholesale = False
+# wholesale = False
 # retail = False
 # customer_cfs = False
 # dso_cfs = False
@@ -66,7 +66,7 @@ subscription_path = 'C:/Users/reev057/DSOT-DATA/Rates/Subscription'
 system_case = "8_hi_system_case_config.json"
 base_case_path = flat_path
 demand_case_path = TOU_path
-case_path = subscription_path
+case_path = transactive_path
 
 
 # # Load System Case Config
@@ -145,15 +145,15 @@ else:
         ['Jan', case_path + '/8_2016_01_pv_bt_fl_ev', 4, 31],
         ['Feb', case_path + '/8_2016_02_pv_bt_fl_ev', 4, 32],
         ['March', case_path + '/8_2016_03_pv_bt_fl_ev', 4, 32],
-        # ['April', case_path + '/8_2016_04_pv_bt_fl_ev', 4, 33],
-        # ['May', case_path + '/8_2016_05_pv_bt_fl_ev', 4, 33],
+        ['April', case_path + '/8_2016_04_pv_bt_fl_ev', 4, 33],
+        ['May', case_path + '/8_2016_05_pv_bt_fl_ev', 4, 33],
         ['June', case_path + '/8_2016_06_pv_bt_fl_ev', 4, 33],
         ['July', case_path + '/8_2016_07_pv_bt_fl_ev', 4, 33],
         ['August', case_path + '/8_2016_08_pv_bt_fl_ev', 4, 34],
         ['Sept', case_path + '/8_2016_09_pv_bt_fl_ev', 4, 33],
-        ['Oct', case_path + '/8_2016_10_pv_bt_fl_ev', 4, 33]
-        # ['Nov', case_path + '/8_2016_11_pv_bt_fl_ev', 4, 33],
-        # ['Dec', case_path + '/8_2016_12_pv_bt_fl_ev', 4, 31]
+        ['Oct', case_path + '/8_2016_10_pv_bt_fl_ev', 4, 33],
+        ['Nov', case_path + '/8_2016_11_pv_bt_fl_ev', 4, 33],
+        ['Dec', case_path + '/8_2016_12_pv_bt_fl_ev', 4, 31]
     ]
 
 
