@@ -17,6 +17,7 @@ do
   if [ -d "$dir" ]
   then
     FILE=$dir/tesp_version
+#    FILE=$dir/docker_id
     if [ -f "$FILE" ]
     then
       echo "Zip simulation $dir to $target_data"

@@ -35,15 +35,15 @@ if [[ $clean_me == "clean" ]]; then
 
   echo "   /sgip1"
   cd "$TESPDIR/examples/analysis/sgip1" || exit
-  ./clean.sh
+#  ./clean.sh
 
   echo "   /dsot/code"
   cd "$TESPDIR/examples/analysis/dsot/code" || exit
-  ./clean.sh
+#  ./clean.sh
 
   echo "   /consensus/code"
   cd "$TESPDIR/examples/analysis/consensus/code" || exit
-  ./clean.sh
+#  ./clean.sh
 
   echo "   /test"
   cd "$TESPDIR/src/tesp_support/test/api" || exit

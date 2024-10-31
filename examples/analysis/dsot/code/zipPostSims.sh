@@ -10,24 +10,25 @@ fi
 echo "This script will zip the results from $1 case(s) to"
 echo "  $SIM_DATA/data"
 echo "and will zip the post processing results in another from $1 case(s) to"
-echo "  $SIM_DATA/post"
+echo "  $SIM_POST/post"
+
+target_data=$SIM_DATA/data
+target_post=$SIM_POST/post
 
 for dir in "$1"*
 do
   if [ -d "$dir" ]
   then
     FILE=$dir/tesp_version
-    FILE=$dir/docker_id
+#    FILE=$dir/docker_id
     if [ -f "$FILE" ]
     then
-      echo "$(cat "$FILE")"
-      target_data=$SIM_DATA/data
-      target_post=$SIM_DATA/post
+      echo $(cat "$FILE")
       echo "Zip simulation $dir to target_data"
       sudo mkdir -p "$target_data"
       sudo mkdir -p "$target_post"
 
-      # remove Pyomo temperary files
+      # remove Pyomo temporary files
       sudo rm -rf $dir/Pyomo*
 
       sudo zip -r "$target_post/$dir.zip" \
@@ -35,7 +36,7 @@ do
 
       for i in 1 2 3 4 5 6 7 8; do
         sudo zip "$target_post/$dir.zip" \
-          $dir/Substation_$i/*_baseline_demand*.h5 \
+          $dir/Substation_$i/*demand*.h5 \
           $dir/Substation_$i/*profiles.h5 \
           $dir/Substation_$i/*amenity_log.csv \
           $dir/Substation_$i/*_data* \

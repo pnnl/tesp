@@ -204,22 +204,12 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num,
                     for t in range(len(tou_params["DSO_" + dso_num][month_name]["periods"][k]["hour_start"])):
                         meter_df.loc[(each, k + "_kwh"), day_name] += (
                             temp.loc[
-                                (
-                                    300
-                                    * 12
-                                    * (
-                                        24 * (day - 1)
+                                (300 * 12 * (24 * (day - 1)
                                         + tou_params["DSO_" + dso_num][month_name]["periods"][k]["hour_start"][t]
-                                    )
-                                ) : (
-                                    300
-                                    * 12
-                                    * (
-                                        24 * (day - 1)
+                                    )):
+                                (300 * 12 * (24 * (day - 1)
                                         + tou_params["DSO_" + dso_num][month_name]["periods"][k]["hour_end"][t]
-                                    )
-                                    - 1
-                                ),
+                                    ) - 1),
                                 "real_power_avg",
                             ].sum()
                             / 1000
@@ -310,26 +300,14 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num,
             for k in tou_params["DSO_" + dso_num][month_name]["periods"].keys():
                 num_hours = 0
                 for i in range(
-                    len(
-                        tou_params["DSO_" + dso_num][month_name]["periods"][k][
-                            "hour_start"
-                        ]
-                    )
-                ):
+                        len(tou_params["DSO_" + dso_num][month_name]["periods"][k]["hour_start"])):
                     num_hours += (
-                        tou_params["DSO_" + dso_num][month_name]["periods"][k][
-                            "hour_end"
-                        ][i]
-                        - tou_params["DSO_" + dso_num][month_name]["periods"][k][
-                            "hour_start"
-                        ][i]
+                        tou_params["DSO_" + dso_num][month_name]["periods"][k]["hour_end"][i]
+                        - tou_params["DSO_" + dso_num][month_name]["periods"][k]["hour_start"][i]
                     )
                 energysum_df.loc[("industrial", k + "_kwh"), day_name] += (
                     indust_df.loc[start_time:end_time, "Bus" + dso_num].sum()
-                    / 12
-                    * 1000
-                    * num_hours
-                    / 24
+                    / 12 * 1000 * num_hours / 24
                 )
 
     # Create totals for energy metrics
@@ -497,7 +475,7 @@ def create_demand_profiles_for_each_meter(
         freq="5min",
         inclusive="left",
     )
-    # For some reason had another day in Novemeber
+    # For some reason had another day in November
     if not (len(index) == len(demand_dict[meter])):
         index = pd.date_range(
             start=start_index,

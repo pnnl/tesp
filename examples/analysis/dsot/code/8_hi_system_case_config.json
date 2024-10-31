@@ -174,7 +174,6 @@
   "planned": "../../data/planned_outages.csv",
   "unplanned": "../../data/unplanned_outages.csv",
   "port": 5570,
-  "fileFormat": true,
   "splitCase": true,
   "caseStartYear": 2016,
   "caseEndYear": 2016,

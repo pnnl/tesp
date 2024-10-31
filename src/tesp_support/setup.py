@@ -20,11 +20,11 @@ setup(
         'importlib-resources~=6.4.5',
         'h5py~=3.11.0',
         'helics~=3.4.0',
-        'pandas~=2.2.2',
+        'pandas~=2.2.3',
         'numpy~=1.26.4',
         'scipy~=1.14.1',
         'matplotlib~=3.9.2',
-        'networkx~=3.3',
+        'networkx~=3.4.2',
         'PYPOWER==5.1.16',
         'pyutilib==6.0.0',
         'Pyomo==6.5.0'

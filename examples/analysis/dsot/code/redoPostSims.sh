@@ -7,36 +7,24 @@ if [[ -z ${SIM_DATA} ]]; then
   exit
 fi
 
-echo "This script will unzip the results from $1 case(s) to current directory"
+echo "This script will unzip the case results from command line argument"
 echo "and then run post processing code after that the shell will zip the"
-echo "post processing results to $SIM_DATA/post and then remove the case(s)"
+echo "post processing results to $SIM_DATA/post and then remove the case"
 
-target_data="$SIM_DATA/data"
-target_post="$SIM_DATA/post"
+target_data=$SIM_DATA/data
 
-for j in 04; do
-  d1=8_2016_$j\_pv_bt_fl_ev
-
-  unzip -q "$target_data/$d1.zip"
-  cd "$d1" || exit
-#  python3 ../run_case_postprocessing.py > postprocessing.log
-  cd .. || exit
-
-  for i in 1 2 3 4 5 6 7 8; do
-    echo "$target_post/$d1.zip" $d1/Substation_$i/*_baseline_demand*.h5
-    zip "$target_post/$d1.zip" $d1/Substation_$i/*_baseline_demand*.h5
-  done
-
-#  rm -rf $d1
-done
-#
-#hostname > "$sims/$(hostname).log"
-#echo "Running $1" >> "$sims/$(hostname).log"
-#dir=$(basename "$1")
-#echo "Running $dir"
-#hostname > "$1/hostname"
-#yes | cp -rf "$1" .
-#sed -i "s:./clean.sh; ./run.sh; ./monitor.sh:./postprocess.sh:g" "$dir/docker-run.sh"
-#sudo chown -R $usr:sim_group ../../*
-#cd "$dir" || exit
-#./docker-run.sh
+if [ -f "$target_data/$1.zip" ]
+then
+  hostname > "$target_data/$(hostname).log"
+  echo "Running $1" >> "$target_data/$(hostname).log"
+  echo "Running $1"
+  #yes | cp -rf "$target_data/$1" .
+  echo "$target_data/$1.zip"
+  yes | unzip -q "$target_data/$1.zip"
+  sed -i "s:./clean.sh; ./run.sh; ./monitor.sh:./postprocess.sh:g" "$1/docker-run.sh"
+  sudo chown -R $USER:sim_group ../../*
+  cd "$1" || exit
+  ./docker-run.sh
+else
+  echo "$target_data/$1.zip is not file!"
+fi
