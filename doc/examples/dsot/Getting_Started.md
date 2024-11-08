@@ -12,6 +12,7 @@ This Getting_Started.md file was written as a quick-start guide to using TESP, s
 		- `sudo snap install --classic code`
 	- To launch VSCode: `code`
 	- To kill sessions: `killall code`
+For PNNL Users Only:
 - An ssh session of mobaxterm into one of the following computing resources:
 	- Boomer, gage, graham-sim, maxwell, tapteal-ubu
 		- Note that you need to request access individually.
@@ -199,7 +200,7 @@ Post-processing can be run either through the shell script, `./postprocesss.sh` 
 
 `python3 ../run_case_postprocessing.py > postprocessing.log&`
 
-## Move run files over to a sharefolder:
+## Move run files over to a sharefolder (FOR PNNL USERS ONLY):
 
 If you would like to share your results with your team or access the run files from your PC:
 
