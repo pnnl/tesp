@@ -12,6 +12,7 @@ This Getting_Started.md file was written as a quick-start guide to using TESP, s
 		- `sudo snap install --classic code`
 	- To launch VSCode: `code`
 	- To kill sessions: `killall code`
+
 For PNNL Users Only:
 - An ssh session of mobaxterm into one of the following computing resources:
 	- Boomer, gage, graham-sim, maxwell, tapteal-ubu
