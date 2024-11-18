@@ -973,7 +973,7 @@ class Commercial_Build:
         Returns:
             None
         """
-        name = bldg['zonename']
+        self.name = bldg['zonename']
         params = {"parent": bldg['parent'],
                   "groupid": bldg['groupid'],
                   "motor_model": "BASIC",
@@ -1008,9 +1008,9 @@ class Commercial_Build:
                   "cooling_COP": '{:2.2f}'.format(bldg['COP_A']),
                   "cooling_setpoint": '80.0',
                   "heating_setpoint": '60.0'}
-        self.glm.add_object("house", name, params)
+        self.glm.add_object("house", self.name, params)
 
-        params = {"parent": name,
+        params = {"parent": self.name,
                   "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
                   "heatgain_fraction": "0.8",
                   "power_fraction": '{:.2f}'.format(bldg['c_p_frac']),
@@ -1022,7 +1022,7 @@ class Commercial_Build:
                   "base_power":  '{:s}_lights*{:.2f}'.format(bldg['base_schedule'], bldg['adj_lights'])}
         self.glm.add_object("ZIPload", "lights", params)
 
-        params = {"parent": name,
+        params = {"parent": self.name,
                   "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
                   "heatgain_fraction": "0.9",
                   "power_fraction": '{:.2f}'.format(bldg['c_p_frac']),
@@ -1034,7 +1034,7 @@ class Commercial_Build:
                   "base_power":  '{:s}_plugs*{:.2f}'.format(bldg['base_schedule'], bldg['adj_plugs'])}
         self.glm.add_object("ZIPload", "plug_loads", params)
 
-        params = {"parent": name,
+        params = {"parent": self.name,
                   "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
                   "heatgain_fraction": "1.0",
                   "power_fraction": "0",
@@ -1044,7 +1044,7 @@ class Commercial_Build:
                   "base_power": '{:s}_gas*{:.2f}'.format(bldg['base_schedule'], bldg['adj_gas'])}
         self.glm.add_object("ZIPload", "gas_waterheater", params)
 
-        params = {"parent": name,
+        params = {"parent": self.name,
                   "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
                   "heatgain_fraction": "0.0",
                   "power_fraction": '{:.2f}'.format(bldg['c_p_frac']),
@@ -1056,7 +1056,7 @@ class Commercial_Build:
                   "base_power": '{:s}_exterior*{:.2f}'.format(bldg['base_schedule'], bldg['adj_ext'])}
         self.glm.add_object("ZIPload", "exterior_lights", params)
 
-        params = {"parent": name,
+        params = {"parent": self.name,
                   "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
                   "heatgain_fraction": "1.0",
                   "power_fraction": "0",
@@ -1066,7 +1066,7 @@ class Commercial_Build:
                   "base_power": '{:s}_occupancy*{:.2f}'.format(bldg['base_schedule'], bldg['adj_occ'])}
         self.glm.add_object("ZIPload", "occupancy", params)
         
-        self.glm.add_metrics_collector(name, "house")
+        self.glm.add_metrics_collector(self.name, "house")
 
     def define_commercial_zones(self, rgn: int, key: str, kva: float) -> None:
         """Define building parameters for commercial building zones and ZIP 
@@ -1081,15 +1081,15 @@ class Commercial_Build:
         Returns:
             None
         """
-        mtr = self.config.base.comm_loads[key][0]
+        self.mtr = self.config.base.comm_loads[key][0]
         comm_type = self.config.base.comm_loads[key][1]
         nphs = int(self.config.base.comm_loads[key][4])
         phases = self.config.base.comm_loads[key][5]
         vln = float(self.config.base.comm_loads[key][6])
         loadnum = int(self.config.base.comm_loads[key][7])
-        log.info('load: %s, mtr: %s, type: %s, kVA: %.4f, nphs: %s, phases: %s, vln: %.3f', key, mtr, comm_type, kva, nphs, phases, vln)
+        log.info('load: %s, mtr: %s, type: %s, kVA: %.4f, nphs: %s, phases: %s, vln: %.3f', key, self.mtr, comm_type, kva, nphs, phases, vln)
 
-        bldg = {'parent': mtr,
+        bldg = {'parent': self.mtr,
                 'groupid': comm_type + '_' + str(loadnum),
                 'fan_type': 'ONE_SPEED',
                 'heat_type': 'GAS',
@@ -1112,8 +1112,8 @@ class Commercial_Build:
         
         if comm_type == 'ZIPload':
             phsva = 1000.0 * kva / nphs
-            name = '{:s}'.format(key + '_streetlights')
-            params = {"parent": '{:s}'.format(mtr),
+            self.name = '{:s}'.format(key + '_streetlights')
+            params = {"parent": '{:s}'.format(self.mtr),
                       "groupid": "STREETLIGHTS",
                       "nominal_voltage": '{:2f}'.format(vln)}
             for phs in ['A', 'B', 'C']:
@@ -1125,7 +1125,7 @@ class Commercial_Build:
                     params["current_pf_" + phs] = '{:f}'.format(self.config.base.c_i_pf)
                     params["power_pf_" + phs] = '{:f}'.format(self.config.base.c_p_pf)
                     params["base_power_" + phs] = '{:.2f}'.format(self.config.base.light_scalar_comm * phsva)
-            self.glm.add_object("load", name, params)
+            self.glm.add_object("load", self.name, params)
         
         else:
             bld_specs = self.building_model_specifics[comm_type] 
@@ -1928,6 +1928,9 @@ class Feeder:
         self.identify_commercial_loads('load', 0.001 * self.config.avg_commercial)
         for key in self.config.base.comm_loads:
             self.config.com_bld.define_commercial_zones(config.region, key, self.config.com_bld.total_comm_kva)
+            if len(self.config.gis_file) >= 2:
+                self.pos[self.config.com_bld.mtr] = self.pos_data[key]
+                self.pos[self.config.com_bld.name] = self.pos[self.config.com_bld.mtr]
         #self.glm.add_voltage_class('node', self.config.vln, self.config.vll, self.secnode)
         #self.glm.add_voltage_class('meter',config.vln, self.config.vll, self.secnode)
         #self.glm.add_voltage_class('load', self.config.vln, self.config.vll, self.secnode)
@@ -2236,9 +2239,9 @@ class Feeder:
                     comm_type = 'ZIPload'
                     comm_size = 0
                     total_zipload += 1
-                mtr = gld_strict_name(e_object['parent'])
-                extra_billing_meters.add(mtr)
-                self.config.base.comm_loads[e_name] = [mtr, comm_type, comm_size, kva, nphs, phases, vln, total_commercial, comm_name]
+                self.mtr = gld_strict_name(e_object['parent'])
+                extra_billing_meters.add(self.mtr)
+                self.config.base.comm_loads[e_name] = [self.mtr, comm_type, comm_size, kva, nphs, phases, vln, total_commercial, comm_name]
                 removenames.append(e_name)
         for e_name in removenames:
             self.glm.del_object(gld_class, e_name)
