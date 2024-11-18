@@ -96,6 +96,7 @@ Public Functions:
 
 import logging as log
 import math
+import json
 import os
 import sys
 
@@ -114,6 +115,7 @@ from tesp_support.api.entity import assign_defaults
 extra_billing_meters = set()
 
 log.basicConfig(level=log.DEBUG)
+log.getLogger('matplotlib.font_manager').disabled = True
 
 class Config:
     def __init__(self, config=None):
@@ -346,7 +348,7 @@ class Residential_Build:
             vstart = format(-0.5 * v_nom, '.2f') + '+' + format(0.866025 * v_nom, '.2f') + 'j'
 
         tpxname = basenode + '_tpx_1'
-        mtrname = basenode + '_mtr_1'
+        self.sm_mtrname = basenode + '_mtr_1'
         loadname = basenode + '_load_1'
         params = {"phases": phs,
                   "nominal_voltage": str(v_nom),
@@ -355,7 +357,7 @@ class Residential_Build:
         self.glm.add_object("triplex_node", basenode, params)
 
         params = {"from": basenode,
-                  "to": mtrname,
+                  "to": self.sm_mtrname,
                   "phases": phs,
                   "length": "30",
                   "configuration": self.config.base.triplex_configurations[0][0]}
@@ -367,10 +369,10 @@ class Residential_Build:
                   "voltage_1": vstart,
                   "voltage_2": vstart}
         self.glm.add_tariff(params)
-        self.glm.add_object("triplex_meter", mtrname, params)
-        self.glm.add_metrics_collector(mtrname, "meter")
+        self.glm.add_object("triplex_meter", self.sm_mtrname, params)
+        self.glm.add_metrics_collector(self.sm_mtrname, "meter")
 
-        params = {"parent": mtrname,
+        params = {"parent": self.sm_mtrname,
                   "phases": phs,
                   "nominal_voltage": str(v_nom),
                   "voltage_1": vstart,
@@ -552,21 +554,21 @@ class Residential_Build:
                   "voltage_2": vstart}
         self.glm.add_object("triplex_node", basenode, params)
         tpxname = gld_strict_name(basenode + '_tpx')
-        mtrname = gld_strict_name(basenode + '_mtr')
+        self.mtrname = gld_strict_name(basenode + '_mtr')
         for i in range(self.nhouse):
             tpxname1 = tpxname + '_' + str(i + 1)
-            mtrname1 = mtrname + '_' + str(i + 1)
-            hsename = gld_strict_name(basenode + '_hs_' + str(i + 1))
-            hse_m_name = gld_strict_name(basenode + '_hsmtr_' + str(i + 1))
+            self.mtrname1 = self.mtrname + '_' + str(i + 1)
+            self.hsename = gld_strict_name(basenode + '_hs_' + str(i + 1))
+            self.hse_m_name = gld_strict_name(basenode + '_hsmtr_' + str(i + 1))
             whname = gld_strict_name(basenode + '_wh_' + str(i + 1))
             sol_i_name = gld_strict_name(basenode + '_solinv_' + str(i + 1))
             bat_i_name = gld_strict_name(basenode + '_batinv_' + str(i + 1))
-            sol_m_name = gld_strict_name(basenode + '_solmtr_' + str(i + 1))
+            self.sol_m_name = gld_strict_name(basenode + '_solmtr_' + str(i + 1))
             sol_name = gld_strict_name(basenode + '_sol_' + str(i + 1))
-            bat_m_name = gld_strict_name(basenode + '_batmtr_' + str(i + 1))
+            self.bat_m_name = gld_strict_name(basenode + '_batmtr_' + str(i + 1))
             bat_name = gld_strict_name(basenode + '_bat_' + str(i + 1))
             params = {"from": basenode,
-                      "to": mtrname1,
+                      "to": self.mtrname1,
                       "phases": phs,
                       "length": "30",
                       "configuration": self.config.base.name_prefix + self.config.base.triplex_configurations[0][0]}
@@ -578,13 +580,13 @@ class Residential_Build:
                       "voltage_1": vstart,
                       "voltage_2": vstart}
             self.glm.add_tariff(params)
-            self.glm.add_object("triplex_meter", mtrname1, params)
-            self.glm.add_metrics_collector(mtrname1, "meter")
+            self.glm.add_object("triplex_meter", self.mtrname1, params)
+            self.glm.add_metrics_collector(self.mtrname1, "meter")
 
-            params = {"parent": mtrname1,
+            params = {"parent": self.mtrname1,
                       "phases": phs,
                       "nominal_voltage": str(v_nom)}
-            self.glm.add_object("triplex_meter", hse_m_name, params)
+            self.glm.add_object("triplex_meter", self.hse_m_name, params)
 
         # Assign floor area, ceiling height, and stories of houses
         fa_array = {}  # distribution array for floor area min, max, mean, standard deviation
@@ -727,7 +729,7 @@ class Residential_Build:
         # +- 10% of mean value
         
         # Set housing parameters
-        params = {"parent": hse_m_name,
+        params = {"parent": self.hse_m_name,
                   "groupid": self.config.base.bldgTypeName[bldg],
                   "schedule_skew": '{:.0f}'.format(skew_value),
                   "floor_area": '{:.0f}'.format(floor_area),
@@ -810,10 +812,10 @@ class Residential_Build:
         # assure no overlaps during transactive simulations
         # params["cooling_setpoint"] = "80.0"
         # params["heating_setpoint"] = "60.0"
-        self.glm.add_object("house", hsename, params)
+        self.glm.add_object("house", self.hsename, params)
 
         # heatgain fraction, Zpf, Ipf, Ppf, Z, I, P
-        params = {"parent": hsename,
+        params = {"parent": self.hsename,
                   "schedule_skew": '{:.0f}'.format(skew_value),
                   "base_power": 'responsive_loads * ' + '{:.2f}'.format(resp_scalar),
                   "heatgain_fraction": '{:.2f}'.format(self.config.base.techdata[0]),
@@ -869,7 +871,7 @@ class Residential_Build:
             wh_skew_value = randomize_residential_skew(True)
 
             if self.config.water_heater_model == "MULTILAYER":
-                params = {"parent": hsename,
+                params = {"parent": self.hsename,
                         "schedule_skew": '{:.0f}'.format(wh_skew_value),
                         "heating_element_capacity": '{:.1f}'.format(heat_element),
                         "thermostat_deadband": '{:.1f}'.format(therm_dead),
@@ -884,7 +886,7 @@ class Residential_Build:
                         "upper_tank_setpoint": '{:.1f}'.format(tank_set + 5.0),
                         "T_mixing_valve": '{:.1f}'.format(tank_set)}
             else: # Traditional single-node model
-                params = {"parent": hsename,
+                params = {"parent": self.hsename,
                         "schedule_skew": '{:.0f}'.format(wh_skew_value),
                         "heating_element_capacity": '{:.1f}'.format(heat_element),
                         "thermostat_deadband": '{:.1f}'.format(therm_dead),
@@ -897,7 +899,7 @@ class Residential_Build:
                         "tank_setpoint": '{:.1f}'.format(tank_set - 5.0)}
             self.glm.add_object("waterheater", whname, params)
 
-        self.glm.add_metrics_collector(hsename, "house")
+        self.glm.add_metrics_collector(self.hsename, "house")
 
         # ----------------------------------------------------------------------
         # Add solar, storage, and EVs
@@ -952,11 +954,11 @@ class Residential_Build:
             prob_ev = (self.config.base.ev_percentage * self.ev_percentage[income])/prob_inc
 
         # add solar, ev, and battery based on RECS data or user-input
-        self.config.sol.add_solar(prob_solar, mtrname1, sol_m_name, sol_name, sol_i_name, phs, v_nom, floor_area)
+        self.config.sol.add_solar(prob_solar, self.mtrname1, self.sol_m_name, sol_name, sol_i_name, phs, v_nom, floor_area)
 
-        self.config.batt.add_batt(prob_batt, mtrname1, bat_m_name, bat_name, bat_i_name, phs, v_nom)
+        self.config.batt.add_batt(prob_batt, self.mtrname1, self.bat_m_name, bat_name, bat_i_name, phs, v_nom)
 
-        self.config.ev.add_ev(prob_ev, hsename)
+        self.config.ev.add_ev(prob_ev, self.hsename)
 
 class Commercial_Build:
     def __init__(self, config):
@@ -1910,8 +1912,17 @@ class Feeder:
         self.identify_xfmr_houses('transformer', self.seg_loads, 0.001 * self.config.avg_house, self.config.region)
         for key in self.config.base.house_nodes:
             self.config.res_bld.add_houses(key, 120.0)
+            # If GIS data is available, assign house and meters to coordinates
+            if len(self.config.gis_file) >= 2:
+                self.pos[self.config.res_bld.mtrname1] = self.pos_data[key]
+                self.pos[self.config.res_bld.hsename] = self.pos[self.config.res_bld.mtrname1]
+                self.pos[self.config.res_bld.hse_m_name] = self.pos[self.config.res_bld.mtrname1]
+                self.pos[self.config.res_bld.bat_m_name] = self.pos[self.config.res_bld.mtrname1]
+                self.pos[self.config.res_bld.sol_m_name] = self.pos[self.config.res_bld.mtrname1]
         for key in self.config.base.small_nodes:
             self.config.res_bld.add_small_loads(key, 120.0)
+            if len(self.config.gis_file) >= 2:
+               self.pos[self.config.res_bld.sm_mtrname] = self.pos_data[key]
 
         # Identify and add commercial loads
         self.identify_commercial_loads('load', 0.001 * self.config.avg_commercial)
@@ -1928,8 +1939,14 @@ class Feeder:
         self.glm.write_model(os.path.join(config.data_path, config.out_file_glm))
 
         # To plot the model using the networkx package:
-        #print("\nPlotting image of model; this may take several minutes.")
-        #self.glm.model.plot_model()
+        if len(self.config.gis_file) >= 2:
+            print("\nUsing location data to plot image of model; this should just take a sec.")
+            # Merge house and meter position assignments with rest of GIS data
+            self.pos |= self.pos_data
+            self.glm.model.plot_model(self.pos)
+        else:
+            print("\nPlotting image of model; this may take several minutes.")
+            self.glm.model.plot_model()
 
     def feeder_gen(self) -> None:
         """ Read in the backbone feeder, then loops through transformer 
@@ -1955,9 +1972,15 @@ class Feeder:
             if not success:
                 exit()
         else:
-            i_glm, success = self.glm.read_model(os.path.join(self.data_path, self.config.in_file_glm))
+            i_glm, success = self.glm.read_model(os.path.join(self.config.data_path, self.config.in_file_glm))
             if not success:
                 exit()
+        # Read in positional data from feeder, if available
+        if len(self.config.gis_file) >= 2:
+            gis_path = os.path.join(self.config.data_path, self.config.gis_file) 
+            with open(gis_path) as gis:
+                self.pos_data = json.load(gis)
+                self.pos = {}
 
         xfused = {}  # ID, phases, total kva, vnom (LN), vsec, poletop/padmount
         self.secnode = {}  # Node, st, phases, vnom
