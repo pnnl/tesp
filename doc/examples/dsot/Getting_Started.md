@@ -4,31 +4,57 @@ This Getting_Started.md file was written as a quick-start guide to using TESP, s
 
 ## What you will need (as a windows user)
 
+- A python IDE (integrated development environment)
+	- VS Code, PyCharm, or similar
+- A python package manager 
+	- Anaconda, conda, pip, or similar
+
+For PNNL Users Only:
+
 - mobaxterm: https://mobaxterm.mobatek.net/
 	- Download and install
 - vscode (code): 
 	- Install from the command line in mobaxterm: 
-		- `sudo apt install snapd`
-		- `sudo snap install --classic code`
-	- To launch VSCode: `code`
-	- To kill sessions: `killall code`
 
-For PNNL Users Only:
+			sudo apt install snapd
+			sudo snap install --classic code
+
+	- To launch VSCode from the terminal: `code`
+	- To kill sessions from the terminal: `killall code`
 - An ssh session of mobaxterm into one of the following computing resources:
 	- Boomer, gage, graham-sim, maxwell, tapteal-ubu
-		- Note that you need to request access individually.
+		- Note that you need to request access individually
 		- Session -> new session -> user@boomer.pnl.gov
         - Enter pnnl password
 
-## Set up an environment and install TESP
+## Setup an environment and install TESP
 
-The TESP Read The Docs page walks through this process: https://tesp.readthedocs.io/en/latest/Installing_Building_TESP.html
+Windows TESP-only Installation:
+- Create a tesp environment, e.g., `win-tesp`
+	- Using Conda, from the terminal: `conda create --name win-tesp python=3.10`
+- Install pip
+	- Using Conda, from the terminal: `conda install pip`
+- Clone the tesp repository: https://github.com/pnnl/tesp
+	- VS Code [Git Instructions](https://code.visualstudio.com/docs/sourcecontrol/intro-to-git#:~:text=To%20clone%20a%20repository%2C%20run,to%20clone%20to%20your%20machine) 
+- Install TESP
+	- From the terminal: 
+			
+			cd [tesp_directory]
+			pip install -r requirements.txt
+- Add the tesp directory as environment variable `TESPDIR`
+	- Navigate to Settings -> Environment Variables -> New
+		- Variable name: `TESPDIR`
+		- Variable value: `C:\Users\Name\path_to_tesp_directory`
+	- Once set, restart computer to take effect.
 
-When you've successfully completed this step, you should be able to activate the environment from your home dierctory.
+Full Installation: 
+
+- The TESP Read The Docs page walks through this process: https://tesp.readthedocs.io/en/latest/Installing_Building_TESP.html
+
+When you've successfully completed these steps, you should be able to activate the environment from your tesp directory.
 Remember to activate your environment before attempting to run anything within TESP. 
 
-Activate environment: `source tesp`
-
+Activate environment: `source tesp.env`
 
 ## DSO+T at a Glance
 
@@ -59,11 +85,10 @@ The main files behind tesp, running the market, the agents, the substations, are
 ## Before starting any runs, get necessary data:
 
 Start by downloading supporting data that is not stored in the repository due to its size and static nature. This will 
-add a “data” folder alongside the existing “code” folder from the repository. 
+add a “data” folder alongside the existing “code” folder from the repository. From the terminal:
 
-`cd tesp/repository/tesp/examples/analysis/dsot/code`
-
-`./dsotData.sh`
+		cd tesp/examples/analysis/dsot/code
+		./dsotData.sh
 
 ## Prepare a run
 
