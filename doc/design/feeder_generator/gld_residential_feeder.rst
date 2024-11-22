@@ -2,7 +2,7 @@
 Residential Feeder Generator 
 ============================
 
-This residential feeder generator module, ``gld_residential_feeder.py``, takes a model ``[feeder].glm`` (GridLAB-D readable format), identifies existing transformers on the feeder with downstream load, determines how many houses each transformer can support based on the average house load in kVA, and adds that many houses and small ZIPloads. This module also adds commercial buildings and ZIP loads based on identified commerical loads. The newly populated feeder is saved as a separate .glm, which can be used for subsequent analysis in GridLAB-D..
+This residential feeder generator module, ``gld_residential_feeder.py``, takes a model ``[feeder].glm`` (GridLAB-D readable format), identifies existing transformers on the feeder with downstream load, determines how many houses each transformer can support based on the average house load in kVA, and adds that many houses and small ZIPloads. This module also adds commercial buildings and ZIP loads based on identified commercial loads. The newly populated feeder is saved as a separate .glm, which can be used for subsequent analysis in GridLAB-D.
 
 Before proceeding, please be sure you have successfully installed TESP.
 
@@ -98,3 +98,39 @@ To run the feeder generator, the ``Config`` class must first be initialized with
     if __name__ == "__main__":
         _test1()
 
+Sample output to console.::
+    User feeder not defined, using taxonomy feeder R1-12.47-2.glm
+    Average House size: 4.5 kVA
+    Results in a populated feeder with:
+        4 small loads totaling 8.90 kVA
+        247 houses added to 247 transformers
+        157 single family homes, 82 apartments, and 8 mobile homes
+    Average Commercial Building size: 30.0 kVA
+    Results in a populated feeder with:
+        84 commercial loads identified, 13 buildings added, approximately 3600 kVA still to be assigned.
+        3 med/small offices with 3 floors, 5 zones each: 45 total office zones
+        0 warehouses,
+        2 big box retail with 6 zones each: 12 total big box zones
+        0 strip malls,
+        0 strip malls,
+        1 education,
+        2 food service,
+        1 food sales,
+        0 lodging,
+        0 healthcare,
+        2 low occupancy,
+        2 low occupancy,
+        2 streetlights
+    DER added: 13 PV with combined capacity of 67.9 kW; 4 batteries with combined capacity of 54.7 kWh; and 4 EV chargers
+
+
+Results
+~~~~~~~
+An example test case with the user-defined IEEE-123.glm test feeder will yield the following graph.
+
+.. image:: ../media/feeder-generator/IEEE-123.glm_network-unpopulated.png
+    :width: 800
+
+
+.. image:: ../media/feeder-generator/IEEE-123.glm_network-populated.png
+    :width: 800
