@@ -3,7 +3,6 @@
 """GridLAB-D model I/O for TESP api
 """
 
-# import json
 import pyjson5
 import os.path
 import re
@@ -19,9 +18,25 @@ from .entity import Entity
 from .parse_helpers import parse_kva
 from .helpers import gld_strict_name
 
+class O_Entity(Entity):
+    def __init__(self, model, entity, config):
+        super().__init__(entity, config)
+        self._m = model
+
+    def add(self, name, params):
+        return self._m.add_object(self.entity, name, params)
+
+    def delete(self, name):
+        self._m.del_object(self.entity, name)
+
+    def items(self):
+        return self.instances.items()
+
+    def __getitem__(self, key):
+        return self.instances.get(key)
+
 class GLM:
     pass
-
 
 class GLModel:
     """ GLModel class
@@ -140,14 +155,15 @@ class GLModel:
                         self.module_entities[module_name] = entity
                     else:
                         obj = self.classes[module_name][object_name]
-                        entity = Entity(object_name, None)
+                        entity = O_Entity(self, object_name, None)
                         entity.add_attr("OBJECT", "Parent", "", "parent", value=None)
                         for attr in obj:
                             self._add_attr(entity, attr, obj[attr])
                         self.object_entities[object_name] = entity
+                        setattr(self.glm, object_name, entity)
 
-            for obj in self.object_entities:
-                setattr(self.glm, obj, self.object_entities[obj].instances)
+            # for obj in self.object_entities:
+            #     setattr(self.glm, obj, self.object_entities[obj].instances)
 
     @staticmethod
     def get_datatype(m_type:str):
@@ -483,19 +499,18 @@ class GLModel:
         if type(obj_type) == str and type(object_name) == str:
             try:
                 entity = self.object_entities[obj_type]
-                return entity.set_instance(object_name, params)
             except:
                 print("Unrecognized GRIDLABD object and id:", obj_type, object_name, ", must be a new object")
                 if obj_type in self.class_types:
-                    entity = self.object_entities[obj_type] = Entity(obj_type, self.objects[obj_type])
+                    entity = self.object_entities[obj_type] = O_Entity(obj_type, self.objects[obj_type])
                     for items in params:
                         entity.add_attr('TEXT', items[0], "", items[0], "")
-                    return entity.set_instance(object_name, params)
                 else:
                     print("Unrecognized user class/object and id:", obj_type, object_name)
+                    return None
+            return entity.set_instance(object_name, params)
         else:
             raise TypeError("GRIDLABD object type and/or object name {obj_type} must be a string and is not.")
-        return None
 
     def get_object_instance(self, obj_type, object_name):
         if type(obj_type) == str and type(obj_type) == str:
@@ -561,7 +576,7 @@ class GLModel:
         if _type not in self.model:
             self.model[_type] = {}
         # add name and set object entity instance to model type
-        self.model[_type][name] = {}
+        # self.model[_type][name] = {}
         self.model[_type][name] = self.set_object_instance(_type, name, params)
         return self.model[_type][name]
 

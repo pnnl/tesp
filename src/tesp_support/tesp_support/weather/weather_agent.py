@@ -143,11 +143,11 @@ def startWeatherAgent(file):
             # find the data by forecast starting and ending time, should be multiple data point for each weather factor
             rows = hourlyWeatherData.loc[
                 (hourlyWeatherData.index >= forecastStart) & (hourlyWeatherData.index < forecastEnd)].copy()
-            rows.solar_direct[rows.solar_direct < 1e-4] = 0
-            rows.solar_diffuse[rows.solar_diffuse < 1e-4] = 0
-            rows.wind_speed[rows.wind_speed < 1e-4] = 0
-            rows.humidity[rows.humidity < 1e-4] = 0
-            rows.pressure[rows.pressure < 1e-4] = 0
+            rows.loc[rows.solar_direct < 1e-4, 'solar_direct'] = 0
+            rows.loc[rows.solar_diffuse < 1e-4, 'solar_diffuse'] = 0
+            rows.loc[rows.wind_speed < 1e-4, 'wind_speed'] = 0
+            rows.loc[rows.humidity < 1e-4, 'humidity'] = 0
+            rows.loc[rows.pressure < 1e-4, 'pressure'] = 0
             for col in rows.columns:
                 data = rows[col].values
                 times = rows.index

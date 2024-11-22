@@ -29,3 +29,5 @@ Change log:
 - v1.3.0  Refactor the TESP PyPI api. Upgrade all models(GridLAB-D, EnergyPlus, NS3) to work with HELICS 3.4. Add modifier.py for GridLAB-D models.
 - v1.3.2  Updated model and modifier for GridLAB-D models, added readme for GLM modifier and Store examples.
 - v1.3.3  Add tesp_component download in tesp_support pypi, change directory structure. Add dockerfile for each module getting ready for dockerize COSU Simulations
+- v1.3.5  
+- v1.3.6  Updated versions for grid applications GridLAB-D and HELICS, new tools to modify GLM files and RECS implementation for GLM residential and commercial feeder

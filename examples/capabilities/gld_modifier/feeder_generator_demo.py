@@ -146,6 +146,19 @@ def _auto_run(args):
             "cooling_COP": 4.5 + house_num,
         }
         house_obj = glmMod.add_object("house", house_name, house_params)
+
+        house_obj = glmMod.house.add(house_name, {
+            "parent": new_name,
+            "Rroof": 33.69 + house_num,
+            "Rwall": 17.71 + house_num,
+            "Rfloor": 17.02 + house_num,
+            "Rwindows": 1.8 + house_num,
+            "airchange_per_hour": 0.8 + house_num,
+            "cooling_system_type": "ELECTRIC",
+            "heating_system_type": "HEAT_PUMP",
+            "cooling_COP": 4.5 + house_num,
+        })
+
         # Adding a new position element for the newly created house
         if hasattr(args, 'coords_file'): 
             pos_data[house_name] = pos_data[new_name]
@@ -161,8 +174,7 @@ def _auto_run(args):
                 print(f'\t"floor_area" not defined for house {house_name}, ' 
                       'adding it now.')
                 house_obj["floor_area"] = 2469
-            print(f'\t"floor_area" now defined in model with value '
-                '{house_obj["floor_area"]}.')
+            print(f'\t"floor_area" now defined in model with value {house_obj["floor_area"]}.')
 
             # You can get object parameters after the object has been created
             if house_num == 0:

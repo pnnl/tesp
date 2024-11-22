@@ -90,6 +90,24 @@ Version 1.3.3 (2023-12-4)
 * Add tesp_component download in tesp_support pypi, add schedule in model_GLM.py
 * Minor changes to path for RECS system feeder
 * Restructured, new RECS parameters, updated to include income, new hvac setpoint RECS data, teleworking.
-* Fix postposing for DSOT
+* Fix post processing for DSOT
 * Dockerfile for each module getting ready for dockerize COSU Simulations
 * Change directory structure
+
+Version 1.3.4 (2023-12-4)
+--------------------------
+* Minor changes and bugs fixes
+
+Version 1.3.5 (2023-12-4)
+--------------------------
+* Minor changes and bugs fixes
+
+Version 1.3.6 (2024-12-2)
+--------------------------
+* Small updates to Getting_Started.md, calling out PNNL-user specific instructions.
+* Added function to plot box and whisker plots of monthly customer bills.  Added EV participation to customer PDF plots.
+* Flowed through customer income_level as additional metadata and expanded customer mean CFS and customer PDF plots to include this metadata as an attribute to report against.
+* Update to gld_feeder_generator to DER deployment calculations to incorporate both the rates analysis case and a user-defined deployment based on RECS distributions.
+* Integration of gld_feeder_generator (previously known as gld_residential_feeder) into tesp_support\api. Required files now live in examples\capabilities\feeder-generator (previously known as uvm). Updated file paths throughout to be consistent with this update.
+* Documentation updates for gld_residential_feeder.py
+* Added plotting network graph with coordinates
