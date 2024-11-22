@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
-
 # Copyright (C) 2021-2023 Battelle Memorial Institute
+# See LICENSE file at https://github.com/pnnl/tesp
 # file: DSO_quadratic_curves.py
 """Class that prepares the quadratic curves for DSO market
 

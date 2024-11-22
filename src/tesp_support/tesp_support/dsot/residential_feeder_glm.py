@@ -1,4 +1,5 @@
-# Copyright (C) 2018-2023 Battelle Memorial Institute
+# Copyright (C) 2021-2024 Battelle Memorial Institute
+# See LICENSE file at https://github.com/pnnl/tesp
 # file: residential_feeder_glm.py
 """Replaces ZIP loads with houses, and optional storage and solar generation.
 

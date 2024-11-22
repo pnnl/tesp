@@ -1,3 +1,5 @@
+# Copyright (C) 2017-2024 Battelle Memorial Institute
+# See LICENSE file at https://github.com/pnnl/tesp
 # Copyright (C) 2017-2023 Battelle Memorial Institute
 # file: process_eplus.py
 """Functions to plot data from the EnergyPlus agent
