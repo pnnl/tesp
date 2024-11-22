@@ -29,7 +29,7 @@ if recs_data:
     import recs.prep_substation_recs_f as prep
     import pandas as pd
 else:
-    rcs = ""
+    rcs = ""  #CBEC
     import tesp_support.original.commercial_feeder_glm as com_FG
     import tesp_support.original.copperplate_feeder_glm as cp_FG
     import tesp_support.dsot.residential_feeder_glm as res_FG

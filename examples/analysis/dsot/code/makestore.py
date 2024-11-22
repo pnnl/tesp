@@ -44,7 +44,7 @@ def dsot_store(case_name):
     my_file.set_includeFile(sub, "default_case_config.json")
     my_file.set_includeFile(sub, "8-metadata-lean.json")
     my_file.set_includeFile(sub, "hvac_setpt.json")
-    my_file.set_includeFile(sub, "8_DSO_quadratic_curves.json")
+    my_file.set_includeFile(sub, "8_quadratic_curves.json")
     my_file.set_includeFile(sub, "DSOT_commercial_metadata.json")
     my_file.set_includeFile(sub, "DSOT_residential_metadata.json")
     my_file.set_includeFile(sub, "DSOT_battery_metadata.json")

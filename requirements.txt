@@ -3,7 +3,7 @@ duckdb~=1.1.2
 docutils==0.18.1
 future~=1.0.0
 h5py~=3.11.0
-helics~=3.4.0
+helics~=3.5.3
 importlib_resources~=6.4.5
 Jinja2~=3.1.4
 joblib~=1.4.2
@@ -17,6 +17,7 @@ plotly~=5.24.0
 psst~=0.1.1a0
 PuLP~=2.9.0
 PyGLM~=2.7.1
+pyjson5~=1.6.7
 Pyomo==6.5.0
 PYPOWER==5.1.16
 pyutilib==6.0.0

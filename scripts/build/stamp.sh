@@ -1,15 +1,16 @@
 #!/bin/bash
 
 if [[ -z ${INSTDIR} ]]; then
-  echo "Edit tesp.env in the TESP home directory"
+  echo "Edit 'tesp.env' in the TESP home directory"
   echo "Run 'source tesp.env' in that same directory"
   exit
 fi
 
-tesp_ver="1.3.5"
+tesp_ver=1.3.5
+grid_ver=22.04.1
 
 echo
-echo "Stamping grid applications software $ver, if you want to change the version, edit this file."
+echo "Stamping grid applications software $grid_ver, if you want to change the version, edit this file."
 echo "You should also update any documentation CHANGELOG.TXT or README.rst before stamping."
 echo "The command below can show the branch and merge history to help you update documentation."
 echo
@@ -17,9 +18,9 @@ echo "    git log --pretty=format:"%h %s" --graph"
 echo
 
 while true; do
-    read -p "Are you ready to stamp Grid $ver? " yn
+    read -rp "Are you ready to stamp Grid $grid_ver? " yn
     case $yn in
-        [Yy]* ) stamp="yes" break;;
+        [Yy]* ) stamp="yes"; break;;
         [Nn]* ) stamp="no"; break;;
         * ) echo "Please answer [y]es or [n]o.";;
     esac
@@ -57,14 +58,16 @@ if [ -d "$dir" ]; then
   cd "${REPO_DIR}" || exit
 fi
 
-echo "Creating grid_binaries_$ver.zip for installed binaries for grid applications software"
+echo "Creating grid_binaries_$grid_ver.zip for installed binaries for grid applications software"
 cd "${INSTDIR}" || exit
-zip -r -9 "${BUILD_DIR}/grid_binaries_$ver.zip" . &> "${BUILD_DIR}/grid_binaries.log" &
+#zip -r -9 "${BUILD_DIR}/grid_binaries_$grid_ver.zip" . &> "${BUILD_DIR}/grid_binaries.log" &
 
 pip list > "${BUILD_DIR}/tesp_pypi.id"
 
-echo "Stamping grid applications software $ver and TESP $tesp_ver for install"
+echo "Stamping grid applications software $grid_ver and TESP $tesp_ver for install"
 cd "${TESPDIR}" || exit
+echo "$grid_ver" > "scripts/grid_version"
+echo "$tesp_ver" > "src/tesp_support/tesp_version"
 echo "$tesp_ver" > "src/tesp_support/version"
 
 # un-comment for final version
@@ -76,7 +79,7 @@ python3 -m build . > "${BUILD_DIR}/package.log"
 echo "Checking TESP distribution package for pypi"
 twine check dist/*
 echo
-echo "To upload the new TESP $ver pypi,"
+echo "To upload the new TESP $tesp_ver pypi,"
 echo "change directory to ${TESPDIR}/src/tesp_support"
 echo "and run the command 'twine upload dist/*'"
 echo

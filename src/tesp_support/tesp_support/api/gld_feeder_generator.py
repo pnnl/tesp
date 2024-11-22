@@ -103,18 +103,16 @@ import sys
 import numpy as np
 import pandas as pd
 
-sys.path.append("..\..\..\..") #append to find examples/analysis/dsot/code as-needed
-from examples.analysis.dsot.code.recs_gld_house_parameters import get_RECS_jsons
-
 from tesp_support.api.helpers import gld_strict_name, random_norm_trunc, randomize_residential_skew
 from tesp_support.api.modify_GLM import GLMModifier
 from tesp_support.api.time_helpers import get_secs_from_hhmm, get_hhmm_from_secs, get_duration, get_dist
 from tesp_support.api.time_helpers import is_hhmm_valid, subtract_hhmm_secs, add_hhmm_secs
 from tesp_support.api.entity import assign_defaults
+from tesp_support.api.recs_gld_house_parameters import get_RECS_jsons
 
 extra_billing_meters = set()
 
-log.basicConfig(level=log.DEBUG)
+log.basicConfig(level=log.INFO)
 log.getLogger('matplotlib.font_manager').disabled = True
 
 class Config:
@@ -122,6 +120,7 @@ class Config:
         # Assign default values to those not defined in config file
         self.keys = list(assign_defaults(self, config).keys())
         self.glm = GLMModifier()
+        self.mdl = self.glm.glm
         self.base = self.glm.defaults
         self.res_bld = Residential_Build(self)
         self.com_bld = Commercial_Build(self)
@@ -138,13 +137,13 @@ class Config:
             if key[0] == self.taxonomy[:-4]:
                 self.vll = key[1]
                 self.vln = key[2]
-    
+
     def position(self) -> dict:
         # Read in positional data from feeder, if available
         if not self.in_file_glm:
             self.gis_file = self.taxonomy.replace('-', '_').replace('.', '_').replace('_glm', '_pos.json')
         if self.gis_file:
-            gis_path = os.path.join(self.data_path, self.gis_file) 
+            gis_path = os.path.join(self.data_path, self.gis_file)
             with open(gis_path) as gis:
                 self.pos_data = json.load(gis)
                 self.pos = {}
@@ -191,19 +190,19 @@ class Config:
 
         # Add metrics interval and interim interval
         if self.metrics_interval > 0:
-            params = {"interval": str(self.base.metrics_interval),
-                      "interim": str(self.base.metrics_interim),
-                      "filename": str(self.base.metrics_filename),
-                      "alternate": str(self.base.metrics_alternate),
-                      "extension": str(self.base.metrics_extension)}
-            self.glm.add_object("metrics_collector_writer", "mc", params)
+            self.mdl.metrics_collector_writer.add("mc", {
+                "interval": str(self.base.metrics_interval),
+                "interim": str(self.base.metrics_interim),
+                "filename": str(self.base.metrics_filename),
+                "alternate": str(self.base.metrics_alternate),
+                "extension": str(self.base.metrics_extension) })
 
         # Add climate object and weather params
-        params = {"interpolate": str(self.interpolate),
-                  "latitude": str(self.latitude),
-                  "longitude": str(self.longitude),
-                  "tmyfile": str(self.tmyfile)}
-        self.glm.add_object("climate", self.base.weather_name, params)
+        self.mdl.climate.add(self.base.weather_name, {
+            "interpolate": str(self.interpolate),
+            "latitude": str(self.latitude),
+            "longitude": str(self.longitude),
+            "tmyfile": str(self.tmyfile) })
 
     def generate_recs(self) -> None:
         """Generate RECS metadata if it does not yet exist based on user config.
@@ -264,6 +263,7 @@ class Residential_Build:
     def __init__(self, config):
         self.config = config
         self.glm = config.glm
+        self.mdl = config.glm.glm
 
     def buildingTypeLabel(self, rgn: int, bldg: int, therm_int: int) -> list:
         """Assign formatted name of region, building type name, and thermal integrity level
@@ -361,20 +361,20 @@ class Residential_Build:
             vstart = format(-0.5 * v_nom, '.2f') + '+' + format(0.866025 * v_nom, '.2f') + 'j'
 
         tpxname = basenode + '_tpx_sm'
-        sm_mtrname = basenode + '_mtr_sm'
+        mtrname = basenode + '_mtr_sm'
         loadname = basenode + '_load_sm'
-        params = {"phases": phs,
-                  "nominal_voltage": str(v_nom),
-                  "voltage_1": vstart,
-                  "voltage_2": vstart}
-        self.glm.add_object("triplex_node", basenode, params)
+        self.mdl.triplex_node.add(basenode, {
+            "phases": phs,
+            "nominal_voltage": str(v_nom),
+            "voltage_1": vstart,
+            "voltage_2": vstart })
 
-        params = {"from": basenode,
-                  "to": sm_mtrname,
-                  "phases": phs,
-                  "length": "30",
-                  "configuration": self.config.base.triplex_configurations[0][0]}
-        self.glm.add_object("triplex_line", tpxname, params)
+        self.mdl.triplex_line.add(tpxname, {
+            "from": basenode,
+            "to": mtrname,
+            "phases": phs,
+            "length": "30",
+            "configuration": self.config.base.triplex_configurations[0][0] })
 
         params = {"phases": phs,
                   "meter_power_consumption": "1+7j",
@@ -382,19 +382,19 @@ class Residential_Build:
                   "voltage_1": vstart,
                   "voltage_2": vstart}
         self.glm.add_tariff(params)
-        self.glm.add_object("triplex_meter", sm_mtrname, params)
-        self.glm.add_metrics_collector(sm_mtrname, "meter")
+        self.mdl.triplex_meter.add(mtrname, params)
+        self.glm.add_metrics_collector(mtrname, "meter")
 
-        params = {"parent": sm_mtrname,
-                  "phases": phs,
-                  "nominal_voltage": str(v_nom),
-                  "voltage_1": vstart,
-                  "voltage_2": vstart,
-                  "constant_power_12_real": "10.0",
-                  "constant_power_12_reac": "8.0"}
-        self.glm.add_object("triplex_load", loadname, params)
+        self.mdl.triplex_load.add(loadname, {
+            "parent": mtrname,
+            "phases": phs,
+            "nominal_voltage": str(v_nom),
+            "voltage_1": vstart,
+            "voltage_2": vstart,
+            "constant_power_12_real": "10.0",
+            "constant_power_12_reac": "8.0" })
         if self.config.gis_file:
-            self.config.pos[sm_mtrname] = self.config.pos_data[basenode]
+            self.config.pos[mtrname] = self.config.pos_data[basenode]
 
     def getDsoIncomeLevelTable(self) -> list:
         """Retrieve the DSO Income Level Fraction of income level in a given 
@@ -563,25 +563,26 @@ class Residential_Build:
             basenode = basenode.replace("_Low", "")
             basenode = basenode.replace("_Middle", "")
             basenode = basenode.replace("_Upper", "")
-        params = {"phases": phs,
-                  "nominal_voltage": str(v_nom),
-                  "voltage_1": vstart,
-                  "voltage_2": vstart}
-        self.glm.add_object("triplex_node", basenode, params)
-        tpxname = gld_strict_name(basenode + '_tpx')
-        mtrname = gld_strict_name(tpxname + '_mtr')
+        self.mdl.triplex_node.add(basenode, {
+            "phases": phs,
+            "nominal_voltage": str(v_nom),
+            "voltage_1": vstart,
+            "voltage_2": vstart })
+        tpxname = f'{basenode}_tpx'
+        mtrname = f'{tpxname}_mtr'
         for i in range(self.nhouse):
-            tpxname1 = tpxname + '_' + str(i + 1)
-            mtrname1 = mtrname + '_' + str(i + 1)
-            hsename = gld_strict_name(basenode + '_hs_' + str(i + 1))
-            hse_m_name = gld_strict_name(basenode + '_hsmtr_' + str(i + 1))
-            whname = gld_strict_name(basenode + '_wh_' + str(i + 1))
-            sol_i_name = gld_strict_name(basenode + '_solinv_' + str(i + 1))
-            bat_i_name = gld_strict_name(basenode + '_batinv_' + str(i + 1))
-            sol_m_name = gld_strict_name(basenode + '_solmtr_' + str(i + 1))
-            sol_name = gld_strict_name(basenode + '_sol_' + str(i + 1))
-            bat_m_name = gld_strict_name(basenode + '_batmtr_' + str(i + 1))
-            bat_name = gld_strict_name(basenode + '_bat_' + str(i + 1))
+            idx = i + 1
+            tpxname1 = f'{tpxname}_{idx}'
+            mtrname1 = f'{mtrname}_{idx}'
+            hsename = f'{basenode}_hs_{idx}'
+            hse_m_name = f'{basenode}_hsmtr_{idx}'
+            whname = f'{basenode}_wh_{idx}'
+            sol_i_name = f'{basenode}_solinv_{idx}'
+            bat_i_name = f'{basenode}_batinv_{idx}'
+            sol_m_name = f'{basenode}_solmtr_{idx}'
+            sol_name = f'{basenode}_sol_{idx}'
+            bat_m_name = f'{basenode}_batmtr_{idx}'
+            bat_name = f'{basenode}_bat_{idx}'
             # Add position data to house and meter objects, if available
             if self.config.gis_file:
                 self.config.pos[mtrname1] = self.config.pos_data[basenode]
@@ -589,12 +590,11 @@ class Residential_Build:
                 self.config.pos[hse_m_name] = self.config.pos_data[basenode]
                 self.config.pos[bat_m_name] = self.config.pos_data[basenode]
                 self.config.pos[sol_m_name] = self.config.pos_data[basenode]
-            params = {"from": basenode,
+            self.mdl.triplex_line.add(tpxname1, {"from": basenode,
                       "to": mtrname1,
                       "phases": phs,
                       "length": "30",
-                      "configuration": self.config.base.name_prefix + self.config.base.triplex_configurations[0][0]}
-            self.glm.add_object("triplex_line", tpxname1, params)
+                      "configuration": self.config.base.name_prefix + self.config.base.triplex_configurations[0][0] })
 
             params = {"phases": phs,
                       "meter_power_consumption": "1+7j",
@@ -602,13 +602,13 @@ class Residential_Build:
                       "voltage_1": vstart,
                       "voltage_2": vstart}
             self.glm.add_tariff(params)
-            self.glm.add_object("triplex_meter", mtrname1, params)
+            self.mdl.triplex_meter.add(mtrname1, params)
             self.glm.add_metrics_collector(mtrname1, "meter")
 
-            params = {"parent": mtrname1,
-                      "phases": phs,
-                      "nominal_voltage": str(v_nom)}
-            self.glm.add_object("triplex_meter", hse_m_name, params)
+            self.mdl.triplex_meter.add(hse_m_name, {
+                "parent": mtrname1,
+                "phases": phs,
+                "nominal_voltage": str(v_nom) })
 
             # Assign floor area, ceiling height, and stories of houses
             fa_array = {}  # distribution array for floor area min, max, mean, standard deviation
@@ -745,11 +745,11 @@ class Residential_Build:
             mass_floor = 2.5 + 1.5 * rng.random()
             mass_solar_gain_frac = 0.5
             mass_int_gain_frac = 0.5
-            
+
             # COP: pick any one year value randomly from the bin in cop_lookup
-            h_COP = c_COP = rng.choice(self.config.base.cop_lookup[ti]) * (0.9 + rng.random() * 0.2)  
+            h_COP = c_COP = rng.choice(self.config.base.cop_lookup[ti]) * (0.9 + rng.random() * 0.2)
             # +- 10% of mean value
-            
+
             # Set housing parameters
             params = {"parent": hse_m_name,
                     "groupid": self.config.base.bldgTypeName[bldg],
@@ -808,7 +808,7 @@ class Residential_Build:
                 params["motor_model"] = "BASIC"
                 params["motor_efficiency"] = "AVERAGE"
             # Restrict large homes from using electric heating
-            # elif floor_area * ceiling_height > 12000.0:  
+            # elif floor_area * ceiling_height > 12000.0:
             #     params["heating_system_type"] =  "GAS"
             #     if cool_rand <= electric_cooling_percentage:
             #         params["cooling_system_type"] = "ELECTRIC"
@@ -830,11 +830,11 @@ class Residential_Build:
             heating_set = heating_bin[3] + rng.random() * (heating_bin[2] - heating_bin[3])
             params["cooling_setpoint"] = np.round(cooling_set)
             params["heating_setpoint"] = np.round(heating_set)
-            # For transactive case, override defaults for larger separation to 
+            # For transactive case, override defaults for larger separation to
             # assure no overlaps during transactive simulations
             # params["cooling_setpoint"] = "80.0"
             # params["heating_setpoint"] = "60.0"
-            self.glm.add_object("house", hsename, params)
+            self.mdl.house.add(hsename, params)
 
             # heatgain fraction, Zpf, Ipf, Ppf, Z, I, P
             params = {"parent": hsename,
@@ -847,10 +847,10 @@ class Residential_Build:
                     "impedance_fraction": '{:.2f}'.format(self.config.base.techdata[4]),
                     "current_fraction": '{:.2f}'.format(self.config.base.techdata[5]),
                     "power_fraction": '{:.2f}'.format(self.config.base.techdata[6])}
-            self.glm.add_object("ZIPload", "responsive", params)
+            self.mdl.ZIPload.add("responsive", params)
 
             params["base_power"] = 'unresponsive_loads * ' + '{:.2f}'.format(unresp_scalar)
-            self.glm.add_object("ZIPload", "unresponsive", params)
+            self.mdl.ZIPload.add("unresponsive", params)
 
             # Determine house water heating fuel type based on space heating fuel type
             wh_fuel_type = 'gas'
@@ -919,7 +919,7 @@ class Residential_Build:
                             "tank_volume": '{:.0f}'.format(wh_size),
                             "waterheater_model": "TWONODE",
                             "tank_setpoint": '{:.1f}'.format(tank_set - 5.0)}
-                self.glm.add_object("waterheater", whname, params)
+                self.mdl.waterheater.add(whname, params)
 
             self.glm.add_metrics_collector(hsename, "house")
 
@@ -963,7 +963,7 @@ class Residential_Build:
                     prob_ev = self.config.ev_deployment * self.ev[self.config.state][self.config.res_dso_type][income]["mobile_home"]
 
             # This is a special case, implemented for the Rates Analysis work
-            else: 
+            else:
                 prob_sf = self.housing_type[self.config.state][self.config.res_dso_type][income]['single_family_attached'] + \
                         self.housing_type[self.config.state][self.config.res_dso_type][income]['single_family_attached']
 
@@ -986,109 +986,115 @@ class Commercial_Build:
     def __init__(self, config):
         self.config = config
         self.glm = config.glm
+        self.mdl = config.glm.glm
 
-    def add_one_commercial_zone(self, bldg: dict) -> None:
+    def add_one_commercial_zone(self, bldg: dict, key: str) -> None:
         """Write one pre-configured commercial zone as a house
 
         Args:
             bldg (dict): dictionary of GridLAB-D house and zipload attributes
+            key (str): location name for object
         Returns:
             None
         """
-        self.name = bldg['zonename']
-        params = {"parent": bldg['parent'],
-                  "groupid": bldg['groupid'],
-                  "motor_model": "BASIC",
-                  "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
-                  "floor_area": '{:.0f}'.format(bldg['floor_area']),
-                  "design_internal_gains": '{:.0f}'.format(bldg['int_gains'] * bldg['floor_area'] * 3.413),
-                  "number_of_doors": '{:.0f}'.format(bldg['no_of_doors']),
-                  "aspect_ratio": '{:.2f}'.format(bldg['aspect_ratio']),
-                  "total_thermal_mass_per_floor_area": '{:1.2f}'.format(bldg['thermal_mass_per_floor_area']),
-                  "interior_surface_heat_transfer_coeff": '{:1.2f}'.format(bldg['surface_heat_trans_coeff']),
-                  "interior_exterior_wall_ratio": '{:.2f}'.format(bldg['interior_exterior_wall_ratio']),
-                  "exterior_floor_fraction": '{:.3f}'.format(bldg['exterior_floor_fraction']),
-                  "exterior_ceiling_fraction": '{:.3f}'.format(bldg['exterior_ceiling_fraction']),
-                  "Rwall": str(bldg['Rwall']),
-                  "Rroof": str(bldg['Rroof']),
-                  "Rfloor": str(bldg['Rfloor']),
-                  "Rdoors": str(bldg['Rdoors']),
-                  "exterior_wall_fraction": '{:.2f}'.format(bldg['exterior_wall_fraction']),
-                  "glazing_layers": '{:s}'.format(bldg['glazing_layers']),
-                  "glass_type": '{:s}'.format(bldg['glass_type']),
-                  "glazing_treatment": '{:s}'.format(bldg['glazing_treatment']),
-                  "window_frame": '{:s}'.format(bldg['window_frame']),
-                  "airchange_per_hour": '{:.2f}'.format(bldg['airchange_per_hour']),
-                  "window_wall_ratio": '{:0.3f}'.format(bldg['window_wall_ratio']),
-                  "heating_system_type": '{:s}'.format(bldg['heat_type']),
-                  "auxiliary_system_type": '{:s}'.format(bldg['aux_type']),
-                  "fan_type": '{:s}'.format(bldg['fan_type']),
-                  "cooling_system_type": '{:s}'.format(bldg['cool_type']),
-                  "air_temperature": '{:.2f}'.format(bldg['init_temp']),
-                  "mass_temperature": '{:.2f}'.format(bldg['init_temp']),
-                  "over_sizing_factor": '{:.1f}'.format(bldg['os_rand']),
-                  "cooling_COP": '{:2.2f}'.format(bldg['COP_A']),
-                  "cooling_setpoint": '80.0',
-                  "heating_setpoint": '60.0'}
-        self.glm.add_object("house", self.name, params)
+        name = bldg['zonename']
+        self.mdl.house.add(name, {
+            "parent": bldg['parent'],
+            "groupid": bldg['groupid'],
+            "motor_model": "BASIC",
+            "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
+            "floor_area": '{:.0f}'.format(bldg['floor_area']),
+            "design_internal_gains": '{:.0f}'.format(bldg['int_gains'] * bldg['floor_area'] * 3.413),
+            "number_of_doors": '{:.0f}'.format(bldg['no_of_doors']),
+            "aspect_ratio": '{:.2f}'.format(bldg['aspect_ratio']),
+            "total_thermal_mass_per_floor_area": '{:1.2f}'.format(bldg['thermal_mass_per_floor_area']),
+            "interior_surface_heat_transfer_coeff": '{:1.2f}'.format(bldg['surface_heat_trans_coeff']),
+            "interior_exterior_wall_ratio": '{:.2f}'.format(bldg['interior_exterior_wall_ratio']),
+            "exterior_floor_fraction": '{:.3f}'.format(bldg['exterior_floor_fraction']),
+            "exterior_ceiling_fraction": '{:.3f}'.format(bldg['exterior_ceiling_fraction']),
+            "Rwall": str(bldg['Rwall']),
+            "Rroof": str(bldg['Rroof']),
+            "Rfloor": str(bldg['Rfloor']),
+            "Rdoors": str(bldg['Rdoors']),
+            "exterior_wall_fraction": '{:.2f}'.format(bldg['exterior_wall_fraction']),
+            "glazing_layers": '{:s}'.format(bldg['glazing_layers']),
+            "glass_type": '{:s}'.format(bldg['glass_type']),
+            "glazing_treatment": '{:s}'.format(bldg['glazing_treatment']),
+            "window_frame": '{:s}'.format(bldg['window_frame']),
+            "airchange_per_hour": '{:.2f}'.format(bldg['airchange_per_hour']),
+            "window_wall_ratio": '{:0.3f}'.format(bldg['window_wall_ratio']),
+            "heating_system_type": '{:s}'.format(bldg['heat_type']),
+            "auxiliary_system_type": '{:s}'.format(bldg['aux_type']),
+            "fan_type": '{:s}'.format(bldg['fan_type']),
+            "cooling_system_type": '{:s}'.format(bldg['cool_type']),
+            "air_temperature": '{:.2f}'.format(bldg['init_temp']),
+            "mass_temperature": '{:.2f}'.format(bldg['init_temp']),
+            "over_sizing_factor": '{:.1f}'.format(bldg['os_rand']),
+            "cooling_COP": '{:2.2f}'.format(bldg['COP_A']),
+            "cooling_setpoint": '80.0',
+            "heating_setpoint": '60.0' })
 
-        params = {"parent": self.name,
-                  "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
-                  "heatgain_fraction": "0.8",
-                  "power_fraction": '{:.2f}'.format(bldg['c_p_frac']),
-                  "impedance_fraction": '{:.2f}'.format(bldg['c_z_frac']),
-                  "current_fraction": '{:.2f}'.format(bldg['c_i_frac']),
-                  "power_pf": '{:.2f}'.format(bldg['c_p_pf']),
-                  "current_pf": '{:.2f}'.format(bldg['c_i_pf']),
-                  "impedance_pf": '{:.2f}'.format(bldg['c_z_pf']),
-                  "base_power":  '{:s}_lights*{:.2f}'.format(bldg['base_schedule'], bldg['adj_lights'])}
-        self.glm.add_object("ZIPload", "lights", params)
+        self.mdl.ZIPload.add("lights", {
+            "parent": name,
+            "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
+            "heatgain_fraction": "0.8",
+            "power_fraction": '{:.2f}'.format(bldg['c_p_frac']),
+            "impedance_fraction": '{:.2f}'.format(bldg['c_z_frac']),
+            "current_fraction": '{:.2f}'.format(bldg['c_i_frac']),
+            "power_pf": '{:.2f}'.format(bldg['c_p_pf']),
+            "current_pf": '{:.2f}'.format(bldg['c_i_pf']),
+            "impedance_pf": '{:.2f}'.format(bldg['c_z_pf']),
+            "base_power":  '{:s}_lights*{:.2f}'.format(bldg['base_schedule'], bldg['adj_lights']) })
 
-        params = {"parent": self.name,
-                  "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
-                  "heatgain_fraction": "0.9",
-                  "power_fraction": '{:.2f}'.format(bldg['c_p_frac']),
-                  "impedance_fraction": '{:.2f}'.format(bldg['c_z_frac']),
-                  "current_fraction": '{:.2f}'.format(bldg['c_i_frac']),
-                  "power_pf": '{:.2f}'.format(bldg['c_p_pf']),
-                  "current_pf": '{:.2f}'.format(bldg['c_i_pf']),
-                  "impedance_pf": '{:.2f}'.format(bldg['c_z_pf']),
-                  "base_power":  '{:s}_plugs*{:.2f}'.format(bldg['base_schedule'], bldg['adj_plugs'])}
-        self.glm.add_object("ZIPload", "plug_loads", params)
+        self.mdl.ZIPload.add("plug_loads", {
+            "parent": name,
+            "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
+            "heatgain_fraction": "0.9",
+            "power_fraction": '{:.2f}'.format(bldg['c_p_frac']),
+            "impedance_fraction": '{:.2f}'.format(bldg['c_z_frac']),
+            "current_fraction": '{:.2f}'.format(bldg['c_i_frac']),
+            "power_pf": '{:.2f}'.format(bldg['c_p_pf']),
+            "current_pf": '{:.2f}'.format(bldg['c_i_pf']),
+            "impedance_pf": '{:.2f}'.format(bldg['c_z_pf']),
+            "base_power":  '{:s}_plugs*{:.2f}'.format(bldg['base_schedule'], bldg['adj_plugs']) })
 
-        params = {"parent": self.name,
-                  "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
-                  "heatgain_fraction": "1.0",
-                  "power_fraction": "0",
-                  "impedance_fraction": "0",
-                  "current_fraction": "0",
-                  "power_pf": "1",
-                  "base_power": '{:s}_gas*{:.2f}'.format(bldg['base_schedule'], bldg['adj_gas'])}
-        self.glm.add_object("ZIPload", "gas_waterheater", params)
+        self.mdl.ZIPload.add("gas_waterheater", {
+            "parent": name,
+            "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
+            "heatgain_fraction": "1.0",
+            "power_fraction": "0",
+            "impedance_fraction": "0",
+            "current_fraction": "0",
+            "power_pf": "1",
+            "base_power": '{:s}_gas*{:.2f}'.format(bldg['base_schedule'], bldg['adj_gas']) })
 
-        params = {"parent": self.name,
-                  "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
-                  "heatgain_fraction": "0.0",
-                  "power_fraction": '{:.2f}'.format(bldg['c_p_frac']),
-                  "impedance_fraction": '{:.2f}'.format(bldg['c_z_frac']),
-                  "current_fraction": '{:.2f}'.format(bldg['c_i_frac']),
-                  "power_pf": '{:.2f}'.format(bldg['c_p_pf']),
-                  "current_pf": '{:.2f}'.format(bldg['c_i_pf']),
-                  "impedance_pf": '{:.2f}'.format(bldg['c_z_pf']),
-                  "base_power": '{:s}_exterior*{:.2f}'.format(bldg['base_schedule'], bldg['adj_ext'])}
-        self.glm.add_object("ZIPload", "exterior_lights", params)
+        self.mdl.ZIPload.add("exterior_lights", {
+            "parent": name,
+            "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
+            "heatgain_fraction": "0.0",
+            "power_fraction": '{:.2f}'.format(bldg['c_p_frac']),
+            "impedance_fraction": '{:.2f}'.format(bldg['c_z_frac']),
+            "current_fraction": '{:.2f}'.format(bldg['c_i_frac']),
+            "power_pf": '{:.2f}'.format(bldg['c_p_pf']),
+            "current_pf": '{:.2f}'.format(bldg['c_i_pf']),
+            "impedance_pf": '{:.2f}'.format(bldg['c_z_pf']),
+            "base_power": '{:s}_exterior*{:.2f}'.format(bldg['base_schedule'], bldg['adj_ext']) })
 
-        params = {"parent": self.name,
-                  "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
-                  "heatgain_fraction": "1.0",
-                  "power_fraction": "0",
-                  "impedance_fraction": "0",
-                  "current_fraction": "0",
-                  "power_pf": "1",
-                  "base_power": '{:s}_occupancy*{:.2f}'.format(bldg['base_schedule'], bldg['adj_occ'])}
-        self.glm.add_object("ZIPload", "occupancy", params)
-        
-        self.glm.add_metrics_collector(self.name, "house")
+        self.mdl.ZIPload.add("occupancy", {
+            "parent": name,
+            "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
+            "heatgain_fraction": "1.0",
+            "power_fraction": "0",
+            "impedance_fraction": "0",
+            "current_fraction": "0",
+            "power_pf": "1",
+            "base_power": '{:s}_occupancy*{:.2f}'.format(bldg['base_schedule'], bldg['adj_occ']) })
+
+        self.glm.add_metrics_collector(name, "house")
+        # Add position data to commercial zone, if available
+        if self.config.gis_file:
+            self.config.pos[name] = self.config.pos_data[key]
+
 
     def define_commercial_zones(self, rgn: int, key: str, kva: float) -> None:
         """Define building parameters for commercial building zones and ZIP 
@@ -1103,15 +1109,15 @@ class Commercial_Build:
         Returns:
             None
         """
-        self.mtr = self.config.base.comm_loads[key][0]
+        mtr = self.config.base.comm_loads[key][0]
         comm_type = self.config.base.comm_loads[key][1]
         nphs = int(self.config.base.comm_loads[key][4])
         phases = self.config.base.comm_loads[key][5]
         vln = float(self.config.base.comm_loads[key][6])
         loadnum = int(self.config.base.comm_loads[key][7])
-        log.info('load: %s, mtr: %s, type: %s, kVA: %.4f, nphs: %s, phases: %s, vln: %.3f', key, self.mtr, comm_type, kva, nphs, phases, vln)
+        log.info('load: %s, mtr: %s, type: %s, kVA: %.4f, nphs: %s, phases: %s, vln: %.3f', key, mtr, comm_type, kva, nphs, phases, vln)
 
-        bldg = {'parent': self.mtr,
+        bldg = {'parent': mtr,
                 'groupid': comm_type + '_' + str(loadnum),
                 'fan_type': 'ONE_SPEED',
                 'heat_type': 'GAS',
@@ -1134,8 +1140,8 @@ class Commercial_Build:
         
         if comm_type == 'ZIPload':
             phsva = 1000.0 * kva / nphs
-            self.name = '{:s}'.format(key + '_streetlights')
-            params = {"parent": '{:s}'.format(self.mtr),
+            name = '{:s}'.format(key + '_streetlights')
+            params = {"parent": '{:s}'.format(mtr),
                       "groupid": "STREETLIGHTS",
                       "nominal_voltage": '{:2f}'.format(vln)}
             for phs in ['A', 'B', 'C']:
@@ -1147,11 +1153,11 @@ class Commercial_Build:
                     params["current_pf_" + phs] = '{:f}'.format(self.config.base.c_i_pf)
                     params["power_pf_" + phs] = '{:f}'.format(self.config.base.c_p_pf)
                     params["base_power_" + phs] = '{:.2f}'.format(self.config.base.light_scalar_comm * phsva)
-            self.glm.add_object("load", self.name, params)
+            self.mdl.load.add(name, params)
             # Add position data to commercial ZIPload, if available
             if self.config.gis_file:
-                self.config.pos[self.name] = self.config.pos_data[key]
-        
+                self.config.pos[name] = self.config.pos_data[key]
+
         else:
             bld_specs = self.building_model_specifics[comm_type] 
             # Randomly determine the age (year of construction) of the building
@@ -1228,12 +1234,8 @@ class Commercial_Build:
                         bldg['adj_ext'] = (0.9 + 0.1 * rng.random()) * floor_area / 1000.
                         bldg['adj_occ'] = (0.9 + 0.1 * rng.random()) * floor_area / 1000.
 
-                        bldg['zonename'] = gld_strict_name(
-                            key + '_floor_' + str(floor) + '_zone_' + str(zone) + '_' + str(comm_type))
-                        Commercial_Build.add_one_commercial_zone(self, bldg)
-                        # Add position data to commercial zone, if available
-                        if self.config.gis_file:
-                            self.config.pos[self.name] = self.config.pos_data[key]
+                        bldg['zonename'] = gld_strict_name(f'{key}_floor_{floor}_zone_{zone}_{comm_type}')
+                        Commercial_Build.add_one_commercial_zone(self, bldg, key)
 
             elif comm_type == 'big_box':
                 bldg['ceiling_height'] = 14.
@@ -1291,11 +1293,8 @@ class Commercial_Build:
                     bldg['adj_ext'] = (0.9 + 0.1 * rng.random()) * floor_area / 1000.
                     bldg['adj_occ'] = (0.9 + 0.1 * rng.random()) * floor_area / 1000.
 
-                    bldg['zonename'] = gld_strict_name(key + '_zone_' + str(zone) + '_' + str(comm_type))
-                    Commercial_Build.add_one_commercial_zone(self, bldg)
-                    # Add position data to commercial zone, if available
-                    if self.config.gis_file:
-                        self.config.pos[self.name] = self.config.pos_data[key]
+                    bldg['zonename'] = gld_strict_name(f'{key}_zone_{zone}_{comm_type}')
+                    Commercial_Build.add_one_commercial_zone(self, bldg, key)
 
             elif comm_type == 'strip_mall':
                 bldg['ceiling_height'] = 17
@@ -1340,11 +1339,8 @@ class Commercial_Build:
                     bldg['adj_gas'] = (0.8 + 0.4 * rng.random()) * floor_area / 1000.0
                     bldg['adj_ext'] = (0.8 + 0.4 * rng.random()) * floor_area / 1000.0
                     bldg['adj_occ'] = (0.8 + 0.4 * rng.random()) * floor_area / 1000.0
-                    bldg['zonename'] = gld_strict_name(key + '_zone_' + str(zone) + '_' + str(comm_type))
-                    Commercial_Build.add_one_commercial_zone(self, bldg)
-                    # Add position data to commercial zone, if available
-                    if self.config.gis_file:
-                        self.config.pos[self.name] = self.config.pos_data[key]
+                    bldg['zonename'] = gld_strict_name(f'{key}_zone_{zone}_{comm_type}')
+                    Commercial_Build.add_one_commercial_zone(self, bldg, key)
 
             else: # For all other building types
                 bldg['skew_value'] = self.glm.randomize_commercial_skew()
@@ -1385,11 +1381,8 @@ class Commercial_Build:
                     bldg['base_schedule'] = 'retail'
                 elif comm_type == 'low_occupancy':
                     bldg['base_schedule'] = 'lowocc'
-                bldg['zonename'] = gld_strict_name(key + '_' + str(comm_type))
-                Commercial_Build.add_one_commercial_zone(self, bldg)
-                # Add position data to commercial zone, if available
-                if self.config.gis_file:
-                    self.config.pos[self.name] = self.config.pos_data[key]
+                bldg['zonename'] = gld_strict_name(f'{key}_{comm_type}')
+                Commercial_Build.add_one_commercial_zone(self, bldg, key)
 
     def define_comm_bldg(self, dso_type: str, num_bldgs: float) -> list:
         """Randomly selects a set number of buildings by type and size (sqft).
@@ -1554,6 +1547,7 @@ class Battery:
     def __init__(self, config):
         self.config = config
         self.glm = config.glm
+        self.mdl = config.glm.glm
         self.battery_count = 0
     
     def add_batt(self, bat_prob: float, parent_mtr: str, bat_mtr: str, bat_name: str, inv_name: str, phs: float, v_nom: float) -> None:
@@ -1586,45 +1580,46 @@ class Battery:
             rated_power = max(max_charge_rate, max_discharge_rate)
 
             self.battery_count += 1
-            params = {"parent": parent_mtr,
-                        "phases": phs,
-                        "nominal_voltage": str(v_nom)}
-            self.glm.add_object("triplex_meter", bat_mtr, params)
+            self.mdl.triplex_meter.add(bat_mtr, {
+                "parent": parent_mtr,
+                "phases": phs,
+                "nominal_voltage": str(v_nom) })
 
-            params = {"parent": bat_mtr,
-                        "phases": phs,
-                        "groupid": "batt_inverter",
-                        "generator_status": "ONLINE",
-                        "generator_mode": "CONSTANT_PQ",
-                        "inverter_type": "FOUR_QUADRANT",
-                        "four_quadrant_control_mode": self.config.base.storage_inv_mode,
-                        "charge_lockout_time": 1,
-                        "discharge_lockout_time": 1,
-                        "rated_power": rated_power,
-                        "charge_on_threshold": "2 kW",
-                        "charge_off_threshold": "7 kW",
-                        "discharge_on_threshold": "10 kW",
-                        "discharge_off_threshold": "5 kW",
-                        "max_charge_rate": max_charge_rate,
-                        "max_discharge_rate": max_discharge_rate,
-                        "sense_object": bat_mtr,
-                        "inverter_efficiency": inverter_efficiency,
-                        "power_factor": 1.0}
-            self.glm.add_object("inverter", inv_name, params)
+            self.mdl.inverter.add(inv_name, {
+                "parent": bat_mtr,
+                "phases": phs,
+                "groupid": "batt_inverter",
+                "generator_status": "ONLINE",
+                "generator_mode": "CONSTANT_PQ",
+                "inverter_type": "FOUR_QUADRANT",
+                "four_quadrant_control_mode": self.config.base.storage_inv_mode,
+                "charge_lockout_time": 1,
+                "discharge_lockout_time": 1,
+                "rated_power": rated_power,
+                "charge_on_threshold": "2 kW",
+                "charge_off_threshold": "7 kW",
+                "discharge_on_threshold": "10 kW",
+                "discharge_off_threshold": "5 kW",
+                "max_charge_rate": max_charge_rate,
+                "max_discharge_rate": max_discharge_rate,
+                "sense_object": bat_mtr,
+                "inverter_efficiency": inverter_efficiency,
+                "power_factor": 1.0 })
 
-            params = {"parent": inv_name,
-                        "use_internal_battery_model": "true",
-                        "nominal_voltage": 480,
-                        "battery_capacity": battery_capacity,
-                        "round_trip_efficiency": round_trip_efficiency,
-                        "state_of_charge": 0.50}
-            self.glm.add_object("battery", bat_name, params)
+            self.mdl.battery.add(bat_name, {
+                "parent": inv_name,
+                "use_internal_battery_model": "true",
+                "nominal_voltage": 480,
+                "battery_capacity": battery_capacity,
+                "round_trip_efficiency": round_trip_efficiency,
+                "state_of_charge": 0.50 })
             self.glm.add_metrics_collector(inv_name, "inverter")
 
 class Solar:
     def __init__(self, config):
         self.config = config
         self.glm = config.glm
+        self.mdl = config.glm.glm
         self.solar_count = 0
         self.solar_kw = 0
   
@@ -1657,10 +1652,9 @@ class Solar:
             
             self.solar_count += 1
             self.solar_kw += 0.001 * inv_power
-            params = {"parent": parent_mtr,
+            self.mdl.triplex_meter.add(solar_mtr, {"parent": parent_mtr,
                         "phases": phs,
-                        "nominal_voltage": str(v_nom)}
-            self.glm.add_object("triplex_meter", solar_mtr, params)
+                        "nominal_voltage": str(v_nom) })
 
             params = {"parent": solar_mtr,
                         "phases": phs,
@@ -1683,11 +1677,11 @@ class Solar:
                 params["V_In"] = "10000000"
                 params["I_In"] = "10000000"
 
-            self.glm.add_object("inverter", inv_name, params)
+            self.mdl.inverter.add(inv_name, params)
             self.glm.add_metrics_collector(inv_name, "inverter")
 
             if self.config.use_solar_player == "False":
-                params = {
+                self.mdl.solar.add(solar_name, {
                     "parent": inv_name,
                     "panel_type": self.config.solar["panel_type"],
                     # "area": '{:.2f}'.format(panel_area),
@@ -1698,8 +1692,7 @@ class Solar:
                     "orientation_azimuth": self.config.solar["orientation_azimuth"],
                     "orientation": self.config.solar["orientation"],
                     "SOLAR_TILT_MODEL": self.config.solar["SOLAR_TILT_MODEL"],
-                    "SOLAR_POWER_MODEL": self.config.solar["SOLAR_POWER_MODEL"]}
-                self.glm.add_object("solar", solar_name, params)
+                    "SOLAR_POWER_MODEL": self.config.solar["SOLAR_POWER_MODEL"] })
 
 class Electric_Vehicle:
     def __init__(self, config):
@@ -2261,9 +2254,9 @@ class Feeder:
                     comm_type = 'ZIPload'
                     comm_size = 0
                     total_zipload += 1
-                self.mtr = gld_strict_name(e_object['parent'])
-                extra_billing_meters.add(self.mtr)
-                self.config.base.comm_loads[e_name] = [self.mtr, comm_type, comm_size, kva, nphs, phases, vln, total_commercial, comm_name]
+                mtr = gld_strict_name(e_object['parent'])
+                extra_billing_meters.add(mtr)
+                self.config.base.comm_loads[e_name] = [mtr, comm_type, comm_size, kva, nphs, phases, vln, total_commercial, comm_name]
                 removenames.append(e_name)
         for e_name in removenames:
             self.glm.del_object(gld_class, e_name)
