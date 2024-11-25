@@ -1,5 +1,5 @@
-Docker-Based Installation
-=========================
+Windows-Based Installation with Docker
+======================================
 
 For those not running on a Linux-based system, TESP is also distributed
 via a Docker image that can be run on Windows, macOS, and Linux.
@@ -26,7 +26,7 @@ environment, in the case of TESP having the TESP repository cloned
 locally plays a roll in getting the container started properly. Thus,
 cloning in the TESP respository is necessary.
 
-``git clone https://github.com/pnnl/tesp.git``
+`git clone https://github.com/pnnl/tesp.git`
 
 Entering the Docker to Use TESP
 -------------------------------
@@ -58,7 +58,122 @@ with GridLAB-D:
 
 ``gridlabd /home/worker/tesp/model.glm``
 
-Any location in the TESP repository folder is fine but it is recommended
-for significant project you create a dedicated folder (*e.g.*
-“tesp/examples/my_project”) to keep all your custom files separate from
-the TESP code.
+
+Windows-Based Installation with Linux server
+============================================
+
+What you will need (as a windows user)
+--------------------------------------
+
+-  A python IDE (integrated development environment)
+
+   -  VS Code or PyCharm
+
+-  A python package manager
+
+   -  Python, Anaconda, conda, pip, or similar
+
+-  mobaxterm: https://mobaxterm.mobatek.net/
+
+   -  Download and install
+
+Setup an environment and install TESP through the server
+--------------------------------------------------------
+
+-  mobaxterm
+
+   -  Download and install
+
+   -  Connect using ssh session of mobaxterm into a linux computing resources
+
+      -  Note that you need to request access individually
+      -  Session -> new session -> user@resource.company.com
+      -  Enter password
+
+-  vscode (code)
+
+   -  Install from the command line in mobaxterm:
+      ::
+
+         sudo apt install snapd
+         sudo snap install --classic code
+
+   -  Here is how to start the environment and pycharm and capture pycharm log for any errors from the terminal:
+      ::
+
+         source ~/grid/tesp/tesp.env
+         code &> ~/code.log&
+
+   -  To kill sessions from the terminal: ``killall code``
+
+-  pycharm (pycharm-community)
+
+   -  Install from the command line in mobaxterm:
+      ::
+
+         sudo apt install snapd
+         sudo snap install pycharm-community --classic
+
+   -  Here is how to start the environment and pycharm and capture pycharm log for any errors from the terminal:
+      ::
+
+         source ~/grid/tesp/tesp.env
+         pycharm-community &> ~/charm.log&
+
+   -  To kill sessions from the terminal: ``killall pycharm-community``
+
+Windows-Based Installation no with Linux server
+===============================================
+For those Windows user want to run only windows.
+No grid applications are available other GridLABD.  GridLABD can be install from here.
+
+What you will need (as a windows user)
+--------------------------------------
+
+-  A python IDE (integrated development environment)
+
+   -  VS Code or PyCharm
+
+-  A python package manager
+
+   -  Python, Anaconda, conda, pip, or similar
+
+Setup an environment and install TESP through Windows
+-----------------------------------------------------
+
+-  Create a tesp environment, e.g.``win-tesp``. Using Conda, from the terminal:
+   ::
+
+      conda create --name win-tesp python=3.10
+-  Install pip. Using Conda, from the terminal:
+   ::
+
+      conda install pip
+-  Clone the tesp repository: https://github.com/pnnl/tesp. VS Code `Git
+   Instructions <https://code.visualstudio.com/docs/sourcecontrol/intro-to-git#:~:text=To%20clone%20a%20repository%2C%20run,to%20clone%20to%20your%20machine>`__
+
+-  Install TESP. From the terminal:
+   ::
+
+      cd [tesp_directory]
+      pip install -r requirements.txt
+-  Add the tesp directory as environment variable ``TESPDIR``
+
+   -  Navigate to Settings -> Environment Variables -> New
+
+      -  Variable name: ``TESPDIR``
+      -  Variable value: ``C:\Users\Name\path_to_tesp_directory``
+
+   -  Once set, restart computer to take effect.
+
+Full Installation
+=================
+-  The TESP Read The Docs page walks through this process:
+   https://tesp.readthedocs.io/en/latest/Installing_Building_TESP.html
+
+When you’ve successfully completed these steps, you should be able to
+activate the environment from your tesp directory. Remember to activate
+your environment before attempting to run anything within TESP.
+
+Activate environment: ``source tesp.env``
+

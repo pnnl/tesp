@@ -91,12 +91,12 @@ TESP includes a small script that attempts to run a trivial command with each of
 
     TESP software modules installed are:
 
-    TESP 1.3.0
+    TESP 1.3.6
     FNCS installed
-    HELICS 3.4.0-main-g0b3d894e7 (2023-10-03)
-    HELICS Java, 3.4.0-main-g0b3d894e7 (2023-10-03)
+    HELICS 3.5.0-main-g0b3d894e7 (2023-10-03)
+    HELICS Java, 3.5.0-main-g0b3d894e7 (2023-10-03)
 
-    GridLAB-D 5.1.0-19475 (4ea6109e:develop:Modified) 64-bit LINUX RELEASE
+    GridLAB-D 5.21.0-19775 (0affdba1:master:Modified) 64-bit LINUX RELEASE
     EnergyPlus, Version 9.3.0-fd4546e21b (No OpenGL)
     NS-3 installed
     Ipopt 3.13.2 (x86_64-pc-linux-gnu), ASL(20190605)
