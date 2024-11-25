@@ -21,8 +21,8 @@ To aid in understanding the DSO+T HVAC agent, the code was examined and a diagra
 ------------------
 
 
-``clearing_price
-----------------
+``clearing_price``
+------------------
 
 
 ``hvac_kw``

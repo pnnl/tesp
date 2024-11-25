@@ -29,6 +29,7 @@ This documentation is a brief summary of a much more extensive series of reports
    :maxdepth: 2
    :caption: Contents:
 
+   Getting_Started.md
    DSOT_Study
    DSOT_agents_sliders
    DSOT_hvac_agent

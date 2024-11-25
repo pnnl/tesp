@@ -18,79 +18,65 @@ References:
 
 Public Functions:
     Config
-    :preamble: Add required modules, objects, includes, defines, and sets 
-        required to run a .glm model
-    :generate_recs: Generate RECS metadata if it does not yet exist based on 
-        user config.
-    :load_recs: Assign default values for residential and commercial buildings, 
-        batteries, and electric vehicles, based on imported metadata for each.
+    :preamble: Add required modules, objects, includes, defines,
+    and sets required to run a .glm model
+    :generate_recs: Generate RECS metadata if it does not yet exist based on user config
+    :load_recs: Assign default values for residential and commercial buildings, batteries,
+    and electric vehicles, based on imported metadata for each building type
 
     Residential_Build
-    :buildingTypeLabel: Assign formatted name of region, building type name, 
-        and thermal integrity level
-    :checkResidentialBuildingTable: Verify that the regional building parameter
-        histograms sum to one
-    :selectSetpointBins: Randomly choose a histogram row from the cooling and
-        heating setpoints. The random number for the heating setpoint row is 
-        generated internally.
-    :add_small_loads: Write loads that are too small for a house, onto a node.
-    :getDsoIncomeLevelTable: Retrieve the DSO income level fractions for the
-        given dso type and state
+    :buildingTypeLabel: Assign formatted name of region, building type name,
+    and thermal integrity level
+    :checkResidentialBuildingTable: Verify that the regional building parameter histograms sum to one
+    :selectSetpointBins: Randomly choose a histogram row from the cooling and heating setpoints.
+    The random number for the heating setpoint row is generated internally
+    :add_small_loads: Write loads that are too small for a house, onto a node
+    :getDsoIncomeLevelTable: Retrieve the DSO income level fractions for the given dso type and state
     :selectIncomeLevel: Select the income level based on region and probability
-    :getDsoThermalTable: Define the distribution of thermal integrity values 
-        based on household income level, vintage, and building type.
-    :selectResidentialBuilding: Retrieve the thermal integrity level by 
-        building type and region.
-    :selectThermalProperties: Retrieve the building thermal properties by
-        building type and thermal integrity level.
-    :add_houses: Add houses, along with solar panels, batteries, and electric
-        vehicle charges, onto a node
+    :getDsoThermalTable: Define the distribution of thermal integrity values
+    based on household income level, vintage, and building type.
+    :selectResidentialBuilding: Retrieve the thermal integrity level by building type and region
+    :selectThermalProperties: Retrieve the building thermal properties
+    by building type and thermal integrity level
+    :add_houses: Add houses, along with solar panels, batteries,
+    and electric vehicle charges, onto a node
     
     Commercial_Build
     :add_one_commercial_zone: Write one pre-configured commercial zone as a house
     :define_commercial_zones: Define building parameters for commercial building
-        zones and ZIP loads, then add to model as house object (commercial zone)
-        or load object (ZIP load).
-    :define_comm_bldg: Randomly select a set number of buildings by type and 
-        size (sqft).
-    :normalize_dict_prob: Ensure that the probability distribution of values in 
-        a dictionary effectively sums to one.
-    :rand_bin_select: Returns the element (bin) in a dictionary given a certain
-        probability
-    :sub_bin_select: Returns a scalar value within a bin range based on a uniform 
-        probability within that bin range
+    zones and ZIP loads, then add to model as house object (commercial zone)
+    or load object (ZIP load)
+    :define_comm_bldg: Randomly select a set number of buildings by type and size (sqft)
+    :normalize_dict_prob: Ensure that the probability distribution of values
+    in a dictionary effectively sums to one
+    :rand_bin_select: Returns the element (bin) in a dictionary given a certain probability
+    :sub_bin_select: Returns a scalar value within a bin range
+    based on a uniform probability within that bin range
     :find_envelope_prop: Returns the envelope value for a given type of property
-        based on the age and (ASHRAE) climate zone of the building
+    based on the age and (ASHRAE) climate zone of the building
     
     Battery
-    :add_batt: Define and add battery and inverter objects to house, under the 
-        parentage of meter_name.
+    :add_batt: Define and add battery and inverter objects to house, under the parentage of meter_name
     
     Solar
-    :add_solar: Define and add solar and inverter objects to house, under the
-        parentage of meter_name.
+    :add_solar: Define and add solar and inverter objects to house, under the parentage of meter_name
 
     Electric_Vehicle
-    :add_ev: Define and add electric vehicle charging object to the house, under
-        the parentage of the house object.
-    :selectEVmodel: Select the EV model based on available sale distribution
-        data.
-    :match_driving_schedule: Method to match the schedule of each vehicle from 
-        NHTS data based on vehicle ev_range.
-    :is_drive_time_valid: Check if work arrival time and home arrival time add
-       up properly.
-    :process_nhts_data: Read the large NHTS survey data file containing driving 
-        data, process it, and return a dataframe.
+    :add_ev: Define and add electric vehicle charging object to the house, under the parentage of the house object
+    :selectEVmodel: Select the EV model based on available sale distribution data
+    :match_driving_schedule: Method to match the schedule of each vehicle from NHTS data based on vehicle ev_range
+    :is_drive_time_valid: Check if work arrival time and home arrival time add up properly
+    :process_nhts_data: Read the large NHTS survey data file containing driving data, process it, and return a dataframe
 
     Feeder
-    :feeder_gen: Read in the backbone feeder, then loop through transformer 
-        instances and assign a standard size based on the downstream load. 
-        Change the referenced transformer_configuration attributes. Write the
-        standard transformer_configuration instance we need.
+    :feeder_gen: Read in the backbone feeder, then loop through transformer
+    instances and assign a standard size based on the downstream load.
+    Change the referenced transformer_configuration attributes. Write the
+    standard transformer_configuration instance we need
     :identify_xfmr_houses: For the full-order feeders, scan each service 
-        transformer to determine the number of houses it should have.
+    transformer to determine the number of houses it should have
     :identify_commercial_loads: For the full-order feeders, scan each load with
-        load_class==C to determine the number of zones it should have.
+    load_class==C to determine the number of zones it should have
 
 """
 
@@ -397,13 +383,13 @@ class Residential_Build:
             self.config.pos[mtrname] = self.config.pos_data[basenode]
 
     def getDsoIncomeLevelTable(self) -> list:
-        """Retrieve the DSO Income Level Fraction of income level in a given 
-        dso type and state:
+        """Retrieve the DSO Income Level Fraction of income level in a given dso type and state:
         
         Index 0 is the income level:
             0 = Low
             1 = Middle (No longer using Moderate)
             2 = Upper
+
         Args:
             None
 
@@ -411,23 +397,23 @@ class Residential_Build:
             UserWarning: Income level distribution does not sum to 1!
 
         Returns:
-            list: dsoIncomePct
+            list: dso_income_pct
         """
         income_mat = self.income_level[self.config.state][self.config.res_dso_type]
         # Create new dictionary only with income levels of interest
-        dsoIncomePct = {}
+        dso_income_pct = {}
         for key in self.config.income_level:
-            dsoIncomePct[key] = income_mat[key]
-        dsoIncomePct = list(dsoIncomePct.values())
+            dso_income_pct[key] = income_mat[key]
+        dso_income_pct = list(dso_income_pct.values())
         # Normalize so array adds up to 1
-        dsoIncomePct = [round(i / sum(dsoIncomePct), 4) for i in dsoIncomePct]  
+        dso_income_pct = [round(i / sum(dso_income_pct), 4) for i in dso_income_pct]
         # Check if the sum of all values is 1
         total = 0
-        for row in range(len(dsoIncomePct)):
-            total += dsoIncomePct[row]
+        for row in range(len(dso_income_pct)):
+            total += dso_income_pct[row]
         if total > 1.01 or total < 0.99:
              raise UserWarning('Income level distribution does not sum to 1!')
-        return dsoIncomePct
+        return dso_income_pct
 
     def selectIncomeLevel(self, incTable: list, prob: float) -> int:
         """Select the income level based on region and probability
@@ -1624,8 +1610,7 @@ class Solar:
         self.solar_kw = 0
   
     def add_solar(self, solar_prob: float,  parent_mtr: str, solar_mtr: str, solar_name: str, inv_name: str, phs: float, v_nom: float, floor_area: float) -> None:
-        """ Define and add solar and inverter to house under the parentage of
-        meter_name
+        """ Define and add solar and inverter to house under the parentage of meter_name
 
         Args:
             solar_prob (float): probability distribution of houses with solar 
@@ -1793,21 +1778,20 @@ class Electric_Vehicle:
         raise UserWarning('EV model sale distribution does not sum to 1!')
 
     def match_driving_schedule(self, ev_range: float, ev_mileage: float, ev_max_charge: float) -> dict:
-        """Method to match the schedule of each vehicle from NHTS data based on
-        vehicle ev_range.
-        - Checks to make sure daily travel miles are less than
-            ev_range-margin. Allows a reserve SoC to be specified.
-        - Checka if home_duration is enough to charge for daily_miles driven +
-            margin
+        """Method to match the schedule of each vehicle from NHTS data based on vehicle ev_range.
+
+        - Checks to make sure daily travel miles are less than (ev_range-margin).
+            Allows a reserve SoC to be specified
+        - Checks if home_duration is enough to charge for daily_miles (driven+margin)
         - Since during v1g or v2g mode, we only allow charging start at the
-            start of the next hour after vehicle, come home and charging must 
-            end at the full hour just before vehicle leaves home, the actual 
-            chargeable hours duration may be smaller than the car home duration 
+            start of the next hour after vehicle, come home and charging must
+            end at the full hour just before vehicle leaves home, the actual
+            chargeable hours duration may be smaller than the car home duration
             by maximum 2 hours.
         - Maximum commute_duration: 1 hour 30 minutes for work-home and 
-            30 minutes for home-work. If remaining time is less than an hour, 
-            make that commute time, but it should not occur as maximum home 
-            duration is always less than 23 hours
+            30 minutes for home-work. If remaining time is less than an hour,
+            make that commute time, but it should not occur as maximum home
+            duration is always less than 23 hours.
 
         Args:
             ev_range (float): range of EV, in miles
@@ -2100,27 +2084,28 @@ class Feeder:
             self.glm.add_link_class(link, self.seg_loads, want_metrics=metrics)
         return self.secnode, self.seg_loads
 
-    def identify_xfmr_houses(self, gld_class: str, seg_loads: dict, avgHouse: float, rgn: int) -> None:
+    def identify_xfmr_houses(self, gld_class: str, seg_loads: dict, avg_house: float, rgn: int) -> None:
         """For the full-order feeders, scan each service transformer to
-        determine the number of houses it should have
+        determine the number of houses it should have.
+
         Args:
             gld_class (str): the GridLAB-D class name to scan
-            seg_loads (dict): dictionary of downstream load (kva) served by each
-               GridLAB-D link
-            avgHouse (float): the average house load in kva
+            seg_loads (dict): dictionary of downstream load (kva) served by each GridLAB-D link
+            avg_house (float): the average house load in kva
             rgn (int): the region number, 1..5
+
         Returns:
             None
         """
 
-        print(f"Average House size: {avgHouse} kVA")
+        print(f"Average House size: {avg_house} kVA")
         total_houses = 0
         total_sf = 0
         total_apt = 0
         total_mh = 0
         total_small = 0
         total_small_kva = 0
-        dsoIncomePct = self.config.res_bld.getDsoIncomeLevelTable()
+        dso_income_pct = self.config.res_bld.getDsoIncomeLevelTable()
         try:
             entity = self.glm.glm.__getattribute__(gld_class)
         except:
@@ -2130,7 +2115,7 @@ class Feeder:
                 tkva = seg_loads[e_name][0]
                 phs = seg_loads[e_name][1]
                 if 'S' in phs:
-                    self.config.res_bld.nhouse = int((tkva / avgHouse) + 0.5)  # round to nearest int
+                    self.config.res_bld.nhouse = int((tkva / avg_house) + 0.5)  # round to nearest int
                     node = gld_strict_name(e_object['to'])
                     if self.config.res_bld.nhouse <= 0:
                         total_small += 1
@@ -2138,9 +2123,9 @@ class Feeder:
                         self.config.base.small_nodes[node] = [tkva, phs]
                     else:
                         total_houses += 1
-                        lg_v_sm = tkva / avgHouse - self.config.res_bld.nhouse  # >0 if we rounded down the number of houses
+                        lg_v_sm = tkva / avg_house - self.config.res_bld.nhouse  # >0 if we rounded down the number of houses
                         # let's get the income level for the dso_type and state
-                        inc_lev = self.config.res_bld.selectIncomeLevel(dsoIncomePct, rng.random())
+                        inc_lev = self.config.res_bld.selectIncomeLevel(dso_income_pct, rng.random())
                         # let's get the vintage table for dso_type, state, and income level
                         dsoThermalPct = self.config.res_bld.getDsoThermalTable(self.config.income_level[inc_lev])
                         bldg, ti = self.config.res_bld.selectResidentialBuilding(dsoThermalPct, rng.random())
