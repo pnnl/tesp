@@ -2012,6 +2012,9 @@ class Feeder:
             if not success:
                 exit()
 
+        # To plot an upopulated version of the base feeder:        
+        #self.glm.model.plot_model()
+
         xfused = {}  # ID, phases, total kva, vnom (LN), vsec, poletop/padmount
         self.secnode = {}  # Node, st, phases, vnom
         self.seg_loads = self.glm.model.identify_seg_loads()
@@ -2205,7 +2208,6 @@ class Feeder:
         for e_name, e_object in entity.items():
             if 'load_class' not in e_object:
                 log.warning("load_class not defined! Cannot add commercial loads")
-                print("load_class not defined! Could not add commercial loads.")
                 return None
             else:
                 select_bldg = None
@@ -2277,7 +2279,6 @@ class Feeder:
             self.glm.del_object(gld_class, e_name)
         
         if e_object['load_class'] != 'C':
-            print("No commercial 'C' load classes defined. Cannot add commercial loads.")
             return None
         
         # Print commercial info

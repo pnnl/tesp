@@ -4,13 +4,14 @@
 {
     // Simulation
     "starttime": "2023-01-01 07:00:00", // REQUIRED: format "YYYY-MM-DD HH:MM:SS"
-    "stoptime": "2023-01-02 07:00:00", // REQUIRED: format "YYYY-MM-DD HH:MM:SS"
+    "stoptime": "2023-12-31 07:00:00", // REQUIRED: format "YYYY-MM-DD HH:MM:SS"
     "timestep": 300, // REQUIRED: simulation timestep, in seconds
     "timezone": "EST+5EDT", // REQUIRED: GridLAB-D supported time zone: Eastern. (CST+6CDT (Central), MST+7MDT (Mountain), PST+8PDT (Pacific))
     "metrics_interval": 300, // DEFAULT: 300, update frequency of the metrics collector, in seconds
 
     // Input and Output Files
     "in_file_glm": "", // input feeder model ("myfeeder.glm"). If empty, taxonomy feeder used
+    "make_plot": "True", // specify whether to plot populated feeder
     "gis_file": "", // optional positional data for feeder (.json)
     "taxonomy": "R1-12.47-2.glm", // taxonomy feeder model
     "out_file_glm": "test.glm", // REQUIRED: output populated feeder ("myfeeder_populated.glm").
