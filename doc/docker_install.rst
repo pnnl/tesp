@@ -18,7 +18,7 @@ Pull TESP Docker Image from Docker Hub
 
 The TESP Docker image is available on Docker Hub in the “PNNL” channel.
 
-Clone TESP rRpo
+Clone TESP Repo
 ---------------
 
 Though the goal of the Docker image is to provide a consistent execution

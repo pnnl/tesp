@@ -1,5 +1,6 @@
+..
     _ Copyright (c) 2021-2023 Battelle Memorial Institute
-    _ file: examples_index.rst
+    _ file: DSOT_index.rst
 
 DSO+T Analysis
 ==============
@@ -29,7 +30,7 @@ This documentation is a brief summary of a much more extensive series of reports
    :maxdepth: 2
    :caption: Contents:
 
-   Getting_Started.md
+   Getting_Started
    DSOT_Study
    DSOT_agents_sliders
    DSOT_hvac_agent
