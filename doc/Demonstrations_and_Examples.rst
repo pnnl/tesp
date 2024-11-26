@@ -54,7 +54,6 @@ TESP Example Analysis
 .. toctree::
     :maxdepth: 3
 
-    
     ./examples/SGIP1_Example
     ./examples/dsot/DSOT_index
     ./examples/Consensus_Usecase

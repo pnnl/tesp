@@ -12,7 +12,7 @@ fi
 build_ubuntu=1
 build_library=1
 build_build=1
-build_cplex=1
+build_cplex=0
 
 paths=(
   "./"

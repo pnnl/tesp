@@ -11,7 +11,6 @@ Transactive Energy Simulation Platform (TESP)
    :caption: Contents:
 
    TESP_Overview
-   docker_install.md
    Installing_Building_TESP
    Demonstrations_and_Examples
    Developing_Customizing_TESP

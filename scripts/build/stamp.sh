@@ -18,7 +18,7 @@ echo "    git log --pretty=format:"%h %s" --graph"
 echo
 
 while true; do
-    read -rp "Are you ready to stamp Grid $grid_ver? " yn
+    read -rp "Are you ready to stamp TESP $tesp_ver and grid apps $grid_ver? " yn
     case $yn in
         [Yy]* ) stamp="yes"; break;;
         [Nn]* ) stamp="no"; break;;
