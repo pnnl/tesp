@@ -277,7 +277,7 @@ Alternate Installation Methods
 ==============================
 
 Windows- or macOS-Based Installation with Docker
---------------------------------------
+------------------------------------------------
 
 For those not running on a Linux-based system, TESP is also distributed
 via a Docker image that can be run on Windows, macOS, and Linux.
@@ -303,6 +303,7 @@ Though the goal of the Docker image is to provide a consistent execution
 environment, to get Docker set up properly for TESP it is necessary to have a local clone of the respository.
 
 .. code-block:: shell-session
+
    $ git clone https://github.com/pnnl/tesp.git
 
 Entering the Docker to Use TESP
