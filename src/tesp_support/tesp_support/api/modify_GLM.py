@@ -8,7 +8,7 @@ import numpy as np
 from .data import feeder_entities_path
 from .entity import assign_defaults
 from .helpers import gld_strict_name
-from .model_GLM import GLModel
+from .model_GLM import GLMModel
 
 
 class Defaults:
@@ -25,7 +25,7 @@ class GLMModifier:
     a line-by-line basis. This allows for a comprehensive view and edits of
     the model.
 
-    The model object (GLModel instance) makes all objects in the model
+    The model object (GLMModel instance) makes all objects in the model
     instances of the TESP Entinty class. This class is a generic
     container designed for holding this data and can be treated like
     a standard Python dictionary.
@@ -34,18 +34,18 @@ class GLMModifier:
     # instances of entity values
 
     def __init__(self):
-        """Instantiates a GLModel object to hold the parsed model (loaded
+        """Instantiates a GLMModel object to hold the parsed model (loaded
         elsewhere) as well as setting up defalt values for GridLAB-D object
         parameters
         """
-        self.model = GLModel()
+        self.model = GLMModel()
         self.glm = self.model.glm
         self.defaults = Defaults
         self.extra_billing_meters = set()
         assign_defaults(self.defaults, feeder_entities_path)
 
     def add_module(self, gld_type: str, params: dict):
-        """Adds the specified GridLAB-D module to GLModel object
+        """Adds the specified GridLAB-D module to GLMModel object
 
         Args:
             gld_type (str): name of GridLAB-D module to add
@@ -58,7 +58,7 @@ class GLMModifier:
         return self.model.module_entities[gld_type].set_instance(gld_type, params)
 
     def del_module(self, gld_type: str) -> None:
-        """Deletes an existing module delaration from the GLModel object
+        """Deletes an existing module delaration from the GLMModel object
 
         Args:
             gld_type (str): name of the GridLAB-D module to delete
@@ -78,7 +78,7 @@ class GLMModifier:
         #         myObj.del_instance(myName)
 
     def add_module_attr(self, gld_type: str, item_name: str, item_value: str) -> None:
-        """Add an attribute to a module in the GLModel object that already
+        """Add an attribute to a module in the GLMModel object that already
         exists.
 
         Args:
@@ -92,7 +92,7 @@ class GLMModifier:
         return self.model.module_entities[gld_type].set_item(gld_type, item_name, item_value)
 
     def del_module_attr(self, gld_type: str, item_name: str) -> None:
-        """Deete an attribute of a module in the GLModel object that already
+        """Deete an attribute of a module in the GLMModel object that already
         exists.
 
         Args:
@@ -103,7 +103,7 @@ class GLMModifier:
 
     def add_object(self, gld_type: str, name: str, params: dict):
         """Adds a GridLAB-D object (those that start "object ..." in a .glm
-        like transformers, lines, houses, and triplex_meters) to the GLModel object.
+        like transformers, lines, houses, and triplex_meters) to the GLMModel object.
 
         Args:
             gld_type (str): Class of GridLAB-D object to add
@@ -119,7 +119,7 @@ class GLMModifier:
 
     def rename_object(self, gld_type: str, old_name: str, new_name: str) -> bool:
         """Renames an existing GridLAB-D object (those that start "object ..." in a .glm
-        like transformers, lines, houses, and triplex_meters) in the GLModel object.
+        like transformers, lines, houses, and triplex_meters) in the GLMModel object.
 
         Args:
             gld_type (str): Class of GridLAB-D object being renamed
@@ -149,7 +149,7 @@ class GLMModifier:
 
     def del_object(self, gld_type: str, name: str) -> None:
         """Deletes an existing GridLAB-D object (those that start "object ..." in a .glm
-        like transformers, lines, houses, and triplex_meters) from the GLModel object.
+        like transformers, lines, houses, and triplex_meters) from the GLMModel object.
 
         Args:
             gld_type (str): Type of GridLAB-D object being renamed
@@ -178,7 +178,7 @@ class GLMModifier:
 
     def add_object_attr(self, gld_type: str, name: str, item_name: str, item_value: str) -> None:
         """Adds an attribute to an existing object (those that start "object ..." in a .glm
-        like transformers, lines, houses, and triplex_meters) in the GLModel object.
+        like transformers, lines, houses, and triplex_meters) in the GLMModel object.
 
         Args:
             gld_type (str): Class of GridLAB-D object to which the
@@ -195,7 +195,7 @@ class GLMModifier:
 
     def del_object_attr(self, gld_type: str, name: str, item_name: str) -> None:
         """Deletes an attribute of an existing object (those that start "object ..." in a .glm
-        like transformers, lines, houses, and triplex_meters) from the GLModel object.
+        like transformers, lines, houses, and triplex_meters) from the GLMModel object.
 
         Args:
             gld_type (string): Class of GridLAB-D object from which the
@@ -208,7 +208,7 @@ class GLMModifier:
 
     # Read and Write .GLM files
     def read_model(self, filepath: str) -> bool:
-        """Reads in GridLAB-D model from a file (.glm) and stores it as an instance of the GLModel object.
+        """Reads in GridLAB-D model from a file (.glm) and stores it as an instance of the GLMModel object.
 
         Args:
             filepath (string): Path to the GridLAB-D model to be read in
@@ -220,7 +220,7 @@ class GLMModifier:
 
     def write_model(self, filepath: str) -> bool:
         """Writes out a GridLAB-D model to a file (.glm) based on the current
-        GLModel object.
+        GLMModel object.
 
         Args:
             filepath (string): Path to the GridLAB-D model to be read in
@@ -452,7 +452,7 @@ class GLMModifier:
                 params["third_tier_price"] = self.defaults.tier3_price
 
     def add_voltage_dump(self, outname: str) -> None:
-        """Adds voltage_dump and current_dump objects to the GLModel object
+        """Adds voltage_dump and current_dump objects to the GLMModel object
 
         Args:
             outname (str): Suffix on filename for voltage and current dump
@@ -469,7 +469,7 @@ class GLMModifier:
         self.add_object("currdump", "currdump", params)
 
     def add_metrics_collector(self, parent: str, metrics_class: str) -> None:
-        """Adds a metrics collector to the GLModel object as a child of the
+        """Adds a metrics collector to the GLMModel object as a child of the
         GridLAB-D specified by "parent" with and an object of class "metrics_class".
 
         Args:
@@ -487,7 +487,7 @@ class GLMModifier:
             self.add_object("metrics_collector", "mc_" + parent, params)
 
     def add_recorder(self, parent: str, property_name: str, file: str) -> None:
-        """Adds a GridLAB-D recorder object to the GLModel object
+        """Adds a GridLAB-D recorder object to the GLMModel object
 
         Args:
             parent (str): GridLAB-D parent object that the recorder is associated with
@@ -504,9 +504,8 @@ class GLMModifier:
                       "interval": str(self.defaults.metrics_interval)}
             self.add_object("recorder", property_name, params)
 
-    
     def add_group_recorder(self, group: str, property_name: str, file: str) -> None:
-        """Adds a GridLAB-D group recorder object to the GLModel object. Group
+        """Adds a GridLAB-D group recorder object to the GLMModel object. Group
         recorders collect data on one property and present that as a table where
         each column is that value from each of the object instances.
 
@@ -525,9 +524,8 @@ class GLMModifier:
                       "interval": str(self.defaults.metrics_interval)}
             self.add_object("group_recorder", property_name, params)
 
-    
     def add_collector(self, group: str, property_name: str, file: str) -> None:
-        """Adds a GridLAB-D collector object to the GLModel object. Collectors 
+        """Adds a GridLAB-D collector object to the GLMModel object. Collectors
         take data on one property and perform an aggregation operation on it 
         (e.g. max, min, average) to present a single value for the whole group 
         and put it into a single column.
@@ -605,23 +603,23 @@ class GLMModifier:
             if want_metrics:
                 self.add_metrics_collector(e_name, gld_class)
 
-    def add_voltage_class(self, gld_class: str, v_prim: float, v_ll: float, secmtrnode: dict) -> None:
-        """Write GridLAB-D instances that have a primary nominal voltage, i.e. node, meter and load.
+    def add_voltage_class(self, gld_class: str, v_ln: float, v_ll: float, secmtrnode: dict) -> None:
+        """Write GridLAB-D instances that have a primary nominal voltage (i.e. node, meter and load).
 
         If triplex load, node or meter, the nominal voltage is 120. If the name
         or parent attribute is found in secmtrnode, we look up the nominal
-        voltage there. Otherwise, the nominal voltage is vprim
+        voltage there. Otherwise, the nominal voltage is v_ln
         secmtrnode[mtr_node] = [kva_total, phases, vnom]. The transformer
         phasing was not changed, and the transformers were up-sized to the
         largest phase kva. Therefore, it should not be necessary to look up
         kva_total, but phases might have changed N==>S. If the phasing did
-        change N==>S, we have to prepend triplex_ to the class, write power_1
-        and voltage_1. When writing commercial buildings, if load_class is
+        change N==>S, we have to prepend 'triplex' to the class, write 'power_1'
+        and 'voltage_1'. When writing commercial buildings, if load_class is
         present and == C, skip the instance.
 
         Args:
             gld_class (str): the GridLAB-D class name to write
-            v_prim (float): the primary nominal line-to-neutral voltage TODO: Should this be v_ln?
+            v_ln (float): the primary nominal line-to-neutral voltage
             v_ll (float): the primary nominal line-to-line voltage
             secmtrnode (dict): key to [transfomer kva, phasing, nominal voltage] by secondary node name
 
@@ -634,7 +632,7 @@ class GLMModifier:
             return
         for e_name, e_object in entity.items():
             phs = e_object['phases']
-            vnom = v_prim
+            vnom = v_ln
             if 'bustype' in e_object:
                 if e_object['bustype'] == 'SWING':
                     self.add_substation(e_name, phs, v_ll)

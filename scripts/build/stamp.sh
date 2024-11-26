@@ -18,7 +18,7 @@ echo "    git log --pretty=format:"%h %s" --graph"
 echo
 
 while true; do
-    read -rp "Are you ready to stamp Grid $grid_ver? " yn
+    read -rp "Are you ready to stamp TESP $tesp_ver and grid apps $grid_ver? " yn
     case $yn in
         [Yy]* ) stamp="yes"; break;;
         [Nn]* ) stamp="no"; break;;
@@ -67,7 +67,7 @@ pip list > "${BUILD_DIR}/tesp_pypi.id"
 echo "Stamping grid applications software $grid_ver and TESP $tesp_ver for install"
 cd "${TESPDIR}" || exit
 echo "$grid_ver" > "scripts/grid_version"
-echo "$tesp_ver" > "src/tesp_support/tesp_version"
+echo "$tesp_ver" > "scripts/tesp_version"
 echo "$tesp_ver" > "src/tesp_support/version"
 
 # un-comment for final version

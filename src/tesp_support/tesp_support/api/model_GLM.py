@@ -39,8 +39,8 @@ class O_Entity(Entity):
 class GLM:
     pass
 
-class GLModel:
-    """ GLModel class
+class GLMModel:
+    """ GLMModel class
 
     Examples miscellaneous for set declarations::
 
@@ -218,7 +218,7 @@ class GLModel:
         # all attribute must have a type
         if "type" in attr:
             m_type = attr["type"]
-            m_datatype = GLModel.get_datatype(m_type)
+            m_datatype = GLMModel.get_datatype(m_type)
             if m_type in ["enumeration", "set"]:
                 unit = "|"
                 for key in attr["keywords"]:
@@ -1120,7 +1120,7 @@ class GLModel:
         line is found by inspecting the model without running a simulation.
 
         Args:
-            self (GLModel)
+            self (GLMModel)
 
         Returns:
             dict: key - name of line in model 
@@ -1180,13 +1180,13 @@ def _test1():
     from .data import tesp_test
 
     # Test model_GLM.py
-    model_file = GLModel()
+    model_file = GLMModel()
     if model_file.readBackboneModel("R1-12.47-1.glm"):
     # if model_file.read(feeders_path + "GLD_three_phase_house.glm"):
         # Output json with new parameters
         model_file.write(tesp_test + "api/R1-12.47-1_out.glm")
 
-    model_file = GLModel()
+    model_file = GLMModel()
     if model_file.readModel(tesp_test + "api/testing.glm"):
         model_file.write(tesp_test + "api/model_out.glm")
 
@@ -1200,7 +1200,7 @@ def _test1():
 
 
 def _test2():
-    testMod = GLModel()
+    testMod = GLMModel()
     if testMod.read(feeders_path + "R1-12.47-1.glm"):
         for name in testMod.module_entities:
             print(testMod.module_entities[name].toHelp())

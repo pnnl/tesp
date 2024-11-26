@@ -1,10 +1,11 @@
-..
+.. 
     _ Copyright (c) 2021-2023 Battelle Memorial Institute
     _ file: Installing_Building_TESP.rst
-
-
+    
 .. toctree::
     :maxdepth: 2
+
+.. _local_build_installation:
 
 Installing and Building TESP
 ****************************
@@ -23,6 +24,8 @@ This guide will assume that TESP is being installed on a clean Ubuntu Linux inst
 For many, this will be a virtual machine (VM) and the good news is that there is a no-cost means of creating this VM using Oracle's `VirtualBox <https://www.virtualbox.org>`_. Other commercial virtualization software such as VMWare and Parallels will also do the trick.
 
 For Windows 10 users we can use WSL2. In many ways a it is like a virtual machine that allows shell commands just as if it were Linux.
+
+There are other `Alternate Installation Installs <altinstalls_>`__ can be achieved
 
 Creating a Ubuntu Linux VM with VirtualBox
 ------------------------------------------
@@ -46,7 +49,7 @@ The setup procedure for creating a WLS2 on Windows 10 very easy with these `inst
 
 Running TESP install script
 ---------------------------
-Once you have a working Ubuntu/WLS2 on Windows installation, the TESP install process is straight-forward. From a command prompt, issue the following commands:
+Once you have a working installation (Ubuntu or WLS2 on Windows), the TESP install process is straight-forward. From a command prompt, issue the following commands:
 
 .. code-block:: shell-session
    :caption: TESP installation commands for Ubuntu/WLS2 on Window10
@@ -62,7 +65,7 @@ In the last line, the optional name and email must be entered in that order, bot
 
    ./tesp.sh trevorhardy trevor.hardy@pnnl.gov
 
-Running this script will kick off a process where all latest linux packages are installed, then the Python environment is setup with the required packages installed after that the repositories are cloned locally and compiled one-by-one. Depending on the computing resources available and network bandwidth, this process will generally take a few hours. Due to this length of time, `sudo` credentials will likely expire at one or more points in the build process and will need to be re-entered.
+Running this script will kick off a process where all latest pre-requisite Linux packages are installed, then the Python environment is setup with the required packages installed, and after that the repositories are cloned locally and compiled one-by-one. Depending on the computing resources available and network bandwidth, this process will generally take a few hours. Due to this length of time, `sudo` credentials will likely expire at one or more points in the build process and will need to be re-entered.
 
 After getting TESP software installed and the executables built, the TESP installation will have created a `tesp` directory the same directory level as the `tesp.sh` script. All installed files are descended from the `tesp` directory.
 
@@ -90,12 +93,12 @@ TESP includes a small script that attempts to run a trivial command with each of
 
     TESP software modules installed are:
 
-    TESP 1.3.0
+    TESP 1.3.6
     FNCS installed
-    HELICS 3.4.0-main-g0b3d894e7 (2023-10-03)
-    HELICS Java, 3.4.0-main-g0b3d894e7 (2023-10-03)
+    HELICS 3.5.3-main-g389bc8929 (2024-11-18)
+    HELICS Java, 3.5.3-main-g389bc8929 (2024-11-18)
 
-    GridLAB-D 5.1.0-19475 (4ea6109e:develop:Modified) 64-bit LINUX RELEASE
+    GridLAB-D 5.21.0-19775 (0affdba1:master:Modified) 64-bit LINUX RELEASE
     EnergyPlus, Version 9.3.0-fd4546e21b (No OpenGL)
     NS-3 installed
     Ipopt 3.13.2 (x86_64-pc-linux-gnu), ASL(20190605)
@@ -267,6 +270,123 @@ This subset of examples can take several days to run (roughly 49.8 hours in the 
     PNNL Team 8500 Base            12338.000525
     PNNL Team 8500 VoltVar         13278.476238
     PNNL Team 8500 VoltWatt        12584.246679
+
+.. _altinstalls:
+
+Alternate Installation Methods
+==============================
+
+Windows- or macOS-Based Installation with Docker
+------------------------------------------------
+
+For those not running on a Linux-based system, TESP is also distributed
+via a Docker image that can be run on Windows, macOS, and Linux.
+
+Install Docker
+..............
+
+For Windows and macOS, Docker is generally installed via `Docker
+Desktop <https://www.docker.com/products/docker-desktop/>`__, a GUI app
+that installs the Docker engine and allows containers to be run locally.
+For Linux, the “docker” app is almost certainly available via the
+package manager appropriate for your installation.
+
+Pull TESP Docker Image from Docker Hub
+......................................
+
+The TESP Docker image is available on Docker Hub in the `"pnnl/tesp channel" <https://hub.docker.com/repository/docker/pnnl/tesp/general>`_.
+
+Clone TESP Repo
+...............
+
+Though the goal of the Docker image is to provide a consistent execution
+environment, to get Docker set up properly for TESP it is necessary to have a local clone of the respository.
+
+.. code-block:: shell-session
+
+   ~$ git clone https://github.com/pnnl/tesp.git
+
+Entering the Docker to Use TESP
+...............................
+
+With the Docker image pulled and the repository cloned in, it is
+possible to start the Docker container interactively, effectively giving
+you a Linux command-line prompt with a working TESP installation. To
+launch the container like this, two launch scripts are provided in the
+TESP repository.
+
+* Linux and macOS: :code:`$ tesp/helper/runtesp.sh` 
+* Windows: :code:`$ tesp/helper/runtesp.bat`
+
+Running these scripts from the command line will return a Linux prompt
+and any of the TESP examples and autotests described in
+:ref:`local_build_installation` will run successfully.
+
+Running TESP with a Local Model or Code
+.......................................
+
+The TESP container has been constructed in such a way that the entire contents of the local TESP repository are visible inside the TESP container in the “/home/worker/tesp” folder. This means any files placed in the TESP repo folder on the host OS (outside the Docker containers) will be visible and executable from within the container. For example, if you create a GridLAB-D model called “model.glm” and place it in the TESP repository folder (“tesp”), you can enter the TESP container and run it with GridLAB-D:
+
+.. code-block:: shell-session
+
+   ~$ gridlabd /home/worker/tesp/model.glm
+
+
+TESP API Installation
+---------------------
+The TESP API is Python-based and provides functionality that doesn't require running simulations. For example, TESP has a GridLAB-D model modification API that can be used by installing the TESP API and without installing GridLAB-D or any other simulation tool.
+
+Installing Tools 
+................
+Make sure the following tools are installed.
+
+* `Python 3` - `Windows needs to install manually <https://www.python.org/downloads/windows/>`_, Linux and macOS generally include it.
+*  (optional) An IDE (integrated development environment), `VS Code <https://code.visualstudio.com/download>`_ and `PyCharm CE <https://www.jetbrains.com/pycharm/download/?section=windows>`_ are popular but there are others.
+* Package manager - `Anaconda <https://www.anaconda.com/download>`_ or `pip <https://pip.pypa.io/en/stable/installation/>`_ (macOS and Linux generally come with pip already installed).
+* git - `Windows installer is here <https://git-scm.com/downloads/win>`_; macOS and Linux already have git installed.
+* pip - `Windows installer is here <https://pip.pypa.io/en/stable/installation/>`_; macOS and Linux already have pip installed.
+
+
+Create a Virtual Environment
+............................
+A virtual environment is a useful way of isolating software projects from each other such that changing libraries or environment variables in one doesn't affect the operation of the other. It's recommended that users of the TESP API set up a dedicated virtual environment; we'll call it "tesp_env" in this example.
+
+.. code-block:: shell-session
+   :caption: Creation and activation of conda virtual environment
+
+   $ conda create -n tesp_env python=3.10
+   $ conda activate
+
+.. code-block:: shell-session
+   :caption: Creation and activation of venv virtural environment on macOS and Linux
+
+   $ python -m venv /path/to/new/tesp_env
+   $ source /path/to/new/tesp_env/bin/activate
+
+.. code-block:: doscon
+   :caption: Creation and activation of venv virtural environment on Windows
+
+   C:\> python -m venv /path/to/new/tesp_env
+   C:\> path/to/new/tesp_env/Scripts/activate.bat
+
+Installing the TESP API
+.......................
+Once inside the virtual environment, installing the TESP API is a two-step process: cloning the repository with "git" and installing it with "pip".
+
+.. code-block:: shell-session
+   :caption: Cloning and installing TESP API on macOS and Linux
+
+   $ git clone https://github.com/pnnl/tesp.git
+   $ cd tesp/src/tesp_support
+   $ pip install -e .
+
+.. code-block:: doscon
+   :caption: Cloning and installing TESP API on Windows
+
+   C:\> git clone https://github.com/pnnl/tesp.git
+   C:\> cd tesp/src/tesp_support
+   C:\> pip install -e .
+
 
 Trouble-shooting Installation (forthcoming)
 -------------------------------------------
