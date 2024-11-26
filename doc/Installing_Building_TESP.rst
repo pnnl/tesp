@@ -273,8 +273,8 @@ This subset of examples can take several days to run (roughly 49.8 hours in the 
 
 .. _altinstalls:
 
-Alternate Installation Installs
-===============================
+Alternate Installation Methods
+==============================
 
 Windows- or macOS-Based Installation with Docker
 --------------------------------------
