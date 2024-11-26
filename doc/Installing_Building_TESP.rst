@@ -304,7 +304,7 @@ environment, to get Docker set up properly for TESP it is necessary to have a lo
 
 .. code-block:: shell-session
 
-   $ git clone https://github.com/pnnl/tesp.git
+   ~$ git clone https://github.com/pnnl/tesp.git
 
 Entering the Docker to Use TESP
 ...............................
@@ -329,7 +329,7 @@ The TESP container has been constructed in such a way that the entire contents o
 
 .. code-block:: shell-session
 
-   $ gridlabd /home/worker/tesp/model.glm
+   ~$ gridlabd /home/worker/tesp/model.glm
 
 
 TESP API Installation

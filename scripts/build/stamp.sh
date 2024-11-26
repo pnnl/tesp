@@ -67,7 +67,7 @@ pip list > "${BUILD_DIR}/tesp_pypi.id"
 echo "Stamping grid applications software $grid_ver and TESP $tesp_ver for install"
 cd "${TESPDIR}" || exit
 echo "$grid_ver" > "scripts/grid_version"
-echo "$tesp_ver" > "src/tesp_support/tesp_version"
+echo "$tesp_ver" > "scripts/tesp_version"
 echo "$tesp_ver" > "src/tesp_support/version"
 
 # un-comment for final version
