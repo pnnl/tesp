@@ -353,7 +353,7 @@ A virtual environment is a useful way of isolating software projects from each o
 .. code-block:: shell-session
    :caption: Creation and activation of conda virtual environment
 
-   $ conda create -n tesp_env python=3.13
+   $ conda create -n tesp_env python=3.10
    $ conda activate
 
 .. code-block:: shell-session
