@@ -1,7 +1,8 @@
 ARG DOCKER_VER
+ARG TAG=$DOCKER_VER
 
 # Build runtime image
-FROM cosim-ubuntu:$DOCKER_VER AS cosim-library
+FROM cosim-ubuntu:tesp_$TAG AS cosim-library
 
 ARG SIM_UID
 ARG COSIM_USER

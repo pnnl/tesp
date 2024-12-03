@@ -6,8 +6,7 @@ build-backend = 'setuptools.build_meta'
 name = "tesp_support"
 dynamic = ["version"]
 authors = [{name = "Trevor Hardy", email = "trevor.hardy@pnnl.gov"}]
-
-maintainers = [ 
+maintainers = [
     {name = "Mitch Pelton", email = "mitch.pelton@pnnl.gov"},
     {name = "Fred Rutz", email = "fredrick.rutz@pnnl.gov"},
     {name = "Jessica Kerby", email = "jessica.kerby@pnn.gov"},
@@ -18,7 +17,7 @@ description = "Python APIs for the Transactive Energy Simulation Platform"
 readme = "README.rst"
 license = {file = "LICENSE"}
 keywords = ["power system", "transactive", "energy"]
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 dependencies = [
     "importlib-resources~=6.4.5",
     "h5py~=3.11.0",
@@ -43,7 +42,7 @@ classifiers = [
     "Natural Language :: English",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.10",
     "Topic :: Scientific/Engineering"
 ]
 
@@ -52,10 +51,8 @@ Homepage = "https://github.com/pnnl/tesp"
 Documentation = "https://tesp.readthedocs.io"
 Repository = "https://github.com/pnnl/tesp"
 
-
 [tool.setuptools.packages.find]
 where = ["."]
-
 
 [tool.setuptools.dynamic]
 version = {attr = "tesp_support.__version__"}

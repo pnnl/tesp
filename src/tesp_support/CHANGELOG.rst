@@ -94,10 +94,6 @@ Version 1.3.3 (2023-12-4)
 * Dockerfile for each module getting ready for dockerize COSU Simulations
 * Change directory structure
 
-Version 1.3.4 (2023-12-4)
---------------------------
-* Minor changes and bugs fixes
-
 Version 1.3.5 (2023-12-4)
 --------------------------
 * Minor changes and bugs fixes
