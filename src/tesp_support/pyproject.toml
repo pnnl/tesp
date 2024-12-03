@@ -52,24 +52,10 @@ Homepage = "https://github.com/pnnl/tesp"
 Documentation = "https://tesp.readthedocs.io"
 Repository = "https://github.com/pnnl/tesp"
 
-[tool.setuptools]
-packages = [
-    "tesp_support",
-    "tesp_support.api",
-    "tesp_support.consensus",
-    "tesp_support.dsot",
-    "tesp_support.matpower",
-    "tesp_support.original",
-    "tesp_support.sgip1",
-    "tesp_support.valuation",
-    "tesp_support.weather"
-]
 
-# [tool.setuptools.packages.find]
-# where = ["tesp_support"]
+[tool.setuptools.packages.find]
+where = ["."]
 
-# [tool.setuptools.packages.find-namespace]
-# where = ["tesp_support"]
 
 [tool.setuptools.dynamic]
 version = {attr = "tesp_support.__version__"}

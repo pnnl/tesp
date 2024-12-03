@@ -2,6 +2,7 @@
 
 import setuptools
 
+
 # Get the version from the "version" file which is an output from "stamp.sh"
 version = open("version", 'r').readline().strip()
 
@@ -14,5 +15,5 @@ long_description += (this_directory / "CHANGELOG.rst").read_text()
 
 if __name__ == "__main__":
     setuptools.setup(version=version,
-                     long_description=long_description
+                     long_description=long_description,
                      )
