@@ -127,6 +127,7 @@ class Config:
         self.ev = Electric_Vehicle(self)
         global rng
         rng = np.random.default_rng(self.seed)
+        np.random.seed(self.seed)
 
         # Lookup vll and vln values based on taxonomy feeder
         if self.in_file_glm:
@@ -261,14 +262,17 @@ class Config:
 
         if not self.in_file_glm:
             self.gis_file = self.taxonomy.replace('-', '_').replace('.', '_').replace('_glm', '_pos.json')
-        if self.gis_file:
+            gis_path = os.path.join(os.path.expandvars('$TESPDIR/data/feeders'), self.gis_file)
+        elif self.gis_file:
             gis_path = os.path.join(self.data_path, self.gis_file)
-            with open(gis_path) as gis:
-                self.pos_data = json.load(gis)
-                self.pos = {}
-            return self.pos_data, self.pos
         else:
             pass
+        
+        with open(gis_path) as gis:
+            self.pos_data = json.load(gis)
+            self.pos = {}
+        return self.pos_data, self.pos
+        
 
 class Residential_Build:
     def __init__(self, config):
@@ -1998,14 +2002,17 @@ class Feeder:
         self.glm.write_model(os.path.join(config.data_path, config.out_file_glm))
 
         # Plot the model using the networkx package:
-        if self.config.gis_file:
-            print("\nUsing location data to plot image of model; this should just take a sec.")
-            # Merge house and meter position assignments with rest of GIS data
-            self.config.pos |= self.config.pos_data
-            self.glm.model.plot_model(self.config.pos)
+        if self.config.make_plot == "True":
+            if self.config.gis_file:
+                print("\nUsing location data to plot image of model; this should just take a sec.")
+                # Merge house and meter position assignments with rest of GIS data
+                self.config.pos |= self.config.pos_data
+                self.glm.model.plot_model(self.config.pos)
+            else:
+                print("\nPlotting image of model; this may take several minutes.")
+                self.glm.model.plot_model()
         else:
-            print("\nPlotting image of model; this may take several minutes.")
-            self.glm.model.plot_model()
+            pass
 
     def feeder_gen(self) -> None:
         """ Read in the backbone feeder, then loop through transformer
@@ -2028,7 +2035,6 @@ class Feeder:
         if not self.config.in_file_glm:
             i_glm, success = self.glm.model.readBackboneModel(self.config.taxonomy)
             print('User feeder not defined, using taxonomy feeder', self.config.taxonomy)
-            self.config.gis_file = self.config.taxonomy.replace('-', '_').replace('.', '_').replace('_glm', '_pos.json')
             if not success:
                 exit()
         else:
@@ -2038,6 +2044,7 @@ class Feeder:
 
         # To plot an upopulated version of the base feeder:
         #self.glm.model.plot_model()
+        #self.glm.model.plot_model(self.config.gis_file)
 
         xfused = {}  # ID, phases, total kva, vnom (LN), vsec, poletop/padmount
         self.secnode = {}  # Node, st, phases, vnom
@@ -2330,5 +2337,24 @@ def _test1():
     config.data_path = data_path
     feeder = Feeder(config)
 
+def _test2():
+    import filecmp
+    data_path = os.path.expandvars('$TESPDIR/examples/capabilities/feeder-generator/')
+    out_file = 'R1-12.47-2_populated.glm'
+    out = os.path.join(data_path, out_file)
+
+    config_file = 'test_feeder_config.json5'
+    config = Config(os.path.join(data_path, config_file))
+    config.data_path = data_path
+    feeder = Feeder(config)
+
+    compare = filecmp.cmp(out, os.path.join(data_path,config.out_file_glm))
+    print("Does the populated test feeder match the original 'R1-12.47-2_populated.glm'?")
+    print(compare)
+
+
 if __name__ == "__main__":
     _test1()
+    
+    # Test that gld_feeder_generator.py populates the R1-12.47-2 taxonomy feeder as expected
+    #_test2()
