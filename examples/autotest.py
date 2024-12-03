@@ -181,6 +181,17 @@ def combine_feeders_test():
         tr.run_test('runcombined.sh', '4 Feeders - FNCS')
     os.chdir(tesp_path)
 
+def gld_modifier_test():
+    tr.start_test('GLD_Modifier example')
+    os.chdir('capabilities/gld_modifier')
+    subprocess.Popen('./clean.sh', shell=True).wait()
+    tr.run_test('run.sh', 'GLD_Modifier')
+    os.chdir(tesp_path)
+
+def feeder_generator_test():
+    from tesp_support.api import gld_feeder_generator
+    gld_feeder_generator._test2()
+
 
 if __name__ == '__main__':
     b_helics = True
@@ -202,9 +213,11 @@ if __name__ == '__main__':
     tr.block_test(energyplus_test)
     tr.block_test(weather_agent_test)
     tr.block_test(houses_test)
+    tr.block_test(gld_modifier_test)
+    tr.block_test(feeder_generator_test)
     tr.block_test(te30_test)
     tr.block_test(combine_feeders_test)
     tr.block_test(make_comm_eplus_test)
-    tr.block_test(make_comm_base_test)  # there are 3 different runs, takes ~5min each
+    tr.block_test(make_comm_base_test)  # there are 3 different runs, takes ~5min each 
 
     print(tr.report_tests())
