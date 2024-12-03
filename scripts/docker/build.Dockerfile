@@ -119,7 +119,7 @@ RUN echo "Cloning or download all relevant repositories..." && \
   cp -r ${REPO_DIR}/tesp/data ${TESPDIR} && \
   cp ${REPO_DIR}/tesp/README.md ${TESPDIR} && \
   cp ${REPO_DIR}/tesp/LICENSE ${TESPDIR} && \
-  cp ${REPO_DIR}/tesp/requirements ${TESPDIR} && \
+  cp ${REPO_DIR}/tesp/requirements.txt ${TESPDIR} && \
   /bin/rm -r ${REPO_DIR}/tesp && \
   ./tesp_b.sh clean > tesp.log 2>&1 && \
   echo "Install TESP and Misc. Python Libraries..." && \
