@@ -66,7 +66,7 @@ def loadshed_proto_test():
         tr.exec_test('gridlabd R1-12.47-1_processed.glm > gridlabd.log', 'Establishing baseline results')
         os.chdir('..')
         tr.run_test('run.sh', 'Load shedding w/o comm network')
-        # tr.run_test('run_ns3.sh', 'Load shedding over comm network')
+        tr.run_test('run_ns3.sh', 'Load shedding over comm network')
         os.chdir(tesp_path)
 
 
