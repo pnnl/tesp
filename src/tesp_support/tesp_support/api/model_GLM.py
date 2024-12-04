@@ -32,6 +32,9 @@ class O_Entity(Entity):
 
     def items(self):
         return self.instances.items()
+    
+    def keys(self):
+        return self.instances.keys()
 
     def __getitem__(self, key):
         return self.instances.get(key)
