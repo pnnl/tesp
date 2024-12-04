@@ -2042,7 +2042,7 @@ class Feeder:
             if not success:
                 exit()
 
-        # To plot an upopulated version of the base feeder:
+        # To plot an unpopulated version of the base feeder:
         #self.glm.model.plot_model()
         #self.glm.model.plot_model(self.config.gis_file)
 

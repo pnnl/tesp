@@ -11,26 +11,20 @@ This script attempts to demonstrate the usage of the new TESP API to modify Grid
 """
 
 import argparse
-import logging
-import pprint
-import os
-import sys
-import networkx as nx
 import json
+import logging
+import os
+import pprint
+import sys
 
-from tesp_support.api.modify_GLM import GLMModifier
+import networkx as nx
+
 from tesp_support.api.data import feeders_path
-
-# Getting all the existing tesp_support stuff
-#   Assumes were in the tesp_api folder
-# sys.path.append('../../tesp_support')
-# sys.path.append('../tesp_api')
-
-# Setting a few environment variables so the imports work smoothly
-# If you're working in a REAL TESP install you don't have to do this.
+from tesp_support.api.modify_GLM import GLMModifier
 
 # Setting up logging
 logger = logging.getLogger(__name__)
+# Setting up pretty printing, mostly for debugging.
 pp = pprint.PrettyPrinter(indent=4)
 
 # Adding custom logging level "DATA" to use for putting
@@ -48,9 +42,6 @@ def data(self, message, *args, **kws):
 logging.DATA = DATA_LEVEL_NUM
 logging.Logger.data = data
 
-# Setting up pretty printing, mostly for debugging.
-pp = pprint.PrettyPrinter(indent=4, )
-
 
 def _auto_run(args):
     feeder_path = os.path.join(feeders_path, args.feeder_file)
@@ -59,16 +50,15 @@ def _auto_run(args):
     if not success:
         print('{feeder_path}} not found or file not supported; exiting')
 
-    if hasattr(args, 'coords_file'): 
+    if hasattr(args, 'coords_file'):
         coords_file_path = os.path.join(feeders_path, args.coords_file)
         with open(coords_file_path) as fp:
             pos_data = json.load(fp)
-            
-            
+
     # Check to see if residential module is in the model now. If not, add it in.
     # The residential module is needed to simulate houses in GridLAB-D.
     if len(glmMod.model.module_entities["residential"].instances) == 0:
-        glmMod.add_module("residential", [])
+        glmMod.add_module("residential", {})
 
     # Houses have to be associated with triplex_meters so we just as for a list of meters
     # Returns a dictionary where the meters names are the keys and values are the
@@ -86,21 +76,21 @@ def _auto_run(args):
             "parent": new_name,
             "phases": glm.triplex_meter[f"{new_name}"]["phases"],
             "nominal_voltage": glm.triplex_meter[f"{new_name}"]["nominal_voltage"],
-        }        
+        }
 
         # Only adding print out for the first time through the loop, so I don't
         # flood the terminal with messages.
         if house_num == 0:
             print("Demonstrating addition of an object (triplex_meter in this"
-            "case) to GridLAB-D model." )
+                  "case) to GridLAB-D model.")
             num_tp_meters = len(tp_meter_names)
             print(f"\tNumber of triplex meters before adding one: {num_tp_meters}")
             print(f"\tAdding triplex_meter {billing_meter_name} to model.")
         glmMod.add_object("triplex_meter", billing_meter_name, meter_params)
         # Adding a new position element for the newly created billing meter
-        if hasattr(args, 'coords_file'): 
+        if hasattr(args, 'coords_file'):
             pos_data[billing_meter_name] = pos_data[new_name]
-    
+
         if house_num == 0:
             num_tp_meters = len(glmMod.glm.triplex_meter)
             print(f"\tNumber of triplex meters after adding one: {num_tp_meters}")
@@ -116,9 +106,9 @@ def _auto_run(args):
         # in this case I don't do anything with that dictionary.
         house_meter = glmMod.add_object("triplex_meter", house_meter_name, meter_params)
         # Adding a new position element for the newly created house_meter
-        if hasattr(args, 'coords_file'): 
+        if hasattr(args, 'coords_file'):
             pos_data[house_meter_name] = pos_data[billing_meter_name]
-        
+
         # Add house object as a child of the house meter
         house_name = f"house_{house_num}"
 
@@ -160,18 +150,18 @@ def _auto_run(args):
         })
 
         # Adding a new position element for the newly created house
-        if hasattr(args, 'coords_file'): 
+        if hasattr(args, 'coords_file'):
             pos_data[house_name] = pos_data[new_name]
-    
-    # Can also modify the object parameters like this after the object has been created.
+
+        # Can also modify the object parameters like this after the object has been created.
         if house_num == 0:
             print("\nDemonstrating editing of object properties after adding them "
-                "to the GridLAB-D model.")
+                  "to the GridLAB-D model.")
             if "floor_area" in house_obj.keys():
                 print(f'\t"Redefining floor_area" in {house_name}.')
                 house_obj["floor_area"] = 2469
             else:
-                print(f'\t"floor_area" not defined for house {house_name}, ' 
+                print(f'\t"floor_area" not defined for house {house_name}, '
                       'adding it now.')
                 house_obj["floor_area"] = 2469
             print(f'\t"floor_area" now defined in model with value {house_obj["floor_area"]}.')
@@ -179,7 +169,7 @@ def _auto_run(args):
             # You can get object parameters after the object has been created
             if house_num == 0:
                 print("\nDemonstrating getting object parameters after they "
-                       "have been added to the GridLAB-D model.")
+                      "have been added to the GridLAB-D model.")
                 cooling_COP = house_obj["cooling_COP"]
                 print(f"\tCooling COP for house {house_name} is {cooling_COP}.")
 
@@ -204,7 +194,7 @@ def _auto_run(args):
     # You can delete specific parameter definitions (effectively making them
     # the default value defined in GridLAB-D)
     print("\nDemonstrating the deletion of a parameter from a GridLAB-D object "
-           "in the model.")
+          "in the model.")
     house_to_edit = glm.house[house_name]
     if "Rroof" in house_to_edit.keys():
         print(f'\t"Rroof" for house {house_name} is {house_to_edit["Rroof"]}.')
@@ -242,7 +232,7 @@ def _auto_run(args):
     transformer_config_objs = glm.transformer_configuration
 
     print("\tFinding all the split-phase transformers as these are the ones "
-           "we're targeting for upgrade.")
+          "we're targeting for upgrade.")
     print(
         "\t(In GridLAB-D, the sizing information is stored in the "
         "transformer_configuration object.)")
@@ -259,12 +249,12 @@ def _auto_run(args):
         elif phases.lower() == "cs":
             if config not in transformer_configs_to_upgrade["cs"]:
                 transformer_configs_to_upgrade["cs"].append(config)
-    print(f'\tFound {len(transformer_configs_to_upgrade["as"])}' 
-        'configurations with phase "AS" that will be upgraded.')
+    print(f'\tFound {len(transformer_configs_to_upgrade["as"])}'
+          'configurations with phase "AS" that will be upgraded.')
     print(f'\tFound {len(transformer_configs_to_upgrade["bs"])} '
-                     'configurations with phase "BS" that will be upgraded.')
-    print(f'\tFound {len(transformer_configs_to_upgrade["cs"])}' 
-        'configurations with phase "CS" that will be upgraded.')
+          'configurations with phase "BS" that will be upgraded.')
+    print(f'\tFound {len(transformer_configs_to_upgrade["cs"])}'
+          'configurations with phase "CS" that will be upgraded.')
 
     # Assumes the model has the "powerX_rating" in the transformer configuration
     # to be used as the basis to determine the existing rating. This will not
@@ -298,12 +288,11 @@ def _auto_run(args):
     # Starting out just looking for the swing bus using the non-networkx APIs we've
     # been using up to this point.
     print(f"\nDemonstrating the use of networkx to find the feeder head and "
-        "the closest fuse")
+          "the closest fuse")
     swing_bus = ""
     for gld_node_name in glm.node.keys():
-        if (
-            "bustype" in glm.node[gld_node_name].keys()
-        ):  # Not every bus has the "bustype" parameter
+        # Not every bus has the "bustype" parameter
+        if "bustype" in glm.node[gld_node_name].keys():
             if glm.node[gld_node_name]["bustype"].lower() == "swing":
                 swing_bus = gld_node_name
     print(f"\tFound feeder head (swing bus) as node {swing_bus}")
@@ -317,8 +306,8 @@ def _auto_run(args):
         if edge_data["eclass"] == "fuse":
             feeder_head_fuse = edge_data["ename"]
             break
-    print( f"\tUsing networkx traversal algorithms, found the closest fuse as "
-          "{feeder_head_fuse}.")
+    print(f"\tUsing networkx traversal algorithms, found the closest fuse as "
+          f"{feeder_head_fuse}.")
 
     # For demonstration purposes, increasing the rating on the fuse by 10%
     # (If you look at a visualization of the graph you'll see that this fuse
@@ -372,12 +361,12 @@ def demo():
                         '--feeder_file',
                         nargs='?',
                         default='South_D1_Alburgh_mod_tesp_reduced.glm')
-    
+
     parser.add_argument('-c',
                         '--coords_file',
                         nargs='?',
                         default='South_D1_Alburgh_mod_tesp_pos.json')
-    
+
     parser.add_argument('-o',
                         '--output_file',
                         nargs='?',
