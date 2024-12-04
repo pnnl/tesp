@@ -1,7 +1,8 @@
 ARG DOCKER_VER
+ARG TAG=$DOCKER_VER
 
 # Build runtime image
-FROM cosim-build:$DOCKER_VER AS cosim-cplex
+FROM cosim-build:tesp_$TAG AS cosim-cplex
 
 ARG COSIM_USER
 ARG CPLEX_BIN=cplex_studio129.linux-x86-64.bin
