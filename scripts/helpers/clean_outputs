@@ -45,6 +45,10 @@ if [[ $clean_me == "clean" ]]; then
   cd "$TESPDIR/examples/analysis/consensus/code" || exit
 #  ./clean.sh
 
+  echo "   /build"
+  cd "$TESPDIR/scripts/build" || exit
+  ./clean.sh
+
   echo "   /test"
   cd "$TESPDIR/src/tesp_support/test/api" || exit
   ./clean.sh
