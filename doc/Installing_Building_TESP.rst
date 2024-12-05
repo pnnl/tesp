@@ -65,13 +65,15 @@ In the last line, the optional name and email must be entered in that order, bot
 
    ./tesp.sh trevorhardy trevor.hardy@pnnl.gov
 
-Running this script will kick off a process where all latest pre-requisite Linux packages are installed, then the Python environment is setup with the required packages installed, and after that the repositories are cloned locally and compiled one-by-one. Depending on the computing resources available and network bandwidth, this process will generally take a few hours. Due to this length of time, `sudo` credentials will likely expire at one or more points in the build process and will need to be re-entered.
+**Important note:** we've seen some trouble with TESP building and/or running correctly in conda virtual environments, even the base virtual environment. For this reason, we recommend that all conda environments be deactivated before installing TESP (``conda deactivate``).  TESP sets up its own virtual environment ("GRID") using the Python "venv" library that is activated with the ``source tesp.env`` command. Any additional software or Python libraries you may want to install can be done after activating this TESP-specific library.
 
-After getting TESP software installed and the executables built, the TESP installation will have created a `grid` directory on the same directory level as the `tesp.sh` script. All installed files are within the `grid` folder.
+Running this script will kick off a process where all latest pre-requisite Linux packages are installed, then the Python environment is setup with the required packages installed, and after that the repositories are cloned locally and compiled one-by-one. Depending on the computing resources available and network bandwidth, this process will generally take a few hours. Due to this length of time, ``sudo`` credentials will likely expire at one or more points in the build process and will need to be re-entered.
+
+After getting TESP software installed and the executables built, the TESP installation will have created a "grid" directory on the same directory level as the "tesp.sh" script. All installed files are within the "grid" folder.
 
 Setting Up TESP Environment
 ---------------------------
-Prior to running any of the included examples, we need to be sure to set up the compute environment so that the TESP software can be found by the system. The `tesp.env` file is located at `grid/tesp/tesp.env` and it contains all the environment configuration.
+Prior to running any of the included examples, we need to be sure to set up the compute environment so that the TESP software can be found by the system. The "tesp.env" file is located at ``grid/tesp/tesp.env`` and it contains all the environment configuration.
 
 .. code-block:: shell-session
 
@@ -85,7 +87,7 @@ There are several progressively more comprehensive ways to validate the TESP ins
 
 Check OS can find TESP software
 ...............................
-TESP includes a small script that attempts to run a trivial command with each of the software packages it installs (typically checking the version). The script is located at `grid/tesp/scripts/build/versions.sh`. This script runs automatically at the end of the build and install process and produces and output something like this (version numbers will vary):
+TESP includes a small script that attempts to run a trivial command with each of the software packages it installs (typically checking the version). The script is located at ``grid/tesp/scripts/build/versions.sh``. This script runs automatically at the end of the build and install process and produces and output something like this (version numbers will vary):
 
 .. code-block:: text
 
@@ -105,7 +107,7 @@ TESP includes a small script that attempts to run a trivial command with each of
 
     ++++++++++++++  TESP has been installed! That's all folks!  ++++++++++++++
 
-If you see any messages indicating `command not found` if indicates one of the software packages did not install correctly.
+If you see any messages indicating ``command not found`` if indicates one of the software packages did not install correctly.
 
 
 Shorter Autotest: Example Subset
@@ -124,9 +126,9 @@ and assumes the commandline prompt '~$' in the TESP root directory:
     ~/grid/tesp/examples$
 
 
-The first command is essential after starting a terminal session prior to running anything in TESP for the first time. After running the first line above, the prompt now shows the prefix `(TESP)` being used for the variable environment. If you don't run the first line, simulations will generally fail for lack of being able to find their dependencies. If things aren't working, double-check to make sure your commandline shows the prefix `(TESP)`.
+The first command is essential after starting a terminal session prior to running anything in TESP for the first time. After running the first line above, the prompt now shows the prefix "(GRID)" being used for the variable environment. If you don't run the first line, simulations will generally fail for lack of being able to find their dependencies. If things aren't working, double-check to make sure your commandline shows the prefix "(GRID)".
 
-The forth command, 'deactivate', returns the environment path to the state it was before the the first command started and remove the `(TESP)` prefix from the prompt.
+The forth command, 'deactivate', returns the environment path to the state it was before the the first command started and remove the "(GRID)" prefix from the prompt.
 All other environment variables are present but the TESP python requirements may/may not be present, depending on your configuration.
    
 The commandline that ran this autotest was executed in the background, so that can close the terminal, but don't close the VM. You can open terminal later and check progress by viewing the short.log. Even this subset of examples can take several hours to run (roughly 4.9 hours in the results shown below) and at the end, prints a final results table showing the runtime in seconds for each test:
@@ -248,7 +250,7 @@ Installing Tools
 ................
 Make sure the following tools are installed.
 
-* `Python 3` - `Windows needs to install manually <https://www.python.org/downloads/windows/>`_, Linux and macOS generally include it.
+* Python 3 - `Windows needs to install manually <https://www.python.org/downloads/windows/>`_, Linux and macOS generally include it.
 *  (optional) An IDE (integrated development environment), `VS Code <https://code.visualstudio.com/download>`_ and `PyCharm CE <https://www.jetbrains.com/pycharm/download/?section=windows>`_ are popular but there are others.
 * Package manager - `Anaconda <https://www.anaconda.com/download>`_ or `pip <https://pip.pypa.io/en/stable/installation/>`_ (macOS and Linux generally come with pip already installed).
 * git - `Windows installer is here <https://git-scm.com/downloads/win>`_; macOS and Linux already have git installed.
