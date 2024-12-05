@@ -67,25 +67,25 @@ In the last line, the optional name and email must be entered in that order, bot
 
 Running this script will kick off a process where all latest pre-requisite Linux packages are installed, then the Python environment is setup with the required packages installed, and after that the repositories are cloned locally and compiled one-by-one. Depending on the computing resources available and network bandwidth, this process will generally take a few hours. Due to this length of time, `sudo` credentials will likely expire at one or more points in the build process and will need to be re-entered.
 
-After getting TESP software installed and the executables built, the TESP installation will have created a `tesp` directory the same directory level as the `tesp.sh` script. All installed files are descended from the `tesp` directory.
+After getting TESP software installed and the executables built, the TESP installation will have created a `grid` directory on the same directory level as the `tesp.sh` script. All installed files are within the `grid` folder.
 
 Setting Up TESP Environment
 ---------------------------
-Prior to running any of the included examples, we need to be sure to set up the compute environment so that the TESP software can be found by the system. The `tespEnv` file is added at the same level as the root `tesp` folder and it contains all the environment configuration.
+Prior to running any of the included examples, we need to be sure to set up the compute environment so that the TESP software can be found by the system. The `tesp.env` file is located at `grid/tesp/tesp.env` and it contains all the environment configuration.
 
 .. code-block:: shell-session
 
-    source tespEnv
+    source tesp.env
     
 You will need to do this every time you open a new terminal. If the computing environment set-up you're using allows it, you can add this command to your ".bashrc" or equivalent so that it is automatically run for you each time you start a terminal session.
 
 Validate TESP installation 
 --------------------------
-Once the installation process has finished there should be a folder name `tesp` where all the TESP software, data, and models have been installed. There are several progressively more comprehensive ways to validate the TESP installation process.
+There are several progressively more comprehensive ways to validate the TESP installation process.
 
 Check OS can find TESP software
 ...............................
-TESP includes a small script that attempts to run a trivial command with each of the software packages it installs (typically checking the version). The script is located at `~/grid/tesp/scripts/build/versions.sh`. This script runs automatically at the end of the build and install process and produces and output something like this (version numbers will vary):
+TESP includes a small script that attempts to run a trivial command with each of the software packages it installs (typically checking the version). The script is located at `grid/tesp/scripts/build/versions.sh`. This script runs automatically at the end of the build and install process and produces and output something like this (version numbers will vary):
 
 .. code-block:: text
 
@@ -107,81 +107,6 @@ TESP includes a small script that attempts to run a trivial command with each of
 
 If you see any messages indicating `command not found` if indicates one of the software packages did not install correctly.
 
-Check directory structure
-.........................
-An easy manual high-level check to see if TESP installed correctly is to look at the directory structure that was installed and make sure everything ended up in the right place. A tree view from top-level `tesp` folder you should see something like this:
-
-.. code-block:: text
- 
-    grid
-    ├── tesp
-    ├── venv
-    │   ├── bin
-    │   │   ├── ...
-    │   │   ├── python
-    │   │   ├── python3
-    │   │   └── python3.8
-    │   ├── man
-    │   ├── include
-    │   ├── lib
-    │   │   └── python3.8
-    │   └── share
-    │       ├── man
-    │       └── doc
-    ├── tenv
-    │   ├── bin
-    │   │   ├── eplus_agent*
-    │   │   ├── fncs*
-    │   │   ├── gridlabd*
-    │   │   ├── helics*
-    │   │   ├── ipopt*
-    │   │   ├── mini_federate
-    │   │   ├── ns3-*
-    │   │   └── test_comm
-    │   ├── energyplus
-    │   │   ├── ...
-    │   ├── include
-    │   │   ├── coin-or
-    │   │   ├── fncs.h
-    │   │   ├── fncs.hpp
-    │   │   ├── gridlabd
-    │   │   ├── helics
-    │   │   └── ns3-dev
-    │   ├── java
-    │   │   ├── fncs.jar
-    │   │   ├── helics-2.8.0.jar
-    │   │   ├── helics.jar -> helics-2.8.0.jar
-    │   │   ├── libhelicsJava.so
-    │   │   └── libJNIfncs.so
-    │   ├── lib
-    │   │   ├── cmake
-    │   │   ├── gridlabd
-    │   │   ├── libcoinasl.*
-    │   │   ├── libcoinmumps.*
-    │   │   ├── libfncs.*
-    │   │   ├── libhelics*
-    │   │   ├── libipoptamplinterface.*
-    │   │   ├── libipopt.*
-    │   │   ├── libns3*
-    │   │   ├── libsipopt.*
-    │   │   └── pkgconfig
-    │   └── share
-    │       ├── doc
-    │       ├── gridlabd
-    │       ├── helics
-    │       ├── java
-    │       └── man
-    └── repo
-        ├── Ames-V5.0
-        ├── EnergyPlus
-        ├── fncs
-        ├── gridlab-d
-        ├── HELICS-src
-        ├── Ipopt
-        ├── KLU_DLL
-        ├── ns-3-dev
-        ├── ThirdParty-ASL
-        └── ThirdParty-Mumps
 
 Shorter Autotest: Example Subset
 ...................................
@@ -192,23 +117,19 @@ and assumes the commandline prompt '~$' in the TESP root directory:
 .. code-block:: shell-session
     :caption: TESP example subset autotest
 
-    ~$ source tespEnv
-    (TESP) ~$ cd ~grid/tesp/examples
-    (TESP) ~/grid/tesp/examples$ exec python3 autotest.py &> short.log &
+    ~$ source tesp.env
+    (TESP) ~$ cd grid/tesp/examples
+    (TESP) ~/grid/tesp/examples$ ./autotest.sh
     (TESP) ~/grid/tesp/examples$ deactivate
     ~/grid/tesp/examples$
 
 
-The first command is essential after starting a terminal session prior to running anything in
-TESP for the first time. After running the first line above, the prompt now shows the prefix `(TESP)` being used for the variable environment.
-If you don't run the first line, simulations will generally fail for lack of being able to find their dependencies.
-If things aren't working, double-check to make sure your commandline shows the prefix `(TESP)`.
+The first command is essential after starting a terminal session prior to running anything in TESP for the first time. After running the first line above, the prompt now shows the prefix `(TESP)` being used for the variable environment. If you don't run the first line, simulations will generally fail for lack of being able to find their dependencies. If things aren't working, double-check to make sure your commandline shows the prefix `(TESP)`.
 
 The forth command, 'deactivate', returns the environment path to the state it was before the the first command started and remove the `(TESP)` prefix from the prompt.
 All other environment variables are present but the TESP python requirements may/may not be present, depending on your configuration.
    
-The commandline that ran this autotest was executed in the background, so that can close the terminal, but don't close the VM. You can open terminal later and check progress by viewing the short.log.
-Even this subset of examples can take several hours to run (roughly 4.9 hours in the results shown below) and at the end, prints a final results table showing the runtime in seconds for each test:
+The commandline that ran this autotest was executed in the background, so that can close the terminal, but don't close the VM. You can open terminal later and check progress by viewing the short.log. Even this subset of examples can take several hours to run (roughly 4.9 hours in the results shown below) and at the end, prints a final results table showing the runtime in seconds for each test:
 
 .. code-block:: text
 
@@ -236,7 +157,7 @@ Even this subset of examples can take several hours to run (roughly 4.9 hours in
     Eplus Restaurant - HELICS         2958.467020
     SGIP1c - HELICS                   3087.110814
 
-Total runtime will depend on the compute resources available and each example run serially.
+Total runtime will depend on the compute resources available and each example runs serially.
 
 Longer Autotest: Remaining examples
 ............................................
@@ -246,10 +167,9 @@ Longer Autotest: Remaining examples
 
     ~$ source tespEnv
     (TESP) ~$ cd ~/grid/tesp/examples
-    (TESP) ~/grid/tesp/examples$ exec python3 autotest_long.py &> long.log &
+    (TESP) ~/grid/tesp/examples$ ./autotest_long.sh
 
-The commandline that ran this autotest was executed in the background, so that can close the terminal, but don't close the VM. You can open terminal later and check progress by viewing the long.log.
-This subset of examples can take several days to run (roughly 49.8 hours in the results shown below) and at the end, prints a final results table showing the runtime in seconds for each test:
+The commandline that ran this autotest was executed in the background, so that can close the terminal, but don't close the VM. You can open terminal later and check progress by viewing the long.log. This subset of examples can take several days to run (roughly 49.8 hours in the results shown below) and at the end, prints a final results table showing the runtime in seconds for each test:
 
 .. code-block:: text
 
@@ -279,17 +199,12 @@ Alternate Installation Methods
 Windows- or macOS-Based Installation with Docker
 ------------------------------------------------
 
-For those not running on a Linux-based system, TESP is also distributed
-via a Docker image that can be run on Windows, macOS, and Linux.
+For those not running on a Linux-based system, TESP is also distributed via a Docker image that can be run on Windows, macOS, and Linux.
 
 Install Docker
 ..............
 
-For Windows and macOS, Docker is generally installed via `Docker
-Desktop <https://www.docker.com/products/docker-desktop/>`__, a GUI app
-that installs the Docker engine and allows containers to be run locally.
-For Linux, the “docker” app is almost certainly available via the
-package manager appropriate for your installation.
+For Windows and macOS, Docker is generally installed via `Docker Desktop <https://www.docker.com/products/docker-desktop/>`__, a GUI app that installs the Docker engine and allows containers to be run locally. For Linux, the “docker” app is almost certainly available via the package manager appropriate for your installation.
 
 Pull TESP Docker Image from Docker Hub
 ......................................
@@ -299,28 +214,21 @@ The TESP Docker image is available on Docker Hub in the `"pnnl/tesp channel" <ht
 Clone TESP Repo
 ...............
 
-Though the goal of the Docker image is to provide a consistent execution
-environment, to get Docker set up properly for TESP it is necessary to have a local clone of the respository.
+Though the goal of the Docker image is to provide a consistent execution environment, to get Docker set up properly for TESP it is necessary to have a local clone of the respository.
 
 .. code-block:: shell-session
 
-   ~$ git clone https://github.com/pnnl/tesp.git
+   $ git clone https://github.com/pnnl/tesp.git
 
 Entering the Docker to Use TESP
 ...............................
 
-With the Docker image pulled and the repository cloned in, it is
-possible to start the Docker container interactively, effectively giving
-you a Linux command-line prompt with a working TESP installation. To
-launch the container like this, two launch scripts are provided in the
-TESP repository.
+With the Docker image pulled and the repository cloned in, it is possible to start the Docker container interactively, effectively giving you a Linux command-line prompt with a working TESP installation. To launch the container like this, two launch scripts are provided in the TESP repository.
 
 * Linux and macOS: :code:`$ tesp/helper/runtesp.sh` 
 * Windows: :code:`$ tesp/helper/runtesp.bat`
 
-Running these scripts from the command line will return a Linux prompt
-and any of the TESP examples and autotests described in
-:ref:`local_build_installation` will run successfully.
+Running these scripts from the command line will return a Linux prompt and any of the TESP examples and autotests described in :ref:`local_build_installation` will run successfully.
 
 Running TESP with a Local Model or Code
 .......................................
@@ -329,7 +237,7 @@ The TESP container has been constructed in such a way that the entire contents o
 
 .. code-block:: shell-session
 
-   ~$ gridlabd /home/worker/tesp/model.glm
+   $ gridlabd /home/worker/tesp/model.glm
 
 
 TESP API Installation
