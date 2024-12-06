@@ -1,4 +1,5 @@
-# Copyright (C) 2021-2023 Battelle Memorial Institute
+# Copyright (C) 2021-2024 Battelle Memorial Institute
+# See LICENSE file at https://github.com/pnnl/tesp
 # file: DSOT_sankey
 
 from os.path import expandvars
@@ -6,7 +7,7 @@ import matplotlib
 import pandas as pd
 import plotly.graph_objects as go
 
-import tesp_support.dsot.plots
+import tesp_support.dsot.plots as pt
 
 
 # Example from: https://plotly.com/python/sankey-diagram/
@@ -70,7 +71,7 @@ def label_nodes(data, total_value):
             if data['data'][0]['link']['source'][link] == node:
                 source_value += data['data'][0]['link']['value'][link]
         node_value = round(max(source_value, target_value), 2)
-        node_percent = round(100 * node_value / total_value)
+        node_percent = round(100 * node_value / total_value, 1)
 
         data['data'][0]['node']['label'][node] = \
             data['data'][0]['node']['label'][node] + ' (' + str(node_value) + ' ' + \
@@ -78,7 +79,7 @@ def label_nodes(data, total_value):
     return data
 
 
-def load_CFS_data(results_path, dso_range, update_data, scale, labelvals):
+def load_CFS_data(results_path, dso_range, update_data, scale, labelvals, calibrate):
     """ Initiates and updates Sankey diagram data structure for Cash Flow Sheet data.
     Args:
         results_path (str): directory path for the case to be analyzed.  Should be run after annual post-processing
@@ -86,13 +87,14 @@ def load_CFS_data(results_path, dso_range, update_data, scale, labelvals):
         update_data (bool): If True pulls in analysis data. If False plots Sankey with default data to show structure
         scale (bool): If True scales data to $B from standard $K CFS units
         labelvals (bool): If True adds quantitative values to node labels
+        calibrate (bool): If True it squares up values that are typically slightly off in the analysis
     Returns:
         data (dict): Sankey data structure for Plotly Sankey diagram plotting
 """
 
-    path = expandvars("$TESPDIR$/examples/analysis/dsot/data")
+    path = expandvars("$TESPDIR/examples/analysis/dsot/data")
 
-    data = tesp_support.dsot.plots.load_json(path, 'sankey_cost_structure.json')
+    data = pt.load_json(path, 'sankey_cost_structure.json')
 
     if update_data:
         # Set default values to zero
@@ -100,10 +102,10 @@ def load_CFS_data(results_path, dso_range, update_data, scale, labelvals):
 
         # Compile data for all DSOs:
         for dso in dso_range:
-            revenue = tesp_support.dsot.plots.load_json(results_path,
+            revenue = pt.load_json(results_path,
                                                         'DSO' + str(dso) + '_Revenues_and_Energy_Sales.json')
-            expenses = tesp_support.dsot.plots.load_json(results_path, 'DSO' + str(dso) + '_Expenses.json')
-            capital_costs = tesp_support.dsot.DSOT_plots.load_json(results_path, 'DSO' + str(dso) + '_Capital_Costs.json')
+            expenses = pt.load_json(results_path, 'DSO' + str(dso) + '_Expenses.json')
+            capital_costs = pt.load_json(results_path, 'DSO' + str(dso) + '_Capital_Costs.json')
 
             Hardware = sum(capital_costs['DistPlant'].values())
             Software = \
@@ -177,7 +179,13 @@ def load_CFS_data(results_path, dso_range, update_data, scale, labelvals):
         CapacityPayments = data['data'][0]['link']['value'][16]
         TotalCapacity = 0
         for fuel in ['nuc', 'coal', 'gas', 'wind', 'solar']:
-            TotalCapacity += gendata_df.loc['Capacity (MW)', fuel]
+            if fuel in ['nuc', 'coal', 'gas']:
+                cap_factor = 1
+            elif fuel in ['wind']:
+                cap_factor = 0.13
+            elif fuel in ['solar']:
+                cap_factor = 0.38
+            TotalCapacity += cap_factor * gendata_df.loc['Capacity (MW)', fuel]
 
         # Create dictionary of fuel keys and number of first link number
         fuel_key = {'nuc': 25,
@@ -189,36 +197,85 @@ def load_CFS_data(results_path, dso_range, update_data, scale, labelvals):
         total_gen_revenue = 0
         for fuel in ['nuc', 'coal', 'gas', 'wind', 'solar']:
             link_id = fuel_key[fuel]
-            data['data'][0]['link']['value'][link_id] = \
-                gendata_df.loc['Total revenue ($k)', fuel] + CapacityPayments * \
-                gendata_df.loc['Capacity (MW)', fuel] / TotalCapacity
+            # https://www.eia.gov/analysis/studies/powerplants/capitalcost/archive/2016/pdf/capcost_assumption.pdf
+            if fuel in ['nuc']:
+                cap_factor = 1
+                cap_cost = 5945
+                fixed_ops = 100.28
+            elif fuel in ['coal']:
+                cap_factor = 1
+                cap_cost = 3636
+                fixed_ops = 42.1
+            elif fuel in ['gas']:
+                cap_factor = 1
+                cap_cost = 978
+                fixed_ops = 11
+            elif fuel in ['wind']:
+                cap_factor = 0.13
+                cap_cost = 1877
+                fixed_ops = 39.7
+            elif fuel in ['solar']:
+                cap_factor = 0.38
+                cap_cost = 2671
+                fixed_ops = 23.4
+            data['data'][0]['link']['value'][link_id] = gendata_df.loc['Total revenue ($k)', fuel] + CapacityPayments * \
+                                                   cap_factor * gendata_df.loc['Capacity (MW)', fuel] / TotalCapacity
             total_gen_revenue += data['data'][0]['link']['value'][link_id]
-            data['data'][0]['link']['value'][link_id + 1] = gendata_df.loc['Capacity (MW)', fuel] * 0.8 * 0.0825 * 1000
+            data['data'][0]['link']['value'][link_id + 1] = gendata_df.loc['Capacity (MW)', fuel] * 0.0913 * cap_cost
             data['data'][0]['link']['value'][link_id + 3] = gendata_df.loc['Fuel cost ($k)', fuel]
             data['data'][0]['link']['value'][link_id + 4] = gendata_df.loc['Startup costs ($k)', fuel]
-            data['data'][0]['link']['value'][link_id + 2] = \
-                data['data'][0]['link']['value'][link_id] - data['data'][0]['link']['value'][link_id + 1] - \
-                data['data'][0]['link']['value'][link_id + 3] - data['data'][0]['link']['value'][link_id + 4]
+            data['data'][0]['link']['value'][link_id + 2] = max(fixed_ops * gendata_df.loc['Capacity (MW)', fuel],
+                data['data'][0]['link']['value'][link_id] - data['data'][0]['link']['value'][link_id + 1] -
+                data['data'][0]['link']['value'][link_id + 3] - data['data'][0]['link']['value'][link_id + 4])
 
         # Calibration step to balance generator revenues whose splits that are only estimates:
-        calibrate = True
         if calibrate:
             corrected_total_gen_revenue = 0
             correction_factor = (data['data'][0]['link']['value'][14] + data['data'][0]['link']['value'][15] +
                                  data['data'][0]['link']['value'][16]) / total_gen_revenue
             for fuel in ['nuc', 'coal', 'gas', 'wind', 'solar']:
                 link_id = fuel_key[fuel]
-                data['data'][0]['link']['value'][link_id] = \
-                    data['data'][0]['link']['value'][link_id] * correction_factor
+                if fuel in ['nuc']:
+                    cap_factor = 1
+                    cap_cost = 5945
+                    fixed_ops = 100.28
+                elif fuel in ['coal']:
+                    cap_factor = 1
+                    cap_cost = 3636
+                    fixed_ops = 42.1
+                elif fuel in ['gas']:
+                    cap_factor = 1
+                    cap_cost = 978
+                    fixed_ops = 11
+                elif fuel in ['wind']:
+                    cap_factor = 0.13
+                    cap_cost = 1877
+                    fixed_ops = 39.7
+                elif fuel in ['solar']:
+                    cap_factor = 0.38
+                    cap_cost = 2671
+                    fixed_ops = 23.4
+                data['data'][0]['link']['value'][link_id] = data['data'][0]['link']['value'][link_id] * correction_factor
                 corrected_total_gen_revenue += data['data'][0]['link']['value'][link_id]
-                data['data'][0]['link']['value'][link_id + 2] = \
-                    data['data'][0]['link']['value'][link_id] - data['data'][0]['link']['value'][link_id + 1] - \
-                    data['data'][0]['link']['value'][link_id + 3] - data['data'][0]['link']['value'][link_id + 4]
+                data['data'][0]['link']['value'][link_id + 2] = max(fixed_ops * gendata_df.loc['Capacity (MW)', fuel], data['data'][0]['link']['value'][link_id] \
+                    - data['data'][0]['link']['value'][link_id + 1] - data['data'][0]['link']['value'][link_id + 3] \
+                    - data['data'][0]['link']['value'][link_id + 4])
+                if data['data'][0]['link']['value'][link_id] != 0.0:
+                    profit_correction = data['data'][0]['link']['value'][link_id] / (data['data'][0]['link']['value'][link_id + 1]
+                        + data['data'][0]['link']['value'][link_id + 2] + data['data'][0]['link']['value'][link_id + 3]
+                        + data['data'][0]['link']['value'][link_id + 4])
+                    data['data'][0]['link']['value'][link_id + 1] = data['data'][0]['link']['value'][link_id + 1] * profit_correction
+                    data['data'][0]['link']['value'][link_id + 2] = data['data'][0]['link']['value'][
+                                                                        link_id + 2] * profit_correction
+                    data['data'][0]['link']['value'][link_id + 3] = data['data'][0]['link']['value'][
+                                                                        link_id + 3] * profit_correction
+                    data['data'][0]['link']['value'][link_id + 4] = data['data'][0]['link']['value'][
+                                                                        link_id + 4] * profit_correction
 
             correction_factor = (data['data'][0]['link']['value'][15] + data['data'][0]['link']['value'][16] +
                                  data['data'][0]['link']['value'][17]) / corrected_total_gen_revenue
         # Load and assign transmission data:
-        loads_df = pd.read_csv(results_path + "\\DSO_load_stats.csv", index_col=[0], dtype=object)
+        loads_df = pd.read_csv(results_path + "/DSO_load_stats.csv", index_col=[0], dtype=object)
         peak_sys_load = float((loads_df.loc['Max', 'Substation'])) + float((loads_df.loc['Max', 'Industrial Loads']))
 
         Transmission_Capital = 169 * peak_sys_load * 0.0825
@@ -235,15 +292,14 @@ def load_CFS_data(results_path, dso_range, update_data, scale, labelvals):
             data['data'][0]['valuesuffix'] = "$B"
 
         # Find the total max value for each node and add it to the label
-        # todo - find this value
-        total_costs = 40
+        total_costs = data['data'][0]['link']['value'][9] + data['data'][0]['link']['value'][10] + data['data'][0]['link']['value'][11]
         if labelvals:
             data = label_nodes(data, total_costs)
 
     return data
 
 
-def load_CFS_delta_data(results_path, comp_path, dso_range, update_data, scale, labelvals, metadata_file):
+def load_CFS_delta_data(results_path, comp_path, dso_range, update_data, scale, labelvals, metadata_file, calibrate):
     """ Initiates and updates Sankey diagram data structure for Cash Flow Sheet data.
     Args:
         results_path (str): directory path for the case to be analyzed.  Should be run after annual post-processing
@@ -252,14 +308,14 @@ def load_CFS_delta_data(results_path, comp_path, dso_range, update_data, scale, 
         update_data (bool): If True pulls in analysis data. If False plots Sankey with default data to show structure
         scale (bool): If True scales data to $B from standard $K CFS units
         labelvals (bool): If True adds quantitative values to node labels
-        metadata_file:
+        calibrate (bool): If True it squares up values that are typically slightly off in the analysis
     Returns:
         data (dict): Sankey data structure for Plotly Sankey diagram plotting
 """
 
-    path = expandvars("$TESPDIR$/examples/analysis/dsot/data")
+    path = expandvars("$TESPDIR/examples/analysis/dsot/data")
 
-    data = tesp_support.dsot.plots.load_json(path, 'sankey_delta_cost_structure.json')
+    data = pt.load_json(path, 'sankey_delta_cost_structure.json')
 
     if update_data:
         # Set default values to zero
@@ -268,19 +324,19 @@ def load_CFS_delta_data(results_path, comp_path, dso_range, update_data, scale, 
         customer_costs = pd.read_csv(results_path + '/Customer_CFS_Summary.csv', index_col=[0])
         customer_costs_comp = pd.read_csv(comp_path + '/Customer_CFS_Summary.csv', index_col=[0])
         customer_costs_delta = customer_costs.subtract(customer_costs_comp)
-        metadata = tesp_support.dsot.plots.load_json(path, metadata_file)
+        metadata = pt.load_json(path, metadata_file)
 
         # Compile data for all DSOs:
         for dso in dso_range:
-            revenue = tesp_support.dsot.plots.load_json(results_path,
+            revenue = pt.load_json(results_path,
                                                         'DSO' + str(dso) + '_Revenues_and_Energy_Sales.json')
-            expenses = tesp_support.dsot.plots.load_json(results_path, 'DSO' + str(dso) + '_Expenses.json')
-            capital_costs = tesp_support.dsot.plots.load_json(results_path, 'DSO' + str(dso) + '_Capital_Costs.json')
+            expenses = pt.load_json(results_path, 'DSO' + str(dso) + '_Expenses.json')
+            capital_costs = pt.load_json(results_path, 'DSO' + str(dso) + '_Capital_Costs.json')
 
-            revenue_comp = tesp_support.dsot.plots.load_json(comp_path,
+            revenue_comp = pt.load_json(comp_path,
                                                              'DSO' + str(dso) + '_Revenues_and_Energy_Sales.json')
-            expenses_comp = tesp_support.dsot.plots.load_json(comp_path, 'DSO' + str(dso) + '_Expenses.json')
-            capital_costs_comp = tesp_support.dsot.plots.load_json(comp_path, 'DSO' + str(dso) + '_Capital_Costs.json')
+            expenses_comp = pt.load_json(comp_path, 'DSO' + str(dso) + '_Expenses.json')
+            capital_costs_comp = pt.load_json(comp_path, 'DSO' + str(dso) + '_Capital_Costs.json')
 
             revenue_delta = rec_diff(revenue, revenue_comp)
             expenses_delta = rec_diff(expenses, expenses_comp)
@@ -328,7 +384,6 @@ def load_CFS_delta_data(results_path, comp_path, dso_range, update_data, scale, 
                 data['data'][0]['link']['value'][9]
 
             # Net Savings
-            # data['data'][0]['link']['value'][6] += total_benefits + total_expenses
             data['data'][0]['link']['value'][6] += revenue_delta['RequiredRevenue']
 
             # Customer Costs and Savings
@@ -337,6 +392,11 @@ def load_CFS_delta_data(results_path, comp_path, dso_range, update_data, scale, 
                 customer_costs_delta.loc['Investment', str(dso)] * num_of_cust / 1000
             customer_bills += (customer_costs_delta.loc['Bills', str(dso)] * num_of_cust) / 1000
             data['data'][0]['link']['value'][10] = customer_bills - data['data'][0]['link']['value'][11]
+
+        if calibrate:
+            data['data'][0]['link']['value'][6] = total_benefits - total_expenses
+            data['data'][0]['link']['value'][10] = data['data'][0]['link']['value'][6] - data['data'][0]['link']['value'][11]
+
     else:
         total_benefits = 3
 
@@ -351,7 +411,7 @@ def load_CFS_delta_data(results_path, comp_path, dso_range, update_data, scale, 
     return data
 
 
-def load_energy_data(results_path, dso_range, update_data, scale, labelvals):
+def load_energy_data(results_path, dso_range, update_data, scale, labelvals, calibrate=True):
     """ Initiates and updates Sankey diagram data structure for simulation energy data.
     Args:
         results_path (str): directory path for the case to be analyzed.  Should be run after annual post-processing
@@ -359,12 +419,13 @@ def load_energy_data(results_path, dso_range, update_data, scale, labelvals):
         update_data (bool): If True pulls in analysis data. If False plots Sankey with default data to show structure
         scale (bool): If True scales data to GW from standard MW CFS units
         labelvals (bool): If True adds quantitative values to node labels
+        calibrate (bool): If True it squares up values that are typically slightly off in the analysis
     Returns:
         data (dict): Sankey data structure for Plotly Sankey diagram plotting
 """
 
     path = expandvars("$TESPDIR/examples/analysis/dsot/data")
-    data = tesp_support.dsot.plots.load_json(path, 'sankey_energy_structure.json')
+    data = pt.load_json(path, 'sankey_energy_structure.json')
 
     if update_data:
         # Set default values to zero
@@ -397,7 +458,7 @@ def load_energy_data(results_path, dso_range, update_data, scale, labelvals):
         RC_ratio = loaddata_df.loc['Average', 'total_res'] / (
                     loaddata_df.loc['Average', 'total_comm'] + loaddata_df.loc['Average', 'total_res'])
 
-        #  Create dictionary of fuel keys and number of first link number
+        #  Create dictionary of load keys and number of first link number
         load_key = {'total_res': 8,
                     'total_comm': 9,
                     'Industrial Loads': 10,
@@ -409,9 +470,12 @@ def load_energy_data(results_path, dso_range, update_data, scale, labelvals):
 
         for load in load_key.keys():
             link_id = load_key[load]
-            if load in ['Plug Loads', 'HVAC Loads', 'Battery']:
+            if load in ['Plug Loads', 'HVAC Loads']:
                 data['data'][0]['link']['value'][link_id] = loaddata_df.loc['Average', load] * RC_ratio
                 data['data'][0]['link']['value'][link_id + 5] = loaddata_df.loc['Average', load] * (1 - RC_ratio)
+            elif load in ['Battery']:   # Matching sign convention of battery data (negative is charging).
+                data['data'][0]['link']['value'][link_id] = -loaddata_df.loc['Average', load] * RC_ratio
+                data['data'][0]['link']['value'][link_id + 5] = -loaddata_df.loc['Average', load] * (1 - RC_ratio)
             else:
                 data['data'][0]['link']['value'][link_id] = loaddata_df.loc['Average', load]
 
@@ -429,7 +493,6 @@ def load_energy_data(results_path, dso_range, update_data, scale, labelvals):
         data['data'][0]['link']['value'][1] = loaddata_df.loc['Average', 'PV'] * (1 - RC_ratio)
 
         # Calibration step to balance loads whose splits that are only estimates:
-        calibrate = True
         if calibrate:
             # Adjust residential solar to meet residential loads
             if loaddata_df.loc['Average', 'PV'] != 0:
@@ -445,15 +508,27 @@ def load_energy_data(results_path, dso_range, update_data, scale, labelvals):
                     loaddata_df.loc['Average', 'PV'] - data['data'][0]['link']['value'][0]
 
             # Adjust commercial plug loads to match up commercial loads
-            data['data'][0]['link']['value'][17] = \
-                data['data'][0]['link']['value'][1] + \
-                data['data'][0]['link']['value'][9] - \
-                data['data'][0]['link']['value'][16]
+            data['data'][0]['link']['value'][17] = data['data'][0]['link']['value'][1] + data['data'][0]['link']['value'][9] - data['data'][0]['link']['value'][16] - \
+                                                   data['data'][0]['link']['value'][20]
+
+            # Adjust residential plug loads to match up commercial loads
+            data['data'][0]['link']['value'][12] = data['data'][0]['link']['value'][0] + data['data'][0]['link']['value'][8] - data['data'][0]['link']['value'][11] - \
+                                                   data['data'][0]['link']['value'][13] - data['data'][0]['link']['value'][14] - data['data'][0]['link']['value'][15]
+
+            # Adjust bulk generation to match DSO loads
+            gap = (data['data'][0]['link']['value'][7] + data['data'][0]['link']['value'][8]
+                      + data['data'][0]['link']['value'][9] + data['data'][0]['link']['value'][10]) - \
+                      (data['data'][0]['link']['value'][2] + data['data'][0]['link']['value'][3]
+                      + data['data'][0]['link']['value'][4] + data['data'][0]['link']['value'][5]
+                      + data['data'][0]['link']['value'][6])
+            factor = gap / (data['data'][0]['link']['value'][2] + data['data'][0]['link']['value'][3])
+            data['data'][0]['link']['value'][2] = (1+factor) * data['data'][0]['link']['value'][2]
+            data['data'][0]['link']['value'][3] = (1+factor) * data['data'][0]['link']['value'][3]
 
         # Scale to GW
         if scale:
             data['data'][0]['link']['value'] = [value / 1e3 for value in data['data'][0]['link']['value']]
-            data['data'][0]['valuesuffix'] = "GW"
+            data['data'][0]['valuesuffix'] = "GW(average)"
             total_load = total_load / 1000
 
         # Find the total max value for each node and add it to the label
@@ -466,22 +541,64 @@ def load_energy_data(results_path, dso_range, update_data, scale, labelvals):
 def sankey_plot():
     # Todo: have mode for system peak.
 
-    # data_path = "C:\\Users\\reev057\\PycharmProjects\\DSO+T\\Data\\Simdata\\DER2\\v1.1-1545-ga2893bd8"
-    # data_path = 'C:\\Users\\reev057\\PycharmProjects\\DSO+T\\Data\\Simdata\\DER2\\v1.1-1610-g6c778889'
-    data_path = 'C:\\Users\\reev057\\PycharmProjects\\DSO+T\\Data\\Simdata\\DER2\\v1.1-1567-g8cb140e1'
-    bau_path = 'C:\\Users\\reev057\\PycharmProjects\\DSO+T\\Data\\Simdata\\DER2\\v1.1-1588-ge941fcf5'
-    # data_path = bau_path
+    # data_path = "C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/v1.1-1545-ga2893bd8"
+    # data_path = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/v1.1-1610-g6c778889'
+    mr_bau_path = 'C:/Users/reev057/DSOT-DATA/v1.1-1694-ge9c9e7fa_mr_bau'
+    # mr_batt_path = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/v1.1-1676-gc9c18a25'
+    mr_batt_path = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/v1.1-1694-ge9c9e7fa_mr_batt'
+    mr_flex_path = 'TBD'
+    hr_bau_path = 'C:/Users/reev057/DSOT-DATA/v1.1-1709-gb8726a8d_hr_bau'
+    hr_batt_path = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/v1.1-1694-ge9c9e7fa_hr_batt'
+    hr_flex_path = 'TBD'
+    mr_200_bau_path = 'C:/Users/reev057/DSOT-DATA/9cff29e_200_MR_BAU'
+    mr_200_batt_path = 'TBD'
+    mr_200_flex_path = 'TBD'
+    hr_200_bau_path = 'C:/Users/reev057/DSOT-DATA/9cff29e_200_HR_BAU'
+    hr_200_batt_path = 'C:/Users/reev057/DSOT-DATA/5306e80_200_HR_Batt'
+    hr_200_flex_path = 'TBD'
 
-    system_case = '8-metadata-lean.json'
+    data_path = hr_bau_path
 
-    updatedata = False
+    if data_path in [mr_bau_path, mr_batt_path, mr_flex_path]:
+        system_case = '8_system_case_config.json'
+        base_case_path = mr_bau_path
+    elif data_path in [hr_bau_path, hr_batt_path, hr_flex_path]:
+        system_case = '8_hi_system_case_config.json'
+        base_case_path = hr_bau_path
+    elif data_path in [mr_200_bau_path, mr_200_batt_path, mr_200_flex_path]:
+        system_case = '200_system_case_config.json'
+        base_case_path = mr_200_bau_path
+    elif data_path in [hr_200_bau_path, hr_200_batt_path, hr_200_flex_path]:
+        system_case = '200_hi_system_case_config.json'
+        base_case_path = hr_200_bau_path
+
+    calibration = True
+    updatedata = True
     scaledata = True
     label_values = True
-    dsorange = range(1, 9)
+    remove_labels = True
 
-    # data = load_CFS_data(data_path, dsorange, updatedata, scaledata, label_values)
-    data = load_CFS_delta_data(data_path, bau_path, dsorange, updatedata, scaledata, label_values, system_case)
-    # data = load_energy_data(data_path, dsorange, updatedata, scaledata, label_values)
+    config_path = 'C:/Users/reev057/PycharmProjects/examples/dsot_v3'
+    case_config = pt.load_json(config_path, system_case)
+
+    # metadata_path = '../dso_data'
+    metadata_path = 'C:/Users/reev057/PycharmProjects/examples/dsot_data'
+
+    dso_metadata_file = case_config['dsoPopulationFile']
+    DSOmetadata = pt.load_json(metadata_path, dso_metadata_file)
+
+    # DSO range for 8 node case.  (for 200 node case we will need to determine active DSOs from metadata file).
+    # dso_range = range(1, 9)
+    dsorange = []
+    for DSO in DSOmetadata.keys():
+        if 'DSO' in DSO:
+            if DSOmetadata[DSO]['used']:
+                dsorange.append(int(DSO.split('_')[-1]))
+
+
+    # data = load_CFS_data(data_path, dsorange, updatedata, scaledata, label_values, calibration)
+    # data = load_CFS_delta_data(data_path, mr_bau_path, dsorange, updatedata, scaledata, label_values, system_case, calibration)
+    data = load_energy_data(data_path, dsorange, updatedata, scaledata, label_values, calibration)
 
     # override gray link colors with 'source' colors
     opacity = 0.4
@@ -497,6 +614,10 @@ def sankey_plot():
     #                                     for color in data['data'][0]['node']['color']]
     data['data'][0]['link']['color'] = [data['data'][0]['node']['color'][src].replace("0.8", str(opacity))
                                         for src in data['data'][0]['link']['source']]
+
+    if remove_labels:
+        # Set default values to zero
+        data['data'][0]['node']['label'] = [' '] * len(data['data'][0]['node']['label'])
 
     fig = go.Figure(data=[go.Sankey(
         valueformat=".0f",

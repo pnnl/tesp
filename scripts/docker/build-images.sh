@@ -1,11 +1,6 @@
 #!/bin/bash
 
-ver="tesp_22.04.1"
-
-# build_<image_name>: 0 - skip; 1 - build image; <image_name> must be in sync with names array below
-build_ubuntu=1
-build_library=1
-build_build=1
+ver="22.04.1"
 
 if [[ -z ${TESPDIR} ]]; then
   echo "Edit tesp.env in the TESP directory"
@@ -13,16 +8,24 @@ if [[ -z ${TESPDIR} ]]; then
   exit
 fi
 
+# build_<image_name>: 0 - skip; 1 - build image; <image_name> must be in sync with names array below
+build_ubuntu=1
+build_library=1
+build_build=1
+build_cplex=0
+
 paths=(
   "./"
   "./"
   "${TESPDIR}/scripts/build/"
+  "./"
 )
 
 names=(
   "ubuntu"
   "library"
   "build"
+  "cplex"
 )
 
 # Dynamically build the 'builds' array based on the configuration
@@ -37,7 +40,7 @@ export BUILDKIT_PROGRESS=plain
 
 for i in "${!names[@]}"; do
   CONTEXT="${paths[$i]}"
-  IMAGE_NAME="cosim-${names[$i]}:${ver}"
+  IMAGE_NAME="cosim-${names[$i]}:tesp_${ver}"
   DOCKERFILE="${names[$i]}.Dockerfile"
 
   if [ "${builds[$i]}" -eq 1 ]; then

@@ -42,13 +42,13 @@ from math import sqrt
 import networkx as nx
 import numpy as np
 import pandas as pd
-import recs.commercial_feeder_glm as comm_FG
 
 from tesp_support.api.data import feeders_path, weather_path
-from tesp_support.api.helpers import gld_strict_name, random_norm_trunc
+from tesp_support.api.helpers import gld_strict_name, random_norm_trunc, randomize_residential_skew
 from tesp_support.api.parse_helpers import parse_kva
-from tesp_support.api.time_helpers import get_secs_from_hhmm, get_hhmm_from_secs, get_duration, get_dist
 from tesp_support.api.time_helpers import is_hhmm_valid, subtract_hhmm_secs, add_hhmm_secs
+from tesp_support.api.time_helpers import get_secs_from_hhmm, get_hhmm_from_secs, get_duration, get_dist
+import recs.commercial_feeder_glm as comm_FG
 
 forERCOT = False
 port = 5570
@@ -331,7 +331,6 @@ vint_type = ['pre_1950',
              '2016-2020']
 dsoThermalPct = []
 
-
 # -----------fraction of vintage type by home type in a given dso type---------
 # index 0 is the home type:
 #   0 = sf: single family homes (single_family_detached + single_family_attached)
@@ -579,30 +578,6 @@ rgnWHSize = [[0.0000, 0.3333, 0.6667],
 coolingScheduleNumber = 8
 heatingScheduleNumber = 6
 waterHeaterScheduleNumber = 6
-
-# these are in seconds
-commercial_skew_max = 8100
-commercial_skew_std = 2700
-residential_skew_max = 8100
-residential_skew_std = 2700
-
-
-def randomize_skew(value, skew_max):
-    sk = value * np.random.randn()
-    if sk < -skew_max:
-        sk = -skew_max
-    elif sk > skew_max:
-        sk = skew_max
-    return sk
-
-
-def randomize_commercial_skew():
-    return randomize_skew(commercial_skew_std, commercial_skew_max)
-
-
-def randomize_residential_skew():
-    return randomize_skew(residential_skew_std, residential_skew_max)
-
 
 # commercial configuration data; over_sizing_factor is by region
 c_z_pf = 0.97
@@ -1716,24 +1691,24 @@ def write_houses(basenode, op, vnom):
         vint = vint_type[ti]
         income = income_level[inc_lev]
         if bldg == 0:  # SF
-            fa_bldg = 'single_family_detached'  # then pick single_Family_detached values for floor_area
+            bldg_type = 'single_family'  # then pick single_family values for floor_area
             if (np.random.uniform(0, 1) >
-                    res_bldg_metadata['num_stories'][state][res_dso_type][income][fa_bldg][vint]['one_story']):
+                    res_bldg_metadata['num_stories'][state][res_dso_type][income][bldg_type][vint]['one_story']):
                 stories = 2  # all SF homes which are not single story are 2 stories
             if (np.random.uniform(0, 1) <=
-                    res_bldg_metadata['high_ceilings'][state][res_dso_type][income][fa_bldg][vint]):
+                    res_bldg_metadata['high_ceilings'][state][res_dso_type][income][bldg_type][vint]):
                 ceiling_height = 10  # all SF homes that have high ceilings are 10 ft
             ceiling_height += np.random.randint(0, 2)
         elif bldg == 1:  # apartments
-            fa_bldg = 'apartment_2_4_units'  # then pick apartment_2_4_units for floor area
+            bldg_type = 'apartments'  # then pick apartment_2_4_units for floor area
         elif bldg == 2:  # mh
-            fa_bldg = 'mobile_home'
+            bldg_type = 'mobile_home'
         else:
             raise ValueError("Wrong building type chosen !")
         vint = vint_type[ti]
         # creating distribution array for floor_area
         for ind in ['min', 'max', 'mean', 'standard_deviation']:
-            fa_array[ind] = res_bldg_metadata['floor_area'][state][res_dso_type][income][fa_bldg][ind]
+            fa_array[ind] = res_bldg_metadata['floor_area'][state][res_dso_type][income][bldg_type][ind]
         # print(i)
         # print(nhouse)
         floor_area = random_norm_trunc(fa_array)  # truncated normal distribution
@@ -1750,7 +1725,6 @@ def write_houses(basenode, op, vnom):
         scalar3 = 0.6 + 0.4 * np.random.uniform(0, 1)
         resp_scalar = scalar1 * scalar2
         unresp_scalar = scalar1 * scalar3
-
         skew_value = randomize_residential_skew()
 
         #  *************** Aspect ratio, ewf, ecf, eff, wwr ****************************
@@ -1873,10 +1847,10 @@ def write_houses(basenode, op, vnom):
         heat_rand = np.random.uniform(0, 1)
         cool_rand = np.random.uniform(0, 1)
         house_fuel_type = 'electric'
-        properties = res_bldg_metadata['space_heating_type'][state][res_dso_type][income][fa_bldg][vint]
+        properties = res_bldg_metadata['space_heating_type'][state][res_dso_type][income][bldg_type][vint]
         heat_pump_prob = properties['gas_heating'] + properties['heat_pump']
         # Get the air conditioning percentage for homes that don't have heat pumps
-        electric_cooling_percentage = res_bldg_metadata['air_conditioning'][state][res_dso_type][income][fa_bldg]
+        electric_cooling_percentage = res_bldg_metadata['air_conditioning'][state][res_dso_type][income][bldg_type]
         if heat_rand <= properties['gas_heating']:
             house_fuel_type = 'gas'
             print('  heating_system_type GAS;', file=op)
@@ -1939,7 +1913,7 @@ def write_houses(basenode, op, vnom):
 
         # Determine house water heating fuel type based on space heating fuel type
         wh_fuel_type = 'gas'
-        properties = res_bldg_metadata['water_heating_fuel'][state][res_dso_type][income][fa_bldg]
+        properties = res_bldg_metadata['water_heating_fuel'][state][res_dso_type][income][bldg_type]
         if house_fuel_type == 'gas':
             if np.random.uniform(0, 1) <= properties['sh_gas']['electric']:
                 wh_fuel_type = 'electric'
@@ -1972,13 +1946,9 @@ def write_houses(basenode, op, vnom):
                 size_array = range(wh_data['tank_size']['5_plus_people']['min'],
                                    wh_data['tank_size']['5_plus_people']['max'] + 1, 10)
             wh_size = np.random.choice(size_array)
-
             wh_demand_str = wh_demand_type + '{:.0f}'.format(water_sch) + '*' + '{:.2f}'.format(water_var)
-            wh_skew_value = 3 * residential_skew_std * np.random.randn()
-            if wh_skew_value < -6 * residential_skew_max:
-                wh_skew_value = -6 * residential_skew_max
-            elif wh_skew_value > 6 * residential_skew_max:
-                wh_skew_value = 6 * residential_skew_max
+            wh_skew_value = randomize_residential_skew(True)
+
             print('  object waterheater {', file=op)
             print('    name', whname + ';', file=op)
             print('    schedule_skew', '{:.0f}'.format(wh_skew_value) + ';', file=op)
@@ -2154,6 +2124,7 @@ def write_houses(basenode, op, vnom):
                             print('    };', file=op)
                         print('  };', file=op)
                         print('}', file=op)
+
         if np.random.uniform(0, 1) <= ev_percentage_il:
             # first lets select an ev model:
             ev_name = selectEVmodel(ev_metadata['sale_probability'], np.random.uniform(0, 1))
@@ -2999,7 +2970,7 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
     global case_name, name_prefix, port, forERCOT, substation_name
     global house_nodes, small_nodes, comm_loads
     # global inverter_efficiency, round_trip_efficiency
-    global latitude, longitude, time_zone_offset, weather_name, feeder_commercial_building_number
+    global latitude, longitude, time_zone_offset, weather_name
     global dso_type, res_dso_type, income_level, state, gld_scaling_factor, pv_rating_MW
     global case_type
     global ashrae_zone, comm_bldg_metadata, comm_bldgs_pop
@@ -3038,10 +3009,6 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
     metrics_type = config['FeederGenerator']['MetricsType']
     metrics_interval = int(config['FeederGenerator']['MetricsInterval'])
     metrics_interim = int(config['FeederGenerator']['MetricsInterim'])
-    # ToDo: Comment out percentage if defining by income level
-    # electric_cooling_percentage = 0.01 * float(config['FeederGenerator']['ElectricCoolingPercentage'])
-    # water_heater_percentage = 0.01 * float(config['FeederGenerator']['WaterHeaterPercentage'])
-    # water_heater_participation = 0.01 * float(config['FeederGenerator']['WaterHeaterParticipation'])
     solar_percentage = 0.01 * float(config['FeederGenerator']['SolarPercentage'])
     storage_percentage = 0.01 * float(config['FeederGenerator']['StoragePercentage'])
     ev_percentage = 0.01 * float(config['FeederGenerator']['EVPercentage'])

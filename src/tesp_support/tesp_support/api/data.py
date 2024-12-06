@@ -1,4 +1,5 @@
 # Copyright (C) 2023 Battelle Memorial Institute
+# See LICENSE file at https://github.com/pnnl/tesp
 # file: data.py
 """Path and Data functions for use within tesp_support.
 """
@@ -20,36 +21,37 @@ tesp_path = None
 components = ["",
               "data",
               "examples",
-              "examples/analysis",
-              "examples/capabilities",
+              path.join("examples", "analysis"),
+              path.join("examples", "capabilities"),
               "models",
               "scripts",
               "src",
-              "src/tesp_support/test"]
+              path.join("src", "tesp_support", "test")]
 
 if 'TESPDIR' in environ:
     tesp_path = environ['TESPDIR']
 else:
-    tesp_path = path.expanduser('~') + '/grid/repo/tesp'
+    tesp_path = path.join(path.expanduser('~'), "grid", "tesp")
 
 # uncomment for debug
-# tesp_path = path.expanduser('~') + '/tesp'
-# chdir(tesp_path)
-# tesp_path = path.expanduser('~') + '/tesp/tesp'
+#print(tesp_path)
+#tesp_path = path.join(path.expanduser('~'), '/tesp')
+#chdir(tesp_path)
+#tesp_path = path.join(path.expanduser('~'), '/tesp/tesp')
 
 if path.isdir(tesp_path):
     for _dir in components:
-        tmp = tesp_path + '/' + _dir
+        tmp = path.join(tesp_path, _dir)
         if path.isdir(tmp):
-            # print(tmp + " directory has been installed for TESP")
+            #print(tmp + " directory has been installed for TESP")
             pass
         else:
-            # print(tmp + " directory has NOT been installed for TESP")
+            #print(tmp + " directory has NOT been installed for TESP")
             pass
 else:
     # New instance
     try:
-        chdir(path.expanduser('~/grid/repo'))
+        chdir(path.expanduser('~/grid'))
         cmd = 'git clone --no-checkout https://github.com/pnnl/tesp'
         subprocess.Popen(cmd, shell=True).wait()
         chdir(tesp_path)
@@ -64,14 +66,14 @@ else:
 
 
 tesp_share = path.expandvars(tesp_path + '/data/')
-comm_path = tesp_share + 'comm/'
-energyplus_path = tesp_share + 'energyplus/'
-feeders_path = tesp_share + 'feeders/'
-scheduled_path = tesp_share + 'schedules/'
-weather_path = tesp_share + 'weather/'
+comm_path = path.join(tesp_share, "comm/")
+energyplus_path = path.join(tesp_share, "energyplus/")
+feeders_path = path.join(tesp_share, "feeders/")
+scheduled_path = path.join(tesp_share, "schedules/")
+weather_path = path.join(tesp_share, "weather/")
 
 tesp_model = path.expandvars(tesp_path + '/models/')
-pypower_path = tesp_model + 'pypower/'
+pypower_path = path.join(tesp_model, "pypower/")
 
 tesp_test = path.expandvars(tesp_path + '/src/tesp_support/test/')
 
@@ -146,7 +148,7 @@ def tesp_component():
         print("Bad choice, choose 1 through 9")
         return
 
-    component = tesp_path + '/' + components[choice]
+    component = path.join(tesp_path, components[choice])
     if path.isdir(component):
         print("It seems we have a copy of " + component)
         return

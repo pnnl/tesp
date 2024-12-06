@@ -1,0 +1,23 @@
+#!/bin/bash
+
+IMAGE=cosim-build:tesp_22.04.1
+#IMAGE=cosim-cplex:tesp_22.04.1
+
+#id $1
+#docker run -itd --rm \
+#       --name runtesp \
+#       -e LOCAL_USER_ID=${SIM_UID} \
+#       --mount type=bind,source="$TESPDIR",destination="$DOCKER_HOME/tesp" \
+#       -w=$DOCKER_HOME \
+#       $IMAGE \
+#       bash -c $1
+#
+#else
+
+docker run -it --rm \
+       --name runtesp \
+       -e LOCAL_USER_ID=${SIM_UID} \
+       --mount type=bind,source="$TESPDIR",destination="$DOCKER_HOME/tesp" \
+       -w=$DOCKER_HOME \
+       $IMAGE \
+       bash

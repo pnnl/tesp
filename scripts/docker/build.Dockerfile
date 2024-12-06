@@ -1,7 +1,8 @@
 ARG DOCKER_VER
+ARG TAG=$DOCKER_VER
 
 # Build runtime image
-FROM cosim-library:$DOCKER_VER AS cosim-build
+FROM cosim-library:tesp_$TAG AS cosim-build
 
 ARG COSIM_USER
 ENV COSIM_HOME=/home/$COSIM_USER
@@ -11,6 +12,7 @@ USER $COSIM_USER
 WORKDIR $COSIM_HOME
 
 # CoSim exports
+ENV TESPDIR=$COSIM_HOME/tesp
 ENV INSTDIR=$COSIM_HOME/tenv
 ENV BUILD_DIR=$COSIM_HOME/build
 ENV REPO_DIR=$COSIM_HOME/repo
@@ -19,14 +21,14 @@ ENV REPO_DIR=$COSIM_HOME/repo
 ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
 ENV PYHELICS_INSTALL=$INSTDIR
 ENV GLPATH=$INSTDIR/lib/gridlabd:$INSTDIR/share/gridlabd
-ENV CPLUS_INCLUDE_PATH=/usr/include/hdf5/serial
+ENV CPLUS_INCLUDE_PATH=/usr/include/hdf5/serial:$INSTDIR/include
 ENV FNCS_INCLUDE_DIR=$INSTDIR/include
 ENV FNCS_LIBRARY=$INSTDIR/lib
-ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INSTDIR/lib
+ENV LD_LIBRARY_PATH=$INSTDIR/lib
 ENV LD_RUN_PATH=$INSTDIR/lib
 
 # PATH
-ENV PATH=$JAVA_HOME:$INSTDIR/bin:$PATH
+ENV PATH=$JAVA_HOME:$INSTDIR/bin:$COSIM_HOME/.local/bin:$PATH
 ENV PATH=$PATH:$INSTDIR/energyplus
 ENV PATH=$PATH:$INSTDIR/energyplus/PreProcess
 ENV PATH=$PATH:$INSTDIR/energyplus/PostProcess
@@ -44,8 +46,8 @@ RUN echo "===== Building CoSim Build =====" && \
   git config --global credential.helper store && \
   echo "Directory structure for build" && \
   mkdir -p tenv && \
-#  mkdir -p build && \
-  mkdir -p repo
+  mkdir -p repo && \
+  mkdir -p tesp
 
 # Copy the build instructions
 COPY . ${BUILD_DIR}
@@ -56,8 +58,8 @@ USER $COSIM_USER
 WORKDIR $COSIM_HOME
 RUN echo "Cloning or download all relevant repositories..." && \
   cd "${REPO_DIR}" || exit && \
-  echo ++++++++++++++ TESP && \
-  git clone -b main https://github.com/pnnl/tesp.git && \
+  echo "++++++++++++++ TESP" && \
+  git clone -b develop https://github.com/pnnl/tesp.git && \
 #  ${BUILD_DIR}/patch.sh tesp tesp && \
   echo "++++++++++++++ PSST" && \
   git clone -b master https://github.com/ames-market/AMES-V5.0.git && \
@@ -113,12 +115,18 @@ RUN echo "Cloning or download all relevant repositories..." && \
   /bin/rm -r ${REPO_DIR}/ThirdParty-ASL && \
   /bin/rm -r ${REPO_DIR}/ThirdParty-Mumps && \
   echo "Compiling and Installing TESP EnergyPlus agents and TMY converter..." && \
-  ./tesp_b.sh clean > tesp.log 2>&1 && \
-  echo "Install Misc Python Libraries..." && \
-  pip install --upgrade pip > "pypi.log" && \
-  pip install --no-cache-dir -r ${REPO_DIR}/tesp/requirements.txt >> "pypi.log" && \
-  pip install --no-cache-dir helics[cli] >> "pypi.log" && \
-  pip install --no-cache-dir -e ${REPO_DIR}/psst  >> "pypi.log" && \
+  cp -r ${REPO_DIR}/tesp/src ${TESPDIR} && \
+  cp -r ${REPO_DIR}/tesp/data ${TESPDIR} && \
+  cp ${REPO_DIR}/tesp/README.md ${TESPDIR} && \
+  cp ${REPO_DIR}/tesp/LICENSE ${TESPDIR} && \
+  cp ${REPO_DIR}/tesp/requirements.txt ${TESPDIR} && \
   /bin/rm -r ${REPO_DIR}/tesp && \
+  ./tesp_b.sh clean > tesp.log 2>&1 && \
+  echo "Install TESP and Misc. Python Libraries..." && \
+  pip install --no-warn-script-location --upgrade pip  > "pypi.log" && \
+  pip install --no-warn-script-location --no-cache-dir -r ${TESPDIR}/requirements.txt  >> "pypi.log" && \
+  pip install --no-warn-script-location --no-cache-dir helics[cli]  >> "pypi.log" && \
+  pip install --no-warn-script-location --no-cache-dir -e ${REPO_DIR}/psst  >> "pypi.log" && \
+  pip install --no-warn-script-location --no-cache-dir -e ${TESPDIR}/src/tesp_support  >> "pypi.log" && \
   echo "${COSIM_USER}" | sudo -S ldconfig && \
   ./versions.sh

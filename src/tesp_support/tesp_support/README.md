@@ -1,6 +1,8 @@
 # tesp_support Python files
 
-Copyright (c) 2017-2023 Battelle Memorial Institute
+Copyright (c) 2017-2024 Battelle Memorial Institute
+
+See LICENSE file at https://github.com/pnnl/tesp
 
 This is the main code repository for Python-based components of TESP, 
 including the transactive agents, case configuration and post-processing.  

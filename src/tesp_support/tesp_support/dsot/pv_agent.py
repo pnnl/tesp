@@ -1,4 +1,5 @@
-# Copyright (C) 2017-2023 Battelle Memorial Institute
+# Copyright (C) 2021-2024 Battelle Memorial Institute
+# See LICENSE file at https://github.com/pnnl/tesp
 # file: pv_dsot.py
 """Class that controls the Photovoltaic Solar agents
 for now, it only provides day ahead forecast for each agent.
@@ -46,34 +47,21 @@ class PVDSOT:
         return (np.array(solar_f)*self.scaling_factor/1000).tolist()
 
 
-def test():
+def _test():
     """ Makes a single pv agent and run DA
     """
-    import pandas as pd
-    from tesp_support.api.data import tesp_test
+    from tesp_support.dsot.forecasting import Forecasting
 
-    a = pd.read_csv(tesp_test + 'dsot/pv_hourly_forecast_power.csv', index_col=0, header=None)
-    a.index = pd.to_datetime(a.index)
-    sim_time = 7200
-    a.loc[pd.date_range(sim_time + timedelta(0, 60), periods=48, freq='H')][1]
+    forecast_obj = Forecasting(5150,  { "correct": False })
 
-    agent = {"evName": "R5_12_47_2_tn_1_ev_1",
-             "meterName": "R5_12_47_2_tn_1_mtr_1",
-             "work_charging": "FALSE",
-             "initial_soc": "100",
-             "max_charge": 3300.0,
-             "daily_miles": 40.527,
-             "arrival_work": 1400,
-             "arrival_home": 1840,
-             "work_duration": 15000.0,
-             "home_duration": 67800.0,
-             "miles_per_kwh": 3.333,
-             "range_miles": 151.0,
-             "efficiency": 0.9,
-             "slider_setting": 0.5119,
-             "profit_margin": 12.321,
-             "participating": True
-             }
+    agent = {
+        "pvName": "R4_12_47_1_tn_12_isol_1",
+        "meterName": "R4_12_47_1_tn_12_mtr_1",
+        "rating": 3500.0,
+        "scaling_factor": 0.41427515570000395,
+        "slider_setting": 0.4529,
+        "participating": False
+    }
 
     BID = [[-5.0, 0.42129778616103297],
            [-0.39676675, 0.30192681471917215],
@@ -87,8 +75,10 @@ def test():
     sim_time = datetime.strptime(start_time, time_format)
     # make object; add model_diag_level and sim_time
     obj1 = PVDSOT(agent, agent, 'test', 11, sim_time)
-    quant = obj1.get_pv_forecast(sim_time)
+    solar_f = forecast_obj.get_solar_forecast(sim_time, 1)
+    quant = obj1.scale_pv_forecast(solar_f)
+    print(quant)
 
 
 if __name__ == "__main__":
-    test()
+    _test()

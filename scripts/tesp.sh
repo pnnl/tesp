@@ -52,8 +52,7 @@ autoconf \
 libtool \
 libjsoncpp-dev \
 gfortran \
-install cmake \
-subversion \
+cmake \
 unzip
 
 # add tools/libs for Java support, HELICS, FNCS, GridLAB-D, Ipopt/cbc
@@ -94,6 +93,7 @@ cd grid || exit
 echo
 echo "Install a virtual python environment to $HOME/grid/venv"
 python3 -m pip install --upgrade pip
+python3 -m pip uninstall virtualenv
 python3 -m pip install virtualenv
 "${HOME}/.local/bin/virtualenv" venv --prompt GRID
 
@@ -104,13 +104,13 @@ mkdir -p tenv
 echo "Clone directory structure for TESP"
 echo ++++++++++++++ TESP
 if [[ ! -d "$HOME/grid/tesp" ]]; then
-  git clone -b main https://github.com/pnnl/tesp.git
+  git clone -b develop https://github.com/pnnl/tesp.git
 fi
 
 echo "Activate Virtual Environment..."
 . tesp/tesp.env
 
-# The rest of the build/install depends on the exports in the tespEnv file
+# The rest of the build/install depends on the exports in the tesp.env file
 which python > "${BUILD_DIR}/tesp_pypi.log" 2>&1
 
 echo "Install grid applications software to $HOME/grid/repo"

@@ -1,4 +1,5 @@
-# Copyright (C) 2017-2023 Battelle Memorial Institute
+# Copyright (C) 2021-2024 Battelle Memorial Institute
+# See LICENSE file at https://github.com/pnnl/tesp
 # file: glm_dictionary.py
 # tuned to feederGenerator_TSP.m for sequencing of objects and attributes
 """Functions to create metadata from a GridLAB-D input (GLM) file
@@ -309,8 +310,6 @@ def glm_dict(name_root, config=None, ercot=False):  # , te30=False):
                     name = lst[1].strip(';')
                     if 'Low' in name:
                         inc_level = 'Low'
-                    elif 'Moderate' in name:
-                        inc_level = 'Moderate'
                     elif 'Middle' in name:
                         inc_level = 'Middle'
                     elif 'Upper' in name:

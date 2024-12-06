@@ -1,4 +1,5 @@
-# Copyright (C) 2017-2023 Battelle Memorial Institute
+# Copyright (C) 2017-2024 Battelle Memorial Institute
+# See LICENSE file at https://github.com/pnnl/tesp
 # file: helpers.py
 """ Utility functions for use within tesp_support, including new agents.
 """
@@ -6,6 +7,7 @@
 import logging
 import json
 from scipy.stats import truncnorm
+from numpy import random
 
 
 def enable_logging(level, model_diag_level, name_prefix):
@@ -67,6 +69,30 @@ class all_but_one_level(object):
         return logRecord.levelno != 11
 
 
+def randomize_skew(value, skew_max):
+    sk = value * random.randn()
+    if sk < -skew_max:
+        sk = -skew_max
+    elif sk > skew_max:
+        sk = skew_max
+    return sk
+
+
+def randomize_commercial_skew():
+    commercial_skew_max = 5400
+    commercial_skew_std = 1800
+    return randomize_skew(commercial_skew_std, commercial_skew_max)
+
+
+def randomize_residential_skew(wh_skew=False):
+    residential_skew_max = 8100
+    residential_skew_std = 2700
+    if wh_skew:
+        return randomize_skew(3*residential_skew_std, 6*residential_skew_max)
+    else:
+        return randomize_skew(residential_skew_std, residential_skew_max)
+
+
 def get_run_solver(name, pyo, model, solver):
     # prefer cplex over ipopt (for production runs)
     try:
@@ -118,9 +144,26 @@ def gld_strict_name(val):
     Returns:
         str: val with all '-' replaced by '_', and any leading digit replaced by 'gld\_'
     """
+    val = val.replace('"', '')
     if val[0].isdigit():
         val = "gld_" + val
     return val.replace('-', '_')
+
+
+def get_region(s):
+    region = 0
+    if 'R1' in s:
+        region = 1
+    elif 'R2' in s:
+        region = 2
+    elif 'R3' in s:
+        region = 3
+    elif 'R4' in s:
+        region = 4
+    elif 'R5' in s:
+        region = 5
+    return region
+
 
 
 class HelicsMsg(object):

@@ -149,6 +149,8 @@ def start_loadshed(argv):
         logger.info(f'Processing data at time {currTime} took {iterStopTime - iterStartTime} sec.')
         logger.info(f'\tCurrent total house load: {totalBillMtrLoad} W')
         nextTime = currTime + deltaTime
+        if nextTime > simTime:
+            break
         grantedTime = h.helicsFederateRequestTime(fed, nextTime)
     # Destroying federate
     # logger.info(f'It took {ccTime - eventAckTime} sec from when the event has been acknowledged for ADMS and the co-sim is done. Deltatime for CC is {deltaTime} sec.')

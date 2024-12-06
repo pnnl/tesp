@@ -1,5 +1,5 @@
 # Copyright (C) 2018-2023 Battelle Memorial Institute
-# file: prep_substation_dsot.py
+# file: prep_substation_recs.py
 """ Sets up the HELICS and agent configurations for DSOT ercot case 8 example
 
 Public Functions:
@@ -18,9 +18,6 @@ from tesp_support.api.helpers import random_norm_trunc
 # write yaml for substation.py to subscribe meter voltages, house temperatures, hvac load and hvac state
 # write txt for gridlabd to subscribe house setpoints and meter price; publish meter voltages
 # write the json agent dictionary for post-processing, and run-time configuration of substation.py
-
-# we want the same pseudo-random thermostat schedules each time, for repeatability
-np.random.seed(0)
 
 
 def select_setpt_occ(prob, mode, st, hd, inc_lev):
@@ -136,7 +133,7 @@ def telework(prob, st, hd, inc_lev):
     return n_days, tw_dow
 
 
-def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, state, dso_type):
+def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
     """ Helper function that processes one GridLAB-D file
 
     Reads fileroot.glm and writes:
@@ -156,10 +153,13 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, sta
     glmname = substationfileroot + '_glm_dict.json'
 
     bus = str(case_config["MarketPrep"]["DSO"]["Bus"])
-    #    substation_name = 'substation_' + basename
-    substation_name = case_config['SimulationConfig']['Substation']  # 'Substation_' + bus
-    ip = open(glmname).read()
+    substation_name = case_config['SimulationConfig']['Substation']
+    Q_dso_key = case_config['SimulationConfig']['DSO']
+    Q_forecast = case_config['SimulationConfig']['Q_bid_forecast_correction']
+    state = case_config['SimulationConfig']['state']
+    dso_type = case_config['SimulationConfig']['DSO_type']
 
+    ip = open(glmname).read()
     gd = json.loads(ip)
     gld_sim_name = gd['message_name']
 
@@ -202,42 +202,10 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, sta
     water_heater_agent_config = case_config['AgentPrep']['WaterHeater']
     site_map = {}
 
-    if simulation_config['caseType']['fl']:
-        trans_cust_per = feeder_config['TransactiveHousePercentage']
-    else:
-        trans_cust_per = 0
-    ineligible_cust = 0
-    eligible_cust = 0
+    trans_cust_per = feeder_config['TransactiveHousePercentage']/100
     # Customer Participation Strategy: Whether a customer (billing meter) will participate or not
-    if gd['billingmeters']:
-        # 1. First find out the % of customers ineligible to participate:
-        # % of customers without cooling and with gas fuel type
-        for key, val in gd['billingmeters'].items():
-            if val['children']:
-                hse = gd['houses'][val['children'][0]]
-                if hse['cooling'] == 'NONE' and hse['fuel_type'] == 'gas':
-                    ineligible_cust += 1
-                else:
-                    eligible_cust += 1
-        inelig_per = ineligible_cust / (ineligible_cust + eligible_cust) * 100
-
-        # 2. Now check how much % is remaining of requested non-participating (transactive) houses
-        requested_non_trans_cust_per = (100 - trans_cust_per)
-        rem_non_trans_cust_per = requested_non_trans_cust_per - inelig_per
-        if rem_non_trans_cust_per < 0:
-            rem_non_trans_cust_per = 0
-            print("{} % customers are ineligible to participate in market, therefore only {} % of customers "
-                  "will be able to participate rather than requested {} %!".format(inelig_per, 100 - inelig_per,
-                                                                                   100 - requested_non_trans_cust_per))
-        else:
-            print("{} % of houses will be participating!".format(trans_cust_per))
-
-        # 3. Find out % of houses that needs to be set non-participating out of total eligible houses
-        # For example: if ineligible houses are 5% and requested non-transactive houses is 20%, we only need to set
-        # participating as false in 15% of the total houses which means 15/95% houses of the total eligible houses
-        eff_non_participating_per = rem_non_trans_cust_per / (100 - inelig_per)
-
     # Obtain site dictionary. We consider each billing meter to correspond to a site
+    # Randomly select houses to participate regardless of if they have DERs
     site_agent = {}
     slider_ranges = case_config['SimulationConfig']['slider_ranges']
     for key, val in gd['billingmeters'].items():
@@ -249,7 +217,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, sta
                     sliders[_key] = _val['_DOWN']
             for child in val['children']:
                 site_map[child] = {'slider_settings': sliders}
-            cust_participating = np.random.uniform(0, 1) <= (1 - eff_non_participating_per)
+            cust_participating = np.random.uniform(0, 1) <= trans_cust_per
             site_agent[key] = {'slider_settings': sliders, 'participating': cust_participating}
 
     # prepare inputs for weather agent
@@ -293,11 +261,14 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, sta
                 house_class = val['house_class']
                 controller_name = key
                 meter_name = val['billingmeter_id']
-
-                # hvac participation depends on whether house is participating or not
-                cooling_participating = site_agent[meter_name]['participating'] and val['cooling'] == 'ELECTRIC'
-                heating_participating = site_agent[meter_name]['participating'] and val['fuel_type'] == 'electric'
-
+                
+                if simulation_config['caseType']['fl']:
+                    # hvac participation depends on whether house is participating or not
+                    cooling_participating = site_agent[meter_name]['participating'] and val['cooling'] == 'ELECTRIC'
+                    heating_participating = site_agent[meter_name]['participating'] and val['fuel_type'] == 'electric'
+                else:
+                    cooling_participating = False
+                    heating_participating = False
                 # in agent debugging mode, we may need to avoid hvac participation for debugging waterheaters only
                 if simulation_config['agent_debug_mode']['ON'] and not simulation_config['agent_debug_mode']['flex_hvac']:
                     cooling_participating = False
@@ -309,7 +280,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, sta
                     num_hvac_agents_heating += 1
 
                 period = hvac_agent_config['MarketClearingPeriod']
-                deadband = 2.0  # np.random.uniform(hvac_agent_config['ThermostatBandLo'],hvac_agent_config['ThermostatBandHi'])
+                deadband = 2.0
 
                 # TODO: this is only until we agree on the new schedule
                 if simulation_config['ThermostatScheduleVersion'] == 2:
@@ -391,23 +362,29 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, sta
 
                         # Determine setpoints
                         # cooling - RECS data individual behavior
-                        wakeup_set_cool = select_setpt_occ(prob, 'cool', state, dso_type, inc_level)  # when home is occupied during day
-                        daylight_set_cool = select_setpt_unocc(wakeup_set_cool,
-                                                               'cool', state, dso_type, inc_level)  # when home is not occupied during day
-                        evening_set_cool = wakeup_set_cool  # when home is occupied during evening
-                        night_set_cool = select_setpt_night(wakeup_set_cool, daylight_set_cool, 'cool',state,dso_type,inc_level)  # during night
+                        # when home is occupied during day
+                        wakeup_set_cool = select_setpt_occ(prob, 'cool', state, dso_type, inc_level)
+                        # when home is not occupied during day
+                        daylight_set_cool = select_setpt_unocc(wakeup_set_cool, 'cool', state, dso_type, inc_level)
+                        # when home is occupied during evening
+                        evening_set_cool = wakeup_set_cool
+                        # during night
+                        night_set_cool = select_setpt_night(wakeup_set_cool, daylight_set_cool, 'cool',
+                                                            state, dso_type, inc_level)
                         # heating - RECS data individual behavior
                         wakeup_set_heat = select_setpt_occ(prob, 'heat', state, dso_type, inc_level)
                         daylight_set_heat = select_setpt_unocc(wakeup_set_heat, 'heat', state, dso_type, inc_level)
                         evening_set_heat = wakeup_set_heat
-                        night_set_heat = select_setpt_night(wakeup_set_heat, daylight_set_heat, 'heat', state, dso_type, inc_level)
-                        # If they work from home at least 1 day per week, set the daylight setpoint to the same value as the wakeup setpoint
+                        night_set_heat = select_setpt_night(wakeup_set_heat, daylight_set_heat, 'heat',
+                                                            state, dso_type, inc_level)
+                        # If they work from home at least 1 day per week,
+                        # set the daylight setpoint to the same value as the wakeup setpoint
                         if n_tw_days > 0:
                             daylight_set_cool = wakeup_set_cool
                             daylight_set_heat = wakeup_set_heat
-                        # highest heating setpoint must be less than (lowest cooling setpoint - margin of 6 degree)
-                        if max(wakeup_set_heat, night_set_heat) > min(wakeup_set_cool, night_set_cool) - 6:
-                            offset = max(wakeup_set_heat, night_set_heat) - (min(wakeup_set_cool, night_set_cool) - 6)
+                        # highest heating setpoint must be less than (lowest cooling setpoint - margin of 3 degree)
+                        if max(wakeup_set_heat, night_set_heat) > min(wakeup_set_cool, night_set_cool) - 3:
+                            offset = max(wakeup_set_heat, night_set_heat) - (min(wakeup_set_cool, night_set_cool) - 3)
                             # shift the all cooling setpoints up and heating setpoints down to avoid this condition
                             wakeup_set_cool += offset / 2
                             daylight_set_cool += offset / 2
@@ -423,39 +400,6 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, sta
                         weekend_night_set_cool = night_set_cool
                         weekend_day_set_heat = wakeup_set_heat
                         weekend_night_set_heat = night_set_heat
-                    # # Schedule V2
-                    # wakeup_start = random_norm_trunc(thermostat_schedule_config['WeekdayWakeStart'])
-                    # daylight_start = wakeup_start + random_norm_trunc(
-                    #     thermostat_schedule_config['WeekdayWakeToDaylightTime'])
-                    # evening_start = random_norm_trunc(thermostat_schedule_config['WeekdayEveningStart'])
-                    # night_start = evening_start + random_norm_trunc(thermostat_schedule_config['WeekdayEveningToNightTime'])
-                    # weekend_day_start = random_norm_trunc(thermostat_schedule_config['WeekendDaylightStart'])
-                    # weekend_night_start = random_norm_trunc(thermostat_schedule_config['WeekendNightStart'])
-                    # temp_midpoint = random_norm_trunc(thermostat_schedule_config['TemperatureMidPoint'])
-                    # schedule_scalar = random_norm_trunc(thermostat_schedule_config['ScheduleScalar'])
-                    # weekday_schedule_offset = thermostat_schedule_config['WeekdayScheduleOffset']
-                    # weekend_schedule_offset = thermostat_schedule_config['WeekendScheduleOffset']
-                    #
-                    # # cooling
-                    # wakeup_set_cool = temp_midpoint + (deadband / 2) + schedule_scalar * weekday_schedule_offset['wakeup']
-                    # daylight_set_cool = temp_midpoint + (deadband / 2) + \
-                    #                     schedule_scalar * weekday_schedule_offset['daylight']
-                    # evening_set_cool = temp_midpoint + (deadband / 2) + schedule_scalar * weekday_schedule_offset['evening']
-                    # night_set_cool = temp_midpoint + (deadband / 2) + schedule_scalar * weekday_schedule_offset['night']
-                    # weekend_day_set_cool = temp_midpoint + (deadband / 2) + \
-                    #                        schedule_scalar * weekend_schedule_offset['daylight']
-                    # weekend_night_set_cool = temp_midpoint + (deadband / 2) + \
-                    #                          schedule_scalar * weekend_schedule_offset['night']
-                    # # heating
-                    # wakeup_set_heat = temp_midpoint - (deadband / 2) - schedule_scalar * weekday_schedule_offset['wakeup']
-                    # daylight_set_heat = temp_midpoint - (deadband / 2) - \
-                    #                     schedule_scalar * weekday_schedule_offset['daylight']
-                    # evening_set_heat = temp_midpoint - (deadband / 2) - schedule_scalar * weekday_schedule_offset['evening']
-                    # night_set_heat = temp_midpoint - (deadband / 2) - schedule_scalar * weekday_schedule_offset['night']
-                    # weekend_day_set_heat = temp_midpoint - (deadband / 2) - \
-                    #                        schedule_scalar * weekend_schedule_offset['daylight']
-                    # weekend_night_set_heat = temp_midpoint - (deadband / 2) - \
-                    #                          schedule_scalar * weekend_schedule_offset['night']
                 else:
                     wakeup_start = np.random.uniform(thermostat_schedule_config['WeekdayWakeStartLo'],
                                                      thermostat_schedule_config['WeekdayWakeStartHi'])
@@ -546,7 +490,10 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, sta
             num_water_heaters += 1
 
             # will this device participate in market
-            participating = hvac_agents[key]['house_participating']
+            if simulation_config['caseType']['fl']:
+                participating = site_agent[meter_name]['participating']
+            else:
+                participating = False
             # in agent debugging mode, we may need to avoid wh participation for debugging hvacs only
             if simulation_config['agent_debug_mode']['ON'] and not simulation_config['agent_debug_mode']['flex_wh']:
                 participating = False
@@ -601,10 +548,10 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, sta
             meter_name = val['billingmeter_id']
 
             # will this device participate in market
-            participating = np.random.uniform(0, 1) <= feeder_config['StorageParticipation'] / 100
-
-            # we should also change site_agent participation if batteries are participating
-            site_agent[meter_name]['participating'] = site_agent[meter_name]['participating'] or participating
+            if simulation_config['caseType']['bt']:
+                participating = site_agent[meter_name]['participating']
+            else:
+                participating = False
 
             slider = site_map[inverter_name]['slider_settings']['bt']
 
@@ -650,13 +597,10 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, sta
         meter_name = val['billingmeter_id']
 
         # will this device participate in market
-        participating = np.random.uniform(0, 1) <= feeder_config['EVParticipation'] / 100
+        participating = site_agent[meter_name]['participating']
         # ev won't participate at all if caseType is not ev
         if not simulation_config['caseType']['ev']:
             participating = False
-
-        # we should also change site_agent participation if evs are participating
-        site_agent[meter_name]['participating'] = site_agent[meter_name]['participating'] or participating
 
         slider = site_map[key]['slider_settings']['ev']
 
@@ -706,9 +650,6 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, sta
             # will this device participate in market: PV don't participate at all
             participating = False
 
-            # we should also change site_agent participation if batteries are participating
-            site_agent[meter_name]['participating'] = site_agent[meter_name]['participating'] or participating
-
             slider = site_map[inverter_name]['slider_settings']['pv']
 
             # scaling factor to multiply with player file MW generation
@@ -745,6 +686,8 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, sta
             market_name = market_config['DSO']['Name']
             markets[market_name] = {
                 'bus': market_config['DSO']['Bus'],
+                'rate': simulation_config['rate'],
+                'serverPort': simulation_config['serverPort'],
                 'unit': market_config['DSO']['Unit'],
                 'pricecap': market_config['DSO']['PriceCap'],
                 'num_samples': market_config['DSO']['CurveSamples'],
@@ -771,6 +714,8 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, sta
             num_market_agents += 1
             market_name = market_config['Retail']['Name']
             markets[market_name] = {
+                'rate': simulation_config['rate'],
+                'serverPort': simulation_config['serverPort'],
                 'unit': market_config['Retail']['Unit'],
                 'pricecap': market_config['Retail']['PriceCap'],
                 'num_samples': market_config['Retail']['CurveSamples'],
@@ -807,10 +752,10 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, sta
 
     print('configured', num_market_agents, 'agents for', num_markets, 'markets')
 
-    if Q_dso_key_g in list(Q_forecast_g.keys()):
-        dso_Q_bid_forecast_correction = Q_forecast_g[Q_dso_key_g]
+    if Q_dso_key in list(Q_forecast.keys()):
+        dso_Q_bid_forecast_correction = Q_forecast[Q_dso_key]
     else:
-        dso_Q_bid_forecast_correction = Q_forecast_g['default']
+        dso_Q_bid_forecast_correction = Q_forecast['default']
         print('WARNING: utilizing default configuration for dso_Q_bid_forecast_correction')
     markets['Q_bid_forecast_correction'] = dso_Q_bid_forecast_correction
 
@@ -825,6 +770,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, sta
             'site_agent': site_agent,
             'StartTime': simulation_config['StartTime'],
             'EndTime': simulation_config['EndTime'],
+            'rate': simulation_config['rate'],
             'LogLevel': simulation_config['LogLevel'],
             'solver': simulation_config['solver'],
             'numCore': simulation_config['numCore'],
@@ -958,7 +904,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, sta
 
 
 def prep_substation(gldfileroot, substationfileroot, weatherfileroot, feedercnt,
-                    config=None, hvacSetpt=None, jsonfile='', Q_forecast=None, Q_dso_key=None, usState=None, dsoType=None):
+                    config=None, hvacSetpt=None, jsonfile=''):
     """ Process a base GridLAB-D file with supplemental JSON configuration data
 
     Always reads gldfileroot.glm and writes:
@@ -976,17 +922,13 @@ def prep_substation(gldfileroot, substationfileroot, weatherfileroot, feedercnt,
         gldfileroot (str): path to and base file name for the GridLAB-D file, without an extension
         substationfileroot (str): path to and base file name for the Substation file, without an extension
         weatherfileroot (str): path to the weather agent file location
+        feedercnt (int):
         config (dict): dictionary of feeder population data already read in, mutually exclusive with jsonfile
+        hvacSetpt (str): default=None
         jsonfile (str): fully qualified path to an optional JSON configuration file
     """
     global case_config
     global hvac_setpt
-
-    global Q_forecast_g
-    global Q_dso_key_g
-
-    Q_forecast_g = Q_forecast
-    Q_dso_key_g = Q_dso_key
 
     if config is not None or len(jsonfile) > 1:
         if len(jsonfile) > 1:
@@ -998,4 +940,4 @@ def prep_substation(gldfileroot, substationfileroot, weatherfileroot, feedercnt,
         print('WARNING: neither configuration dictionary or json file provided')
 
     hvac_setpt = hvacSetpt
-    process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, usState, dsoType)
+    process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt)

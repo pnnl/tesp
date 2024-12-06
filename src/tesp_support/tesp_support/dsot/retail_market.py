@@ -1,4 +1,5 @@
-# Copyright (C) 2017-2023 Battelle Memorial Institute
+# Copyright (C) 2021-2024 Battelle Memorial Institute
+# See LICENSE file at https://github.com/pnnl/tesp
 # file: retail_market.py
 """Class that manages the operation of retail market at substation-level
 
@@ -32,6 +33,7 @@ from copy import deepcopy
 import numpy as np
 
 from tesp_support.dsot.helpers_dsot import Curve, get_intersect, MarketClearingType, resample_curve, resample_curve_for_price_only
+from tesp_support.api.schedule_client import *
 
 
 class RetailMarket:
@@ -94,6 +96,10 @@ class RetailMarket:
         """ Initializes the class
         """
         self.name = key
+        self.dso_bus = int(key.replace("Retail_", ""))
+        self.rate = ""
+        if "rate" in retail_dict:
+            self.rate = retail_dict["rate"]
         self.basecase = retail_dict['basecase']
         self.load_flexibility = retail_dict['load_flexibility']
         self.num_samples = retail_dict['num_samples']
@@ -160,6 +166,9 @@ class RetailMarket:
         # self.AMES_RT_agent_prices = None
         # self.AMES_DA_agent_quantities = None
         # self.AMES_DA_agent_prices = None
+        self.gproxy = DataClient(retail_dict['serverPort']).proxy
+        self.current_time = None
+
 
     def clean_bids_RT(self):
         """ Initialize the real-time market
@@ -258,15 +267,18 @@ class RetailMarket:
             if min(curve_seller.quantities) <= temp <= max(curve_seller.quantities):
                 cleared_quantity = temp
                 for idx in range(1, self.num_samples):
-                    if curve_seller.quantities[idx - 1] < cleared_quantity < curve_seller.quantities[idx]:
-                        cleared_price = curve_seller.prices[idx - 1] + (
-                                    cleared_quantity - curve_seller.quantities[idx - 1]) * (
-                                                    curve_seller.prices[idx] - curve_seller.prices[idx - 1]) / (
-                                                    curve_seller.quantities[idx] - curve_seller.quantities[idx - 1])
-                    elif curve_seller.quantities[idx - 1] == cleared_quantity:
-                        cleared_price = curve_seller.prices[idx - 1]
-                    elif curve_seller.quantities[idx] == cleared_quantity:
-                        cleared_price = curve_seller.prices[idx]
+                    if self.rate == 'TOU':
+                        cleared_price = self.gproxy.read_tou_schedules("tou_price", self.current_time, self.dso_bus-1)
+                    else:
+                        if curve_seller.quantities[idx - 1] < cleared_quantity < curve_seller.quantities[idx]:
+                            cleared_price = curve_seller.prices[idx - 1] + (
+                                        cleared_quantity - curve_seller.quantities[idx - 1]) * (
+                                                        curve_seller.prices[idx] - curve_seller.prices[idx - 1]) / (
+                                                        curve_seller.quantities[idx] - curve_seller.quantities[idx - 1])
+                        elif curve_seller.quantities[idx - 1] == cleared_quantity:
+                            cleared_price = curve_seller.prices[idx - 1]
+                        elif curve_seller.quantities[idx] == cleared_quantity:
+                            cleared_price = curve_seller.prices[idx]
                 # if cleared_quantity > self.Q_max:
                 #     clear_type = MarketClearingType.CONGESTED
                 # else:
@@ -312,9 +324,15 @@ class RetailMarket:
             buyer_quantities = curve_buyer.quantities
             seller_quantities = buyer_quantities
             # log.info("curve_seller.prices: "+str(curve_seller.prices))
-            seller_prices = resample_curve_for_price_only(buyer_quantities,
-                                                                  curve_seller.quantities,
-                                                                  curve_seller.prices)
+            tou_price = 0.0
+            if self.rate == 'TOU':
+                seller_prices = []
+                tou_price = self.gproxy.read_tou_schedules("tou_price", self.current_time, self.dso_bus - 1)
+                for _ in curve_seller.prices:
+                    seller_prices.append(tou_price)
+            else:
+                seller_prices = resample_curve_for_price_only(buyer_quantities, curve_seller.quantities, curve_seller.prices)
+
             # seller_prices[0]=0.0
             seller_prices[-1] = self.price_cap
 
@@ -347,6 +365,13 @@ class RetailMarket:
                         clear_type = MarketClearingType.UNCONGESTED
                         congestion_surcharge = 0.0
                     return clear_type, cleared_price, cleared_quantity, congestion_surcharge
+                elif buyer_prices[idx] == seller_prices[idx]:
+                    cleared_price = buyer_prices[idx]
+                    cleared_quantity = buyer_quantities[idx]
+                    clear_type = MarketClearingType.UNCONGESTED
+                    congestion_surcharge = 0
+                    log.info("Buyer and seller prices are identical!")
+                    return clear_type, cleared_price, cleared_quantity, congestion_surcharge
 
             log.info("ERROR retail intersection not found (not supposed to happen)" +
                      "\n  quantities: " + str(buyer_quantities) +
@@ -355,20 +380,32 @@ class RetailMarket:
 
             if buyer_prices[0] > seller_prices[0]:
                 if max_q == max(curve_seller.quantities):
-                    cleared_price = buyer_prices[-1]
+                    if self.rate == 'TOU':
+                        cleared_price = tou_price
+                    else:
+                        cleared_price = buyer_prices[-1]
                     cleared_quantity = buyer_quantities[-1]
                     clear_type = MarketClearingType.CONGESTED
                 elif max_q == max(curve_buyer.quantities):
-                    cleared_price = seller_prices[-1]
+                    if self.rate == 'TOU':
+                        cleared_price = tou_price
+                    else:
+                        cleared_price = seller_prices[-1]
                     cleared_quantity = seller_quantities[-1]
                     clear_type = MarketClearingType.UNCONGESTED
             else:
                 if min_q == min(curve_seller.quantities):
-                    cleared_price = buyer_prices[0]
+                    if self.rate == 'TOU':
+                        cleared_price = tou_price
+                    else:
+                        cleared_price = buyer_prices[0]
                     cleared_quantity = buyer_quantities[0]
                     clear_type = MarketClearingType.UNCONGESTED
                 elif min_q == min(curve_buyer.quantities):
-                    cleared_price = seller_prices[0]
+                    if self.rate == 'TOU':
+                        cleared_price = tou_price
+                    else:
+                        cleared_price = seller_prices[0]
                     cleared_quantity = seller_quantities[0]
                     clear_type = MarketClearingType.UNCONGESTED
             if cleared_quantity > Q_max:

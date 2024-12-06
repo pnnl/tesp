@@ -38,7 +38,8 @@ def downloadweather_NOAA(stationid, startdate, enddate, outputFilename):
     data3 = r3.json()
 
     if data1 == {} or data2 == {} or data3 == {}:
-        print('no data available for one of the url')
+        print('No data available for one of the url')
+        exit()
     else:
 
         f_1 = open("temperature.csv", "w", newline='')
@@ -99,30 +100,34 @@ def downloadweather_NOAA(stationid, startdate, enddate, outputFilename):
 
     with open("windspeed.csv") as f2:
         reader_2 = csv.reader(f2)
-        # timestamp=[]
+        timestamp1=[]
         windspeed = []
         for row in reader_2:
             # skip first row
             if reader_2.line_num == 1:
                 continue
+            timestamp1.append(datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S"))
             windspeed.append(row[1])
     f2.close()
 
     with open("pressure.csv") as f3:
         reader_3 = csv.reader(f3)
-        # timestamp=[]
+        timestamp2=[]
         pressure = []
         for row in reader_3:
             # skip first row
             if reader_3.line_num == 1:
                 continue
+            timestamp2.append(datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S"))
             pressure.append(row[1])
     f3.close()
 
-    # Creat a timeseries data
+    # Create a timeseries data
     dti = pd.to_datetime(timestamp)
     ts1 = pd.Series(temperature, index=dti)
+    dti = pd.to_datetime(timestamp1)
     ts2 = pd.Series(windspeed, index=dti)
+    dti = pd.to_datetime(timestamp2)
     ts3 = pd.Series(pressure, index=dti)
     # upsample to every 5 minutes
     s1 = ts1.resample('300s').interpolate()
@@ -144,8 +149,9 @@ def downloadweather_NOAA(stationid, startdate, enddate, outputFilename):
 
 
 def _tests():
-    # available station id is in stationid_with_hourly_data.csv
+    # available station id is in station id_with_hourly_data.csv
     downloadweather_NOAA('GHCND:USW00024233', '2010-05-01', '2010-06-01', '5min_temp_wind_pressure.csv')
+    # downloadweather_NOAA('GHCND:USW00014745', '2010-05-01', '2010-06-01', '5min_temp_wind_pressure.csv')
 
 
 if __name__ == '__main__':

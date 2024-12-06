@@ -1,3 +1,7 @@
+..
+    _ Copyright (c) 2021-2023 Battelle Memorial Institute
+    _ file: DSOT_agents_sliders.rst
+
 DSO+T Agent Bidding and Sliders
 *******************************
 
@@ -27,18 +31,6 @@ The central two points in the four-point bid are used to define a deadband in th
     Generic battery or EV (V2G) four-point bid with negative bid quantities as they are able to supply electrical energy.
 
 
-``CurveSlope``
---------------
-
-``CurveSlope`` is used by most agents to define their price responsiveness (along with the slider setting). Generally, ``CurveSlope`` is the ratio of the change in price (real-time or day-ahead) and the over the power consumption of the load; this ratio is then divided by the slider setting. Dividing by the slider setting affects the slope of the price responsiveness with lower values (those prioritizing comfort over cost) increasing the slope resulting in two impacts:
-
-#. **Greater sensitivity to price** - the quantity of the energy bid changes more significantly as a function of price. Smaller changes in prices will produce larger changes in bid quantity.
-#. **Smaller price-responsive price range** - Decreating the slider increases the value of ``CurveSlope`` and pulls Pmin and Pmax closer to a central value, putting more bid quantities at Qmax or Qmin, respectively. (Qmin is generally zero for flexible loads but may be a negative value for EVs and batteries as they are able to supply energy.) 
-
-.. figure:: ../../media/dsot/slider_impact_on_four_point_bid.png
-
-    Impact of adjusting the slider setting on the ``CurveSlope`` and corresponding four-point bid points.
-
 
 Converting Between Bid Quantity and Device Amenity Setting
 ----------------------------------------------------------
@@ -49,6 +41,23 @@ For the HVAC and water heaters, once informed of a cleared price the device need
 .. figure:: ../../media/dsot/dsot_vol3_fig33.png
 
     Example of the translation of cleared quantity to a thermostat setpoint performed by the HVAC agent.
+
+
+The slider setting itself is also used in defining the conversion between the cleared price and the thermostat setting
+
+
+Agent Configuration
+===================
+
+HVAC agent
+----------
+HVAC agents are instatiated in ``substation.py`` (l. 248) and it pulls in it's configuration from the ``hvac`` object in the ``config`` dictionary. This dictionary is loaded from "..._agent_dict.json". This dictionary defines the following values used by "hvac_agentp.py" to configure the hvac agent. The limit values shown are constant across all agents in the original DSOT while the slider value is randomized between zero and one.::
+
+    ramp_high_limit = 5
+    ramp_low_limit = 5
+    range_high_limit = 5
+    range_low_limit = 3
+    slider = [0,1]
 
 Agent Implementations
 =====================
@@ -112,6 +121,43 @@ and the `day-ahead bid <https://github.com/pnnl/tesp/blob/1dcd35e58124764504f4cc
 
     CurveSlope[t] = (delta_DA_price / (0 - self.hvac_kw) * (1 + self.ProfitMargin_slope / 100))
 
+* Setting `thermostat temperature limits <https://github.com/pnnl/tesp/blob/1dcd35e58124764504f4ccb4f38d2f784e0e066e/src/tesp_support/tesp_support/dsot/hvac_agent.py#L464>`_::
+
+            self.range_high_cool = self.range_high_limit * self.slider  
+            self.range_low_cool = self.range_low_limit * self.slider  
+            self.range_high_heat = self.range_high_limit * self.slider  
+            self.range_low_heat = self.range_low_limit * self.slider  
+            
+    The range limits determine a customers `maximum and minimum acceptable temperatures <https://github.com/pnnl/tesp/blob/1dcd35e58124764504f4ccb4f38d2f784e0e066e/src/tesp_support/tesp_support/dsot/hvac_agent.py#L528>`_ ::
+
+        self.temp_max_cool = cooling_setpt + self.range_high_cool  # - self.ramp_high_limit * (1 - self.slider)
+        self.temp_min_cool = cooling_setpt - self.range_low_cool  # + self.ramp_low_limit * (1 - self.slider)
+        self.temp_max_heat = heating_setpt + self.range_high_heat  # - self.ramp_high_limit * (1 - self.slider)
+        self.temp_min_heat = heating_setpt - self.range_low_heat  # + self.ramp_low_limit * (1 - self.slider)
+
+
+
+
+    These limits play a role in the `day-ahead energy market bidding <https://github.com/pnnl/tesp/blob/1dcd35e58124764504f4ccb4f38d2f784e0e066e/src/tesp_support/tesp_support/dsot/hvac_agent.py#L1099>`. There are multiple bidding strategies in forming the day-ahead energy market bids for the HVAC agent. Below is one but they are all constrained by this temperature limit::
+
+             elif use_DA_curve:
+                if self.thermostat_mode == "Cooling":
+                    if self.cleared_price > self.price_forecast_0:
+                        setpoint_tmp = self.temp_room[0] + (self.cleared_price - self.price_forecast_0) * \
+                                       self.range_high_cool / self.price_delta
+                    elif self.cleared_price < self.price_forecast_0:
+                        setpoint_tmp = self.temp_room[0] + (self.cleared_price - self.price_forecast_0) * \
+                                       self.range_low_cool / self.price_delta
+
+* Setting the `price-responsiveness of the thermostat setpoint temperature <https://github.com/pnnl/tesp/blob/1dcd35e58124764504f4ccb4f38d2f784e0e066e/src/tesp_support/tesp_support/dsot/hvac_agent.py#L469>`_::
+
+        if self.slider != 0:
+            # cooling
+            self.ramp_high_cool = self.ramp_high_limit * (1 - self.slider)  # 1+2*(1-self.slider) 
+            self.ramp_low_cool = self.ramp_low_limit * (1 - self.slider)  # 1+2*(1-self.slider) 
+            # heating
+            self.ramp_high_heat = self.ramp_low_limit * (1 - self.slider)  # 1+2*(1-self.slider) 
+            self.ramp_low_heat = self.ramp_high_limit * (1 - self.slider)  # 1+2*(1-self.slider) 
 
 
 Water Heater Agent

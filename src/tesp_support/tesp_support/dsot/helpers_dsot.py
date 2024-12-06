@@ -1,4 +1,5 @@
-# Copyright (C) 2017-2023 Battelle Memorial Institute
+# Copyright (C) 2021-2024 Battelle Memorial Institute
+# See LICENSE file at https://github.com/pnnl/tesp
 # file: helpers_dsot.py
 """ Utility functions for use within tesp_support, including new agents.
 This is DSO+T specific helper functions
@@ -117,7 +118,7 @@ while sleep 120; do
   PROCESS_1_STATUS=$?
   ps aux | grep gridlabd | grep -q -v grep
   PROCESS_2_STATUS=$?
-  ps aux | grep fncs_broker | grep -q -v grep
+  ps aux | grep helics_broker | grep -q -v grep
   PROCESS_3_STATUS=$?
   # If the greps above find anything, they exit with 0 status
   # If all are not 0, then we are done with the main background processes, so the container can end
@@ -129,31 +130,7 @@ while sleep 120; do
     exit 1
   fi
 done                    
-"""
-                      )
-    with open(out_folder + '/docker-run.sh', 'w') as outfile:
-        gdb_extra = "" if system_config['gldDebug'] == 0 else \
-            """
-                   --cap-add=SYS_PTRACE \\
-                   --security-opt seccomp=unconfined\\"""
-        outfile.write("""
-REPO="tesp_private"
-LOCAL_TESP="$HOME/projects/dsot/code/tesp-private"
-WORKING_DIR="/data/tesp/examples/dsot_v3/%s"
-
-docker run \\
-       -e LOCAL_USER_ID="$(id -u)" \\
-       -itd \\
-       --rm \\
-       --network=none \\%s
-       --mount type=bind,source="$LOCAL_TESP/examples",destination="/data/tesp/examples" \\
-       --mount type=bind,source="$LOCAL_TESP/support",destination="/data/tesp/support" \\
-       --mount type=bind,source="$LOCAL_TESP/ercot",destination="/data/tesp/ercot" \\
-       --mount type=bind,source="$LOCAL_TESP/src",destination="/data/tesp/src" \\
-       -w=${WORKING_DIR} \\
-       $REPO:latest \\
-       /bin/bash -c "pip install --user -e /data/tesp/src/tesp_support/; ./clean.sh; ./run.sh; ./monitor.sh"
-        """ % (path.basename(out_folder), gdb_extra))
+""")
 
     with open(out_folder + '/kill.sh', 'w') as outfile:
         if 'HELICS' in system_config.keys():
@@ -238,6 +215,7 @@ def write_dsot_management_script(master_file, case_path, system_config=None, sub
             if dyldPath is not None:
                 outfile.write('export DYLD_LIBRARY_PATH=%s\n\n' % dyldPath)
 
+        outfile.write('(exec date &> ./debug.log &)\n')      
         outfile.write('mkdir -p PyomoTempFiles\n\n')
         outfile.write('# To run agents set with_market=1 else set with_market=0\n')
         if system_config["market"]:
@@ -293,6 +271,7 @@ def write_dsot_management_script(master_file, case_path, system_config=None, sub
                     outfile.write('(exec python3 -c "import tesp_support.api.player as tesp;'
                                   'tesp.load_player_loop(\'./%s\', \'%s\')" &> %s/%s_player.log &)\n'
                                   % (master_file, players[plyr], outPath, player[0]))
+        outfile.write('(exec date &> ./debug.log &)\n')
 
     write_management_script(archive_folder, case_path, outPath, system_config['gldDebug'], 1)
 
@@ -522,8 +501,10 @@ while sleep 120; do
   PROCESS_1_STATUS=$?
   ps aux | grep gridlabd | grep -q -v grep
   PROCESS_2_STATUS=$?
-  ps aux | grep fncs_broker | grep -q -v grep
+  ps aux | grep helics_broker | grep -q -v grep
   PROCESS_3_STATUS=$?
+  ps aux | grep fncs_broker | grep -q -v grep
+  PROCESS_4_STATUS=$?
   # If the greps above find anything, they exit with 0 status
   # If all are not 0, then we are done with the main background processes, so the container can end
   if [ $PROCESS_1_STATUS -ne 0 ] && [ $PROCESS_2_STATUS -ne 0 ] && [ $PROCESS_3_STATUS -ne 0 ]; then
@@ -545,27 +526,25 @@ done
                    --cap-add=SYS_PTRACE \\
                    --security-opt seccomp=unconfined\\"""
         outfile.write("""
-git describe > tesp_version
-docker images -q tesp_private:latest > docker_version
+IMAGE="cosim-cplex:tesp_22.04.1"
+
+git describe --tags > tesp_version
+docker images -q ${IMAGE} > docker_version
 hostname > hostname
 
-REPO="tesp_private"
-LOCAL_TESP="$HOME/projects/dsot/code/tesp-private"
-WORKING_DIR="/data/tesp/examples/dsot_v3/%s"
+WORKING_DIR="$DOCKER_HOME/tesp/examples/analysis/dsot/code/%s"
 ARCHIVE_DIR="%s"
 
 docker run \\
-       -e LOCAL_USER_ID="$(id -u oste814)" \\
+       -e LOCAL_USER_ID=$SIM_UID \\
        -itd \\
        --rm \\
        --network=none \\%s
-       --mount type=bind,source="$LOCAL_TESP",destination="/data/tesp" \\
-       --mount type=bind,source="$ARCHIVE_DIR",destination="%s" \\
+       --mount type=bind,source="$TESPDIR",destination="$DOCKER_HOME/tesp" \\
        -w=${WORKING_DIR} \\
-       $REPO:latest \\
-       /bin/bash -c "export PSST_SOLVER=/opt/ibm/cplex/bin/x86-64_linux/cplexamp; \\
-       pip install --user -e /data/tesp/src/tesp_support/; ./clean.sh; ./run.sh; ./monitor.sh"
-        """ % (path.basename(out_folder), archive_folder, gdb_extra, archive_folder))
+       ${IMAGE} \\
+       /bin/bash -c "./run.sh; ./monitor.sh"
+        """ % (path.basename(out_folder), archive_folder, gdb_extra))
 
     with open(out_folder + '/postprocess.sh', 'w') as outfile:
         if run_post == 1:
@@ -593,7 +572,7 @@ docker run \\
         outfile.write('find . -name \\*metrics*.json* -type f -delete\n')
         outfile.write('find . -name \\*metrics*.h5 -type f -delete\n')
         outfile.write('find . -name \\*model_dict.json -type f -delete\n')
-        outfile.write('find . -name \\*diagnostics.txt -type f -delete\n')
+        outfile.write('find . -name \\*diag.txt -type f -delete\n')
         outfile.write('find . -name \\*log.txt -type f -delete\n')
         outfile.write('cd -\n')
 

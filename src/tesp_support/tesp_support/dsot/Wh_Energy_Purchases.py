@@ -1,4 +1,5 @@
-# Copyright (C) 2021-2023 Battelle Memorial Institute
+# Copyright (C) 2021-2024 Battelle Memorial Institute
+# See LICENSE file at https://github.com/pnnl/tesp
 # file: Wh_Energy_Purchases.py
 """Utilities to open and read load
 
@@ -37,7 +38,6 @@ def load_hourly_data(dir_path, dso_num, simdata):
         data_df.rename(columns={'time': 'date_time'}, inplace=True)
         data_df.rename(columns={'da_q' + '{}'.format(dso_num): 'Bus' + '{}'.format(dso_num)}, inplace=True)
     else:
-        # os.chdir(dir_path)
         data_df = pd.read_csv('2016_ERCOT_Hourly_Load_Data.csv', index_col='Hour_End')
         data_df.reset_index(inplace=True)
         data_df.rename(columns={'Hour_End': 'date_time'}, inplace=True)
@@ -293,34 +293,75 @@ def Wh_Energy_Purchases(dir_path, dso_num, simdata=False, h1=5, h2=16, h3=20, pl
                                    WhBLPurchasesMonthly, WhDAPurchasesMonthly, WhRTPurchasesMonthly,
                                    WhBLPriceMonthly, WhDAPriceMonthly, WhRTPriceMonthly], axis=1)
 
-    Monthly_Purchases.rename(columns={'Fixed Quantity (MW)': 'Bilateral (MWh)', ' Bus1': 'Real-time (MWh)',
-                                      0: 'Bilateral Purchases ($)', 1: 'Day-ahead ($)', 2: 'Real-time ($)',
-                                      3: 'Bilateral Avg Price ($/MWh)', 4: 'Day-ahead Avg Price ($/MWh)',
-                                      5: 'Real-time Avg Price ($/MWh)'}, inplace=True)
+    Monthly_Purchases.rename(
+        columns={
+            "Fixed Quantity (MW)": "WhBLEnergy",
+            "Day-ahead (MWh)": "WhDAEnergy",
+            0: "WhRTEnergy",
+            1: "WhBLCosts",
+            2: "WhDACosts",
+            3: "WhRTCosts",
+            4: "WhBLPrice",
+            5: "WhDAPrice",
+            6: "WhRTPrice",
+        },
+        inplace=True,
+    )
 
     # TO DO: Change the following path for the monthly purchases csv to the desired location
     # Monthly_Purchases.to_csv(r'C:/Users/mayh819/PycharmProjects/tesp-private/tesp-private/{}_DSO_{}_Monthly_Purchases.csv'.format(place,dso_num))
-    MarketPurchases = {'WhEnergyPurchases': {
-        'WhDAPurchases': {
-            'WhDACosts': WhDAPurchases / 1000,  # Day-ahead energy cost in $k
-            'WhDAEnergy': WhDAEnergy,  # Day-ahead energy purchased in MWh
-            'WhDAPrice': WhDAPurchases / WhDAEnergy  # Day-ahead average price in $/MWh
+    MarketPurchases = {
+        'WhEnergyPurchases': {
+            'WhDAPurchases': {
+                'WhDACosts': WhDAPurchases / 1000,  # Day-ahead energy cost in $k
+                'WhDAEnergy': WhDAEnergy,  # Day-ahead energy purchased in MWh
+                'WhDAPrice': WhDAPurchases / WhDAEnergy  # Day-ahead average price in $/MWh
+            },
+            'WhRTPurchases': {
+                'WhRTCosts': WhRTPurchases / 1000,  # Real-time energy cost in $k
+                'WhRTEnergy': WhRTEnergy,  # Real-time energy purchased in MWh
+                'WhRTPrice': WhRTPurchases / WhRTEnergy  # Real-time average price in $/MWh
+            },
+            'WhBLPurchases': {
+                'WhBLCosts': WhBLPurchases / 1000,  # Bilateral energy cost in $k
+                'WhBLEnergy': WhBLEnergy,  # Bilateral energy purchased in MWh
+                'WhBLPrice': WhBLPurchases / WhBLEnergy  # Bilateral average price in $/MWh
+            },
+            'WholesalePeakLoadRate': WholesalePeakLoadRate  # peak capacity in MW
         },
-        'WhRTPurchases': {
-            'WhRTCosts': WhRTPurchases / 1000,  # Real-time energy cost in $k
-            'WhRTEnergy': WhRTEnergy,  # Real-time energy purchased in MWh
-            'WhRTPrice': WhRTPurchases / WhRTEnergy  # Real-time average price in $/MWh
-        },
-        'WhBLPurchases': {
-            'WhBLCosts': WhBLPurchases / 1000,  # Bilateral energy cost in $k
-            'WhBLEnergy': WhBLEnergy,  # Bilateral energy purchased in MWh
-            'WhBLPrice': WhBLPurchases / WhBLEnergy  # Bilateral average price in $/MWh
-        },
-        'WholesalePeakLoadRate': WholesalePeakLoadRate  # peak capacity in MW
-    },
         'OtherWholesale': {
-            'WhLosses': 0  # DSO specific ISO losses are zero for now (not calculated by DC power flow equation).
-        }}
+                'WhLosses': 0  # DSO specific ISO losses are zero for now (not calculated by DC power flow equation).
+        }
+    }
+
+    # Adjust the monthly cost metrics to be in $k
+    Monthly_Purchases.loc[:, "WhBLCosts"] /= 1000
+    Monthly_Purchases.loc[:, "WhDACosts"] /= 1000
+    Monthly_Purchases.loc[:, "WhRTCosts"] /= 1000
+
+    # Change the index from time stamps to month numbers
+    months = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+    ]
+    Monthly_Purchases.set_index(pd.Index(months), inplace=True)
+
+    # Update MarketPurchases to also include monthly metrics
+    for i in ["DA", "RT", "BL"]:
+        MarketPurchases["WhEnergyPurchases"]["Wh" + i + "PurchasesMonthly"] = {
+            "Wh" + i + j: {m: Monthly_Purchases.loc[m, "Wh" + i + j] for m in months}
+            for j in ["Costs", "Energy", "Price"]
+        }
 
     return MarketPurchases
 

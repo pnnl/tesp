@@ -1,4 +1,5 @@
-# Copyright (C) 2017-2023 Battelle Memorial Institute
+# Copyright (C) 2021-2024 Battelle Memorial Institute
+# See LICENSE file at https://github.com/pnnl/tesp
 # file: substation_f.py
 """Manages the Transactive Control scheme for DSO+T implementation version 1
 
@@ -305,7 +306,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
         gld_row = config_glm['inverters'][key]
         battery_agent_objs[key] = BatteryDSOT(row, gld_row, key, 11, current_time, solver)
         # map topics
-        topic_map[key + '#SOC'] = [battery_agent_objs[key].set_battery_SOC]
+        topic_map[key + '#SOC'] = [battery_agent_objs[key].set_SOC]
     log.info('instantiated %s battery control agents' % (len(battery_keys)))
 
     # instantiate the ev controller objects and map their message inputs
@@ -316,7 +317,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
         gld_row = config_glm['ev'][row['houseName']]
         ev_agent_objs[key] = EVDSOT(row, gld_row, key, 11, current_time, solver)
         # map topics
-        topic_map[key + '#SOC'] = [ev_agent_objs[key].set_ev_SOC]
+        topic_map[key + '#SOC'] = [ev_agent_objs[key].set_SOC]
     log.info('instantiated %s electric vehicle control agents' % (len(ev_keys)))
 
     # instantiate the pv objects and map their message inputs
@@ -439,6 +440,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                 name_units_pairs=[
                     ('meters', ['meterName'] * len(site_da_meter)),
                     ('status', ['[0..1]=[PARTICIPATION,NONPARTICIPATION]'] * len(site_da_meter)),
+                    ('site_quantities', [[retail_unit] * int(dso_market_obj.windowLength / 2)] * len(site_da_meter)),
                     ('non_transactive_hvac', [[retail_unit] * retail_market_obj.windowLength] * len(site_da_meter)),
                     ('non_transactive_wh', [[retail_unit] * retail_market_obj.windowLength] * len(site_da_meter)),
                     ('non_transactive_zip', [[retail_unit] * retail_market_obj.windowLength] * len(site_da_meter)),
@@ -685,6 +687,10 @@ def inner_substation_loop(configfile, metrics_root, with_market):
         log.debug('\t hour of day -> ' + str(hour_of_day))
         log.debug('\t minute of hour -> ' + str(minute_of_hour))
 
+        # Pass current time to retail market
+        retail_market_obj.current_time = current_time
+        dso_market_obj.current_time = current_time
+
         # portion that sets the initial billing information. Runs only once!
         if billing_set_defaults:
             for key, obj in hvac_agent_objs.items():
@@ -695,8 +701,8 @@ def inner_substation_loop(configfile, metrics_root, with_market):
 
         # portion that sets the time-of-day thermostat schedule for HVACs
         for key, obj in hvac_agent_objs.items():
-            obj.change_solargain(minute_of_hour, hour_of_day, day_of_week)  # need to be replaced by Qi and Qs calculations
-            if obj.change_basepoint(minute_of_hour, hour_of_day, day_of_week, 11, current_time):
+            obj.set_time(minute_of_hour, hour_of_day, day_of_week)  # need to be replaced by Qi and Qs calculations
+            if obj.change_basepoint(11, current_time):
                 # publish setpoint for participating and basepoint for non-participating
                 if obj.participating and with_market:
                     fncs.publish(obj.name + '/cooling_setpoint', obj.cooling_setpoint)
@@ -704,12 +710,10 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                 else:
                     fncs.publish(obj.name + '/cooling_setpoint', obj.basepoint_cooling)
                     fncs.publish(obj.name + '/heating_setpoint', obj.basepoint_heating)
-                # else:
-                #    continue
 
         # portion that updates the time in the water heater agents
         for key, obj in water_heater_agent_objs.items():
-            obj.set_time(hour_of_day, minute_of_hour)
+            obj.set_time(minute_of_hour, hour_of_day)
 
         # portion that gets current events from FNCS.
         events = fncs.get_events()
@@ -783,8 +787,8 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                 timing(proc[3], True)
                 for key, obj in hvac_agent_objs.items():
                     if obj.participating:
-                        # set the nominal solargain
-                        obj.solar_heatgain = obj.get_solargain(config_glm['climate'], current_retail_time)
+                        # set the nominal solar gain
+                        obj.get_solargain(config_glm['climate'], current_retail_time)
                         # formulate the real-time bid
                         bid = obj.formulate_bid_rt(11, current_time)
                         # add real-time bid to the retail market
@@ -904,8 +908,8 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                     P_age_DA.append(obj)
                 # else:
             timing(proc[6], True)
-            # print('uncontrolled battery ***')
-            # print('no uncntrl load for battery)
+            log.debug('uncontrolled battery ***')
+            log.debug('no uncntrl load for battery')
 
             # HVAC bidding
             timing(proc[7], True)
@@ -945,10 +949,10 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                     site_da_hvac_uncntrl[site_id] += temp
                 site_da_zip_loads[site_id] += obj.forecast_ziploads
             timing(proc[7], False)
-            # print('uncontrolled zip ***')
-            # print(zip_loads)
-            # print('uncontrolled hvac ***')
-            # print(uncntrl_hvac)
+            log.debug('uncontrolled zip ***')
+            log.debug(zip_loads)
+            log.debug('uncontrolled hvac ***')
+            log.debug(uncntrl_hvac)
 
             # Water heater bidding
             timing(proc[8], True)
@@ -972,8 +976,8 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                     uncntrl_wh.append(temp1)
                     site_da_wh_uncntrl[site_id] += temp1
             timing(proc[8], False)
-            # print('uncontrolled wh ***')
-            # print(uncntrl_wh)
+            log.debug('uncontrolled wh ***')
+            log.debug(uncntrl_wh)
 
             # Electrical Vehicle bidding
             timing(proc[9], True)
@@ -981,7 +985,6 @@ def inner_substation_loop(configfile, metrics_root, with_market):
             for key, obj in ev_agent_objs.items():
                 site_id = site_da_meter.index(config_glm['ev'][obj.houseName]['billingmeter_id'])
                 if obj.participating and with_market:
-                    # print('current_time before opt: ', current_time)
                     obj.DA_model_parameters(current_time)
                     P_age_DA.append(obj)
                 else:
@@ -990,8 +993,8 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                     uncntrl_ev.append(temp1)
                     site_da_ev_uncntrl[site_id] += temp1
             timing(proc[9], False)
-            # print('uncontrolled ev ***')
-            # print(uncntrl_ev)
+            log.debug('uncontrolled ev ***')
+            log.debug(uncntrl_ev)
 
             # PV generation forecasting
             timing(proc[10], True)
@@ -1005,8 +1008,8 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                     uncntrl_pv.append(temp1)
                     site_da_pv_uncntrl[site_id] += temp1
             timing(proc[10], False)
-            # print('uncontrolled pv ***')
-            # print(uncntrl_pv)
+            log.debug('uncontrolled pv ***')
+            log.debug(uncntrl_pv)
 
             timing(proc[15], True)
             # Sum all uncontrollable loads
@@ -1021,10 +1024,10 @@ def inner_substation_loop(configfile, metrics_root, with_market):
             site_da_total_quantities_uncntrl = site_da_total_quantities_uncntrl.tolist()
             if site_da_quantities == 0.0:
                 site_da_quantities = [0.0]*retail_market_obj.windowLength
-            # print('uncontrolled total ***')
-            # print(site_da_quantities)
-            # print('uncontrolled total site load ***')
-            # print(site_da_total_quantities_uncntrl)
+            log.debug('uncontrolled total ***')
+            log.debug(site_da_quantities)
+            log.debug('uncontrolled total site load ***')
+            log.debug(site_da_total_quantities_uncntrl)
 
             # formulating bid DA with multiprocessing library
             # created pyomo models in serial, but solves in parallel
@@ -1260,6 +1263,8 @@ def inner_substation_loop(configfile, metrics_root, with_market):
             fncs.publish('da_bid', json.dumps(da_bid))
 
             print('Day-Ahead bid at', time_granted, '=', retail_market_obj.AMES_DA, flush=True)
+            log.info('First hour total DA bid to AMES unresponsive' + '=' + str(retail_market_obj.AMES_DA[offset+1]) + 'MW')
+            log.info('First hour total DA bid to AMES responsive max' + '=' + str(retail_market_obj.AMES_DA[offset+1]) + 'MW')
 
             temp = np.array(site_da_total_quantities_uncntrl) + np.array(site_da_total_quantities_cleared)
             site_total_quantities = []
@@ -1284,6 +1289,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                         retail_market_obj.name,
                         site_da_meter,
                         site_da_status,
+                        site_total_quantities,
                         site_da_hvac_uncntrl.tolist(),
                         site_da_wh_uncntrl.tolist(),
                         site_da_zip_loads.tolist(),
@@ -1684,7 +1690,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                     obj.set_price_forecast(forecast_obj.retail_price_forecast)
                     da_cleared_quantity = []
                     for idx in range(obj.windowLength):
-                        da_cleared_quantity.append(obj.from_P_to_Q_ev(obj.bid_da[idx], retail_market_obj.cleared_price_DA[idx]))
+                        da_cleared_quantity.append(obj.from_P_to_Q_battery(obj.bid_da[idx], retail_market_obj.cleared_price_DA[idx]))
                     site_da_ev_cleared_quantities[site_id] += np.array(da_cleared_quantity)
                 else:
                     site_da_ev_cleared_quantities[site_id] += np.zeros(48)
@@ -1809,9 +1815,17 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                         # if Water heater real-time bid is accepted adjust the thermostat setpoint in GridLAB-D
                         water_heater_name = obj.name.replace("hse", "wh")
                         # print("Water_heater name",water_heater_name)
-                        fncs.publish(water_heater_name + '/lower_tank_setpoint', obj.Setpoint_bottom)
-                        fncs.publish(water_heater_name + '/upper_tank_setpoint', obj.Setpoint_upper)
-                        # print('My published setpoints',obj.Setpoint_bottom, obj.Setpoint_upper)
+                        try:
+                            fncs.publish(water_heater_name + '/lower_tank_setpoint', obj.Setpoint_bottom)
+                            fncs.publish(water_heater_name + '/upper_tank_setpoint', obj.Setpoint_upper)
+                            # print('My published setpoints',obj.Setpoint_bottom, obj.Setpoint_upper)
+                        except:
+                            water_heater_name = water_heater_name.replace("_Middle", "")
+                            water_heater_name = water_heater_name.replace("_Low", "")
+                            water_heater_name = water_heater_name.replace("_Upper", "")
+                            fncs.publish(water_heater_name + '/lower_tank_setpoint', obj.Setpoint_bottom)
+                            fncs.publish(water_heater_name + '/upper_tank_setpoint', obj.Setpoint_upper)
+                            # print('My published setpoints',obj.Setpoint_bottom, obj.Setpoint_upper)
 
                     timing(proc[17], True)
                     if write_metrics:
@@ -1854,7 +1868,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                             obj.bid_rt,
                             obj.inv_P_setpoint,
                             obj.inv_Q_setpoint,
-                            obj.Cinit/obj.batteryCapacity
+                            obj.Cinit/obj.capacity
                         )
                     timing(proc[17], False)
 
@@ -1875,7 +1889,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                             obj.name,
                             obj.bid_rt,
                             obj.inv_P_setpoint,
-                            obj.Cinit/obj.evCapacity
+                            obj.Cinit/obj.capacity
                         )
                     timing(proc[17], False)
 

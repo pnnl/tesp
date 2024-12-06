@@ -1,4 +1,5 @@
-# Copyright (C) 2021-2023 Battelle Memorial Institute
+# Copyright (C) 2021-2024 Battelle Memorial Institute
+# See LICENSE file at https://github.com/pnnl/tesp
 # file: schedule_server.py
 """Implements simple server for providing access to common data to many agents
 
@@ -105,6 +106,27 @@ class DataProxy(object):
             cache[1] = np.mean(temp[0:-1].reshape(-1, 60), axis=1)
             # print(name, " ", time)
         return cache[1]
+    
+    
+    @staticmethod
+    def read_tou_schedules(name, time, col_num):
+        """ Returns tou price values of the given time for the name of schedule forecast and column
+
+        Args:
+            name (str): schedule name for data frame
+            time (any): current time
+            col_num (int): column number 1 to n
+        """
+        idx = name + str(col_num)
+        try:
+            cache = cache_output[idx]
+        except:
+            cache_output[idx] = [0, 0]
+            cache = cache_output[idx]
+        if cache[0] != time:
+            cache[0] = time
+            cache[1] = sch_df_dict[name].loc[pd.to_datetime(time)]
+        return cache[1][col_num]
 
 
 def schedule_server(config_file, port):
@@ -118,6 +140,7 @@ def schedule_server(config_file, port):
     comm_sch = ppc["comm_sch"]
     copy_sch = ppc["copy_sch"]
     power_sch = ppc["power_sch"]
+    tou_sch = ppc["tou_sch"]
     # port = ppc["port"]
 
     # load data frames schedules
@@ -137,6 +160,13 @@ def schedule_server(config_file, port):
     for ds in power_sch:
         sch = ds[0]
         sch_df_dict[sch] = pd.read_csv(ds[1], index_col=0, header=None)
+        sch_df_dict[sch].index = pd.to_datetime(sch_df_dict[sch].index)
+        cache_output[sch] = [0, 0]
+
+    # create a data frame for tou rate schedule, file format (time, DSO_1 price, DSO_2 price, ...)
+    for ds in tou_sch:
+        sch = ds[0]
+        sch_df_dict[sch] = pd.read_csv(ds[1], index_col=0, header=1)
         sch_df_dict[sch].index = pd.to_datetime(sch_df_dict[sch].index)
         cache_output[sch] = [0, 0]
 

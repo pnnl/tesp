@@ -10,8 +10,6 @@ import tesp_support.dsot.plots as pt
 import tesp_support.dsot.dso_quadratic_curves as qc
 import tesp_support.dsot.dso_rate_making as rm
 import tesp_support.dsot.dso_helper_functions as hf
-import tesp_support.dsot.dso_CFS as dcfs
-import tesp_support.dsot.customer_CFS as ccfs
 
 
 ''' This script runs key postprocessing functions that warrant execution after every simulation run.  
@@ -25,15 +23,15 @@ It has the following elements:
 
 #  STEP 0 ---------  STEP UP ------------------------------
 #  Determine which metrics to post-process
-# annual_energy = True
-# annual_amenity = True
-# load_stats = True
-# annual_lmps = True
-# gen_stats = True
-# train_lmps = True
-# wholesale = True
-# retail = True
-# customer_cfs = True
+annual_energy = True
+annual_amenity = True
+load_stats = True
+annual_lmps = True
+gen_stats = True
+train_lmps = True
+wholesale = True
+retail = True
+customer_cfs = True
 dso_cfs = True
 
 annual_energy = False
@@ -42,48 +40,55 @@ load_stats = False
 annual_lmps = False
 gen_stats = False
 train_lmps = False
-wholesale = False
-retail = False
-customer_cfs = False
+# wholesale = False
+# retail = False
+# customer_cfs = False
 # dso_cfs = False
 
+
 # Only set to True if you have already run cfs once and want to update billing to match expenses.
-squareup_revenue = True
+squareup_revenue = False
+
+# Set True if you want to automatically determine start and end days of month (versus manually set them).
+determine_days = False
 
 first_data_day = 4  # First day in the simulation that data to be analyzed. Run-in days before this are discarded.
 discard_end_days = 1  # Number of days at the end of the simulation to be discarded
 
 # ------------ Select folder locations for different cases ---------
 
-mr_bau_path = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/v1.1-1588-ge941fcf5'
-mr_batt_path = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/v1.1-1676-gc9c18a25'
-mr_flex_path = 'TBD'
-hr_bau_path = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/v1.1-1645-g954c150b'
-hr_batt_path = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/v1.1-1694-ge9c9e7fa'
-hr_flex_path = 'TBD'
-mr_200_bau_path = 'TBD'
-mr_200_batt_path = 'TBD'
-mr_200_flex_path = 'TBD'
+flat_path = 'C:/Users/reev057/DSOT-DATA/Rates/Flat'
+DSOT_path = 'C:/Users/reev057/DSOT-DATA/Rates/DSOT'
+TOU_path = 'C:/Users/reev057/DSOT-DATA/Rates/TOU'
+transactive_path = 'C:/Users/reev057/DSOT-DATA/Rates/Transactive'
+subscription_path = 'C:/Users/reev057/DSOT-DATA/Rates/Subscription'
 
-case_path = mr_bau_path
+system_case = "8_hi_system_case_config.json"
+base_case_path = flat_path
+demand_case_path = TOU_path
+case_path = transactive_path
 
-# Load System Case Config
 
-if case_path in [mr_bau_path, mr_batt_path, mr_flex_path]:
-    system_case = '8_system_case_config.json'
-    base_case_path = mr_bau_path
-elif case_path in [hr_bau_path, hr_batt_path, hr_flex_path]:
-    system_case = '8_hi_system_case_config.json'
-    base_case_path = hr_bau_path
-elif case_path in [mr_200_bau_path, mr_200_batt_path, mr_200_flex_path]:
-    system_case = '200_system_case_config.json'
-    base_case_path = mr_200_bau_path
+# # Load System Case Config
+# if case_path in [mr_bau_path, mr_batt_path, mr_flex_path]:
+#     system_case = '8_system_case_config.json'
+#     base_case_path = mr_bau_path
+# elif case_path in [hr_bau_path, hr_batt_path, hr_flex_path]:
+#     system_case = '8_hi_system_case_config.json'
+#     base_case_path = hr_bau_path
+# elif case_path in [mr_200_bau_path, mr_200_batt_path, mr_200_flex_path]:
+#     system_case = '200_system_case_config.json'
+#     base_case_path = mr_200_bau_path
+# elif case_path in [hr_200_bau_path, hr_200_batt_path, hr_200_flex_path]:
+#     system_case = '200_hi_system_case_config.json'
+#     base_case_path = hr_200_bau_path
 
 config_path = dirname(abspath(__file__))
 case_config = pt.load_json(config_path, system_case)
 
 # metadata_path = '../dso_data'
-metadata_path = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/data'
+# metadata_path = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/data'
+metadata_path = 'C:/Users/reev057/PycharmProjects/TESP_Public/examples/analysis/dsot/data'
 
 renew_forecast_file = metadata_path + "/" + case_config['genForecastHr'][5].split('/')[-1]
 dso_metadata_file = case_config['dsoPopulationFile']
@@ -97,77 +102,65 @@ for DSO in DSOmetadata.keys():
         if DSOmetadata[DSO]['used']:
             dso_range.append(int(DSO.split('_')[-1]))
 
+case_name = ''
+month_def = []
+rate_scenario = None
+
+# Determine the rate scenario to investigate
+if case_path == flat_path:
+    case_name = 'Flat'
+    rate_scenario = "flat"
+if case_path == DSOT_path:
+    case_name = 'DSOT'
+    rate_scenario = "dsot"
+if case_path == TOU_path:
+    case_name = 'TOU'
+    rate_scenario = "time-of-use"
+if case_path == transactive_path:
+    case_name = 'RandD'
+    rate_scenario = "transactive"
+if case_path == subscription_path:
+    case_name = 'Sub'
+    rate_scenario = "subscription"
+
+
 #  Month, path of month data, first day of real data, last day of real data + 1
-if case_path == mr_bau_path:
+if case_path == TOU_path:
     month_def = [
-        ['Jan', case_path + '/2016_01', 3, 34],
-        ['Feb', case_path + '/2016_02', 3, 32],
-        ['March', case_path + '/2016_03', 3, 34],
-        ['April', case_path + '/2016_04', 3, 33],
-        ['May', case_path + '/2016_05', 3, 34],
-        ['June', case_path + '/2016_06', 3, 33],
-        ['July', case_path + '/2016_07', 3, 34],
-        ['August', case_path + '/2016_08', 3, 34],
-        ['Sept', case_path + '/2016_09', 3, 33],
-        ['Oct', case_path + '/2016_10', 3, 34],
-        ['Nov', case_path + '/2016_11', 3, 33]
-        # ['Dec', case_path + '/2016_12', 3, 34]
+        ['Jan', case_path + '/8_2016_01_pv_bt_fl_ev', 4, 31],
+        ['Feb', case_path + '/8_2016_02_pv_bt_fl_ev', 4, 32],
+        ['March', case_path + '/8_2016_03_pv_bt_fl_ev', 5, 33],   #Start and end a day later due to sim issues
+        ['April', case_path + '/8_2016_04_pv_bt_fl_ev', 6, 35],   #Start and end two days later due to sim issues
+        ['May', case_path + '/8_2016_05_pv_bt_fl_ev', 4, 33],
+        ['June', case_path + '/8_2016_06_pv_bt_fl_ev', 4, 33],
+        ['July', case_path + '/8_2016_07_pv_bt_fl_ev', 4, 33],
+        ['August', case_path + '/8_2016_08_pv_bt_fl_ev', 4, 34],
+        ['Sept', case_path + '/8_2016_09_pv_bt_fl_ev', 4, 33],
+        ['Oct', case_path + '/8_2016_10_pv_bt_fl_ev', 4, 33],
+        ['Nov', case_path + '/8_2016_11_pv_bt_fl_ev', 4, 33],
+        ['Dec', case_path + '/8_2016_12_pv_bt_fl_ev', 4, 31]
     ]
-elif case_path == hr_bau_path:
+else:
     month_def = [
-        ['Jan', case_path + '/2016_01_pv', 3, 34],
-        ['Feb', case_path + '/2016_02_pv', 3, 32],
-        ['March', case_path + '/2016_03_pv', 3, 34],
-        ['April', case_path + '/2016_04_pv', 3, 33],
-        ['May', case_path + '/2016_05_pv', 3, 34],
-        ['June', case_path + '/2016_06_pv', 3, 33],
-        ['July', case_path + '/2016_07_pv', 3, 34],
-        ['August', case_path + '/2016_08_pv', 3, 34],
-        ['Sept', case_path + '/2016_09_pv', 3, 33],
-        ['Oct', case_path + '/2016_10_pv', 3, 34],
-        ['Nov', case_path + '/2016_11_pv', 3, 33]
-        # ['Dec', case_path + '/2016_12_pv', 3, 34]
-    ]
-
-elif case_path == mr_batt_path:
-    month_def = [
-        ['Jan', case_path + '/2016_01_bt', 3, 34],
-        ['Feb', case_path + '/2016_02_bt', 3, 32],
-        ['March', case_path + '/2016_03_bt', 3, 34],
-        ['April', case_path + '/2016_04_bt', 3, 33],
-        ['May', case_path + '/2016_05_bt', 3, 34],
-        ['June', case_path + '/2016_06_bt', 3, 33],
-        ['July', case_path + '/2016_07_bt', 3, 34],
-        ['August', case_path + '/2016_08_bt', 3, 34],
-        ['Sept', case_path + '/2016_09_bt', 3, 33],
-        ['Oct', case_path + '/2016_10_bt', 3, 34],
-        ['Nov', case_path + '/2016_11_bt', 3, 33]
-        # ['Dec', case_path + '/2016_12_bt', 3, 34]
+        ['Jan', case_path + '/8_2016_01_pv_bt_fl_ev', 4, 31],
+        ['Feb', case_path + '/8_2016_02_pv_bt_fl_ev', 4, 32],
+        ['March', case_path + '/8_2016_03_pv_bt_fl_ev', 4, 32],
+        ['April', case_path + '/8_2016_04_pv_bt_fl_ev', 4, 33],
+        ['May', case_path + '/8_2016_05_pv_bt_fl_ev', 4, 33],
+        ['June', case_path + '/8_2016_06_pv_bt_fl_ev', 4, 33],
+        ['July', case_path + '/8_2016_07_pv_bt_fl_ev', 4, 33],
+        ['August', case_path + '/8_2016_08_pv_bt_fl_ev', 4, 34],
+        ['Sept', case_path + '/8_2016_09_pv_bt_fl_ev', 4, 33],
+        ['Oct', case_path + '/8_2016_10_pv_bt_fl_ev', 4, 33],
+        ['Nov', case_path + '/8_2016_11_pv_bt_fl_ev', 4, 33],
+        ['Dec', case_path + '/8_2016_12_pv_bt_fl_ev', 4, 31]
     ]
 
-elif case_path == hr_batt_path:
-    month_def = [
-        ['Jan', case_path + '/8_2016_01_pv_bt_ev', 3, 34],
-        ['Feb', case_path + '/8_2016_02_pv_bt_ev', 3, 32],
-        ['March', case_path + '/8_2016_03_pv_bt_ev', 3, 34],
-        ['April', case_path + '/8_2016_04_pv_bt_ev', 3, 33],
-        ['May', case_path + '/8_2016_05_pv_bt_ev', 3, 34],
-        ['June', case_path + '/8_2016_06_pv_bt_ev', 3, 33],
-        ['July', case_path + '/8_2016_07_pv_bt_ev', 3, 34],
-        ['August', case_path + '/8_2016_08_pv_bt_ev', 3, 34],
-        ['Sept', case_path + '/8_2016_09_pv_bt_ev', 3, 33],
-        ['Oct', case_path + '/8_2016_10_pv_bt_ev', 3, 34],
-        ['Nov', case_path + '/8_2016_11_pv_bt_ev', 3, 33]
-        # ['Dec', case_path + '/8_2016_12_pv_bt_ev', 3, 34]
-    ]
-
-# month_def = [
-#             ['Aug', case_path + '/w_lean_aug_8', 3, 34],
-#             ['Aug_bt', case_path + '/x_lean_aug_8_pv_bt_ev', 3, 34]
-# ]
 
 # Verify and implement actual number of simulation days.
 total_sim_days = 0
+generate_case_config = ''
+# TODO: Copy generate_case_config file to annual level.
 for month in month_def:
     generate_case_config = pt.load_json(month[1], 'generate_case_config.json')
 
@@ -176,8 +169,11 @@ for month in month_def:
 
     # Start at day 'n' after first few days are discarded.  
     # Assumes that simulation runs to end of month with 'm' extra days at the end.
-    month[2] = first_data_day
-    month[3] = num_sim_days - discard_end_days + 1
+    if determine_days:
+        month[2] = first_data_day
+        month[3] = num_sim_days - discard_end_days + 1
+    month.append(generate_case_config['StartTime'])
+    month.append(generate_case_config['EndTime'])
     total_sim_days += month[3] - month[2]
 
 total_day_range = range(1, total_sim_days + 1)
@@ -225,7 +221,7 @@ if load_stats:  # Finds Q_max amongst other things.
 # --------------- AGGREGATE ANNUAL LMPS LOADS for FORECASTER RETUNING  ------------------------------
 if annual_lmps:
     dso_num = '3'
-    pt.dso_lmp_stats(month_def, case_path, renew_forecast_file)
+    pt.dso_lmp_stats(month_def, case_path, renew_forecast_file, dso_range)
     pt.plot_lmp_stats(case_path, case_path, dso_num, 7)
 
 if gen_stats:
@@ -241,23 +237,27 @@ if train_lmps:
 # dso_num = '1'
 if wholesale:
     for dso_num in dso_range:
+        qmax_df = pd.read_csv(case_path + '/Qmax.csv', index_col=[0])
+        time_of_system_peak = datetime.fromisoformat(qmax_df.loc['DSO_Total', 'Time of Peak'])
         Market_Purchases = ep.Wh_Energy_Purchases(case_path, str(dso_num), True)
         print(Market_Purchases)
         os.chdir(case_path)
         with open('DSO' + str(dso_num) + '_Market_Purchases.json', 'w') as f:
             json.dump(Market_Purchases, f, indent=2)
-
+# TODO: Make month usage consistent 'Mar' versus 'March'
 # --------------- DETERMINE RETAIL BILLING  ------------------------------
 # Run Customer billing code to determine revenues
 # Run DSO cash flow to determine total DSO expense = total DSO required revenue.
 # Run Customer billing code to determine revenues and iterate tariffs to match expenses
 # Run final DSO cash flow with final customer revenues.
-
+#  TODO: break DSO CFS into two parts and execute first part here to have required revenue ready.
 if retail:
+    dso_df = None
     if squareup_revenue:
         dso_df = pd.read_csv(case_path + "/DSO_CFS_Summary.csv")
         # TODO: Fix this: dso_df = dso_df.set_index(dso_df.columns[0])
     for dso_num in dso_range:
+        pt.tic()
         file_name = 'Substation_' + str(dso_num) + '_glm_dict.json'
         GLD_metadata = pt.load_json(month_def[0][1] + agent_prefix + str(dso_num), file_name)
 
@@ -291,19 +291,35 @@ if retail:
                         DSOmetadata['DSO_' + str(dso_num)]['RCI customer count mix']['industrial'])
         dso_scaling_factor = DSOmetadata['DSO_' + str(dso_num)]['scaling_factor']
         if squareup_revenue:
-            required_revenue = (float(dso_df.iloc[13, dso_num]) + float(dso_df.iloc[30, dso_num])) * 1000
+            required_revenue = (float(dso_df.loc[13, 'DSO_' + str(dso_num)]) + float(dso_df.loc[30, 'DSO_' + str(dso_num)])) * 1000
         else:
             required_revenue = 4e6
-        DSO_Cash_Flows, DSO_Revenues_and_Energy_Sales, tariff, surplus = \
-            rm.DSO_rate_making(case_path, dso_num, GLD_metadata, required_revenue,
-                               metadata_path, dso_scaling_factor, num_ind_cust)
+        trans_cost_balance_method = None
+        DSO_Cash_Flows, DSO_Revenues_and_Energy_Sales, tariff, surplus = rm.DSO_rate_making(
+            case_path,
+            demand_case_path,
+            dso_num,
+            GLD_metadata,
+            required_revenue,
+            metadata_path,
+            dso_scaling_factor,
+            num_ind_cust,
+            case_name,
+            squareup_revenue,
+            rate_scenario,
+            trans_cost_balance_method,
+        )
 
         # Example of getting an annual customer bill in dictionary form:
         customer = list(GLD_metadata['billingmeters'].keys())[0]
         cust_bill_file = case_path + '/bill_dso_' + str(dso_num) + '_data.h5'
         cust_bills = pd.read_hdf(cust_bill_file, key='cust_bill_data', mode='r')
-        customer_bill = rm.get_cust_bill(customer, cust_bills, GLD_metadata)
+        cust_energy = pd.read_hdf(case_path + '/energy_dso_' + str(dso_num) + '_data.h5', key='energy_data', mode='r')
+        customer_bill = rm.get_cust_bill(customer, cust_bills, GLD_metadata, cust_energy, rate_scenario)
         print(customer_bill)
+
+        print("DSO " + str(dso_num) + ": Surplus error = " + str(surplus/required_revenue*100) + "%")
+        pt.toc()
 
         os.chdir(case_path)
         with open('DSO' + str(dso_num) + '_Cash_Flows.json', 'w') as f:
@@ -320,21 +336,42 @@ if retail:
 
 if customer_cfs:
     # dso_range = [1]
-    customer_df = ccfs.get_customer_df(dso_range, case_path, metadata_path)
-    customer_df.to_hdf(case_path + '/Master_Customer_Dataframe.h5', key='customer_data')
-    customer_df.to_csv(path_or_buf=case_path + '/Master_Customer_Dataframe.csv')
+    create_customer_df = True
+    if create_customer_df:
+        customer_df = hf.get_customer_df(dso_range, case_path, metadata_path, rate_scenario)
+        customer_df.to_hdf(case_path + '/Master_Customer_Dataframe.h5', key='customer_data')
+        customer_df.to_csv(path_or_buf=case_path + '/Master_Customer_Dataframe.csv')
+    else:
+        customer_df = pd.read_hdf(case_path + '/Master_Customer_Dataframe.h5', key='customer_data', mode='r')
 
-    main_variables = ['dso', 'tariff_class', 'building_type', 'cust_participating', 'cooling', 'heating']
+    main_variables = ['dso', 'tariff_class', 'building_type', 'cust_participating', 'cooling', 'heating', 'income_level']
     variables_combs = [['tariff_class', 'cust_participating'],
                        ['tariff_class', 'cust_participating', 'cooling', 'heating'],
-                       ['building_type', 'cust_participating']]
+                       ['building_type', 'cust_participating'],
+                       ['tariff_class', 'pv_participating'],
+                       ['tariff_class', 'ev_participating']
+                       # ['tariff_class', 'cust_participating', 'pv_participating']
+                       # ['tariff_class', 'cust_participating', 'ev_participating']
+    ]
 
-    customer_mean_df = hf.get_mean_for_diff_groups(customer_df, main_variables, variables_combs, cfs_start_position=24)
+    customer_mean_df = hf.get_mean_for_diff_groups(customer_df, main_variables, variables_combs, cfs_start_position=25)
     customer_mean_df.to_csv(path_or_buf=case_path + '/Customer_CFS_Summary.csv')
 
 if dso_cfs:
-    DSO_df, CapitalCosts_dict_list, Expenses_dict_list, Revenues_dict_list, DSO_Cash_Flows_dict_list = \
-        dcfs.get_DSO_df(dso_range, generate_case_config, DSOmetadata, case_path, base_case_path)
+    (
+        DSO_df,
+        CapitalCosts_dict_list,
+        Expenses_dict_list,
+        Revenues_dict_list,
+        DSO_Cash_Flows_dict_list,
+    ) = hf.get_DSO_df(
+        dso_range,
+        generate_case_config,
+        DSOmetadata,
+        case_path,
+        base_case_path,
+        rate_scenario,
+    )
 
     DSO_df.to_csv(path_or_buf=case_path + '/DSO_CFS_Summary.csv')
 
