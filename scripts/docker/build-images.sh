@@ -13,11 +13,13 @@ build_ubuntu=1
 build_library=1
 build_build=1
 build_cplex=0
+build_user=0
 
 paths=(
   "./"
   "./"
   "${TESPDIR}/scripts/build/"
+  "./"
   "./"
 )
 
@@ -26,6 +28,7 @@ names=(
   "library"
   "build"
   "cplex"
+  "user"
 )
 
 # Dynamically build the 'builds' array based on the configuration
