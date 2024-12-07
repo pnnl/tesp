@@ -1,23 +1,38 @@
 #!/bin/bash
 
+# Copyright (C) 2021-2023 Battelle Memorial Institute
+# file: runtesp
+
+if [[ -z ${TESPDIR} ]]; then
+  echo "Edit tesp.env in the TESP directory"
+  echo "Run 'source tesp.env' in that same directory"
+  exit
+fi
+
+# standard use
+ver=$(cat "${TESPDIR}/scripts/grid_version")
+#IMAGE=pnnl/tesp:${ver}
+
+# for custom use
 IMAGE=cosim-build:tesp_22.04.1
 #IMAGE=cosim-cplex:tesp_22.04.1
 
-#id $1
-#docker run -itd --rm \
-#       --name runtesp \
-#       -e LOCAL_USER_ID=${SIM_UID} \
-#       --mount type=bind,source="$TESPDIR",destination="$SIM_HOME/tesp" \
-#       -w=$SIM_HOME \
-#       $IMAGE \
-#       bash -c $1
-#
-#else
-
-docker run -it --rm \
-       --name runtesp \
-       -e LOCAL_USER_ID=${SIM_UID} \
-       --mount type=bind,source="$TESPDIR",destination="$SIM_HOME/tesp" \
-       -w=$SIM_HOME \
-       $IMAGE \
-       bash
+if [[ -z $1 ]] ; then
+  echo "foreground"
+  docker run -it --rm \
+         --name runtesp \
+         -e LOCAL_USER_ID=${SIM_UID} \
+         --mount type=bind,source="$TESPDIR",destination="$SIM_HOME/tesp" \
+         -w=$SIM_HOME \
+         $IMAGE \
+         bash
+else
+  echo "background"
+  docker run -itd --rm \
+         --name runtesp \
+         -e LOCAL_USER_ID=${SIM_UID} \
+         --mount type=bind,source="$TESPDIR",destination="$SIM_HOME/tesp" \
+         -w=$SIM_HOME \
+         $IMAGE \
+         bash -c "$1"
+fi

@@ -1,6 +1,7 @@
 #!/bin/bash
 
-ver="22.04.1"
+# Copyright (C) 2021-2023 Battelle Memorial Institute
+# file: build-images.sh
 
 if [[ -z ${TESPDIR} ]]; then
   echo "Edit tesp.env in the TESP directory"
@@ -40,6 +41,8 @@ done
 
 cd "$DOCKER_DIR" || exit
 export BUILDKIT_PROGRESS=plain
+
+ver=$(cat "${TESPDIR}/scripts/grid_version")
 
 for i in "${!names[@]}"; do
   CONTEXT="${paths[$i]}"

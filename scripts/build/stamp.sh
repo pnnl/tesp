@@ -1,13 +1,17 @@
 #!/bin/bash
 
-if [[ -z ${INSTDIR} ]]; then
+# Copyright (C) 2021-2023 Battelle Memorial Institute
+# file: stamp.sh
+
+if [[ -z ${TESPDIR} ]]; then
   echo "Edit 'tesp.env' in the TESP home directory"
   echo "Run 'source tesp.env' in that same directory"
   exit
 fi
 
-tesp_ver=1.3.5
-grid_ver=22.04.1
+cd "$DOCKER_DIR" || exit
+tesp_ver=$(cat ../tesp_version)
+grid_ver=$(cat ../grid_version)
 
 echo
 echo "Stamping grid applications software $grid_ver, if you want to change the version, edit this file."
@@ -66,8 +70,6 @@ pip list > "${BUILD_DIR}/tesp_pypi.id"
 
 echo "Stamping grid applications software $grid_ver and TESP $tesp_ver for install"
 cd "${TESPDIR}" || exit
-echo "$grid_ver" > "scripts/grid_version"
-echo "$tesp_ver" > "scripts/tesp_version"
 echo "$tesp_ver" > "src/tesp_support/version"
 
 # un-comment for final version

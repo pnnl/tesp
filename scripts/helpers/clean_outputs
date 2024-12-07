@@ -1,5 +1,11 @@
 #!/bin/bash
 
+if [[ -z ${TESPDIR} ]]; then
+  echo "Edit tesp.env in the TESP directory"
+  echo "Run 'source tesp.env' in that same directory"
+  exit
+fi
+
 echo
 echo "  This script iterates the examples directory calling clean.sh in tha directory."
 echo "  A user can modify a particular directory clean.sh script if needed."
