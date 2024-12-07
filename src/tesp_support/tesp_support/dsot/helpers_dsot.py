@@ -532,7 +532,7 @@ git describe --tags > tesp_version
 docker images -q ${IMAGE} > docker_version
 hostname > hostname
 
-WORKING_DIR="$DOCKER_HOME/tesp/examples/analysis/dsot/code/%s"
+WORKING_DIR="$SIM_HOME/tesp/examples/analysis/dsot/code/%s"
 ARCHIVE_DIR="%s"
 
 docker run \\
@@ -540,7 +540,7 @@ docker run \\
        -itd \\
        --rm \\
        --network=none \\%s
-       --mount type=bind,source="$TESPDIR",destination="$DOCKER_HOME/tesp" \\
+       --mount type=bind,source="$TESPDIR",destination="$SIM_HOME/tesp" \\
        -w=${WORKING_DIR} \\
        ${IMAGE} \\
        /bin/bash -c "./run.sh; ./monitor.sh"

@@ -52,10 +52,10 @@ for i in "${!names[@]}"; do
     image1=$(docker images -q "${IMAGE_NAME}")
     docker build --no-cache --rm \
                  --build-arg DOCKER_VER="${ver}" \
-                 --build-arg COSIM_USER="${DOCKER_USER}" \
-                 --build-arg SIM_HOST="${SIM_HOST}" \
-                 --build-arg SIM_USER="${SIM_USER}" \
+                 --build-arg SIM_GID=$SIM_GID \
+                 --build-arg SIM_GRP="${SIM_GRP}" \
                  --build-arg SIM_UID=$SIM_UID \
+                 --build-arg SIM_USER="${SIM_USER}" \
                  --network=host \
                  -f "${DOCKERFILE}" \
                  -t "${IMAGE_NAME}" "${CONTEXT}"

@@ -7,8 +7,8 @@ IMAGE=cosim-build:tesp_22.04.1
 #docker run -itd --rm \
 #       --name runtesp \
 #       -e LOCAL_USER_ID=${SIM_UID} \
-#       --mount type=bind,source="$TESPDIR",destination="$DOCKER_HOME/tesp" \
-#       -w=$DOCKER_HOME \
+#       --mount type=bind,source="$TESPDIR",destination="$SIM_HOME/tesp" \
+#       -w=$SIM_HOME \
 #       $IMAGE \
 #       bash -c $1
 #
@@ -17,7 +17,7 @@ IMAGE=cosim-build:tesp_22.04.1
 docker run -it --rm \
        --name runtesp \
        -e LOCAL_USER_ID=${SIM_UID} \
-       --mount type=bind,source="$TESPDIR",destination="$DOCKER_HOME/tesp" \
-       -w=$DOCKER_HOME \
+       --mount type=bind,source="$TESPDIR",destination="$SIM_HOME/tesp" \
+       -w=$SIM_HOME \
        $IMAGE \
        bash

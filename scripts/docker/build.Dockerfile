@@ -4,18 +4,19 @@ ARG TAG=$DOCKER_VER
 # Build runtime image
 FROM cosim-library:tesp_$TAG AS cosim-build
 
-ARG COSIM_USER
-ENV COSIM_HOME=/home/$COSIM_USER
-ENV COSIM_EMAIL=pnnl.com
+ARG SIM_USER
 
-USER $COSIM_USER
-WORKDIR $COSIM_HOME
+ENV SIM_HOME=/home/$SIM_USER
+ENV SIM_EMAIL=pnnl.com
+
+USER $SIM_USER
+WORKDIR $SIM_HOME
 
 # CoSim exports
-ENV TESPDIR=$COSIM_HOME/tesp
-ENV INSTDIR=$COSIM_HOME/tenv
-ENV BUILD_DIR=$COSIM_HOME/build
-ENV REPO_DIR=$COSIM_HOME/repo
+ENV TESPDIR=$SIM_HOME/tesp
+ENV INSTDIR=$SIM_HOME/tenv
+ENV REPO_DIR=$SIM_HOME/repo
+ENV BUILD_DIR=$SIM_HOME/build
 
 # COMPILE exports
 ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
@@ -28,10 +29,11 @@ ENV LD_LIBRARY_PATH=$INSTDIR/lib
 ENV LD_RUN_PATH=$INSTDIR/lib
 
 # PATH
-ENV PATH=$JAVA_HOME:$INSTDIR/bin:$COSIM_HOME/.local/bin:$PATH
+ENV PATH=$JAVA_HOME:$INSTDIR/bin:$SIM_HOME/.local/bin:$PATH
 ENV PATH=$PATH:$INSTDIR/energyplus
 ENV PATH=$PATH:$INSTDIR/energyplus/PreProcess
 ENV PATH=$PATH:$INSTDIR/energyplus/PostProcess
+ENV PATH=$PATH:$TESPDIR/scripts/helpers
 
 # PSST exports
 ENV PSST_SOLVER=cbc
@@ -41,8 +43,8 @@ ENV PSST_WARNING=ignore
 
 RUN echo "===== Building CoSim Build =====" && \
   echo "Configure name and email for git" && \
-  git config --global user.name "${COSIM_USER}" && \
-  git config --global user.email "${COSIM_USER}@${COSIM_EMAIL}" && \
+  git config --global user.name "${SIM_USER}" && \
+  git config --global user.email "${SIM_USER}@${SIM_EMAIL}" && \
   git config --global credential.helper store && \
   echo "Directory structure for build" && \
   mkdir -p tenv && \
@@ -52,10 +54,11 @@ RUN echo "===== Building CoSim Build =====" && \
 # Copy the build instructions
 COPY . ${BUILD_DIR}
 USER root
-RUN chown -hR $COSIM_USER:$COSIM_USER ${BUILD_DIR}
+RUN chown -hR $SIM_USER:$SIM_USER ${BUILD_DIR}
 
-USER $COSIM_USER
-WORKDIR $COSIM_HOME
+USER $SIM_USER
+WORKDIR $SIM_HOME
+
 RUN echo "Cloning or download all relevant repositories..." && \
   cd "${REPO_DIR}" || exit && \
   echo "++++++++++++++ TESP" && \
@@ -128,5 +131,5 @@ RUN echo "Cloning or download all relevant repositories..." && \
   pip install --no-warn-script-location --no-cache-dir helics[cli]  >> "pypi.log" && \
   pip install --no-warn-script-location --no-cache-dir -e ${REPO_DIR}/psst  >> "pypi.log" && \
   pip install --no-warn-script-location --no-cache-dir -e ${TESPDIR}/src/tesp_support  >> "pypi.log" && \
-  echo "${COSIM_USER}" | sudo -S ldconfig && \
+  echo "${SIM_USER}" | sudo -S ldconfig && \
   ./versions.sh
