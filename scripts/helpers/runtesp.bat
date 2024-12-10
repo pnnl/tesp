@@ -46,7 +46,7 @@ EXIT /b 1
 :no_tesp
 ECHO "Set the 'TESPDIR' environment varible for the TESP directory"
 ECHO "Command line terminal example:
-ECHO "C:\> set /p TESPDIR=C:\user\myuser\tesp
+ECHO "C:\> set /p TESPDIR=C:\Users\JoeUser\tesp
 ECHO "Permanently set an environment variable for the current user:"
 ECHO "C:\> setx TESPDIR 'C:\Users\JoeUser\tesp'"
 ECHO "Permanently set global environment variable (for all users):"

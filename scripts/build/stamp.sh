@@ -14,7 +14,8 @@ tesp_ver=$(cat ../tesp_version)
 grid_ver=$(cat ../grid_version)
 
 echo
-echo "Stamping grid applications software $grid_ver, if you want to change the version, edit this file."
+echo "Stamping grid applications software $grid_ver and TESP $tesp-ver."
+echo "If you want to change the version, edit 'scripts/tesp_version' or 'scripts/grid_version' file."
 echo "You should also update any documentation CHANGELOG.TXT or README.rst before stamping."
 echo "The command below can show the branch and merge history to help you update documentation."
 echo

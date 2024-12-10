@@ -14,7 +14,7 @@ numpy~=1.26.4
 openpyxl~=3.1.5
 pandas~=2.2.2
 plotly~=5.24.0
-psst~=0.1.1a0
+psst
 PuLP~=2.9.0
 PyGLM~=2.7.1
 pyjson5~=1.6.7
@@ -33,6 +33,7 @@ sphinxcontrib-bibtex~=2.6.3
 sphinx-jsonschema~=1.19.1
 sphinx-rtd-theme~=3.0.2
 tables~=3.10.1
+tesp_support
 urllib3~=2.2.3
 xarray~=2024.9.0
 xlrd~=2.0.1
