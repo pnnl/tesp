@@ -28,8 +28,9 @@ To generally improve the code quality and ensure continuity of performance from 
 1. Modularity between the device the agent is controlling and the market in which the agent is participating. Both should be interchangeable to support extension to new devices and new market/transactive mechanisms.
 2. The agent should maintain some form of device model to use in estimating future device behavior. In DSO+T this was a physics-based model but other forms (_e.g._ machine-learning models) need to be supported.
 3. Implemented in the context of a larger software architecture (class-based). We need to balance the complexity of the software architecture and class hiearchy with creating code that is usable by those new to TESP agents.
-4. Documentation of the software architecture and refactored classes, both of the APIs and in prose.
-5. (Maybe?) Provide an interactive model of the device for use in understanding it's behavior and validating the design.
+4. Ability to support use interchangeable bidding strategies.
+5. Documentation of the software architecture and refactored classes, both of the APIs and in prose.
+6. (Maybe?) Provide an interactive model of the device for use in understanding it's behavior and validating the design.
 
 ## Requirements for Agent Testbed
 Agent developers (both those of us refactoring the existing agents as well as those developing new agents) need a computationally light way of evaluating the functionality and performance of their code. To that end, it will be important to provide one or more test harnesses where developers can insert their code and see how it performs. It is likely there will need to be at least two testbeds:
