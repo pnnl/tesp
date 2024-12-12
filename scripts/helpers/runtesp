@@ -14,8 +14,9 @@ ver=$(cat "${TESPDIR}/scripts/grid_version")
 #IMAGE=pnnl/tesp:${ver}
 
 # for custom use
-IMAGE=cosim-build:tesp_22.04.1
-#IMAGE=cosim-cplex:tesp_22.04.1
+IMAGE=cosim-build:tesp_${ver}
+#IMAGE=cosim-cplex:tesp_${ver}
+#IMAGE=cosim-user:tesp_${ver}
 
 if [[ -z $1 ]] ; then
   echo "foreground"
