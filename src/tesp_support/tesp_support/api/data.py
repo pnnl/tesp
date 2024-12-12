@@ -10,11 +10,12 @@ import argparse
 import subprocess
 
 """
-If your Python package needs to write to a file for shared data
-or configuration, you can use standard platform/OS-specific system directories, 
-such as ~/.local/config/$appname or /usr/share/$appname/$version (Linux specific) [1]. 
+If your Python package needs to write to a file for shared data or configuration,
+you can use standard platform/OS-specific system directories, such as 
+~/.local/config/$appname or /usr/share/$appname/$version (Linux specific) [1]. 
 A common approach is to add a read-only template file to the package directory 
-that is then copied to the correct system directory if no pre-existing file is found.
+that is then copied to the correct system directory if no pre-existing file is 
+found.
 """
 
 tesp_path = None
@@ -65,17 +66,17 @@ else:
         pass
 
 
-tesp_share = path.expandvars(tesp_path + '/data/')
-comm_path = path.join(tesp_share, "comm/")
-energyplus_path = path.join(tesp_share, "energyplus/")
-feeders_path = path.join(tesp_share, "feeders/")
-scheduled_path = path.join(tesp_share, "schedules/")
-weather_path = path.join(tesp_share, "weather/")
+tesp_share = path.join(path.expandvars(tesp_path), 'data')
+comm_path = path.join(tesp_share, "comm")
+energyplus_path = path.join(tesp_share, "energyplus")
+feeders_path = path.join(tesp_share, "feeders")
+scheduled_path = path.join(tesp_share, "schedules")
+weather_path = path.join(tesp_share, "weather")
 
-tesp_model = path.expandvars(tesp_path + '/models/')
-pypower_path = path.join(tesp_model, "pypower/")
+tesp_model = path.join(path.expandvars(tesp_path), 'models')
+pypower_path = path.join(tesp_model, "pypower")
 
-tesp_test = path.expandvars(tesp_path + '/src/tesp_support/test/')
+tesp_test = path.join(path.expandvars(tesp_path),  'src', 'tesp_support', 'test')
 
 glm_entities_path = files('tesp_support.api.datafiles').joinpath('glm_classes.json')
 piq_entities_path = files('tesp_support.api.datafiles').joinpath('grid_PIQ.json')
@@ -148,12 +149,12 @@ def tesp_component():
         print("Bad choice, choose 1 through 9")
         return
 
-    component = path.join(tesp_path, components[choice])
+    component = path.join(path.expandvars(tesp_path), components[choice])
     if path.isdir(component):
         print("It seems we have a copy of " + component)
         return
 
     # can proceed with the copy
-    chdir(tesp_path)
+    chdir(path.expandvars(tesp_path))
     subprocess.Popen(parcel, shell=False).wait()
     print('Output directory: ', tesp_path + "/" + components[choice])

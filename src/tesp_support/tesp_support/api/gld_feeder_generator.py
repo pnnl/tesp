@@ -2348,7 +2348,7 @@ def _test2():
     config.data_path = data_path
     feeder = Feeder(config)
 
-    compare = filecmp.cmp(out, os.path.join(data_path,config.out_file_glm))
+    compare = filecmp.cmp(out, os.path.join(data_path, config.out_file_glm))
     print("Does the populated test feeder match the original 'R1-12.47-2_populated.glm'?")
     print(compare)
 
