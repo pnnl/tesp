@@ -63,7 +63,7 @@ def _auto_run(args):
     # Houses have to be associated with triplex_meters so we just as for a list of meters
     # Returns a dictionary where the meters names are the keys and values are the
     # GridLAB-D parameter values.
-    tp_meter_names = list(glmMod.glm.triplex_meter)
+    tp_meter_names = list(glm.triplex_meter.keys())
     num_houses_to_add = 11
     # Create dictionaries (with GridLAB-D parameter values) for new houses to be added
     for house_num in range(num_houses_to_add):
@@ -86,13 +86,13 @@ def _auto_run(args):
             num_tp_meters = len(tp_meter_names)
             print(f"\tNumber of triplex meters before adding one: {num_tp_meters}")
             print(f"\tAdding triplex_meter {billing_meter_name} to model.")
-        glmMod.add_object("triplex_meter", billing_meter_name, meter_params)
+        glm.triplex_meter.add(billing_meter_name, meter_params)
         # Adding a new position element for the newly created billing meter
         if hasattr(args, 'coords_file'):
             pos_data[billing_meter_name] = pos_data[new_name]
 
         if house_num == 0:
-            num_tp_meters = len(glmMod.glm.triplex_meter)
+            num_tp_meters = len(glm.triplex_meter.keys())
             print(f"\tNumber of triplex meters after adding one: {num_tp_meters}")
 
         # Add a meter to capture just the house energy consumption
@@ -124,20 +124,7 @@ def _auto_run(args):
         #       TESP provides this functionality through TODO.
 
         # Defining these parameters in a silly way just so each one is unique.
-        house_params = {
-            "parent": new_name,
-            "Rroof": 33.69 + house_num,
-            "Rwall": 17.71 + house_num,
-            "Rfloor": 17.02 + house_num,
-            "Rwindows": 1.8 + house_num,
-            "airchange_per_hour": 0.8 + house_num,
-            "cooling_system_type": "ELECTRIC",
-            "heating_system_type": "HEAT_PUMP",
-            "cooling_COP": 4.5 + house_num,
-        }
-        house_obj = glmMod.add_object("house", house_name, house_params)
-
-        house_obj = glmMod.house.add(house_name, {
+        house_obj = glm.house.add(house_name, {
             "parent": new_name,
             "Rroof": 33.69 + house_num,
             "Rwall": 17.71 + house_num,
@@ -213,15 +200,15 @@ def _auto_run(args):
     #  parent-child relationship.
     print("Demonstrating the deletion of an entire object from GridLAB-D model.")
     print("\tZIPload is child of house and will be automatically deleted as well.")
-    num_houses = len(glm.house)
+    num_houses = len(glm.house.keys())
     print(f"\tNumber of houses: {num_houses}")
-    num_zips = len(glm.ZIPload)
+    num_zips = len(glm.ZIPload.keys())
     print(f"\tNumber of ZIPloads: {num_zips}")
     print(f"\tDeleting {house_to_delete} from model.")
     glmMod.del_object("house", house_to_delete)
-    num_houses = len(glm.house)
+    num_houses = len(glm.house.keys())
     print(f"\tNumber of houses: {num_houses}")
-    num_zips = len(glm.ZIPload)
+    num_zips = len(glm.ZIPload.keys())
     print(f"\tNumber of ZIPloads: {num_zips}")
 
     # Increase all the secondary/distribution transformer ratings by 15%
@@ -314,7 +301,7 @@ def _auto_run(args):
     # isn't really the feeder head fuse.
     # And that's what you get for making assumptions.
     # https://emac.berkeley.edu/gridlabd/taxonomy_graphs/R1-12.47-1.pdf )
-    if len(glm.fuse) > 0:
+    if len(glm.fuse.keys()) > 0:
         print(f"\tIncreasing fuse size by an arbitrary 10%")
         fuse_obj = glm.fuse[feeder_head_fuse]
         print(f'\t\tOld fuse current limit: {fuse_obj["current_limit"]} A')
@@ -323,7 +310,7 @@ def _auto_run(args):
 
     max_transformer_power = 0
     max_transformer_name = ""
-    for transformer_config_name in glm.transformer_configuration:
+    for transformer_config_name in glm.transformer_configuration.keys():
         transformer_power_rating = float(
             glm.transformer_configuration[transformer_config_name]["power_rating"]
         )
@@ -360,17 +347,17 @@ def demo():
     parser.add_argument('-n',
                         '--feeder_file',
                         nargs='?',
-                        default='South_D1_Alburgh_mod_tesp_reduced.glm')
+                        default='R1-12.47-2.glm')
 
     parser.add_argument('-c',
                         '--coords_file',
                         nargs='?',
-                        default='South_D1_Alburgh_mod_tesp_pos.json')
+                        default='R1_12_47_2_pos.json')
 
     parser.add_argument('-o',
                         '--output_file',
                         nargs='?',
-                        default='South_D1_Alburgh_mod_tesp_reduced_mod.glm')
+                        default='modified_R1-12.47-2.glm')
     _args = parser.parse_args()
     _auto_run(_args)
 
