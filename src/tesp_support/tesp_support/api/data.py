@@ -30,7 +30,7 @@ components = ["",
               path.join("src", "tesp_support", "test")]
 
 if 'TESPDIR' in environ:
-    tesp_path = environ['TESPDIR']
+    tesp_path = path.expanduser(environ['TESPDIR'])
 else:
     tesp_path = path.join(path.expanduser('~'), "grid", "tesp")
 
@@ -66,17 +66,17 @@ else:
         pass
 
 
-tesp_share = path.join(path.expandvars(tesp_path), 'data')
-comm_path = path.join(tesp_share, "comm")
-energyplus_path = path.join(tesp_share, "energyplus")
-feeders_path = path.join(tesp_share, "feeders")
-scheduled_path = path.join(tesp_share, "schedules")
-weather_path = path.join(tesp_share, "weather")
+tesp_share = path.join(path.expandvars(tesp_path), 'data/')
+comm_path = path.join(tesp_share, "comm/")
+energyplus_path = path.join(tesp_share, "energyplus/")
+feeders_path = path.join(tesp_share, "feeders/")
+scheduled_path = path.join(tesp_share, "schedules/")
+weather_path = path.join(tesp_share, "weather/")
 
-tesp_model = path.join(path.expandvars(tesp_path), 'models')
-pypower_path = path.join(tesp_model, "pypower")
+tesp_model = path.join(path.expandvars(tesp_path), 'models/')
+pypower_path = path.join(tesp_model, "pypower/")
 
-tesp_test = path.join(path.expandvars(tesp_path),  'src', 'tesp_support', 'test')
+tesp_test = path.join(path.expandvars(tesp_path),  'src', 'tesp_support', 'test/')
 
 glm_entities_path = files('tesp_support.api.datafiles').joinpath('glm_classes.json')
 piq_entities_path = files('tesp_support.api.datafiles').joinpath('grid_PIQ.json')
@@ -149,12 +149,12 @@ def tesp_component():
         print("Bad choice, choose 1 through 9")
         return
 
-    component = path.join(path.expandvars(tesp_path), components[choice])
+    component = path.join(tesp_path, components[choice])
     if path.isdir(component):
         print("It seems we have a copy of " + component)
         return
 
     # can proceed with the copy
-    chdir(path.expandvars(tesp_path))
+    chdir(tesp_path)
     subprocess.Popen(parcel, shell=False).wait()
     print('Output directory: ', tesp_path + "/" + components[choice])
