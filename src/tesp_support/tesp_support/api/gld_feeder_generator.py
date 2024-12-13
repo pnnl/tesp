@@ -2002,7 +2002,7 @@ class Feeder:
         self.glm.write_model(os.path.join(config.data_path, config.out_file_glm))
 
         # Plot the model using the networkx package:
-        if self.config.make_plot == "True":
+        if self.config.make_plot:
             if self.config.gis_file:
                 print("\nUsing location data to plot image of model; this should just take a sec.")
                 # Merge house and meter position assignments with rest of GIS data

@@ -354,13 +354,13 @@ def demo(plot:bool):
     # the log file and ERROR messages to additionally be sent to the console as
     # well. Thus, when bad things happen the user will get an error message in
     # both places which, hopefully, will aid in troubleshooting.
-    fileHandle = logging.FileHandler("feeder_generator.log", mode="w")
+    fileHandle = logging.FileHandler("gld_modifier.log", mode="w")
     fileHandle.setLevel(logging.DEBUG)
     streamHandle = logging.StreamHandler(sys.stdout)
     streamHandle.setLevel(logging.ERROR)
     logging.basicConfig(level=logging.DEBUG, handlers=[fileHandle, streamHandle])
 
-    parser = argparse.ArgumentParser(description="GridLAB-D Feeder Generator")
+    parser = argparse.ArgumentParser(description="Demo GridLAB-D modifier using a defined feeder")
     # script_path = os.path.dirname(os.path.realpath(__file__))
     parser.add_argument('-n',
                         '--feeder_file',

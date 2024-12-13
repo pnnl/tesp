@@ -11,7 +11,7 @@
 
     // Input and Output Files
     "in_file_glm": "",            // input feeder model ("myfeeder.glm"). If empty, taxonomy feeder used
-    "make_plot": "False",          // specify whether to plot populated feeder
+    "make_plot": false,           // specify whether to plot populated feeder
     "gis_file": "",               // optional positional data for feeder (.json)
     "taxonomy": "R1-12.47-2.glm", // taxonomy feeder model
     "out_file_glm": "test.glm",   // REQUIRED: output populated feeder ("myfeeder_populated.glm").
@@ -121,7 +121,7 @@
         "attr": "P_out_inj",   // attribute being played
         "datatype": "double",  // the data type of the attribute
         "static": "False",     // static value if True, data = static value
-        "data": "DSO_2_5_minute_dist_power.csv"  // if static value is false
+        "data": "power_5_minute.csv"  // if static value is false
     },
     "solar_Q_player": null,
 
