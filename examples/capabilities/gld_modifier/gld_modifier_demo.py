@@ -43,7 +43,7 @@ logging.DATA = DATA_LEVEL_NUM
 logging.Logger.data = data
 
 
-def _auto_run(args):
+def _auto_run(plot:bool, args):
     feeder_path = os.path.join(feeders_path, args.feeder_file)
     glmMod = GLMModifier()
     glm, success = glmMod.read_model(feeder_path)
@@ -83,10 +83,8 @@ def _auto_run(args):
         # Only adding print out for the first time through the loop, so I don't
         # flood the terminal with messages.
         if house_num == 0:
-            print("Demonstrating addition of an object (triplex_meter in this"
-                  "case) to GridLAB-D model.")
-            print(tp_meter_names)
-            num_tp_meters = len(tp_meter_names)
+            print("Demonstrating addition of an object (triplex_meter in this case) to GridLAB-D model.")
+            num_tp_meters = len(glm.triplex_meter.keys())
             print(f"\tNumber of triplex meters before adding one: {num_tp_meters}")
             print(f"\tAdding triplex_meter {billing_meter_name} to model.")
         glmMod.add_object("triplex_meter", billing_meter_name, meter_params)
@@ -96,7 +94,7 @@ def _auto_run(args):
             pos_data[billing_meter_name] = pos_data[new_name]
 
         if house_num == 0:
-            num_tp_meters = len(tp_meter_names)
+            num_tp_meters = len(glm.triplex_meter.keys())
             print(f"\tNumber of triplex meters after adding one: {num_tp_meters}")
 
         # Add a meter to capture just the house energy consumption
@@ -345,12 +343,13 @@ def _auto_run(args):
     #     dummy = 0
 
     # Use networkx to plot graph of model for exploration
-    print("\nPlotting image of model")
-    glmMod.model.plot_model(pos_data)
+    if plot:
+        print("\nPlotting image of model")
+        glmMod.model.plot_model(pos_data)
     glmMod.write_model(args.output_file)
 
 
-def demo():
+def demo(plot:bool):
     # This slightly complex mess allows lower importance messages to be sent to 
     # the log file and ERROR messages to additionally be sent to the console as
     # well. Thus, when bad things happen the user will get an error message in
@@ -376,10 +375,10 @@ def demo():
     parser.add_argument('-o',
                         '--output_file',
                         nargs='?',
-                        default='R1-12.47-2_output.glm')
+                        default='R1-12.47-2_out.glm')
     _args = parser.parse_args()
-    _auto_run(_args)
+    _auto_run(plot, _args)
 
 
 if __name__ == "__main__":
-    demo()
+    demo(True)

@@ -4,19 +4,19 @@
 {
     // Simulation
     "starttime": "2023-01-01 07:00:00", // REQUIRED: format "YYYY-MM-DD HH:MM:SS"
-    "stoptime": "2023-12-31 07:00:00", // REQUIRED: format "YYYY-MM-DD HH:MM:SS"
-    "timestep": 300, // REQUIRED: simulation timestep, in seconds
-    "timezone": "EST+5EDT", // REQUIRED: GridLAB-D supported time zone: Eastern. (CST+6CDT (Central), MST+7MDT (Mountain), PST+8PDT (Pacific))
-    "metrics_interval": 300, // DEFAULT: 300, update frequency of the metrics collector, in seconds
+    "stoptime": "2023-01-01 17:00:00",  // REQUIRED: format "YYYY-MM-DD HH:MM:SS"
+    "timestep": 300,              // REQUIRED: simulation timestep, in seconds
+    "timezone": "EST+5EDT",       // REQUIRED: GridLAB-D supported time zone: Eastern. (CST+6CDT (Central), MST+7MDT (Mountain), PST+8PDT (Pacific))
+    "metrics_interval": 300,      // DEFAULT: 300, update frequency of the metrics collector, in seconds
 
     // Input and Output Files
-    "in_file_glm": "", // input feeder model ("myfeeder.glm"). If empty, taxonomy feeder used
-    "make_plot": "True", // specify whether to plot populated feeder
-    "gis_file": "", // optional positional data for feeder (.json)
+    "in_file_glm": "",            // input feeder model ("myfeeder.glm"). If empty, taxonomy feeder used
+    "make_plot": "False",          // specify whether to plot populated feeder
+    "gis_file": "",               // optional positional data for feeder (.json)
     "taxonomy": "R1-12.47-2.glm", // taxonomy feeder model
-    "out_file_glm": "test.glm", // REQUIRED: output populated feeder ("myfeeder_populated.glm").
-    "case_name": "MyCase", // REQUIRED: a name for your case
-    "substation_name": "MySub", // REQUIRED: a name for the substation
+    "out_file_glm": "test.glm",   // REQUIRED: output populated feeder ("myfeeder_populated.glm").
+    "case_name": "MyCase",        // REQUIRED: a name for your case
+    "substation_name": "MySub",   // REQUIRED: a name for the substation
     // Metadata Files
     "data_path": ".",
     "file_residential_meta": "residential_metadata.json",
@@ -49,7 +49,7 @@
     "number_of_gld_homes": 1308,
     "comm_customers_per_bldg": 2.09,
     "avg_house": 4500.0, // Average house size, in VA
-    "avg_commercial": 30000.0, // Averate commercial bldg size, in VA
+    "avg_commercial": 30000.0, // Average commercial bldg size, in VA
     "RCI_customer_count_mix": {
       "residential": 0.8357,
       "commercial": 0.1265,
@@ -102,7 +102,7 @@
     "defines": {
     },
 
-    // Climate (continuted)
+    // Climate (continued)
     "interpolate": "QUADRATIC",
 
     // Residential & Commercial Population (continued)
