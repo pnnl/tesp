@@ -189,8 +189,16 @@ def gld_modifier_test():
     os.chdir(tesp_path)
 
 def feeder_generator_test():
-    from tesp_support.api import gld_feeder_generator
-    gld_feeder_generator._test2()
+    tr.start_test('Feeder Generator example')
+    os.chdir('capabilities/feeder-generator')
+    subprocess.Popen('./clean.sh', shell=True).wait()
+    tr.run_test('run.sh', 'Feeder generator')
+    os.chdir(tesp_path)
+
+def feeder_generator_comp_test():
+    os.chdir(tesp_path)
+    from tesp_support.api.gld_feeder_generator import _test2
+    _test2()
 
 
 if __name__ == '__main__':
@@ -215,6 +223,7 @@ if __name__ == '__main__':
     tr.block_test(houses_test)
     tr.block_test(gld_modifier_test)
     tr.block_test(feeder_generator_test)
+    #tr.block_test(feeder_generator_test)
     tr.block_test(te30_test)
     tr.block_test(combine_feeders_test)
     tr.block_test(make_comm_eplus_test)
