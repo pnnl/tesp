@@ -20,7 +20,7 @@ keywords = ["power system", "transactive", "energy"]
 requires-python = ">=3.10"
 dependencies = [
     "importlib-resources~=6.4.5",
-    "h5py~=3.11.0",
+    "h5py~=3.12.1",
     "helics~=3.5.3",
     "pandas~=2.2.3",
     "numpy~=1.26.4",
