@@ -182,10 +182,10 @@ def combine_feeders_test():
     os.chdir(tesp_path)
 
 def gld_modifier_test():
-    tr.start_test('GLD_Modifier example')
+    tr.start_test('GLM Modifier example')
     os.chdir('capabilities/gld_modifier')
     subprocess.Popen('./clean.sh', shell=True).wait()
-    tr.run_test('run.sh', 'GLD_Modifier')
+    tr.run_test('run.sh', 'GLM Modifier')
     os.chdir(tesp_path)
 
 def feeder_generator_test():
@@ -227,6 +227,6 @@ if __name__ == '__main__':
     tr.block_test(te30_test)
     tr.block_test(combine_feeders_test)
     tr.block_test(make_comm_eplus_test)
-    tr.block_test(make_comm_base_test)  # there are 3 different runs, takes ~5min each 
+    tr.block_test(make_comm_base_test)  # there are 3 different runs, takes ~5min each
 
     print(tr.report_tests())

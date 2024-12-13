@@ -6,7 +6,7 @@ REM file: runtesp.bat
 IF NOT DEFINED TESPDIR GOTO no_tesp
 
 REM == standard use
-SET /p ver=< %TESPDIR%\scripts\grid_version
+SET /p ver=< "%TESPDIR%\scripts\grid_version"
 SET IMAGE=pnnl/tesp:%ver%
 
 REM == for custom use
