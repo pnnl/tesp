@@ -225,7 +225,7 @@ Though the goal of the Docker image is to provide a consistent execution environ
 Entering the Docker to Use TESP
 ...............................
 
-With the Docker image pulled and the repository cloned in, it is possible to start the Docker container interactively, effectively giving you a Linux command-line prompt with a working TESP installation. To launch the container like this, two launch scripts are provided in the TESP repository.
+With the Docker image pulled and the repository cloned in, it is possible to start the Docker container interactively, effectively giving you a Linux command-line prompt with a working TESP installation. Before you begin, make sure to login to the docker with `docker login`. To launch the container, two launch scripts are provided in the TESP repository depending on your OS.
 
 * Linux and macOS: :code:`$ tesp/helper/runtesp.sh` 
 * Windows: :code:`$ tesp/helper/runtesp.bat`
@@ -298,6 +298,25 @@ Once inside the virtual environment, installing the TESP API is a two-step proce
    C:\> pip install -e .
 
 
-Trouble-shooting Installation (forthcoming)
--------------------------------------------
+Trouble-shooting Installation
+-----------------------------
+
+Docker Integration
+..................
+
+If executing the `runtesp.bat` results in the error `docker: Error response from daemon: pull access denied for runtesp, repository does not exist or may require 'docker login'.`
+
+First confirm that you are logged in to docker:
+
+`docker login`
+
+If that still fails, try renormalizing the tesp repository.
+
+.. code-block:: shell-session
+    :caption: Renormalize tesp repository
+
+    $ git config --global core.eol lf
+    $ git add --update --renormalize
+    $ git ls-files -z | xargs -0 rm
+    $ git checkout .
  
