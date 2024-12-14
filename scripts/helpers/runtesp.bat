@@ -6,8 +6,9 @@ REM file: runtesp.bat
 IF NOT DEFINED TESPDIR GOTO no_tesp
 
 REM == standard use
-SET /p ver=< "%TESPDIR%\scripts\grid_version"
-SET IMAGE=pnnl/tesp:%ver%
+SET tesp_ver=< "%TESPDIR%\scripts\tesp_version"
+SET grid_ver=< "%TESPDIR%\scripts\grid_version"
+SET IMAGE=pnnl/tesp:%tesp_ver%_ubuntu_%grid_ver%
 
 REM == for custom use
 REM IMAGE=cosim-build:tesp_22.04.1
@@ -16,11 +17,13 @@ REM IMAGE=cosim-cplex:tesp_22.04.1
 SET SIM_UID=1001
 SET SIM_HOME=/home/worker
 
+ECHO "Should always confirm that you are logged in to docker using 'docker login'"
+
 IF DEFINED %1% GOTO background
 
 :foreground
 ECHO "Running foreground image %IMAGE%"
-docker run -it --rm --name runtesp ^
+docker run -it --rm --name foregroundWorker ^
  -e LOCAL_USER_ID=%SIM_UID% ^
  --mount type=bind,source="%TESPDIR%",destination="%SIM_HOME%/tesp" ^
  --workdir=%SIM_HOME% ^
@@ -31,8 +34,7 @@ GOTO end
 
 :background
 ECHO "Running background image %IMAGE%"
-docker run -itd --rm ^
- --name runtesp ^
+docker run -itd --rm --name backgroundWorker ^
  -e LOCAL_USER_ID=%SIM_UID% ^
  --mount type=bind,source="%TESPDIR%",destination="%SIM_HOME%/tesp" ^
  --workdir=%SIM_HOME% ^
@@ -44,7 +46,7 @@ ECHO "So long TESP folks!"
 EXIT /b 1
 
 :no_tesp
-ECHO "Set the 'TESPDIR' environment varible for the TESP directory"
+ECHO "Set the 'TESPDIR' environment variable for the TESP directory"
 ECHO "Command line terminal example:
 ECHO "C:\> set /p TESPDIR=C:\Users\JoeUser\tesp
 ECHO "Permanently set an environment variable for the current user:"

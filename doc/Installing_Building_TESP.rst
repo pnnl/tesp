@@ -135,7 +135,7 @@ The commandline that ran this autotest was executed in the background, so that c
 
 .. code-block:: text
 
-    Test Case(s)                       Time Taken
+    Test Case(s)                  Time(sec) Taken
     =============================================
     GridLAB-D Player/Recorder            0.891868
     Loadshed - HELICS ns-3               4.129848
@@ -175,7 +175,7 @@ The commandline that ran this autotest was executed in the background, so that c
 
 .. code-block:: text
 
-    Test Case(s)                     Time Taken
+    Test Case(s)                Time(sec) Taken
     ===========================================
     SGIP1a - HELICS                14132.360023
     SGIP1b - HELICS                14143.111387
@@ -227,8 +227,8 @@ Entering the Docker to Use TESP
 
 With the Docker image pulled and the repository cloned in, it is possible to start the Docker container interactively, effectively giving you a Linux command-line prompt with a working TESP installation. Before you begin, make sure to login to the docker with `docker login`. To launch the container, two launch scripts are provided in the TESP repository depending on your OS.
 
-* Linux and macOS: :code:`$ tesp/helper/runtesp.sh` 
-* Windows: :code:`$ tesp/helper/runtesp.bat`
+* Linux and macOS: :code:`$ tesp/scripts/helpers/runtesp.sh`
+* Windows: :code:`$ tesp/scripts/helpers/runtesp.bat`
 
 Running these scripts from the command line will return a Linux prompt and any of the TESP examples and autotests described in :ref:`local_build_installation` will run successfully.
 
@@ -288,6 +288,7 @@ Once inside the virtual environment, installing the TESP API is a two-step proce
 
    $ git clone https://github.com/pnnl/tesp.git
    $ cd tesp/src/tesp_support
+   $ source /path/to/new/tesp_env/bin/activate
    $ pip install -e .
 
 .. code-block:: doscon
@@ -295,6 +296,7 @@ Once inside the virtual environment, installing the TESP API is a two-step proce
 
    C:\> git clone https://github.com/pnnl/tesp.git
    C:\> cd tesp/src/tesp_support
+   C:\> path/to/new/tesp_env/Scripts/activate.bat
    C:\> pip install -e .
 
 

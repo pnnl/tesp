@@ -9,7 +9,9 @@ if [[ -z ${TESPDIR} ]]; then
   exit
 fi
 
-ver=$(cat "${TESPDIR}/scripts/grid_version")
+tesp_ver=$(cat "${TESPDIR}/scripts/tesp_version")
+grid_ver=$(cat "${TESPDIR}/scripts/grid_version")
+docker_tag=${tesp_ver}_ubuntu_${grid_ver}
 
 # you may need log out first `docker logout` ref. https://stackoverflow.com/a/53835882/248616
 # docker login
@@ -29,5 +31,5 @@ ver=$(cat "${TESPDIR}/scripts/grid_version")
 #
 # Login Succeeded
 
-docker tag cosim-build:tesp_${ver} pnnl/tesp:${ver}
-docker push pnnl/tesp:${ver}
+docker tag cosim-build:tesp_${grid_ver} pnnl/tesp:${docker_tag}
+docker push pnnl/tesp:${docker_tag}

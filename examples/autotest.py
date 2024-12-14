@@ -31,7 +31,7 @@ def loadshed_test():
         subprocess.Popen('./clean.sh', shell=True).wait()
         subprocess.Popen('make clean > make.log', shell=True).wait()
         subprocess.Popen('make >> make.log', shell=True).wait()
-        # tr.run_test('runhpy.sh', 'Loadshed - HELICS ns-3')
+        # tr.run_test('runhpy.sh', 'Loadshed - HELICS ns-3')  # works on linux
         tr.run_test('runhpy0.sh', 'Loadshed - HELICS Python')
         tr.run_test('runhjava.sh', 'Loadshed - HELICS Java')
     else:
@@ -50,7 +50,7 @@ def loadshed_cli_test():
         subprocess.Popen('make clean > make.log', shell=True).wait()
         subprocess.Popen('make >> make.log', shell=True).wait()
         tr.run_test('run.sh', 'Loadshed - HELICS/EPlus')
-        # tr.run_test('run_ns3.sh', 'Loadshed - HELICS/EPLUS/NS3')
+        # tr.run_test('run_ns3.sh', 'Loadshed - HELICS/EPLUS/NS3')  # works in linux
         os.chdir(tesp_path)
 
 
@@ -66,7 +66,7 @@ def loadshed_proto_test():
         tr.exec_test('gridlabd R1-12.47-1_processed.glm > gridlabd.log', 'Establishing baseline results')
         os.chdir('..')
         tr.run_test('run.sh', 'Load shedding w/o comm network')
-        # tr.run_test('run_ns3.sh', 'Load shedding over comm network')
+        # tr.run_test('run_ns3.sh', 'Load shedding over comm network')  # works in linux
         os.chdir(tesp_path)
 
 

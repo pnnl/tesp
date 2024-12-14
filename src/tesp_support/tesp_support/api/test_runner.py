@@ -264,7 +264,7 @@ def run_docker_test(file_name, case_name=None):
 
 
 def report_tests():
-    lines = '\n\n{:30s}   {:12s}\n'.format('Test Case(s)', 'Time Taken')
+    lines =  '\n\nTest Case(s)                Time(sec) Taken\n'
     lines += '===========================================\n'
     for row in reports:
         lines += '{:30s} {:12.6f}\n'.format(row['case'], row['elapsed'])
