@@ -322,3 +322,41 @@ If that still fails, try renormalizing the tesp repository.
     $ git ls-files -z | xargs -0 rm
     $ git checkout .
  
+Docker file access with Linux as the host
+.........................................
+
+TESP uses linux group permissions to share files between linux host and docker container.
+The 'runner:x:9002' group has been added to the docker image for this purpose.
+These instructions are to be run on your host machine.
+For the text below, substitute your login name for 'userName', share group name for 'groupName'.
+
+To find out what 'groupName' that might have been used for the id 9002, issue the following command:
+
+.. code-block:: shell-session
+    $ cat /etc/group | grep 9002
+
+If the group 'groupName:x:9002:...' is found, we need find out what groups your login has, issue the follow command:
+
+.. code-block:: shell-session
+    $ groups
+
+If the 'groupName' is not a member of the group list, add the 'groupName' to the group list from '$ groups' command above to the user by modifying the 'userName':
+
+.. code-block:: shell-session
+    $ sudo usermod -aG userName,sudo,groupName userName
+
+If that succeeds, you are now a member of the group and can skip the next paragraph.
+
+If there are no groups with the id 9002, we must add a new group to the system.
+Then add the 'groupName' to the group list from '$ groups' command above to the user by modifying 'userName':
+
+.. code-block:: shell-session
+    $ sudo addgroup groupName --gid 9002
+    $ sudo usermod -aG userName,sudo,groupName userName
+
+Change the directory to your TESP clone directory and set the permissions to use the 'groupName' group for the files.
+
+.. code-block:: shell-session
+    $ cd ~/grid/tesp
+    $ chgrp -R groupName .
+

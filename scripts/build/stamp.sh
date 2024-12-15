@@ -65,7 +65,7 @@ fi
 
 echo "Creating grid_binaries_$grid_ver.zip for installed binaries for grid applications software"
 cd "${INSTDIR}" || exit
-zip -r -9 "${BUILD_DIR}/grid_binaries_$grid_ver.zip" . &> "${BUILD_DIR}/grid_binaries.log" &
+# zip -r -9 "${BUILD_DIR}/grid_binaries_$grid_ver.zip" . &> "${BUILD_DIR}/grid_binaries.log" &
 
 pip list > "${BUILD_DIR}/tesp_pypi.id"
 

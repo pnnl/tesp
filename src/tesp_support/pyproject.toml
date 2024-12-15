@@ -52,13 +52,14 @@ Documentation = "https://tesp.readthedocs.io"
 Repository = "https://github.com/pnnl/tesp"
 
 [tool.setuptools.packages.find]
-where = ["."]
+where = [".","tesp_support"]
 
 [tool.setuptools.dynamic]
 version = {attr = "tesp_support.__version__"}
 
 [tool.setuptools.package-data]
-api_datafiles = ["*.json", "*.db"]
+api = ["*"]
+"api.datafiles" = ["*.json", "*.db"]
 
 [project.scripts]
 tesp_components = "tesp_support.api.data:tesp_component"
