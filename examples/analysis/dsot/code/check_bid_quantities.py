@@ -196,7 +196,7 @@ def get_metrics_full_multiple_KEY(file_name, pre_file, pos_file):
                         temp.append(I_ver[t][node][p])
                 data_I_ver[j, n, :] = temp
             except TypeError:
-                # print (data_I_ver[j,m,:])
+                # print (data_I_ver[j,n,:])
                 # print (I_ver[t][node])
                 data_I_ver[j, n, :] = I_ver[t][node]
             n = n + 1
@@ -215,7 +215,7 @@ def get_metrics_full_multiple_KEY(file_name, pre_file, pos_file):
     all_homes_I_ver.append(Ip.max(axis=0))
     all_homes_I_ver.append(Ip.sum(axis=0))
 
-    data_individual = [pd.DataFrame(data_I_ver[m, :, :], index=index) for m in range(x)]
+    data_individual = [pd.DataFrame(data_I_ver[n, :, :], index=index) for m in range(x)]
 
     return meta_I_ver, start_time, all_homes_I_ver, data_individual, list(I_ver[times[0]].keys())  # individual homes
 
@@ -325,7 +325,7 @@ def get_metrics_full_multiple_KEY_Mdays_H(file_name, pre_file, pos_file, days):
     # all_homes_I_ver.append(Ip.max(axis=0))
     # all_homes_I_ver.append(Ip.sum(axis=0))
 
-    data_individual = [pd.DataFrame(data_I_ver[m, :, :], index=index) for m in range(x)]
+    data_individual = [pd.DataFrame(data_I_ver[n, :, :], index=index) for m in range(x)]
 
     return meta_I_ver, start_time, all_homes_I_ver, data_individual  # individual homes
 
@@ -434,7 +434,7 @@ def get_metrics_full_multiple_KEY_Mdays(file_name, pre_file, pos_file, days):
     all_homes_I_ver.append(Ip.max(axis=0))
     all_homes_I_ver.append(Ip.sum(axis=0))
 
-    data_individual = [pd.DataFrame(data_I_ver[m, :, :], index=index) for m in range(x)]
+    data_individual = [pd.DataFrame(data_I_ver[n, :, :], index=index) for m in range(x)]
 
     return meta_I_ver, start_time, all_homes_I_ver, data_individual, list(I_ver[times[0]].keys())  # individual homes
 

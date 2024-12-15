@@ -33,6 +33,14 @@ tesp\_support.api.entity module
    :undoc-members:
    :show-inheritance:
 
+tesp\_support.api.gld\_feeder\_generator module
+-----------------------------------------------
+
+.. automodule:: tesp_support.api.gld_feeder_generator
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 tesp\_support.api.gridpiq module
 --------------------------------
 
@@ -157,6 +165,22 @@ tesp\_support.api.process\_voltages module
 ------------------------------------------
 
 .. automodule:: tesp_support.api.process_voltages
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+tesp\_support.api.recs\_api module
+----------------------------------
+
+.. automodule:: tesp_support.api.recs_api
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+tesp\_support.api.recs\_gld\_house\_parameters module
+-----------------------------------------------------
+
+.. automodule:: tesp_support.api.recs_gld_house_parameters
    :members:
    :undoc-members:
    :show-inheritance:

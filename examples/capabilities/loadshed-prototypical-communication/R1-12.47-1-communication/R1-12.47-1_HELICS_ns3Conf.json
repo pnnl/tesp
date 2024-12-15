@@ -76,9 +76,7 @@
     },
     {
       "name": "filter_R1_12_47_1_tn_564_mhse_4",
-      "sourcetargets": [
-        "R1-12.47-1/R1_12_47_1_tn_564_mhse_4"
-      ],
+      "sourcetargets": ["R1-12.47-1/R1_12_47_1_tn_564_mhse_4"],
       "operation": "reroute",
       "properties": {
         "name": "newdestination",

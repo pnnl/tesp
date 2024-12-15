@@ -1,0 +1,84 @@
+// This is the template of the output JSON produced by the feeder generator to 
+// document the changes that were made to the .glm (glm_mod_dict.json). This 
+// information is useful both as an artifact of the changes made as well as 
+// to provide necessary metadata for post-processing (e.g. comparison between
+// houses with and without solar).
+//
+// This information is not comprehensive but provides a summary of the models
+// The full model definition is the .glm itself and can be read with 
+// GLMModifier.py to get any detail of the model for use in post-processing.
+
+{
+    // ConvertableZipLoad Class attribute dictionary definitions
+    "residential loads": { // residential_loads
+        <zip_load_name>: { //str  name of load being converted in glm
+            avg_house_load: float, // from glm_config.json5
+            num_houses: int, // how many houses will fit at this node
+        }
+    },
+
+    "commercial loads": { // commercial_loads
+        <zip_load_name>: {str // name of load being converted in glm
+            load_size: float, // value pulled directly from .glm
+        }
+    },
+
+    "remainder loads": { //remainder_loads
+        <zip_load_name>: { //str # name of load being converted in glm
+            remainder_load: float, // left over load after adding houses at this node
+        }
+    },
+
+
+    // Feeder Class attribute dictionary definitions
+    // These likely could just be lists BUT dictionaries give us flexibilty for the future
+    // Change these names to the GLD property names?
+    "residential house objects": { //residential_houses
+        <former_zip_load_name>:{
+            house_names: [
+                <house obj name>:{
+                    "square footage": float,
+                    "income group": string,
+                    "schedule skew": int,
+                    "heating system type": string,
+                    "cooling setpoint": float,
+                    "heating setpoint": float,
+                    "solar panel power rating": float,
+                    "solar panel inverter rating": float,
+                    "energy storage power rating": float,
+                    "energy storage capacity rating": float,
+                    "energy storage inverter rating": float,
+                    "EV miles per kWh": float,
+                    "Range in miles": float,
+                    "Maximum charging rate": float,
+                }
+            ]
+        }
+    },
+    
+    "commercial house objections": { //commercial_houses
+        <former_zip_load_name>:{
+            house_names: [
+                <house obj name>:{
+                    "solar panel power rating": float,
+                    "solar panel inverter rating": float,
+                    "energy storage power rating": float,
+                    "energy storage capacity rating": float,
+                    "energy storage inverter rating": float,
+                    "EV miles per kWh": float, //TDH: Unclear to me if these parameters are being set appropriately for charging at commercial structures
+                    "Range in miles": float,
+                    "Maximum charging rate": float,
+                }
+            ]
+        }
+    },
+
+    "remainder ZIP loads": { //remainder_zips
+        <former_zip_load_name>: {
+            house_names: [<list_of_house_object_names>]
+        }
+    }
+}
+
+
+

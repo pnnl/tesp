@@ -1,6 +1,8 @@
 # dsot Python files
 
-Copyright (c) 2017-2023 Battelle Memorial Institute
+Copyright (c) 2021-2024 Battelle Memorial Institute
+
+See LICENSE file at https://github.com/pnnl/tesp
 
 This is the DSOT code repository for Python-based components of TESP
 

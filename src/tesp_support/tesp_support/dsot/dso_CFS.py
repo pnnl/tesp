@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
-# Copyright (C) 2021-2023 Battelle Memorial Institute
+# Copyright (C) 2021-2024 Battelle Memorial Institute
+# See LICENSE file at https://github.com/pnnl/tesp
 # file: dso_CFS.py
 """
 @author: yint392
@@ -8,58 +8,10 @@
 # but each folder is monthly data
 
 import numpy as np
+import pandas as pd
 
 import tesp_support.dsot.dso_helper_functions as dso_helper
-from .plots import load_json
 
-
-def get_DSO_df(dso_range, case_config, DSOmetadata, case_path, base_case_path):
-    DSO_df = dso_helper.pd.DataFrame([])
-    CapitalCosts_dict_list = []
-    Expenses_dict_list = []
-    Revenues_dict_list = []
-    DSO_Cash_Flows_dict_list = []
-    for dso_num in dso_range:
-        Market_Purchases = load_json(case_path, 'DSO' + str(dso_num) + '_Market_Purchases.json')
-        Market_Purchases_base_case = load_json(base_case_path, 'DSO' + str(dso_num) + '_Market_Purchases.json')
-
-        DSO_Cash_Flows = load_json(case_path, 'DSO' + str(dso_num) + '_Cash_Flows.json')
-        DSO_Revenues_and_Energy_Sales = load_json(case_path, 'DSO' + str(dso_num) + '_Revenues_and_Energy_Sales.json')
-
-        DSO_peak_demand = Market_Purchases['WhEnergyPurchases']['WholesalePeakLoadRate']
-        DSO_base_case_peak_demand = Market_Purchases_base_case['WhEnergyPurchases']['WholesalePeakLoadRate']
-
-        CapitalCosts_dict, Expenses_dict, Revenues_dict, \
-        DSO_Cash_Flows_dict, DSO_Wholesale_Energy_Purchase_Summary, DSO_Cash_Flows_composite = \
-            dso_CFS(case_config, DSOmetadata, str(dso_num),
-                    DSO_peak_demand, DSO_base_case_peak_demand,
-                    DSO_Cash_Flows, DSO_Revenues_and_Energy_Sales, Market_Purchases,
-                    Market_Purchases_base_case)
-        CapitalCosts_dict_list.append(CapitalCosts_dict)
-        Expenses_dict_list.append(Expenses_dict)
-        Revenues_dict_list.append(Revenues_dict)
-        DSO_Cash_Flows_dict_list.append(DSO_Cash_Flows_dict)
-        DSO_col = {
-            "name": DSOmetadata['DSO_' + str(dso_num)]["name"],
-            "utility_type": DSOmetadata['DSO_' + str(dso_num)]["utility_type"],
-            "ownership_type": DSOmetadata['DSO_' + str(dso_num)]["ownership_type"],
-            "climate_zone": DSOmetadata['DSO_' + str(dso_num)]["climate_zone"],
-            "ASHRAE_zone": DSOmetadata['DSO_' + str(dso_num)]["ashrae_zone"],
-            "peak_season": DSOmetadata['DSO_' + str(dso_num)]["peak_season"],
-            "number_of_customers": DSOmetadata['DSO_' + str(dso_num)]["number_of_customers"],
-            "scaling_factor": DSOmetadata['DSO_' + str(dso_num)]["scaling_factor"],
-            "DSO_peak_demand": Market_Purchases['WhEnergyPurchases']['WholesalePeakLoadRate'],
-            "DSO_base_case_peak_demand": Market_Purchases_base_case['WhEnergyPurchases']['WholesalePeakLoadRate'],
-            "energy_sold_MWh": DSO_Revenues_and_Energy_Sales['EnergySold'],
-            "energy_purchased_MWh": Market_Purchases['WhEnergyPurchases']['WhDAPurchases']['WhDAEnergy']
-                                    + Market_Purchases['WhEnergyPurchases']['WhRTPurchases']['WhRTEnergy']
-                                    + Market_Purchases['WhEnergyPurchases']['WhBLPurchases']['WhBLEnergy'],
-            'EffectiveCostRetailEnergy': DSO_Revenues_and_Energy_Sales['EffectiveCostRetailEnergy']
-        }
-        DSO_col.update(DSO_Cash_Flows_composite)
-        DSO_col = dso_helper.pd.Series(DSO_col)
-        DSO_df['DSO_' + str(dso_num)] = DSO_col
-    return DSO_df, CapitalCosts_dict_list, Expenses_dict_list, Revenues_dict_list, DSO_Cash_Flows_dict_list
 
 # This dso_CFS function calculates cash flow statement ...
 
@@ -75,15 +27,20 @@ def get_DSO_df(dso_range, case_config, DSOmetadata, case_path, base_case_path):
 # under each month, the dso and substation paths should be the same
 
 
-def dso_CFS(case_config,
-            DSOmetadata,
-            dso_num,
-            DSO_peak_demand,
-            DSO_base_case_peak_demand,
-            DSO_Cash_Flows,
-            DSO_Revenues_and_Energy_Sales,
-            Market_Purchases,
-            Market_Purchases_base_case):
+def dso_CFS(
+    case_config,
+    DSOmetadata,
+    dso_num,
+    DSO_peak_demand,
+    DSO_base_case_peak_demand,
+    System_peak_fraction,
+    DSO_Cash_Flows,
+    DSO_Revenues_and_Energy_Sales,
+    Market_Purchases,
+    Market_Purchases_base_case,
+    rate_scenario=None,
+):
+
     # reading json data
     # with open(os.path.join(metadata_path, '8-node-metadata.json')) as json_file:
     #    metadata_8_node = json.load(json_file)
@@ -104,9 +61,51 @@ def dso_CFS(case_config,
 
     system_case_config = case_config
 
-    TransactiveCaseFlag = system_case_config["caseType"]["bt"] or system_case_config["caseType"]["fl"]
+    if rate_scenario is not None:
+        if rate_scenario in ["transactive", "dsot"]:
+            TransactiveCaseFlag = 1
+        else:
+            TransactiveCaseFlag = 0
+    else:
+        TransactiveCaseFlag = (
+            system_case_config["caseType"]["bt"] or system_case_config["caseType"]["fl"]
+        )
     # placeholder for testing
     # TransactiveCaseFlag = 1
+
+    # Set a flag corresponding to when the subscription rate case is considered
+    if rate_scenario is not None:
+        if rate_scenario == "subscription":
+            SubscriptionCaseFlag = 1
+        else:
+            SubscriptionCaseFlag = 0
+    else:
+        SubscriptionCaseFlag = 0
+
+    # Set a flag corresponding to when any rate scenario other than the flat rate is considered
+    if rate_scenario is not None:
+        if rate_scenario == "flat":
+            NonFlatCaseFlag = 0
+        else:
+            NonFlatCaseFlag = 1
+    else:
+        NonFlatCaseFlag = TransactiveCaseFlag
+
+    # Specify the months
+    months = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+    ]
 
     dso_name = 'dso_' + str(dso_num)
 
@@ -149,7 +148,7 @@ def dso_CFS(case_config,
 
     ShareUndeveloped = 1 - ShareGreenfield - sasfd
 
-    if TransactiveCaseFlag:
+    if NonFlatCaseFlag:
         FracPeakDemandReduction = (DSO_base_case_peak_demand - DSO_peak_demand) / DSO_base_case_peak_demand
     else:
         FracPeakDemandReduction = 0
@@ -214,24 +213,47 @@ def dso_CFS(case_config,
               metadata_general['brownfield_growth_new_meters_frac'] *
               substation_costs['brownfield_growth_rate_dso_total'][utility_type]) / 1000
 
-    MktHdw = (NoSubstations + 1) * \
-             (metadata_general['market_operations']['hardware']['per_substation']
-              + (metadata_general['market_operations']['hardware'][
-                     'per_customer'] * number_of_customers / 1000 / NoSubstations)) * \
-             ACCF_controls_and_software * TransactiveCaseFlag / 1000
+    MktHdw = (
+        (NoSubstations + 1)
+        * (
+            metadata_general["market_operations"]["hardware"]["per_substation"]
+            + (
+                metadata_general["market_operations"]["hardware"]["per_customer"]
+                * number_of_customers
+                / 1000
+                / NoSubstations
+            )
+        )
+        * ACCF_controls_and_software
+        * (TransactiveCaseFlag or SubscriptionCaseFlag)
+        / 1000
+    )
 
     market_operations_software = metadata_general['market_operations']['software']
 
-    MktSoft = (market_operations_software['constant'] +
-               market_operations_software['per_customer'] * number_of_customers / 1000 +
-               (market_operations_software['per_customer^1/2'] * (number_of_customers / 1000) ** (1 / 2)) +
-               NoSubstations * market_operations_software['per_substation']) * \
-              ACCF_controls_and_software * TransactiveCaseFlag / 1000
+    MktSoft = (
+        (
+            market_operations_software["constant"]
+            + market_operations_software["per_customer"] * number_of_customers / 1000
+            + (
+                market_operations_software["per_customer^1/2"]
+                * (number_of_customers / 1000) ** (1 / 2)
+            )
+            + NoSubstations * market_operations_software["per_substation"]
+        )
+        * ACCF_controls_and_software
+        * (TransactiveCaseFlag or SubscriptionCaseFlag)
+        / 1000
+    )
 
     AmiNetwork = metadata_general['AMI_DER_network'][
                      utility_type] * number_of_customers * ACCF_controls_and_software / 1000
     DER_network_transactive_increase = metadata_general['DER_network_transactive_increase']
-    DerNetwork = AmiNetwork * TransactiveCaseFlag * DER_network_transactive_increase
+    DerNetwork = (
+        AmiNetwork
+        * (TransactiveCaseFlag or SubscriptionCaseFlag)
+        * DER_network_transactive_increase
+    )
 
     Upfront_DA_Network_Capital_Costs = metadata_general['DA_network']['upfront_DA_network_capital_costs']
     # Annual_O_and_M_Costs = metadata_general['DA_network']['DA_network_O&M_costs']
@@ -251,14 +273,22 @@ def dso_CFS(case_config,
     BillingSoft = software('billing_software')
 
     # Calculate the change in capacity market price due to load reduction and then the total capacity payment
-    CapacityPriceFactor = 1 - (metadata_general['generation_capacity_price_elast_factor'] *
-                               (DSO_base_case_peak_demand - DSO_peak_demand) / DSO_base_case_peak_demand)
+    CapacityPriceFactor = max(0, 1 - (metadata_general['generation_capacity_price_elast_factor'] *
+                                      (1 - System_peak_fraction)))
     PeakCapacity = metadata_general['generation_capacity_fee_per_kW'] * CapacityPriceFactor * DSO_peak_demand * \
                    metadata_general['generation_capacity_reserve'] * 1000 / 1000
 
     EnergyQuantityPurchased_base_case = Market_Purchases_base_case['WhEnergyPurchases']['WhDAPurchases']['WhDAEnergy'] + \
                                         Market_Purchases_base_case['WhEnergyPurchases']['WhRTPurchases']['WhRTEnergy'] + \
                                         Market_Purchases_base_case['WhEnergyPurchases']['WhBLPurchases']['WhBLEnergy']
+    
+    # Calculate the monthly energy quantity purchases for the base case
+    EnergyQuantityPurchasedMonthly_base_case = {}
+    for m in months:
+        EnergyQuantityPurchasedMonthly_base_case[m] = sum(
+            Market_Purchases_base_case["WhEnergyPurchases"]["Wh" + i + "PurchasesMonthly"]["Wh" + i + "Energy"][m]
+            for i in ["DA", "RT", "BL"]
+        )
 
     WhDAQPurchases = Market_Purchases['WhEnergyPurchases']['WhDAPurchases']['WhDAEnergy']  # Day-ahead energy volume
     WhRTQPurchases = Market_Purchases['WhEnergyPurchases']['WhRTPurchases']['WhRTEnergy']  # Real-time energy volume
@@ -266,9 +296,26 @@ def dso_CFS(case_config,
 
     EnergyQuantityPurchased = WhDAQPurchases + WhRTQPurchases + WhBLQPurchases
 
+    # Calculate the monthly energy quantity purchases
+    EnergyQuantityPurchasedMonthly = {}
+    for m in months:
+        EnergyQuantityPurchasedMonthly[m] = sum(
+            Market_Purchases["WhEnergyPurchases"]["Wh" + i + "PurchasesMonthly"]["Wh" + i + "Energy"][m]
+            for i in ["DA", "RT", "BL"]
+        )
+
     WhDAPurchases = Market_Purchases['WhEnergyPurchases']['WhDAPurchases']['WhDACosts']  # Day-ahead energy cost
     WhRTPurchases = Market_Purchases['WhEnergyPurchases']['WhRTPurchases']['WhRTCosts']  # Real-time energy cost
     WhBLPurchases = Market_Purchases['WhEnergyPurchases']['WhBLPurchases']['WhBLCosts']  # Bilateral energy cost
+
+    # Specify the monthly day-ahead, real-time, and bilateral purchases
+    WhDAPurchasesMonthly = {}
+    WhRTPurchasesMonthly = {}
+    WhBLPurchasesMonthly = {}
+    for m in months:
+        WhDAPurchasesMonthly[m] = Market_Purchases["WhEnergyPurchases"]["WhDAPurchasesMonthly"]["WhDACosts"][m]
+        WhRTPurchasesMonthly[m] = Market_Purchases["WhEnergyPurchases"]["WhRTPurchasesMonthly"]["WhRTCosts"][m]
+        WhBLPurchasesMonthly[m] = Market_Purchases["WhEnergyPurchases"]["WhBLPurchasesMonthly"]["WhBLCosts"][m]
 
     EnergyPurchased = WhDAPurchases + WhRTPurchases + WhBLPurchases
 
@@ -279,12 +326,49 @@ def dso_CFS(case_config,
                    metadata_general['ACCF']['grid_assets']['transmission_owner']['transmission_infrastructure'] * \
                    metadata_general['transmission_capital_benefit_factor']
 
+    # Calculate monthly transmission charges
+    TransChargesMonthly = {}
+    for m in months:
+        TransChargesMonthly[m] = (
+            transmission_access_fee_per_MWh
+            * EnergyQuantityPurchasedMonthly_base_case[m]
+            / 1000
+            + (DSO_peak_demand - DSO_base_case_peak_demand)
+            * metadata_general["transmission_capital_cost_per_kW"]
+            * metadata_general["ACCF"]["grid_assets"]["transmission_owner"]["transmission_infrastructure"]
+            * metadata_general["transmission_capital_benefit_factor"]
+            * (
+                pd.to_datetime(m + " 1, 2016", infer_datetime_format=True).days_in_month
+                / 366
+            )
+        )
+
     WhReserves = EnergyQuantityPurchased * \
                  ((system_case_config['reserveUp'] - metadata_general['reserve']['regulation_fraction']) *
                   (metadata_general['reserve']['spinning_reserve_cost'] + metadata_general['reserve'][
                       'non_spinning_reserve_cost']) +
                   metadata_general['reserve']['regulation_fraction'] * metadata_general['reserve'][
                       'regulation_cost']) / 1000
+    
+    # Calculate the monthly reserves expenses
+    WhReservesMonthly = {}
+    for m in months:
+        WhReservesMonthly[m] = (
+            EnergyQuantityPurchasedMonthly[m]
+            * (
+                (
+                    system_case_config["reserveUp"]
+                    - metadata_general["reserve"]["regulation_fraction"]
+                )
+                * (
+                    metadata_general["reserve"]["spinning_reserve_cost"]
+                    + metadata_general["reserve"]["non_spinning_reserve_cost"]
+                )
+                + metadata_general["reserve"]["regulation_fraction"]
+                * metadata_general["reserve"]["regulation_cost"]
+            )
+            / 1000
+        )
 
     # 0 for now
     WhLosses = Market_Purchases['OtherWholesale']['WhLosses']
@@ -292,43 +376,165 @@ def dso_CFS(case_config,
     iso_energy_fee = metadata_general['iso_energy_fee']
     WhISO = iso_energy_fee * EnergyQuantityPurchased_base_case / 1000
 
-    RetailDAEnergy = dso_helper.returnDictSum(
-        DSO_Revenues_and_Energy_Sales['RetailSales']['TransactiveSales']['RetailDAEnergy'])
-    RetailRTEnergy = dso_helper.returnDictSum(
-        DSO_Revenues_and_Energy_Sales['RetailSales']['TransactiveSales']['RetailRTEnergy'])
-    TransactFees = metadata_general['dso_transaction_fee_per_KWh'] * (RetailDAEnergy + RetailRTEnergy) / 1000 * 1000
+    # Calculate the monthly ISO energy fee
+    WhISOMonthly = {}
+    for m in months:
+        WhISOMonthly[m] = iso_energy_fee * EnergyQuantityPurchasedMonthly_base_case[m] / 1000
+
+    if rate_scenario is None:
+        RetailDAEnergy = dso_helper.returnDictSum(
+            DSO_Revenues_and_Energy_Sales['RetailSales']['TransactiveSales']['RetailDAEnergy'])
+        RetailRTEnergy = dso_helper.returnDictSum(
+            DSO_Revenues_and_Energy_Sales['RetailSales']['TransactiveSales']['RetailRTEnergy'])
+    else:
+        if rate_scenario == "transactive":
+            RetailEnergy = sum(
+                DSO_Revenues_and_Energy_Sales["RetailSales"]['TransactiveSales']["TransactiveSales" + c][
+                    "TransactiveEnergySales" + c
+                ]
+                for c in ["Res", "Comm", "Ind"]
+            )
+            # RetailRTEnergy = sum(
+            #     DSO_Revenues_and_Energy_Sales["RetailSales"]["TransactiveSales" + c][
+            #         "RetailRTEnergy" + c
+            #     ]
+            #     for c in ["Res", "Comm", "Ind"]
+            # )
+        elif rate_scenario == "dsot":
+            RetailEnergy = sum(
+                DSO_Revenues_and_Energy_Sales["RetailSales"]['DSOTSales']["DSOTSales" + c][
+                    "DSOTEnergySales" + c
+                ]
+                for c in ["Res", "Comm", "Ind"]
+            )
+            # RetailRTEnergy = sum(
+            #     DSO_Revenues_and_Energy_Sales["RetailSales"]['DSOTSales']["DSOTSales" + c][
+            #         "DSORTEnergySales" + c
+            #     ]
+            #     for c in ["Res", "Comm", "Ind"]
+            # )
+        else:
+            RetailEnergy = 0
+
+    # TransactFees = metadata_general['dso_transaction_fee_per_KWh'] * (RetailDAEnergy + RetailRTEnergy) / 1000 * 1000
+    TransactFees = metadata_general['dso_transaction_fee_per_KWh'] * RetailEnergy / 1000 * 1000
 
     EnergySold = DSO_Revenues_and_Energy_Sales['EnergySold']
+
+    # Specify the monthly energy sold
+    EnergySoldMonthly = {}
+    for m in months:
+        EnergySoldMonthly[m] = DSO_Revenues_and_Energy_Sales["EnergySoldMonthly"][m]
+
     O_and_M_Materials = metadata_general['O&M_material_cost_per_kWh'] * EnergySold * 1000 / 1000
+
+    # Calculate monthly O&M materials expenses
+    O_and_M_MaterialsMonthly = {}
+    for m in months:
+        O_and_M_MaterialsMonthly[m] = (
+            metadata_general["O&M_material_cost_per_kWh"] * EnergySoldMonthly[m]
+        )
 
     # labor
 
-    if TransactiveCaseFlag:
-        MktOpsLev1Fte, MktOpsFte, MktOpsLev1Cost, MktOpsLeaderRatio, MktOpsLabor, MktOpsLeaderLevel = \
-            dso_helper.labor_transactive('market_operations', metadata_general, metadata_dso, utility_type,
-                                         NoSubstations, TransactiveCaseFlag)
-        DerRecruiterLev1Fte, DerRecruiterFte, DerRecruiterLev1Cost, DerRecruiterLeaderRatio, AssetR_R, DerRecruiterLeaderLevel = \
-            dso_helper.labor_transactive('DER_recruiter', metadata_general, metadata_dso, utility_type, NoSubstations,
-                                         TransactiveCaseFlag)
+    if TransactiveCaseFlag or SubscriptionCaseFlag:
+        (
+            MktOpsLev1Fte,
+            MktOpsFte,
+            MktOpsLev1Cost,
+            MktOpsLeaderRatio,
+            MktOpsLabor,
+            MktOpsLeaderLevel,
+        ) = dso_helper.labor_transactive(
+            "market_operations",
+            metadata_general,
+            metadata_dso,
+            utility_type,
+            NoSubstations,
+            (TransactiveCaseFlag or SubscriptionCaseFlag),
+        )
+        (
+            DerRecruiterLev1Fte,
+            DerRecruiterFte,
+            DerRecruiterLev1Cost,
+            DerRecruiterLeaderRatio,
+            AssetR_R,
+            DerRecruiterLeaderLevel,
+        ) = dso_helper.labor_transactive(
+            "DER_recruiter",
+            metadata_general,
+            metadata_dso,
+            utility_type,
+            NoSubstations,
+            (TransactiveCaseFlag or SubscriptionCaseFlag),
+        )
 
-        DerNetLev1Fte, DerNetFte, DerNetLev1Cost, DerNetLeaderRatio, CustNetworkLabor, DerNetworkLeaderLevel = \
-            dso_helper.labor_network_admin_transactive('DER_network_labor_ratios',
-                                                       'network_admin_hourly_rate',
-                                                       metadata_general,
-                                                       metadata_dso, utility_type, NoSubstations,
-                                                       TransactiveCaseFlag)
+        (
+            DerNetLev1Fte,
+            DerNetFte,
+            DerNetLev1Cost,
+            DerNetLeaderRatio,
+            CustNetworkLabor,
+            DerNetworkLeaderLevel,
+        ) = dso_helper.labor_network_admin_transactive(
+            "DER_network_labor_ratios",
+            "network_admin_hourly_rate",
+            metadata_general,
+            metadata_dso,
+            utility_type,
+            NoSubstations,
+            (TransactiveCaseFlag or SubscriptionCaseFlag),
+        )
 
-        DerCyberLev1Fte, DerCyberFte, DerCyberLev1Cost, DerCyberLeaderRatio, CustCyberLabor, DerCyberLeaderLevel = \
-            dso_helper.labor_network_admin_transactive('DER_cyber_labor_ratios',
-                                                       'cyber_analyst_hourly_rate',
-                                                       metadata_general,
-                                                       metadata_dso, utility_type, NoSubstations,
-                                                       TransactiveCaseFlag)
+        (
+            DerCyberLev1Fte,
+            DerCyberFte,
+            DerCyberLev1Cost,
+            DerCyberLeaderRatio,
+            CustCyberLabor,
+            DerCyberLeaderLevel,
+        ) = dso_helper.labor_network_admin_transactive(
+            "DER_cyber_labor_ratios",
+            "cyber_analyst_hourly_rate",
+            metadata_general,
+            metadata_dso,
+            utility_type,
+            NoSubstations,
+            (TransactiveCaseFlag or SubscriptionCaseFlag),
+        )
     else:
-        MktOpsLev1Fte, MktOpsFte, MktOpsLev1Cost, MktOpsLeaderRatio, MktOpsLabor, MktOpsLeaderLevel = 0, 0, 0, 0, 0, 0
-        DerRecruiterLev1Fte, DerRecruiterFte, DerRecruiterLev1Cost, DerRecruiterLeaderRatio, AssetR_R, DerRecruiterLeaderLevel = 0, 0, 0, 0, 0, 0
-        DerNetLev1Fte, DerNetFte, DerNetLev1Cost, DerNetLeaderRatio, CustNetworkLabor, DerNetworkLeaderLevel = 0, 0, 0, 0, 0, 0
-        DerCyberLev1Fte, DerCyberFte, DerCyberLev1Cost, DerCyberLeaderRatio, CustCyberLabor, DerCyberLeaderLevel = 0, 0, 0, 0, 0, 0
+        (
+            MktOpsLev1Fte,
+            MktOpsFte,
+            MktOpsLev1Cost,
+            MktOpsLeaderRatio,
+            MktOpsLabor,
+            MktOpsLeaderLevel,
+        ) = (0, 0, 0, 0, 0, 0)
+        (
+            DerRecruiterLev1Fte,
+            DerRecruiterFte,
+            DerRecruiterLev1Cost,
+            DerRecruiterLeaderRatio,
+            AssetR_R,
+            DerRecruiterLeaderLevel,
+        ) = (0, 0, 0, 0, 0, 0)
+        (
+            DerNetLev1Fte,
+            DerNetFte,
+            DerNetLev1Cost,
+            DerNetLeaderRatio,
+            CustNetworkLabor,
+            DerNetworkLeaderLevel,
+        ) = (0, 0, 0, 0, 0, 0)
+        (
+            DerCyberLev1Fte,
+            DerCyberFte,
+            DerCyberLev1Cost,
+            DerCyberLeaderRatio,
+            CustCyberLabor,
+            DerCyberLeaderLevel,
+        ) = (0, 0, 0, 0, 0, 0)
 
     CustomerServiceAgentLev1Fte, CustomerServiceAgentFte, CustomerServiceAgentLev1Cost, \
         CustomerServiceAgentLeaderRatio, CustomerServiceAgent, CustomerServiceAgentLeaderLevel = \
@@ -366,18 +572,55 @@ def dso_CFS(case_config,
     EconomicsLev1Fte, EconomicsFte, EconomicsLev1Cost, EconomicsLeaderRatio, EconomicsLabor, EconomicsLeaderLevel = \
         dso_helper.labor('economist', metadata_general, metadata_dso, utility_type, NoSubstations)
 
-    BillingLev1Fte, BillingFte, BillingLev1Cost, BillingLeaderRatio, Billing, BillingLeaderLevel = \
-        dso_helper.labor_increase('billing', metadata_general, metadata_dso, utility_type, NoSubstations,
-                                  TransactiveCaseFlag)
+    (
+        BillingLev1Fte,
+        BillingFte,
+        BillingLev1Cost,
+        BillingLeaderRatio,
+        Billing,
+        BillingLeaderLevel,
+    ) = dso_helper.labor_increase(
+        "billing",
+        metadata_general,
+        metadata_dso,
+        utility_type,
+        NoSubstations,
+        NonFlatCaseFlag,
+    )
 
-    AmiCyberLev1Fte, AmiCyberFte, AmiCyberLev1Cost, AmiCyberLeaderRatio, AmiCyberLabor, AmiCyberLeaderLevel = \
-        dso_helper.labor_network_admin_increase('AMI_cyber_labor_ratios', 'cyber_analyst_hourly_rate', metadata_general,
-                                                metadata_dso, utility_type, NoSubstations, TransactiveCaseFlag)
+    (
+        AmiCyberLev1Fte,
+        AmiCyberFte,
+        AmiCyberLev1Cost,
+        AmiCyberLeaderRatio,
+        AmiCyberLabor,
+        AmiCyberLeaderLevel,
+    ) = dso_helper.labor_network_admin_increase(
+        "AMI_cyber_labor_ratios",
+        "cyber_analyst_hourly_rate",
+        metadata_general,
+        metadata_dso,
+        utility_type,
+        NoSubstations,
+        NonFlatCaseFlag,
+    )
 
-    AmiNetLev1Fte, AmiNetFte, AmiNetLev1Cost, AmiNetLeaderRatio, AmiNetworkLabor, AmiNetworkLeaderLevel = \
-        dso_helper.labor_network_admin_increase('AMI_network_labor_ratios', 'network_admin_hourly_rate',
-                                                metadata_general,
-                                                metadata_dso, utility_type, NoSubstations, TransactiveCaseFlag)
+    (
+        AmiNetLev1Fte,
+        AmiNetFte,
+        AmiNetLev1Cost,
+        AmiNetLeaderRatio,
+        AmiNetworkLabor,
+        AmiNetworkLeaderLevel,
+    ) = dso_helper.labor_network_admin_increase(
+        "AMI_network_labor_ratios",
+        "network_admin_hourly_rate",
+        metadata_general,
+        metadata_dso,
+        utility_type,
+        NoSubstations,
+        NonFlatCaseFlag,
+    )
 
     AdminLev1Fte, AdminFte, AdminLev1Cost, AdminLeaderRatio, AdminLabor, AdminLeaderLevel = \
         dso_helper.labor('admin', metadata_general, metadata_dso, utility_type, NoSubstations)
@@ -453,9 +696,10 @@ def dso_CFS(case_config,
             'Meters': Meters
         },
         'InfoTech': {
-            'MktSoftHdw': {'MktSoft': MktSoft,
-                           'MktHdw': MktHdw
-                           },
+            'MktSoftHdw': {
+                'MktSoft': MktSoft,
+                'MktHdw': MktHdw
+            },
             'AMIDERNetwork': {
                 'AmiNetwork': AmiNetwork,
                 'DerNetwork': DerNetwork
@@ -474,17 +718,18 @@ def dso_CFS(case_config,
 
     Revenues_dict = {
         'RetailSales': DSO_Cash_Flows['Revenues']['RetailSales'],
-
         'TransactFees': TransactFees,
-        'TransTo': {'TransToMO': {
+        'TransTo': {
+            'TransToMO': {
             'MOtoDO': MOtoDO,
             'MOtoRSP': MOtoRSP
-        },
+            },
             'TransToDO': {
                 'DOtoRSP': DOtoRSP
             }
         }
     }
+
 
     RSPtoDO = 0  # dso_helper.returnDictSum(Revenues_dict) - (MktSoft + MktHdw + MktOpsLabor)
 
@@ -492,55 +737,55 @@ def dso_CFS(case_config,
     # TaxesRevenues = Revenues * metadata_general['effective_income_tax_rate'][utility_type]
 
     # a separate function?
-    OperatingExpenses_dict = {'PeakCapacity': PeakCapacity,
-                              'TransCharges': TransCharges,
-                              'WhEnergyPurchases': {
-                                  'WhDAPurchases': WhDAPurchases,
-                                  'WhRTPurchases': WhRTPurchases,
-                                  'WhBLPurchases': WhBLPurchases
-                              },
-                              'OtherWholesale': {
-                                  'WhReserves': WhReserves,
-                                  'WhLosses': WhLosses,
-                                  'WhISO': WhISO
-                              },
-                              'O&mMaterials': O_and_M_Materials,
-                              'O&mLabor': {
-                                  'Linemen': Linemen,
-                                  'Operators': Operators,
-                                  'Planning': Planning,
-                                  'Metering': Metering
-                              },
-                              'MktOpsLabor': MktOpsLabor,
-                              'AmiCustOps': {
-                                  'AmiOps': {
-                                      'AmiNetworkLabor': AmiNetworkLabor,
-                                      'AmiCyberLabor': AmiCyberLabor
-                                  },
-                                  'CustOps': {
-                                      'CustNetworkLabor': CustNetworkLabor,
-                                      'CustCyberLabor': CustCyberLabor
-                                  },
-                                  'DmsOps': {
-                                      'DmsNetworkLabor': DmsNetworkLabor,
-                                      'DmsCyberLabor': DmsCyberLabor
-                                  }
-                              },
-                              'RetailOps': {
-                                  'CustomerService': CustomerServiceAgent,
-                                  'AssetR&R': AssetR_R,
-                                  'Billing': Billing
-                              },
-                              'Admin': Admin,
-                              'Space': Space,
-                              'TransFrom': {
-                                  'TransFromDO':
-                                      {'DOtoMO': DOtoMO},
-                                  'TransFromRSP':
-                                      {'RSPtoMO': RSPtoMO,
-                                       'RSPtoDO': RSPtoDO}
-                              }
-                              }
+    OperatingExpenses_dict = {
+        'PeakCapacity': PeakCapacity,
+        'TransCharges': TransCharges,
+        'WhEnergyPurchases': {
+            'WhDAPurchases': WhDAPurchases,
+            'WhRTPurchases': WhRTPurchases,
+            'WhBLPurchases': WhBLPurchases
+        },
+        'OtherWholesale': {
+            'WhReserves': WhReserves,
+            'WhLosses': WhLosses,
+            'WhISO': WhISO
+        },
+        'O&mMaterials': O_and_M_Materials,
+        'O&mLabor': {
+            'Linemen': Linemen,
+            'Operators': Operators,
+            'Planning': Planning,
+            'Metering': Metering
+        },
+        'MktOpsLabor': MktOpsLabor,
+        'AmiCustOps': {
+            'AmiOps': {
+                'AmiNetworkLabor': AmiNetworkLabor,
+                'AmiCyberLabor': AmiCyberLabor
+            },
+            'CustOps': {
+                'CustNetworkLabor': CustNetworkLabor,
+                'CustCyberLabor': CustCyberLabor
+            },
+            'DmsOps': {
+                'DmsNetworkLabor': DmsNetworkLabor,
+                'DmsCyberLabor': DmsCyberLabor
+            }
+        },
+        'RetailOps': {
+            'CustomerService': CustomerServiceAgent,
+            'AssetR&R': AssetR_R,
+            'Billing': Billing
+        },
+        'Admin': Admin,
+        'Space': Space,
+        'TransFrom': {
+            'TransFromDO': {'DOtoMO': DOtoMO},
+            'TransFromRSP': {
+                'RSPtoMO': RSPtoMO,
+                'RSPtoDO': RSPtoDO}
+            }
+        }
 
     OperatingExpenses = dso_helper.returnDictSum(OperatingExpenses_dict)
     # TaxExpDeduct = Expenses * metadata_general['effective_income_tax_rate'][utility_type]
@@ -567,6 +812,17 @@ def dso_CFS(case_config,
 
     CapitalExpenses = DistPlant + InfoTech
 
+    # Determine the capital expenses by month. Since these costs don't scale with 
+    # energy consumption, the monthly capital expenses will be split in a way that is 
+    # proportional to the number of days out of the year that each month contains 
+    # (assuming a leap year).
+    CapitalExpensesMonthly = {}
+    for m in months:
+        CapitalExpensesMonthly[m] = CapitalExpenses * (
+            pd.to_datetime(m + " 1, 2016", infer_datetime_format=True).days_in_month
+            / 366
+        )
+
     WhEnergyPurchases = WhDAPurchases + WhRTPurchases + WhBLPurchases
     OtherWholesale = WhReserves + WhLosses + WhISO
     O_M_Labor = Linemen + Operators + Planning + Metering
@@ -591,96 +847,263 @@ def dso_CFS(case_config,
                         O_M_Labor + MktOpsLabor + AmiCustOps + \
                         DmsOps + RetailOps + Admin + Space  # + TransFrom
 
-    FixedSales = dso_helper.returnDictSum(DSO_Cash_Flows['Revenues']['RetailSales']['FixedSales'])
-    TransactiveSales = dso_helper.returnDictSum(DSO_Cash_Flows['Revenues']['RetailSales']['TransactiveSales'])
-    RetailSales = FixedSales + TransactiveSales
+    # Determine the operating expenses by month. Some of these costs scale with energy 
+    # consumption and others don't, so the monthly operating expesnes will need to be 
+    # split in a slightly more sophisticated way. Costs that scale with energy 
+    # consumption will be split in a way that reflects monthly energy consumption. 
+    # Costs that don't scale with energy consumption  will be split in a way that is 
+    # proportional to the number of days out of the year that each month contains 
+    # (assuming a leap year).
+    WhEnergyPurchasesMonthly = {}
+    OtherWholesaleMonthly = {}
+    OperatingExpensesMonthly = {}
+    for m in months:
+        # Calculate monthly energy purchases
+        WhEnergyPurchasesMonthly[m] = (
+            WhDAPurchasesMonthly[m] + WhRTPurchasesMonthly[m] + WhBLPurchasesMonthly[m]
+        )
 
-    Revenues = RetailSales  # + TransactFees +
+        # Calculate other monthly wholesale expenses
+        OtherWholesaleMonthly[m] = (
+            WhReservesMonthly[m]
+            + WhISOMonthly[m]
+            + WhLosses
+            * (
+                pd.to_datetime(m + " 1, 2016", infer_datetime_format=True).days_in_month
+                / 366
+            )
+        )
+
+        # Calculate total monthly operating expenses
+        OperatingExpensesMonthly[m] = (
+            TransChargesMonthly[m]
+            + WhEnergyPurchasesMonthly[m]
+            + OtherWholesaleMonthly[m]
+            + O_and_M_MaterialsMonthly[m]
+            + (
+                PeakCapacity
+                + O_M_Labor
+                + MktOpsLabor
+                + AmiCustOps
+                + DmsOps
+                + RetailOps
+                + Admin
+                + Space
+            )
+            * (
+                pd.to_datetime(m + " 1, 2016", infer_datetime_format=True).days_in_month
+                / 366
+            )
+        )
 
     DSO_Cash_Flows_composite = {
-        'CapitalExpenses': CapitalExpenses,
-        'DistPlant': DistPlant,
+        'CapitalExpenses': CapitalExpenses,  # Capital Expenses
+        'DistPlant': DistPlant,  # Distribution Plant
         'Substations': Substations,
         'Feeders': Feeders,
         'Meters': Meters,
-        'InfoTech': InfoTech,
-        'MktSoftHdw': MktSoftHdw,
-        'MktSoft': MktSoft,
-        'MktHdw': MktHdw,
-        'AmiDerNetwork': AmiDerNetwork,
+        'InfoTech': InfoTech,  # IT Systems
+        'MktSoftHdw': MktSoftHdw,  # Retail Market Software & Hardware
+        'MktSoft': MktSoft,  # Retail Market Software
+        'MktHdw': MktHdw,  # Retail Market Hardware
+        'AmiDerNetwork': AmiDerNetwork,  # AMI/DER Network
         'AmiNetwork': AmiNetwork,
         'DerNetwork': DerNetwork,
-        'DaNetwork': DaNetwork,
-        'DmsSoft': DmsSoft,
-        'OmsSoft': OmsSoft,
-        'CisSoft': CisSoft,
-        'BillingSoft': BillingSoft,
-        'OperatingExpenses': OperatingExpenses,
-        'PeakCapacity': PeakCapacity,
-        'TransCharges': TransCharges,
-        'WhEnergyPurchases': WhEnergyPurchases,
-        'WhDAPurchases': WhDAPurchases,
-        'WhRTPurchases': WhRTPurchases,
-        'WhBLPurchases': WhBLPurchases,
-        'OtherWholesale': OtherWholesale,
-        'WhReserves': WhReserves,
-        'WhLosses': WhLosses,
-        'WhISO': WhISO,
-        'O&mMaterials': O_and_M_Materials,
-        'O&mLabor': O_M_Labor,
+        'DaNetwork': DaNetwork,  # DA Network
+        'DmsSoft': DmsSoft,  # Distribution Management System Software
+        'OmsSoft': OmsSoft,  # Outage Management System Software
+        'CisSoft': CisSoft,  # Customer Information System Software
+        'BillingSoft': BillingSoft,  # Billing Software
+        'OperatingExpenses': OperatingExpenses,  # Operating Expenses
+        'PeakCapacity': PeakCapacity,  # Peak Capacity Charges
+        'TransCharges': TransCharges,  # Transmission Access Fees
+        'WhEnergyPurchases': WhEnergyPurchases,  # Wholesale Energy Purchases
+        'WhDAPurchases': WhDAPurchases,  # Day Ahead Energy Costs
+        'WhRTPurchases': WhRTPurchases,  # Real Time Energy Costs
+        'WhBLPurchases': WhBLPurchases,  # Bilateral Energy Costs
+        'OtherWholesale': OtherWholesale,  # Other Wholesale Costs
+        'WhReserves': WhReserves,  # ISO Reserves
+        'WhLosses': WhLosses,  # ISO Losses
+        'WhISO': WhISO,  # ISO Fees
+        'O&mMaterials': O_and_M_Materials,  # Operations and Maintenance Materials
+        'O&mLabor': O_M_Labor,  # Operations and Maintenance Labor
         'Linemen': Linemen,
         'Operators': Operators,
         'Planning': Planning,
         'Metering': Metering,
-        'MktOpsLabor': MktOpsLabor,
-        'AmiCustOps': AmiCustOps,
-        'AmiOps': AmiOps,
-        'AmiNetworkLabor': AmiNetworkLabor,
-        'AmiCyberLabor': AmiCyberLabor,
-        'CustOps': CustOps,
-        'CustNetworkLabor': CustNetworkLabor,
-        'CustCyberLabor': CustCyberLabor,
-        'DmsOps': DmsOps,
-        'DmsNetworkLabor': DmsNetworkLabor,
-        'DmsCyberLabor': DmsCyberLabor,
-        'RetailOps': RetailOps,
-        'CustomerService': CustomerServiceAgent,
-        'AssetR&R': AssetR_R,
-        'Billing': Billing,
-        'Admin': Admin,
-        'AdminDO': 0,
-        'AdminMO': 0,
-        'AdminRSP': 0,
-        'Space': Space,
-        'SpaceDO': 0,
-        'SpaceMO': 0,
-        'SpaceRSP': 0,
-        'TransFrom': TransFrom,
-        'TransFromDO': TransFromDO,
-        'DOtoMO': DOtoMO,
-        'TransFromRSP': TransFromRSP,
-        'RSPtoMO': RSPtoMO,
-        'RSPtoDO': RSPtoDO,
-        'Revenues': Revenues,
-        'RetailSales': RetailSales,
-        'FixedSales': FixedSales,
-        'FixedEnergyCharges': DSO_Cash_Flows['Revenues']['RetailSales']['FixedSales']['FixedEnergyCharges'],
-        'DemandCharges': DSO_Cash_Flows['Revenues']['RetailSales']['FixedSales']['DemandCharges'],
-        'ConnectChargesFix': DSO_Cash_Flows['Revenues']['RetailSales']['FixedSales']['ConnectChargesFix'],
-        'TransactiveSales': TransactiveSales,
-        'RetailDACharges': DSO_Cash_Flows['Revenues']['RetailSales']['TransactiveSales']['RetailDACharges'],
-        'RetailRTCharges': DSO_Cash_Flows['Revenues']['RetailSales']['TransactiveSales']['RetailRTCharges'],
-        'DistCharges': DSO_Cash_Flows['Revenues']['RetailSales']['TransactiveSales']['DistCharges'],
-        'ConnectChargesDyn': DSO_Cash_Flows['Revenues']['RetailSales']['TransactiveSales']['ConnectChargesDyn'],
-        'TransactFees': TransactFees,
-        'TransTo': TransTo,
-        'TransToMO': TransToMO,
-        'MOtoDO': MOtoDO,
-        'MOtoRSP': MOtoRSP,
-        'TransToDO': TransToDO,
-        'DOtoRSP': DOtoRSP,
-        'Balance': 0
+        'MktOpsLabor': MktOpsLabor,  # Market Operations Labor
+        'AmiCustOps': AmiCustOps,  # AMI and Customer Network Operations
+        'AmiOps': AmiOps,  # AMI Operations Labor
+        'AmiNetworkLabor': AmiNetworkLabor,  # AMI Network Labor
+        'AmiCyberLabor': AmiCyberLabor,  # AMI Cybersecurity Labor
+        'CustOps': CustOps,  # Customer Network Operations Labor
+        'CustNetworkLabor': CustNetworkLabor,  # Customer Network Network Labor
+        'CustCyberLabor': CustCyberLabor,  # Customer Network Cybersecurity Labor
+        'DmsOps': DmsOps,  # DMS Operations
+        'DmsNetworkLabor': DmsNetworkLabor,  # DMS Network Labor
+        'DmsCyberLabor': DmsCyberLabor,  # DMS Cybersecurity Labor
+        'RetailOps': RetailOps,  # Retail Operations
+        'CustomerService': CustomerServiceAgent,  # Customer Service Labor
+        'AssetR&R': AssetR_R,  # Asset Recruitment & Retention Labor
+        'Billing': Billing,  # Billing Labor
+        'Admin': Admin,  # Administration
+        'AdminDO': 0,  # DO Administration
+        'AdminMO': 0,  # MO Administration
+        'AdminRSP': 0,  # RSP Administration
+        'Space': Space,  # Workspace
+        'SpaceDO': 0,  # DO Workspace
+        'SpaceMO': 0,  # MO Workspace
+        'SpaceRSP': 0,  # RSP Workspace
+        'TransFrom': TransFrom,  # Transfers Sent Within DSO
+        'TransFromDO': TransFromDO,  # Transfers from DO
+        'DOtoMO': DOtoMO,  # Sent by DO to MO
+        'TransFromRSP': TransFromRSP,  # Transfers from RSP
+        'RSPtoMO': RSPtoMO,  # Sent by RSP to MO
+        'RSPtoDO': RSPtoDO,  # Sent by RSP to DO
     }
+
+    if rate_scenario is None:
+        # Specify relevant DSO+T retail sales information
+        FixedSales = dso_helper.returnDictSum(DSO_Cash_Flows['Revenues']['RetailSales']['FixedSales'])
+        TransactiveSales = dso_helper.returnDictSum(DSO_Cash_Flows['Revenues']['RetailSales']['TransactiveSales'])
+        RetailSales = FixedSales + TransactiveSales
+        Revenues = RetailSales  # + TransactFees +
+
+        # Update the DSO cash flows composite dict
+        DSO_Cash_Flows_composite.update(
+            {
+                'Revenues': Revenues,
+                'RetailSales': RetailSales,  # Retail Sales
+                'FixedSales': FixedSales,  # Fixed-Rate Sales
+                'FixedEnergyCharges': DSO_Cash_Flows['Revenues']['RetailSales']['FixedSales']['FixedEnergyCharges'],  # Fixed-Rate energy charges
+                'DemandCharges': DSO_Cash_Flows['Revenues']['RetailSales']['FixedSales']['DemandCharges'],  # Demand charges (C & I)
+                'ConnectChargesFix': DSO_Cash_Flows['Revenues']['RetailSales']['FixedSales']['ConnectChargesFix'],  # Connect charges (fixed-price)
+                'TransactiveSales': TransactiveSales,  # Transactive-Rate Sales
+                'RetailDACharges': DSO_Cash_Flows['Revenues']['RetailSales']['TransactiveSales']['RetailDACharges'],  # Day-ahead energy charges
+                'RetailRTCharges': DSO_Cash_Flows['Revenues']['RetailSales']['TransactiveSales']['RetailRTCharges'],  # Real-time energy charges
+                'DistCharges': DSO_Cash_Flows['Revenues']['RetailSales']['TransactiveSales']['DistCharges'],  # Distribution charges
+                'ConnectChargesDyn': DSO_Cash_Flows['Revenues']['RetailSales']['TransactiveSales']['ConnectChargesDyn'],  # Connect charges (dynamic rate)
+            }
+        )
+    else:
+        # Specify the flat rate's sales, which are present in each rate scenario
+        FlatSales = dso_helper.returnDictSum(
+            DSO_Cash_Flows["Revenues"]["RetailSales"]["FlatSales"]
+        )
+
+        # Specify the sales for the other rates under consideration in each rate scenario
+        OtherRateSales = 0
+        if rate_scenario == "time-of-use":
+            OtherRateSales = dso_helper.returnDictSum(
+            DSO_Cash_Flows["Revenues"]["RetailSales"]["TOUSales"]
+        )
+        elif rate_scenario == "subscription":
+            OtherRateSales = dso_helper.returnDictSum(
+            DSO_Cash_Flows["Revenues"]["RetailSales"]["SubscriptionSales"]
+        )
+        elif rate_scenario == "transactive":
+            OtherRateSales = dso_helper.returnDictSum(
+            DSO_Cash_Flows["Revenues"]["RetailSales"]["TransactiveSales"]
+        )
+        elif rate_scenario == "dsot":
+            OtherRateSales = dso_helper.returnDictSum(
+            DSO_Cash_Flows["Revenues"]["RetailSales"]["DSOTSales"]
+        )
+
+        # Determine the total retail sales
+        RetailSales = FlatSales + OtherRateSales
+
+        # Create a dictionary to contain all the relevant retail-slaes-related information
+        retail_sales_dict = {
+            "Revenues": RetailSales, # + TransactFees + ...
+            "RetailSales": RetailSales,  # Retail Sales
+            "FlatSales": FlatSales,
+            "FlatEnergySales": DSO_Cash_Flows["Revenues"]["RetailSales"]["FlatSales"]["FlatEnergyCharges"],
+            "FlatDemandSales": DSO_Cash_Flows["Revenues"]["RetailSales"]["FlatSales"]["FlatDemandCharges"],
+            "FlatFixedSales": DSO_Cash_Flows["Revenues"]["RetailSales"]["FlatSales"]["FlatFixedCharges"],
+            "TOUSales": 0,
+            "TOUEnergySales": 0,
+            "TOUDemandSales": 0,
+            "TOUFixedSales": 0,
+            "SubscriptionSales": 0,
+            "SubscriptionEnergySales": 0,
+            "SubscriptionDemandSales": 0,
+            "SubscriptionFixedSales": 0,
+            "SubscriptionNetDeviationCharges": 0,
+            "TransactiveSales": 0,
+            "TransactiveDAEnergySales": 0,
+            "TransactiveRTEnergySales": 0,
+            "TransactiveFixedSales": 0,
+            "TransactiveVolumetricSales": 0,
+            "DSOTSales": 0,
+            "DSOTDAEnergySales": 0,
+            "DSOTRTEnergySales": 0,
+            "DSOTFixedSales": 0,
+            "DSOTVolumetricSales": 0
+        }
+
+        # Update the retail sales dictionary depending on the rate scenario
+        if rate_scenario == "time-of-use":
+            retail_sales_dict.update(
+                {
+                    "TOUSales": OtherRateSales,
+                    "TOUEnergySales": DSO_Cash_Flows["Revenues"]["RetailSales"]["TOUSales"]["TOUEnergyCharges"],
+                    "TOUDemandSales": DSO_Cash_Flows["Revenues"]["RetailSales"]["TOUSales"]["TOUDemandCharges"],
+                    "TOUFixedSales": DSO_Cash_Flows["Revenues"]["RetailSales"]["TOUSales"]["TOUFixedCharges"],
+                }
+            )
+        elif rate_scenario == "subscription":
+            retail_sales_dict.update(
+                {
+                    "SubscriptionSales": OtherRateSales,
+                    "SubscriptionEnergySales": DSO_Cash_Flows["Revenues"]["RetailSales"]["SubscriptionSales"]["SubscriptionEnergyCharges"],
+                    "SubscriptionDemandSales": DSO_Cash_Flows["Revenues"]["RetailSales"]["SubscriptionSales"]["SubscriptionDemandCharges"],
+                    "SubscriptionFixedSales": DSO_Cash_Flows["Revenues"]["RetailSales"]["SubscriptionSales"]["SubscriptionFixedCharges"],
+                    "SubscriptionNetDeviationCharges": DSO_Cash_Flows["Revenues"]["RetailSales"]["SubscriptionSales"]["SubscriptionFixedCharges"],
+                }
+            )
+        elif rate_scenario == "transactive":
+            retail_sales_dict.update(
+                {
+                    "TransactiveSales": OtherRateSales,
+                    "TransactiveDAEnergySales": DSO_Cash_Flows["Revenues"]["RetailSales"]["TransactiveSales"]["TransactiveDAEnergyCharges"],
+                    "TransactiveRTEnergySales": DSO_Cash_Flows["Revenues"]["RetailSales"]["TransactiveSales"]["TransactiveRTEnergyCharges"],
+                    "TransactiveFixedSales": DSO_Cash_Flows["Revenues"]["RetailSales"]["TransactiveSales"]["TransactiveFixedCharges"],
+                    "TransactiveVolumetricSales": DSO_Cash_Flows["Revenues"]["RetailSales"]["TransactiveSales"]["TransactiveVolumetricCharges"],
+                }
+            )
+        elif rate_scenario == "dsot":
+            retail_sales_dict.update(
+                {
+                    "DSOTSales": OtherRateSales,
+                    "DSOTDAEnergySales": DSO_Cash_Flows["Revenues"]["RetailSales"]["DSOTSales"]["DSOTDAEnergyCharges"],
+                    "DSOTRTEnergySales": DSO_Cash_Flows["Revenues"]["RetailSales"]["DSOTSales"]["DSOTRTEnergyCharges"],
+                    "DSOTFixedSales": DSO_Cash_Flows["Revenues"]["RetailSales"]["DSOTSales"]["DSOTFixedCharges"],
+                    "DSOTVolumetricSales": DSO_Cash_Flows["Revenues"]["RetailSales"]["DSOTSales"]["DSOTVolumetricCharges"],
+                }
+            )
+
+        # Update the DSO cash flows composite dict
+        DSO_Cash_Flows_composite.update(retail_sales_dict)
+
+    # Update the last part of the DSO cash flows composite dict
+    DSO_Cash_Flows_composite.update(
+        {
+            'TransactFees': TransactFees,  # Transaction Fees
+            'TransTo': TransTo,  # Transfers Received Within DSO
+            'TransToMO': TransToMO,  # Transfers to MO
+            'MOtoDO': MOtoDO,  # Received by MO from DO
+            'MOtoRSP': MOtoRSP,  # Received by MO from RSP
+            'TransToDO': TransToDO,  # Transfers to DO
+            'DOtoRSP': DOtoRSP,  # Received by DO from RSP
+            'Balance': 0,
+        }
+    )
+
+    # Add the monthly DSO capital and operating expenses to the composite cash flows dict
+    for m in months:
+        DSO_Cash_Flows_composite["CapitalExpenses_" + m] = CapitalExpensesMonthly[m]
+        DSO_Cash_Flows_composite["OperatingExpenses_" + m] = OperatingExpensesMonthly[m]
 
     # DSO_Cash_Flows_DO
     # DSO_Cash_Flows_MO
@@ -731,9 +1154,8 @@ if __name__ == '__main__':
     transactive = True
     # path_to_write
     # save_path
-
     CapitalExpenses_dict, OperatingExpenses_dict, Revenues_dict, \
         DSO_Cash_Flows_dict, DSO_Wholesale_Energy_Purchase_Summary, DSO_Cash_Flows_composite = \
         dso_CFS(config_path, DSOmetadata, dso_num, DSO_base_case_peak_demand,
                 DSO_Cash_Flows, DSO_Revenues_and_Energy_Sales)
-'''
+    '''

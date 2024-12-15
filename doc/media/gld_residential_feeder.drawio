@@ -1,0 +1,146 @@
+<mxfile host="65bd71144e">
+    <diagram id="4c3SyYko8eKxY3yuAuja" name="Page-1">
+        <mxGraphModel dx="1145" dy="776" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="2" value="&lt;font face=&quot;Lucida Console&quot;&gt;initialize_glm_modifier(glmfilepath) -&amp;gt;&amp;nbsp; glmMod&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="20" y="45" width="380" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="15" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;fontFamily=Lucida Console;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="5" target="14" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="5" value="&lt;font face=&quot;Lucida Console&quot;&gt;populate_all_feeders(glm_modifier, outpath) -&amp;gt; None&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="20" y="110" width="380" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="17" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;fontFamily=Lucida Console;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="14" target="16" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="22" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontFamily=Lucida Console;" parent="1" source="14" target="20" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="25" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;fontFamily=Lucida Console;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="14" target="24" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="27" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;fontFamily=Lucida Console;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="14" target="26" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="29" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;fontFamily=Lucida Console;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="14" target="28" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="32" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;fontFamily=Lucida Console;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="14" target="31" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="360" y="540" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="34" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;fontFamily=Lucida Console;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="14" target="33" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="36" value="" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="14" target="35">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="300" y="640"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="40" value="" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="14" target="39">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="300" y="700"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="47" value="" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="14" target="46">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="300" y="780"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="50" value="" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="14" target="49">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="300" y="835"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="53" value="" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="14" target="52">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="300" y="890"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="56" value="" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="14" target="55">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="300" y="945"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="59" value="" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="14" target="58">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="300" y="1005"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="61" value="" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="14" target="60">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="300" y="1055"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="14" value="&lt;font face=&quot;Lucida Console&quot;&gt;ProcessTaxonomyFeeder(glm_modifier, outname,rootname, vll, vln, avghouse, avgcommercial)&lt;/font&gt;" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="160" y="160" width="280" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="16" value="&lt;font face=&quot;Lucida Console&quot;&gt;glm_modifier.add_module&lt;/font&gt;" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="330" y="240" width="190" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="20" value="&lt;font face=&quot;Lucida Console&quot;&gt;glm_modifier.model.set_lines.append&lt;/font&gt;" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="325" y="297" width="280" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="24" value="&lt;font face=&quot;Lucida Console&quot;&gt;add_xfmr_config(glm_modifier, key, phs, kvat, vnom, vsec, install_type, vprimll, vprimln)&lt;/font&gt;" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="325" y="354" width="670" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="26" value="&lt;font face=&quot;Lucida Console&quot;&gt;add_local_triplex_configurations(glm_modifier)&lt;/font&gt;" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="325" y="411" width="360" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="28" value="&lt;font face=&quot;Lucida Console&quot;&gt;add_config_class(glm_modifier, model, h, t)&lt;/font&gt;" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="325" y="469" width="330" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="31" value="&lt;font face=&quot;Lucida Console&quot;&gt;add_link_class(glm_modfier, model, h, t, seg_loads, want_metrics)&lt;/font&gt;" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="325" y="526" width="490" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="33" value="&lt;font face=&quot;Lucida Console&quot;&gt;replace_commercial_loads(glm_modifier, model, h, t, avgBuilding)&lt;/font&gt;" style="whiteSpace=wrap;html=1;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="325" y="583" width="490" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="35" value="&lt;font face=&quot;Lucida Console&quot;&gt;identify_ercot_houses(glm_modifier, model, h, t, avgBuilding)&lt;/font&gt;" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="325" y="640" width="460" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="39" value="&lt;font face=&quot;Lucida Console&quot;&gt;add_ercot_houses(glm_modifier, model, h, t, avgBuilding)&lt;/font&gt;" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="325" y="697" width="430" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="46" value="&lt;font face=&quot;Lucida Console&quot;&gt;add_houses(glm_modifier, basenode, vnom, bIgnoreThermostatSchedule, bWriteService, bTriplex, setpoint_offset)&lt;/font&gt;" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="325" y="754" width="810" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="49" value="&lt;font face=&quot;Lucida Console&quot;&gt;add_ercot_small_loads(glm_modifier, key, vln))&lt;/font&gt;" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="325" y="811" width="360" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="52" value="&lt;font face=&quot;Lucida Console&quot;&gt;add_commercial_loads(glm_modifier, rgn, key)&lt;/font&gt;" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="325" y="869" width="340" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="55" value="&lt;font face=&quot;Lucida Console&quot;&gt;add_voltage_class(glm_modifier, model, h, t, vprim, vll, secmtrnode)&lt;/font&gt;" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="327.5" y="926" width="520" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="58" value="&lt;font face=&quot;Lucida Console&quot;&gt;Find3PhaseXfmr(glm_modifier, kva)&lt;/font&gt;" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="327.5" y="983" width="260" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="60" value="&lt;font face=&quot;Lucida Console&quot;&gt;add_tariff(glm_modifier, params)&lt;/font&gt;" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="330" y="1040" width="250" height="30" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

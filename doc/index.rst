@@ -7,7 +7,7 @@ Transactive Energy Simulation Platform (TESP)
 =============================================
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 3
    :caption: Contents:
 
    TESP_Overview

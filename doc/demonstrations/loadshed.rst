@@ -21,7 +21,7 @@ loadshed - verify GridLAB-D, ns-3 and Python over HELICS
 ........................................................
 ::
 
- cd ~/tesp/repository/tesp/examples/capabilities/loadshedh
+ cd ~/grid/tesp/examples/capabilities/loadshedh
  ./clean.sh # Removes any left-over results and log files
  ./runhpy.sh
  ./plot.sh
@@ -31,7 +31,7 @@ loadshed - Python without ns-3
 ........................................................
 ::
 
- cd ~/tesp/repository/tesp/examples/capabilities/loadshedh
+ cd ~/grid/tesp/examples/capabilities/loadshedh
  ./clean.sh # Removes any left-over results and log files
  ./runhpy0.sh
  ./plot.sh
@@ -41,7 +41,7 @@ loadshed - verify GridLAB-D, ns3 and Java over HELICS
 ........................................................
 ::
 
- cd ~/tesp/repository/tesp/examples/capabilities/loadshedh
+ cd ~/grid/tesp/examples/capabilities/loadshedh
  ./clean.sh
  ./runhjava.sh
  ./plot.sh

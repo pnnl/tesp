@@ -1,7 +1,9 @@
 #!/bin/bash
 
 if [[ -z ${INSTDIR} ]]; then
-  . "${HOME}/tespEnv"
+  echo "Edit tesp.env in the TESP home directory"
+  echo "Run 'source tesp.env' in that same directory"
+  exit
 fi
 
 cd "${TESPDIR}/doc" || exit

@@ -1,4 +1,5 @@
-# Copyright (C) 2018-2023 Battelle Memorial Institute
+# Copyright (C) 2022-2024 Battelle Memorial Institute
+# See LICENSE file at https://github.com/pnnl/tesp
 # file: residential_feeder_glm.py
 """Replaces ZIP loads with houses, and optional storage and solar generation.
 
@@ -41,7 +42,7 @@ import pandas as pd
 from math import sqrt
 
 from tesp_support.api.data import feeders_path, weather_path
-from tesp_support.api.helpers import gld_strict_name, random_norm_trunc
+from tesp_support.api.helpers import gld_strict_name, random_norm_trunc, randomize_residential_skew
 from tesp_support.api.parse_helpers import parse_kva
 import tesp_support.original.commercial_feeder_glm as comm_FG
 
@@ -403,30 +404,6 @@ rgnWHSize = [[0.0000, 0.3333, 0.6667],
 coolingScheduleNumber = 8
 heatingScheduleNumber = 6
 waterHeaterScheduleNumber = 6
-
-# these are in seconds
-commercial_skew_max = 8100
-commercial_skew_std = 2700
-residential_skew_max = 8100
-residential_skew_std = 2700
-
-
-def randomize_skew(value, skew_max):
-    sk = value * np.random.randn()
-    if sk < skew_max:
-        sk = skew_max
-    elif sk > skew_max:
-        sk = skew_max
-    return sk
-
-
-def randomize_commercial_skew():
-    return randomize_skew(commercial_skew_std, commercial_skew_max)
-
-
-def randomize_residential_skew():
-    return randomize_skew(residential_skew_std, residential_skew_max)
-
 
 # commercial configuration data; over_sizing_factor is by region
 c_z_pf = 0.97
@@ -1559,11 +1536,7 @@ def write_houses(basenode, op, vnom):
         scalar3 = 0.6 + 0.4 * np.random.uniform(0, 1)
         resp_scalar = scalar1 * scalar2
         unresp_scalar = scalar1 * scalar3
-        skew_value = residential_skew_std * np.random.randn()
-        if skew_value < -residential_skew_max:
-            skew_value = -residential_skew_max
-        elif skew_value > residential_skew_max:
-            skew_value = residential_skew_max
+        skew_value = randomize_residential_skew()
 
         #  *************** Aspect ratio, ewf, ecf, eff, wwr ****************************
         if bldg == 0:  # SF homes
@@ -1809,11 +1782,7 @@ def write_houses(basenode, op, vnom):
             wh_size = np.random.choice(size_array)
 
             wh_demand_str = wh_demand_type + '{:.0f}'.format(water_sch) + '*' + '{:.2f}'.format(water_var)
-            wh_skew_value = 3 * residential_skew_std * np.random.randn()
-            if wh_skew_value < -6 * residential_skew_max:
-                wh_skew_value = -6 * residential_skew_max
-            elif wh_skew_value > 6 * residential_skew_max:
-                wh_skew_value = 6 * residential_skew_max
+            wh_skew_value = randomize_residential_skew(True)
             print('  object waterheater {', file=op)
             print('    name', whname + ';', file=op)
             print('    schedule_skew', '{:.0f}'.format(wh_skew_value) + ';', file=op)
@@ -2750,7 +2719,7 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
     global case_name, name_prefix, port, forERCOT, substation_name
     global house_nodes, small_nodes, comm_loads
     global inverter_efficiency, round_trip_efficiency
-    global latitude, longitude, time_zone_offset, weather_name, feeder_commercial_building_number
+    global latitude, longitude, time_zone_offset, weather_name
     global dso_type
     global case_type
     global ashrae_zone, comm_bldg_metadata, comm_bldgs_pop

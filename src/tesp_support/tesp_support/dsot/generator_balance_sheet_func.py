@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
-# Copyright (C) 2021-2023 Battelle Memorial Institute
+# Copyright (C) 2021-2024 Battelle Memorial Institute
+# See LICENSE file at https://github.com/pnnl/tesp
 # file: generator_balance_sheet_func.py
 """
 @author: yint392
@@ -105,5 +105,5 @@ if __name__ == '__main__':
     path_to_write = 'C:/Users/yint392/OneDrive - PNNL/Documents/DSO/'
     system_path = 'C:/Users/yint392/OneDrive - PNNL/Documents/tesp-private/examples/dsot_v3'
 
-    Generator_balance_sheet = generator_balance_sheet_annual(generator_num, gen_type, json_path, path_to_write,
+    Generator_balance_sheet = generator_balance_sheet_annual(generator_num, gen_type, json_path, system_path, path_to_write,
                                                              write_to_txt=False, write_to_JSON=False)

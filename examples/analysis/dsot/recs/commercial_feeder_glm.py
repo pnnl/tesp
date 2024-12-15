@@ -4,7 +4,7 @@
 import math
 import numpy as np
 
-from tesp_support.api.helpers import gld_strict_name
+from tesp_support.api.helpers import gld_strict_name, randomize_commercial_skew
 import recs.residential_feeder_glm as res_FG
 
 
@@ -188,13 +188,13 @@ def define_comm_loads(bldg_type, bldg_size, dso_type, climate, bldg_metadata):
             bldg['skew_value'] = 0
         elif bldg_type in ['office', 'warehouse_storage', 'education']:
             bldg['base_schedule'] = 'office'
-            bldg['skew_value'] = res_FG.randomize_commercial_skew()
+            bldg['skew_value'] = randomize_commercial_skew()
         elif bldg_type in ['big_box', 'strip_mall', 'food_service', 'food_sales']:
             bldg['base_schedule'] = 'retail'
-            bldg['skew_value'] = res_FG.randomize_commercial_skew()
+            bldg['skew_value'] = randomize_commercial_skew()
         elif bldg_type == 'low_occupancy':
             bldg['base_schedule'] = 'lowocc'
-            bldg['skew_value'] = res_FG.randomize_commercial_skew()
+            bldg['skew_value'] = randomize_commercial_skew()
 
         # randomize 10# then convert W/sf -> kW
         floor_area = bldg['floor_area']
@@ -473,7 +473,7 @@ def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percenta
                 print('    four_quadrant_control_mode', solar_inv_mode + ';', file=op)
                 print('    P_Out', 'P_out_inj.value * {}'.format(pv_scaling_factor), ';', file=op)
                 if 'no_file' not in solar_Q_player:
-                    print('    Q_Out Q_out_inj.value * 0.00;', file=op)
+                    print('    Q_Out Q_out_inj.value * 0.0;', file=op)
                 else:
                     print('    Q_Out 0;', file=op)
                 # Instead of solar object, write a fake V_in and I_in sufficient high so

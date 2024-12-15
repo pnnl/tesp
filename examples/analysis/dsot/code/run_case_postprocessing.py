@@ -100,8 +100,16 @@ def post_process():
         # This function calculates the energy consumption every day for every customer and saves it to a h5 file.
         if read_meters:
             pt.tic()
-            meter_df, energysum_df = rm.read_meters(GLD_metadata, case_path, GLD_prefix, str(dso_number),
-                                                    day_range, dso_scaling_factor, metadata_path)
+            meter_df, energysum_df = rm.read_meters(
+                GLD_metadata,
+                case_path,
+                GLD_prefix,
+                str(dso_number),
+                day_range,
+                dso_scaling_factor,
+                metadata_path,
+                rate_scenario=rate_scenario
+            )
             print('Meter reading complete: DSO ' + str(dso_number) + ', Month ' + month_name)
             pt.toc()
         # --------------- CALCULATE AMENITY SCORES  ------------------------------
@@ -113,6 +121,33 @@ def post_process():
             print('Amenity scores complete: DSO ' + str(dso_number) + ', Month ' + month_name)
             pt.toc()
 
+    def determine_baseline_demand_profiles(dso_number):
+        # Determine the demand profile of hourly demand for each meter in a month
+        demand_df = rm.create_demand_profiles_for_each_meter(
+            case_path,
+            dso_number,
+            list(day_range),
+            save=False,
+        )
+
+        # Determine the baseline demand profile for each meter in a month
+        bl_demand_df = rm.create_baseline_demand_profiles_for_each_meter(
+           demand_df,
+           dso_number,
+           "weekdays_and_weekends",
+           save=True,
+           save_path=case_path,
+        )
+
+    def determine_demand_profiles(dso_number):
+        # Determine the demand profile of hourly demand for each meter in a month
+        demand_df = rm.create_demand_profiles_for_each_meter(
+            case_path,
+            dso_number,
+            list(day_range),
+            save=True,
+        )
+
     #  STEP 0 ---------  STEP UP ------------------------------
     #  Determine which metrics to post-process
     read_meters = True
@@ -122,6 +157,8 @@ def post_process():
     der_stack_plots = True
     bldg_stack_plots = True
     forecast_plots = True
+    create_baseline_demand_profiles = True
+    create_demand_profiles = True
     # read_meters = False
     # calc_amenity = False
     # pop_stats = False
@@ -129,19 +166,29 @@ def post_process():
     # der_stack_plots = False
     # bldg_stack_plots = False
     # forecast_plots = False
+    # create_baseline_demand_profiles = False
+    # create_demand_profiles = False
 
     system_case = 'generate_case_config.json'
-    first_data_day = 4  # First day in the simulation that data to be analyzed. Run-in days before this are discarded.
-    discard_end_days = 1  # Number of days at the end of the simulation to be discarded
-
     # ------------ Select folder locations for different cases ---------
     # Load System Case Config
     config_path = os.getcwd()
     case_config = pt.load_json(config_path, system_case)
 
-    case_path = dirname(abspath(__file__)) + '/' + case_config['caseName']    
-    metadata_path = case_config['dataPath']
-    dso_metadata_file = case_config['dsoPopulationFile']
+    # Identify the rate scenario
+    rate_scenario = None
+    if "rate" in case_config:
+        rate_scenario = case_config["rate"]
+
+    case_path = dirname(abspath(__file__)) + '/' + case_config['caseName']
+    metadata_path = "../" + case_config['dataPath']
+
+    # Identify the proper metadata file depending on the rate scenario
+    if rate_scenario is None:
+        dso_metadata_file = case_config["dsoPopulationFile"]
+    else:
+        dso_metadata_file = case_config["dsoRECSPopulationFile"]
+
     agent_prefix = '/DSO_'
     GLD_prefix = '/Substation_'
 
@@ -156,13 +203,17 @@ def post_process():
     # Not sure how to find dso number that is running on a compute node
     DSOmetadata = pt.load_json(metadata_path, dso_metadata_file)
 
+    first_data_day = 4  # First day in the simulation that data to be analyzed. Run-in days before this are discarded.
+    discard_end_days = 1  # Number of days at the end of the simulation to be discarded
     num_sim_days = (datetime.strptime(case_config['EndTime'], '%Y-%m-%d %H:%M:%S') -
                     datetime.strptime(case_config['StartTime'], '%Y-%m-%d %H:%M:%S')).days
     month_dict = {1: "January", 2: "February", 3: "March", 4: "April", 5: "May", 6: "June", 7: "July",
                   8: "August", 9: "September", 10: "October", 11: "November", 12: "December"}
-    month_name = month_dict[(datetime.strptime(case_config['StartTime'],
-                                               '%Y-%m-%d %H:%M:%S') + timedelta(days=first_data_day)).month]
-
+    month_num = (
+        datetime.strptime(case_config["StartTime"], "%Y-%m-%d %H:%M:%S")
+        + timedelta(days=first_data_day)
+    ).month
+    month_name = month_dict[month_num]
     day_range = range(first_data_day, num_sim_days - discard_end_days + 1)
 
     dso_range = []
@@ -186,6 +237,15 @@ def post_process():
     if forecast_plots:
         for day_num in day_range:
             processlist.append([Daily_market_plot, day_num])
+
+    #market=false is "Flat"
+    if create_baseline_demand_profiles and (rate_scenario == "Flat" or rate_scenario == "TOU"):
+        for dso_num in dso_range:
+            processlist.append([determine_baseline_demand_profiles, dso_num])
+    # "" = DSOT
+    if create_demand_profiles and (rate_scenario == "" or rate_scenario == "RND"):
+        for dso_num in dso_range:
+            processlist.append([determine_demand_profiles, dso_num])
 
     if len(processlist) > 0:
         print('About to parallelize {} processes'.format(len(processlist)))

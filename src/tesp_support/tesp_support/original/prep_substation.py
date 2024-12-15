@@ -31,6 +31,7 @@ broker = 'tcp://localhost:5570'
 network_node = 'network_node'
 marketName = 'Market_1'
 unit = 'kW'
+control_mode = 'CN_RAMP' # 'CN_NONE'
 use_predictive_bidding = 0
 use_override = 'OFF'
 price_cap = 3.78
@@ -480,6 +481,7 @@ def ProcessGLM(fileroot):
             print('subscribe "precommit:' + meter_name + '.price <- ' + sub_federate + '/' + key + '/price";', file=op)
             print('subscribe "precommit:' + meter_name + '.monthly_fee <- ' + sub_federate + '/' + key + '/monthly_fee";', file=op)
     op.close()
+
 
 def prep_substation(gldfileroot, jsonfile='', bus_id=None):
     """ Process a base GridLAB-D file with supplemental JSON configuration data

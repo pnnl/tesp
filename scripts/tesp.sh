@@ -3,7 +3,6 @@
 # Copyright (c) 2021-2023 Battelle Memorial Institute
 # file: tesp.sh
 
-
 # You should get familiar with the command line to have good success with TESP
 # As such, you may want to run in remote shh terminal.
 # Here is to how to install and configured ssh server
@@ -24,9 +23,9 @@
 
 # If you would to use and IDE here's to install snap Pycharm IDE for python
 #   sudo snap install pycharm-community --classic
-# Here is how to start pycharm and capture pycharm log for any errors
+# Here is how to start the environment and pycharm and capture pycharm log for any errors
+#   source ~/grid/tesp/tesp.env
 #   pycharm-community &> ~/charm.log&
-
 
 #alternatives command line for java or python
 #sudo update-alternatives --config java
@@ -36,7 +35,7 @@
 
 while true; do
     # shellcheck disable=SC2162
-    read -p "Do you wish to build the binaries? " yn
+    read -p "Do you wish to build the binaries? (Yy/Nn)" yn
     case $yn in
         [Yy]* ) binaries="develop"; break;;
         [Nn]* ) binaries="copy"; break;;
@@ -44,71 +43,37 @@ while true; do
     esac
 done
 
-# repo for git
-# sudo add-apt-repository ppa:git-core/ppa
-
-# Some support depends on linux version
-lv=( $(cat /etc/issue) )
-lv=( ${lv[1]//./ } )
-if [[ ${lv[0]} -eq 18 ]]; then
-  sudo apt-get update
-  tk="python3-tk"
-elif [[ ${lv[0]} -eq 20 ]]; then
-  sudo apt-get update
-  tk="python3-tk"
-elif [[ ${lv[0]} -eq 22 ]]; then
-  sudo add-apt-repository ppa:deadsnakes/ppa -y
-  sudo apt-get update
-  tk="python3.8-tk"
-else
-  echo "**************************************************"
-  echo "$(cat /etc/issue), not supported for TESP"
-  echo "**************************************************"
-  exit
-fi
-
-# build tools
+# add build tools for compiling
 sudo apt-get -y upgrade
-sudo apt-get -y install pkgconf
-sudo apt-get -y install git
-sudo apt-get -y install build-essential
-sudo apt-get -y install autoconf
-sudo apt-get -y install libtool
-sudo apt-get -y install libjsoncpp-dev
-sudo apt-get -y install gfortran
-sudo apt-get -y install cmake
-sudo apt-get -y install subversion
-sudo apt-get -y install unzip
+sudo apt-get -y install pkgconf \
+git \
+build-essential \
+autoconf \
+libtool \
+libjsoncpp-dev \
+gfortran \
+cmake \
+unzip
 
-# Java support
-sudo apt-get -y install openjdk-11-jdk
+# add tools/libs for Java support, HELICS, FNCS, GridLAB-D, Ipopt/cbc
+sudo apt-get -y install openjdk-11-jdk \
+libzmq5-dev \
+libczmq-dev \
+libboost-dev \
+libxerces-c-dev \
+libhdf5-serial-dev \
+libsuitesparse-dev \
+coinor-cbc \
+coinor-libcbc-dev \
+coinor-libipopt-dev \
+liblapack-dev \
+libmetis-dev \
+python3-venv \
+python3-pip \
+python3-tk \
+python3-pil.imagetk
+
 sudo ln -sf /usr/lib/jvm/java-11-openjdk-amd64 /usr/lib/jvm/default-java
-
-# for HELICS and FNCS
-sudo apt-get -y install libzmq5-dev
-sudo apt-get -y install libczmq-dev
-sudo apt-get -y install libboost-dev
-
-# for GridLAB-D
-sudo apt-get -y install libxerces-c-dev
-sudo apt-get -y install libhdf5-serial-dev
-
-# for solvers used by AMES/Agents/GridLAB-D
-# needed for KLU
-sudo apt-get -y install libsuitesparse-dev
-# end users replace libsuitesparse-dev with libklu1, which is licensed LGPL
-# needed for Ipopt/cbc
-sudo apt-get -y install coinor-cbc
-sudo apt-get -y install coinor-libcbc-dev
-sudo apt-get -y install coinor-libipopt-dev
-sudo apt-get -y install liblapack-dev
-sudo apt-get -y install libmetis-dev
-
-sudo apt-get -y install python3.8
-sudo apt-get -y install python3.8-venv
-sudo apt-get -y install python3-pip
-sudo apt-get -y install ${tk}
-sudo apt-get -y install python3-pil.imagetk
 
 echo
 if [[ -z $1 && -z $2 ]]; then
@@ -120,89 +85,101 @@ else
 fi
 git config --global credential.helper store
 
+cd "${HOME}" || exit
+echo "Install environment to $HOME/grid"
+mkdir -p grid
+cd grid || exit
+
 echo
+echo "Install a virtual python environment to $HOME/grid/venv"
+python3 -m pip install --upgrade pip
+python3 -m pip uninstall virtualenv
+python3 -m pip install virtualenv
+"${HOME}/.local/bin/virtualenv" venv --prompt GRID
+
+echo
+echo "Install executables environment to $HOME/grid/tenv"
+mkdir -p tenv
+
 echo "Clone directory structure for TESP"
 echo ++++++++++++++ TESP
-git clone -b main https://github.com/pnnl/tesp.git
-echo "Copy TESP environment variables to $HOME/tespEnv for shell scripts"
-cp tesp/scripts/tespEnv "$HOME/"
-. "${HOME}/tespEnv"
-cd tesp || exit
-
-echo "Install a virtual python environment to $HOME/tesp/venv"
-python3.8 -m pip install --upgrade pip
-python3.8 -m pip install virtualenv
-"${HOME}/.local/bin/virtualenv" venv --prompt TESP
-
-echo "Install executables environment to $HOME/tesp/tenv"
-mkdir -p tenv
-if [[ ${lv[0]} -eq 18 ]]; then
-  if [[ $binaries == "develop" ]]; then
-    # To compile with helics>=3.1 gridlabd>=5.0 need to upgrade cmake and g++-9 for ubuntu 18.04
-    wget --no-check-certificate https://github.com/Kitware/CMake/releases/download/v3.24.2/cmake-3.24.2-linux-x86_64.sh
-    chmod 755 cmake-3.24.2-linux-x86_64.sh
-    ./cmake-3.24.2-linux-x86_64.sh --skip-license --prefix="$HOME/tesp/tenv"
-    rm -f cmake-3.24.2-linux-x86_64.sh
-  fi
-  sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
-  sudo apt-get update
-  sudo apt-get -y install gcc-9 g++-9
-  sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 60 --slave /usr/bin/g++ g++ /usr/bin/g++-9
-  sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 60 --slave /usr/bin/g++ g++ /usr/bin/g++-7
+if [[ ! -d "$HOME/grid/tesp" ]]; then
+  git clone -b develop https://github.com/pnnl/tesp.git
 fi
 
-echo "Install repositories to $HOME/tesp/repository"
-mkdir -p repository
-cd repository || exit
-echo
-echo "Download all relevant repositories..."
+echo "Activate Virtual Environment..."
+. tesp/tesp.env
+
+# The rest of the build/install depends on the exports in the tesp.env file
+which python > "${BUILD_DIR}/tesp_pypi.log" 2>&1
+
+echo "Install grid applications software to $HOME/grid/repo"
+mkdir -p repo
+cd repo || exit
 
 echo
+echo "Download all relevant repositories..."
+echo
 echo ++++++++++++++ PSST
-# git clone https://github.com/ames-market/psst.git
-git clone -b master https://github.com/ames-market/AMES-V5.0.git
-"${TESPBUILD}/patch.sh" AMES-V5.0 AMES-V5.0
+if [[ ! -d "${REPO_DIR}/AMES-V5.0" ]]; then
+  # git clone -b master https://github.com/ames-market/psst.git
+  # For dsot
+  git clone -b master https://github.com/ames-market/AMES-V5.0.git
+  "${BUILD_DIR}/patch.sh" AMES-V5.0 AMES-V5.0
+fi
 
 if [[ $binaries == "develop" ]]; then
   echo
   echo ++++++++++++++ FNCS
-  git clone -b feature/opendss https://github.com/FNCS/fncs.git
-  #For dsot
-  #git clone -b develop https://github.com/FNCS/fncs.git
-  "${TESPBUILD}/patch.sh" fncs fncs
+  if [[ ! -d "${REPO_DIR}/fncs" ]]; then
+    git clone -b feature/opendss https://github.com/FNCS/fncs.git
+    # For different calling no cpp
+    # git clone -b develop https://github.com/FNCS/fncs.git
+    "${BUILD_DIR}/patch.sh" fncs fncs
+  fi
 
   echo
   echo ++++++++++++++ HELICS
-  git clone -b main https://github.com/GMLC-TDC/HELICS-src
-  "${TESPBUILD}/patch.sh" HELICS-src HELICS-src
+  if [[ ! -d "${REPO_DIR}/HELICS-src" ]]; then
+    git clone -b main https://github.com/GMLC-TDC/HELICS-src
+    "${BUILD_DIR}/patch.sh" HELICS-src HELICS-src
+  fi
 
   echo
   echo ++++++++++++++ GRIDLAB
-  #develop - dec21 commit number for dsot
-  #ENV GLD_VERSION=6c983d8daae8c6116f5fd4d4ccb7cfada5f8c9fc
-  git clone -b master https://github.com/gridlab-d/gridlab-d.git
-  "${TESPBUILD}/patch.sh" gridlab-d gridlab-d
+  if [[ ! -d "${REPO_DIR}/gridlab-d" ]]; then
+    git clone -b master https://github.com/gridlab-d/gridlab-d.git
+    "${BUILD_DIR}/patch.sh" gridlab-d gridlab-d
+  fi
 
   echo
   echo ++++++++++++++ ENERGYPLUS
-  git clone -b fncs_9.3.0 https://github.com/FNCS/EnergyPlus.git
-  "${TESPBUILD}/patch.sh" EnergyPlus EnergyPlus
+  if [[ ! -d "${REPO_DIR}/EnergyPlus" ]]; then
+    git clone -b fncs_9.3.0 https://github.com/FNCS/EnergyPlus.git
+    "${BUILD_DIR}/patch.sh" EnergyPlus EnergyPlus
+  fi
 
   echo
   echo ++++++++++++++ NS-3
-  git clone -b master https://gitlab.com/nsnam/ns-3-dev.git
-  "${TESPBUILD}/patch.sh" ns-3-dev ns-3-dev
+  if [[ ! -d "${REPO_DIR}/ns-3-dev" ]]; then
+    git clone -b master https://gitlab.com/nsnam/ns-3-dev.git
+    "${BUILD_DIR}/patch.sh" ns-3-dev ns-3-dev
+  fi
 
   echo
   echo ++++++++++++++ HELICS-NS-3
-  git clone -b main https://github.com/GMLC-TDC/helics-ns3 ns-3-dev/contrib/helics
-  "${TESPBUILD}/patch.sh" ns-3-dev/contrib/helics helics-ns3
+  if [[ ! -d "${REPO_DIR}/ns-3-dev/contrib/helics" ]]; then
+    git clone -b main https://github.com/GMLC-TDC/helics-ns3 ns-3-dev/contrib/helics
+    "${BUILD_DIR}/patch.sh" ns-3-dev/contrib/helics helics-ns3
+  fi
 
   echo
   echo ++++++++++++++ KLU SOLVER
-  svn export https://github.com/gridlab-d/tools/branches/klu-build-update/solver_klu/source/KLU_DLL
+  if [[ ! -d "${REPO_DIR}/KLU_DLL" ]]; then
+    unzip -q "${BUILD_DIR}/KLU_DLL.zip" -d ./KLU_DLL
+  fi
 fi
 
 # Compile all relevant executables
-cd "${TESPBUILD}" || exit
-./tesp_c.sh $binaries
+cd "${BUILD_DIR}" || exit
+./build_c.sh $binaries

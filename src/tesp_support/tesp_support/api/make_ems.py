@@ -1,4 +1,5 @@
-# Copyright (C) 2020-2023 Battelle Memorial Institute
+# Copyright (C) 2020-2024 Battelle Memorial Institute
+# See LICENSE file at https://github.com/pnnl/tesp
 # file: make_ems.py
 """Creates and merges the EMS for an EnergyPlus building model
 

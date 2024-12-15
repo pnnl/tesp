@@ -34,4 +34,12 @@ echo "#!/bin/bash
 (exec python3 -c \"import tesp_support.api.player as tesp;tesp.load_player_loop('./case_config', 'refLoadMn')\" &> ./ref_player.log &)
 " > run.sh
 
+echo "#!/usr/bin/env python3
+
+import tesp_support.api.tso_psst as tesp
+
+tesp.tso_psst_loop('./case_config')
+
+"> debug.py
+
 fi

@@ -1,8 +1,12 @@
-# Copyright (C) 2017-2023 Battelle Memorial Institute
+# Copyright (C) 2021-2024 Battelle Memorial Institute
+# See LICENSE file at https://github.com/pnnl/tesp
 # file: forecasting.py
 """Class responsible for forecasting 
 
-Implements the substation level DA price forecast and load forecast
+Implements the substation level DA price forecast and load forecast. Accesses
+forecast data using the schedule server; see "schedule_server.py" for further
+implementation details.
+
 
 """
 
@@ -507,7 +511,7 @@ class Forecasting:
         return deepcopy(industrial_load.tolist())
 
     def correcting_Q_forecast_10_AM(self, Q_10_AM, offset, day_of_week):
-        """ Correcs the quantity submited to the wolsale market at 10 AM
+        """ Corrects the quantity submitted to the wholesale market at 10 AM
         
         Args:
             Q_10_AM (list of 24 float): DA quantities
@@ -529,7 +533,7 @@ class Forecasting:
                 idx = 1
             new_Q = Q_10_AM * self.gain_Q_DA[idx] + t_65 * self.gain_t_65[idx] + t_65_2 * self.gain_t_65_2[idx] + \
                     self.DC_change_Q_DA[idx]
-            return list(new_Q / 100.0)
+            return list(new_Q)
         else:
             return Q_10_AM
 

@@ -12,26 +12,24 @@
 #      - and that these files have same permissions shared between owner and group???
 #        (this let's us not login with local user id, but created mounted files might appear weird on local system)
 
-git describe > tesp_version
-docker images -q tesp_private:latest > docker_version
+IMAGE="cosim-cplex:tesp_22.04.1"
 
-REPO="tesp_private"
-LOCAL_TESP="$HOME/projects/dsot/code/tesp-private"
-WORKING_DIR="/data/tesp/examples/dsot_v3"
-#BASHCMD="pip install --user -e /data/tesp/src/tesp_support/; python3 prepare_case_dsot_f.py"
-#BASHCMD="pip install --user -e /data/tesp/src/tesp_support/; python3 prepare_case_dsot_f.py $1 $2 $3 $4 $5 $6"
-BASHCMD="pip install --user -e /data/tesp/src/tesp_support/; python3 generate_case.py"
+git describe --tags > tesp_version
+docker images -q ${IMAGE} > docker_version
+hostname > hostname
+
+WORKING_DIR="$SIM_HOME/tesp/examples/analysis/dsot/code/%s"
+#BASHCMD="python3 prepare_case_dsot_f.py"
+#BASHCMD="python3 prepare_case_dsot_f.py $1 $2 $3 $4 $5 $6"
+BASHCMD="python3 generate_case.py"
 
 docker run \
-       -e LOCAL_USER_ID="$(id -u)" \
-       -it \
+       -e LOCAL_USER_ID=$SIM_UID \
+       -itd \
        --rm \
        --network=none \
        --ipc=none \
-       --mount type=bind,source="$LOCAL_TESP/examples",destination="/data/tesp/examples" \
-       --mount type=bind,source="$LOCAL_TESP/support",destination="/data/tesp/support" \
-       --mount type=bind,source="$LOCAL_TESP/ercot",destination="/data/tesp/ercot" \
-       --mount type=bind,source="$LOCAL_TESP/src",destination="/data/tesp/src" \
+       --mount type=bind,source="$TESPDIR",destination="$SIM_HOME/tesp"
        -w=${WORKING_DIR} \
-       $REPO:latest \
+       ${IMAGE} \
        /bin/bash -c "$BASHCMD"

@@ -9,172 +9,171 @@
     "default": {
       "correct": false
     },
-    "DSO_1": {
+   "DSO_1": {
       "correct": true,
       "Q_gain": [
-        0.8855087019848917,
-        -0.042276258921696314
+         0.8799428007106228,
+         0.8458796128879467
       ],
       "t_65": [
-        -69213.34102262228,
-        62130.30977039601
+         -80.75799757356003,
+         -4.11213442839896
       ],
       "t_65_2": [
-        3981.2892357046608,
-        -764.4965117717425
+         4.265590123704721,
+         3.1403639405779584
       ],
       "DC_change_Q_DA": [
-        1286194.4689805135,
-        63313.91203848377
+         1448.3588150614175,
+         1314.8965048124753
       ]
-    },
-    "DSO_2": {
+   },
+   "DSO_2": {
       "correct": true,
       "Q_gain": [
-        0.8766873460464479,
-        -0.03736118783016213
+         0.869818397947326,
+         0.83260903501188
       ],
       "t_65": [
-        -44047.12506005408,
-        21820.076882962006
+         -55.55172021980986,
+         -19.521991950986667
       ],
       "t_65_2": [
-        4011.66440141954,
-        178.1799814825672
+         4.366436661750946,
+         4.136619840497309
       ],
       "DC_change_Q_DA": [
-        1141178.6677058921,
-        274401.32359988365
+         1295.7641326641647,
+         1471.3674815128056
       ]
-    },
-    "DSO_3": {
+   },
+   "DSO_3": {
       "correct": true,
       "Q_gain": [
-        0.7628476840731337,
-        -0.2769449395628329
+         0.7370725619270401,
+         0.4781124938362388
       ],
       "t_65": [
-        -1787.350313072527,
-        3032.3813678752713
+         -2.170357531937552,
+         1.6705339160198198
       ],
       "t_65_2": [
-        182.24356189189785,
-        -41.613782129760175
+         0.1948114687829059,
+         0.13075585583008173
       ],
       "DC_change_Q_DA": [
-        44907.54553923859,
-        62652.40662261787
+         55.138259044877984,
+         108.14881200032391
       ]
-    },
-    "DSO_4": {
+   },
+   "DSO_4": {
       "correct": true,
       "Q_gain": [
-        0.7518891582221883,
-        -0.07086084043681119
+         0.7363704291885533,
+         0.6745529232824223
       ],
       "t_65": [
-        -12123.571688321223,
-        17367.96668297686
+         -14.87669429145866,
+         8.494547324184497
       ],
       "t_65_2": [
-        1486.6189025231743,
-        -409.7167510527112
+         1.5811930889423416,
+         1.007508837887338
       ],
       "DC_change_Q_DA": [
-        558400.4516388297,
-        215869.33524238112
+         623.6382604812195,
+         776.3535301512022
       ]
-    },
-    "DSO_5": {
+   },
+   "DSO_5": {
       "correct": true,
       "Q_gain": [
-        0.8061219940242272,
-        -0.05199398253711815
+         0.79136807945697,
+         0.752321634914374
       ],
       "t_65": [
-        -16773.5777828164,
-        7474.010863305652
+         -21.310699813947487,
+         -11.706838002893925
       ],
       "t_65_2": [
-        2089.3644394686726,
-        180.90262931148163
+         2.255794867883966,
+         2.3524342082506102
       ],
       "DC_change_Q_DA": [
-        809848.343359858,
-        288334.6484957911
+         924.7314944080028,
+         1124.4374699082628
       ]
-    },
-    "DSO_6": {
+   },
+   "DSO_6": {
       "correct": true,
       "Q_gain": [
-        0.7137863430167863,
-        -0.010058073954078761
+         0.6841215404653993,
+         0.7001196231834605
       ],
       "t_65": [
-        -312.7534522255469,
-        252.89998933746347
+         -0.7899911021771584,
+         -0.2166062978987422
       ],
       "t_65_2": [
-        120.61464950742335,
-        12.614437617331888
+         0.13897765792911407,
+         0.1388048276330066
       ],
       "DC_change_Q_DA": [
-        106003.96406992947,
-        433.3817287383645
+         121.497500919964,
+         109.04850961562225
       ]
-    },
-    "DSO_7": {
+   },
+   "DSO_7": {
       "correct": true,
       "Q_gain": [
-        0.8082598717923835,
-        -0.09831789151913864
+         0.7887443014335898,
+         0.7089213877743985
       ],
       "t_65": [
-        1662.2661023968526,
-        -9937.545973779932
+         0.0790617728589823,
+         -10.54450267816261
       ],
       "t_65_2": [
-        1059.5605044532417,
-        893.98027889626
+         1.165680286601235,
+         2.0398454026437394
       ],
       "DC_change_Q_DA": [
-        427734.6347687127,
-        335616.1933103078
+         497.7581868508027,
+         775.9858233340753
       ]
-    },
-    "DSO_8": {
+   },
+   "DSO_8": {
       "correct": true,
       "Q_gain": [
-        0.7737395660152623,
-        -0.2513037014433632
+         0.7751899855479271,
+         0.4988613499074878
       ],
       "t_65": [
-        -277.7308248924981,
-        486.19817165431056
+         -0.43161932119477975,
+         0.3761150791275897
       ],
       "t_65_2": [
-        75.26364344969826,
-        -9.087176918172954
+         0.07955308693974814,
+         0.06317798792419255
       ],
       "DC_change_Q_DA": [
-        12442.760733384606,
-        28954.717240923223
+         13.200718123300765,
+         43.1604451586657
       ]
-    }
+   }
   },
   "agent_debug_mode": {
     "ON": 0,
     "flex_wh": 0,
     "flex_hvac": 0
   },
-  "metricsFullDetail": false,
+  "metricsFullDetail": true,
   "gldDebug": 0,
   "outages": true,
   "outagesUnplanned": true,
   "planned": "../../data/planned_outages.csv",
   "unplanned": "../../data/unplanned_outages.csv",
   "port": 5570,
-  "fileFormat": true,
   "splitCase": true,
   "caseStartYear": 2016,
   "caseEndYear": 2016,
@@ -183,6 +182,8 @@
   "solver": "cbc",
   "numCore": 12,
   "market": false,
+  "howToConfigRate": "['', 'Flat', 'RND', 'TOU']",
+  "rate": "",
   "priceSensLoad": false,
   "noScale": true,
   "curve": false,
@@ -192,14 +193,17 @@
   "reserveUp": 0.15,
   "quadratic": true,
   "priceCap": 1000.0,
+  "RandD": false,
+  "LDCurve": "../../data/RandD.csv",
   "zonalReserves": false,
   "simplifiedFeeders": false,
   "howToConfigureOutputPath": "Leave it blank for default, otherwise use full path",
   "outputPath": "",
-  "myoutputPath": "/home/osboxes/grid/repository/tesp-private/examples/dsot_v2/output",
+  "myoutputPath": "~/grid/tesp/examples/dsot/output",
   "archivePath": "/mnt/simdata/done",
   "version": "2",
   "baseMVA": 100.0,
+  "genPowerLevel": 0.5,
   "genPower": true,
   "renewables": [
     "wind"
@@ -295,11 +299,14 @@
   "solarAgentForecastFile": "8-node_dist_hourly_forecast_power.csv",
   "dataPath": "../data",
   "dsoAgentFile": "default_case_config.json",
+  "dsoRECSAgentFile": "rates_analysis_case_config.json",
   "dsoPopulationFile": "8-metadata-lean.json",
-  "dsoRECSPopulationFile": "8-metadata-recs.json",
+  "dsoRECSPopulationFile": "",
   "WeatherDataSourcePath": "../data/8-node data/DAT formatted files/",
   "hvacSetPoint": "hvac_setpt.json",
-  "dsoQuadraticFile": "8_DSO_quadratic_curves.json",
+  "hvacRECSSetPoint": "hvac_setpt_RECS.json",
+  "dsoQuadraticFile": "8_quadratic_curves.json",
+  "dsoRECSQuadraticFile": "",
   "dsoCommBldgFile": "DSOT_commercial_metadata.json",
   "dsoResBldgFile": "DSOT_residential_metadata.json",
   "dsoRECSResBldgFile": "RECS_residential_metadata.json",
@@ -309,21 +316,9 @@
   "dsoScheduleServerFile": "8_schedule_server_metadata.json",
   "TimeZone": "CST+6CDT",
   "caseName": "lean_aug_8",
-  "mStartTime": "2016-03-29 00:00:00",
-  "mEndTime": "2016-05-01 00:00:00",
-  "jStartTime": "2016-01-01 00:00:00",
-  "jEndTime": "2016-01-11 00:00:00",
-  "fStartTime": "2016-02-07 00:00:00",
-  "fEndTime": "2016-02-14 00:00:00",
-  "pStartTime": "2016-04-01 00:00:00",
-  "pEndTime": "2016-04-11 00:00:00",
   "StartTime": "2016-08-05 00:00:00",
-  "EndTime": "2016-08-10 00:00:00",
-  "Tmax": 432000,
-  "7Tmax": 604800,
-  "10Tmax": 864000,
-  "14Tmax": 1209600,
-  "33Tmax": 2851200,
+  "EndTime": "2016-08-12 00:00:00",
+  "Tmax": 604800,
   "Interval": 86400,
   "Period": 300,
   "dt": 15,
@@ -4882,7 +4877,7 @@
       1,
       "Substation_1",
       3816.926091825308,
-      24753.866310685036,
+      30000,
       0,
       0.5,
       0,
@@ -4893,7 +4888,7 @@
       2,
       "Substation_2",
       2351.178899082569,
-      20881.27259875,
+      25000,
       0,
       0.5,
       0,
@@ -4926,7 +4921,7 @@
       5,
       "Substation_5",
       1395.9564220183486,
-      11905.492010356154,
+      15000,
       0,
       0.5,
       0,
@@ -4937,7 +4932,7 @@
       6,
       "Substation_6",
       67.95868852459016,
-      801.7024178857229,
+      1000,
       0,
       0.5,
       0,
@@ -4948,7 +4943,7 @@
       7,
       "Substation_7",
       895.214424951267,
-      7512.1220094747205,
+      10000,
       0,
       0.5,
       0,
@@ -4975,6 +4970,7 @@
     "agent_debug_mode": "ON==1 for allowing only hvac or only wh participation within flexLoadCase",
     "ames": "true == ames running, false == pypower running opf",
     "solver": "The name for the solver for ames",
+    "market": "false == turn market off (biding agents), true == turn market on (biding agents)",
     "priceSensLoad": "true == Substation load is flexible, false == only inflexible load",
     "windPower": "true == wind power, false == no wind power",
     "noScale": "FNCS gld_scale set to 1 if false",
@@ -4988,6 +4984,7 @@
     "version": "Version Number",
     "baseMVA": "conversion facter to p.u.",
     "metricsFullDetail": "level of reporting detail you want -> false for limited, true for full level of detail",
+    "genPowerLevel": "0.0 - 1.0 generation power level at start up, 1.0 == 100 percent on",
     "genPower": " true=renewables are turn on,  false=renewables are turn off",
     "renewables": "Set of renewable names, those can be 'wind', 'solar'",
     "keyLoad": "The key to be used for the load player -> refLoadMn, readLoadHr or indLoad, should be sync with Startdate",

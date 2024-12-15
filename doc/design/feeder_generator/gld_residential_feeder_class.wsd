@@ -1,0 +1,75 @@
+@startuml gld_residential_feeder_class.wsd
+
+class Config {
+    self 
+    config
+
+    preamble(): None
+    generate_recs(): None
+    load_recs(): None
+}
+
+class Residential_Build {
+    self
+    config
+
+    buildingTypeLabel(): list
+    checkResidentialBuildingTable(): None 
+    selectSetpointBins(): int 
+    add_small_loads(): None
+    getDsoIncomeLevelTable(): list
+    selectIncomeLevel(): int
+    getDsoThermalTable(): float
+    selectResidentialBuilding(): list
+    selectThermalProperties(): list 
+    addhouses(): None
+}
+
+class Commercial_Build {
+    self
+    config
+
+    add_one_commercial_zone(): None
+    define_commercial_zones(): None
+    define_comm_bldg(): list
+    normalize_dict_prob(): None
+    rand_bin_select(): None
+    sub_bin_select(): int
+    find_envelope_prop(): float
+}
+
+class Battery {
+    self
+    config
+
+    add_batt(): None
+}
+
+class Solar {
+    self
+    config
+
+    add_solar(): None
+}
+
+class Electric_Vehicle {
+    self
+    config
+
+    add_ev(): None
+    selecEVmodel(): str
+    match_driving_schedule(): dict
+    is_drive_time_valid(): bool
+    process_nhts_data(): dataframe
+}
+
+class Feeder {
+    self
+    config
+
+    feeder_gen(): None
+    identify_xfrm_houses(): None
+    identify_commercial_loads(): None
+}
+
+@enduml

@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 # Copyright (C) 2021-2023 Battelle Memorial Institute
+# See LICENSE file at https://github.com/pnnl/tesp
 # file: balance_sheet_functions.py
 # @author: yint392
 """
