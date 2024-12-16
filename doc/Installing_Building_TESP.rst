@@ -201,7 +201,9 @@ Alternate Installation Methods
 Windows- or macOS-Based Installation with Docker
 ------------------------------------------------
 
-For those not running on a Linux-based system, TESP is also distributed via a Docker image that can be run on Windows, macOS, and Linux.
+For those not running on a Linux-based system, TESP is also distributed via a Docker image that can be run on Windows (with WSL 2), macOS, and Linux. The TESP Docker containers are created to mount the locally cloned TESP respository folder such that anything placed in this folder is visible inside the Docker containers. This allows users to place custom code, model, and datasets in this folder and use them with applications in the Docker containers.
+
+The biggest downside to using the Docker containers is that customization of any of the compiled tools (_e.g._ GridLAB-D) is not possible without rebuilding the appropriate Docker image. 
 
 Install Docker
 ..............
