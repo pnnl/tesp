@@ -1,0 +1,57 @@
+@startuml
+class HVACDSOT {
+    + name: str
+    + solver: str
+    + houseName: str
+    + meterName: str
+    + period: float
+    + wakeup_start: float
+    + daylight_start: float
+    + evening_start: float
+    + night_start: float
+    + wekend_day_start: float
+    + weekend_night_start: float
+    + T_lower_limit: float
+    + T_upper_limit: float
+    + __int__(hvac_dict: dict, house_properties: dict, key: str, model_diag_level: int, sim_time: DataTime, solver: str): void
+    + calc_thermostat_settings(model_diag_level: int, sim_time: DateTime): void
+    + update_temp_limits_da(cooling_setpt: float, heating_setpt: float): void
+    + calc_etp_model(): void
+    + set_price_forecast(price_forecast: list): void
+    + set_temperature_forecst(fncs_str: str): void
+    + set_humidity_forecast(fncs_str: str): void
+    + set_solargain_forecast(solargain_array: list): void
+    + store_full_internalgain_forecast(forecast_internalgain: TODO): void
+    + store_full_zipload_forecast(forecast_ziploads: TODO): void
+    + set_internalgain_forecast(interngain_array: list): void
+    + set_zipload_forecast(forecast_ziploads: list): void
+    + set_temperature(fncs_str: str): void
+    + set_humidity(fncs_str: str): void
+    + set_solar_direct(fncs_str: str): void
+    + set_solar_diffuse(fncs_str: str) : void
+    + get_solargain(climate_conf: dict, current_time: DateTime): void
+    + calc_solargain(day_of_year: int, start_hour: float, dnr: float, dhr: float, lat: float, long: float, tz_offset: float): void
+    + calc_solar_flux(cpt: str, day_of_year: int, lat: float, sol_time: float, dnr_i: float, dhr_i: float, vertical_angle: float): void
+    + inform_bid(price: float): void
+    + bid_accepted(model_diag_level: int, sim_time: str): void
+    + set_time(minute: int, hour: int, day: int): void
+    + change_basepoint(model_diag_level: int, sim_time: sim_time: str): void
+    + set_house_load(fncs_str: str): void
+    + set_hvac_load(fncs_str: str): void
+    + set_wh_load(fncs_str: str): void
+    + set_hvac_state(fncs_str: str): void
+    + set_air_temp(fncs_str: str, modle_diag_level: int, sim_time: str): void
+    + set_voltage(fncs_str: str): void
+    + formulate_bid_rt(model_diag_level: int, sim_time: str): void
+    + get_uncntrl_hvac_load(moh: int, hod: int, dow: int): list
+    + formulate_bid_da(): void
+    + get_scheduled_setpt(mod3: int, hod4: int, dow3:int): void
+    + DA_model_parameters(moh3: int, hod3: int, dow3: int): bool
+    + obj_rule(m: TODO object of some kind): void
+    + con_rule_eq1(m: TODO object of some kind, t: TODO index of some kind, int?): void
+    + temp_bound_rule(m, t): tuple
+    + DA_optimal_quantities(): list
+    + test_function(): str
+    + set_da_cleared_quantity(BID: list, PRICE: float)
+}
+@enduml

@@ -1,0 +1,29 @@
+@startuml
+participant User
+User -> HVACDSOT: <<create>>
+activate HVACDSOT
+
+HVACDSOT -> HVACDSOT: DA_model_parameters()
+activate HVACDSOT
+
+HVACDSOT -> HVACDSOT: get_schedule_setpoint()
+
+HVACDSOT -> HVACDSOT: update_temp_limits_da()
+return bool
+
+HVACDSOT -> HVACDSOT: DA_optimal_quantities()
+activate HVACDSOT
+
+HVACDSOT -> ConcreteModel: <<create>>
+activate ConcreteModel
+HVACDSOT -> HVACDSOT: get_run_solver()
+
+HVACDSOT -> ConcreteModel: solve()
+return results
+return
+
+HVACDSOT -> HVACDSOT: get_uncntrol_hvac_load()
+return
+
+
+@enduml
