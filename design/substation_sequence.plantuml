@@ -1,0 +1,289 @@
+@startuml
+participant User
+
+User -> substation: <<call>>
+activate substation
+
+substation -> substation: inner_substation_loop()
+activate substation
+
+substation -> substation: timing()
+substation -> substation: *enable_logging()*
+note right: Methods framed by "*" are imported from other modules.
+substation -> substation: !open_metadata_dicts()!
+note right: Methods framed by "!" do not exist but describe functionality present in code.
+substation -> substation: !configure_simulation()!
+
+substation -> Forecast: <<create>>
+activate Forecast
+
+Forecast -> Forecast: set_sch_year()
+
+loop number of markets
+    substation -> DSOMarket: <<create>>
+    activate DSOMarket
+    DSOMarket -> DSOMarket: update_wholesale_node_curve()
+
+    substation -> RetailMarket: <<create>>
+    activate RetailMarket
+end
+
+loop number of HVACDSOT
+    substation -> HVACDSOT: <<create>>
+    activate HVACDSOT
+end
+
+loop number of WaterHeaterDSOT
+    substation -> WaterHeaterDSOT: <<create>>
+    activate WaterHeaterDSOT
+end
+
+loop number of BatteryDSOT
+    substation -> BatteryDSOT: <<create>>
+    activate BatteryDSOT
+end
+
+loop number of EVDSOT
+    substation -> EVDSOT: <<create>>
+    activate EVDSOT
+end
+
+loop number of PVDSOT
+    substation -> PVDSOT: <<create>>
+    activate PVDSOT
+end
+
+substation -> substation: !create_metrics_stores()!
+activate substation
+substation -> MetricsCollector: <<create>>
+activate MetricsCollector
+loop number of metrics stores
+    substation -> MetricsStore: <<create>>
+    activate MetricsStore
+end
+deactivate substation
+
+substation -> substation: !configure_market_timing()!
+substation -> substation: !initialize_bidding()!
+substation -> substation: !create_substation_federation()!
+
+loop simulation time
+    substation -> substation: !publish_HVAC_setpoints()!
+    substation -> WaterHeaterDSOT: set_time()
+    substation -> substation: !get_input_from_federation()!
+    substation -> DSOMarket: update_wholesale_node_curve()
+    substation -> RetailMarket: clean_bids_RT()
+    loop number of HVACDSOT
+        substation -> HVACDSOT: !hvac_rt_bidding()!
+        HVACDSOT -> HVACDSOT: get_solargain()
+        activate HVACDSOT
+        HVACDSOT -> HVACDSOT: calc_solargain()
+        activate HVACDSOT
+        HVACDSOT -> HVACDSOT: calc_solar_flux()
+        return solar_flux
+        return solar_gain
+        HVACDSOT -> HVACDSOT: formulate_bid_rt()
+        substation <- HVACDSOT: HVAC_rt_bid
+        substation -> RetailMarket: curve_aggregator_RT()
+    end
+    loop number of WaterHeaterDSOT
+        substation -> WaterHeaterDSOT: !wh_rt_bidding()!
+        WaterHeaterDSOT -> WaterHeaterDSOT: formulate_bid_rt()
+        substation <- WaterHeaterDSOT: wh_rt_bid
+        substation -> RetailMarket: curve_aggregator_RT()
+    end
+    loop number of BatteryDSOT
+        substation -> BatteryDSOT: !battery_rt_bidding()!
+        BatteryDSOT -> BatteryDSOT: formulate_bid_rt()
+        substation <- BatteryDSOT: battery_rt_bid
+        substation -> RetailMarket: curve_aggregator_RT()
+    end
+    loop number of EVDSOT
+        substation -> EVDSOT: !battery_rt_bidding()!
+        EVDSOT -> EVDSOT: formulate_bid_rt()
+        substation <- EVDSOT: ev_rt_bid
+        substation -> RetailMarket: curve_aggregator_RT()
+    end
+    substation -> RetailMarket: curve_aggregator_RT()
+    note right: Buyer curve aggregation
+
+    substation -> DSOMarket: update_wholesale_node_curve()
+    substation -> RetailMarket: clean_bids_DA()
+    substation -> substation: !clear_household_heatgain()!
+    loop number of BatteryDSOT
+        note right: TODO figure battery DA bidding out
+    end
+    loop number of HVACDSOT
+        substation -> HVACDSOT: set_solargain_forecast
+        substation -> Forecast: get_internal_gain_forecast()
+        activate Forecast
+        Forecast -> Forecast: forecasting_schedules()
+        return ZIPload, internal_gain
+        substation -> HVACDSOT: store_full_internalgain_forecast()
+        substation -> HVACDSOT: store_full_zipload_forecast()
+        substation -> HVACDSOT: set_internalgain_forecast()
+        substation -> HVACDSOT: set_zipload_forecast()
+        substation -> HVACDSOT: DA_model_parameters()
+        activate HVACDSOT
+        HVACDSOT -> HVACDSOT: get_scheduled_setpt()
+        HVACDSOT -> HVACDSOT: update_temp_limit_da()
+        return bool
+        substation -> HVACDSOT: get_uncntrl_hvac()
+        activate HVACDSOT
+        HVACDSOT-> HVACDSOT: DA_model_parameters()
+        activate HVACDSOT
+        HVACDSOT -> HVACDSOT: get_scheduled_setpt()
+        HVACDSOT -> HVACDSOT: update_temp_limit_da()
+        return bool
+        return Quantity
+    end
+    loop number of WaterHeaterDSOT
+        substation -> Forecast: get_waterdraw_forecast()
+        activate Forecast
+        return water draw forecast
+        substation -> WaterHeaterDSOT: set_forecasted_schedule()
+        substation -> WaterHeaterDSOT: get_unctrl_wh_load()
+        activate WaterHeaterDSOT
+        return temp
+    end
+    loop number of EVDSOT
+        substation -> EVDSOT: !ev_da_bidding()!
+        EVDSOT -> EVDSOT: DA_model_parameters()
+        activate EVDSOT
+        EVDSOT -> EVDSOT: get_car_home_duration()
+        activate EVDSOT
+        EVDSOT -> EVDSOT: is_car_home
+        activate EVDSOT
+        return bool
+        return duration
+        deactivate
+        substation -> EVDSOT: get_uncntrl_ev_load()
+        activate EVDSOT
+        EVDSOT -> EVDSOT: get_car_home_duration()
+        activate EVDSOT
+        EVDSOT -> EVDSOT: is_car_home
+        return bool
+        return duration
+        deactivate
+    end
+    loop number of PVDSOT
+        substation -> Forecast: get_solar_forecast()
+        activate Forecast
+        return values
+        substation -> PVDSOT: scale_pv_forecast()
+        activate PVDSOT
+        return scaled_values
+    end
+    substation -> substation: !bid_uncontrollable_loads_DA()!
+    substation -> substation: !agents_optimize_bids_in_parallel()!
+    substation -> RetailMarket: curve_aggregator_DA()
+    substation -> substation: !bid_industrial_load_DA()!
+    substation -> RetailMarket: curve_aggregator_DA()
+    substation -> substation: !perform_DSO_RT_bid()!
+    activate substation
+    substation -> DSOMarket: clean_bid_rt()
+    substation -> DSOMarket: curve_aggregator_DSO_RT()
+    deactivate substation
+    substation -> substation: !perform_DSO_DA_bid()!
+    activate substation
+    substation -> DSOMarket: clean_bid_DA()
+    substation -> DSOMarket: curve_aggregator_DSO_DA()
+    deactivate substation
+    substation -> substation: !perform_wholesale_bidding_RT()!
+    activate substation
+    substation -> RetailMarket: curve_aggregator_AMES_RT()
+    substation -> substation: !send_RT_bid_to AMES()!
+    deactivate substation
+    substation -> substation: !perform_wholesale_bidding_DA()!
+    substation -> substation: !send_DA_bid_to AMES()!
+    activate substation
+    substation -> RetailMarket: curve_aggregator_AMES_DA()
+    deactivate substation
+    substation -> substation: !write_metrics()!
+    substation -> substation: !get_wholesale_RT_clearing_price()!
+    activate substation
+    substation -> substation: !write_metrics()!
+    deactivate substation
+    substation -> substation: !get_wholesale_DA_clearing_price()!
+    activate substation
+    substation -> substation: !write_metrics()!
+    deactivate substation
+    substation -> substation: !clear_DSO_RT()!
+    activate substation
+    substation -> DSOMarket: set_Pwclear_RT()
+    substation -> DSOMarket: !update_RT_supply_curve()!
+    deactivate substation
+    substation -> substation: !clear_DSO_DA()!
+    activate substation
+    substation -> DSOMarket: set_Pwclear_DA()
+    substation -> DSOMarket: !update_DA_supply_curve()!
+    deactivate substation
+    substation -> substation: !clear_retail_market_RT()!
+    activate substation
+    substation -> RetailMarket: clear_market_RT()
+    loop number of HVACDSOT
+        substation -> HVACDSOT: inform_bid()
+    end
+    loop number of WaterHeaterDSOT
+        substation -> WaterHeaterDSOT: inform_bid()
+    end
+    loop number of BatteryDSOT
+        substation -> BatteryDSOT: inform_bid()
+    end
+    loop number of EVDSOT
+        substation -> EVDSOT: inform_bid()
+    end
+    substation -> substation: !write_metrics()!
+    deactivate substation
+    substation -> substation: !clear_retail_market_DA()!
+    activate substation
+    substation -> RetailMarket: clear_market_DA()
+    substation -> Forecast: set_retail_price_forecast()
+    substation -> RetailMarket: update_price_CA()
+    loop number of HVACDSOT
+        substation -> HVACDSOT: set_price_forecast()
+        substation -> HVACDSOT: set_da_cleared_quantity()
+        substation -> substation: !write_metrics()!
+    end
+    loop number of WaterHeaterDSOT
+        substation -> WaterHeaterDSOT: set_price_forecast()
+        substation -> WaterHeaterDSOT: set_da_cleared_quantity()
+        substation -> substation: !write_metrics()!
+    end
+    loop number of BatteryDSOT
+        substation -> WaterHeaterDSOT: set_price_forecast()
+        substation -> WaterHeaterDSOT: from_P_to_Q_battery()
+        substation -> substation: !write_metrics()!
+    end
+    loop number of EVDSOT
+        substation -> WaterHeaterDSOT: set_price_forecast()
+        substation -> WaterHeaterDSOT: from_P_to_Q_battery()
+        substation -> substation: !write_metrics()!
+    end
+    substation -> substation: !write_metrics()!
+    deactivate substation
+    substation -> substation: !adjust_agents_RT()!
+    activate substation
+    loop number of HVACDSOT
+        substation -> HVACDSOT: !adjust_setpoints()!
+        substation -> substation: !write_metrics()!
+    end
+    loop number of WaterHeaterDSOT
+        substation -> HVACDSOT: !adjust_setpoints()!
+        substation -> substation: !write_metrics()!
+    end
+    loop number of BatteryDSOT
+        substation -> HVACDSOT: !set_output_P_and_Q()!
+        substation -> substation: !write_metrics()!
+    end
+    loop number of EVDSOT
+        substation -> HVACDSOT: !set_charging_P()!
+        substation -> substation: !write_metrics()!
+    end
+    substation -> substation: !write_metrics()!
+    deactivate substation
+    substation -> MetricsCollector: !write_metrics_to_file()!
+end
+
+
+@enduml
