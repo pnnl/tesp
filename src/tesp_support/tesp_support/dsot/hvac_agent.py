@@ -27,9 +27,23 @@ log.getLogger('pyomo.core').setLevel(log.ERROR)
 
 class HVACDSOT:  # TODO: update class name
     """
-    This agent ...
+    This agent is responsible for managing a residential HVAC system's
+    participation in a double-auction transactive system in a real-time and
+    day-ahead energy market. There are four required functions for all agents,
+    reqgardless of asset type, to fully participate in said market:
 
-    # TODO: update the purpose of this Agent
+    1. Asset agent model - estimates the physical behavior of the respective 
+    DER asset based on observed sensor measurements
+    2. Asset scheduler - prepares an operating plan for the respective asset 
+    considering the forecast future prices and asset constraints (e.g., 
+    comfort setting preferences)
+    3. Asset bidding prepares a price-quantity curve for the respective 
+    responsive asset to participate in the retail market
+    4. Market control mapping maps the real-time price into the control 
+    settings for the given asset
+    5. Managing asset operation - receiveing measurement signals from the
+    asset and sending appropriate control signals to the asset.
+
 
     Args:
         hvac_dict (dict):
@@ -40,13 +54,454 @@ class HVACDSOT:  # TODO: update class name
         solver (str):
 
     Attributes:
-        # TODO: update attributes for this agent
+        name (str) - Unique identifier of the agent
+        solver (str) - The solver to be used by the agent to perform the
+        optimization necessary for day-ahead bidding
+        houseName (str) - Name of the house object in GridLAB-D modeling the
+        physical behavior of the residential HVAC system this agent is 
+        managing
+        meterName (str) - Billing meter name that collects energy consumption 
+        information impacted by the operation of the HVAC system this agent
+        is managing
+        period (int) - Operational period length in seconds
+        wakeup_start (float) - Time of day for the thermostat schedule 
+        "wake-up" period. For weekdays there are four thermostat periods:
+        "wake-up", "daylight", "evening", and "night". For weekends there
+        are only two periods: "day" and "night". Value expressed as decimal
+        hours in the range [0  24).
+        daylight_start (float) - Time of day for the thermostat schedule 
+        "daylight" period. For weekdays there are four thermostat periods:
+        "wake-up", "daylight", "evening", and "night". For weekends there
+        are only two periods: "day" and "night". Value expressed as decimal
+        hours in the range [0  24).
+        evening_start (float) - Time of day for the thermostat schedule 
+        "evening" period. For weekdays there are four thermostat periods:
+        "wake-up", "daylight", "evening", and "night". For weekends there
+        are only two periods: "day" and "night". Value expressed as decimal
+        hours in the range [0  24).
+        night_start (float) - Time of day for the thermostat schedule 
+        "night" period. For weekdays there are four thermostat periods:
+        "wake-up", "daylight", "evening", and "night". For weekends there
+        are only two periods: "day" and "night". Value expressed as decimal
+        hours in the range [0  24).
+        weekend_day_start (float) - Time of day for the thermostat schedule 
+        "weekend day" period. For weekdays there are four thermostat periods:
+        "wake-up", "daylight", "evening", and "night". For weekends there
+        are only two periods: "day" and "night". Value expressed as decimal
+        hours in the range [0  24).
+        weekend_night_start (float) - Time of day for the thermostat schedule 
+        "weekend night" period. For weekdays there are four thermostat periods:
+        "wake-up", "daylight", "evening", and "night". For weekends there
+        are only two periods: "day" and "night". Value expressed as decimal
+        hours in the range [0  24).
+        T_lower_limit (float) - Absolute lower household temperature limit 
+        in Farenheit
+        T_upper_limit (float) - Absolute upper household temperature limit 
+        in Farenheit
+        cooling_setpoint_lower (float) - Lower thermostat limit when HVAC is
+        in cooling mode.
+        cooling_setpoint_upper (float) - Upper thermostat limit when HVAC is
+        in cooling mode.
+        heating_setpoint_lower (float) - Lower thermostat limit when HVAC is
+        in heating mode.
+        heating_setpoint_upper (float) - Upper thermostat limit when HVAC is
+        in heating mode.
+        basepoint_cooling (float) - Thermostat cooling setpoint as determined
+        by the non-price-responsive thermostat schedule.
+        basepoint_heating (float) - Thermostat heating setpoint as determined
+        by the non-price-responsive thermostat schedule.
+        cooling_setpoint (float) - Current cooling setpoint for thermostat
+        heating_setpoint (float) - Current heating setpoint for thermostat
+        wakeup_set_cool (float) - Cooling setpoint for "wake-up" period for 
+        thermostat
+        daylight_set_cool (float) - Cooling setpoint for "daylight" period for 
+        thermostat
+        evening_set_cool (float) - Cooling setpoint for "evening" period for 
+        thermostat
+        night_set_cool (float) - Cooling setpoint for "night" period for 
+        thermostat
+        weekend_day_set_cool (float) - Cooling setpoint for "weekend day" 
+        period for thermostat
+        weekend_night_set_cool (float) - Cooling setpoint for "weekend night" 
+        period for thermostat
+        wakeup_set_heat (float) - Heating setpoint for "wake-up" period for 
+        thermostat
+        daylight_set_heat (float) - Heating setpoint for "daylight" period for 
+        thermostat
+        evening_set_heat (float) - Heating setpoint for "evening" period for 
+        thermostat
+        night_set_heat (float) - Heating setpoint for "night" period for 
+        thermostat
+        weekend_day_set_heat (float) - Heating setpoint for "weekend day" 
+        period for thermostat
+        weekend_night_set_heat (float) - Heating setpoint for "weekend night" 
+        period for thermostat
+        deadband (float) - Thermostat deadband in which temperature changes
+        around the setpoint do not produce a change in state of the HVAC
+        price_cap (float) - Maximum price the can be bid into the energy 
+        market
+        bid_delay (int) - Number of seconds into the market period when
+        a bid is formed
+        ramp_high_limit (float) - Factor that defines the rate at which
+        positive deviations in price from the historic average price will
+        change the setpoint.
+        ramp_low_limit (float) - Factor that defines the rate at which
+        negative deviations in price from the historic average price will
+        change the setpoint.
+        range_high_limit (float) - Factor that is used to determine the 
+        maximum thermostat setpoint deviation from the scheduled
+        (basepoint) setpoint.
+        range_low_limit (float) - Factor that is used to determine the 
+        minimum thermostat setpoint deviation from the scheduled
+        (basepoint) setpoint.
+        slider (float) - Price-responsive control setting from 0 to 1 where
+        larger values indicate a greater sensitivity of thermostat setting to
+        price. Influences both the rate at which price changes impact the
+        thermostat setpoint as well as the maximum and minimum thermostat
+        deviations from the scheduled (basepoint) setpoint.
+        cooling_participating (bool) - Flag indicating whether the HVAC is 
+        participating the energy market when in cooling mode
+        heating_participating (bool) - Flag indicating whether the HVAC is 
+        participating the energy market when in heating mode
+        participating (flag) - Logical OR of "heating_participating" and 
+        "cooling_participating".
+        windowLength (int) - Number of day-ahead market periods that are
+        estimated when solving the optimization problem when forming the day-
+        ahead market bid
+        TIME (range) - range data type of "windowLength"
+        optimized_Quantity (list) - List with "windowLength" number of 
+        elements where each element is itself a list (_e.g._ [[]]).
+        range_low_cool (float) - Actual minimum thermostat cooling setpoint
+        deviation from the scheduled (basepoint) cooling setpoint.
+        range_high_cool (float) - Actual maximum thermostat cooling setpoint
+        deviation from the scheduled (basepoint) cooling setpoint.
+        range_low_heat (float) - Actual minimum thermostat heating setpoint
+        deviation from the scheduled (basepoint) heating setpoint.
+        range_high_heat (float) - Actual maximum thermostat heating setpoint
+        deviation from the scheduled (basepoint) heating setpoint.
+        ramp_low_cool (float) - Rate at which the thermostat setpoint changes
+        in response to negative deviations in price when in cooling mode.
+        ramp_high_cool (float) - Rate at which the thermostat setpoint changes
+        in response to positive deviations in price when in cooling mode.
+        ramp_low_heat (float) - Rate at which the thermostat setpoint changes
+        in response to negative deviations in price when in heating mode.
+        ramp_high_heat (float) - Rate at which the thermostat setpoint changes
+        in response to positive deviations in price when in heating mode.
+        temp_max_cool (float) - Actual maximum thermostat cooling setpoint
+        temp_min_cool (float) - Actual minimum thermostat cooling setpoint
+        temp_max_heat (float) - Actual maximum thermostat heating setpoint
+        temp_min_heat (float) - Actual minimum thermostat heating setpoint
+        temp_max_cool_da (float) - Actual maximum thermostat cooling setpoint
+        when planning for the day-ahead market
+        temp_min_cool_da (float) Actual minimum thermostat cooling setpoint
+        when planning for the day-ahead market
+        temp_max_heat_da (float) - Actual maximum thermostat heating setpoint
+        when planning for the day-ahead market
+        temp_min_heat_da (float) - Actual minimum thermostat heating setpoint
+        when planning for the day-ahead market
+        price_forecast (list) - Price forecast list 48 elements long (hard-
+        coded)
+        price_forecast_0 (float) - Price forecast for the current hour used
+        to formulate the day-ahead bid.
+        price_forecast_0_new (float) - Unused and purpose unknown
+        price_std_dev (float) - Standard deviation of the current price
+        forecast
+        price_delta (float) - Difference between the minimum and maxmimum
+        price of the current price forecast
+        price_mean (float) - Mean of the current price forecast
+        temperature_forecast (list) = Temperature forecast list 48 elements 
+        long (hard-coded). Needed to estimate thermal load the HVAC system
+        will manage during optimization problem
+        temp_min_48hour (float) - Minimum temperature over the forecasted 
+        period
+        temp_max_48hour (float) - Maximum temperature over the forecasted 
+        period
+        temp_delta (float) - Delta in maximum vs minimum temperature over the
+        forecasted period
+        humidity_forecast (list) - Humidity forecast list 48 elements long
+        (hard-coded). Needed to estimate thermal load the HVAC system will
+        manage during optimization problem
+        solargain_forecast (list) - Forecast list 48 elements long of solar
+        gain into the residential structure. Needed to estimate thermal load
+        the HVAC system will manage during optimization problem
+        (hard-coded)
+        internalgain_forecast (list) - Forecast list 48 elements long of 
+        internal heat gain into the residential structure. Needed to estimate 
+        thermal load the HVAC system will manage during optimization problem
+        forecast_ziploads (list) - Forecast list 48 elements long of 
+        zip load heat gain into the residential structure. Needed to estimate 
+        thermal load the HVAC system will manage during optimization problem
+        full_internalgain_forecast (list) - Residential heating internal gain  
+        forecast values provided by the Forecaster
+        full_forecast_ziploads (list) - Residential zipload heating gain   
+        forecast values provided by the Forecaster
+        air_temp (float) - Current indoor air temperature of the residential
+        strucutre. Set by GridLAB-D
+        mass_temp (float) - Estimated indoor mass (e.g. furniture) temperature
+        based on agent's ETP model that is updated as part of setting the 
+        thermostat when cleared for operation at a given price.
+        hvac_kw (float) - Current real power consumption of the HVAC system as
+        simulated in GridLAB-D
+        wh_kw (float) - Current real power consumption of the water heater as
+        simulated in GridLAB-D
+        house_kw (float) - Current total house real power load (?) as
+        simulated in GridLAB-D
+        mtr_v (float) - Current billing meter (maybe?) line-neutral 
+        voltage as simulated in GridLAB-D
+        hvac_on (bool) - Current state of the HVAC system as simulated in 
+        GridLAB-D.
+        minute (int) - Current minute of the simulated hour; [0,59]
+        hour (int) - Current hour of the simulated day; [0. 24]
+        day (int) - Current day of the simulated week; 0=Monday, 6 = Sunday
+        Qopt_da_prev (float) - Optimal quantity for current hour from previous
+        day-ahead bidding
+        temp_da_prev (float) - Optimal indoor temperature for current hour 
+        from previous day-ahead bidding.
+        DA_once_flag (bool) - Hard-coded to False and unused
+        air_temp_agent (float) - Estimated indoor air temperature based on 
+        agent's ETP model that is updated as part of setting the thermostat
+        when cleared for operation at a given price.
+        bid_rt_price (float) - Hard-coded to 0.0 and unused
+        Qi (float) - Heat flows into indoor residential air due to other
+        electrical energy consumpation (e.g. appliances)
+        Qh (float) - Heat flows into the residential indoor air due HVAC 
+        system operation
+        Qa_ON (float) - Heat flows into the residential indoor air due HVAC 
+        operation and heat from the indoor mass and solar radiation
+        Qa_OFF (float) - Heat flows into the residential indoor air from the
+        indoor mass and solar radiation
+        Qm (float) - Heat flows into the residential indoor air from the
+        indoor mass and solar radiation 
+        Qs (float) - Heat flows into the residential indoor air from solar
+        radiation
+        interpolation (bool) - Flag to turn on interpolation of Qopt_DA and 
+        Topt_DA when forming the real-time bid
+        RT_minute_count_interpolation (float) - Number of minutes into the 
+        hourly day-ahed market when the interpolation operations should take
+        place.
+        previous_Q_DA (float) - Previous Qopt_DA used in calculating the 
+        intra-hour Qopt_DA via interpolation.
+        previous_T_DA (float) - Previous Topt_DA used in calculating the 
+        intra-hour Topt_DA via interpolation.
+        delta_Q (float) - Difference between bid Q for the current hour and
+        the previous_Q_DA; used in interpolating Qopt_DA
+        delta_T (float) - Difference between the expect T for the current hour 
+        (based on bidding) and the previous_T_DA; used in interpolating Topt_DA
+        A_ETP (list) - 2x2 matrix (list of lists) holding the thermal
+        conductivity and capacitance parameters for a given structure in the
+        ETP model. This is the "A" matrix in the linear differential 
+        equation system of x'=Ax + B.
+        AEI (list) - 2x2 matrix (list of lists) inversion of A_ETP
+        B_ETP_ON (list) - 2x1 matrix (list of lists) holding the constant
+        factors of the linear differential equation system of x'=Ax + B. In
+        this case, B holds a Qa that reflects the HVAC system in a running
+        state.
+        B_ETP_OFF (list) - 2x1 matrix (list of lists) holding the constant
+        factors of the linear differential equation system of x'=Ax + B. In
+        this case, B holds a Qa that reflects the HVAC system in a non-running
+        state.
+        bid_quantity (float) - The real-time cleared quantity calculated from 
+        the cleared real-time price.
+        bid_quantity_rt (float) - Hard-coded to zero.
+        thermostat_mode (str) -  Indicates HVAC mode 'OFF', 'Cooling' or
+        'Heating'
+        cleared_price (str) - Real-time cleared price
+        bid_rt (list) - Four-point bid structure as 4-element list of 
+        2-element (P and Q) lists
+        bid_da (list) - Four-point bid structure as 4-element list of 
+        2-element (P and Q) lists in a 48-element list, one for every biding
+        period in the day-ahead market.
+        quantity_curve (list) - Holds real-time bid quantities
+        temp_curve (list) - Set of temperatures centered on the optimal day-
+        ahead price used to find quantity_curve
+        sqft (float) - Number of square feet of the structure modeled by agent 
+        for use in asset model (ETP model parameter)
+        stories float) - Number of stories of the structure modeled by agent 
+        for use in asset model (ETP model parameter)
+        doors (float) - Number of doors of the structure modeled by agent for 
+        use in asset model (ETP model parameter)
+        thermal_integrity (float) - Unused. Enumerated value defining the 
+        integrity of the thermal envelope of the structure modeled by agent
+        Rroof (float) - Thermal resistance of the roof of the structure 
+        modeled by agent for use in asset model (ETP model parameter).
+        Rwall (float) - Thermal resistance of the walls of the structure 
+        modeled by agent for use in asset model (ETP model parameter).
+        Rfloor (float) - Thermal resistance of the floors of the structure 
+        modeled by agent for use in asset model (ETP model parameter).
+        Rdoors (float) - Thermal resistance of the doors of the structure 
+        modeled by agent for use in asset model (ETP model parameter).
+        airchange_per_hour (float) - Airchanges per hour of the structure 
+        modeled by agent for use in asset model (ETP model parameter).
+        ceiling_height (float) - Ceiling height of the structure modeled by 
+        agent for use in asset model (ETP model parameter).
+        thermal_mass_per_floor_area (float) - Thermal mass per unit floor aread
+        of the structure modeled by agent for use in asset model (ETP model 
+        parameter).
+        aspect_ratio (float) - Aspect ratio of the structure modeled by agent
+        for use in asset model (ETP model parameter).
+        exterior_ceiling_fraction (float) - Ratio of external ceiling to floor
+        area of the structure modeled by agent for use in asset model (ETP 
+        model parameter).
+        exterior_floor_fraction (float) - Fraction of floor area as a portion
+        of the external thermal envelope of the structure modeled by agent for
+        use in asset model (ETP model parameter).
+        exterior_wall_fraction (float) - Fraction of wall area as a portion
+        of the external thermal envelope of the structure modeled by agent for
+        use in asset model (ETP model parameter).
+        WETC (float) - Window exterior tranmissions coefficient of the 
+        structure modeled by agent for use in asset model (ETP model 
+        parameter).
+        glazing_layers (int) - Number of panes in windows of the 
+        structure modeled by agent for use in asset model (ETP model 
+        parameter). All windows are assumed to have the same number of panes
+        glass_type (int) - Glass type enumeration for windows of the 
+        structure modeled by agent for use in asset model (ETP model 
+        parameter). 
+        0 = Other
+        1 = Normal
+        2 = Low-e
+        window_frame (int) - Window frame material type enumeration for 
+        windows frames of the structure modeled by agent for use in asset 
+        model (ETP model parameter). 
+        0 = None
+        1 = Aluminum
+        2 = Thermal break
+        3 = Wood
+        4 = Insulated
+        glazing_treatment (int) - Window glazing treatment enumeration for 
+        windows frames of the structure modeled by agent for use in asset 
+        model (ETP model parameter). 
+        1 = Clear
+        2 = ABS
+        3 = Refl
+        cooling_COP (float) - Coefficient of performance for HVAC unit when
+        operating in cooling mode (ETP model parameter).
+        heating_COP (float) - Coefficient of performance for HVAC unit when
+        operating in heating mode (ETP model parameter).
+        cooling_cop_adj_rt (float) - Adjustment to the cooling COP based on  
+        unknown factors. 
+        heating_cop_adj_rt (float) - Adjustment to the heating COP based on  
+        unknown factors
+        cooling_cop_adj (list) - List with "windowLength" number of elements
+        all of value "cooling_COP"
+        heating_cop_adj (list) - List with "windowLength" number of elements
+        all of value "heating_COP"
+        cooling_COP_K0 (float) - Hard-coded constant factor used in 
+        calculating "cooling_COP_adj"
+        cooling_COP_K1 (float) - Hard-coded linear co-efficient used in  
+        calculating "cooling_COP_adj"
+        cooling_COP_limit (float) - Hard-coded parameter used in calculating 
+        "cooling_COP_adj"
+        heating_COP_K0 (float) - Hard-coded constant factor used in 
+        calculating "heating_COP_adj"
+        heating_COP_K1 (float) - Hard-coded linear co-efficient used in 
+        calculating "heating_COP_adj"
+        heating_COP_K2 (float) - Hard-coded quadratic co-efficient used in  
+        calculating "heating_COP_adj"
+        heating_COP_K3 (float) - Hard-coded cubic co-efficient used in  
+        calculating "heating_COP_adj"
+        heating_COP_limit (float) - Hard-coded parameter used in calculating 
+        "heating_COP_adj"
+        cooling_capacity_K0 (float) - Hard-coded constant factor used in 
+        calculating "design_cooling_capacity"
+        cooling_capacity_K1 (float) - Hard-coded linear co-efficient used in 
+        calculating "design_cooling_capacity"
+        latent_load_fraction (float) - Hard-coded value representing the latent
+        load fraction in the thermal energy flow equations
+        latent_factor (list) = List of latent factors
+        cooling_design_temperature (float) - Cooling design temperature 
+        design_cooling_setpoint (float) - Design cooling setpoint
+        design_internal_gains (float) - Hard-coded value representing the
+        design internal heat gains used in the agent ETP model
+        design_peak_solar (float) - Hard-coded value representing the peak 
+        solar heat flows used in the agent ETP model
+        over_sizing_factor (float) - Hard-coded value used to size the HVAC system
+        in the agent ETP model
+        heating_system_type (str) - Indicates type of heating system; valid values
+        are "HEAT_PUMP" and "ELECTRIC".
+        cooling_system_type (str) = Unused
+        design_heating_setpoint (float) - Hard-coded value; nominal thermostat 
+        setpoint used in specifying the thermal design of the structure
+        heating_design_temperature (float) - Hard-coded value; deviation from 
+        "design_heating_setpoint" used in calculating "design_heating_capacity"
+        heating_capacity_K0 (float) - Hard-coded constant factor used in 
+        calculating "heating_capacity_adj"
+        heating_capacity_K1 (float) - Hard-coded linear co-efficient used in 
+        calculating "heating_capacity_adj"
+        heating_capacity_K2 (float) - Hard-coded quadratic co-efficient used in  
+        calculating "heating_capacity_adj"
+        design_heating_capacity (float) - Design capacity of HVAC system 
+        necessary to maintain reasonable indoor temperature under expected 
+        thermal load when heating.
+        design_cooling_capacity (float) - Design capacity of HVAC system 
+        necessary to maintain reasonable indoor temperature under expected  
+        thermal load when cooling.
+        solar_direct (float) - Direct solar radiation that heats the structure
+        used in the agent ETP model
+        solar_diffuse (float) - Diffuse solar radiation that heats the 
+        structure used in the agent ETP model
+        outside_air_temperature (float) Outside air temperature
+        humidity (float) - Humidity factor, unitless
+        moh (int) - minute of hour
+        hod = (int) - hour of day
+        dow = (int) - day of week
+        FirstTime (bool) - Unused
+        # variables to be used in solargain calculation
+        surface_angles (dict) - Constants used to calculate the solar  
+        radiation on the structure based on the position of the sun in the sky
+        UA (float) - Thermal conductivity between the outdoors and the indoor
+        air
+        CA (float) - Thermal energy capacity of the indoor air
+        HM (float) - Thermal resistivity between the indoor air and the 
+        structure mass
+        CM (float) - Thermal capacity of the structure mass
+        mass_internal_gain_fraction (float) - Fraction of internal heatgains 
+        that create the internal heatgains in the ETP model
+        mass_solar_gain_fraction (float) - Fraction of solar radiation that
+        create the solar heating of the structural mass in the ETP model
+        solar_heatgain_factor (float) - Fraction of solar radiation that
+        create the solar heating of the indoor air in the ETP model
+        solar_gain (float) - Solar radiation that creates the solar heating
+        of the indoor air in the ETP model
+        temp_room (list) - List of length windowLength storing indoor 
+        temperatures produced by the day-ahead bidding strategy estimating
+        the indoor air temperature
+        temp_desired_48hour_cool (list) - List of length windowLength storing
+        desired cooling temperatures
+        temp_desired_48hour_heat (list) - List of length windowLength storing  
+        desired heating temperatures
+        temp_room_previous_cool (float) - Previous desired cooling temperature
+        temp_room_previous_heat (float) - Previous desired heating temperature
+        temp_outside_init (float) - Hard-coded value used to set up the 
+        optimization problem.
+        eps (float) - Calculated from ETP parameters
+        COP (float) - Unused
+        K1 (float) - Unused
+        K2 (float) - Unused
+        ProfitMargin_intercept (float) - Used to calculate real-time and day-
+        ahead bid prices
 
     """
 
-    def __init__(self, hvac_dict, house_properties, key, model_diag_level, sim_time, solver):
-        # TODO: update inputs for class
-        """ Initializes the class
+    def __init__(self, 
+                 hvac_dict: dict, 
+                 house_properties: dict, 
+                 key: str, 
+                 model_diag_level: int, 
+                 sim_time: datetime, 
+                 solver: str) -> None:
+        """Initializes model and performs input parameter validation.
+
+        Invalid parameters generate log messages but do not halt execution.
+
+        Args:
+            hvac_dict (dict): _description_
+            house_properties (dict): _description_
+            key (str): _description_
+            model_diag_level (int): _description_
+            sim_time (datetime): _description_
+            solver (str): _description_
+
         """
         # TODO: update attributes of class
         self.name = key
@@ -553,7 +1008,13 @@ class HVACDSOT:  # TODO: update class name
                 self.temp_max_heat_da = heating_setpt
 
     def calc_etp_model(self):
-        """ Sets the ETP parameters from configuration data
+        """ Calculates the ETP parameters from configuration data
+
+        There are only a handful of ETP model parameters but many, many typical
+        household model parameters that go into calculating those few values.
+        This method takes those parameters defined when the model was created
+        and does the calculations to convert them over to the ETP model
+        parameters.
 
         References:
             `Thermal Integrity Table Inputs and Defaults <http://gridlab-d.shoutwiki.com/wiki/Residential_module_user%27s_guide#Thermal_Integrity_Table_Inputs_and_Defaults>`_
@@ -1428,7 +1889,7 @@ class HVACDSOT:  # TODO: update class name
 
         if self.CA != 0.0:
             self.A_ETP[0][0] = -1.0 * (self.UA + self.HM) / self.CA
-            self.A_ETP[0][1] = self.HM / self.CA
+            self.A_ETP[0][1] = self.HM / self.CA # 
             self.B_ETP_ON[0] = (self.UA * self.outside_air_temperature / self.CA) + (Qa_ON / self.CA)
             self.B_ETP_OFF[0] = (self.UA * self.outside_air_temperature / self.CA) + (Qa_OFF / self.CA)
 
