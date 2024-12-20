@@ -446,7 +446,6 @@ class HVACDSOT:  # TODO: update class name
         hod = (int) - hour of day
         dow = (int) - day of week
         FirstTime (bool) - Unused
-        # variables to be used in solargain calculation
         surface_angles (dict) - Constants used to calculate the solar  
         radiation on the structure based on the position of the sun in the sky
         UA (float) - Thermal conductivity between the outdoors and the indoor
@@ -905,7 +904,7 @@ class HVACDSOT:  # TODO: update class name
             log.log(model_diag_level, '{} {} -- cooling_COP is {}, outside of nominal range of {} to {}'
                     .format(self.name, 'init', self.cooling_COP, cooling_COP_lower, cooling_COP_upper))
 
-    def calc_thermostat_settings(self, model_diag_level, sim_time):
+    def calc_thermostat_settings(self, model_diag_level: int, sim_time: str) -> None:
         """ Sets the ETP parameters from configuration data
 
         Args:
@@ -993,7 +992,14 @@ class HVACDSOT:  # TODO: update class name
             if self.temp_max_heat < heating_setpt:
                 self.temp_max_heat = heating_setpt
 
-    def update_temp_limits_da(self, cooling_setpt, heating_setpt):
+    def update_temp_limits_da(self, cooling_setpt: float, heating_setpt: float) -> None:
+        """Update indoor temperature limits based on current cooling and
+        heating setpoints
+
+        Args:
+            cooling_setpt (float): Current cooling setpoint
+            heating_setpt (float): Current heating setpoint
+        """
         self.temp_max_cool_da = cooling_setpt + self.range_high_cool  # - self.ramp_high_limit * (1 - self.slider)
         self.temp_min_cool_da = cooling_setpt - self.range_low_cool  # + self.ramp_low_limit * (1 - self.slider)
         self.temp_max_heat_da = heating_setpt + self.range_high_heat  # - self.ramp_high_limit * (1 - self.slider)
@@ -1007,7 +1013,7 @@ class HVACDSOT:  # TODO: update class name
             if self.temp_max_heat_da < heating_setpt:
                 self.temp_max_heat_da = heating_setpt
 
-    def calc_etp_model(self):
+    def calc_etp_model(self) -> None:
         """ Calculates the ETP parameters from configuration data
 
         There are only a handful of ETP model parameters but many, many typical
@@ -1254,11 +1260,12 @@ class HVACDSOT:  # TODO: update class name
         log.debug('  CM -> {:.2f}'.format(self.CM))
         # print('  CM -> {:.2f}'.format(self.CM))
 
-    def set_price_forecast(self, price_forecast):
+    def set_price_forecast(self, price_forecast: list) -> None:
         """ Set the 24-hour price forecast and calculate mean and std
 
         Args:
-            price_forecast ([float x 24]): predicted price in $/kwh
+            price_forecast (list): List of 24 floats predicting price in
+            $/kWh
         """
         self.price_forecast = price_forecast[:]
         # print("self.price_forecast")
@@ -1267,14 +1274,17 @@ class HVACDSOT:  # TODO: update class name
         self.price_std_dev = np.std(self.price_forecast)
         self.price_delta = np.max(self.price_forecast) - np.min(self.price_forecast)
 
-    def set_temperature_forecast(self, fncs_str):
-        """ Set the 48-hour price forecast and calculate min and max
+    def set_temperature_forecast(self, data_str: str) -> None:
+        """ Set the temperature forecast class attribute from the passed-in data
+        string
+
+        Min and max are stored as class attributes.
 
         Args:
-            fncs_str: temperature_forecast ([float x 48]): predicted temperature in F
+            data_str (str): floats representing predicted temperature in F
         """
 
-        temperature_forecast = eval(fncs_str)
+        temperature_forecast = eval(data_str)
         self.temperature_forecast = [float(temperature_forecast[key]) for key in temperature_forecast.keys()]
         # print ("temperature forecast inside function")
         # print(self)
@@ -1282,86 +1292,93 @@ class HVACDSOT:  # TODO: update class name
         self.temp_min_48hour = min(self.temperature_forecast)
         self.temp_max_48hour = max(self.temperature_forecast)
 
-    def set_humidity_forecast(self, fncs_str):
-        """ Set the 48-hour price forecast and calculate min and max
+    def set_humidity_forecast(self, data_str: str) -> None:
+        """ Set the humidity forecast class attribute from the passed-in data
+        string
 
         Args:
-            fncs_str: temperature_forecast ([float x 48]): predicted temperature in F
+            data_str (str): floats representing predicted humidity in F
         """
 
-        humidity_forecast = eval(fncs_str)
+        humidity_forecast = eval(data_str)
         self.humidity_forecast = [float(humidity_forecast[key]) for key in humidity_forecast.keys()]
 
-    def set_solargain_forecast(self, solargain_array):
-        """ Set the 48-hour solargain forecast
+    def set_solargain_forecast(self, solargain_array: list) -> None:
+        """ Set the solargain forecast class attribute from the passed-in list
 
         Args:
-            solargain_array: solargain_forecast ([float x 48]): forecasted solargain in BTu/(h*sf)
+            solargain_array (list): forecasted solargain in BTu/(h*sf)
         """
         # bringing solar gain to nominal for the use in different homes
         # A3 has solargain_factor of 40.548
         self.solargain_forecast = solargain_array
 
-    def store_full_internalgain_forecast(self, forecast_internalgain):
-        """
+    def store_full_internalgain_forecast(self, forecast_internalgain: list) -> None:
+        """ Set the internal gain forecast class attribute from the passed-in
+        list 
+        
         Args:
-            forecast_internalgain: internal gain forecast to store for future
+            forecast_internalgain (list): internal gain forecast
 
-        Returns: sets the variable so that it can be used later hours as well
         """
         self.full_internalgain_forecast = forecast_internalgain
 
-    def store_full_zipload_forecast(self, forecast_ziploads):
-        """
+    def store_full_zipload_forecast(self, forecast_ziploads: list) -> None:
+        """Set the zipload forecast class attribute from the passed-in
+        list 
+
         Args:
             forecast_ziploads: internal gain forecast to store for future
-
-        Returns: sets the variable so that it can be used later hours as well
         """
         self.full_forecast_ziploads = forecast_ziploads
 
-    def set_internalgain_forecast(self, internalgain_array):
-        """ Set the 48-hour internalgain forecast
+    def set_internalgain_forecast(self, internalgain_array: list) -> None:
+        """Set the internal gain forecast class attribute from the passed-in
+        list 
+
         Args:
-            internalgain_array: internalgain_forecast ([float x 48]): forecasted internalgain in BTu/h
+            internalgain_array (list): forecasted internalgain in BTu/h
         """
         self.internalgain_forecast = internalgain_array
 
-    def set_zipload_forecast(self, forecast_ziploads):
+    def set_zipload_forecast(self, forecast_ziploads: list) -> None:
         """
-        Set the 48-hour zipload forecast
+        Set the 48-hour zipload forecast class attribute from the passed-in
+        list
         Args:
             forecast_ziploads: array of zipload forecast
-        Returns: nothing, sets the property
         """
         self.forecast_ziploads = forecast_ziploads
 
-    def set_temperature(self, fncs_str):
-        """ Sets the outside temperature attribute
+    def set_temperature(self, data_str: str) -> None:
+        """ Sets the outside temperature class attribute from the passed-in
+        value
 
         Args:
-            fncs_str (str): FNCS message with outdoor temperature in F
+            data_str (str): outdoor temperature in F
         """
-        val = parse_number(fncs_str)
+        val = parse_number(data_str)
         self.outside_air_temperature = val
 
-    def set_humidity(self, fncs_str):
-        """ Sets the humidity attribute
+    def set_humidity(self, data_str: str) -> None:
+        """ Sets the humidity class attribute from the passed-in string
 
         Args:
-            fncs_str (str): FNCS message with humidity
+            data_str (str): relative humidity
         """
-        val = parse_number(fncs_str)
+        val = parse_number(data_str)
         if val > 0.0:
             self.humidity = val
 
-    def set_solar_direct(self, fncs_str):
-        """ Sets the solar irradiance attribute, if greater than zero
+    def set_solar_direct(self, data_str: str) -> None:
+        """ Sets the solar irradiance attribute from the passed-in string
+
+        Only updates value if the irradiance is greater than or equal to zero.
 
         Args:
-            fncs_str (str): FNCS message with solar irradiance
+            data_str (str): solar irradiance
         """
-        val = parse_number(fncs_str)
+        val = parse_number(data_str)
         if val >= 0.0:
             self.solar_direct = val
 
@@ -1375,12 +1392,17 @@ class HVACDSOT:  # TODO: update class name
         if val >= 0.0:
             self.solar_diffuse = val
 
-    def get_solargain(self, climate_conf, current_time):
-        """ estimates the nominal solargain without solargain_factor
+    def get_solargain(self, climate_conf: dict, current_time: datetime) -> float:
+        """Estimates the nominal solargain without solargain_factor
 
         Args:
-            climate_conf: latitude and longitude info in a dict
-            current_time: the time for which solargain needs to be estiamted
+            climate_conf (dict): Holds longitude and latitude for location
+            where solar gain is being calculated
+            current_time (datetime): Current time when solar gain is being
+            calculated
+
+        Returns:
+            float: calculated solar gain
         """
         lat = math.radians(float(climate_conf['latitude']))  # converting to radians
         lon = math.radians(float(climate_conf['longitude']))
@@ -1400,8 +1422,28 @@ class HVACDSOT:  # TODO: update class name
         self.solar_gain = self.calc_solargain(day_of_yr, start_hour, dnr, dhr, lat, lon, tz_offset)
         return self.solar_gain
 
-    def calc_solargain(self, day_of_yr, start_hour, dnr, dhr, lat, lon, tz_offset):
-        # implementing gridlabd solargain calculation from climate.cpp and house_e.cpp
+    def calc_solargain(self, 
+                        day_of_yr: int, 
+                        start_hour: int, 
+                        dnr: float, 
+                        dhr: float, 
+                        lat: float, 
+                        lon: float, 
+                        tz_offset: float) -> float:
+        """Implements GridLAB-D solargain calculation from climate.cpp and house_e.cpp
+
+        Args:
+            day_of_yr (int): Ordinal day of the year
+            start_hour (int): Hour of day to use when calculating the solargain
+            dnr (float): Solar direct normal radiance
+            dhr (float): Solar diffuse horizontal radiance
+            lat (float): Latitude where solar gain is being calculated
+            lon (float): Longitude where solar gain is being calculated
+            tz_offset (float): UTC hour offset. In almost every case an int
+
+        Returns:
+            float: solar gain
+        """
         rad = (2.0 * math.pi * day_of_yr) / 365.0
         eq_time = (0.5501 * cos(rad) - 3.0195 * cos(2 * rad) - 0.0771 * cos(3 * rad)
                    - 7.3403 * sin(rad) - 9.4583 * sin(2 * rad) - 0.3284 * sin(3 * rad)) / 60.0
@@ -1420,7 +1462,31 @@ class HVACDSOT:  # TODO: update class name
         solar_gain = avg_solar_flux * 3.412  # incident_solar_radiation is now in Btu/(h*sf)
         return solar_gain
 
-    def calc_solar_flux(self, cpt, day_of_yr, lat, sol_time, dnr_i, dhr_i, vertical_angle):
+    def calc_solar_flux(self, 
+                        cpt: str, 
+                        day_of_yr: int, 
+                        lat: float, 
+                        sol_time: float, 
+                        dnr_i: float, 
+                        dhr_i: float, 
+                        vertical_angle: float) -> float:
+        """Calculates solar flux based on passe-in, time, location, and
+        orientation
+
+        Args:
+            cpt (str): Orientation as compass direction
+            day_of_yr (int): Ordinal day of the year
+            lat (float): Latitude where solar flux is being calculated
+            sol_time (float): Solar time
+            dnr_i (float): Solar direct normal radiance
+            dhr_i (float): Solar diffuse horizontal radiance
+            vertical_angle (float): Angle of plane absorbing the solar
+            radiation
+
+        Returns:
+            float: Total solar flux
+        """
+                                   
         az = math.radians(self.surface_angles[cpt])
         if cpt == 'H':
             az = math.radians(self.surface_angles['E'])
@@ -1448,15 +1514,15 @@ class HVACDSOT:  # TODO: update class name
             cos_incident = 0
         return dnr_i * cos_incident + dhr_i
 
-    def inform_bid(self, price):
-        """ Set the cleared_price attribute
+    def inform_bid(self, price: float) -> None:
+        """ Set the cleared_price class attribute
 
         Args:
             price (float): cleared price in $/kwh
         """
         self.cleared_price = price
 
-    def bid_accepted(self, model_diag_level, sim_time):
+    def bid_accepted(self, model_diag_level: int, sim_time: datetime) -> bool:
         """ Update the thermostat setting if the last bid was accepted
 
         The last bid is always "accepted". If it wasn't high enough,
@@ -1684,8 +1750,8 @@ class HVACDSOT:  # TODO: update class name
         #     print("bid",self.bid_rt)
         return returnflag
 
-    def set_time(self, minute, hour, day):
-        """ Sets the current hour and minute
+    def set_time(self, minute: int , hour: int, day: int) -> None:
+        """ Sets class attributes values for minute, hour, and day
 
         Args:
             minute (int): the minute of the hour from 0 to 59
@@ -1696,7 +1762,7 @@ class HVACDSOT:  # TODO: update class name
         self.hour = hour
         self.day = day
 
-    def change_basepoint(self, model_diag_level, sim_time):
+    def change_basepoint(self, model_diag_level: int, sim_time: datetime) -> bool:
         """ Updates the time-scheduled thermostat setting
 
         Args:
@@ -1744,56 +1810,56 @@ class HVACDSOT:  # TODO: update class name
             return True
         return False
 
-    def set_house_load(self, fncs_str):
-        """ Sets the hvac_load attribute, if greater than zero
+    def set_house_load(self, data_str: str) -> None:
+        """ Sets the hvac_load class attribute, if greater than zero
 
         Args:
-            fncs_str (str): FNCS message with load in kW
+            data_str (str): house load in kW
         """
-        val = parse_number(fncs_str)
+        val = parse_number(data_str)
         if val > 0.0:
             self.house_kw = val
 
-    def set_hvac_load(self, fncs_str):
-        """ Sets the hvac_load attribute, if greater than zero
+    def set_hvac_load(self, data_str: str) -> None:
+        """ Sets the hvac_load class attribute, if greater than zero
 
         Args:
-            fncs_str (str): FNCS message with load in kW
+            data_str (str): HVAC load in kW
         """
-        val = parse_number(fncs_str)
+        val = parse_number(data_str)
         if val > 0.0:
             self.hvac_kw = val
 
-    def set_wh_load(self, fncs_str):
+    def set_wh_load(self, data_str: str) -> None:
         """ Sets the wh_load attribute, if greater than zero
 
         Args:
-            fncs_str (str): FNCS message with load in kW
+            data_str (str): Waster heater load in kW
         """
-        val = parse_number(fncs_str)
+        val = parse_number(data_str)
         if val >= 0.0:
             self.wh_kw = val
 
-    def set_hvac_state(self, fncs_str):
+    def set_hvac_state(self, data_str: str) -> None:
         """ Sets the hvac_on attribute
 
         Args:
-            fncs_str (str): FNCS message with state, ON or OFF
+            data_str (str): HVAC state, "ON" or "OFF"
         """
-        if fncs_str == 'OFF':
+        if data_str == 'OFF':
             self.hvac_on = False
         else:
             self.hvac_on = True
 
-    def set_air_temp(self, fncs_str, model_diag_level, sim_time):
+    def set_air_temp(self, data_str: str, model_diag_level: int, sim_time: str) -> None:
         """ Sets the air_temp attribute
 
         Args:
-            fncs_str (str): FNCS message with temperature in degrees Fahrenheit
-            model_diag_level (int): Specific level for logging errors; set to 11
+            data_str (str): temperature in degrees Fahrenheit
+            model_diag_level (int): Specific level for logging errors
             sim_time (str): Current time in the simulation; should be human-readable
         """
-        T_air = parse_number(fncs_str)
+        T_air = parse_number(data_str)
         if self.T_lower_limit < T_air < self.T_upper_limit:
             pass
         else:
@@ -1815,23 +1881,24 @@ class HVACDSOT:  # TODO: update class name
         else:
             self.thermostat_mode = 'Heating'
 
-    def set_voltage(self, fncs_str):
-        """ Sets the mtr_v attribute
+    def set_voltage(self, data_str: str) -> None:
+        """ Sets the mtr_v class attribute
 
         Args:
-            fncs_str (str): FNCS message with meter line-neutral voltage
+            data_str (str): FNCS message with meter line-neutral voltage
         """
-        self.mtr_v = parse_magnitude(fncs_str)
+        self.mtr_v = parse_magnitude(data_str)
 
-    def formulate_bid_rt(self, model_diag_level, sim_time):
-        """ Bid to run the air conditioner through the next period for real-time
+    def formulate_bid_rt(self, model_diag_level: int, sim_time: str) -> list:
+        """Bid to run the air conditioner through the next period for real-time
 
         Args:
-            model_diag_level (int): Specific level for logging errors; set to 11
-            sim_time (str): Current time in the simulation; should be human-readable
+            model_diag_level (int): Unused; specific level for logging errors
+            sim_time (str): Unused; current time in the simulation; should be 
+            human-readable
 
         Returns:
-            [[float, float], [float, float], [float, float], [float, float]]: [bid price $/kwh, bid quantity kW] x 4
+            list: [bid price ($/kwh), bid quantity (kW)] x 4
         """
         if self.heating_system_type != 'HEAT_PUMP' and self.thermostat_mode == 'Heating':
             self.cooling_setpoint = self.temp_min_cool
@@ -2119,7 +2186,18 @@ class HVACDSOT:  # TODO: update class name
         self.RT_minute_count_interpolation = self.RT_minute_count_interpolation + 5.0
         return self.bid_rt
 
-    def get_uncntrl_hvac_load(self, moh, hod, dow):
+    def get_uncntrl_hvac_load(self, moh: int, hod: int, dow: int) -> list:
+        """Estimates the required heating or cooling quantity for each time
+        in self.TIME and returns all values as a list
+
+        Args:
+            moh (int): Minute of hour [0-59]
+            hod (int): Hour of day [0-23]
+            dow (int): Day of week [0-6], where 0 = Monday
+
+        Returns:
+            list: _description_
+        """
         self.DA_model_parameters(moh, hod, dow)
         Quantity = []
 
@@ -2161,8 +2239,9 @@ class HVACDSOT:  # TODO: update class name
 
         return Quantity
 
-    def formulate_bid_da(self):  # , moh2, hod2, dow2):
-        """ Formulate windowLength hours 4 points PQ bid curves for the DA market
+    def formulate_bid_da(self) -> list: 
+        """ Formulate DA bid in the form of four-point bids, one for each hour
+        in windowLength
 
         Function calls DA_optimal_quantities to obtain the optimal quantities for the DA market.
         With the quantities, a 4 point bids are formulated for each hour.
@@ -2230,12 +2309,16 @@ class HVACDSOT:  # TODO: update class name
 
         return self.bid_da
 
-    def get_scheduled_setpt(self, moh3, hod4, dow3):
-        """
+    def get_scheduled_setpt(self, moh3: int, hod4: int, dow3: int) -> tuple:
+        """Gets cooling and heating setpoint based on passed-in time
+
         Args:
             moh3: (int): the minute of the hour from 0 to 59
             hod4: (int): the hour of the day, from 0 to 23
             dow3: (int): the day of the week, zero being Monday
+
+        Returns:
+            tuple: Cooling setpoint (float), heating setpoint (float)
         """
 
         if 23 < hod4 < 48:
@@ -2270,19 +2353,16 @@ class HVACDSOT:  # TODO: update class name
                 val_heat = self.evening_set_heat
         return val_cool, val_heat
 
-    def DA_model_parameters(self, moh3, hod3, dow3):
-        """
-        self.basepoint_cooling = 73.278
-        self.temp_min_cool = self.temp_min_cool + self.basepoint_cooling
-        self.temp_max_cool = self.temp_max_cool + self.basepoint_cooling
-        self.thermostat_mode = 'Cooling'
+    def DA_model_parameters(self, moh3: int, hod3: int, dow3:int) -> bool:
+        """Updates parameters needed for forming DA bid
 
-        if self.thermostat_mode == 'Cooling':
-            temp_min_48hour = self.temp_min_cool
-            temp_max_48hour = self.temp_max_cool
-        else:
-            temp_min_48hour = self.temp_min_heat
-            temp_max_48hour = self.temp_max_heat
+        Args:
+            moh3 (int): the minute of the hour from 0 to 59
+            hod3 (int): the hour of the day, from 0 to 23
+            dow3 (int): the day of the week, zero being Monday
+
+        Returns:
+            bool: Always returns True
         """
 
         self.moh = moh3
@@ -2360,7 +2440,15 @@ class HVACDSOT:  # TODO: update class name
 
         return True
 
-    def obj_rule(self, m):
+    def obj_rule(self, m: ConcreteModel) -> float:
+        """Defines the Pyomo object function based on HVAC mode
+
+        Args:
+            m (ConcreteModel): Pyomo ConcreteModel model object
+
+        Returns:
+            float: objective function value
+        """
         if self.thermostat_mode == 'Cooling':
             temp = self.temp_desired_48hour_cool
         else:
@@ -2374,7 +2462,17 @@ class HVACDSOT:  # TODO: update class name
         else:
             return 0
 
-    def con_rule_eq1(self, m, t):  # initialize SOHC state
+    def con_rule_eq1(self, m: ConcreteModel, t: int) -> None:  # initialize SOHC state
+        """Constraint equation for Pyomo optimzation formulation based on the
+        HVAC mode and the index in the list of times being estimated
+
+        Args:
+            m (ConcreteModel): Pyomo ConcreteModel model object
+            t (int): Index for time vector
+
+        Returns:
+            _type_: _description_
+        """
         if self.thermostat_mode == 'Cooling':
             if t == 0:
                 # Initial SOHC state
@@ -2406,7 +2504,16 @@ class HVACDSOT:  # TODO: update class name
                                              3412.1416331279 / self.latent_factor[t] + self.internalgain_forecast[t] +
                                              self.solargain_forecast[t] * self.solar_heatgain_factor) / self.UA)))
 
-    def temp_bound_rule(self, m, t):
+    def temp_bound_rule(self, m: ConcreteModel, t: int) -> tuple:
+        """Defines the temperature limits for the Pyomo optimization
+
+        Args:
+            m (ConcreteModel): Pyomo ConcreteModel model object
+            t (int): Index for time vector
+
+        Returns:
+            tuple: Lower and upper temperature limit
+        """
         if self.thermostat_mode == 'Cooling':
             return (self.temp_desired_48hour_cool[t] - self.range_low_cool,
                     self.temp_desired_48hour_cool[t] + self.range_high_cool)
@@ -2414,12 +2521,14 @@ class HVACDSOT:  # TODO: update class name
             return (self.temp_desired_48hour_heat[t] - self.range_low_heat,
                     self.temp_desired_48hour_heat[t] + self.range_high_heat)
 
-    def DA_optimal_quantities(self):
-        """ Generates Day Ahead optimized quantities for Water Heater according to the forecasted prices
-        and water draw schedule, called by DA_formulate_bid function
+    def DA_optimal_quantities(self) -> list:
+        """ Generates Day Ahead optimized quantities for Water Heater according
+        to the forecasted prices and water draw schedule, called by 
+        DA_formulate_bid function
 
         Returns:
-            Quantity (list) (1 x windowLength): Optimized quantities for each hour in the DA bidding horizon, in kWh
+            list: (1 x windowLength) Optimized quantities for each hour in the 
+            DA bidding horizon, in kWh
         """
 
         # this is for model validation only
@@ -2515,21 +2624,24 @@ class HVACDSOT:  # TODO: update class name
 
         return [Quantity, temp_room]
 
-    def test_function(self):
-        """ Test function with the only purpose of returning the name of the object
+    def test_function(self) -> str:
+        """Test function with the only purpose of returning the name of the object
 
+        Returns:
+            str: name of object
         """
         return self.name
 
-    def set_da_cleared_quantity(self, BID, PRICE):
-        """ Convert the 4 point bids to a quantity with the known price
+    def set_da_cleared_quantity(self, BID: list, PRICE: float) -> float:
+        """ Finds the cleared quantity based on the submitted bid and the 
+        cleared price
 
         Args:
-            BID (float) ((1,2)X4): 4 point bid
+            BID (list): 4 point bid
             PRICE (float): cleared price in $/kWh
 
         Returns:
-            quantity (float): cleared quantity
+            float: cleared quantity
         """
         P = 1
         Q = 0
