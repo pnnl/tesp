@@ -1,0 +1,391 @@
+@startuml 
+skinparam classAttributeIconSize 0
+abstract Agent {
+    + name: str
+    + asset: Asset 
+    + bidding_strategy: BiddingStrategy 
+    + market_interface: MarketInterface 
+
+    + void get_asset_state()
+    + void generate_market_signal()
+    + void send_asset_control()
+    + void record_metrics()
+}
+abstract Asset { 
+    + asset_name: str 
+    + asset_model: AssetModel 
+    + asset_state: AssetState 
+    + metrics: Metrics 
+
+    + AssetState simulate_asset_operation()
+    + void get_asset_state()
+    + void send_asset_control_signal() 
+} 
+abstract AssetState { 
+    + asset_state_variables: var 
+} 
+abstract AssetModel { 
+    + asset_model_parameters: var 
+} 
+abstract BiddingStrategy {
+    + asset: Asset 
+    + amenity_bid: AuctionBid
+    + commodity_bid: AuctionBid 
+
+    + void form_amentity_bid()
+    + void coverty_amenity_to_commodity()
+}
+abstract Bid {   
+}
+abstract MarketInterface {
+    + market_state: MarketStateMachine 
+
+    + void send_market_signal()
+    + void get_market_signa()
+
+}
+abstract MarketStateMachine {
+}
+abstract Metrics {
+}
+
+
+
+
+abstract DoubleAuctionAgent {
+}
+abstract HVACAsset {
+}
+abstract HVACAssetState {
+}
+abstract HVACAssetModel {
+}
+abstract DoubleAuctionMarketInterface {
+    + void send_bid()
+    + void get_clearing_price()
+}
+class AuctionBid {
+    + price: list 
+    + quantity: list 
+
+    + void sort_bid()
+}
+abstract DoubleAuctionMarketStateMachine {
+}
+abstract DSOTAgent {
+}
+abstract DSOTBiddingStrategy{
+    + solver: SolverEnum
+}
+
+
+class HVACDSOTAgent {
+    + houseName: str
+    + meterName: str 
+    + period: int 
+    + minute: int
+    + hour: int
+    + day: int
+}
+class DSOTRTMarketStateMachine {
+}
+class DSOTDAMarketStateMachine {
+}
+class DSOTRTMarketInterface {
+    + clearing_price: float  
+    + clearing_quantity: float 
+}
+class DSOTDAMarketInterface {
+    + clearing_price: list 
+    + clearing_quantities: list 
+}
+class DSOT4pointBid {
+}
+class HVACDSOTAsset {  
+    + asset_state: HVACDSOTAsset
+    + asset_model: HVACDSOTAssetModel
+    + asset_environment_model: HVACDSOTEnvironmentModel
+}
+class ThermostatModeEnum{
+}
+class HeatingSystemEnum{
+}
+class CoolingSystemEnum{
+}
+class HVACDSOTAssetState {
+    + air_temp: float
+    + mass_temp: float
+    + hvac_kw: float
+    + wh_kw: float
+    + house_kw: float
+    + mtr_v: float
+    + hvac_on: bool
+    + thermostat_mode: ThermostateModeEnum
+}
+class HVACDSOTEnvironmentModel{
+    + Qi: float
+    + Qh: float
+    + Qa_ON: float
+    + Qa_OFF: float
+    + Qm: float
+    + Qs: float
+    + solar_direct: float
+    + solar_diffuse: float
+    + outside_air_temperature: float
+    + humidity: float
+    + moh: int
+    + hod: int
+    + dow: int
+    + surface_angles: dict
+    + UA: float
+    + CA: float
+    + HM: float
+    + CM: float
+    + mass_internal_gain_fraction: float
+    + mass_solar_gain_fraction: float
+    + solar_heatgain_factor: float
+    + solar_gain: float
+}
+class HVACDSOTAssetModel {
+    + temperatures: HVACTemperatures
+    + A_ETP: list
+    + AEI: list
+    + B_ETP_ON: list
+    + B_ETP_OFF: list
+    + sqft: float
+    + doors: float
+    + Rroof: float
+    + Rwall: float
+    + Rfloor: float
+    + Rdoors: float
+    + airchange_per_hour: float
+    + ceiling_height: float
+    + thermal_mass_per_floor_area: float
+    + aspect_ratio: float
+    + exterior_ceiling_fraction: float
+    + exterior_floor_fraction: float
+    + exterior_wall_fraction: float
+    + WETC: float
+    + glazing_layers: int
+    + glass_type: int
+    + window_frame: int
+    + glazing_treatment: int
+    + cooling_COP: float
+    + heating_COP: float
+    + cooling_cop_adj_rt: float
+    + heating_cop_adj_rt: float
+    + cooling_cop_adj: float
+    + heating_cop_adj: float
+    + cooling_COP_K0: float
+    + cooling_COP_K1: float
+    + cooling_COP_limit: float
+    + heating_COP_K0: float
+    + heating_COP_K1: float
+    + heating_COP_K2: float
+    + heating_COP_K3: float
+    + heating_COP_limit: float
+    + cooling_capacity_K0: float
+    + cooling_capacity_K1: float
+    + latent_load_fraction: float
+    + latent_factor: float
+    + cooling_design_temperature: float
+    + design_cooling_setpoint: float
+    + design_internal_gains: float
+    + design_peak_solar: float
+    + over_sizing_factor: float
+    + heating_system_type: HeatingSystemEnum
+    + cooling_system_type: CoolingSystemEnum
+    + design_heating_setpoint: float
+    + heating_design_temperature: float
+    + heating_capacity_K0: float
+    + heating_capacity_K1: float
+    + heating_capacity_K2: float
+    + design_heating_capacity: float
+    + design_cooling_capacity: float
+    + eps: float
+
+}
+class HVACDSOTRTBiddingStrategy {
+    + hvac_schedule: HVACSchedule
+    + price_cap: float 
+    + bid_delay: float
+    + ramp_high_limit: float
+    + ramp_low_limit: float
+    + range_high_limit: float
+    + range_low_limit: float
+    + slider: float
+    + cooling_participating: float
+    + heating_participating: float
+    + participating: float
+    + windowLength: float
+    + range_low_cool: float
+    + range_high_cool: float
+    + range_low_heat: float
+    + range_high_heat: float
+    + ramp_low_cool: float
+    + ramp_high_cool: float
+    + ramp_high_cool: float
+    + ramp_low_heat: float
+    + ramp_high_heat: float
+    + bid_rt_price: float
+    + interpolation: bool
+    + RT_minute_count_interpolation: float
+    + bid_quantity: float
+    + bid_quantity_rt: float
+    + cleared_price: float
+    + bid_rt: DSOT4pointBid
+    + quantity_curve: list
+    + temp_curve: list
+    + ProfitMargin_intercept: float
+}
+class HVACDSOTDABiddingStrategy {
+    + hvac_schedule: HVACSchedule 
+    + price_cap: float
+    + bid_delay: float
+    + ramp_high_limit: float
+    + ramp_low_limit: float
+    + range_high_limit: float
+    + range_low_limit: float
+    + slider: float
+    + cooling_participating: float
+    + heating_participating: float
+    + participating: float
+    + windowLength: float
+    + TIME: range
+    + optimized_Quantity: list
+    + range_low_cool: float
+    + range_high_cool: float
+    + range_low_heat: float
+    + range_high_heat: float
+    + ramp_low_cool: float
+    + ramp_high_cool: float
+    + ramp_high_cool: float
+    + ramp_low_heat: float
+    + ramp_high_heat: float
+    + price_forecast: list
+    + price_forecast_0: float
+    + price_forecast_0_new: float
+    + price_delta: float
+    + price_mean: float
+    + humidity_forecast: list
+    + solargain_forecast: list
+    + internalgain_forecast: list
+    + forecast_ziploads: list
+    + full_internalgain_forecast: list
+    + full_forecast_ziploads: list
+    + Qopt_da_prev: float
+    + temp_da_prev: float
+    + DA_once_flag: bool
+    + air_temp_agent: float
+    + previous_Q_DA: float
+    + previous_T_DA: float
+    + delta_Q: float
+    + delta_T: float
+    + bid_da: DSOT4pointBid
+    + temp_room: list
+    + temp_desired_48hour_cool: list
+    + temp_desired_48hour_heat: list
+    + temp_room_previous_cool: float
+    + temp_room_previous_heat: float
+    + temp_outside_init: float
+    + ProfitMargin_intercept: float
+}
+class HVACSchedule{
+    + wakeup_start: float 
+    + daylight_start: float 
+    + evening_start: float 
+    + night_start: float 
+    + weekend_day_start: float 
+    + weekend_night_start: float 
+}
+class HVACTemperatures{
+    + T_lower_limit: float 
+    + T_upper_limit: float 
+    + cooling_setpoint_lower: float 
+    + cooling_setpoint_upper: float 
+    + heating_setpoint_lower: float
+    + heating_setpoint_upper: float
+    + basepoint_cooling: float
+    + basepoint_heating: float
+    + cooling_setpoint: float
+    + heating_setpoint: float
+    + wakeup_set_cool: float
+    + daylight_set_cool: float
+    + evening_set_cool: float
+    + night_set_cool: float
+    + weekend_day_set_cool: float
+    + weekend_night_set_cool: float
+    + wakeup_set_heat: float
+    + daylight_set_heat: float
+    + evening_set_heat: float
+    + night_set_heat: float
+    + weekend_day_set_heat: float
+    + weekend_night_set_heat: float
+    + deadband: float
+    + temp_max_cool: float
+    + temp_min_cool: float
+    + temp_max_heat: float
+    + temp_min_heat: float
+    + temp_max_cool_da: float
+    + temp_min_cool_da: float
+    + temp_max_heat_da: float
+    + temp_min_heat_da: float
+    + temp_min_48hour: float
+    + temp_max_48hour: float
+    + temp_delta: float
+}
+
+
+
+
+
+Agent "1" *-- "1" Asset 
+Agent "1" *-- "1" MarketInterface 
+Agent "1" *-- "1" BiddingStrategy
+Agent "1" *-- "1" Metrics
+Asset "1" *-- "1" AssetState 
+Asset "1" *-- "1" AssetModel 
+BiddingStrategy "1" *-- "1" Asset 
+MarketInterface "1" *-- "1" MarketStateMachine
+
+
+HVACDSOTAsset "1" *-- "1" HVACDSOTAssetModel 
+HVACDSOTAgent "1" *-- "1" HVACDSOTAssetModel 
+HVACDSOTAgent "1" *-- "1" HVACDSOTRTBiddingStrategy
+HVACDSOTAgent "1" *-- "1" HVACDSOTDABiddingStrategy
+HVACDSOTAgent "1" *-- "1" DSOTRTMarketInterface
+HVACDSOTAgent "1" *-- "1" DSOTDAMarketInterface
+HVACDSOTAsset "1" *-- "1" HVACDSOTAssetState
+HVACDSOTAgent "1" *-- "1" HVACDSOTAsset
+DSOTRTMarketInterface "1" *-- "1" DSOTRTMarketStateMachine
+DSOTDAMarketInterface "1" *-- "1" DSOTDAMarketStateMachine
+HVACDSOTRTBiddingStrategy "1" *-- "1" DSOT4pointBid
+HVACDSOTDABiddingStrategy "1" *-- "1" DSOT4pointBid
+HVACDSOTAssetModel "1" *-- "1" HVACTemperatures
+HVACDSOTAsset "1" *-- "1" HVACDSOTEnvironmentModel
+HVACDSOTAssetState "1" *-- "1" ThermostatModeEnum
+HVACDSOTAssetModel "1" *-- "1" HeatingSystemEnum
+HVACDSOTAssetModel "1" *-- "1" CoolingSystemEnum
+
+Agent  <|--  DoubleAuctionAgent
+Bid  <|--  AuctionBid 
+DoubleAuctionMarketInterface  --|>  MarketInterface
+DSOTRTMarketInterface  --|>  DoubleAuctionMarketInterface
+DSOTDAMarketInterface  --|>  DoubleAuctionMarketInterface
+DoubleAuctionAgent  <|--  DSOTAgent
+DSOTAgent  <|--  HVACDSOTAgent
+Asset  <|--  HVACAsset
+HVACAsset  <|--  HVACDSOTAsset
+AssetModel  <|--  HVACAssetModel
+HVACAssetModel  <|--  HVACDSOTAssetModel
+AssetState  <|--  HVACAssetState
+HVACAssetState  <|--  HVACDSOTAssetState
+DSOTBiddingStrategy  <|--  HVACDSOTRTBiddingStrategy
+DSOTBiddingStrategy  <|--  HVACDSOTDABiddingStrategy
+BiddingStrategy <|-- DSOTBiddingStrategy
+AuctionBid  <|--  DSOT4pointBid
+MarketStateMachine  <|--  DoubleAuctionMarketStateMachine
+DoubleAuctionMarketStateMachine  <|--  DSOTRTMarketStateMachine
+DoubleAuctionMarketStateMachine  <|--  DSOTDAMarketStateMachine
+
+@enduml
