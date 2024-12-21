@@ -209,9 +209,9 @@ class HVACDSOT:  # TODO: update class name
         price_delta (float) - Difference between the minimum and maxmimum
         price of the current price forecast
         price_mean (float) - Mean of the current price forecast
-        temperature_forecast (list) = Temperature forecast list 48 elements 
-        long (hard-coded). Needed to estimate thermal load the HVAC system
-        will manage during optimization problem
+        temperature_forecast (list) = Outdoor temperature forecast list 48 
+        elements  long (hard-coded). Needed to estimate thermal load the HVAC
+        system will manage during optimization problem
         temp_min_48hour (float) - Minimum temperature over the forecasted 
         period
         temp_max_48hour (float) - Maximum temperature over the forecasted 
@@ -320,7 +320,7 @@ class HVACDSOT:  # TODO: update class name
         for use in asset model (ETP model parameter)
         doors (float) - Number of doors of the structure modeled by agent for 
         use in asset model (ETP model parameter)
-        thermal_integrity (float) - Unused. Enumerated value defining the 
+        thermal_integrity (enum) - Unused. Enumerated value defining the 
         integrity of the thermal envelope of the structure modeled by agent
         Rroof (float) - Thermal resistance of the roof of the structure 
         modeled by agent for use in asset model (ETP model parameter).
@@ -627,6 +627,7 @@ class HVACDSOT:  # TODO: update class name
         self.Qa_OFF = 0.0
         self.Qm = 0.0
         self.Qs = 0.0
+        self.BTU_PER_HR_PER_KW = 3412.1416331279
 
         # interpolation
         self.interpolation = bool(True)
@@ -1831,7 +1832,7 @@ class HVACDSOT:  # TODO: update class name
             self.hvac_kw = val
 
     def set_wh_load(self, data_str: str) -> None:
-        """ Sets the wh_load attribute, if greater than zero
+        """ NOT CALLED - Sets the wh_load attribute, if greater than zero
 
         Args:
             data_str (str): Waster heater load in kW
