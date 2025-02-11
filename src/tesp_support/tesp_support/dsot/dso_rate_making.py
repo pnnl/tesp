@@ -1264,7 +1264,7 @@ def calculate_consumer_bills(
                     )
 
                     # Calculate the consumer's energy charge under the time-of-use rate
-                    # associated with the subscription rate
+                    # associated with the subscription rate (this is for reporting by peak and off-peak
                     bill_df.loc[(each, "subscription_energy_charge"), m] = sum(
                         tou_params["DSO_" + dso_num][m]["price"]
                         * tou_params["DSO_" + dso_num][m]["periods"][k]["ratio"]
