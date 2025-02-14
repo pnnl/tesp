@@ -1,4 +1,5 @@
-# Copyright (C) 2021-2023 Battelle Memorial Institute
+# Copyright (C) 2021-2024 Battelle Memorial Institute
+# See LICENSE file at https://github.com/pnnl/tesp
 # file: schedule_client.py
 """Client class used by entities to access schedule server
 

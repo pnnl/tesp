@@ -1,4 +1,5 @@
-# Copyright (C) 2017-2023 Battelle Memorial Institute
+# Copyright (C) 2021-2024 Battelle Memorial Institute
+# See LICENSE file at https://github.com/pnnl/tesp
 # file: retail_market.py
 """Class that manages the operation of retail market at substation-level
 

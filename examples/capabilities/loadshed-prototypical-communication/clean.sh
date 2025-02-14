@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Copyright (C) 2021-2023 Battelle Memorial Institute
-# file: clean.sh
-
 rm -f *.log
 rm -f R1-12.47-1/*.log
 rm -f R1-12.47-1/*.csv

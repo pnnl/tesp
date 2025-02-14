@@ -214,7 +214,7 @@ def post_process():
         + timedelta(days=first_data_day)
     ).month
     month_name = month_dict[month_num]
-    day_range = list(range(first_data_day, num_sim_days - discard_end_days + 1))
+    day_range = range(first_data_day, num_sim_days - discard_end_days + 1)
 
     dso_range = []
     for DSO in DSOmetadata.keys():

@@ -41,6 +41,14 @@ tesp\_support.weather.TMYtoEPW module
    :undoc-members:
    :show-inheritance:
 
+tesp\_support.weather.forecast module
+-------------------------------------
+
+.. automodule:: tesp_support.weather.forecast
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 tesp\_support.weather.weather\_agent module
 -------------------------------------------
 

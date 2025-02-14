@@ -28,21 +28,17 @@ The world of TE is very large. At its core, it is a merger of economics and cont
 
 What is required to support a given transactive mechanism is arbitrarily complex and may or may not easily align with the existing software suite and its underlying architecture. TESP cannot both be both usable as a plug-and-play TE evaluation environment where users can expect to avoid the complexity of the underlying software and just use it out-of-the-box while simultaneously supporting arbitrarily general TE mechanisms. 
 
-
 Modifying TESP can Quickly Become Non-Trivial
 .............................................
 Since TESP will never be able to provide the no-effort on-ramp to any generic TE mechanism, what can it do to allow users to customize it more easily? To some extent, this question is fighting against the goals of TESP, providing a no-hassle method of evaluating new TE mechanisms. Every line of code and configuration that a user has to modify is one more than we would ideally like. Given the reality of what TESP would ideally support, though, expecting a user to have no hand in the coding pie is unreasonable. So what challenges would a TESP user face in trying to customize TESP?
 
 The software toolset that TESP traditionally uses to implement TE mechanisms is specific. We use PyPower to model and solve transmission system power flows (and perform economic dispatch, if necessary), AMES/PSST to perform wholesale market operations, GridLAB-D to model distribution systems, solve their powerflows, and model residential customers and limited number of commercial customers, Energy+ to model a broader set of commercial customers (though not as well as we'd like), custom Python TE agents to perform the transactive control, HELICS to provide the integration between all these simulators and Python scripts to build the simulation cases of interest. Depending on the transactive mechanism, a TESP user may require modification in all of these tools and scripts (adding the DSO+T DA energy functionality did).
 
-
 Analysis Needs Vary
 ...................
 Under the best case scenario, a TESP user may desire to perform an analysis that TESP was specifically designed to support. It could easily be, though, that the user has different analysis needs than that originally imagined when the TESP example was built. Take, for example, a user that wants to evaluate the impacts of rooftop solar PV on the efficiency of real-time transactive energy markets, *the* classic transactive mechanism. It could be that this analyst wants to evaluate hundreds or even thousands of specific scenarios and is willing to given up some degree of modeling fidelity to crank through the simulations faster. Ideally TESP would be able to take an existing example with high fidelity and provide a way to quickly simplify it to speed up the simulation time.
 
 TESP, though, does not support aribtrary levels of modeling fidelity. Even if the TE mechanism is well supported, to perform specific analysis significantly different models and simulation case constructions scripts may be required. This, again, requires the users to get their hands dirty to customize TESP to suit their analysis needs and likely requires a greater-than-cursory understanding of the software suite.
-
-
 
 
 Addressing Challenges: The Design Philosophy of TESP
@@ -63,11 +59,9 @@ Built-In Examples Show How Things Could Be Done
 ...............................................
 To help bridge the gap between an analysis goal and the user's unfamiliarity with the TESP toolset, a broad suite of capability demonstrations and example analysis need to be included with TESP. Capability demonstrations show how to user specific simulation tools, APIs, or models so that new users can understand the capabilities of TESP and how to use specific features. Example analysis are implementations in TESP of analysis that have been done with TESP. Often these analysis will have publications and a simplified version of the analysis will be implemented in TESP. The examples differ from the demonstrations in that they are analysis that are intended to produce meaningful results whereas the demonstrations are more about showing how to use a specific part of TESP. Being legitimate analysis, the examples will generally have a broader set of documentation that shows how the analysis as a whole was conducted and not just, say, how the co-simulation was configured.
 
-
 Building Common Functions into the TESP API
 ...........................................
 TESP provides the greatest value to users when it provides easier ways of doing hard things. Some of this comes through the built-in tool integration with HELICS but much of it is realized through the careful definition of the TESP API. Though the possible transactive systems analysis space is very large, there are common functions or standard practices that can be implemented through the TESP API that will standardize TESP in ways that will increase understanding and portability across specific analysis. Examples of such common functions could be data collection, post-processing to produce common metrics, standardize models and scripts to manipulate them. Some of these API calls may be specific to some common analysis.
-
 
 
 The Path Forward for TESP
@@ -84,7 +78,6 @@ As was previously discussed, despite the general TE system analysis TESP desires
 * Standard DER device agents that provide estimated energy consumption for arbitrary periods into the future. This information can be used by a HEMS to interact with the TE system to acquire the appropriate energy (or curtail the DER operation)
 * Forecasters for common signals used by DER agents to create their forecasted device loads
 * Standardized double-auction implementation
-
 
 Reference Implementations of Common TE Systems
 ..............................................
@@ -105,6 +98,3 @@ Transactive systems (and the smart grid in general) rely on communication system
 Standardize Capacity Expansion Modeling
 .......................................
 Often, the biggest cost savings transactive energy provides is in capital cost savings, that is, in the power plants and transmission lines that don't need to get built (or are built much later) because transactive energy has been able to effectively manage the load. For analysis that want to capture these effects in simulation, a means of evolving the bulk power system under a given management philosophy (business as usual, time-of-use tarifs, transactive real-time tarifs) is an important part of creating a comprehensive apples-to-apples comparison. There are no tools in TESP to allow the run-time evolution of the power system and no direct integration with any of the popular capacity expansion tools to allow their outputs to easily fit into the TESP bulk power system modeling. This capability is an important missing piece for high-quality TE system evaluations.
-
-
-

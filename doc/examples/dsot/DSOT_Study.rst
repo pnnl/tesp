@@ -34,7 +34,6 @@ The documentation of the system provided here is a summary of the extensive docu
 * `DSO+T Expanded Study Results; DSO+T Study: Volume 5`_
 
 
-
 Software Architecture
 ---------------------
 The DSO+T analysis, though run on a single local compute node, has a relatively complex software architecture. There are a number of software entities that interact through a variety of means, as shown in Figure :numref:`fig_dsot_architecture`.

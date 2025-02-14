@@ -3,8 +3,8 @@
 """ This gld_feeder_generator.py is an updated feeder generator that combines 
 the functionality of both residential_feeder_glm.py and commercial_feeder_glm.py.
 
-Replaces ZIP loads with houses, and optional storage, electric vehicles,
-and solar generation.
+Replaces ZIP loads with houses, optional storage, electric vehicles, and solar
+generation.
 
 As this module populates the feeder backbone with houses and DER, it uses
 the Networkx package to perform graph-based capacity analysis, upgrading
@@ -19,35 +19,39 @@ References:
 Public Functions:
     Config
     :preamble: Add required modules, objects, includes, defines, and sets 
-        required to run a .glm model
-    :generate_recs: Generate RECS metadata if it does not yet exist based on 
+        required to run a .glm model.
+    :generate_recs: Generate RECS metadata if it does not yet exist based on
         user config.
-    :load_recs: Assign default values for residential and commercial buildings, 
+    :load_recs: Assign default values for residential and commercial buildings,
         batteries, and electric vehicles, based on imported metadata for each.
+    :load_position: Read in positional data from feeder, if specified in config,
+        to aid plotting function of populated feeder model.
 
     Residential_Build
     :buildingTypeLabel: Assign formatted name of region, building type name, 
-        and thermal integrity level
+        and thermal integrity level.
     :checkResidentialBuildingTable: Verify that the regional building parameter
-        histograms sum to one
+        histograms sum to one.
     :selectSetpointBins: Randomly choose a histogram row from the cooling and
-        heating setpoints. The random number for the heating setpoint row is 
+        heating setpoints. The random number for the heating setpoint row is
         generated internally.
     :add_small_loads: Write loads that are too small for a house, onto a node.
     :getDsoIncomeLevelTable: Retrieve the DSO income level fractions for the
-        given dso type and state
-    :selectIncomeLevel: Select the income level based on region and probability
-    :getDsoThermalTable: Define the distribution of thermal integrity values 
+        given dso type and state.
+    :selectIncomeLevel: Select the income level based on region and probability.
+    :getDsoThermalTable: Define the distribution of thermal integrity values
         based on household income level, vintage, and building type.
-    :selectResidentialBuilding: Retrieve the thermal integrity level by 
+    :selectResidentialBuilding: Retrieve the thermal integrity level by
         building type and region.
     :selectThermalProperties: Retrieve the building thermal properties by
         building type and thermal integrity level.
     :add_houses: Add houses, along with solar panels, batteries, and electric
-        vehicle charges, onto a node
+        vehicle charges, onto a node.
     
     Commercial_Build
-    :add_one_commercial_zone: Write one pre-configured commercial zone as a house
+    :add_one_commercial_zone: Write one pre-configured commercial zone as a
+        house and small loads such as lights, plug loads, and gas water heaters
+        as ZIPLoads.
     :define_commercial_zones: Define building parameters for commercial building
         zones and ZIP loads, then add to model as house object (commercial zone)
         or load object (ZIP load).
@@ -56,70 +60,65 @@ Public Functions:
     :normalize_dict_prob: Ensure that the probability distribution of values in 
         a dictionary effectively sums to one.
     :rand_bin_select: Returns the element (bin) in a dictionary given a certain
-        probability
-    :sub_bin_select: Returns a scalar value within a bin range based on a uniform 
-        probability within that bin range
+        probability.
+    :sub_bin_select: Returns a scalar value within a bin range based on a uniform
+        probability within that bin range.
     :find_envelope_prop: Returns the envelope value for a given type of property
-        based on the age and (ASHRAE) climate zone of the building
+        based on the age and (ASHRAE) climate zone of the building.
     
     Battery
     :add_batt: Define and add battery and inverter objects to house, under the 
-        parentage of meter_name.
+        parentage of the parent_mtr.
     
     Solar
     :add_solar: Define and add solar and inverter objects to house, under the
-        parentage of meter_name.
+        parentage of the parent_mtr.
 
     Electric_Vehicle
-    :add_ev: Define and add electric vehicle charging object to the house, under
-        the parentage of the house object.
-    :selectEVmodel: Select the EV model based on available sale distribution
-        data.
-    :match_driving_schedule: Method to match the schedule of each vehicle from 
-        NHTS data based on vehicle ev_range.
-    :is_drive_time_valid: Check if work arrival time and home arrival time add
-       up properly.
-    :process_nhts_data: Read the large NHTS survey data file containing driving 
-        data, process it, and return a dataframe.
+    :add_ev: Define and add electric vehicle charging object to the house, under the parentage of the house object
+    :selectEVmodel: Select the EV model based on available sale distribution data
+    :match_driving_schedule: Method to match the schedule of each vehicle from NHTS data based on vehicle ev_range
+    :is_drive_time_valid: Check if work arrival time and home arrival time add up properly
+    :process_nhts_data: Read the large NHTS survey data file containing driving data, process it, and return a dataframe
 
     Feeder
-    :feeder_gen: Read in the backbone feeder, then loop through transformer 
-        instances and assign a standard size based on the downstream load. 
-        Change the referenced transformer_configuration attributes. Write the
-        standard transformer_configuration instance we need.
+    :feeder_gen: Read in the backbone feeder, then loop through transformer
+    instances and assign a standard size based on the downstream load.
+    Change the referenced transformer_configuration attributes. Write the
+    standard transformer_configuration instance we need
     :identify_xfmr_houses: For the full-order feeders, scan each service 
-        transformer to determine the number of houses it should have.
+    transformer to determine the number of houses it should have
     :identify_commercial_loads: For the full-order feeders, scan each load with
-        load_class==C to determine the number of zones it should have.
+    load_class==C to determine the number of zones it should have
 
 """
 
 import logging as log
 import math
+import json
 import os
-import sys
 
 import numpy as np
 import pandas as pd
-
-sys.path.append("..\..\..\..") #append to find examples/analysis/dsot/code as-needed
-from examples.analysis.dsot.code.recs_gld_house_parameters import get_RECS_jsons
 
 from tesp_support.api.helpers import gld_strict_name, random_norm_trunc, randomize_residential_skew
 from tesp_support.api.modify_GLM import GLMModifier
 from tesp_support.api.time_helpers import get_secs_from_hhmm, get_hhmm_from_secs, get_duration, get_dist
 from tesp_support.api.time_helpers import is_hhmm_valid, subtract_hhmm_secs, add_hhmm_secs
 from tesp_support.api.entity import assign_defaults
+from tesp_support.api.recs_gld_house_parameters import get_RECS_jsons
 
 extra_billing_meters = set()
 
-log.basicConfig(level=log.DEBUG)
+log.basicConfig(level=log.WARNING)
+log.getLogger('matplotlib.font_manager').disabled = True
 
 class Config:
     def __init__(self, config=None):
         # Assign default values to those not defined in config file
         self.keys = list(assign_defaults(self, config).keys())
         self.glm = GLMModifier()
+        self.mdl = self.glm.glm
         self.base = self.glm.defaults
         self.res_bld = Residential_Build(self)
         self.com_bld = Commercial_Build(self)
@@ -128,6 +127,7 @@ class Config:
         self.ev = Electric_Vehicle(self)
         global rng
         rng = np.random.default_rng(self.seed)
+        np.random.seed(self.seed)
 
         # Lookup vll and vln values based on taxonomy feeder
         if self.in_file_glm:
@@ -139,7 +139,7 @@ class Config:
 
     def preamble(self) -> None:
         """ Add required modules, objects, includes, defines, and sets required
-        to run a .glm model
+        to run a .glm model.
         Returns:
             None
         """
@@ -158,7 +158,7 @@ class Config:
 
         self.glm.model.set_clock(self.starttime, self.stoptime, self.timezone)
 
-        # Set includes
+        # Add includes
         for item in self.includes:
             self.glm.model.add_include(item)
 
@@ -176,19 +176,19 @@ class Config:
 
         # Add metrics interval and interim interval
         if self.metrics_interval > 0:
-            params = {"interval": str(self.base.metrics_interval),
-                      "interim": str(self.base.metrics_interim),
-                      "filename": str(self.base.metrics_filename),
-                      "alternate": str(self.base.metrics_alternate),
-                      "extension": str(self.base.metrics_extension)}
-            self.glm.add_object("metrics_collector_writer", "mc", params)
+            self.mdl.metrics_collector_writer.add("mc", {
+                "interval": str(self.base.metrics_interval),
+                "interim": str(self.base.metrics_interim),
+                "filename": str(self.base.metrics_filename),
+                "alternate": str(self.base.metrics_alternate),
+                "extension": str(self.base.metrics_extension) })
 
         # Add climate object and weather params
-        params = {"interpolate": str(self.interpolate),
-                  "latitude": str(self.latitude),
-                  "longitude": str(self.longitude),
-                  "tmyfile": str(self.tmyfile)}
-        self.glm.add_object("climate", self.base.weather_name, params)
+        self.mdl.climate.add(self.base.weather_name, {
+            "interpolate": str(self.interpolate),
+            "latitude": str(self.latitude),
+            "longitude": str(self.longitude),
+            "tmyfile": str(self.tmyfile) })
 
     def generate_recs(self) -> None:
         """Generate RECS metadata if it does not yet exist based on user config.
@@ -213,11 +213,14 @@ class Config:
     def load_recs(self) -> None:
         """ Assign default values for residential and commercial buildings,
         batteries, and electric vehicles, based on imported metadata for each.
+
         Args:
             None
+
         Returns:
             None
         """
+
         assign_defaults(self.com_bld, os.path.join(self.data_path, self.file_commercial_meta))
         # generate the total population of commercial buildings by type and size
         num_comm_customers = round(self.number_of_gld_homes *
@@ -245,27 +248,56 @@ class Config:
         assign_defaults(self.ev, os.path.join(self.data_path, self.file_ev_meta))
         self.base.ev_driving_metadata = self.ev.process_nhts_data(os.path.join(self.data_path, self.file_ev_driving_meta))
 
+    def load_position(self) -> dict | None:
+        """ Read in positional data from feeder, if specified in config, to
+        aid plotting function of populated feeder model.
+        Use position files for taxonomy feeder, if no input feeder specified.
+        Args:
+            None
+        Returns:
+            dict: self.pos_data, .glm objects and their position coordinates
+            dict: self.pos, an empty dictionary to assign positions to objects
+                added by feeder generator
+        """
+
+        if not self.in_file_glm:
+            self.gis_file = self.taxonomy.replace('-', '_').replace('.', '_').replace('_glm', '_pos.json')
+            gis_path = os.path.join(os.path.expandvars('$TESPDIR/data/feeders'), self.gis_file)
+        elif self.gis_file:
+            gis_path = os.path.join(self.data_path, self.gis_file)
+        else:
+            pass
+        
+        with open(gis_path) as gis:
+            self.pos_data = json.load(gis)
+            self.pos = {}
+        return self.pos_data, self.pos
+        
+
 class Residential_Build:
     def __init__(self, config):
         self.config = config
         self.glm = config.glm
+        self.mdl = config.glm.glm
 
     def buildingTypeLabel(self, rgn: int, bldg: int, therm_int: int) -> list:
-        """Assign formatted name of region, building type name, and thermal integrity level
+        """Assign formatted name of region, building type name, and thermal
+        integrity level.
 
         Args:
             rgn (int): region number 1..5
             bldg (int): 0 for single-family, 1 for apartment, 2 for mobile home
             therm_int (int): thermal integrity level, 0..6 for single-family, 
                 only 0..2 valid for apartment or mobile home
-        
+
         Returns:
             list: table containing region, building type, and thermal integrity
         """
+
         return self.config.base.rgnName[rgn - 1] + ': ' + self.config.base.bldgTypeName[bldg] + ': TI Level ' + str(therm_int + 1)
 
     def checkResidentialBuildingTable(self) -> None:
-        """Verify that the regional building parameter histograms sum to one
+        """Verify that the regional building parameter histograms sum to one.
         Args:
             None
         Returns:
@@ -308,6 +340,7 @@ class Residential_Build:
         Returns:
             int: cooling and heating setpoints
         """
+
         cBin = hBin = 0
         total = 0
         tbl = self.config.base.bldgCoolingSetpoints[bldg]
@@ -345,21 +378,21 @@ class Residential_Build:
         else:
             vstart = format(-0.5 * v_nom, '.2f') + '+' + format(0.866025 * v_nom, '.2f') + 'j'
 
-        tpxname = basenode + '_tpx_1'
-        mtrname = basenode + '_mtr_1'
-        loadname = basenode + '_load_1'
-        params = {"phases": phs,
-                  "nominal_voltage": str(v_nom),
-                  "voltage_1": vstart,
-                  "voltage_2": vstart}
-        self.glm.add_object("triplex_node", basenode, params)
+        tpxname = basenode + '_tpx_sm'
+        mtrname = basenode + '_mtr_sm'
+        loadname = basenode + '_load_sm'
+        self.mdl.triplex_node.add(basenode, {
+            "phases": phs,
+            "nominal_voltage": str(v_nom),
+            "voltage_1": vstart,
+            "voltage_2": vstart })
 
-        params = {"from": basenode,
-                  "to": mtrname,
-                  "phases": phs,
-                  "length": "30",
-                  "configuration": self.config.base.triplex_configurations[0][0]}
-        self.glm.add_object("triplex_line", tpxname, params)
+        self.mdl.triplex_line.add(tpxname, {
+            "from": basenode,
+            "to": mtrname,
+            "phases": phs,
+            "length": "30",
+            "configuration": self.config.base.triplex_configurations[0][0] })
 
         params = {"phases": phs,
                   "meter_power_consumption": "1+7j",
@@ -367,26 +400,29 @@ class Residential_Build:
                   "voltage_1": vstart,
                   "voltage_2": vstart}
         self.glm.add_tariff(params)
-        self.glm.add_object("triplex_meter", mtrname, params)
+        self.mdl.triplex_meter.add(mtrname, params)
         self.glm.add_metrics_collector(mtrname, "meter")
 
-        params = {"parent": mtrname,
-                  "phases": phs,
-                  "nominal_voltage": str(v_nom),
-                  "voltage_1": vstart,
-                  "voltage_2": vstart,
-                  "constant_power_12_real": "10.0",
-                  "constant_power_12_reac": "8.0"}
-        self.glm.add_object("triplex_load", loadname, params)
+        self.mdl.triplex_load.add(loadname, {
+            "parent": mtrname,
+            "phases": phs,
+            "nominal_voltage": str(v_nom),
+            "voltage_1": vstart,
+            "voltage_2": vstart,
+            "constant_power_12_real": "10.0",
+            "constant_power_12_reac": "8.0" })
+        if self.config.gis_file:
+            self.config.pos[mtrname] = self.config.pos_data[basenode]
 
     def getDsoIncomeLevelTable(self) -> list:
         """Retrieve the DSO Income Level Fraction of income level in a given 
-        dso type and state:
+        dso type and state.
         
         Index 0 is the income level:
             0 = Low
             1 = Middle (No longer using Moderate)
             2 = Upper
+
         Args:
             None
 
@@ -394,26 +430,27 @@ class Residential_Build:
             UserWarning: Income level distribution does not sum to 1!
 
         Returns:
-            list: dsoIncomePct
+            list: dso_income_pct
         """
+
         income_mat = self.income_level[self.config.state][self.config.res_dso_type]
         # Create new dictionary only with income levels of interest
-        dsoIncomePct = {}
+        dso_income_pct = {}
         for key in self.config.income_level:
-            dsoIncomePct[key] = income_mat[key]
-        dsoIncomePct = list(dsoIncomePct.values())
+            dso_income_pct[key] = income_mat[key]
+        dso_income_pct = list(dso_income_pct.values())
         # Normalize so array adds up to 1
-        dsoIncomePct = [round(i / sum(dsoIncomePct), 4) for i in dsoIncomePct]  
+        dso_income_pct = [round(i / sum(dso_income_pct), 4) for i in dso_income_pct]
         # Check if the sum of all values is 1
         total = 0
-        for row in range(len(dsoIncomePct)):
-            total += dsoIncomePct[row]
+        for row in range(len(dso_income_pct)):
+            total += dso_income_pct[row]
         if total > 1.01 or total < 0.99:
              raise UserWarning('Income level distribution does not sum to 1!')
-        return dsoIncomePct
+        return dso_income_pct
 
     def selectIncomeLevel(self, incTable: list, prob: float) -> int:
-        """Select the income level based on region and probability
+        """Select the income level based on region and probability.
 
         Args:
             incTable (): income table
@@ -422,6 +459,7 @@ class Residential_Build:
         Returns:
             int: row
         """
+
         total = 0
         for row in range(len(incTable)):
             total += incTable[row]
@@ -443,6 +481,7 @@ class Residential_Build:
         Returns:
             float: DSO thermal table
         """
+
         vintage_mat = self.housing_vintage[self.config.state][self.config.res_dso_type][income]
         df = pd.DataFrame(vintage_mat)
         # Initialize array
@@ -472,6 +511,7 @@ class Residential_Build:
             int: row
             int: col
         """
+
         row = 0
         total = 0
         for row in range(len(rgnTable)):
@@ -494,6 +534,7 @@ class Residential_Build:
         Returns:
             list: therm_prop
         """
+
         if bldg == 0:
             therm_prop = self.config.base.singleFamilyProperties[therm_int]
         elif bldg == 1:
@@ -504,7 +545,7 @@ class Residential_Build:
 
     def add_houses(self, basenode: str, v_nom: float) -> None:
         """Add houses, along with solar panels, batteries, and electric vehicle
-        chargers, onto a node
+        chargers, onto a node.
         
         Args:
             basenode (str): GridLAB-D node name
@@ -546,31 +587,38 @@ class Residential_Build:
             basenode = basenode.replace("_Low", "")
             basenode = basenode.replace("_Middle", "")
             basenode = basenode.replace("_Upper", "")
-        params = {"phases": phs,
-                  "nominal_voltage": str(v_nom),
-                  "voltage_1": vstart,
-                  "voltage_2": vstart}
-        self.glm.add_object("triplex_node", basenode, params)
-        tpxname = gld_strict_name(basenode + '_tpx')
-        mtrname = gld_strict_name(basenode + '_mtr')
+        self.mdl.triplex_node.add(basenode, {
+            "phases": phs,
+            "nominal_voltage": str(v_nom),
+            "voltage_1": vstart,
+            "voltage_2": vstart })
+        tpxname = f'{basenode}_tpx'
+        mtrname = f'{tpxname}_mtr'
         for i in range(self.nhouse):
-            tpxname1 = tpxname + '_' + str(i + 1)
-            mtrname1 = mtrname + '_' + str(i + 1)
-            hsename = gld_strict_name(basenode + '_hs_' + str(i + 1))
-            hse_m_name = gld_strict_name(basenode + '_hsmtr_' + str(i + 1))
-            whname = gld_strict_name(basenode + '_wh_' + str(i + 1))
-            sol_i_name = gld_strict_name(basenode + '_solinv_' + str(i + 1))
-            bat_i_name = gld_strict_name(basenode + '_batinv_' + str(i + 1))
-            sol_m_name = gld_strict_name(basenode + '_solmtr_' + str(i + 1))
-            sol_name = gld_strict_name(basenode + '_sol_' + str(i + 1))
-            bat_m_name = gld_strict_name(basenode + '_batmtr_' + str(i + 1))
-            bat_name = gld_strict_name(basenode + '_bat_' + str(i + 1))
-            params = {"from": basenode,
+            idx = i + 1
+            tpxname1 = f'{tpxname}_{idx}'
+            mtrname1 = f'{mtrname}_{idx}'
+            hsename = f'{basenode}_hs_{idx}'
+            hse_m_name = f'{basenode}_hsmtr_{idx}'
+            whname = f'{basenode}_wh_{idx}'
+            sol_i_name = f'{basenode}_solinv_{idx}'
+            bat_i_name = f'{basenode}_batinv_{idx}'
+            sol_m_name = f'{basenode}_solmtr_{idx}'
+            sol_name = f'{basenode}_sol_{idx}'
+            bat_m_name = f'{basenode}_batmtr_{idx}'
+            bat_name = f'{basenode}_bat_{idx}'
+            # Add position data to house and meter objects, if available
+            if self.config.gis_file:
+                self.config.pos[mtrname1] = self.config.pos_data[basenode]
+                self.config.pos[hsename] = self.config.pos_data[basenode]
+                self.config.pos[hse_m_name] = self.config.pos_data[basenode]
+                self.config.pos[bat_m_name] = self.config.pos_data[basenode]
+                self.config.pos[sol_m_name] = self.config.pos_data[basenode]
+            self.mdl.triplex_line.add(tpxname1, {"from": basenode,
                       "to": mtrname1,
                       "phases": phs,
                       "length": "30",
-                      "configuration": self.config.base.name_prefix + self.config.base.triplex_configurations[0][0]}
-            self.glm.add_object("triplex_line", tpxname1, params)
+                      "configuration": self.config.base.name_prefix + self.config.base.triplex_configurations[0][0] })
 
             params = {"phases": phs,
                       "meter_power_consumption": "1+7j",
@@ -578,493 +626,501 @@ class Residential_Build:
                       "voltage_1": vstart,
                       "voltage_2": vstart}
             self.glm.add_tariff(params)
-            self.glm.add_object("triplex_meter", mtrname1, params)
+            self.mdl.triplex_meter.add(mtrname1, params)
             self.glm.add_metrics_collector(mtrname1, "meter")
 
-            params = {"parent": mtrname1,
-                      "phases": phs,
-                      "nominal_voltage": str(v_nom)}
-            self.glm.add_object("triplex_meter", hse_m_name, params)
+            self.mdl.triplex_meter.add(hse_m_name, {
+                "parent": mtrname1,
+                "phases": phs,
+                "nominal_voltage": str(v_nom) })
 
-        # Assign floor area, ceiling height, and stories of houses
-        fa_array = {}  # distribution array for floor area min, max, mean, standard deviation
-        stories = 1
-        ceiling_height = 8
-        vint = self.config.base.vint_type[ti]
-        income = self.config.income_level[inc_lev]
-        if bldg == 0:  # SF
-            bldg_type = 'single_family'  # pick single_family_detached values for floor_area
-            if (rng.random() >
-                    self.num_stories[self.config.state][self.config.res_dso_type][income][bldg_type][vint]['one_story']):
-                stories = 2  # all SF homes which are not single story are 2 stories
-            if rng.random() <= \
-                    self.high_ceilings[self.config.state][self.config.res_dso_type][income][bldg_type][vint]:
-                ceiling_height = 10  # all SF homes that have high ceilings are 10 ft
-            ceiling_height += rng.integers(0, 2)
-        elif bldg == 1:  # apartments
-            bldg_type = 'apartments'  # then pick apartment_2_4_units for floor area
-        elif bldg == 2:  # mh
-            bldg_type = 'mobile_home'
-        else:
-            raise ValueError("Wrong building type chosen !")
-        vint = self.config.base.vint_type[ti]
-        # creating distribution array for floor_area
-        for ind in ['min', 'max', 'mean', 'standard_deviation']:
-            fa_array[ind] = self.floor_area[self.config.state][self.config.res_dso_type][income][bldg_type][ind]
-        floor_area = random_norm_trunc(fa_array)  # truncated normal distribution
-        floor_area = (1 + lg_v_sm) * floor_area  # adjustment depends on whether nhouses rounded up or down
-        fa_rand = rng.random()
-        if floor_area > fa_array['max']:
-            floor_area = fa_array['max'] - (fa_rand * 200)
-        elif floor_area < fa_array['min']:
-            floor_area = fa_array['min'] + (fa_rand * 100)
-
-        # Define residential skew and scalar for schedule files
-        scalar1 = 324.9 / 8907 * floor_area ** 0.442
-        scalar2 = 0.6 + 0.4 * rng.random()
-        scalar3 = 0.6 + 0.4 * rng.random()
-        resp_scalar = scalar1 * scalar2
-        unresp_scalar = scalar1 * scalar3
-        skew_value = self.glm.randomize_residential_skew()
-
-        # Define aspect ratio, ewf, ecf, eff, wwr
-        if bldg == 0:  # SF homes
-            # min, max, mean, std
-            dist_array = self.aspect_ratio['single_family']
-            aspect_ratio = random_norm_trunc(dist_array)
-            # Exterior wall and ceiling and floor fraction
-            # single family detatched house has all exterior walls, ceiling, and floor
-            ewf = 1  # exterior wall fraction
-            ecf = 1  # exterior ceiling fraction
-            eff = 1  # exterior floor fraction
-            # window wall ratio
-            wwr = (self.window_wall_ratio['single_family']['mean'])
-        elif bldg == 1:  # APT
-            # min, max, mean, std
-            dist_array = self.aspect_ratio['apartments']
-            aspect_ratio = random_norm_trunc(dist_array)
-            # window wall ratio
-            wwr = (self.window_wall_ratio['apartments']['mean'])
-            # Two type of apts assumed, total 2 levels each:
-            #       1. small apt: 8 units with 4 units on each level
-            #       2. large apt: 16 units with 8 units on each level
-            # Assign percentage of units to small apt (8 units) or large (16 units)
-            small_apt_pct = self.housing_type[self.config.state][
-                self.config.res_dso_type][income]['apartment_2_4_units']
-            large_apt_pct = self.housing_type[self.config.state][
-                self.config.res_dso_type][income]['apartment_5_units']
-            if rng.random() < small_apt_pct / (small_apt_pct + large_apt_pct):
-                # 2-level small apt (8 units):
-                # All 4 upper units are identical and all 4 lower units are identical
-                # So, only two types of units: upper and lower (50% chances of each)
-                # all units have 50% walls exterior
-                ewf = 0.5
-                # for 50% units: has exterior floor but not ceiling
-                if rng.random() < 0.5:
-                    ecf = 0
-                    eff = 1
-                else:  # for other 50% units: has exterior ceiling but not floor
-                    ecf = 1
-                    eff = 0
+            # Assign floor area, ceiling height, and stories of houses
+            fa_array = {}  # distribution array for floor area min, max, mean, standard deviation
+            stories = 1
+            ceiling_height = 8
+            vint = self.config.base.vint_type[ti]
+            income = self.config.income_level[inc_lev]
+            if bldg == 0:  # SF
+                bldg_type = 'single_family'  # pick single_family_detached values for floor_area
+                if (rng.random() >
+                        self.num_stories[self.config.state][self.config.res_dso_type][income][bldg_type][vint]['one_story']):
+                    stories = 2  # all SF homes which are not single story are 2 stories
+                if rng.random() <= \
+                        self.high_ceilings[self.config.state][self.config.res_dso_type][income][bldg_type][vint]:
+                    ceiling_height = 10  # all SF homes that have high ceilings are 10 ft
+                ceiling_height += rng.integers(0, 2)
+            elif bldg == 1:  # apartments
+                bldg_type = 'apartments'  # then pick apartment_2_4_units for floor area
+            elif bldg == 2:  # mh
+                bldg_type = 'mobile_home'
             else:
-                # 2-level large 16 units apts:
-                # There are 4 type of units: 4 corner bottom floor, 4 corner upper,
-                # 4 middle upper and 4 middle lower floor units. Each unit type has 25% chance
-                if rng.random() < 0.25:  # 4 corner bottom floor units
+                raise ValueError("Wrong building type chosen !")
+            vint = self.config.base.vint_type[ti]
+            # creating distribution array for floor_area
+            for ind in ['min', 'max', 'mean', 'standard_deviation']:
+                fa_array[ind] = self.floor_area[self.config.state][self.config.res_dso_type][income][bldg_type][ind]
+            floor_area = random_norm_trunc(fa_array)  # truncated normal distribution
+            floor_area = (1 + lg_v_sm) * floor_area  # adjustment depends on whether nhouses rounded up or down
+            fa_rand = rng.random()
+            if floor_area > fa_array['max']:
+                floor_area = fa_array['max'] - (fa_rand * 200)
+            elif floor_area < fa_array['min']:
+                floor_area = fa_array['min'] + (fa_rand * 100)
+
+            # Define residential skew and scalar for schedule files
+            scalar1 = 324.9 / 8907 * floor_area ** 0.442
+            scalar2 = 0.6 + 0.4 * rng.random()
+            scalar3 = 0.6 + 0.4 * rng.random()
+            resp_scalar = scalar1 * scalar2
+            unresp_scalar = scalar1 * scalar3
+            skew_value = self.glm.randomize_residential_skew()
+
+            # Define aspect ratio, ewf, ecf, eff, wwr
+            if bldg == 0:  # SF homes
+                # min, max, mean, std
+                dist_array = self.aspect_ratio['single_family']
+                aspect_ratio = random_norm_trunc(dist_array)
+                # Exterior wall and ceiling and floor fraction
+                # single family detatched house has all exterior walls, ceiling, and floor
+                ewf = 1  # exterior wall fraction
+                ecf = 1  # exterior ceiling fraction
+                eff = 1  # exterior floor fraction
+                # window wall ratio
+                wwr = (self.window_wall_ratio['single_family']['mean'])
+            elif bldg == 1:  # APT
+                # min, max, mean, std
+                dist_array = self.aspect_ratio['apartments']
+                aspect_ratio = random_norm_trunc(dist_array)
+                # window wall ratio
+                wwr = (self.window_wall_ratio['apartments']['mean'])
+                # Two type of apts assumed, total 2 levels each:
+                #       1. small apt: 8 units with 4 units on each level
+                #       2. large apt: 16 units with 8 units on each level
+                # Assign percentage of units to small apt (8 units) or large (16 units)
+                small_apt_pct = self.housing_type[self.config.state][
+                    self.config.res_dso_type][income]['apartment_2_4_units']
+                large_apt_pct = self.housing_type[self.config.state][
+                    self.config.res_dso_type][income]['apartment_5_units']
+                if rng.random() < small_apt_pct / (small_apt_pct + large_apt_pct):
+                    # 2-level small apt (8 units):
+                    # All 4 upper units are identical and all 4 lower units are identical
+                    # So, only two types of units: upper and lower (50% chances of each)
+                    # all units have 50% walls exterior
                     ewf = 0.5
-                    ecf = 0
-                    eff = 1
-                elif rng.random() < 0.5:  # 4 corner upper floor units
-                    ewf = 0.5
-                    ecf = 1
-                    eff = 0
-                elif rng.random() < 0.75:  # 4 middle bottom floor units
-                    ewf = aspect_ratio / (1 + aspect_ratio) / 2
-                    ecf = 0
-                    eff = 1
-                else:  # rng.random() < 1  # 4 middle upper floor units
-                    ewf = aspect_ratio / (1 + aspect_ratio) / 2
-                    ecf = 1
-                    eff = 0
-        else:  # bldg == 2, Mobile Homes
-            # select between single and double wide
-            wwr = (self.window_wall_ratio['mobile_home']['mean'])  # window wall ratio
-            if floor_area <= 1080:  # Single wide
-                aspect_ratio = random_norm_trunc(
-                    self.aspect_ratio['mobile_home_single_wide'])
-            else:  # double wide
-                aspect_ratio = random_norm_trunc(
-                    self.aspect_ratio['mobile_home_double_wide'])
-            # A detatched MH has all walls exterior, has a ceiling and a floor
-            ewf = 1  # exterior wall fraction
-            ecf = 1  # exterior ceiling fraction
-            eff = 1  # exterior floor fraction
+                    # for 50% units: has exterior floor but not ceiling
+                    if rng.random() < 0.5:
+                        ecf = 0
+                        eff = 1
+                    else:  # for other 50% units: has exterior ceiling but not floor
+                        ecf = 1
+                        eff = 0
+                else:
+                    # 2-level large 16 units apts:
+                    # There are 4 type of units: 4 corner bottom floor, 4 corner upper,
+                    # 4 middle upper and 4 middle lower floor units. Each unit type has 25% chance
+                    if rng.random() < 0.25:  # 4 corner bottom floor units
+                        ewf = 0.5
+                        ecf = 0
+                        eff = 1
+                    elif rng.random() < 0.5:  # 4 corner upper floor units
+                        ewf = 0.5
+                        ecf = 1
+                        eff = 0
+                    elif rng.random() < 0.75:  # 4 middle bottom floor units
+                        ewf = aspect_ratio / (1 + aspect_ratio) / 2
+                        ecf = 0
+                        eff = 1
+                    else:  # rng.random() < 1  # 4 middle upper floor units
+                        ewf = aspect_ratio / (1 + aspect_ratio) / 2
+                        ecf = 1
+                        eff = 0
+            else:  # bldg == 2, Mobile Homes
+                # select between single and double wide
+                wwr = (self.window_wall_ratio['mobile_home']['mean'])  # window wall ratio
+                if floor_area <= 1080:  # Single wide
+                    aspect_ratio = random_norm_trunc(
+                        self.aspect_ratio['mobile_home_single_wide'])
+                else:  # double wide
+                    aspect_ratio = random_norm_trunc(
+                        self.aspect_ratio['mobile_home_double_wide'])
+                # A detatched MH has all walls exterior, has a ceiling and a floor
+                ewf = 1  # exterior wall fraction
+                ecf = 1  # exterior ceiling fraction
+                eff = 1  # exterior floor fraction
 
-        oversize = random_norm_trunc(
-            self.hvac_oversize)  # hvac_oversize factor
-        wetc = random_norm_trunc(
-            self.window_shading)  # window_exterior_transmission_coefficient
+            oversize = random_norm_trunc(
+                self.hvac_oversize)  # hvac_oversize factor
+            wetc = random_norm_trunc(
+                self.window_shading)  # window_exterior_transmission_coefficient
 
-        tiProps = Residential_Build.selectThermalProperties(self, bldg, ti)
-        # Rceiling(roof), Rwall, Rfloor, WindowLayers, WindowGlass, Glazing,
-        # WindowFrame, Rdoor, AirInfil, COPhi, COPlo
-        Rroof = tiProps[0] * (0.8 + 0.4 * rng.random())
-        Rwall = tiProps[1] * (0.8 + 0.4 * rng.random())
-        Rfloor = tiProps[2] * (0.8 + 0.4 * rng.random())
-        glazing_layers = int(tiProps[3])
-        glass_type = int(tiProps[4])
-        glazing_treatment = int(tiProps[5])
-        window_frame = int(tiProps[6])
-        Rdoor = tiProps[7] * (0.8 + 0.4 * rng.random())
-        airchange = tiProps[8] * (0.8 + 0.4 * rng.random())
-        init_temp = 68 + 4 * rng.random()
-        mass_floor = 2.5 + 1.5 * rng.random()
-        mass_solar_gain_frac = 0.5
-        mass_int_gain_frac = 0.5
-        
-        # COP: pick any one year value randomly from the bin in cop_lookup
-        h_COP = c_COP = rng.choice(self.config.base.cop_lookup[ti]) * (0.9 + rng.random() * 0.2)  
-        # +- 10% of mean value
-        
-        # Set housing parameters
-        params = {"parent": hse_m_name,
-                  "groupid": self.config.base.bldgTypeName[bldg],
-                  "schedule_skew": '{:.0f}'.format(skew_value),
-                  "floor_area": '{:.0f}'.format(floor_area),
-                  "number_of_stories": str(stories),
-                  "ceiling_height": str(ceiling_height),
-                  "over_sizing_factor": '{:.1f}'.format(oversize),
-                  "Rroof": '{:.2f}'.format(Rroof),
-                  "Rwall": '{:.2f}'.format(Rwall),
-                  "Rfloor": '{:.2f}'.format(Rfloor),
-                  "glazing_layers": str(glazing_layers),
-                  "glass_type": str(glass_type),
-                  "glazing_treatment": str(glazing_treatment),
-                  "window_frame": str(window_frame),
-                  "Rdoors": '{:.2f}'.format(Rdoor),
-                  "airchange_per_hour": '{:.2f}'.format(airchange),
-                  "cooling_COP": '{:.1f}'.format(c_COP),
-                  "air_temperature": '{:.2f}'.format(init_temp),
-                  "mass_temperature": '{:.2f}'.format(init_temp),
-                  "total_thermal_mass_per_floor_area": '{:.3f}'.format(mass_floor),
-                  "mass_solar_gain_fraction": '{}'.format(mass_solar_gain_frac),
-                  "mass_internal_gain_fraction": '{}'.format(mass_int_gain_frac),
-                  "aspect_ratio": '{:.2f}'.format(aspect_ratio),
-                  "exterior_wall_fraction": '{:.2f}'.format(ewf),
-                  "exterior_floor_fraction": '{:.2f}'.format(eff),
-                  "exterior_ceiling_fraction": '{:.2f}'.format(ecf),
-                  "window_exterior_transmission_coefficient": '{:.2f}'.format(wetc),
-                  "window_wall_ratio": '{:.2f}'.format(wwr),
-                  "breaker_amps": "1000", "hvac_breaker_rating": "1000"}
-        heat_rand = rng.random()
-        cool_rand = rng.random()
-        house_fuel_type = 'electric'
-        heat_pump_prob = self.space_heating_type[self.config.state][
-                             self.config.res_dso_type][income][bldg_type][vint]['gas_heating'] + \
-                             self.space_heating_type[self.config.state][
-                             self.config.res_dso_type][income][bldg_type][vint]['heat_pump']
-        # Get the air conditioning percentage for homes that don't have heat pumps
-        electric_cooling_percentage = \
-            self.air_conditioning[self.config.state][
-                self.config.res_dso_type][income][bldg_type]
+            tiProps = Residential_Build.selectThermalProperties(self, bldg, ti)
+            # Rceiling(roof), Rwall, Rfloor, WindowLayers, WindowGlass, Glazing,
+            # WindowFrame, Rdoor, AirInfil, COPhi, COPlo
+            Rroof = tiProps[0] * (0.8 + 0.4 * rng.random())
+            Rwall = tiProps[1] * (0.8 + 0.4 * rng.random())
+            Rfloor = tiProps[2] * (0.8 + 0.4 * rng.random())
+            glazing_layers = int(tiProps[3])
+            glass_type = int(tiProps[4])
+            glazing_treatment = int(tiProps[5])
+            window_frame = int(tiProps[6])
+            Rdoor = tiProps[7] * (0.8 + 0.4 * rng.random())
+            airchange = tiProps[8] * (0.8 + 0.4 * rng.random())
+            init_temp = 68 + 4 * rng.random()
+            mass_floor = 2.5 + 1.5 * rng.random()
+            mass_solar_gain_frac = 0.5
+            mass_int_gain_frac = 0.5
 
-        if heat_rand <= self.space_heating_type[self.config.state][self.config.res_dso_type][income][bldg_type][vint]['gas_heating']:
-            house_fuel_type = 'gas'
-            params["heating_system_type"] = "GAS"
-            if cool_rand <= electric_cooling_percentage:
+            # COP: pick any one year value randomly from the bin in cop_lookup
+            h_COP = c_COP = rng.choice(self.config.base.cop_lookup[ti]) * (0.9 + rng.random() * 0.2)
+            # +- 10% of mean value
+
+            # Set housing parameters
+            params = {"parent": hse_m_name,
+                    "groupid": self.config.base.bldgTypeName[bldg],
+                    "schedule_skew": '{:.0f}'.format(skew_value),
+                    "floor_area": '{:.0f}'.format(floor_area),
+                    "number_of_stories": str(stories),
+                    "ceiling_height": str(ceiling_height),
+                    "over_sizing_factor": '{:.1f}'.format(oversize),
+                    "Rroof": '{:.2f}'.format(Rroof),
+                    "Rwall": '{:.2f}'.format(Rwall),
+                    "Rfloor": '{:.2f}'.format(Rfloor),
+                    "glazing_layers": str(glazing_layers),
+                    "glass_type": str(glass_type),
+                    "glazing_treatment": str(glazing_treatment),
+                    "window_frame": str(window_frame),
+                    "Rdoors": '{:.2f}'.format(Rdoor),
+                    "airchange_per_hour": '{:.2f}'.format(airchange),
+                    "cooling_COP": '{:.1f}'.format(c_COP),
+                    "air_temperature": '{:.2f}'.format(init_temp),
+                    "mass_temperature": '{:.2f}'.format(init_temp),
+                    "total_thermal_mass_per_floor_area": '{:.3f}'.format(mass_floor),
+                    "mass_solar_gain_fraction": '{}'.format(mass_solar_gain_frac),
+                    "mass_internal_gain_fraction": '{}'.format(mass_int_gain_frac),
+                    "aspect_ratio": '{:.2f}'.format(aspect_ratio),
+                    "exterior_wall_fraction": '{:.2f}'.format(ewf),
+                    "exterior_floor_fraction": '{:.2f}'.format(eff),
+                    "exterior_ceiling_fraction": '{:.2f}'.format(ecf),
+                    "window_exterior_transmission_coefficient": '{:.2f}'.format(wetc),
+                    "window_wall_ratio": '{:.2f}'.format(wwr),
+                    "breaker_amps": "1000", "hvac_breaker_rating": "1000"}
+            heat_rand = rng.random()
+            cool_rand = rng.random()
+            house_fuel_type = 'electric'
+            heat_pump_prob = self.space_heating_type[self.config.state][
+                                self.config.res_dso_type][income][bldg_type][vint]['gas_heating'] + \
+                                self.space_heating_type[self.config.state][
+                                self.config.res_dso_type][income][bldg_type][vint]['heat_pump']
+            # Get the air conditioning percentage for homes that don't have heat pumps
+            electric_cooling_percentage = \
+                self.air_conditioning[self.config.state][
+                    self.config.res_dso_type][income][bldg_type]
+
+            if heat_rand <= self.space_heating_type[self.config.state][self.config.res_dso_type][income][bldg_type][vint]['gas_heating']:
+                house_fuel_type = 'gas'
+                params["heating_system_type"] = "GAS"
+                if cool_rand <= electric_cooling_percentage:
+                    params["cooling_system_type"] = "ELECTRIC"
+                else:
+                    params["cooling_system_type"] = "NONE"
+            elif heat_rand <= heat_pump_prob:
+                params["heating_system_type"] = "HEAT_PUMP"
+                params["heating_COP"] = '{:.1f}'.format(h_COP)
                 params["cooling_system_type"] = "ELECTRIC"
-            else:
-                params["cooling_system_type"] = "NONE"
-        elif heat_rand <= heat_pump_prob:
-            params["heating_system_type"] = "HEAT_PUMP"
-            params["heating_COP"] = '{:.1f}'.format(h_COP)
-            params["cooling_system_type"] = "ELECTRIC"
-            params["auxiliary_strategy"] = "DEADBAND"
-            params["auxiliary_system_type"] = "ELECTRIC"
-            params["motor_model"] = "BASIC"
-            params["motor_efficiency"] = "AVERAGE"
-        # Restrict large homes from using electric heating
-        # elif floor_area * ceiling_height > 12000.0:  
-        #     params["heating_system_type"] =  "GAS"
-        #     if cool_rand <= electric_cooling_percentage:
-        #         params["cooling_system_type"] = "ELECTRIC"
-        #     else:
-        #         params["cooling_system_type"] = "NONE"
-        else:
-            params["heating_system_type"] = "RESISTANCE"
-            if cool_rand <= electric_cooling_percentage:
-                params["cooling_system_type"] = "ELECTRIC"
+                params["auxiliary_strategy"] = "DEADBAND"
+                params["auxiliary_system_type"] = "ELECTRIC"
                 params["motor_model"] = "BASIC"
-                params["motor_efficiency"] = "GOOD"
+                params["motor_efficiency"] = "AVERAGE"
+            # Optional: Restrict large homes from using electric heating
+            # elif floor_area * ceiling_height > 12000.0:
+            #     params["heating_system_type"] =  "GAS"
+            #     if cool_rand <= electric_cooling_percentage:
+            #         params["cooling_system_type"] = "ELECTRIC"
+            #     else:
+            #         params["cooling_system_type"] = "NONE"
             else:
-                params["cooling_system_type"] = "NONE"
+                params["heating_system_type"] = "RESISTANCE"
+                if cool_rand <= electric_cooling_percentage:
+                    params["cooling_system_type"] = "ELECTRIC"
+                    params["motor_model"] = "BASIC"
+                    params["motor_efficiency"] = "GOOD"
+                else:
+                    params["cooling_system_type"] = "NONE"
 
-        # Randomly choose cooling and heating setpoints within bins
-        cooling_bin, heating_bin = self.selectSetpointBins(bldg, rng.random())
-        # Adjust separation to account for deadband
-        cooling_set = cooling_bin[3] + rng.random() * (cooling_bin[2] - cooling_bin[3])
-        heating_set = heating_bin[3] + rng.random() * (heating_bin[2] - heating_bin[3])
-        params["cooling_setpoint"] = np.round(cooling_set)
-        params["heating_setpoint"] = np.round(heating_set)
-        # For transactive case, override defaults for larger separation to 
-        # assure no overlaps during transactive simulations
-        # params["cooling_setpoint"] = "80.0"
-        # params["heating_setpoint"] = "60.0"
-        self.glm.add_object("house", hsename, params)
+            # Randomly choose cooling and heating setpoints within bins
+            cooling_bin, heating_bin = self.selectSetpointBins(bldg, rng.random())
+            # Adjust separation to account for deadband
+            cooling_set = cooling_bin[3] + rng.random() * (cooling_bin[2] - cooling_bin[3])
+            heating_set = heating_bin[3] + rng.random() * (heating_bin[2] - heating_bin[3])
+            params["cooling_setpoint"] = np.round(cooling_set)
+            params["heating_setpoint"] = np.round(heating_set)
+            # For transactive case, override defaults for larger separation to
+            # assure no overlaps during transactive simulations
+            # params["cooling_setpoint"] = "80.0"
+            # params["heating_setpoint"] = "60.0"
+            self.mdl.house.add(hsename, params)
 
-        # heatgain fraction, Zpf, Ipf, Ppf, Z, I, P
-        params = {"parent": hsename,
-                  "schedule_skew": '{:.0f}'.format(skew_value),
-                  "base_power": 'responsive_loads * ' + '{:.2f}'.format(resp_scalar),
-                  "heatgain_fraction": '{:.2f}'.format(self.config.base.techdata[0]),
-                  "impedance_pf": '{:.2f}'.format(self.config.base.techdata[1]),
-                  "current_pf": '{:.2f}'.format(self.config.base.techdata[2]),
-                  "power_pf": '{:.2f}'.format(self.config.base.techdata[3]),
-                  "impedance_fraction": '{:.2f}'.format(self.config.base.techdata[4]),
-                  "current_fraction": '{:.2f}'.format(self.config.base.techdata[5]),
-                  "power_fraction": '{:.2f}'.format(self.config.base.techdata[6])}
-        self.glm.add_object("ZIPload", "responsive", params)
+            # heatgain fraction, Zpf, Ipf, Ppf, Z, I, P
+            params = {"parent": hsename,
+                    "schedule_skew": '{:.0f}'.format(skew_value),
+                    "base_power": 'responsive_loads * ' + '{:.2f}'.format(resp_scalar),
+                    "heatgain_fraction": '{:.2f}'.format(self.config.base.techdata[0]),
+                    "impedance_pf": '{:.2f}'.format(self.config.base.techdata[1]),
+                    "current_pf": '{:.2f}'.format(self.config.base.techdata[2]),
+                    "power_pf": '{:.2f}'.format(self.config.base.techdata[3]),
+                    "impedance_fraction": '{:.2f}'.format(self.config.base.techdata[4]),
+                    "current_fraction": '{:.2f}'.format(self.config.base.techdata[5]),
+                    "power_fraction": '{:.2f}'.format(self.config.base.techdata[6])}
+            self.mdl.ZIPload.add("responsive", params)
 
-        params["base_power"] = 'unresponsive_loads * ' + '{:.2f}'.format(unresp_scalar)
-        self.glm.add_object("ZIPload", "unresponsive", params)
+            params["base_power"] = 'unresponsive_loads * ' + '{:.2f}'.format(unresp_scalar)
+            self.mdl.ZIPload.add("unresponsive", params)
 
-        # Determine house water heating fuel type based on space heating fuel type
-        wh_fuel_type = 'gas'
-        properties = self.water_heating_fuel[self.config.state][self.config.res_dso_type][income][bldg_type]
-        if house_fuel_type == 'gas':
-            # percentage of homes with gas space heating but electric water heaters
-            if rng.random() <= properties['sh_gas']['electric']:
-                wh_fuel_type = 'electric'
-        elif house_fuel_type == 'electric':
-            # percentage of homes with both electric space and water heating
-            if rng.random() <= properties['sh_electric']['electric']:
-                wh_fuel_type = 'electric'
-        if wh_fuel_type == 'electric':  # if the water heater fuel type is electric, install wh
-            heat_element = 3.0 + 0.5 * rng.integers(1, 6)  # numpy integers (lo, hi) returns lo..(hi-1)
-            tank_set = 110 + 16 * rng.random()
-            therm_dead = 1  # 4 + 4 * rng.random()
-            tank_UA = 2 + 2 * rng.random()
-            water_sch = np.ceil(self.config.base.waterHeaterScheduleNumber * rng.random())
-            water_var = 0.95 + rng.random() * 0.1  # +/-5% variability
-            wh_demand_type = 'large_'
+            # Determine house water heating fuel type based on space heating fuel type
+            wh_fuel_type = 'gas'
+            properties = self.water_heating_fuel[self.config.state][self.config.res_dso_type][income][bldg_type]
+            if house_fuel_type == 'gas':
+                # percentage of homes with gas space heating but electric water heaters
+                if rng.random() <= properties['sh_gas']['electric']:
+                    wh_fuel_type = 'electric'
+            elif house_fuel_type == 'electric':
+                # percentage of homes with both electric space and water heating
+                if rng.random() <= properties['sh_electric']['electric']:
+                    wh_fuel_type = 'electric'
+            if wh_fuel_type == 'electric':  # if the water heater fuel type is electric, install wh
+                heat_element = 3.0 + 0.5 * rng.integers(1, 6)  # numpy integers (lo, hi) returns lo..(hi-1)
+                tank_set = 110 + 16 * rng.random()
+                therm_dead = 1  # 4 + 4 * rng.random()
+                tank_UA = 2 + 2 * rng.random()
+                water_sch = np.ceil(self.config.base.waterHeaterScheduleNumber * rng.random())
+                water_var = 0.95 + rng.random() * 0.1  # +/-5% variability
+                wh_demand_type = 'large_'
 
-            # Water heater sizing
-            wh_data = self.water_heater_tank_size
-            if floor_area <= wh_data['floor_area']['1_2_people']['floor_area_max']:
-                size_array = range(wh_data['tank_size']['1_2_people']['min'],
-                                   wh_data['tank_size']['1_2_people']['max'] + 1, 5)
-                wh_demand_type = 'small_'
-            elif floor_area <= wh_data['floor_area']['2_3_people']['floor_area_max']:
-                size_array = range(wh_data['tank_size']['2_3_people']['min'],
-                                   wh_data['tank_size']['2_3_people']['max'] + 1, 5)
-                wh_demand_type = 'small_'
-            elif floor_area <= wh_data['floor_area']['3_4_people']['floor_area_max']:
-                size_array = range(wh_data['tank_size']['3_4_people']['min'],
-                                   wh_data['tank_size']['3_4_people']['max'] + 1, 10)
+                # Water heater sizing
+                wh_data = self.water_heater_tank_size
+                if floor_area <= wh_data['floor_area']['1_2_people']['floor_area_max']:
+                    size_array = range(wh_data['tank_size']['1_2_people']['min'],
+                                    wh_data['tank_size']['1_2_people']['max'] + 1, 5)
+                    wh_demand_type = 'small_'
+                elif floor_area <= wh_data['floor_area']['2_3_people']['floor_area_max']:
+                    size_array = range(wh_data['tank_size']['2_3_people']['min'],
+                                    wh_data['tank_size']['2_3_people']['max'] + 1, 5)
+                    wh_demand_type = 'small_'
+                elif floor_area <= wh_data['floor_area']['3_4_people']['floor_area_max']:
+                    size_array = range(wh_data['tank_size']['3_4_people']['min'],
+                                    wh_data['tank_size']['3_4_people']['max'] + 1, 10)
+                else:
+                    size_array = range(wh_data['tank_size']['5_plus_people']['min'],
+                                    wh_data['tank_size']['5_plus_people']['max'] + 1, 10)
+                wh_size = rng.choice(size_array)
+                wh_demand_str = wh_demand_type + '{:.0f}'.format(water_sch) + '*' + '{:.2f}'.format(water_var)
+                wh_skew_value = randomize_residential_skew(True)
+
+                if self.config.water_heater_model == "MULTILAYER":
+                    params = {"parent": hsename,
+                            "schedule_skew": '{:.0f}'.format(wh_skew_value),
+                            "heating_element_capacity": '{:.1f}'.format(heat_element),
+                            "thermostat_deadband": '{:.1f}'.format(therm_dead),
+                            "location": "INSIDE",
+                            "tank_diameter": "1.5",
+                            "tank_UA": '{:.1f}'.format(tank_UA),
+                            "water_demand": wh_demand_str,
+                            "tank_volume": '{:.0f}'.format(wh_size),
+                            "waterheater_model": "MULTILAYER",
+                            "discrete_step_size": "60.0",
+                            "lower_tank_setpoint": '{:.1f}'.format(tank_set - 5.0),
+                            "upper_tank_setpoint": '{:.1f}'.format(tank_set + 5.0),
+                            "T_mixing_valve": '{:.1f}'.format(tank_set)}
+                else: # Traditional single-node model
+                    params = {"parent": hsename,
+                            "schedule_skew": '{:.0f}'.format(wh_skew_value),
+                            "heating_element_capacity": '{:.1f}'.format(heat_element),
+                            "thermostat_deadband": '{:.1f}'.format(therm_dead),
+                            "location": "INSIDE",
+                            "tank_diameter": "1.5",
+                            "tank_UA": '{:.1f}'.format(tank_UA),
+                            "water_demand": wh_demand_str,
+                            "tank_volume": '{:.0f}'.format(wh_size),
+                            "waterheater_model": "TWONODE",
+                            "tank_setpoint": '{:.1f}'.format(tank_set - 5.0)}
+                self.mdl.waterheater.add(whname, params)
+
+            self.glm.add_metrics_collector(hsename, "house")
+
+            # ------------------------------------------------------------------
+            # Add solar, storage, and EVs
+            # Calculates the probability of solar, battery and ev by building
+            #   type and income based on 2020 RECS data distributions.
+            # Note that the 2020 RECS data does not capture battery distributions.
+            #   We therefore assume batteries follow the same housing and income
+            #   trends as solar, but allow the user to specify a different
+            #   deployment level in the config.
+            #-------------------------------------------------------------------
+            if self.config.use_recs == "True":
+                if bldg == 0:
+                    prob_solar = self.config.solar_deployment * (self.solar_pv[self.config.state][self.config.res_dso_type]
+                                                                [income]["single_family_detached"] +
+                                                                self.solar_pv[self.config.state][self.config.res_dso_type]
+                                                                [income]["single_family_attached"])
+                    prob_batt = self.config.battery_deployment * (self.solar_pv[self.config.state][self.config.res_dso_type]
+                                                                [income]["single_family_detached"] +
+                                                                self.solar_pv[self.config.state][self.config.res_dso_type]
+                                                                [income]["single_family_attached"])
+                    prob_ev = self.config.ev_deployment * (self.ev[self.config.state][self.config.res_dso_type][income]
+                                                            ["single_family_detached"] + self.ev[self.config.state]
+                                                            [self.config.res_dso_type][income]["single_family_attached"])
+                elif bldg == 1:
+                    prob_solar = self.config.solar_deployment * (self.solar_pv[self.config.state][self.config.res_dso_type]
+                                                                [income]["apartment_2_4_units"] +
+                                                                self.solar_pv[self.config.state][self.config.res_dso_type]
+                                                                [income]["apartment_5_units"])
+                    prob_batt = self.config.battery_deployment * (self.solar_pv[self.config.state][self.config.res_dso_type]
+                                                                [income]["apartment_2_4_units"] +
+                                                                self.solar_pv[self.config.state][self.config.res_dso_type]
+                                                                [income]["apartment_5_units"])
+                    prob_ev = self.config.ev_deployment * (self.ev[self.config.state][self.config.res_dso_type][income]
+                                                            ["apartment_2_4_units"] + self.ev[self.config.state]
+                                                            [self.config.res_dso_type][income]["apartment_5_units"])
+                else:
+                    prob_solar = self.config.solar_deployment * self.solar_pv[self.config.state][self.config.res_dso_type][income]["mobile_home"]
+                    prob_batt = self.config.battery_deployment * self.solar_pv[self.config.state][self.config.res_dso_type][income]["mobile_home"]
+                    prob_ev = self.config.ev_deployment * self.ev[self.config.state][self.config.res_dso_type][income]["mobile_home"]
+
+            # This is a special case, implemented for the Rates Analysis work
             else:
-                size_array = range(wh_data['tank_size']['5_plus_people']['min'],
-                                   wh_data['tank_size']['5_plus_people']['max'] + 1, 10)
-            wh_size = rng.choice(size_array)
-            wh_demand_str = wh_demand_type + '{:.0f}'.format(water_sch) + '*' + '{:.2f}'.format(water_var)
-            wh_skew_value = randomize_residential_skew(True)
+                prob_sf = self.housing_type[self.config.state][self.config.res_dso_type][income]['single_family_attached'] + \
+                        self.housing_type[self.config.state][self.config.res_dso_type][income]['single_family_attached']
 
-            if self.config.water_heater_model == "MULTILAYER":
-                params = {"parent": hsename,
-                        "schedule_skew": '{:.0f}'.format(wh_skew_value),
-                        "heating_element_capacity": '{:.1f}'.format(heat_element),
-                        "thermostat_deadband": '{:.1f}'.format(therm_dead),
-                        "location": "INSIDE",
-                        "tank_diameter": "1.5",
-                        "tank_UA": '{:.1f}'.format(tank_UA),
-                        "water_demand": wh_demand_str,
-                        "tank_volume": '{:.0f}'.format(wh_size),
-                        "waterheater_model": "MULTILAYER",
-                        "discrete_step_size": "60.0",
-                        "lower_tank_setpoint": '{:.1f}'.format(tank_set - 5.0),
-                        "upper_tank_setpoint": '{:.1f}'.format(tank_set + 5.0),
-                        "T_mixing_valve": '{:.1f}'.format(tank_set)}
-            else: # Traditional single-node model
-                params = {"parent": hsename,
-                        "schedule_skew": '{:.0f}'.format(wh_skew_value),
-                        "heating_element_capacity": '{:.1f}'.format(heat_element),
-                        "thermostat_deadband": '{:.1f}'.format(therm_dead),
-                        "location": "INSIDE",
-                        "tank_diameter": "1.5",
-                        "tank_UA": '{:.1f}'.format(tank_UA),
-                        "water_demand": wh_demand_str,
-                        "tank_volume": '{:.0f}'.format(wh_size),
-                        "waterheater_model": "TWONODE",
-                        "tank_setpoint": '{:.1f}'.format(tank_set - 5.0)}
-            self.glm.add_object("waterheater", whname, params)
+                prob_inc = self.income_level[self.config.state][self.config.res_dso_type][income]
 
-        self.glm.add_metrics_collector(hsename, "house")
+                prob_solar = (self.config.base.solar_percentage * self.solar_percentage[income])/(prob_sf * prob_inc)
 
-        # ----------------------------------------------------------------------
-        # Add solar, storage, and EVs
-        # Calculates the probability of solar, battery and ev by building type
-        #   and income based on 2020 RECS data distributions.
-        # Note that the 2020 RECS data does not capture battery distributions.
-        #   We therefore assume batteries follow the same housing and income
-        #   trends as solar, but allow the user to specify a different
-        #   deployment level in the config.
-        #-----------------------------------------------------------------------
-        if self.config.use_recs == "True":
-            if bldg == 0:
-                prob_solar = self.config.solar_deployment * (self.solar_pv[self.config.state][self.config.res_dso_type]
-                                                            [income]["single_family_detached"] +
-                                                            self.solar_pv[self.config.state][self.config.res_dso_type]
-                                                            [income]["single_family_attached"])
-                prob_batt = self.config.battery_deployment * (self.solar_pv[self.config.state][self.config.res_dso_type]
-                                                            [income]["single_family_detached"] +
-                                                            self.solar_pv[self.config.state][self.config.res_dso_type]
-                                                            [income]["single_family_attached"])
-                prob_ev = self.config.ev_deployment * (self.ev[self.config.state][self.config.res_dso_type][income]
-                                                        ["single_family_detached"] + self.ev[self.config.state]
-                                                        [self.config.res_dso_type][income]["single_family_attached"])
-            elif bldg == 1:
-                prob_solar = self.config.solar_deployment * (self.solar_pv[self.config.state][self.config.res_dso_type]
-                                                            [income]["apartment_2_4_units"] +
-                                                            self.solar_pv[self.config.state][self.config.res_dso_type]
-                                                            [income]["apartment_5_units"])
-                prob_batt = self.config.battery_deployment * (self.solar_pv[self.config.state][self.config.res_dso_type]
-                                                            [income]["apartment_2_4_units"] +
-                                                            self.solar_pv[self.config.state][self.config.res_dso_type]
-                                                            [income]["apartment_5_units"])
-                prob_ev = self.config.ev_deployment * (self.ev[self.config.state][self.config.res_dso_type][income]
-                                                        ["apartment_2_4_units"] + self.ev[self.config.state]
-                                                        [self.config.res_dso_type][income]["apartment_5_units"])
-            else:
-                prob_solar = self.config.solar_deployment * self.solar_pv[self.config.state][self.config.res_dso_type][income]["mobile_home"]
-                prob_batt = self.config.battery_deployment * self.solar_pv[self.config.state][self.config.res_dso_type][income]["mobile_home"]
-                prob_ev = self.config.ev_deployment * self.ev[self.config.state][self.config.res_dso_type][income]["mobile_home"]
+                prob_batt = (self.config.base.storage_percentage * self.battery_percentage[income])/(self.config.base.solar_percentage * self.solar_percentage[income])
 
-        # This is a special case, implemented for the Rates Analysis work
-        else: 
-            prob_sf = self.housing_type[self.config.state][self.config.res_dso_type][income]['single_family_attached'] + \
-                     self.housing_type[self.config.state][self.config.res_dso_type][income]['single_family_attached']
+                prob_ev = (self.config.base.ev_percentage * self.ev_percentage[income])/prob_inc
 
-            prob_inc = self.income_level[self.config.state][self.config.res_dso_type][income]
+            # add solar, ev, and battery based on RECS data or user-input
+            self.config.sol.add_solar(prob_solar, mtrname1, sol_m_name, sol_name, sol_i_name, phs, v_nom, floor_area)
 
-            prob_solar = (self.config.base.solar_percentage * self.solar_percentage[income])/(prob_sf * prob_inc)
+            self.config.batt.add_batt(prob_batt, mtrname1, bat_m_name, bat_name, bat_i_name, phs, v_nom)
 
-            prob_batt = (self.config.base.storage_percentage * self.battery_percentage[income])/(self.config.base.solar_percentage * self.solar_percentage[income])
-
-            prob_ev = (self.config.base.ev_percentage * self.ev_percentage[income])/prob_inc
-
-        # add solar, ev, and battery based on RECS data or user-input
-        self.config.sol.add_solar(prob_solar, mtrname1, sol_m_name, sol_name, sol_i_name, phs, v_nom, floor_area)
-
-        self.config.batt.add_batt(prob_batt, mtrname1, bat_m_name, bat_name, bat_i_name, phs, v_nom)
-
-        self.config.ev.add_ev(prob_ev, hsename)
+            self.config.ev.add_ev(prob_ev, hsename)
 
 class Commercial_Build:
     def __init__(self, config):
         self.config = config
         self.glm = config.glm
+        self.mdl = config.glm.glm
 
-    def add_one_commercial_zone(self, bldg: dict) -> None:
-        """Write one pre-configured commercial zone as a house
+    def add_one_commercial_zone(self, bldg: dict, key: str) -> None:
+        """Write one pre-configured commercial zone as a house and small loads
+        such as lights, plug loads, and gas water heaters as ZIPLoads.
 
         Args:
             bldg (dict): dictionary of GridLAB-D house and zipload attributes
+            key (str): location name for object
         Returns:
             None
         """
+
         name = bldg['zonename']
-        params = {"parent": bldg['parent'],
-                  "groupid": bldg['groupid'],
-                  "motor_model": "BASIC",
-                  "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
-                  "floor_area": '{:.0f}'.format(bldg['floor_area']),
-                  "design_internal_gains": '{:.0f}'.format(bldg['int_gains'] * bldg['floor_area'] * 3.413),
-                  "number_of_doors": '{:.0f}'.format(bldg['no_of_doors']),
-                  "aspect_ratio": '{:.2f}'.format(bldg['aspect_ratio']),
-                  "total_thermal_mass_per_floor_area": '{:1.2f}'.format(bldg['thermal_mass_per_floor_area']),
-                  "interior_surface_heat_transfer_coeff": '{:1.2f}'.format(bldg['surface_heat_trans_coeff']),
-                  "interior_exterior_wall_ratio": '{:.2f}'.format(bldg['interior_exterior_wall_ratio']),
-                  "exterior_floor_fraction": '{:.3f}'.format(bldg['exterior_floor_fraction']),
-                  "exterior_ceiling_fraction": '{:.3f}'.format(bldg['exterior_ceiling_fraction']),
-                  "Rwall": str(bldg['Rwall']),
-                  "Rroof": str(bldg['Rroof']),
-                  "Rfloor": str(bldg['Rfloor']),
-                  "Rdoors": str(bldg['Rdoors']),
-                  "exterior_wall_fraction": '{:.2f}'.format(bldg['exterior_wall_fraction']),
-                  "glazing_layers": '{:s}'.format(bldg['glazing_layers']),
-                  "glass_type": '{:s}'.format(bldg['glass_type']),
-                  "glazing_treatment": '{:s}'.format(bldg['glazing_treatment']),
-                  "window_frame": '{:s}'.format(bldg['window_frame']),
-                  "airchange_per_hour": '{:.2f}'.format(bldg['airchange_per_hour']),
-                  "window_wall_ratio": '{:0.3f}'.format(bldg['window_wall_ratio']),
-                  "heating_system_type": '{:s}'.format(bldg['heat_type']),
-                  "auxiliary_system_type": '{:s}'.format(bldg['aux_type']),
-                  "fan_type": '{:s}'.format(bldg['fan_type']),
-                  "cooling_system_type": '{:s}'.format(bldg['cool_type']),
-                  "air_temperature": '{:.2f}'.format(bldg['init_temp']),
-                  "mass_temperature": '{:.2f}'.format(bldg['init_temp']),
-                  "over_sizing_factor": '{:.1f}'.format(bldg['os_rand']),
-                  "cooling_COP": '{:2.2f}'.format(bldg['COP_A']),
-                  "cooling_setpoint": '80.0',
-                  "heating_setpoint": '60.0'}
-        self.glm.add_object("house", name, params)
+        self.mdl.house.add(name, {
+            "parent": bldg['parent'],
+            "groupid": bldg['groupid'],
+            "motor_model": "BASIC",
+            "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
+            "floor_area": '{:.0f}'.format(bldg['floor_area']),
+            "design_internal_gains": '{:.0f}'.format(bldg['int_gains'] * bldg['floor_area'] * 3.413),
+            "number_of_doors": '{:.0f}'.format(bldg['no_of_doors']),
+            "aspect_ratio": '{:.2f}'.format(bldg['aspect_ratio']),
+            "total_thermal_mass_per_floor_area": '{:1.2f}'.format(bldg['thermal_mass_per_floor_area']),
+            "interior_surface_heat_transfer_coeff": '{:1.2f}'.format(bldg['surface_heat_trans_coeff']),
+            "interior_exterior_wall_ratio": '{:.2f}'.format(bldg['interior_exterior_wall_ratio']),
+            "exterior_floor_fraction": '{:.3f}'.format(bldg['exterior_floor_fraction']),
+            "exterior_ceiling_fraction": '{:.3f}'.format(bldg['exterior_ceiling_fraction']),
+            "Rwall": str(bldg['Rwall']),
+            "Rroof": str(bldg['Rroof']),
+            "Rfloor": str(bldg['Rfloor']),
+            "Rdoors": str(bldg['Rdoors']),
+            "exterior_wall_fraction": '{:.2f}'.format(bldg['exterior_wall_fraction']),
+            "glazing_layers": '{:s}'.format(bldg['glazing_layers']),
+            "glass_type": '{:s}'.format(bldg['glass_type']),
+            "glazing_treatment": '{:s}'.format(bldg['glazing_treatment']),
+            "window_frame": '{:s}'.format(bldg['window_frame']),
+            "airchange_per_hour": '{:.2f}'.format(bldg['airchange_per_hour']),
+            "window_wall_ratio": '{:0.3f}'.format(bldg['window_wall_ratio']),
+            "heating_system_type": '{:s}'.format(bldg['heat_type']),
+            "auxiliary_system_type": '{:s}'.format(bldg['aux_type']),
+            "fan_type": '{:s}'.format(bldg['fan_type']),
+            "cooling_system_type": '{:s}'.format(bldg['cool_type']),
+            "air_temperature": '{:.2f}'.format(bldg['init_temp']),
+            "mass_temperature": '{:.2f}'.format(bldg['init_temp']),
+            "over_sizing_factor": '{:.1f}'.format(bldg['os_rand']),
+            "cooling_COP": '{:2.2f}'.format(bldg['COP_A']),
+            "cooling_setpoint": '80.0',
+            "heating_setpoint": '60.0' })
 
-        params = {"parent": name,
-                  "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
-                  "heatgain_fraction": "0.8",
-                  "power_fraction": '{:.2f}'.format(bldg['c_p_frac']),
-                  "impedance_fraction": '{:.2f}'.format(bldg['c_z_frac']),
-                  "current_fraction": '{:.2f}'.format(bldg['c_i_frac']),
-                  "power_pf": '{:.2f}'.format(bldg['c_p_pf']),
-                  "current_pf": '{:.2f}'.format(bldg['c_i_pf']),
-                  "impedance_pf": '{:.2f}'.format(bldg['c_z_pf']),
-                  "base_power":  '{:s}_lights*{:.2f}'.format(bldg['base_schedule'], bldg['adj_lights'])}
-        self.glm.add_object("ZIPload", "lights", params)
+        self.mdl.ZIPload.add("lights", {
+            "parent": name,
+            "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
+            "heatgain_fraction": "0.8",
+            "power_fraction": '{:.2f}'.format(bldg['c_p_frac']),
+            "impedance_fraction": '{:.2f}'.format(bldg['c_z_frac']),
+            "current_fraction": '{:.2f}'.format(bldg['c_i_frac']),
+            "power_pf": '{:.2f}'.format(bldg['c_p_pf']),
+            "current_pf": '{:.2f}'.format(bldg['c_i_pf']),
+            "impedance_pf": '{:.2f}'.format(bldg['c_z_pf']),
+            "base_power":  '{:s}_lights*{:.2f}'.format(bldg['base_schedule'], bldg['adj_lights']) })
 
-        params = {"parent": name,
-                  "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
-                  "heatgain_fraction": "0.9",
-                  "power_fraction": '{:.2f}'.format(bldg['c_p_frac']),
-                  "impedance_fraction": '{:.2f}'.format(bldg['c_z_frac']),
-                  "current_fraction": '{:.2f}'.format(bldg['c_i_frac']),
-                  "power_pf": '{:.2f}'.format(bldg['c_p_pf']),
-                  "current_pf": '{:.2f}'.format(bldg['c_i_pf']),
-                  "impedance_pf": '{:.2f}'.format(bldg['c_z_pf']),
-                  "base_power":  '{:s}_plugs*{:.2f}'.format(bldg['base_schedule'], bldg['adj_plugs'])}
-        self.glm.add_object("ZIPload", "plug_loads", params)
+        self.mdl.ZIPload.add("plug_loads", {
+            "parent": name,
+            "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
+            "heatgain_fraction": "0.9",
+            "power_fraction": '{:.2f}'.format(bldg['c_p_frac']),
+            "impedance_fraction": '{:.2f}'.format(bldg['c_z_frac']),
+            "current_fraction": '{:.2f}'.format(bldg['c_i_frac']),
+            "power_pf": '{:.2f}'.format(bldg['c_p_pf']),
+            "current_pf": '{:.2f}'.format(bldg['c_i_pf']),
+            "impedance_pf": '{:.2f}'.format(bldg['c_z_pf']),
+            "base_power":  '{:s}_plugs*{:.2f}'.format(bldg['base_schedule'], bldg['adj_plugs']) })
 
-        params = {"parent": name,
-                  "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
-                  "heatgain_fraction": "1.0",
-                  "power_fraction": "0",
-                  "impedance_fraction": "0",
-                  "current_fraction": "0",
-                  "power_pf": "1",
-                  "base_power": '{:s}_gas*{:.2f}'.format(bldg['base_schedule'], bldg['adj_gas'])}
-        self.glm.add_object("ZIPload", "gas_waterheater", params)
+        self.mdl.ZIPload.add("gas_waterheater", {
+            "parent": name,
+            "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
+            "heatgain_fraction": "1.0",
+            "power_fraction": "0",
+            "impedance_fraction": "0",
+            "current_fraction": "0",
+            "power_pf": "1",
+            "base_power": '{:s}_gas*{:.2f}'.format(bldg['base_schedule'], bldg['adj_gas']) })
 
-        params = {"parent": name,
-                  "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
-                  "heatgain_fraction": "0.0",
-                  "power_fraction": '{:.2f}'.format(bldg['c_p_frac']),
-                  "impedance_fraction": '{:.2f}'.format(bldg['c_z_frac']),
-                  "current_fraction": '{:.2f}'.format(bldg['c_i_frac']),
-                  "power_pf": '{:.2f}'.format(bldg['c_p_pf']),
-                  "current_pf": '{:.2f}'.format(bldg['c_i_pf']),
-                  "impedance_pf": '{:.2f}'.format(bldg['c_z_pf']),
-                  "base_power": '{:s}_exterior*{:.2f}'.format(bldg['base_schedule'], bldg['adj_ext'])}
-        self.glm.add_object("ZIPload", "exterior_lights", params)
+        self.mdl.ZIPload.add("exterior_lights", {
+            "parent": name,
+            "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
+            "heatgain_fraction": "0.0",
+            "power_fraction": '{:.2f}'.format(bldg['c_p_frac']),
+            "impedance_fraction": '{:.2f}'.format(bldg['c_z_frac']),
+            "current_fraction": '{:.2f}'.format(bldg['c_i_frac']),
+            "power_pf": '{:.2f}'.format(bldg['c_p_pf']),
+            "current_pf": '{:.2f}'.format(bldg['c_i_pf']),
+            "impedance_pf": '{:.2f}'.format(bldg['c_z_pf']),
+            "base_power": '{:s}_exterior*{:.2f}'.format(bldg['base_schedule'], bldg['adj_ext']) })
 
-        params = {"parent": name,
-                  "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
-                  "heatgain_fraction": "1.0",
-                  "power_fraction": "0",
-                  "impedance_fraction": "0",
-                  "current_fraction": "0",
-                  "power_pf": "1",
-                  "base_power": '{:s}_occupancy*{:.2f}'.format(bldg['base_schedule'], bldg['adj_occ'])}
-        self.glm.add_object("ZIPload", "occupancy", params)
-        
+        self.mdl.ZIPload.add("occupancy", {
+            "parent": name,
+            "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
+            "heatgain_fraction": "1.0",
+            "power_fraction": "0",
+            "impedance_fraction": "0",
+            "current_fraction": "0",
+            "power_pf": "1",
+            "base_power": '{:s}_occupancy*{:.2f}'.format(bldg['base_schedule'], bldg['adj_occ']) })
+
         self.glm.add_metrics_collector(name, "house")
+        # Add position data to commercial building, if available
+        if self.config.gis_file:
+            self.config.pos[name] = self.config.pos_data[key]
+
 
     def define_commercial_zones(self, rgn: int, key: str, kva: float) -> None:
         """Define building parameters for commercial building zones and ZIP 
@@ -1079,6 +1135,7 @@ class Commercial_Build:
         Returns:
             None
         """
+
         mtr = self.config.base.comm_loads[key][0]
         comm_type = self.config.base.comm_loads[key][1]
         nphs = int(self.config.base.comm_loads[key][4])
@@ -1123,8 +1180,11 @@ class Commercial_Build:
                     params["current_pf_" + phs] = '{:f}'.format(self.config.base.c_i_pf)
                     params["power_pf_" + phs] = '{:f}'.format(self.config.base.c_p_pf)
                     params["base_power_" + phs] = '{:.2f}'.format(self.config.base.light_scalar_comm * phsva)
-            self.glm.add_object("load", name, params)
-        
+            self.mdl.load.add(name, params)
+            # Add position data to commercial ZIPload, if available
+            if self.config.gis_file:
+                self.config.pos[name] = self.config.pos_data[key]
+
         else:
             bld_specs = self.building_model_specifics[comm_type] 
             # Randomly determine the age (year of construction) of the building
@@ -1194,16 +1254,15 @@ class Commercial_Build:
                         bldg['os_rand'] = bldg['oversize'] * (0.8 + 0.4 * rng.random())
                         bldg['COP_A'] = self.config.base.cooling_COP * (0.8 + 0.4 * rng.random())
 
-                        # randomize 10# then convert W/sf -> kW
+                        # Randomize 10# then convert W/sf -> kW
                         bldg['adj_lights'] = (0.9 + 0.1 * rng.random()) * floor_area / 1000.
                         bldg['adj_plugs'] = (0.9 + 0.2 * rng.random()) * floor_area / 1000.
                         bldg['adj_gas'] = (0.9 + 0.2 * rng.random()) * floor_area / 1000.
                         bldg['adj_ext'] = (0.9 + 0.1 * rng.random()) * floor_area / 1000.
                         bldg['adj_occ'] = (0.9 + 0.1 * rng.random()) * floor_area / 1000.
 
-                        bldg['zonename'] = gld_strict_name(
-                            key + '_floor_' + str(floor) + '_zone_' + str(zone) + '_' + str(comm_type))
-                        Commercial_Build.add_one_commercial_zone(self, bldg)
+                        bldg['zonename'] = gld_strict_name(f'{key}_floor_{floor}_zone_{zone}_{comm_type}')
+                        Commercial_Build.add_one_commercial_zone(self, bldg, key)
 
             elif comm_type == 'big_box':
                 bldg['ceiling_height'] = 14.
@@ -1255,14 +1314,14 @@ class Commercial_Build:
                     bldg['COP_A'] = self.config.base.cooling_COP * (0.8 + 0.4 * rng.random())
 
                     bldg['adj_lights'] = 1.2 * (
-                            0.9 + 0.1 * rng.random()) * floor_area / 1000.  # randomize 10# then convert W/sf -> kW
+                            0.9 + 0.1 * rng.random()) * floor_area / 1000.  # Randomize 10# then convert W/sf -> kW
                     bldg['adj_plugs'] = (0.9 + 0.2 * rng.random()) * floor_area / 1000.
                     bldg['adj_gas'] = (0.9 + 0.2 * rng.random()) * floor_area / 1000.
                     bldg['adj_ext'] = (0.9 + 0.1 * rng.random()) * floor_area / 1000.
                     bldg['adj_occ'] = (0.9 + 0.1 * rng.random()) * floor_area / 1000.
 
-                    bldg['zonename'] = gld_strict_name(key + '_zone_' + str(zone) + '_' + str(comm_type))
-                    Commercial_Build.add_one_commercial_zone(self, bldg)
+                    bldg['zonename'] = gld_strict_name(f'{key}_zone_{zone}_{comm_type}')
+                    Commercial_Build.add_one_commercial_zone(self, bldg, key)
 
             elif comm_type == 'strip_mall':
                 bldg['ceiling_height'] = 17
@@ -1307,8 +1366,8 @@ class Commercial_Build:
                     bldg['adj_gas'] = (0.8 + 0.4 * rng.random()) * floor_area / 1000.0
                     bldg['adj_ext'] = (0.8 + 0.4 * rng.random()) * floor_area / 1000.0
                     bldg['adj_occ'] = (0.8 + 0.4 * rng.random()) * floor_area / 1000.0
-                    bldg['zonename'] = gld_strict_name(key + '_zone_' + str(zone) + '_' + str(comm_type))
-                    Commercial_Build.add_one_commercial_zone(self, bldg)
+                    bldg['zonename'] = gld_strict_name(f'{key}_zone_{zone}_{comm_type}')
+                    Commercial_Build.add_one_commercial_zone(self, bldg, key)
 
             else: # For all other building types
                 bldg['skew_value'] = self.glm.randomize_commercial_skew()
@@ -1349,8 +1408,8 @@ class Commercial_Build:
                     bldg['base_schedule'] = 'retail'
                 elif comm_type == 'low_occupancy':
                     bldg['base_schedule'] = 'lowocc'
-                bldg['zonename'] = gld_strict_name(key + '_' + str(comm_type))
-                Commercial_Build.add_one_commercial_zone(self, bldg)
+                bldg['zonename'] = gld_strict_name(f'{key}_{comm_type}')
+                Commercial_Build.add_one_commercial_zone(self, bldg, key)
 
     def define_comm_bldg(self, dso_type: str, num_bldgs: float) -> list:
         """Randomly selects a set number of buildings by type and size (sqft).
@@ -1362,6 +1421,7 @@ class Commercial_Build:
         Returns:
             bldgs (list): buildings
         """
+
         global bldg_area
         bldgs = {}
         bldg_types = Commercial_Build.normalize_dict_prob(dso_type, self.general['building_type'][dso_type])
@@ -1378,7 +1438,7 @@ class Commercial_Build:
     @staticmethod
     def normalize_dict_prob(name: str, diction: dict) -> dict:
         """ Ensure that the probability distribution of values in a dictionary 
-            effectively sums to one
+            effectively sums to one.
 
         Args:
             name (str): name of dictionary to normalize
@@ -1386,9 +1446,10 @@ class Commercial_Build:
                 probabilities
         
         Returns:
-            diction (dict): normalized dictionary of elements and associated 
+            dict: normalized dictionary of elements and associated with
                 non-cumulative probabilities
         """
+
         sum1 = 0
         sum2 = 0
         for i in diction:
@@ -1404,16 +1465,17 @@ class Commercial_Build:
     @staticmethod
     def rand_bin_select(diction: dict, probability: float) -> str | None:
         """ Returns the element (bin) in a dictionary given a certain
-          probability
+          probability.
 
         Args:
             diction: dictionary of elements and associated non-cumulative 
                 probabilities
             probability: scalar value between 0 and 1
-        
+
         Returns:
-            str:
+            str: element
         """
+
         total = 0
 
         for element in diction:
@@ -1425,7 +1487,7 @@ class Commercial_Build:
     @staticmethod
     def sub_bin_select(bin_range: str, bin_type: str, prob: float) -> int:
         """ Returns a scalar value within a bin type based on a uniform
-            probability within that bin range
+            probability within that bin range.
 
         Args:
             bin_range (str): name of bin range
@@ -1433,8 +1495,9 @@ class Commercial_Build:
             prob (float): scalar value between 0 and 1
         
         Returns:
-            val (int): scalar value within bin range
+            int: val, scalar value within bin range
         """
+
         bins = {}
         if bin_type == 'vintage':
             bins = {'pre_1960': [1945, 1959],
@@ -1464,7 +1527,7 @@ class Commercial_Build:
     @staticmethod
     def find_envelope_prop(prop: str, age: int, env_data: dict, climate: str) -> float:
         """ Returns the envelope value for a given type of property based on the
-            age and (ASHRAE) climate zone of the building
+            age and (ASHRAE) climate zone of the building.
 
         Args:
             prop (str): envelope material property of interest (e.g. 
@@ -1474,7 +1537,7 @@ class Commercial_Build:
             env_data (dict): Dictionary of envelope property data
             climate (str): ASHRAE climate zone of building (e.g. '2A')
         Returns:
-            val (float): property value - typically a U-value.
+            float: val, property value - typically a U-value.
         """
 
         val = None
@@ -1515,11 +1578,13 @@ class Battery:
     def __init__(self, config):
         self.config = config
         self.glm = config.glm
+        self.mdl = config.glm.glm
         self.battery_count = 0
-    
+        self.battery_capacity_count = 0
+
     def add_batt(self, bat_prob: float, parent_mtr: str, bat_mtr: str, bat_name: str, inv_name: str, phs: float, v_nom: float) -> None:
         """Define and add battery and inverter objects to house, under the 
-        parentage of the meter_name.
+        parentage of the parent_mtr.
 
         Args:
             bat_prob (float): probability distribution of houses with batteries
@@ -1533,6 +1598,7 @@ class Battery:
         Returns:
             None
         """
+
         if rng.random() <= bat_prob:
             battery_capacity = get_dist(self.config.batt.capacity['mean'],
                                         self.config.batt.capacity['deviation_range_per']) * 1000
@@ -1547,51 +1613,58 @@ class Battery:
             rated_power = max(max_charge_rate, max_discharge_rate)
 
             self.battery_count += 1
-            params = {"parent": parent_mtr,
-                        "phases": phs,
-                        "nominal_voltage": str(v_nom)}
-            self.glm.add_object("triplex_meter", bat_mtr, params)
+            self.battery_capacity_count += battery_capacity
+            self.mdl.triplex_meter.add(bat_mtr, {
+                "parent": parent_mtr,
+                "phases": phs,
+                "nominal_voltage": str(v_nom) })
 
-            params = {"parent": bat_mtr,
-                        "phases": phs,
-                        "groupid": "batt_inverter",
-                        "generator_status": "ONLINE",
-                        "generator_mode": "CONSTANT_PQ",
-                        "inverter_type": "FOUR_QUADRANT",
-                        "four_quadrant_control_mode": self.config.base.storage_inv_mode,
-                        "charge_lockout_time": 1,
-                        "discharge_lockout_time": 1,
-                        "rated_power": rated_power,
-                        "charge_on_threshold": "2 kW",
-                        "charge_off_threshold": "7 kW",
-                        "discharge_on_threshold": "10 kW",
-                        "discharge_off_threshold": "5 kW",
-                        "max_charge_rate": max_charge_rate,
-                        "max_discharge_rate": max_discharge_rate,
-                        "sense_object": bat_mtr,
-                        "inverter_efficiency": inverter_efficiency,
-                        "power_factor": 1.0}
-            self.glm.add_object("inverter", inv_name, params)
+            self.mdl.inverter.add(inv_name, {
+                "parent": bat_mtr,
+                "phases": phs,
+                "groupid": "batt_inverter",
+                "generator_status": "ONLINE",
+                "generator_mode": "CONSTANT_PQ",
+                "inverter_type": "FOUR_QUADRANT",
+                "four_quadrant_control_mode": self.config.base.storage_inv_mode,
+                "charge_lockout_time": 1,
+                "discharge_lockout_time": 1,
+                "rated_power": rated_power,
+                "charge_on_threshold": "2 kW",
+                "charge_off_threshold": "7 kW",
+                "discharge_on_threshold": "10 kW",
+                "discharge_off_threshold": "5 kW",
+                "max_charge_rate": max_charge_rate,
+                "max_discharge_rate": max_discharge_rate,
+                "sense_object": bat_mtr,
+                "inverter_efficiency": inverter_efficiency,
+                "power_factor": 1.0 })
 
-            params = {"parent": inv_name,
-                        "use_internal_battery_model": "true",
-                        "nominal_voltage": 480,
-                        "battery_capacity": battery_capacity,
-                        "round_trip_efficiency": round_trip_efficiency,
-                        "state_of_charge": 0.50}
-            self.glm.add_object("battery", bat_name, params)
+            self.mdl.battery.add(bat_name, {
+                "parent": inv_name,
+                "use_internal_battery_model": "true",
+                "nominal_voltage": 480,
+                "battery_capacity": battery_capacity,
+                "round_trip_efficiency": round_trip_efficiency,
+                "state_of_charge": 0.50 })
             self.glm.add_metrics_collector(inv_name, "inverter")
 
 class Solar:
     def __init__(self, config):
         self.config = config
         self.glm = config.glm
+        self.mdl = config.glm.glm
         self.solar_count = 0
         self.solar_kw = 0
   
     def add_solar(self, solar_prob: float,  parent_mtr: str, solar_mtr: str, solar_name: str, inv_name: str, phs: float, v_nom: float, floor_area: float) -> None:
         """ Define and add solar and inverter to house under the parentage of
-        meter_name
+        parent_mtr.
+
+        Find solar capacity directly proportional to sq. ft. of house.
+        Typical PV panel is 350-450 Watts and avg home has 5kW installed.
+        We assume 2500 sq. ft as avg area of a single family house, and one
+        350 W panel for every 175 sq. ft.
 
         Args:
             solar_prob (float): probability distribution of houses with solar 
@@ -1602,26 +1675,20 @@ class Solar:
             phs (float): phase of parent triplex meter
             v_nom (float): nominal line-to-neutral voltage at basenode
             floor_area (float): area of house in sqft
-        
         Returns:
             None
         """
 
-        if rng.random() <= solar_prob: 
-            # Find solar capacity directly proportional to sq. ft.
-            # typical PV panel is 350 Watts and avg home has 5kW installed.
-            # If we assume 2500 sq. ft as avg area of a single family house,
-            # and one 350 W panel for every 175 sq. ft.:
+        if rng.random() <= solar_prob:
             num_panel = np.floor(floor_area / 175)
             inverter_undersizing = 1.0
             inv_power = num_panel * 350 * inverter_undersizing
             
             self.solar_count += 1
             self.solar_kw += 0.001 * inv_power
-            params = {"parent": parent_mtr,
+            self.mdl.triplex_meter.add(solar_mtr, {"parent": parent_mtr,
                         "phases": phs,
-                        "nominal_voltage": str(v_nom)}
-            self.glm.add_object("triplex_meter", solar_mtr, params)
+                        "nominal_voltage": str(v_nom) })
 
             params = {"parent": solar_mtr,
                         "phases": phs,
@@ -1644,11 +1711,11 @@ class Solar:
                 params["V_In"] = "10000000"
                 params["I_In"] = "10000000"
 
-            self.glm.add_object("inverter", inv_name, params)
+            self.mdl.inverter.add(inv_name, params)
             self.glm.add_metrics_collector(inv_name, "inverter")
 
             if self.config.use_solar_player == "False":
-                params = {
+                self.mdl.solar.add(solar_name, {
                     "parent": inv_name,
                     "panel_type": self.config.solar["panel_type"],
                     # "area": '{:.2f}'.format(panel_area),
@@ -1659,8 +1726,7 @@ class Solar:
                     "orientation_azimuth": self.config.solar["orientation_azimuth"],
                     "orientation": self.config.solar["orientation"],
                     "SOLAR_TILT_MODEL": self.config.solar["SOLAR_TILT_MODEL"],
-                    "SOLAR_POWER_MODEL": self.config.solar["SOLAR_POWER_MODEL"]}
-                self.glm.add_object("solar", solar_name, params)
+                    "SOLAR_POWER_MODEL": self.config.solar["SOLAR_POWER_MODEL"] })
 
 class Electric_Vehicle:
     def __init__(self, config):
@@ -1685,6 +1751,7 @@ class Electric_Vehicle:
                 or work duration exceeds hours of day.
             UserWarning: Raises: "home and work arrival time are not consistent
                 with durations!" if EV drive time is not valid.
+
         Returns:
             None
         """
@@ -1761,21 +1828,20 @@ class Electric_Vehicle:
         raise UserWarning('EV model sale distribution does not sum to 1!')
 
     def match_driving_schedule(self, ev_range: float, ev_mileage: float, ev_max_charge: float) -> dict:
-        """Method to match the schedule of each vehicle from NHTS data based on
-        vehicle ev_range.
-        - Checks to make sure daily travel miles are less than
-            ev_range-margin. Allows a reserve SoC to be specified.
-        - Checka if home_duration is enough to charge for daily_miles driven +
-            margin
-        - Since during v1g or v2g mode, we only allow charging start at the
-            start of the next hour after vehicle, come home and charging must 
-            end at the full hour just before vehicle leaves home, the actual 
+        """Method to match the schedule of each vehicle from NHTS data based on vehicle ev_range.
+
+        - Checks to make sure daily travel miles are less than (ev_range-margin).
+            Allows a reserve SoC to be specified.
+        - Checks if home_duration is enough to charge for daily_miles (driven+margin)
+        - During v1g or v2g mode, we only allow charging to start at the top
+            of the hour following the vehicle arriving home. Charging must
+            end at the full hour just before vehicle leaves home. The actual
             chargeable hours duration may be smaller than the car home duration 
             by maximum 2 hours.
         - Maximum commute_duration: 1 hour 30 minutes for work-home and 
-            30 minutes for home-work. If remaining time is less than an hour, 
-            make that commute time, but it should not occur as maximum home 
-            duration is always less than 23 hours
+            30 minutes for home-work. If remaining time is less than an hour,
+            make that commute time, but it should not occur as maximum home
+            duration is always less than 23 hours.
 
         Args:
             ev_range (float): range of EV, in miles
@@ -1836,7 +1902,7 @@ class Electric_Vehicle:
 
     @staticmethod
     def is_drive_time_valid(drive_sch: dict) -> bool:
-        """Check if work arrival time and home arrival time adds up properly
+        """Check if work arrival time and home arrival time add up properly.
 
         Args:
             drive_sch (dict): Contains {daily_miles, home_arr_time,
@@ -1845,6 +1911,7 @@ class Electric_Vehicle:
         Returns:
             bool: true or false
         """
+
         home_leave_time = add_hhmm_secs(drive_sch['home_arr_time'], drive_sch['home_duration'])
         commute_secs = min(3600, 24 * 3600 - drive_sch['home_duration'])
         work_arr_time = add_hhmm_secs(home_leave_time, commute_secs / 2)
@@ -1863,29 +1930,31 @@ class Electric_Vehicle:
             data_file (str): path of the file
 
         Returns:
-            df_fin (pd.DataFrame): dataframe containing start_time, end_time, 
-                travel_day (weekday/weekend) and daily miles driven
+            dataframe: df_fin, containing start_time, end_time, travel_day
+                (weekday/weekend) and daily miles driven
         """
+
         # Read data from NHTS survey
         df_data = pd.read_csv(data_file, index_col=[0, 1])
-        # filter based on trip leaving only from home and not from work or other places
-        # take the earliest time leaving from home of a particular vehicle
+        # Filter based on trip leaving only from home and not from work or other
+        # places. Take the earliest time leaving home of a particular vehicle.
         df_data_leave = df_data[df_data['WHYFROM'] == 1].groupby(level=['HOUSEID', 'VEHID']).min()[
             ['STRTTIME', 'TRAVDAY']]
-        # filter based on trip arriving only at home and not at work or other places
-        # take the latest time arriving at home of a particular vehicle
+        # Filter based on trip arriving only at home and not at work or other
+        # places. Take the latest time arriving at home of a particular vehicle.
         df_data_arrive = df_data[df_data['WHYTO'] == 1].groupby(level=['HOUSEID', 'VEHID']).max()[
             ['ENDTIME', 'TRAVDAY']]
-        # take the sum of trip miles by a particular vehicle in a day
+        # Take the sum of trip miles by a particular vehicle in a day
         df_data_miles = df_data.groupby(level=['HOUSEID', 'VEHID']).sum()['TRPMILES']
-        # limit daily miles to maximum possible range of EV from the ev model data as EVs cant travel more
-        # than the range in a day if we don't consider the highway charging
+        # Limit daily miles to maximum possible range of EV from the EV model
+        # data, as EVs can't travel more than their range in a day if we don't
+        # consider highway charging.
         max_ev_range = max(self.Range_miles.values())
         df_data_miles = df_data_miles[df_data_miles < max_ev_range]
         df_data_miles = df_data_miles[df_data_miles > 0]
 
-        # combine all 4 parameters: starttime, endtime, total_miles, travel_day.
-        # Ignore vehicle ids that don't have both leaving and arrival time at home
+        # Combine all 4 parameters: starttime, endtime, total_miles, travel_day.
+        # Ignore vehicle IDs that don't have both leaving and arrival time at home
         temp = df_data_leave.merge(df_data_arrive['ENDTIME'], left_index=True, right_index=True)
         df_fin = temp.merge(df_data_miles, left_index=True, right_index=True)
         return df_fin
@@ -1894,15 +1963,16 @@ class Feeder:
     def __init__(self, config: Config):
         self.config = config
         self.glm = config.glm
-        
+        self.mdl = config.glm.glm
+
         # Generate RECS metadata, if it does not exist
         self.config.generate_recs()
         # Assign defaults based on RECS data
         self.config.load_recs()
-
+        # Load position data, if available
+        self.config.load_position()
         # Populate the feeder
         self.feeder_gen()
-
         # Configure the .glm
         self.config.preamble()
 
@@ -1921,43 +1991,60 @@ class Feeder:
         #self.glm.add_voltage_class('meter',config.vln, self.config.vll, self.secnode)
         #self.glm.add_voltage_class('load', self.config.vln, self.config.vll, self.secnode)
 
-        print(f"{self.config.sol.solar_count} pv totaling "
-              f"{self.config.sol.solar_kw:.1f} kW, with "
-              f"{self.config.batt.battery_count} batteries and "
-              f"{self.config.ev.ev_count} EV chargers.")
+        print('DER added:'
+              f" {self.config.sol.solar_count} PV with combined capacity of "
+              f"{self.config.sol.solar_kw:.1f} kW; "
+              f"{self.config.batt.battery_count} batteries with combined capacity of "
+              f"{self.config.batt.battery_capacity_count/1000:.1f} kWh; and "
+              f"{self.config.ev.ev_count} EV chargers")
+
+        # Write the popoulated glm model to the output file
         self.glm.write_model(os.path.join(config.data_path, config.out_file_glm))
 
-        # To plot the model using the networkx package:
-        #print("\nPlotting image of model; this may take several minutes.")
-        #self.glm.model.plot_model()
+        # Plot the model using the networkx package:
+        if self.config.make_plot:
+            if self.config.gis_file:
+                print("\nUsing location data to plot image of model; this should just take a sec.")
+                # Merge house and meter position assignments with rest of GIS data
+                self.config.pos |= self.config.pos_data
+                self.glm.model.plot_model(self.config.pos)
+            else:
+                print("\nPlotting image of model; this may take several minutes.")
+                self.glm.model.plot_model()
+        else:
+            pass
 
     def feeder_gen(self) -> None:
-        """ Read in the backbone feeder, then loops through transformer 
+        """ Read in the backbone feeder, then loop through transformer
         instances and assign a standard size based on the downstream load. 
         Change the referenced transformer_configuration attributes. Write the
         standard transformer_configuration instances we need.
 
-        The tax choice array are for feeder taxonomy signature glm file
-        and are sized accordingly with file name, the transformer configuration,
-        setting current_limit for fuse, setting cap_nominal_voltage and
-        current_limit for capacitor
+        The tax choice array are for feeder taxonomy signature glm file and are
+        sized accordingly with file name, the transformer configuration, setting
+        current_limit for fuse, setting cap_nominal_voltage and current_limit
+        for capacitor.
 
         Args:
-            None            
-
+            None
         Returns:
             None
         """
-        # Read in backbone feeder to populate
+
+        # Read in backbone feeder to populate. User-defined or taxonomy feeder.
         if not self.config.in_file_glm:
             i_glm, success = self.glm.model.readBackboneModel(self.config.taxonomy)
             print('User feeder not defined, using taxonomy feeder', self.config.taxonomy)
             if not success:
                 exit()
         else:
-            i_glm, success = self.glm.read_model(os.path.join(self.data_path, self.config.in_file_glm))
+            i_glm, success = self.glm.read_model(os.path.join(self.config.data_path, self.config.in_file_glm))
             if not success:
                 exit()
+
+        # To plot an unpopulated version of the base feeder:
+        #self.glm.model.plot_model()
+        #self.glm.model.plot_model(self.config.gis_file)
 
         xfused = {}  # ID, phases, total kva, vnom (LN), vsec, poletop/padmount
         self.secnode = {}  # Node, st, phases, vnom
@@ -1965,9 +2052,9 @@ class Feeder:
 
         for e_name, e_object in i_glm.transformer.items():
             # "identify_seg_loads" does not account for parallel paths in the
-            # model. This test allows us to skip paths that have not been
-            # had load accumulated with them, including parallel paths. Also 
-            # skipping population for transformers with secondary more than 500 V
+            # model. This test allows us to skip paths that have not had load
+            # accumulated with them, including parallel paths. Also skipping
+            # population for transformers with secondary voltage more than 500 V.
             e_config = e_object['configuration']
             sec_v = float(i_glm.transformer_configuration[e_config]['secondary_voltage'])
 
@@ -2059,29 +2146,30 @@ class Feeder:
             self.glm.add_link_class(link, self.seg_loads, want_metrics=metrics)
         return self.secnode, self.seg_loads
 
-    def identify_xfmr_houses(self, gld_class: str, seg_loads: dict, avgHouse: float, rgn: int) -> None:
+    def identify_xfmr_houses(self, gld_class: str, seg_loads: dict, avg_house: float, rgn: int) -> None:
         """For the full-order feeders, scan each service transformer to
-        determine the number of houses it should have
+        determine the number of houses it should have.
+
         Args:
             gld_class (str): the GridLAB-D class name to scan
-            seg_loads (dict): dictionary of downstream load (kva) served by each
-               GridLAB-D link
-            avgHouse (float): the average house load in kva
+            seg_loads (dict): dictionary of downstream load (kva) served by each GridLAB-D link
+            avg_house (float): the average house load in kva
             rgn (int): the region number, 1..5
+
         Returns:
             None
         """
 
-        print(f"Average House size: {avgHouse} kVA")
+        print(f"Average House size: {avg_house} kVA")
         total_houses = 0
         total_sf = 0
         total_apt = 0
         total_mh = 0
         total_small = 0
         total_small_kva = 0
-        dsoIncomePct = self.config.res_bld.getDsoIncomeLevelTable()
+        dso_income_pct = self.config.res_bld.getDsoIncomeLevelTable()
         try:
-            entity = self.glm.glm.__getattribute__(gld_class)
+            entity = self.mdl.__getattribute__(gld_class)
         except:
             return
         for e_name, e_object in entity.items():
@@ -2089,7 +2177,7 @@ class Feeder:
                 tkva = seg_loads[e_name][0]
                 phs = seg_loads[e_name][1]
                 if 'S' in phs:
-                    self.config.res_bld.nhouse = int((tkva / avgHouse) + 0.5)  # round to nearest int
+                    self.config.res_bld.nhouse = int((tkva / avg_house) + 0.5)  # round to nearest int
                     node = gld_strict_name(e_object['to'])
                     if self.config.res_bld.nhouse <= 0:
                         total_small += 1
@@ -2097,10 +2185,11 @@ class Feeder:
                         self.config.base.small_nodes[node] = [tkva, phs]
                     else:
                         total_houses += 1
-                        lg_v_sm = tkva / avgHouse - self.config.res_bld.nhouse  # >0 if we rounded down the number of houses
-                        # let's get the income level for the dso_type and state
-                        inc_lev = self.config.res_bld.selectIncomeLevel(dsoIncomePct, rng.random())
-                        # let's get the vintage table for dso_type, state, and income level
+                        lg_v_sm = tkva / avg_house - self.config.res_bld.nhouse
+                        # > 0 if we rounded down the number of houses
+                        # Get the income level for the dso_type and state
+                        inc_lev = self.config.res_bld.selectIncomeLevel(dso_income_pct, rng.random())
+                        # Get the vintage table for dso_type, state, and income level
                         dsoThermalPct = self.config.res_bld.getDsoThermalTable(self.config.income_level[inc_lev])
                         bldg, ti = self.config.res_bld.selectResidentialBuilding(dsoThermalPct, rng.random())
                         if bldg == 0:
@@ -2110,9 +2199,10 @@ class Feeder:
                         else:
                             total_mh += 1
                         self.config.base.house_nodes[node] = [self.config.res_bld.nhouse, rgn, lg_v_sm, phs, bldg, ti, inc_lev]
-        print(f"{total_small} small loads totaling {total_small_kva:.2f} kVA")
-        print(f"{total_houses} houses added to {len(self.config.base.house_nodes)} transformers")
-        print(f"{total_sf} single family homes, {total_apt} apartments, and {total_mh} mobile homes")
+        print('Results in a populated feeder with:')
+        print(f"    {total_small} small loads totaling {total_small_kva:.2f} kVA")
+        print(f"    {total_houses} houses added to {len(self.config.base.house_nodes)} transformers")
+        print(f"    {total_sf} single family homes, {total_apt} apartments, and {total_mh} mobile homes")
     
     def identify_commercial_loads(self, gld_class: str, avgBuilding: float) -> None:
         """For the full-order feeders, scan each load with load_class==C to
@@ -2142,14 +2232,13 @@ class Feeder:
         sqft_kva_ratio = 0.005  # Average com building design load is 5 W/sq ft.
 
         try:
-            entity = self.glm.glm.__getattribute__(gld_class)
+            entity = self.mdl.__getattribute__(gld_class)
         except:
             return
         removenames = []
         for e_name, e_object in entity.items():
             if 'load_class' not in e_object:
                 log.warning("load_class not defined! Cannot add commercial loads")
-                print("load_class not defined! Could not add commercial loads.")
                 return None
             else:
                 select_bldg = None
@@ -2221,23 +2310,23 @@ class Feeder:
             self.glm.del_object(gld_class, e_name)
         
         if e_object['load_class'] != 'C':
-            print("No commercial 'C' load classes defined. Cannot add commercial loads.")
             return None
         
         # Print commercial info
-        print('{} commercial loads identified, {} buildings added, approximately {} kVA still to be assigned.'.
+        print('Results in a populated feeder with:')
+        print('    {} commercial loads identified, {} buildings added, approximately {} kVA still to be assigned.'.
               format(len(self.config.base.comm_bldgs_pop), total_commercial, int(remain_comm_kva)))
-        print('  ', total_office, 'med/small offices with 3 floors, 5 zones each:', total_office*5*3, 'total office zones' )
-        print('  ', total_warehouse_storage, 'warehouses,')
-        print('  ', total_big_box, 'big box retail with 6 zones each:', total_big_box*6, 'total big box zones')
-        print('  ', self.config.com_bld.total_strip_mall, 'strip malls,')
-        print('  ', total_education, 'education,')
-        print('  ', total_food_service, 'food service,')
-        print('  ', total_food_sales, 'food sales,')
-        print('  ', total_lodging, 'lodging,')
-        print('  ', total_healthcare_inpatient, 'healthcare,')
-        print('  ', total_low_occupancy, 'low occupancy,')
-        print('  ', total_zipload, 'streetlights')
+        print('     ', total_office, 'med/small offices with 3 floors, 5 zones each:', total_office*5*3, 'total office zones' )
+        print('     ', total_warehouse_storage, 'warehouses,')
+        print('     ', total_big_box, 'big box retail with 6 zones each:', total_big_box*6, 'total big box zones')
+        print('     ', self.config.com_bld.total_strip_mall, 'strip malls,')
+        print('     ', total_education, 'education,')
+        print('     ', total_food_service, 'food service,')
+        print('     ', total_food_sales, 'food sales,')
+        print('     ', total_lodging, 'lodging,')
+        print('     ', total_healthcare_inpatient, 'healthcare,')
+        print('     ', total_low_occupancy, 'low occupancy,')
+        print('     ', total_zipload, 'streetlights')
         log.info('The {} commercial loads and {} streetlights (ZIPloads) totaling {:.2f} kVA added to this feeder'.
                  format(total_commercial, total_zipload, self.config.com_bld.total_comm_kva))
 
@@ -2248,5 +2337,24 @@ def _test1():
     config.data_path = data_path
     feeder = Feeder(config)
 
+def _test2():
+    import filecmp
+    data_path = os.path.expandvars('$TESPDIR/examples/capabilities/feeder-generator/')
+    out_file = 'R1-12.47-2_populated.glm'
+    out = os.path.join(data_path, out_file)
+
+    config_file = 'test_feeder_config.json5'
+    config = Config(os.path.join(data_path, config_file))
+    config.data_path = data_path
+    feeder = Feeder(config)
+
+    compare = filecmp.cmp(out, os.path.join(data_path, config.out_file_glm))
+    print("Does the populated test feeder match the original 'R1-12.47-2_populated.glm'?")
+    print(compare)
+
+
 if __name__ == "__main__":
     _test1()
+    
+    # Test that gld_feeder_generator.py populates the R1-12.47-2 taxonomy feeder as expected
+    #_test2()

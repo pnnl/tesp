@@ -1,3 +1,7 @@
+..
+    _ Copyright (c) 2021-2023 Battelle Memorial Institute
+    _ file: DSOT_agents_sliders.rst
+
 DSO+T Agent Bidding and Sliders
 *******************************
 

@@ -1,4 +1,5 @@
-# Copyright (C) 2017-2019 Battelle Memorial Institute
+# Copyright (C) 2022-2024 Battelle Memorial Institute
+# See LICENSE file at https://github.com/pnnl/tesp
 # file: microgrid_agent.py
 """Manages the Transactive Control scheme for DSO+T implementation version 1
 

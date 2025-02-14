@@ -8,7 +8,7 @@ do
     if [ -f "$FILE" ]
     then
       id=$(cat $FILE)
-      echo "Stopping simulation" $dir ", docker container id" $id
+      echo "Stopping simulation $dir , docker container id $id"
       docker stop $id
     fi
   fi

@@ -19,7 +19,7 @@ hostname > "$target_cases/$(hostname).log"
   do
     if [ -d "$dir" ]
     then
-      casename=$(basename $dir)
+      case_name=$(basename $dir)
       cnt=$(docker ps --filter "name=$1" | wc -l)
       if [ $cnt -lt $max ]
       then
@@ -33,7 +33,7 @@ hostname > "$target_cases/$(hostname).log"
           hostname > $dir/hostname
           yes | cp -rf $dir .
           cd "$(basename $dir)" || exit
-          sed -i "s:--rm:--rm --name $casename:g" "docker-run.sh"
+          sed -i "s:--rm:--rm --name $case_name:g" "docker-run.sh"
           ./docker-run.sh
           cd ..
         fi

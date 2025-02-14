@@ -1,9 +1,11 @@
+..
+    _ Copyright (c) 2021-2023 Battelle Memorial Institute
+    _ file: DSOT_hvac_agent.rst
+
 DSO+T HVAC Agent
 ****************
 
 This is an proposed outline for the further documentation we need to do on the DSO+T HVAC agent.
-
-
 
 DSO+T HVAC Agent Key Parameters
 ===============================
@@ -21,8 +23,8 @@ To aid in understanding the DSO+T HVAC agent, the code was examined and a diagra
 ------------------
 
 
-``clearing_price
-----------------
+``clearing_price``
+------------------
 
 
 ``hvac_kw``

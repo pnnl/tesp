@@ -32,7 +32,8 @@ TESP Capability Demonstrations
     ./demonstrations/gld_modifier.rst
     ./demonstrations/datastore.rst
     ./design/feeder_generator/gld_residential_feeder.rst
-    
+    ./design/Design_notes.md
+
     
 TESP uses TCP/IP port 5570 for communication and requires Python 3. Simulations can start many processes, and take minutes or hours to complete. At this time, instructions are given only for the Linux package or Docker version of TESP, which is installable. See below for advice on running TESP in native Mac OS X or Windows.
 
@@ -43,7 +44,7 @@ Some general tips for Linux:
 * high-performance computing (HPC) should be considered if simulating more than one substation-week
 * you may have to increase the number of processes and open file handles allowed
 * **lsof -i :5570** will show all processes connected to port 5570
-* use **ls -al** or **cat** or **tail** on log files or csv filesto show progress of a case solution
+* use **ls -al** or **cat** or **tail** on log files or csv files to show progress of a case solution
 * **./kill5570.sh** will terminate all processes connected to port 5570; if you have to do this, make sure **lsof -i :5570** shows nothing before attempting another case
 * it is recommended that you append **&** to any python plot commands, so they run in the background.
 
@@ -53,7 +54,6 @@ TESP Example Analysis
 .. toctree::
     :maxdepth: 3
 
-    
     ./examples/SGIP1_Example
     ./examples/dsot/DSOT_index
     ./examples/Consensus_Usecase

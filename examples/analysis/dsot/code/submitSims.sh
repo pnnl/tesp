@@ -11,7 +11,7 @@ echo "This script will copy $1 case(s) to"
 echo "  $SIM_DATA/cases"
 
 # change the ready folder
-target_cases="$SIM_DATA/cases"
+target_cases=$SIM_DATA/cases
 
 # cd to directory where the cases
 for dir in $1*
@@ -23,7 +23,7 @@ do
     if [ -f "$FILE" ]
     then
       echo "Submit simulation $dir"
-      rm -rf $target_cases/$dir
+      rm -rf "$target_cases/$dir"
       cp -r "$dir" "$target_cases"
       rm -rf "$dir"
     fi

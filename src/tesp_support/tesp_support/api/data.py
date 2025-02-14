@@ -1,4 +1,5 @@
 # Copyright (C) 2023 Battelle Memorial Institute
+# See LICENSE file at https://github.com/pnnl/tesp
 # file: data.py
 """Path and Data functions for use within tesp_support.
 """
@@ -9,11 +10,12 @@ import argparse
 import subprocess
 
 """
-If your Python package needs to write to a file for shared data
-or configuration, you can use standard platform/OS-specific system directories, 
-such as ~/.local/config/$appname or /usr/share/$appname/$version (Linux specific) [1]. 
+If your Python package needs to write to a file for shared data or configuration,
+you can use standard platform/OS-specific system directories, such as 
+~/.local/config/$appname or /usr/share/$appname/$version (Linux specific) [1]. 
 A common approach is to add a read-only template file to the package directory 
-that is then copied to the correct system directory if no pre-existing file is found.
+that is then copied to the correct system directory if no pre-existing file is 
+found.
 """
 
 tesp_path = None
@@ -28,7 +30,7 @@ components = ["",
               path.join("src", "tesp_support", "test")]
 
 if 'TESPDIR' in environ:
-    tesp_path = environ['TESPDIR']
+    tesp_path = path.expanduser(environ['TESPDIR'])
 else:
     tesp_path = path.join(path.expanduser('~'), "grid", "tesp")
 
@@ -64,17 +66,17 @@ else:
         pass
 
 
-tesp_share = path.expandvars(tesp_path + '/data/')
+tesp_share = path.join(path.expandvars(tesp_path), 'data/')
 comm_path = path.join(tesp_share, "comm/")
 energyplus_path = path.join(tesp_share, "energyplus/")
 feeders_path = path.join(tesp_share, "feeders/")
 scheduled_path = path.join(tesp_share, "schedules/")
 weather_path = path.join(tesp_share, "weather/")
 
-tesp_model = path.expandvars(tesp_path + '/models/')
+tesp_model = path.join(path.expandvars(tesp_path), 'models/')
 pypower_path = path.join(tesp_model, "pypower/")
 
-tesp_test = path.expandvars(tesp_path + '/src/tesp_support/test/')
+tesp_test = path.join(path.expandvars(tesp_path),  'src', 'tesp_support', 'test/')
 
 glm_entities_path = files('tesp_support.api.datafiles').joinpath('glm_classes.json')
 piq_entities_path = files('tesp_support.api.datafiles').joinpath('grid_PIQ.json')

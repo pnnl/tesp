@@ -1,3 +1,5 @@
+#!/bin/bash
+
 rm -f *.out
 rm -f *.csv
 rm -f *.log

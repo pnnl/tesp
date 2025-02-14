@@ -1,12 +1,7 @@
 #!/bin/bash
 
-ver="tesp_22.04.1"
-
-# build_<image_name>: 0 - skip; 1 - build image; <image_name> must be in sync with names array below
-build_ubuntu=1
-build_library=1
-build_build=1
-build_cplex=1
+# Copyright (C) 2021-2023 Battelle Memorial Institute
+# file: build-images.sh
 
 if [[ -z ${TESPDIR} ]]; then
   echo "Edit tesp.env in the TESP directory"
@@ -14,10 +9,18 @@ if [[ -z ${TESPDIR} ]]; then
   exit
 fi
 
+# build_<image_name>: 0 - skip; 1 - build image; <image_name> must be in sync with names array below
+build_ubuntu=1
+build_library=1
+build_build=1
+build_cplex=1
+build_user=0
+
 paths=(
   "./"
   "./"
   "${TESPDIR}/scripts/build/"
+  "./"
   "./"
 )
 
@@ -26,6 +29,7 @@ names=(
   "library"
   "build"
   "cplex"
+  "user"
 )
 
 # Dynamically build the 'builds' array based on the configuration
@@ -38,9 +42,11 @@ done
 cd "$DOCKER_DIR" || exit
 export BUILDKIT_PROGRESS=plain
 
+ver=$(cat "${TESPDIR}/scripts/grid_version")
+
 for i in "${!names[@]}"; do
   CONTEXT="${paths[$i]}"
-  IMAGE_NAME="cosim-${names[$i]}:${ver}"
+  IMAGE_NAME="cosim-${names[$i]}:tesp_${ver}"
   DOCKERFILE="${names[$i]}.Dockerfile"
 
   if [ "${builds[$i]}" -eq 1 ]; then
@@ -49,10 +55,10 @@ for i in "${!names[@]}"; do
     image1=$(docker images -q "${IMAGE_NAME}")
     docker build --no-cache --rm \
                  --build-arg DOCKER_VER="${ver}" \
-                 --build-arg COSIM_USER="${DOCKER_USER}" \
-                 --build-arg SIM_HOST="${SIM_HOST}" \
-                 --build-arg SIM_USER="${SIM_USER}" \
+                 --build-arg SIM_GID=$SIM_GID \
+                 --build-arg SIM_GRP="${SIM_GRP}" \
                  --build-arg SIM_UID=$SIM_UID \
+                 --build-arg SIM_USER="${SIM_USER}" \
                  --network=host \
                  -f "${DOCKERFILE}" \
                  -t "${IMAGE_NAME}" "${CONTEXT}"

@@ -31,7 +31,7 @@ if recs_data:
     import recs.prep_substation_recs as prep
     import pandas as pd
 else:
-    rcs = ""
+    rcs = ""  #CBEC
     import tesp_support.original.commercial_feeder_glm as com_FG
     import tesp_support.original.copperplate_feeder_glm as cp_FG
     import tesp_support.dsot.residential_feeder_glm as res_FG
@@ -500,7 +500,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 5:
+    if len(sys.argv) > 6:
         prepare_case(int(sys.argv[1]), sys.argv[2], pv=int(sys.argv[3]), bt=int(sys.argv[4]), fl=int(sys.argv[5]), ev=int(sys.argv[6]))
     else:
         node = 8

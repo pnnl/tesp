@@ -1,23 +1,45 @@
 #!/bin/bash
 
-IMAGE=cosim-build:tesp_22.04.1
-#IMAGE=cosim-cplex:tesp_22.04.1
+# Copyright (C) 2021-2023 Battelle Memorial Institute
+# file: runtesp
 
-#id $1
-#docker run -itd --rm \
-#       --name runtesp \
-#       -e LOCAL_USER_ID=${SIM_UID} \
-#       --mount type=bind,source="$TESPDIR",destination="$DOCKER_HOME/tesp" \
-#       -w=$DOCKER_HOME \
-#       $IMAGE \
-#       bash -c $1
-#
-#else
+if [[ -z ${TESPDIR} ]]; then
+  echo "Edit tesp.env in the TESP directory"
+  echo "Run 'source tesp.env' in that same directory"
+  exit
+fi
 
-docker run -it --rm \
-       --name runtesp \
-       -e LOCAL_USER_ID=${SIM_UID} \
-       --mount type=bind,source="$TESPDIR",destination="$DOCKER_HOME/tesp" \
-       -w=$DOCKER_HOME \
-       $IMAGE \
-       bash
+# standard use
+tesp_ver=$(cat "${TESPDIR}/scripts/tesp_version")
+grid_ver=$(cat "${TESPDIR}/scripts/grid_version")
+docker_tag=${tesp_ver}_ubuntu_${grid_ver}
+IMAGE=pnnl/tesp:${docker_tag}
+
+# for custom use
+#IMAGE=cosim-ubuntu:tesp_${grid_ver}
+#IMAGE=cosim-library:tesp_${grid_ver}
+#IMAGE=cosim-build:tesp_${grid_ver}
+#IMAGE=cosim-cplex:tesp_${grid_ver}
+#IMAGE=cosim-user:tesp_${grid_ver}
+
+echo "Should always confirm that you are logged in to docker using 'docker login'"
+
+if [[ -z $1 ]] ; then
+  echo "Running foreground image $IMAGE"
+  docker run -it --rm \
+         --name foregroundWorker \
+         -e LOCAL_USER_ID=${SIM_UID} \
+         --mount type=bind,source="$TESPDIR",destination="$SIM_HOME/tesp" \
+         -w=$SIM_HOME \
+         $IMAGE \
+         bash
+else
+  echo "Running background image $IMAGE"
+  docker run -itd --rm \
+         --name backgroundWorker \
+         -e LOCAL_USER_ID=${SIM_UID} \
+         --mount type=bind,source="$TESPDIR",destination="$SIM_HOME/tesp" \
+         -w=$SIM_HOME \
+         $IMAGE \
+         bash -c "$1"
+fi

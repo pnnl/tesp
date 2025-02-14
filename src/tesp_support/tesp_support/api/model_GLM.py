@@ -1,9 +1,9 @@
-# Copyright (C) 2019-2023 Battelle Memorial Institute
+# Copyright (C) 2023-2024 Battelle Memorial Institute
+# See LICENSE file at https://github.com/pnnl/tesp
 # file: glm_model.py
 """GridLAB-D model I/O for TESP api
 """
 
-# import json
 import pyjson5
 import os.path
 import re
@@ -19,12 +19,31 @@ from .entity import Entity
 from .parse_helpers import parse_kva
 from .helpers import gld_strict_name
 
+class O_Entity(Entity):
+    def __init__(self, model, entity, config):
+        super().__init__(entity, config)
+        self._m = model
+
+    def add(self, name, params):
+        return self._m.add_object(self.entity, name, params)
+
+    def delete(self, name):
+        self._m.del_object(self.entity, name)
+
+    def items(self):
+        return self.instances.items()
+    
+    def keys(self):
+        return self.instances.keys()
+
+    def __getitem__(self, key):
+        return self.instances.get(key)
+
 class GLM:
     pass
 
-
-class GLModel:
-    """ GLModel class
+class GLMModel:
+    """ GLMModel class
 
     Examples miscellaneous for set declarations::
 
@@ -140,14 +159,15 @@ class GLModel:
                         self.module_entities[module_name] = entity
                     else:
                         obj = self.classes[module_name][object_name]
-                        entity = Entity(object_name, None)
+                        entity = O_Entity(self, object_name, None)
                         entity.add_attr("OBJECT", "Parent", "", "parent", value=None)
                         for attr in obj:
                             self._add_attr(entity, attr, obj[attr])
                         self.object_entities[object_name] = entity
+                        setattr(self.glm, object_name, entity)
 
-            for obj in self.object_entities:
-                setattr(self.glm, obj, self.object_entities[obj].instances)
+            # for obj in self.object_entities:
+            #     setattr(self.glm, obj, self.object_entities[obj].instances)
 
     @staticmethod
     def get_datatype(m_type:str):
@@ -201,7 +221,7 @@ class GLModel:
         # all attribute must have a type
         if "type" in attr:
             m_type = attr["type"]
-            m_datatype = GLModel.get_datatype(m_type)
+            m_datatype = GLMModel.get_datatype(m_type)
             if m_type in ["enumeration", "set"]:
                 unit = "|"
                 for key in attr["keywords"]:
@@ -483,19 +503,18 @@ class GLModel:
         if type(obj_type) == str and type(object_name) == str:
             try:
                 entity = self.object_entities[obj_type]
-                return entity.set_instance(object_name, params)
             except:
                 print("Unrecognized GRIDLABD object and id:", obj_type, object_name, ", must be a new object")
                 if obj_type in self.class_types:
-                    entity = self.object_entities[obj_type] = Entity(obj_type, self.objects[obj_type])
+                    entity = self.object_entities[obj_type] = O_Entity(obj_type, self.objects[obj_type])
                     for items in params:
                         entity.add_attr('TEXT', items[0], "", items[0], "")
-                    return entity.set_instance(object_name, params)
                 else:
                     print("Unrecognized user class/object and id:", obj_type, object_name)
+                    return None
+            return entity.set_instance(object_name, params)
         else:
             raise TypeError("GRIDLABD object type and/or object name {obj_type} must be a string and is not.")
-        return None
 
     def get_object_instance(self, obj_type, object_name):
         if type(obj_type) == str and type(obj_type) == str:
@@ -561,7 +580,7 @@ class GLModel:
         if _type not in self.model:
             self.model[_type] = {}
         # add name and set object entity instance to model type
-        self.model[_type][name] = {}
+        # self.model[_type][name] = {}
         self.model[_type][name] = self.set_object_instance(_type, name, params)
         return self.model[_type][name]
 
@@ -1104,7 +1123,7 @@ class GLModel:
         line is found by inspecting the model without running a simulation.
 
         Args:
-            self (GLModel)
+            self (GLMModel)
 
         Returns:
             dict: key - name of line in model 
@@ -1164,13 +1183,13 @@ def _test1():
     from .data import tesp_test
 
     # Test model_GLM.py
-    model_file = GLModel()
+    model_file = GLMModel()
     if model_file.readBackboneModel("R1-12.47-1.glm"):
     # if model_file.read(feeders_path + "GLD_three_phase_house.glm"):
         # Output json with new parameters
         model_file.write(tesp_test + "api/R1-12.47-1_out.glm")
 
-    model_file = GLModel()
+    model_file = GLMModel()
     if model_file.readModel(tesp_test + "api/testing.glm"):
         model_file.write(tesp_test + "api/model_out.glm")
 
@@ -1184,7 +1203,7 @@ def _test1():
 
 
 def _test2():
-    testMod = GLModel()
+    testMod = GLMModel()
     if testMod.read(feeders_path + "R1-12.47-1.glm"):
         for name in testMod.module_entities:
             print(testMod.module_entities[name].toHelp())

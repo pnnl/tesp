@@ -1,4 +1,5 @@
-# Copyright (C) 2018-2023 Battelle Memorial Institute
+# Copyright (C) 2021-2024 Battelle Memorial Institute
+# See LICENSE file at https://github.com/pnnl/tesp
 # file: residential_feeder_glm.py
 """Replaces ZIP loads with houses, and optional storage and solar generation.
 
@@ -115,31 +116,6 @@ max_discharge_rate = 5000
 inverter_efficiency = 0.97
 battery_capacity = 13500
 round_trip_efficiency = 0.86
-
-
-def add_headers():
-    """
-    Using the glm_config.json4, checks for the existance of certain
-    modules, include, defines, and certian one-off objects and adds or edits 
-    them as necessary.
-    """
-    pass
-
-def add_object_configs():
-    """
-    Calls all the specific 
-    """
-
-def add_xfmr_configs():
-    """
-    Adds transformer configuration objects.
-
-    TDH: Are these just defined in the glm_config.json5? Do we start with 
-    entity defaults and then edit them?
-    """
-    pass
-
-def add
 
 # EV population functions
 def process_nhts_data(data_file):

@@ -1,3 +1,5 @@
+#!/bin/bash
+
 rm -f *.out
 rm -f *.log
 rm -f *.xml

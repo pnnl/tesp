@@ -1,4 +1,5 @@
-# Copyright (C) 2017-2023 Battelle Memorial Institute
+# Copyright (C) 2017-2024 Battelle Memorial Institute
+# See LICENSE file at https://github.com/pnnl/tesp
 # file: process_inv.py
 """Functions to plot inverter and volt-var data from GridLAB-D, for NIST TE Challenge 2
 

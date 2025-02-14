@@ -1,4 +1,5 @@
-# Copyright (C) 2017-2023 Battelle Memorial Institute
+# Copyright (C) 2017-2024 Battelle Memorial Institute
+# See LICENSE file at https://github.com/pnnl/tesp
 # file: test_runner.py
 """
 Auto test runner for TESP run* cases
@@ -263,7 +264,7 @@ def run_docker_test(file_name, case_name=None):
 
 
 def report_tests():
-    lines = '\n\n{:30s}   {:12s}\n'.format('Test Case(s)', 'Time Taken')
+    lines =  '\n\nTest Case(s)                Time(sec) Taken\n'
     lines += '===========================================\n'
     for row in reports:
         lines += '{:30s} {:12.6f}\n'.format(row['case'], row['elapsed'])
