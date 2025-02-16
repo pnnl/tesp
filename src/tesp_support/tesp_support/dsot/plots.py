@@ -1646,6 +1646,74 @@ def der_stack_plot(dso_range, day_range, metadata_path, case, comp=None, plot_re
     plt.savefig(file_path_fig, bbox_inches='tight')
 
 
+def subscription_plot(dso, day_range, metadata_path, case, demand_case):
+    """  Plots comparison of subscription load and base demand load (as well as price comparison).
+    Args:
+        dso (int): the DSO range that should be plotted.
+        day_range (range): the day range to plotted.
+        metadata_path (str): path of folder containing metadata
+        case (str): folder extension of case of interest
+        comp (str): folder extension for reference case to be plotted in comparison
+    Returns:
+        saves hdf and csv data files of combined dso data
+        saves DER stack plot to file
+        """
+    # Load generate_case_config
+    case_config = load_json(case, 'generate_case_config.json')
+    # Load ERCOT load profile data
+    metadata_file = os.path.join(metadata_path, case_config['refLoadMn'][5].split('/')[-1])
+    sim_start = datetime.strptime(case_config['StartTime'], '%Y-%m-%d %H:%M:%S')
+    ercot_df = load_ercot_data(metadata_file, sim_start, day_range)
+
+    demand_df = pd.read_hdf(case + '/Substation_' + str(dso) + '/Substation_'
+                                + str(dso) + '_demand_by_meter.h5', key='demand', mode='r')
+
+    basedemand_df = pd.read_hdf(demand_case + '/Substation_' + str(dso) + '/Substation_'
+                                + str(dso) + '_baseline_demand_by_meter.h5', key='demand', mode='r')
+
+    start_time = sim_start + timedelta(days=day_range[0] - 1)
+    stop_time = sim_start + timedelta(days=day_range[-1]) - timedelta(minutes=5)
+    # der_df = der_df.groupby(['time']).sum()
+    demand_df = demand_df.loc[start_time:stop_time, :]
+
+    # if der_df.index[-1] < stop_time:
+    #     raise Exception('DER stack plot data not available for ' + str(stop_time) + ".")
+
+    # Determine total customer base demand (subscription value) ensuring to use scaling factor and correct for kW-to-MW
+    demand_df['sum'] = demand_df.sum(axis=1)*case_config['DSO'][int(dso)-1][2]/1000
+    basedemand_df['sum'] = basedemand_df.sum(axis=1)*case_config['DSO'][int(dso)-1][2]/1000
+    basedemand_df = basedemand_df.loc[start_time:stop_time, :]
+    # if basedemand_df.index[-1] < stop_time:
+    #     raise Exception('Customer baseline demand data not available for ' + str(stop_time) + ".")
+
+    # Plot Building Stacked Chart with ERCOT and Substation loads for reference
+    plt.figure(figsize=(15, 10))
+    plt.plot(demand_df.index, demand_df['sum'], label='Total Customer Demand', color='black')
+    plt.plot(basedemand_df.index, basedemand_df['sum'], label='Total Customer Subscriptions', color='red')
+
+    large_font = True
+    if large_font:
+        tick_font = 17
+        label_font = 32
+        legend_font = 24
+    else:
+        tick_font = 17
+        label_font = 25
+        legend_font = 17
+
+    plt.legend(loc='lower left', prop={'size': legend_font})
+    # plt.legend(loc='lower left', prop={'size': legend_font}, ncol=2)
+    plt.xlabel('Time', size=label_font)
+    plt.ylabel('Load (MW)', size=label_font)
+    plt.ylim(top=30000, bottom=0)
+    ax = plt.gca()
+    ax.tick_params(axis='both', which='major', labelsize=tick_font)
+    # plt.title('DSO load profile by end-load type (ALL DSOs)', size=20)
+    plot_filename = datetime.now().strftime(
+        '%Y%m%d') + 'Subscription_plot_DSO_' + demand_df.index[0].strftime('%m-%d') + '.png'
+    file_path_fig = os.path.join(case, 'plots', plot_filename)
+    plt.savefig(file_path_fig, bbox_inches='tight')
+
 def daily_load_plots(dso, system, subsystem, variable, day, case, comp, agent_prefix, gld_prefix):
     """
     For a specified dso, system, variable, and day this function will load in the required data, plot the daily
