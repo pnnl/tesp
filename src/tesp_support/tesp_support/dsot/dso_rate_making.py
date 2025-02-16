@@ -694,6 +694,9 @@ def create_baseline_demand_profiles_for_each_meter(
 
 def calc_cust_bill(metadata, meter_df, trans_df, energy_sum_df, tariff, dso_num, SF, ind_cust):
     """ Calculate the customer bill using summary meter data and fixed tariff structure.
+
+    ----------------  DEPRECATED  (calculate_consumer_bills is used for rates analysis) ----------------------------
+
     Args:
         metadata (dict): metadata structure for the DSO to be analyzed
         meter_df (dataframe): monthly and total energy consumption and peak power by house (meter)
@@ -1239,6 +1242,7 @@ def calculate_consumer_bills(
                         * (demand_df.loc[t, each] - bl_demand_df.loc[t, each])
                         for t in demand_df.index
                     )
+                    # TODO: also record net deviation energy net, plus, and minus
 
                     # Calculate the consumer's energy charge under the time-of-use rate
                     # associated with the subscription rate (this is for reporting by peak and off-peak
@@ -2286,7 +2290,7 @@ def calculate_tariff_prices(
                     # Update the total revenue from demand charges for each residential
                     # and commercial consumer during each season
                     rev_demand_charge_sub_rc[s] += tariff["DSO_" + dso_num][
-                        "industrial"
+                        metadata["billingmeters"][each]["tariff_class"]
                     ]["demand_charge"] * sum(
                         bl_demand_df[s][
                             bl_demand_df[s].index.month == int(month_map[m])
@@ -2302,7 +2306,6 @@ def calculate_tariff_prices(
 
                     # Update the total revenue from the net deviation charges for each
                     # residential and commercial consumer during each season
-                    # TODO: Incorporate dynamic capital cost recovery price
                     rev_net_deviation_charge_sub_rc[s] += sum(
                         da_lmp_stats.loc[str(t), "da_lmp" + dso_num]
                         * (demand_df[s].loc[t, each] - bl_demand_df[s].loc[t, each])
@@ -2388,7 +2391,6 @@ def calculate_tariff_prices(
 
                     # Update the total revenue from the net deviation charges for each
                     # industrial consumer during each season
-                    # TODO: Incorporate dynamic capital cost recovery price
                     rev_net_deviation_charge_sub_i[s] += sum(
                         da_lmp_stats.loc[str(t), "da_lmp" + dso_num]
                         * (demand_df[s].loc[t, each] - bl_demand_df[s].loc[t, each])
@@ -2649,6 +2651,7 @@ def calculate_tariff_prices(
             - rev_fixed_charge_flat_i
             - total_tier_credit_flat_i
         ) / (sf * total_consumption_flat_rc + total_consumption_flat_i)
+
     elif rate_scenario == "transactive":
         # Load in necessary data for the transactive rate
         if trans_cost_balance_method in [None, "volumetric"]:
