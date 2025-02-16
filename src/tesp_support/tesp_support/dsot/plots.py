@@ -2700,11 +2700,12 @@ def dso_lmp_stats(month_list, output_path, renew_forecast_file, dso_range):
 
     ames_lmps_df['NetLoad'] = ames_lmps_df[' TotalLoad'] - ames_lmps_df[' TotRenGen']
     lmp_cols = [col for col in ames_lmps_df.columns if 'LMP' in col]
-    cols = [' TotalLoad', ' TotalGen', 'NetLoad', ' Adder'] + lmp_cols
+    cols = [' TotalLoad', ' TotalGen', 'NetLoad'] + lmp_cols
     # dso_lmps_df = dso_lmps_df.join(ames_lmps_df[cols])
 
     # Check to see if Adder was used (for example in Rob and Don method) - if so correct LMPs - e.g. remove adder).
     if any(ames_lmps_df.columns.str.contains('Adder')):
+        cols = cols + [' Adder']
         for column in ames_lmps_df.columns:
             if 'LMP' in column:
                 ames_lmps_df[column] = ames_lmps_df[column] - ames_lmps_df[' Adder']
@@ -2751,8 +2752,12 @@ def dso_lmp_stats(month_list, output_path, renew_forecast_file, dso_range):
     da_lmps_df = pd.merge(da_lmps_df, renew_forecast[['TotalRenewGen']], left_index=True, right_index=True)
     da_lmps_df['NetLoad'] = da_lmps_df[' TotalLoad'] - da_lmps_df['TotalRenewGen']
     # narrow down to only modeled DSOs + system load data
-    dso_cols = ['da_lmp'+str(dso) for dso in dso_range] + ['da_q'+str(dso) for dso in dso_range] \
-               + [' TotalLoad', 'TotalRenewGen', 'NetLoad', ' Adder']
+    if any(ames_lmps_df.columns.str.contains('Adder')):
+        dso_cols = ['da_lmp'+str(dso) for dso in dso_range] + ['da_q'+str(dso) for dso in dso_range] \
+                    + [' TotalLoad', 'TotalRenewGen', 'NetLoad', ' Adder']
+    else:
+        dso_cols = ['da_lmp'+str(dso) for dso in dso_range] + ['da_q'+str(dso) for dso in dso_range] \
+                    + [' TotalLoad', 'TotalRenewGen', 'NetLoad']
     da_lmps_df[dso_cols].to_csv(path_or_buf=output_path + '/Annual_DA_LMP_Load_data.csv')
 
     # Determine Annual RT LMP Stats
