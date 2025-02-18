@@ -30,13 +30,23 @@ $TESPDIR/examples/analysis/dsot/data/post_processing
 
 # ------------ Select folder locations for different cases ---------
 
-datapath = os.path.expandvars('$TESPDIR/examples/analysis/dsot/data/post_processing') 
+hayden = False
 
-flat_path = os.path.join(datapath, 'Flat')
-DSOT_path = os.path.join(datapath, 'DSOT')
-TOU_path = os.path.join(datapath, 'TOU')
-transactive_path = os.path.join(datapath, 'rob-don')
-#subscription_path = os.path.join(datapath, 'sub')
+if hayden:
+    flat_path = 'C:/Users/reev057/DSOT-DATA/Rates/Flat'
+    DSOT_path = 'C:/Users/reev057/DSOT-DATA/Rates/DSOT'
+    TOU_path = 'C:/Users/reev057/DSOT-DATA/Rates/TOU'
+    transactive_path = 'C:/Users/reev057/DSOT-DATA/Rates/Transactive'
+    subscription_path = 'C:/Users/reev057/DSOT-DATA/Rates/Subscription'
+    metadata_path = 'C:/Users/reev057/PycharmProjects/TESP_Public/examples/analysis/dsot/data'
+else:
+    datapath = os.path.expandvars('$TESPDIR/examples/analysis/dsot/data/post_processing') 
+    flat_path = os.path.join(datapath, 'Flat')
+    DSOT_path = os.path.join(datapath, 'DSOT')
+    TOU_path = os.path.join(datapath, 'TOU')
+    transactive_path = os.path.join(datapath, 'rob-don')
+    #subscription_path = os.path.join(datapath, 'sub')
+    metadata_path = os.path.expandvars('$TESPDIR/examples/analysis/dsot/data') 
 
 # Select case_path to post process
 system_case = "8_hi_system_case_config.json"
@@ -121,10 +131,7 @@ discard_end_days = 1  # Number of days at the end of the simulation to be discar
 config_path = dirname(abspath(__file__))
 case_config = pt.load_json(config_path, system_case)
 
-# metadata_path = '../dso_data'
-# metadata_path = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/data'
-# metadata_path = 'C:/Users/reev057/PycharmProjects/TESP_Public/examples/analysis/dsot/data'
-metadata_path = os.path.expandvars('$TESPDIR/examples/analysis/dsot/data') 
+
 
 renew_forecast_file = metadata_path + "/" + case_config['genForecastHr'][5].split('/')[-1]
 dso_metadata_file = case_config['dsoPopulationFile']
