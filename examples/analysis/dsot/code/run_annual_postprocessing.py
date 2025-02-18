@@ -2,6 +2,7 @@ import json
 import os
 from datetime import datetime
 from os.path import dirname, abspath, isdir
+import shutil
 
 import pandas as pd
 
@@ -14,6 +15,11 @@ import tesp_support.dsot.dso_helper_functions as hf
 
 ''' This script runs key postprocessing functions that warrant execution after every simulation run.  
 It has the following elements:
+
+To run_annual_postprocessing.py, first run_case_postprocessing.py on case. 
+Then, move case folder to datapath. Suggested datapath is to create subfolder:
+$TESPDIR/examples/analysis/dsot/data/post_processing
+
     0. Setup - establish locations and meta data files etc.
     1. Postprocessing that is required per DSO (and can be parallelized)
     2. Postprocessing that is required across all DSOs and is desired for every run
@@ -21,29 +27,72 @@ It has the following elements:
     4. Postprocessing that compares cases (and will likely need to be executed on Constance).
 '''
 
+
+# ------------ Select folder locations for different cases ---------
+
+datapath = os.path.expandvars('$TESPDIR/examples/analysis/dsot/data/post_processing') 
+
+flat_path = os.path.join(datapath, 'Flat')
+DSOT_path = os.path.join(datapath, 'DSOT')
+TOU_path = os.path.join(datapath, 'TOU')
+transactive_path = os.path.join(datapath, 'rob-don')
+#subscription_path = os.path.join(datapath, 'sub')
+
+# Select case_path to post process
+system_case = "8_hi_system_case_config.json"
+base_case_path = flat_path
+demand_case_path = TOU_path
+case_path = DSOT_path
+
+
 #  STEP 0 ---------  STEP UP ------------------------------
 #  Determine which metrics to post-process
 annual_energy = True
-annual_amenity = True
-load_stats = True
-annual_lmps = True
-gen_stats = True
-train_lmps = True
-wholesale = True
+if not os.path.isfile(os.path.join(case_path, 'amenity_dso_1_data.h5')):
+    print('No amenity data found, running annual_amenity')
+    annual_amenity = True
+else:
+    annual_amenity = False
+
+if not os.path.isfile(os.path.join(case_path, 'DSO_load_stats.csv')):
+    load_stats = True
+else:
+    load_stats = False
+
+if not os.path.isfile(os.path.join(case_path, 'Annual_DA_LMP_stats.csv')):
+    annual_lmps = True
+else:
+    annual_lmps = False
+
+if not os.path.isfile(os.path.join(case_path, 'generator_statistics_AMES.csv')):
+    gen_stats = True
+else:
+    gen_stats = False
+
+if not os.path.isfile(os.path.join(case_path, 'DSO_quadratic_curves.json')):
+    train_lmps = True
+else:
+    train_lmps = False
+
+if not os.path.isfile(os.path.join(case_path, 'DSO1_Market_Purchases.json')):
+    wholesale = True
+else:
+    wholesale = False
+
 retail = True
 customer_cfs = True
 dso_cfs = True
 
-annual_energy = False
-annual_amenity = False
-load_stats = False
-annual_lmps = False
-gen_stats = False
-train_lmps = False
-# wholesale = False
-# retail = False
-# customer_cfs = False
-# dso_cfs = False
+#annual_energy = False
+#annual_amenity = False
+#load_stats = False
+#annual_lmps = False
+#gen_stats = False
+#train_lmps = False
+#wholesale = False
+#retail = False
+#customer_cfs = False
+#dso_cfs = False
 
 
 # Only set to True if you have already run cfs once and want to update billing to match expenses.
@@ -54,20 +103,6 @@ determine_days = False
 
 first_data_day = 4  # First day in the simulation that data to be analyzed. Run-in days before this are discarded.
 discard_end_days = 1  # Number of days at the end of the simulation to be discarded
-
-# ------------ Select folder locations for different cases ---------
-
-flat_path = 'C:/Users/reev057/DSOT-DATA/Rates/Flat'
-DSOT_path = 'C:/Users/reev057/DSOT-DATA/Rates/DSOT'
-TOU_path = 'C:/Users/reev057/DSOT-DATA/Rates/TOU'
-transactive_path = 'C:/Users/reev057/DSOT-DATA/Rates/Transactive'
-subscription_path = 'C:/Users/reev057/DSOT-DATA/Rates/Subscription'
-
-system_case = "8_hi_system_case_config.json"
-base_case_path = flat_path
-demand_case_path = TOU_path
-case_path = transactive_path
-
 
 # # Load System Case Config
 # if case_path in [mr_bau_path, mr_batt_path, mr_flex_path]:
@@ -88,7 +123,8 @@ case_config = pt.load_json(config_path, system_case)
 
 # metadata_path = '../dso_data'
 # metadata_path = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/data'
-metadata_path = 'C:/Users/reev057/PycharmProjects/TESP_Public/examples/analysis/dsot/data'
+# metadata_path = 'C:/Users/reev057/PycharmProjects/TESP_Public/examples/analysis/dsot/data'
+metadata_path = os.path.expandvars('$TESPDIR/examples/analysis/dsot/data') 
 
 renew_forecast_file = metadata_path + "/" + case_config['genForecastHr'][5].split('/')[-1]
 dso_metadata_file = case_config['dsoPopulationFile']
@@ -119,9 +155,9 @@ if case_path == TOU_path:
 if case_path == transactive_path:
     case_name = 'RandD'
     rate_scenario = "transactive"
-if case_path == subscription_path:
-    case_name = 'Sub'
-    rate_scenario = "subscription"
+# if case_path == subscription_path:
+#     case_name = 'Sub'
+#     rate_scenario = "subscription"
 
 
 #  Month, path of month data, first day of real data, last day of real data + 1
@@ -160,10 +196,12 @@ else:
 # Verify and implement actual number of simulation days.
 total_sim_days = 0
 generate_case_config = ''
-# TODO: Copy generate_case_config file to annual level.
+if not os.path.isfile(os.path.join(case_path, 'generate_case_config.json')):
+        print('Copying generate_case_config.json to annual case folder')
+        shutil.copy2(os.path.join(case_path, '8_2016_01_pv_bt_fl_ev/generate_case_config.json'), os.path.join(case_path, 'generate_case_config.json'))
+
 for month in month_def:
     generate_case_config = pt.load_json(month[1], 'generate_case_config.json')
-
     num_sim_days = (datetime.strptime(generate_case_config['EndTime'], '%Y-%m-%d %H:%M:%S') -
                     datetime.strptime(generate_case_config['StartTime'], '%Y-%m-%d %H:%M:%S')).days
 
@@ -243,7 +281,7 @@ if wholesale:
         print(Market_Purchases)
         os.chdir(case_path)
         with open('DSO' + str(dso_num) + '_Market_Purchases.json', 'w') as f:
-            json.dump(Market_Purchases, f, indent=2)
+           json.dump(Market_Purchases, f, indent=2)
 # TODO: Make month usage consistent 'Mar' versus 'March'
 # --------------- DETERMINE RETAIL BILLING  ------------------------------
 # Run Customer billing code to determine revenues
