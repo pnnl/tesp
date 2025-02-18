@@ -523,8 +523,8 @@ done
     with open(out_folder + '/docker-run.sh', 'w') as outfile:
         gdb_extra = "" if gld_Debug == 0 else \
             """
-                   --cap-add=SYS_PTRACE \\
-                   --security-opt seccomp=unconfined\\"""
+        --cap-add=SYS_PTRACE \\
+        --security-opt seccomp=unconfined \\"""
         outfile.write("""
 IMAGE="cosim-cplex:tesp_22.04.1"
 
@@ -532,11 +532,15 @@ git describe --tags > tesp_version
 docker images -q ${IMAGE} > docker_version
 hostname > hostname
 
-WORKING_DIR="$SIM_HOME/tesp/examples/analysis/dsot/code/%s"
+CASE="%s"
+SRCWORK_DIR="$TESPDIR/examples/analysis/dsot/code/$CASE"
+WORKING_DIR="$SIM_HOME/tesp/examples/analysis/dsot/code/$CASE"
 ARCHIVE_DIR="%s"
 
+chown -fR ${SIM_UID}:${SIM_GID} "$SRCWORK_DIR"
+
 docker run \\
-       -e LOCAL_USER_ID=$SIM_UID \\
+       -e LOCAL_UID=$UID \\
        -itd \\
        --rm \\
        --network=none \\%s
@@ -544,6 +548,8 @@ docker run \\
        -w=${WORKING_DIR} \\
        ${IMAGE} \\
        /bin/bash -c "./run.sh; ./monitor.sh"
+
+chown -fR $UID:$SIM_GID "$SRCWORK_DIR"
         """ % (path.basename(out_folder), archive_folder, gdb_extra))
 
     with open(out_folder + '/postprocess.sh', 'w') as outfile:
