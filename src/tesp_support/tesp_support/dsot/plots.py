@@ -2823,22 +2823,22 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
     # Create summary comparison plots of simulation LMP versus actual data.
     stats = True
     # TODO: Add default mode that does not compare to real data
-    ERCOTDApricerange = pd.read_hdf(data_path + '/ERCOT_LMP.h5', key='DADeltaLMP_data', mode='r')
-    ERCOTDAPrices = pd.read_hdf(data_path + '/ERCOT_LMP.h5', key='DALMP_data', mode='r')
+    ERCOTDApricerange = pd.read_hdf(os.path.join(os.pardir(data_path) + 'ERCOT_LMP.h5'), key='DADeltaLMP_data', mode='r')
+    ERCOTDAPrices = pd.read_hdf(os.path.join(os.pardir(data_path) + 'ERCOT_LMP.h5'), key='DALMP_data', mode='r')
 
-    ERCOTRTpricerange = pd.read_hdf(data_path + '/ERCOT_LMP.h5', key='RTDeltaLMP_data', mode='r')
-    ERCOTRTPrices = pd.read_hdf(data_path + '/ERCOT_LMP.h5', key='RTLMP_data', mode='r')
+    ERCOTRTpricerange = pd.read_hdf(os.path.join(os.pardir(data_path) + 'ERCOT_LMP.h5'), key='RTDeltaLMP_data', mode='r')
+    ERCOTRTPrices = pd.read_hdf(os.path.join(os.pardir(data_path) + 'ERCOT_LMP.h5'), key='RTLMP_data', mode='r')
 
-    CAISODApricerange = pd.read_hdf(data_path + '/CAISO_LMP.h5', key='DADeltaLMP_data', mode='r')
-    CAISODAPrices = pd.read_hdf(data_path + '/CAISO_LMP.h5', key='DALMP_data', mode='r')
+    CAISODApricerange = pd.read_hdf(os.path.join(os.pardir(data_path) + 'CAISO_LMP.h5'), key='DADeltaLMP_data', mode='r')
+    CAISODAPrices = pd.read_hdf(os.path.join(os.pardir(data_path) + 'CAISO_LMP.h5'), key='DALMP_data', mode='r')
 
-    PJMDApricerange = pd.read_hdf(data_path + '/PJM_LMP.h5', key='DADeltaLMP_data', mode='r')
-    PJMDAPrices = pd.read_hdf(data_path + '/PJM_LMP.h5', key='DALMP_data', mode='r')
+    PJMDApricerange = pd.read_hdf(os.path.join(os.pardir(data_path) + 'PJM_LMP.h5'), key='DADeltaLMP_data', mode='r')
+    PJMDAPrices = pd.read_hdf(os.path.join(os.pardir(data_path) + 'PJM_LMP.h5'), key='DALMP_data', mode='r')
 
-    PJMRTpricerange = pd.read_hdf(data_path + '/PJM_LMP.h5', key='RTDeltaLMP_data', mode='r')
-    PJMRTPrices = pd.read_hdf(data_path + '/PJM_LMP.h5', key='RTLMP_data', mode='r')
+    PJMRTpricerange = pd.read_hdf(os.path.join(os.pardir(data_path) + 'PJM_LMP.h5'), key='RTDeltaLMP_data', mode='r')
+    PJMRTPrices = pd.read_hdf(os.path.join(os.pardir(data_path) + 'PJM_LMP.h5'), key='RTLMP_data', mode='r')
 
-    ERCOT_LMP_DELTA = pd.read_excel(data_path + '/DAM_2016.xlsx', sheet_name='LMP Delta')
+    ERCOT_LMP_DELTA = pd.read_excel(os.path.join(os.pardir(data_path) + 'DAM_2016.xlsx'), sheet_name='LMP Delta')
 
     # =========== Create box plots 1- DA spread ===========================
 
