@@ -2594,19 +2594,19 @@ def dso_load_stats(dso_range, month_list, data_path, metadata_path, plot=False):
         plt.savefig(file_path_fig, bbox_inches='tight')
 
         #  Daily Load Values and Range Box Plot (side-by-side comparison)
-        comparison_df = dso_total_df[['Total Load', 'Month']]
+        comparison_df = dso_total_df[['Total Load', 'Month']].copy()
         comparison_df['Case'] = 'DSO+T'
-        compare2_df = dso_total_df[['ERCOT Net Load', 'Month']]
+        compare2_df = dso_total_df[['ERCOT Net Load', 'Month']].copy()
         compare2_df['Case'] = 'ERCOT'
         compare2_df.rename(columns={'ERCOT Net Load': 'Total Load'}, inplace=True)
-        comparison_df = pd.concat([compare2_df, comparison_df])
+        comparison_df = pd.concat([compare2_df, comparison_df]).reset_index(drop=True)
 
-        range_compare_df = dso_daily_range_df[['Total Load', 'Month']]
+        range_compare_df = dso_daily_range_df[['Total Load', 'Month']].copy()
         range_compare_df['Case'] = 'DSO+T'
-        range_compare2_df = dso_daily_range_df[['ERCOT Net Load', 'Month']]
+        range_compare2_df = dso_daily_range_df[['ERCOT Net Load', 'Month']].copy()
         range_compare2_df['Case'] = 'ERCOT'
         range_compare2_df.rename(columns={'ERCOT Net Load': 'Total Load'}, inplace=True)
-        range_compare_df = pd.concat([range_compare2_df, range_compare_df])
+        range_compare_df = pd.concat([range_compare2_df, range_compare_df]).reset_index(drop=True)
 
         fig, axes = plt.subplots(2, 1, figsize=(11, 10), sharex=True)
         pal = ["gold"] + ['skyblue']
@@ -2648,7 +2648,7 @@ def non_participating_dso_loads(dso_range, case, metadata_path):
     case_config = load_json(case, 'generate_case_config.json')
     # Load ERCOT load profile data
     dso_load_file = os.path.join(metadata_path, case_config['refLoadMn'][5].split('/')[-1])
-    dso_load_profiles = pd.read_csv(dso_load_file, index_col='Seconds', parse_dates=True)
+    dso_load_profiles = pd.read_csv(dso_load_file, index_col='Seconds', parse_dates=True, date_format='%Y-%m-%d %H:%M:%S')
 
     start_time = datetime.strptime("2015-12-29 00:00:00", '%Y-%m-%d %H:%M:%S')
     arr = np.array([start_time + timedelta(seconds=float(i)) for i in dso_load_profiles.index.values])
@@ -2808,37 +2808,38 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
     rt_lmps_df = rt_lmps_df.set_index(pd.to_datetime(rt_lmps_df.index))
     rt_lmps_df['Month'] = rt_lmps_df.index.month
 
-    da_lmps_daily_df = pd.Series.to_frame(da_lmps_df['da_lmp' + dso_num].groupby(pd.Grouper(freq='D')).max()
-                                          - da_lmps_df['da_lmp' + dso_num].groupby(pd.Grouper(freq='D')).min())
-    da_lmps_daily_df['stdev'] = da_lmps_df['da_lmp' + dso_num].groupby(pd.Grouper(freq='D')).std()
+    da_lmps_daily_df = pd.Series.to_frame(da_lmps_df['da_lmp' + str(dso_num)].groupby(pd.Grouper(freq='D')).max()
+                                          - da_lmps_df['da_lmp' + str(dso_num)].groupby(pd.Grouper(freq='D')).min())
+    da_lmps_daily_df['stdev'] = da_lmps_df['da_lmp' + str(dso_num)].groupby(pd.Grouper(freq='D')).std()
     da_lmps_daily_df['Month'] = da_lmps_daily_df.index.month
-    da_lmps_daily_df.dropna(subset=['da_lmp' + dso_num], inplace=True)
+    da_lmps_daily_df.dropna(subset=['da_lmp' + str(dso_num)], inplace=True)
 
-    rt_lmps_daily_df = pd.Series.to_frame(rt_lmps_df[' LMP' + dso_num].groupby(pd.Grouper(freq='D')).max()
-                                          - rt_lmps_df[' LMP' + dso_num].groupby(pd.Grouper(freq='D')).min())
-    rt_lmps_daily_df['stdev'] = rt_lmps_df[' LMP' + dso_num].groupby(pd.Grouper(freq='D')).std()
+    rt_lmps_daily_df = pd.Series.to_frame(rt_lmps_df[' LMP' + str(dso_num)].groupby(pd.Grouper(freq='D')).max()
+                                          - rt_lmps_df[' LMP' + str(dso_num)].groupby(pd.Grouper(freq='D')).min())
+    rt_lmps_daily_df['stdev'] = rt_lmps_df[' LMP' + str(dso_num)].groupby(pd.Grouper(freq='D')).std()
     rt_lmps_daily_df['Month'] = rt_lmps_daily_df.index.month
-    rt_lmps_daily_df.dropna(subset=[' LMP' + dso_num], inplace=True)
+    rt_lmps_daily_df.dropna(subset=[' LMP' + str(dso_num)], inplace=True)
 
     # Create summary comparison plots of simulation LMP versus actual data.
     stats = True
     # TODO: Add default mode that does not compare to real data
-    ERCOTDApricerange = pd.read_hdf(os.path.join(os.pardir(data_path) + 'ERCOT_LMP.h5'), key='DADeltaLMP_data', mode='r')
-    ERCOTDAPrices = pd.read_hdf(os.path.join(os.pardir(data_path) + 'ERCOT_LMP.h5'), key='DALMP_data', mode='r')
+    data = os.path.expandvars('$TESPDIR/examples/analysis/dsot/data')
+    ERCOTDApricerange = pd.read_hdf(os.path.join(data, 'ERCOT_LMP.h5'), key='DADeltaLMP_data', mode='r')
+    ERCOTDAPrices = pd.read_hdf(os.path.join(data, 'ERCOT_LMP.h5'), key='DALMP_data', mode='r')
 
-    ERCOTRTpricerange = pd.read_hdf(os.path.join(os.pardir(data_path) + 'ERCOT_LMP.h5'), key='RTDeltaLMP_data', mode='r')
-    ERCOTRTPrices = pd.read_hdf(os.path.join(os.pardir(data_path) + 'ERCOT_LMP.h5'), key='RTLMP_data', mode='r')
+    ERCOTRTpricerange = pd.read_hdf(os.path.join(data, 'ERCOT_LMP.h5'), key='RTDeltaLMP_data', mode='r')
+    ERCOTRTPrices = pd.read_hdf(os.path.join(data, 'ERCOT_LMP.h5'), key='RTLMP_data', mode='r')
 
-    CAISODApricerange = pd.read_hdf(os.path.join(os.pardir(data_path) + 'CAISO_LMP.h5'), key='DADeltaLMP_data', mode='r')
-    CAISODAPrices = pd.read_hdf(os.path.join(os.pardir(data_path) + 'CAISO_LMP.h5'), key='DALMP_data', mode='r')
+    CAISODApricerange = pd.read_hdf(os.path.join(data, 'CAISO_LMP.h5'), key='DADeltaLMP_data', mode='r')
+    CAISODAPrices = pd.read_hdf(os.path.join(data, 'CAISO_LMP.h5'), key='DALMP_data', mode='r')
 
-    PJMDApricerange = pd.read_hdf(os.path.join(os.pardir(data_path) + 'PJM_LMP.h5'), key='DADeltaLMP_data', mode='r')
-    PJMDAPrices = pd.read_hdf(os.path.join(os.pardir(data_path) + 'PJM_LMP.h5'), key='DALMP_data', mode='r')
+    PJMDApricerange = pd.read_hdf(os.path.join(data, 'PJM_LMP.h5'), key='DADeltaLMP_data', mode='r')
+    PJMDAPrices = pd.read_hdf(os.path.join(data, 'PJM_LMP.h5'), key='DALMP_data', mode='r')
 
-    PJMRTpricerange = pd.read_hdf(os.path.join(os.pardir(data_path) + 'PJM_LMP.h5'), key='RTDeltaLMP_data', mode='r')
-    PJMRTPrices = pd.read_hdf(os.path.join(os.pardir(data_path) + 'PJM_LMP.h5'), key='RTLMP_data', mode='r')
+    PJMRTpricerange = pd.read_hdf(os.path.join(data, 'PJM_LMP.h5'), key='RTDeltaLMP_data', mode='r')
+    PJMRTPrices = pd.read_hdf(os.path.join(data, 'PJM_LMP.h5'), key='RTLMP_data', mode='r')
 
-    ERCOT_LMP_DELTA = pd.read_excel(os.path.join(os.pardir(data_path) + 'DAM_2016.xlsx'), sheet_name='LMP Delta')
+    ERCOT_LMP_DELTA = pd.read_excel(os.path.join(data, 'DAM_2016.xlsx'), sheet_name='LMP Delta')
 
     # =========== Create box plots 1- DA spread ===========================
 
@@ -2934,8 +2935,8 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
 
     # =========== Create DA LMP value and range plot - all cases side by side ===========================
 
-    lmp_comparison_df = da_lmps_df[['da_lmp' + dso_num, 'Month']]
-    lmp_comparison_df.rename(columns={'da_lmp' + dso_num: 'DA LMP'}, inplace=True)
+    lmp_comparison_df = da_lmps_df[['da_lmp' + str(dso_num), 'Month']]
+    lmp_comparison_df.rename(columns={'da_lmp' + str(dso_num): 'DA LMP'}, inplace=True)
     lmp_comparison_df['Case'] = 'DSO+T'
     ERCOTcompare_df = ERCOTDAPrices[['Houston $_mwh', 'Month']]
     ERCOTcompare_df['Case'] = 'ERCOT'
@@ -2948,8 +2949,8 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
     CALISOcompare_df.rename(columns={'LMP_PRC': 'DA LMP'}, inplace=True)
     lmp_comparison_df = pd.concat([CALISOcompare_df, PJMcompare_df, ERCOTcompare_df, lmp_comparison_df])
 
-    rangelmp_comparison_df = da_lmps_daily_df[['da_lmp' + dso_num, 'Month']]
-    rangelmp_comparison_df.rename(columns={'da_lmp' + dso_num: 'DA LMP'}, inplace=True)
+    rangelmp_comparison_df = da_lmps_daily_df[['da_lmp' + str(dso_num), 'Month']]
+    rangelmp_comparison_df.rename(columns={'da_lmp' + str(dso_num): 'DA LMP'}, inplace=True)
     # rangelmp_comparison_df['DA LMP STD'] = da_lmps_daily_df['stdev']
     rangelmp_comparison_df['Case'] = 'DSO+T'
     rangeERCOTcompare_df = ERCOTDApricerange[['Houston $_mwh', 'Month']]
@@ -3004,8 +3005,8 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
 
     # =========== Create RT LMP value and range plot - all cases side by side ===========================
 
-    lmp_rt_comparison_df = rt_lmps_df[[' LMP' + dso_num, 'Month']]
-    lmp_rt_comparison_df.rename(columns={' LMP' + dso_num: 'RT LMP'}, inplace=True)
+    lmp_rt_comparison_df = rt_lmps_df[[' LMP' + str(dso_num), 'Month']]
+    lmp_rt_comparison_df.rename(columns={' LMP' + str(dso_num): 'RT LMP'}, inplace=True)
     lmp_rt_comparison_df['Case'] = 'DSO+T'
     ERCOTRTcompare_df = ERCOTRTPrices[['Houston $_mwh', 'Month']]
     ERCOTRTcompare_df['Case'] = 'ERCOT'
@@ -3016,8 +3017,8 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
     # NOTE CALISO RT LMP data not available for 2016 or 2017.
     lmp_rt_comparison_df = pd.concat([PJMRTcompare_df, ERCOTRTcompare_df, lmp_rt_comparison_df])
 
-    range_rt_lmp_comparison_df = rt_lmps_daily_df[[' LMP' + dso_num, 'Month']]
-    range_rt_lmp_comparison_df.rename(columns={' LMP' + dso_num: 'RT LMP'}, inplace=True)
+    range_rt_lmp_comparison_df = rt_lmps_daily_df[[' LMP' + str(dso_num), 'Month']]
+    range_rt_lmp_comparison_df.rename(columns={' LMP' + str(dso_num): 'RT LMP'}, inplace=True)
     range_rt_lmp_comparison_df['RT LMP STD'] = rt_lmps_daily_df['stdev']
     range_rt_lmp_comparison_df['Case'] = 'DSO+T'
     range_rt_ERCOTcompare_df = ERCOTRTpricerange[['Houston $_mwh', 'Month']]
@@ -3081,7 +3082,7 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
     PJMLDC_data.sort(reverse=False)
     PJMLDC_data = np.array(PJMLDC_data)
 
-    DSOT_data = da_lmps_daily_df['da_lmp' + dso_num].values.tolist()
+    DSOT_data = da_lmps_daily_df['da_lmp' + str(dso_num)].values.tolist()
     DSOT_data.sort(reverse=False)
     DSOT_data = np.array(DSOT_data)
 
@@ -3148,7 +3149,7 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
     PJMLDC_data.sort(reverse=False)
     PJMLDC_data = np.array(PJMLDC_data)
 
-    DSOT_data = da_lmps_df['da_lmp' + dso_num].values.tolist()
+    DSOT_data = da_lmps_df['da_lmp' + str(dso_num)].values.tolist()
     DSOT_data.sort(reverse=False)
     DSOT_data = np.array(DSOT_data)
 
@@ -3211,7 +3212,7 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
     PJMRTLDC_data.sort(reverse=False)
     PJMRTLDC_data = np.array(PJMRTLDC_data)
 
-    DSOT_RT_data = da_lmps_daily_df['da_lmp' + dso_num].values.tolist()
+    DSOT_RT_data = da_lmps_daily_df['da_lmp' + str(dso_num)].values.tolist()
     DSOT_RT_data.sort(reverse=False)
     DSOT_RT_data = np.array(DSOT_RT_data)
 
@@ -3269,7 +3270,7 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
     PJM_RTLMP_LDC_data.sort(reverse=False)
     PJM_RTLMP_LDC_data = np.array(PJM_RTLMP_LDC_data)
 
-    DSOT_RTLMP_data = rt_lmps_df[' LMP' + dso_num].values.tolist()
+    DSOT_RTLMP_data = rt_lmps_df[' LMP' + str(dso_num)].values.tolist()
     DSOT_RTLMP_data.sort(reverse=False)
     DSOT_RTLMP_data = np.array(DSOT_RTLMP_data)
 

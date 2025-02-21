@@ -62,7 +62,7 @@ case_list.append(TOU_path)
 case_list.append(transactive_path)
 #case_list.append(subscription_path)
 
-def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_path : str):
+def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_path : str, run_base: bool):
     """This function loops through the run_annual_postprocessing script to 
     generate the required metrics files for each case being studied, then 
     square up any revenues and expenses and generates final cash flow statements.
@@ -73,13 +73,18 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
             case being post processesed
         base_case_path (str): the path to the base case folder (Flat)
         demand_case_path (str): the path to the demand case folder (TOU)
+        run_base (bool): whether to run the base case first. Set to true for
+            first run. Subsequent runs can set to false.
 
     Raises:
         Exception: _description_
     """
 
     # Process the base case first
-    case_list.insert(0, str(base_case_path))
+    if run_base == True:
+        case_list.insert(0, str(base_case_path))
+    else: 
+        pass
     # Run each case once to generate required files, once to square up 
     case_list = np.repeat(case_list, 2)  
     
@@ -508,17 +513,19 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
 def batch_process():
     base_case_path = flat_path
     demand_case_path = TOU_path
-    run_annual_postprocessing(case_list, base_case_path, demand_case_path)
+    run_base = True
+    run_annual_postprocessing(case_list, base_case_path, demand_case_path, run_base)
 
 def one_process():
     # Select case to post-process
-    case = transactive_path
+    case = TOU_path
 
     base_case_path = flat_path
     demand_case_path = TOU_path
+    run_base = False
     case_list = []
     case_list.append(str(case))
-    run_annual_postprocessing(case_list, base_case_path, demand_case_path)
+    run_annual_postprocessing(case_list, base_case_path, demand_case_path, run_base)
     
 
 if __name__ == "__main__":
