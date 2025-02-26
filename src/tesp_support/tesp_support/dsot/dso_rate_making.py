@@ -751,9 +751,13 @@ def calc_cust_bill(metadata, meter_df, trans_df, energy_sum_df, tariff, dso_num,
         variable.append('blended_rate')
         month.append(0)
 
-    bill_df = pd.DataFrame(month,
-                           index=[meter, variable],
-                           columns=['sum'])
+    #bill_df = pd.DataFrame(month,
+    #                       index=[meter, variable],
+    #                       columns=['sum'])
+
+
+    bill_df = pd.DataFrame(np.array(month, dtype=float), index=pd.MultiIndex.from_arrays([meter, variable]), columns=['sum'])
+
 
     month = []
     variable = []
@@ -1838,7 +1842,8 @@ def calculate_tariff_prices(
         ) / (sf * total_consumption_rc + total_consumption_i)
     elif rate_scenario == "time-of-use":
         # Load in necessary data for the time-of-use rate
-        tou_params = load_json(case_path, "time_of_use_parameters.json")
+        data_path = os.path.expandvars('$TESPDIR/examples/analysis/dsot/data')
+        tou_params = load_json(data_path, "time_of_use_parameters.json")
 
         # Determine the seasons under consideration in the time-of-use rate
         seasons_dict = {}
@@ -3453,7 +3458,8 @@ def DSO_rate_making(
         elif rate_scenario == "time-of-use":
             # Update the variables
             tariff["DSO_" + str(dso_num)]["flat_rate"] = prices["flat_rate"]
-            tou_params = load_json(case, "time_of_use_parameters.json")
+            data_path = os.path.expandvars('$TESPDIR/examples/analysis/dsot/data')
+            tou_params = load_json(data_path, "time_of_use_parameters.json")
             for m in tou_params["DSO_" + str(dso_num)].keys():
                 tou_params["DSO_" + str(dso_num)][m]["price"] = prices[
                     "tou_rate_" + tou_params["DSO_" + str(dso_num)][m]["season"]
