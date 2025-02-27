@@ -4,7 +4,7 @@
 import os
 from datetime import datetime
 
-import waterfall_chart
+import waterfall_chart #distribution name: waterfallcharts
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -1172,7 +1172,7 @@ def plot_customer_pdf(attribute, variables, metric, pop_df, case, output_path):
     plt.savefig(file_path_fig, bbox_inches='tight')
 
 
-if __name__ == '__main__':
+def DSOT_plots():
     pd.set_option('display.max_columns', 50)
 
     # ------------ Selection of DSO and Day  ---------------------------------
@@ -1334,3 +1334,101 @@ if __name__ == '__main__':
     # reduction_by_class(Cases, Data_paths, Output_path, 'Load')
     if dso_valuation_waterfall:
         dso_cfs_delta(Cases_list, Data_paths_list, dso_range, metadata_file)
+
+
+def rates_plots():
+    # ------------ Selection of DSO and Day  ---------------------------------
+    dso_num = '1'  # Needs to be non-zero integer
+    day_num = '4'  # Needs to be non-zero integer
+    # Set day range of interest (1 = day 1)
+    # 1 = Day 1. Starting at day two as agent data is missing first hour of run.
+    day_range = range(3, 5)  
+    dso_range = range(1, 9)  # 1 = DSO 1 (end range should be last DSO +1)
+
+    #  ------------ Select folder locations for different cases ---------
+    # Load System Case Config
+    # Set current working directory to location of case folder.
+    case = 'Flat'
+    data_path = os.path.expandvars('$TESPDIR/examples/analysis/dsot/data/post_processing')
+    config_path = os.path.join(data_path, case)
+
+    # you should always use 'generate_case_config.json' as it is copied when case is created
+    system_case = 'generate_case_config.json'
+    case_config = pt.load_json(config_path, system_case)
+    case_config_file = config_path + '/' + system_case
+
+    agent_prefix = '/DSO_'
+    GLD_prefix = '/Substation_'
+
+    metadata_path = os.path.expandvars('$TESPDIR/examples/analysis/dsot/data/')
+
+    metadata_file = case_config["dsoPopulationFile"]
+    if "rate" in case_config:
+        metadata_file = case_config["dsoRECSPopulationFile"]
+    dso_meta_file = os.path.join(metadata_path, metadata_file)
+
+    flat_path = os.path.join(data_path, 'Flat')
+    DSOT_path = os.path.join(data_path, 'DSOT')
+    TOU_path = os.path.join(data_path, 'TOU')
+
+    # Check if there is a plots folder - create if not.
+    check_folder = os.path.isdir(data_path + '/plots')
+    if not check_folder:
+        os.makedirs(data_path + '/plots')
+
+    ##  1. DER Load Plotting - Plot gets saved in case_path\plots folder.
+    # Provides stacked time series plots of end loads.  E.g., Figure 6, 32, 36, 37 in DSO+T Volume 1.
+
+    #Flat case plot
+    flat_aug_path = os.path.join(flat_path, '8_2016_08_pv_bt_fl_ev')
+    day_range = range(12, 17) # Set day range and case path around August 11 peak - peak load is given in load stats csv.
+    pt.der_stack_plot(dso_range, day_range, metadata_path, flat_aug_path, None, False)
+
+    # Compare TOU and DSO+T to Flat (BAU case)
+    TOU_aug_path = os.path.join(TOU_path, '8_2016_08_pv_bt_fl_ev')
+    pt.der_stack_plot(dso_range, day_range, metadata_path, TOU_aug_path, flat_aug_path, False)
+
+    DSOT_aug_path = os.path.join(DSOT_path, '8_2016_08_pv_bt_fl_ev')
+    pt.der_stack_plot(dso_range, day_range, metadata_path, DSOT_aug_path, flat_aug_path, False)
+
+    # TODO: Add Winter Peak as well as system min load (4/4/2016) plots.
+
+    ##  2. Annual System Load Plotting - Plot gets saved in case_path\plots folder.
+    # Provides annual box and whisker like Figure 14, 16, 40 in Vol1.
+    Cases = ['Flat', 'TOU', 'DSOT']
+    Data_paths = [flat_path, TOU_path, DSOT_path]  # TODO: Add other cases as they are completed.
+    Variables = ['DA LMP', 'Total Load', 'Hybrid']
+    for Variable in Variables:
+        plot_annual_stats(Cases, Data_paths, data_path, dso_num, Variable)
+
+    ##  3. Generator Plotting.
+    # Provides stacked time series plots of bulk generation.  
+    # E.g., Figure 15 in DSO+T Volume 1.
+    pt.generation_load_profiles(flat_aug_path, metadata_path, flat_aug_path, day_range, False)
+
+    ##  4. CFS Waterfall.
+    # Total grid cost water fall: Figure 42 in Vol 1
+    Cases_list = [['Flat', 'TOU'], ['Flat', 'DSOT']]
+    Data_paths_list = [[flat_path, TOU_path], [flat_path, DSOT_path]]
+    dso_cfs_delta(Cases_list, Data_paths_list, dso_range, metadata_file, metadata_path)
+
+    ##  5. Customer PDFs.
+    # Probably density Functions of customer populations: e.g., Figure 45 in Vol 1
+    Cases = ['Flat', 'TOU']
+    Data_paths = [flat_path, TOU_path]
+    customer_cfs_delta(Cases, Data_paths, metadata_file, metadata_path)
+    # TODO: Need to debug DSO+T rate making..
+    # Data_paths = [flat_path, DSOT_path]
+    # comp_pt.customer_cfs_delta(Cases, Data_paths, metadata_file, metadata_path)
+
+    ##  6. House/Customer Daily HVAC / Load Examples.
+    # Probably density Functions of customer populations: e.g., Figure 45 in Vol 1
+
+    ##  7. Population Attribute PDFs.
+    # Probably density Functions of customer populations: e.g., Figure 45 in Vol 1
+
+
+
+if __name__ == '__main__':
+    #DSOT_plots()
+    rates_plots()
