@@ -2731,6 +2731,8 @@ def calculate_tariff_prices(
             )
             / 1000
         )
+        # TODO: need to fix scaling for when there will be industrial customers in GLD.  The fixed industrial load
+        #  includes the scaling factor effect but this is adding to any GLD load that does not.
         indust_df = load_indust_data(industrial_file, range(1, 2)) * 1000
         rev_DA_energy_charge_trans_i += (
             indust_df.loc[0, "Bus" + dso_num]
@@ -2762,10 +2764,10 @@ def calculate_tariff_prices(
                     rev_DA_energy_charge_trans_rc
                     + rev_RT_energy_charge_trans_rc
                     + rev_volumetric_charge_trans_rc
-                    + rev_DA_energy_charge_trans_i
                     + rev_RT_energy_charge_trans_i
                 )
-                - rev_volumetric_charge_trans_i
+                - (rev_volumetric_charge_trans_i
+                + rev_DA_energy_charge_trans_i)
             ) / (12 * (sf * total_consumers_trans_rc + total_consumers_trans_i))
 
         # Initialize some of the closed-form solution components
@@ -2809,7 +2811,7 @@ def calculate_tariff_prices(
                         rev_volumetric_charge_trans += (
                             meter_df.loc[(each, "kw-hr"), "sum"] * trans_vol_charge
                         )
-                        rev_fixed_charge_trans += prices["transactive_fixed_charge"]
+                        rev_fixed_charge_trans += prices["transactive_fixed_charge"] * len(months)
                 else:
                     # Update total consumption for the flat rate consumers
                     total_consumption_flat_rc += meter_df.loc[(each, "kw-hr"), "sum"]
@@ -2827,8 +2829,10 @@ def calculate_tariff_prices(
 
                     # Update total revenue from fixed charges for the flat rate 
                     # consumers
-                    rev_fixed_charge_flat_rc += fixed_charge * len(months)
-
+                    if trans_cost_balance_method in [None, "volumetric"]:
+                        rev_fixed_charge_flat_rc += trans_fixed_charge * len(months)
+                    elif trans_cost_balance_method == "fixed":
+                        rev_fixed_charge_flat_rc += prices["transactive_fixed_charge"] * len(months)
                     # Update the total tier credit for the flat rate consumers, if the 
                     # consumer qualifies
                     if metadata["billingmeters"][each]["tariff_class"] in [
@@ -3484,6 +3488,9 @@ def DSO_rate_making(
             elif trans_cost_balance_method == "fixed":
                 tariff["DSO_" + str(dso_num)][
                     "transactive_connection_charge"
+                ] = prices["transactive_fixed_charge"]
+                tariff["DSO_" + str(dso_num)][
+                    "base_connection_charge"
                 ] = prices["transactive_fixed_charge"]
         elif rate_scenario == "dsot":
             # Update the variables
