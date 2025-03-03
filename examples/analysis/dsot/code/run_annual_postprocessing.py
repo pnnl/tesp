@@ -162,20 +162,6 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
         # Number of days at the end of the simulation to be discarded
         discard_end_days = 1  
 
-        # # Load System Case Config
-        # if case_path in [mr_bau_path, mr_batt_path, mr_flex_path]:
-        #     system_case = '8_system_case_config.json'
-        #     base_case_path = mr_bau_path
-        # elif case_path in [hr_bau_path, hr_batt_path, hr_flex_path]:
-        #     system_case = '8_hi_system_case_config.json'
-        #     base_case_path = hr_bau_path
-        # elif case_path in [mr_200_bau_path, mr_200_batt_path, mr_200_flex_path]:
-        #     system_case = '200_system_case_config.json'
-        #     base_case_path = mr_200_bau_path
-        # elif case_path in [hr_200_bau_path, hr_200_batt_path, hr_200_flex_path]:
-        #     system_case = '200_hi_system_case_config.json'
-        #     base_case_path = hr_200_bau_path
-
         config_path = dirname(abspath(__file__))
         case_config = pt.load_json(config_path, system_case)
 
@@ -208,9 +194,9 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
         if case_path == transactive_path:
             case_name = 'RandD'
             rate_scenario = "transactive"
-        # if case_path == subscription_path:
-        #     case_name = 'Sub'
-        #     rate_scenario = "subscription"
+        if case_path == subscription_path:
+            case_name = 'Sub'
+            rate_scenario = "subscription"
 
         print('---------------Postprocessing ' + str(case_name), 'Case ----------------')
 
