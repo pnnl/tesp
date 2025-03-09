@@ -1100,8 +1100,8 @@ def calculate_consumer_bills(
     months = list(meter_df.columns[~meter_df.columns.str.contains("sum")])
     for m in months:
         # Initialize the DataFrames for each month
-        bill_df[m] = [0] * len(bill_df)
-        billsum_df[m] = [0] * len(billsum_df)
+        bill_df[m] = [0.0] * len(bill_df)
+        billsum_df[m] = [0.0] * len(billsum_df)
 
         if rate_scenario == "subscription":
             # Create a mapping between month name and month number
@@ -1596,26 +1596,41 @@ def calculate_consumer_bills(
 
     # Calculate the average prices at the meter level
     for each in metadata["billingmeters"]:
+        if bill_df.loc[(each, "flat_energy_purchased"), "sum"] == 0.0:
+            bill_df.loc[(each, "flat_average_price"), "sum"] = 0.0
+        else:
         bill_df.loc[(each, "flat_average_price"), "sum"] = (
             bill_df.loc[(each, "flat_total_charge"), "sum"]
             / bill_df.loc[(each, "flat_energy_purchased"), "sum"]
         )
         if rate_scenario == "time-of-use":
+            if bill_df.loc[(each, "tou_energy_purchased"), "sum"] == 0.0:
+                bill_df.loc[(each, "tou_average_price"), "sum"] = 0.0
+            else:
             bill_df.loc[(each, "tou_average_price"), "sum"] = (
                 bill_df.loc[(each, "tou_total_charge"), "sum"]
                 / bill_df.loc[(each, "tou_energy_purchased"), "sum"]
             )
         elif rate_scenario == "subscription":
+            if bill_df.loc[(each, "subscription_energy_purchased"), "sum"] == 0.0:
+                bill_df.loc[(each, "subscription_average_price"), "sum"] = 0.0
+            else:
             bill_df.loc[(each, "subscription_average_price"), "sum"] = (
                 bill_df.loc[(each, "subscription_total_charge"), "sum"]
                 / bill_df.loc[(each, "subscription_energy_purchased"), "sum"]
             )
         elif rate_scenario == "transactive":
+            if bill_df.loc[(each, "transactive_energy_purchased"), "sum"] == 0.0:
+                bill_df.loc[(each, "transactive_average_price"), "sum"] = 0.0
+            else:
             bill_df.loc[(each, "transactive_average_price"), "sum"] = (
                 bill_df.loc[(each, "transactive_total_charge"), "sum"]
                 / bill_df.loc[(each, "transactive_energy_purchased"), "sum"]
             )
         elif rate_scenario == "dsot":
+            if bill_df.loc[(each, "dsot_energy_purchased"), "sum"] == 0.0:
+                bill_df.loc[(each, "dsot_average_price"), "sum"] = 0.0
+            else:
             bill_df.loc[(each, "dsot_average_price"), "sum"] = (
                 bill_df.loc[(each, "dsot_total_charge"), "sum"]
                 / bill_df.loc[(each, "dsot_energy_purchased"), "sum"]
