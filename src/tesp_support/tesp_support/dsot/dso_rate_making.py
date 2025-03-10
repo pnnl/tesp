@@ -1408,7 +1408,8 @@ def calculate_consumer_bills(
                     # Calculate the consumer's fixed charge under the transactive tariff
                     bill_df.loc[
                         (each, "transactive_fixed_charge"), m
-                    ] = trans_fixed_charge
+                    ] = trans_fixed_charge  * \
+                            tariff["DSO_" + dso_num][metadata["billingmeters"][each]["tariff_class"]]["connection_charge_multiplier"]
 
                     # Calculate the consumer's volumetric energy charge under the
                     # transactive tariff
@@ -1599,42 +1600,42 @@ def calculate_consumer_bills(
         if bill_df.loc[(each, "flat_energy_purchased"), "sum"] == 0.0:
             bill_df.loc[(each, "flat_average_price"), "sum"] = 0.0
         else:
-        bill_df.loc[(each, "flat_average_price"), "sum"] = (
-            bill_df.loc[(each, "flat_total_charge"), "sum"]
-            / bill_df.loc[(each, "flat_energy_purchased"), "sum"]
-        )
+            bill_df.loc[(each, "flat_average_price"), "sum"] = (
+                bill_df.loc[(each, "flat_total_charge"), "sum"]
+                / bill_df.loc[(each, "flat_energy_purchased"), "sum"]
+            )
         if rate_scenario == "time-of-use":
             if bill_df.loc[(each, "tou_energy_purchased"), "sum"] == 0.0:
                 bill_df.loc[(each, "tou_average_price"), "sum"] = 0.0
             else:
-            bill_df.loc[(each, "tou_average_price"), "sum"] = (
-                bill_df.loc[(each, "tou_total_charge"), "sum"]
-                / bill_df.loc[(each, "tou_energy_purchased"), "sum"]
-            )
+                bill_df.loc[(each, "tou_average_price"), "sum"] = (
+                    bill_df.loc[(each, "tou_total_charge"), "sum"]
+                    / bill_df.loc[(each, "tou_energy_purchased"), "sum"]
+                )
         elif rate_scenario == "subscription":
             if bill_df.loc[(each, "subscription_energy_purchased"), "sum"] == 0.0:
                 bill_df.loc[(each, "subscription_average_price"), "sum"] = 0.0
             else:
-            bill_df.loc[(each, "subscription_average_price"), "sum"] = (
-                bill_df.loc[(each, "subscription_total_charge"), "sum"]
-                / bill_df.loc[(each, "subscription_energy_purchased"), "sum"]
-            )
+                bill_df.loc[(each, "subscription_average_price"), "sum"] = (
+                    bill_df.loc[(each, "subscription_total_charge"), "sum"]
+                    / bill_df.loc[(each, "subscription_energy_purchased"), "sum"]
+                )
         elif rate_scenario == "transactive":
             if bill_df.loc[(each, "transactive_energy_purchased"), "sum"] == 0.0:
                 bill_df.loc[(each, "transactive_average_price"), "sum"] = 0.0
             else:
-            bill_df.loc[(each, "transactive_average_price"), "sum"] = (
-                bill_df.loc[(each, "transactive_total_charge"), "sum"]
-                / bill_df.loc[(each, "transactive_energy_purchased"), "sum"]
-            )
+                bill_df.loc[(each, "transactive_average_price"), "sum"] = (
+                    bill_df.loc[(each, "transactive_total_charge"), "sum"]
+                    / bill_df.loc[(each, "transactive_energy_purchased"), "sum"]
+                )
         elif rate_scenario == "dsot":
             if bill_df.loc[(each, "dsot_energy_purchased"), "sum"] == 0.0:
                 bill_df.loc[(each, "dsot_average_price"), "sum"] = 0.0
             else:
-            bill_df.loc[(each, "dsot_average_price"), "sum"] = (
-                bill_df.loc[(each, "dsot_total_charge"), "sum"]
-                / bill_df.loc[(each, "dsot_energy_purchased"), "sum"]
-            )
+                bill_df.loc[(each, "dsot_average_price"), "sum"] = (
+                    bill_df.loc[(each, "dsot_total_charge"), "sum"]
+                    / bill_df.loc[(each, "dsot_energy_purchased"), "sum"]
+                )
         
     # Calculate the average prices at the sector level
     for load in ["residential", "commercial", "industrial", "total"]:
@@ -2709,7 +2710,8 @@ def calculate_tariff_prices(
                     rev_fixed_charge_trans_rc += trans_fixed_charge * len(months)
                 elif trans_cost_balance_method == "fixed":
                     # Update the total number of consumers
-                    total_consumers_trans_rc += 1
+                    total_consumers_trans_rc += 1 * \
+                    tariff["DSO_" + dso_num][metadata["billingmeters"][each]["tariff_class"]]["connection_charge_multiplier"]
 
                     # Update the total revenue from volumetric charges
                     rev_volumetric_charge_trans_rc += (
@@ -2741,7 +2743,7 @@ def calculate_tariff_prices(
             total_consumption_trans_i = energy_sum_df.loc[("industrial", "kw-hr"), "sum"]
             rev_fixed_charge_trans_i = trans_fixed_charge * len(months) * num_ind_cust
         elif trans_cost_balance_method == "fixed":
-            total_consumers_trans_i = num_ind_cust
+            total_consumers_trans_i = num_ind_cust * tariff["DSO_" + dso_num]["industrial"]["connection_charge_multiplier"]
             rev_volumetric_charge_trans_i = (
                 energy_sum_df.loc[("industrial", "kw-hr"), "sum"] * trans_vol_charge
             )
@@ -2831,7 +2833,8 @@ def calculate_tariff_prices(
                         rev_volumetric_charge_trans += (
                             meter_df.loc[(each, "kw-hr"), "sum"] * trans_vol_charge
                         )
-                        rev_fixed_charge_trans += prices["transactive_fixed_charge"] * len(months)
+                        rev_fixed_charge_trans += prices["transactive_fixed_charge"] * len(months) * \
+                            tariff["DSO_" + dso_num][metadata["billingmeters"][each]["tariff_class"]]["connection_charge_multiplier"]
                 else:
                     # Update total consumption for the flat rate consumers
                     total_consumption_flat_rc += meter_df.loc[(each, "kw-hr"), "sum"]
@@ -2849,10 +2852,10 @@ def calculate_tariff_prices(
 
                     # Update total revenue from fixed charges for the flat rate 
                     # consumers
-                    if trans_cost_balance_method in [None, "volumetric"]:
-                        rev_fixed_charge_flat_rc += trans_fixed_charge * len(months)
-                    elif trans_cost_balance_method == "fixed":
-                        rev_fixed_charge_flat_rc += prices["transactive_fixed_charge"] * len(months)
+                    # if trans_cost_balance_method in [None, "volumetric"]:
+                    #     rev_fixed_charge_flat_rc += trans_fixed_charge * len(months)
+                    # elif trans_cost_balance_method == "fixed":
+                    rev_fixed_charge_flat_rc += fixed_charge * len(months)
                     # Update the total tier credit for the flat rate consumers, if the 
                     # consumer qualifies
                     if metadata["billingmeters"][each]["tariff_class"] in [
@@ -3510,9 +3513,9 @@ def DSO_rate_making(
                 tariff["DSO_" + str(dso_num)][
                     "transactive_connection_charge"
                 ] = prices["transactive_fixed_charge"]
-                tariff["DSO_" + str(dso_num)][
-                    "base_connection_charge"
-                ] = prices["transactive_fixed_charge"]
+                # tariff["DSO_" + str(dso_num)][
+                #     "base_connection_charge"
+                # ] = prices["transactive_fixed_charge"]
         elif rate_scenario == "dsot":
             # Update the variables
             tariff["DSO_" + str(dso_num)]["flat_rate"] = prices["flat_rate"]
