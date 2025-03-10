@@ -48,7 +48,7 @@ else:
     DSOT_path = os.path.join(datapath, 'DSOT')
     TOU_path = os.path.join(datapath, 'TOU')
     transactive_path = os.path.join(datapath, 'rob-don')
-    #subscription_path = os.path.join(datapath, 'sub')
+    subscription_path = os.path.join(datapath, 'sub') # duplicate the 'rob-don' folder and rename to 'sub'
     metadata_path = os.path.expandvars('$TESPDIR/examples/analysis/dsot/data') 
 
 # ------------------- Select case_path to post process ------------------------
@@ -60,7 +60,7 @@ case_list = []
 case_list.append(DSOT_path)
 case_list.append(TOU_path)
 case_list.append(transactive_path)
-#case_list.append(subscription_path)
+case_list.append(subscription_path)
 
 def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_path : str, run_base: bool):
     """This function loops through the run_annual_postprocessing script to 
