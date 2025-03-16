@@ -142,15 +142,12 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
         if not os.path.isfile(os.path.join(case_path, 'Customer_CSF_Summary.csv')):
             customer_cfs = True
         else:
-            customer_cfs = False
+            customer_cfs = True
 
         if not os.path.isfile(os.path.join(case_path, 'DSO_CSF_Summary.csv')):
             dso_cfs = True
-            squareup_revenue = False
         else:
             dso_cfs = True
-            # To update billing to match expenses:
-            squareup_revenue = True
 
         # Set True if you want to automatically determine start and end days of 
         # the month (versus manually set them).
@@ -335,9 +332,6 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
         #  TODO: break DSO CFS into two parts and execute first part here to have required revenue ready.
         if retail:
             dso_df = None
-            if squareup_revenue:
-                dso_df = pd.read_csv(case_path + "/DSO_CFS_Summary.csv")
-                # TODO: Fix this: dso_df = dso_df.set_index(dso_df.columns[0])
             for dso_num in dso_range:
                 pt.tic()
                 file_name = 'Substation_' + str(dso_num) + '_glm_dict.json'
@@ -372,24 +366,21 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
                 num_ind_cust = (DSOmetadata['DSO_' + str(dso_num)]['number_of_customers'] *
                                 DSOmetadata['DSO_' + str(dso_num)]['RCI customer count mix']['industrial'])
                 dso_scaling_factor = DSOmetadata['DSO_' + str(dso_num)]['scaling_factor']
-                if squareup_revenue:
-                    required_revenue = (float(dso_df.loc[13, 'DSO_' + str(dso_num)]) + float(dso_df.loc[30, 'DSO_' + str(dso_num)])) * 1000
-                else:
-                    required_revenue = 4e6
+
                 trans_cost_balance_method = None
-                DSO_Cash_Flows, DSO_Revenues_and_Energy_Sales, tariff, surplus = rm.DSO_rate_making(
+                include_RT = False   # Do (or do not) include RT cost correction component in customer billing.
+                DSO_Cash_Flows, DSO_Revenues_and_Energy_Sales, tariff, surplus_err = rm.DSO_rate_making(
                     case_path,
                     demand_case_path,
                     dso_num,
                     GLD_metadata,
-                    required_revenue,
                     metadata_path,
                     dso_scaling_factor,
                     num_ind_cust,
                     case_name,
-                    squareup_revenue,
                     rate_scenario,
                     trans_cost_balance_method,
+                    include_RT
                 )
 
                 # Example of getting an annual customer bill in dictionary form:
@@ -400,7 +391,7 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
                 customer_bill = rm.get_cust_bill(customer, cust_bills, GLD_metadata, cust_energy, rate_scenario)
                 print(customer_bill)
 
-                print("DSO " + str(dso_num) + ": Surplus error = " + str(surplus/required_revenue*100) + "%")
+                print("DSO " + str(dso_num) + ": Surplus error = " + str(surplus_err) + "%")
                 pt.toc()
 
                 os.chdir(case_path)
@@ -430,10 +421,10 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
             variables_combs = [['tariff_class', 'cust_participating'],
                             ['tariff_class', 'cust_participating', 'cooling', 'heating'],
                             ['building_type', 'cust_participating'],
-                            ['tariff_class', 'pv_participating'],
-                            ['tariff_class', 'ev_participating']
-                            # ['tariff_class', 'cust_participating', 'pv_participating']
-                            # ['tariff_class', 'cust_participating', 'ev_participating']
+                            # ['tariff_class', 'pv_participating'],
+                            # ['tariff_class', 'ev_participating']
+                            ['tariff_class', 'cust_participating', 'pv_participating'],
+                            ['tariff_class', 'cust_participating', 'ev_participating']
             ]
 
             customer_mean_df = hf.get_mean_for_diff_groups(customer_df, main_variables, variables_combs, cfs_start_position=25)
