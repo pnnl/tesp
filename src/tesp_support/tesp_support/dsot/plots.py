@@ -44,17 +44,30 @@ def tic():
     toc(False)
 
 
-def load_json(dir_path, file_name):
-    """ Utility to open Json files."""
-    name = os.path.join(dir_path, file_name)
-    try:
-        cache = cache_output[name]
-        return cache
-    except:
-        with open(name) as json_file:
-            cache_output[name] = json.load(json_file)
-    return cache_output[name]
+def load_json(dir_path, file_name, use_cache=True):
+    """ Utility to open Json files.
+    Args:
+        dir_path (str): location of json file
+        filename (str): name json file
+        use_cache (bool): set true to use cache.  False to avoid cache (important to use for
+        files updated and accessed multiple times in analysis - e.g., TOU_parameters)
 
+    Returns:
+        output: json file contents
+    """
+    name = os.path.join(dir_path, file_name)
+    if use_cache:
+        try:
+            cache = cache_output[name]
+            return cache
+        except:
+            with open(name) as json_file:
+                cache_output[name] = json.load(json_file)
+        return cache_output[name]
+    else:
+        with open(name) as json_file:
+            output = json.load(json_file)
+        return output
 
 def get_date(dir_path, dso, day):
     """ Utility to return start time (datetime format) of simulation day (str) in question"""

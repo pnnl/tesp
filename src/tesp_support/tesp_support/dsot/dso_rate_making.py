@@ -47,7 +47,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num,
     # Load in necessary data for the defined rate scenario
     if (rate_scenario in ["time-of-use", "TOU"]):
         # Load time-of-use rate parameters
-        tou_params = load_json(os.path.join("../" + dso_data_path), "time_of_use_parameters.json")
+        tou_params = load_json(os.path.join("../" + dso_data_path), "time_of_use_parameters.json", False)
 
         # Create a mapping between month number and month abbreviation
         month_num_to_abbrev = {
@@ -732,7 +732,7 @@ def calculate_consumer_bills(
 
     # Load in necessary data for the defined rate scenario
     if rate_scenario in ["time-of-use", "subscription"]:
-        tou_params = load_json(case_path, "time_of_use_parameters.json")
+        tou_params = load_json(case_path, "time_of_use_parameters.json", False)
 
     # Specify the bill components that will be recorded
     bill_components = [
@@ -1600,7 +1600,7 @@ def calculate_tariff_prices(
     elif rate_scenario == "time-of-use":
         # Load in necessary data for the time-of-use rate
         data_path = os.path.expandvars('$TESPDIR/examples/analysis/dsot/data')
-        tou_params = load_json(data_path, "time_of_use_parameters.json")
+        tou_params = load_json(data_path, "time_of_use_parameters.json", False)
 
         # Determine the seasons under consideration in the time-of-use rate
         seasons_dict = {}
@@ -1860,7 +1860,7 @@ def calculate_tariff_prices(
         ) / (sf * total_consumption_flat_rc + total_consumption_flat_i)
     elif rate_scenario == "subscription":
         # Load in necessary data for the time-of-use rate
-        tou_params = load_json(case_path, "time_of_use_parameters.json")
+        tou_params = load_json(case_path, "time_of_use_parameters.json", False)
 
         # Create a mapping between month name and month number
         month_map = {
@@ -3056,12 +3056,11 @@ def DSO_rate_making(
         file_name = "rate_case_values_" + rate_scenario + ".json"
 
     # Load Tariff structure
-    tariff = load_json(tariff_path, file_name)
+    tariff = load_json(tariff_path, file_name, False)
 
     # Load in transactive A values from simulation settings to ensure consistency
     default_config = load_json(tariff_path, 'default_case_config.json')
-    for DSO in tariff:
-        tariff[DSO]['transactive_LMP_multiplier'] = default_config['MarketPrep']['DSO']['dso_retail_scaling']
+    tariff['DSO_'+ str(dso_num)]['transactive_LMP_multiplier'] = default_config['MarketPrep']['DSO']['dso_retail_scaling']
 
     energy_file = case + '/energy_dso_' + str(dso_num) + '_data.h5'
     trans_file = case + '/transactive_dso_' + str(dso_num) + '_data.h5'
@@ -3107,7 +3106,7 @@ def DSO_rate_making(
         # Update the variables
         tariff["DSO_" + str(dso_num)]["flat_rate"] = prices["flat_rate"]
         data_path = os.path.expandvars('$TESPDIR/examples/analysis/dsot/data')
-        tou_params = load_json(data_path, "time_of_use_parameters.json")
+        tou_params = load_json(data_path, "time_of_use_parameters.json", False)
         for m in tou_params["DSO_" + str(dso_num)].keys():
             tou_params["DSO_" + str(dso_num)][m]["price"] = prices[
                 "tou_rate_" + tou_params["DSO_" + str(dso_num)][m]["season"]
@@ -3119,7 +3118,7 @@ def DSO_rate_making(
     elif rate_scenario == "subscription":
         # Update the variables
         tariff["DSO_" + str(dso_num)]["flat_rate"] = prices["flat_rate"]
-        tou_params = load_json(case, "time_of_use_parameters.json")
+        tou_params = load_json(case, "time_of_use_parameters.json", False)
         for m in tou_params["DSO_" + str(dso_num)].keys():
             tou_params["DSO_" + str(dso_num)][m]["price"] = prices[
                 "subscription_rate_" + tou_params["DSO_" + str(dso_num)][m]["season"]
