@@ -5,6 +5,24 @@
 HVAC system in a transactive system. See the class docstring for further
 details.
 
+---
+A Note on Units:
+Unless otherwise stated, TESP and DSO+T maintain the following unit conventions:
+
+Temperature - Fahrenheit [F]
+Time - Seconds [s]
+Price/Bids - []
+Heatgain - [Btu/h]
+Heating/Cooling Capacity - [Btu/h]
+R values - [F*sqft*hr/Btu]
+Length/Distance - [ft]
+Area - [sqft]
+
+Where units may be non-obvious, the choice of unit will be specified in the 
+variable name, i.e., variable_unit. This is of particular note for units of 
+power and energy, to keep track of kW(h) vs. MW(h).
+---
+
 @author: Trevor Hardy
 """
 
@@ -103,7 +121,6 @@ class WindowGlassType(Enum):
 class SortDirection(Enum):
     ASCENDING = 0
     DESCENDING = 1
-
 
 class HVACDSOTAgent:
     def __init__(self, name: str, attributes: dict):
@@ -228,12 +245,12 @@ class HVACSchedule:
         # Externally defined attributes
         # These are generally fixed throughout the simulation
         self.name = None
-        self.wakeup_start = None
-        self.daylight_start = None
-        self.evening_start = None 
-        self.night_start = None 
-        self.weekend_day_start = None
-        self.weekend_night_start = None
+        self.wakeup_start_hr = None
+        self.daylight_start_hr = None
+        self.evening_start_hr = None 
+        self.night_start_hr = None 
+        self.weekend_day_start_hr = None
+        self.weekend_night_start_hr = None
         self.ramp_high_limit = None
         self.ramp_low_limit = None
         self.ramp_low_cool = 0
@@ -250,18 +267,18 @@ class HVACSchedule:
         init_class_attributes(self, attributes)
 
     def validate_inputs(self):
-        if self.wakeup_start > self.daylight_start:
-            logger.debug('{} {} -- wakeup_start ({}) is not < daylight_start ({}).'
-                    .format(self.name, 'init', self.wakeup_start, self.daylight_start))
-        if self.daylight_start > self.evening_start:
-            logger.debug('{} {} -- daylight_start ({}) is not < evening_start ({}).'
-                    .format(self.name, 'init', self.daylight_start, self.evening_start))
-        if self.evening_start > self.night_start:    
-            logger.debug('{} {} -- evening_start ({}) is not < night_start ({}).'
-                    .format(self.name, 'init', self.evening_start, self.night_start))
-        if self.weekend_day_start > self.weekend_night_start:
-            logger.debug('{} {} -- weekend_day_start ({}) is not < weekend_night_start ({}).'
-                    .format(self.name, 'init', self.weekend_day_start, self.weekend_night_start))
+        if self.wakeup_start_hr > self.daylight_start_hr:
+            logger.debug('{} {} -- wakeup_start_hr ({}) is not < daylight_start_hr ({}).'
+                    .format(self.name, 'init', self.wakeup_start_hr, self.daylight_start_hr))
+        if self.daylight_start_hr > self.evening_start_hr:
+            logger.debug('{} {} -- daylight_start_hr ({}) is not < evening_start_hr ({}).'
+                    .format(self.name, 'init', self.daylight_start_hr, self.evening_start_hr))
+        if self.evening_start_hr > self.night_start_hr:    
+            logger.debug('{} {} -- evening_start_hr ({}) is not < night_start_hr ({}).'
+                    .format(self.name, 'init', self.evening_start_hr, self.night_start_hr))
+        if self.weekend_day_start_hr > self.weekend_night_start_hr:
+            logger.debug('{} {} -- weekend_day_start_hr ({}) is not < weekend_night_start_hr ({}).'
+                    .format(self.name, 'init', self.weekend_day_start_hr, self.weekend_night_start_hr))
 
 
     def get_scheduled_setpoint(self, 
@@ -281,19 +298,19 @@ class HVACSchedule:
         if day_of_week > 4:  # a weekend
             val_cool = self.temperatures.weekend_night_set_cool
             val_heat = self.temperatures.weekend_night_set_heat
-            if self.weekend_day_start <= day_of_week < self.weekend_night_start:
+            if self.weekend_day_start_hr <= day_of_week < self.weekend_night_start_hr:
                 val_cool = self.temperatures.weekend_day_set_cool
                 val_heat = self.temperatures.weekend_day_set_heat
         else:  # a weekday
             val_cool = self.temperatures.night_set_cool
             val_heat = self.temperatures.night_set_heat
-            if self.wakeup_start <= day_of_week < self.daylight_start:
+            if self.wakeup_start_hr <= day_of_week < self.daylight_start_hr:
                 val_cool = self.temperatures.wakeup_set_cool
                 val_heat = self.temperatures.wakeup_set_heat
-            elif self.daylight_start <= day_of_week < self.evening_start:
+            elif self.daylight_start_hr <= day_of_week < self.evening_start_hr:
                 val_cool = self.temperatures.daylight_set_cool
                 val_heat = self.temperatures.daylight_set_heat
-            elif self.evening_start <= day_of_week < self.night_start:
+            elif self.evening_start_hr <= day_of_week < self.night_start_hr:
                 val_cool = self.temperatures.evening_set_cool
                 val_heat = self.temperatures.evening_set_heat
         return val_cool, val_heat
@@ -319,19 +336,19 @@ class HVACSchedule:
         if sim_time.weekday() > 4:  # a weekend
             val_cool = temperatures.weekend_night_set_cool
             val_heat = temperatures.weekend_night_set_heat
-            if self.weekend_day_start <= self.hour < self.weekend_night_start:
+            if self.weekend_day_start_hr <= self.hour < self.weekend_night_start_hr:
                 val_cool = temperatures.weekend_day_set_cool
                 val_heat = temperatures.weekend_day_set_heat
         else:  # a weekday
             val_cool = temperatures.night_set_cool
             val_heat = temperatures.night_set_heat
-            if self.wakeup_start <= self.hour < self.daylight_start:
+            if self.wakeup_start_hr <= self.hour < self.daylight_start_hr:
                 val_cool = temperatures.wakeup_set_cool
                 val_heat = temperatures.wakeup_set_heat
-            elif self.daylight_start <= self.hour < self.evening_start:
+            elif self.daylight_start_hr <= self.hour < self.evening_start_hr:
                 val_cool = temperatures.daylight_set_cool
                 val_heat = temperatures.daylight_set_heat
-            elif self.evening_start <= self.hour < self.night_start:
+            elif self.evening_start_hr <= self.hour < self.night_start_hr:
                 val_cool = temperatures.evening_set_cool
                 val_heat = temperatures.evening_set_heat
         if abs(temperatures.basepoint_cooling - val_cool) > 0.1 or \
@@ -525,7 +542,7 @@ class HVACDSOTStructureModel:
         self.exterior_floor_fraction = None
         self.exterior_wall_fraction = None
         self.interior_exterior_wall_ratio = None
-        self.WETC = None
+        self.window_exterior_transmission_coefficient = None
         self.glazing_layers = None
         self.window_wall_ratio = None
         self.gross_air_heat_capacity = None
@@ -561,7 +578,7 @@ class HVACDSOTStructureModel:
         self.etp_structure_params = ETPStructureParams()
         self.single_door_area = 0
         self.solar_heatgain_factor = 0
-        self.Rg = 0
+        self.Rwindows = 0
         init_class_attributes(self, attributes)
 
         # Initialization of model
@@ -587,8 +604,8 @@ class HVACDSOTStructureModel:
             self.exterior_floor_fraction = 1
         if self.exterior_wall_fraction == 0.0:
             self.exterior_wall_fraction
-        if self.WETC <= 0.0:
-            self.WETC = 0.6
+        if self.window_exterior_transmission_coefficient <= 0.0:
+            self.window_exterior_transmission_coefficient = 0.6
         # TODO update to raising exceptions
         if self.sqft <= 0:
             logger.debug('{} {} -- number of sqft ({}) is non-positive'
@@ -722,64 +739,64 @@ class HVACDSOTStructureModel:
                 print("error: no value for one pane of low-e glass")
             elif self.glazing_layers == 2:
                 if self.window_frame_type == WindowFrameType.NONE:
-                    self.Rg = 1.0 / 0.30
+                    self.Rwindows = 1.0 / 0.30
                 elif self.window_frame_type == WindowFrameType.ALUMINUM:
-                    self.Rg = 1.0 / 0.67
+                    self.Rwindows = 1.0 / 0.67
                 elif self.window_frame_type == WindowFrameType.THERMAL_BREAK:
-                    self.Rg = 1.0 / 0.47
+                    self.Rwindows = 1.0 / 0.47
                 elif self.window_frame_type == WindowFrameType.WOOD:
-                    self.Rg = 1.0 / 0.41
+                    self.Rwindows = 1.0 / 0.41
                 elif self.window_frame_type == WindowFrameType.INSULATED:
-                    self.Rg = 1.0 / 0.33
+                    self.Rwindows = 1.0 / 0.33
             elif self.glazing_layers == 3:
                 if self.window_frame_type == WindowFrameType.NONE:
-                    self.Rg = 1.0 / 0.27
+                    self.Rwindows = 1.0 / 0.27
                 elif self.window_frame_type == WindowFrameType.ALUMINUM:
-                    self.Rg = 1.0 / 0.64
+                    self.Rwindows = 1.0 / 0.64
                 elif self.window_frame_type == WindowFrameType.THERMAL_BREAK:
-                    self.Rg = 1.0 / 0.43
+                    self.Rwindows = 1.0 / 0.43
                 elif self.window_frame_type == WindowFrameType.WOOD:
-                    self.Rg = 1.0 / 0.37
+                    self.Rwindows = 1.0 / 0.37
                 elif self.window_frame_type == WindowFrameType.INSULATED:
-                    self.Rg = 1.0 / 0.31
+                    self.Rwindows = 1.0 / 0.31
         elif self.glass_type == WindowGlassType.NORMAL:
             if self.glazing_layers == 1:
                 if self.window_frame_type == WindowFrameType.NONE:
-                    self.Rg = 1.0 / 1.04
+                    self.Rwindows = 1.0 / 1.04
                 elif self.window_frame_type == WindowFrameType.ALUMINUM:
-                    self.Rg = 1.0 / 1.27
+                    self.Rwindows = 1.0 / 1.27
                 elif self.window_frame_type == WindowFrameType.THERMAL_BREAK:
-                    self.Rg = 1.0 / 1.08
+                    self.Rwindows = 1.0 / 1.08
                 elif self.window_frame_type == WindowFrameType.WOOD:
-                    self.Rg = 1.0 / 0.90
+                    self.Rwindows = 1.0 / 0.90
                 elif self.window_frame_type == WindowFrameType.INSULATED:
-                    self.Rg = 1.0 / 0.81
+                    self.Rwindows = 1.0 / 0.81
             elif self.glazing_layers == 2:
                 if self.window_frame_type == WindowFrameType.NONE:
-                    self.Rg = 1.0 / 0.48
+                    self.Rwindows = 1.0 / 0.48
                 elif self.window_frame_type == WindowFrameType.ALUMINUM:
-                    self.Rg = 1.0 / 0.81
+                    self.Rwindows = 1.0 / 0.81
                 elif self.window_frame_type == WindowFrameType.THERMAL_BREAK:
-                    self.Rg = 1.0 / 0.60
+                    self.Rwindows = 1.0 / 0.60
                 elif self.window_frame_type == WindowFrameType.WOOD:
-                    self.Rg = 1.0 / 0.53
+                    self.Rwindows = 1.0 / 0.53
                 elif self.window_frame_type == WindowFrameType.INSULATED:
-                    self.Rg = 1.0 / 0.44
+                    self.Rwindows = 1.0 / 0.44
             elif self.glazing_layers == 3:
                 if self.window_frame_type == WindowFrameType.NONE:
-                    self.Rg = 1.0 / 0.31
+                    self.Rwindows = 1.0 / 0.31
                 elif self.window_frame_type == WindowFrameType.ALUMINUM:
-                    self.Rg = 1.0 / 0.67
+                    self.Rwindows = 1.0 / 0.67
                 elif self.window_frame_type == WindowFrameType.THERMAL_BREAK:
-                    self.Rg = 1.0 / 0.46
+                    self.Rwindows = 1.0 / 0.46
                 elif self.window_frame_type == WindowFrameType.WOOD:
-                    self.Rg = 1.0 / 0.40
+                    self.Rwindows = 1.0 / 0.40
                 elif self.window_frame_type == WindowFrameType.INSULATED:
-                    self.Rg = 1.0 / 0.34
+                    self.Rwindows = 1.0 / 0.34
         elif self.glass_type == WindowGlassType.OTHER:
-            self.Rg = 2.0
+            self.Rwindows = 2.0
 
-        return self.Rg
+        return self.Rwindows
 
     def calc_structure_areas(self) -> None:
         """Calculates various areas of the structure based on object
@@ -807,7 +824,7 @@ class HVACDSOTStructureModel:
         Returns:
             float: solar heatgain factor
         """
-        self.solar_heatgain_factor = self.gross_window_area * self.window_transmission_coefficient * self.WETC
+        self.solar_heatgain_factor = self.gross_window_area * self.window_transmission_coefficient * self.window_exterior_transmission_coefficient
         return self.solar_heatgain_factor
     
     def div(self, numerator: float, denominator: float, def_val_if_zero_denom: float=0) -> float:
@@ -832,7 +849,7 @@ class HVACDSOTStructureModel:
 
     def calc_UA(self) -> float:
         """Calculates the UA (total thermal conductance) of the specified
-        structure.
+        structure, in Btu/degF*h.
 
         Returns:
             float: UA of structure
@@ -842,12 +859,15 @@ class HVACDSOTStructureModel:
             self.div(self.ceiling_area, self.Rroof) \
             + self.div(self.floor_area, self.Rfloor) \
             + self.div(self.net_wall_area, self.Rwall) \
-            + self.div(self.gross_window_area, self.Rg) \
+            + self.div(self.gross_window_area, self.Rwindows) \
             + self.div(self.total_door_area, self.Rdoors)
         return self.etp_structure_params.UA
         
     def calc_CA(self) -> float:
-        """Calculation of indoor air thermal capacity
+        """Calculation of indoor air heat capacity, or air thermal mass, in Btu/F
+        
+        Note that the *3 multiplier is to reflect that the air mass includes
+         surface effects from the mass as well
 
         Returns:
             float: Thermal capacity of indoor air
@@ -912,8 +932,6 @@ class HVACDSOTStructureModel:
                   capacitance      heat capacitance                             
 
         
-        
-        
         Returns:       
             ETPStructureParams: Data object for holding the ETP structure
             parameters
@@ -931,7 +949,7 @@ class HVACDSOTEnvironmentModel:
     thermostat + structure system. Calculates the heat flows between modeled
     elements. 
     
-    Part of maintaining the environment model is calculating the heat flows
+    Part of maintaining the environment model is calculating the heat flows.
     The fine ASCII art below shows the dependencies between the calculated
     heat flows. If, say, a call is made to calculate a new value of Qm, 
     calls will be made to recalculate Qs and Qi. 
@@ -951,15 +969,13 @@ class HVACDSOTEnvironmentModel:
     (_e.g._ Qs) being calculated multiple times when trying to update a single
     value. There are two work-arounds to avoid this:
 
-    1. - There's an `update_all_heat_flows()` that calculates all the heat
+    1. There's an `update_all_heat_flows()` that calculates all the heat
     flows ensuring there's no redundant calculations.
     2. Any of the methods used to update a heat flow dependent on another
     heat flow have optional arguments to accept previously cacluated values 
     of those flows. If a value is passed in, it is used instead of 
     recalculating. If no value is passed it, the dependent heat flow is 
     recalculated.
-
-
 
     """
     def __init__(self,
@@ -979,7 +995,7 @@ class HVACDSOTEnvironmentModel:
         self.mass_internal_gain_fraction = None
         self.mass_solar_gain_fraction = None
         self.lat = None
-        self.lon = None
+        self.long = None
         
         # Internally calculated attributes. 
         # These are updated throughout the simulation
@@ -1015,7 +1031,7 @@ class HVACDSOTEnvironmentModel:
 
         Args:
             other_obj (HVACDSOTAgent): Object whose attributes are the source
-            of the data being copied into the target object's attributes.
+                of the data being copied into the target object's attributes.
         """
         if isinstance(other_obj, HVACDSOTEnvironmentModel):
             self.__dict__.update(other_obj.__dict__)
@@ -1031,15 +1047,15 @@ class HVACDSOTEnvironmentModel:
 
         Args:
             thermostat_mode (ThermoStatMode): Indicates thermostat mode; from
-            HVACDSOTAssetstate
+                HVACDSOTAssetstate
             hvac_on (bool): Indicates current state of HVAC; from 
-            HVACDSOTAssetstate
+                HVACDSOTAssetstate
             heating_capacity (float): Heating capacity from 
-            HVACDSOTSystemModel
+                HVACDSOTSystemModel
             cooling_capacity (float): Cooling capacity from 
-            HVACDSOTSystemModel
+                HVACDSOTSystemModel
             hvac_kW (float): Indicates current real power consumption of HVAC;
-            from HVACDSOTAssetstate
+                from HVACDSOTAssetstate
 
         Returns:
             tuple: Qh and Qh_org TODO: what is Qh_org?
@@ -1068,25 +1084,28 @@ class HVACDSOTEnvironmentModel:
                 cooling_capacity: float,
                 hvac_kW: float,
                 Qh_org: float = None) -> float:
-        """Calculates Qi, the heat flow into the 
+        """Calculates Qi, the heat flow into indoor residential air due to other
+        electrical energy consumpation (e.g. appliances).
 
         Args:
-            house_kW (float): _description_
-            wh_kW (float): _description_
+            house_kW (float): Current total house real power load (TODO?) as
+                simulated in GridLAB-D
+            wh_kW (float): Current real power consumption of the water heater as
+                simulated in GridLAB-D
             thermostat_mode (ThermoStatMode): Indicates thermostat mode; from
-            HVACDSOTAssetstate
+                HVACDSOTAssetstate
             hvac_on (bool): Indicates current state of HVAC; from 
-            HVACDSOTAssetstate
+                HVACDSOTAssetstate
             heating_capacity (float): Heating capacity from 
-            HVACDSOTSystemModel
+                HVACDSOTSystemModel
             cooling_capacity (float): Cooling capacity from 
-            HVACDSOTSystemModel
+                HVACDSOTSystemModel
             hvac_kW (float): Indicates current real power consumption of HVAC;
-            from HVACDSOTAssetstate
+                from HVACDSOTAssetstate
             Qh_org (float): TODO
 
         Returns:
-            float: _description_
+            float: Qi
         """
         if Qh_org == None:
             self.calc_Qh(thermostat_mode, hvac_on, heating_capacity, cooling_capacity, hvac_kW)
@@ -1094,7 +1113,7 @@ class HVACDSOTEnvironmentModel:
             self.Qh_org = Qh_org
         self.Qi = (house_kW - abs(self.Qh_org) - wh_kW) * KW_TO_BTU_PER_HR
         if self.Qi <= 0.0:
-            Qi = 0.0
+            self.Qi = 0.0
         return self.Qi
     
     def calc_Qs(self, solar_heatgain_factor: float, solar_gain: float) -> float:
@@ -1103,11 +1122,11 @@ class HVACDSOTEnvironmentModel:
 
         Args:
             solar_heatgain_factor (float): Portion of solar radiation that
-            heats the structure mass
+                heats the structure mass
             solar_gain (float): Energy from solar radiation
 
         Returns:
-            float: 
+            float: Qs
         """
         self.Qs = solar_gain * solar_heatgain_factor
         return self.Qs
@@ -1131,34 +1150,36 @@ class HVACDSOTEnvironmentModel:
         later estimations of the whole system (HVAC + thermostat + structure)
         for arbitrary points of time in the future. So rather than just using 
         the acutal current state of the HVAC system, we calculate two values 
-        and use whichever one is applicable in the future state we're 
-        modeling.
+        and use whichever one is applicable in the future state we're modeling.
 
         Args:
-            house_kW (float): _description_
-            wh_kW (float): _description_
+            house_kW (float): Current total house real power load (TODO?) as
+                simulated in GridLAB-D
+            wh_kW (float): Current real power consumption of the water heater as
+                simulated in GridLAB-D
             thermostat_mode (ThermoStatMode): Indicates thermostat mode; from
-            HVACDSOTAssetstate
+                HVACDSOTAssetstate
             hvac_on (bool): Indicates current state of HVAC; from 
-            HVACDSOTAssetstate
+                HVACDSOTAssetstate
             heating_capacity (float): Heating capacity from 
-            HVACDSOTSystemModel
+                HVACDSOTSystemModel
             cooling_capacity (float): Cooling capacity from 
-            HVACDSOTSystemModel
+                HVACDSOTSystemModel
             hvac_kW (float): Indicates current real power consumption of HVAC;
-            from HVACDSOTAssetstate
+                from HVACDSOTAssetstate
             Qs (float): (optional) Heat flows from solar radiation. If 
-            previously calculated, it can be passed in. Otherwise, it will
-            be calculated for use in this method.
+                previously calculated, it can be passed in. Otherwise, it will
+                be calculated for use in this method.
             Qi (float): (optional) Heat flows into the indoor air. If 
-            previously calculated, it can be passed in. Otherwise, it will
-            be calculated for use in this method.
+                previously calculated, it can be passed in. Otherwise, it will
+                be calculated for use in this method.
             Qh (float): (optional) Heat flows into the indoor air due to HVAC
-            operation. If previously calculated, it can be passed in. 
-            Otherwise, it will be calculated for use in this method.
-            Qh_org (float): (optional) Heat flows into the indoor air due to 
-            HVAC operation. If previously calculated, it can be passed in. 
-            Otherwise, it will be calculated for use in this method.
+                operation. If previously calculated, it can be passed in. 
+                Otherwise, it will be calculated for use in this method.
+            Qh_org (float): TODO - this is the same as Qh. What is Qh_org?
+                (optional) Heat flows into the indoor air due to HVAC operation. 
+                If previously calculated, it can be passed in. Otherwise, it 
+                will be calculated for use in this method.
 
         Returns:
             tuple: Qa_OFF, Qa_ON
@@ -1205,24 +1226,26 @@ class HVACDSOTEnvironmentModel:
         """Calculates the heat flows into the structural mass
 
         Args:
-            house_kW (float): _description_
-            wh_kW (float): _description_
+            house_kW (float): Current total house real power load (TODO?) as
+                simulated in GridLAB-D
+            wh_kW (float): Current real power consumption of the water heater as
+                simulated in GridLAB-D
             thermostat_mode (ThermoStatMode): Indicates thermostat mode; from
-            HVACDSOTAssetstate
+                HVACDSOTAssetstate
             hvac_on (bool): Indicates current state of HVAC; from 
-            HVACDSOTAssetstate
+                HVACDSOTAssetstate
             heating_capacity (float): Heating capacity from 
-            HVACDSOTSystemModel
+                HVACDSOTSystemModel
             cooling_capacity (float): Cooling capacity from 
-            HVACDSOTSystemModel
+                HVACDSOTSystemModel
             hvac_kW (float): Indicates current real power consumption of HVAC;
-            from HVACDSOTAssetstate
+                from HVACDSOTAssetstate
             Qs (float): (optional) Heat flows from solar radiation. If 
-            previously calculated, it can be passed in. Otherwise, it will
-            be calculated for use in this method.
+                previously calculated, it can be passed in. Otherwise, it will
+                be calculated for use in this method.
             Qi (float): (optional) Heat flows into the indoor air. If 
-            previously calculated, it can be passed in. Otherwise, it will
-            be calculated for use in this method.
+                previously calculated, it can be passed in. Otherwise, it will
+                be calculated for use in this method.
 
         Returns:
             float: Qm
@@ -1255,18 +1278,20 @@ class HVACDSOTEnvironmentModel:
         duplicate calculations take place.
 
         Args:
-            house_kW (float): _description_
-            wh_kW (float): _description_
+            house_kW (float): Current total house real power load (TODO?) as
+                simulated in GridLAB-D
+            wh_kW (float): Current real power consumption of the water heater as
+                simulated in GridLAB-D
             thermostat_mode (ThermoStatMode): Indicates thermostat mode; from
-            HVACDSOTAssetstate
+                HVACDSOTAssetstate
             hvac_on (bool): Indicates current state of HVAC; from 
-            HVACDSOTAssetstate
+                HVACDSOTAssetstate
             heating_capacity (float): Heating capacity from 
-            HVACDSOTSystemModel
+                HVACDSOTSystemModel
             cooling_capacity (float): Cooling capacity from 
-            HVACDSOTSystemModel
+                HVACDSOTSystemModel
             hvac_kW (float): Indicates current real power consumption of HVAC;
-            from HVACDSOTAssetstate
+                from HVACDSOTAssetstate
 
         Returns:
             tuple: All heat flows (Qi, Qs, Qh, Qh_org, Qm)
@@ -1327,9 +1352,8 @@ class HVACDSOTEnvironmentModel:
             sol_time (float): Solar time
             dnr_i (float): Solar direct normal radiance
             dhr_i (float): Solar diffuse horizontal radiance
-            vertical_angle (float): Angle of plane absorbing the solar
-            radiation
-
+            vertical_angle (float): Angle of plane absorbing the solar radiation
+            
         Returns:
             float: Total solar flux
         """
@@ -1340,21 +1364,11 @@ class HVACDSOTEnvironmentModel:
         hr_ang = -(15.0 * math.pi / 180) * (sol_time - 12.0)
         decl = 0.409280 * sin(2.0 * math.pi * (284 + day_of_yr) / 365)
         slope = vertical_angle
-        sindecl = sin(decl)
-        cosdecl = cos(decl)
-        sinlat = sin(lat)
-        coslat = cos(lat)
-        sinslope = sin(slope)
-        cosslope = cos(slope)
-        sinaz = sin(az)
-        cosaz = cos(az)
-        sinhr = sin(hr_ang)
-        coshr = cos(hr_ang)
-        cos_incident = (sindecl * sinlat * cosslope -
-                        sindecl * coslat * sinslope * cosaz +
-                        cosdecl * coslat * cosslope * coshr +
-                        cosdecl * sinlat * sinslope * cosaz * coshr +
-                        cosdecl * sinslope * sinaz * sinhr)
+        cos_incident = (sin(decl) * sin(lat) * cos(slope) -
+                        sin(decl) * cos(lat) * sin(slope) * cos(az) +
+                        cos(decl) * cos(lat) * cos(slope) * cos(hr_ang) +
+                        cos(decl) * sin(lat) * sin(slope) * cos(az) * cos(hr_ang) +
+                        cos(decl) * sin(slope) * sin(az) * sin(hr_ang))
         if cos_incident < 0:
             cos_incident = 0
         return dnr_i * cos_incident + dhr_i
@@ -1362,13 +1376,14 @@ class HVACDSOTEnvironmentModel:
     def calc_solargain(self, sim_time: dt.datetime,
                        solar_direct = None,
                        solar_diffuse = None):
-        """_summary_
+        """Calculates the solar gain based on the direct and diffuse solar 
+        irradiance at the current simulation time.
 
         Args:
             sim_time (dt.datetime): Current simulation time
 
         Returns:
-            float: _description_
+            float: solar_gain
         """
         if solar_direct == None:
             solar_direct = self.solar_direct
@@ -1672,7 +1687,7 @@ class HVACDSOTBiddingStrategy:
         self.slider = None
         self.cooling_participating = None
         self.heating_participating = None
-        self.windowLength = None
+        self.windowLength_hr = None
         self.interpolation = None
         self.ProfitMargin_intercept = None
         self.ProfitMargin_slope = None
@@ -1755,7 +1770,7 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
             self.bid_da = attributes["RT_test_support"]["bid_da"]
             self.previous_Q_DA = attributes["RT_test_support"]["previous_Q_DA"]
             self.previous_T_DA = attributes["RT_test_support"]["previous_T_DA"]
-            self.temp_room = [attributes["RT_test_support"]["temp_room_value"] for _ in range(self.windowLength)]
+            self.temp_room = [attributes["RT_test_support"]["temp_room_value"] for _ in range(self.windowLength_hr)]
 
 
 
@@ -1807,7 +1822,7 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
     
     def update_da_temperature_limits(self, sim_time: dt.datetime) -> None:
         self.update_forecast_temperature_limits()
-        for time_idx in range(self.windowLength):
+        for time_idx in range(self.windowLength_hr):
             hour = sim_time.hour + sim_time.minute / 60 + time_idx + 1 / 60 # hours
             scheduled_cooling_setpoint, scheduled_heating_setpoint = self.schedule.get_scheduled_setpoint(
                 hour, sim_time.weekday())
@@ -1866,7 +1881,7 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
     def get_uncntrl_hvac_load(self, sim_time: dt.datetime) -> float:
         self.update_da_temperature_limits(sim_time)
         quantity = []
-        for time_idx in range(self.windowLength):
+        for time_idx in range(self.windowLength_hr):
             quant_cool = self.estimate_required_cooling_quantity(time_idx)
             quant_heat = self.estimate_required_heating_quantity(time_idx)
 
@@ -1970,17 +1985,17 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
         # Create model
         model = pyo.ConcreteModel()
         # Decision variables
-        model.hvac_quant= pyo.Var(range(self.windowLength), bounds=(0.0, self.state.hvac_kw))
-        model.inside_air_temperature = pyo.Var(range(self.windowLength), bounds=self.temperature_bound_rule)
+        model.hvac_quant= pyo.Var(range(self.windowLength_hr), bounds=(0.0, self.state.hvac_kw))
+        model.inside_air_temperature = pyo.Var(range(self.windowLength_hr), bounds=self.temperature_bound_rule)
         # Objective of the problem
         model.obj = pyo.Objective(rule=self.obj_rule, sense=pyo.minimize)
         # Constraints
-        model.con1 = pyo.Constraint(range(self.windowLength), rule=self.con_rule_eq1)
+        model.con1 = pyo.Constraint(range(self.windowLength_hr), rule=self.con_rule_eq1)
         # Solve
         results = get_run_solver("hvac_" + self.name, pyo, model, self.solver)
-        hvac_quantity = [0 for _ in range(self.windowLength)]
-        indoor_room_temperature = [0 for _ in range(self.windowLength)]
-        for t in range(self.windowLength):
+        hvac_quantity = [0 for _ in range(self.windowLength_hr)]
+        indoor_room_temperature = [0 for _ in range(self.windowLength_hr)]
+        for t in range(self.windowLength_hr):
             indoor_room_temperature[t] = pyo.value(model.inside_air_temperature[t])
             hvac_quantity[t] = pyo.value(model.quan_hvac[t])
         return [hvac_quantity, indoor_room_temperature]
