@@ -3432,6 +3432,8 @@ def DSO_rate_making(
         }
 
     # Calculate any mismatch in revenue versus expenses
+    if rate_scenario in ["time-of-use", "subscription"]:
+        dso_expenses = sum(dso_expenses.values())
 
     surplus = (DSO_Revenues_and_Energy_Sales["RequiredRevenue"]*1000 - dso_expenses) / dso_expenses * 100
 
