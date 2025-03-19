@@ -22,6 +22,8 @@ Answer: Trevor talked with Rob and solar_heatgain_factor uses tha ASHRAE definit
 ## "copy_attributes_from()" as a higher level class method?
 "copy_attributes_from()" allows the copying of attributes from one object to another, typically on object creation. This is useful if you need to simulate the behavior of a system but don't want to change the original model's state and instead just want to make a dummy copy of the object to play around with. Trevor has implemented this in the HVACDSOTAssetState class but it feels like it might be useful in other classes like HVACDSOTEnvironmentModel so that hypothetical future environmental states can be used without messing up the current environmental state.
 
+Answer: no need for this method, Python has a `copy()` method that works on object.
+
 ## Use a units package for all our variables?
 There are [many units packages out there in Python-land](https://kdavies4.github.io/natu/seealso.html) that allow a unit to be associated with a variable. Many of them allow fancy things like unit conversions which I generally don't think is necessary but one, [quantify](https://quantiphy.readthedocs.io/en/stable/user.html) is more about documentation (though it does support some features in those other packages). [From the QuantiPhy documentation](https://github.com/KenKundert/quantiphy/blob/5e48f7f77b60846183fc5cd78462ffb3130b828e/README.rst):
 

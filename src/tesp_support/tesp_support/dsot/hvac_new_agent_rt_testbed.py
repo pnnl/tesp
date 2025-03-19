@@ -13,12 +13,14 @@ import pprint
 import argparse
 import sys
 from tesp_support.dsot import hvac_new_agent
+from tesp_support.dsot.hvac_new_agent import ThermoStatMode
 import json5
 import datetime as dt
 
 
 # Setting up logging
 logger = logging.getLogger(__name__)
+
 
 # Setting up pretty printing, mostly for debugging.
 pp = pprint.PrettyPrinter(indent=4)
@@ -40,7 +42,27 @@ def _open_file(file_path: str, type='r'):
     else:
         return fh
     
-def _auto_run(args):
+def _auto_run():
+    # This slightly complex mess allows lower importance messages
+    # to be sent to the log file and ERROR messages to additionally
+    # be sent to the console as well. Thus, when bad things happen
+    # the user will get an error message in both places which,
+    # hopefully, will aid in trouble-shooting.
+    fileHandle = logging.FileHandler("hvac_agent_testbed.log",'w')
+    fileHandle.setLevel(logging.DEBUG)
+    streamHandle = logging.StreamHandler(sys.stdout)
+    streamHandle.setLevel(logging.WARNING)
+    logging.basicConfig(level=logging.DEBUG,
+                        handlers=[fileHandle, streamHandle])
+    parser = argparse.ArgumentParser(description= "Runs HVAC DSOT agent in testbed")
+    parser.add_argument('-c', '--config_json_file',
+                        help="configuration JSON for the HVAC agent",
+                        nargs='?',
+                        default="hvac_agent_testbed_config.json5")
+    parser.add_argument('-r', '--real_time',
+                        help="flag to form real-time bid)",
+                        action=argparse.BooleanOptionalAction)
+    args = parser.parse_args()
     config_fh =_open_file(args.config_json_file)
     config_dict = json5.load(config_fh)
     # convert sim_time string to datetime object
@@ -52,33 +74,22 @@ def _auto_run(args):
     ha = hvac_new_agent.HVACDSOTAgent(name="test_hvac_agent",
                                       attributes=config_dict)
     if args.real_time == True:
+        new_asset_state = {
+            "indoor_air_temp": 73,
+            "mass_temperature": 70,
+            "hvac_kW": 1500,
+            "wh_kW": 2000,
+            "house_kW": 10000,
+            "mtr_v": 120,
+            "hvac_on": False,
+            "thermostat_mode": ThermoStatMode.COOLING
+        }
+        ha.asset.asset_state.update_asset_state(new_asset_state)
         ha.calc_capacites_and_all_heat_flows()
         ha.asset.asset_model.structure_model.calc_structure_ETP_parameters()
         rt_bid = ha.rt_bidding_strategy.form_rt_bid()
         dummy = 0
-        
-
-
+    
 
 if __name__ == '__main__':
-    # This slightly complex mess allows lower importance messages
-    # to be sent to the log file and ERROR messages to additionally
-    # be sent to the console as well. Thus, when bad things happen
-    # the user will get an error message in both places which,
-    # hopefully, will aid in trouble-shooting.
-    fileHandle = logging.FileHandler("hvac_agent_testbed.log",'w')
-    fileHandle.setLevel(logging.DEBUG)
-    streamHandle = logging.StreamHandler(sys.stdout)
-    streamHandle.setLevel(logging.ERROR)
-    logging.basicConfig(level=logging.DEBUG,
-                        handlers=[fileHandle, streamHandle])
-    parser = argparse.ArgumentParser(description= "Runs HVAC DSOT agent in testbed")
-    parser.add_argument('-c', '--config_json_file',
-                        help="configuration JSON for the HVAC agnet",
-                        nargs='?',
-                        default="hvac_agent_testbed_config.json5")
-    parser.add_argument('-r', '--real_time',
-                        help="flag to form real-time bid)",
-                        action=argparse.BooleanOptionalAction)
-    args = parser.parse_args()
-    _auto_run(args)
+    _auto_run()
