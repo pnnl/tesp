@@ -899,8 +899,8 @@ class HVACDSOTStructureModel:
 
     def calc_HM(self) -> float:
         """Calculation of thermal resistivity between the indoor air and the
-        structure mass. Short-form variable assignments employed for equation
-        human-readability.
+        structure mass. Short-form variable assignments employed for human-
+        readability.
 
         Returns:
             float: thermal resistivity between the indoor air and the
@@ -1024,7 +1024,7 @@ class HVACDSOTEnvironmentModel:
         self.mass_internal_gain_fraction: float = None
         self.mass_solar_gain_fraction: float = None
         self.lat: float = None
-        self.lon: float = None
+        self.long: float = None
         
         # Internally calculated attributes. 
         # These are updated throughout the simulation
@@ -1425,8 +1425,12 @@ class HVACDSOTEnvironmentModel:
         self.solar_gain = 0
         day_of_yr = sim_time.timetuple().tm_yday
         rad = (2.0 * math.pi * day_of_yr) / 365.0
-        eq_time = (0.5501 * cos(rad) - 3.0195 * cos(2 * rad) - 0.0771 * cos(3 * rad)
-                   - 7.3403 * sin(rad) - 9.4583 * sin(2 * rad) - 0.3284 * sin(3 * rad)) / 60.0
+        eq_time = (0.5501 * cos(rad)
+                    - 3.0195 * cos(2 * rad)
+                    - 0.0771 * cos(3 * rad)
+                    - 7.3403 * sin(rad)
+                    - 9.4583 * sin(2 * rad)
+                    - 0.3284 * sin(3 * rad)) / 60.0
         tz_meridian = 15 * sim_time.utcoffset()
          # tz_meridian = 15 * tz_offset - old method that I'm not sure I fully understand
         std_meridian = tz_meridian * math.pi / 180
@@ -1485,10 +1489,9 @@ class DSOTForecasts:
         # windowLength is unitless and simply the number of periods that 
         # need to be forecasted
         forecast_times = []
-        for _ in range(windowLength)
+        for _ in range(windowLength):
             forecast_times.append(sim_time + da_period)
         return forecast_times
-
 
     def calc_solar_gain_forecast(self, times: list, 
                                  environment_model: HVACDSOTEnvironmentModel,
@@ -1571,14 +1574,12 @@ class HVACDSOTSystemModel:
 
         self.validate_attributes()
         
-
     def validate_attributes(self) -> None:
         if self.cooling_COP_lower_limit > self.cooling_COP >= self.cooling_COP_upper_limit:
             logger.debug('{} {} -- cooling_COP is {}, outside of nominal range of {} to {}'
                     .format(self.name, 'init', self.cooling_COP, 
                             self.cooling_COP_lower_limit, 
                             self.cooling_COP_upper_limit))
-        
 
     def calc_heating_capacity(self) -> float:
         """Calculates the true heating capacity of the HVAC system based on
@@ -1595,10 +1596,16 @@ class HVACDSOTSystemModel:
         Returns:
             float: temperature-corrected heating capacity
         """
-        self.heating_capacity = self.design_heating_capacity * (
-            self.heating_capacity_K0 \
-            + self.heating_capacity_K1 * self.environment_model.outside_air_temperature \
-            + self.heating_capacity_K2 * self.environment_model.outside_air_temperature ** 2)
+        #Short-form variable assignments employed for human-readability.
+        h_d = self.design_heating_capacity
+        h_KO = self.heating_capacity_K0
+        h_K1 = self.heating_capacity_K1
+        air_temp = self.environment_model.outside_air_temperature
+        h_K2 = self.heating_capacity_K2
+
+        self.heating_capacity = \
+            h_d * (h_KO + h_K1 * air_temp + h_K2 * air_temp ** 2)
+        
         return self.heating_capacity
     
     def calc_cooling_capacity(self) -> float:
@@ -1616,9 +1623,13 @@ class HVACDSOTSystemModel:
         Returns:
             float: temperature-corrected cooling capacity
         """
-        self.cooling_capacity = self.design_cooling_capacity * (
-            self.cooling_capacity_K0 \
-            + self.cooling_capacity_K1 * self.environment_model.outside_air_temperature)
+        #Short-form variable assignments employed for human-readability.
+        c_d = self.design_cooling_capacity
+        c_K0 = self.cooling_capacity_K0
+        c_K1 = self.cooling_capacity_K1
+        air_temp = self.environment_model.outside_air_temperature
+
+        self.cooling_capacity = c_d * (c_K0 + c_K1 * air_temp)
         return self.cooling_capacity
     
     def calc_heating_COP(self) -> list:
@@ -1629,17 +1640,25 @@ class HVACDSOTSystemModel:
             list: Adjusted heating COP values in a list the same length as the 
             temperature forecast used in calculating the values.
         """
+        #Short-form variable assignments employed for human-readability.
+        cop = self.heating_COP
+        cop_K0 = self.heating_COP_K0
+        cop_K1 = self.heating_COP_K1
+        cop_limit = self.heating_COP_limit
+        cop_K2 = self.heating_COP_K2
+        cop_K3 = self.heating_COP_K3
+
         for idx, temperature in enumerate(self.forecasts.outside_air_temperature):
             if temperature < self.heating_COP_limit:
-                self.heating_cop_adj_da[idx] = self.heating_COP / (
-                        self.heating_COP_K0 + self.heating_COP_K1 * self.heating_COP_limit +
-                        self.heating_COP_K2 * self.heating_COP_limit ** 2 +
-                        self.heating_COP_K3 * self.heating_COP_limit ** 3)
+                self.heating_cop_adj_da[idx] = \
+                    cop / (cop_K0 + cop_K1 * cop_limit + 
+                           cop_K2 * cop_limit ** 2 +
+                           cop_K3 * cop_limit ** 3)
             else:
-                self.heating_cop_adj_da[idx] = self.heating_COP / (
-                        self.heating_COP_K0 + self.heating_COP_K1 * temperature +
-                        self.heating_COP_K2 * temperature ** 2 +
-                        self.heating_COP_K3 * temperature ** 3)
+                self.heating_cop_adj_da[idx] = \
+                    cop / (cop_K0 + cop_K1 * temperature +
+                        cop_K2 * temperature ** 2 +
+                        cop_K3 * temperature ** 3)
         return self.heating_cop_adj_da
     
     def calc_cooling_COP(self) -> list:
@@ -1675,12 +1694,21 @@ class HVACDSOTSystemModel:
         Returns:
             tuple: design_cooling_capacity, design_heating_capacity
         """
-        design_cooling_capacity = ((1.0 + self.over_sizing_factor) 
-                                   * (1.0 + environment_model.latent_load_fraction)
-                                   * (etp_structure_params.UA * 
-                                            (self.cooling_design_temperature - self.design_cooling_setpoint))
-                                   + self.design_internal_gains
-                                   + (self.design_peak_solar * structure_model.solar_heatgain_factor))
+        #Short-form variable assignments employed for human-readability.
+        ovr_sz = self.over_sizing_factor
+        load_f = environment_model.latent_load_fraction
+        ua = etp_structure_params.UA
+        cool_temp = self.cooling_design_temperature
+        cool_set = self.design_cooling_setpoint
+        int_gain = self.design_internal_gains
+        pk_sol = self.design_peak_solar
+        heatgain = structure_model.solar_heatgain_factor
+        heat_set = self.design_heating_setpoint
+        heat_temp = self.heating_design_temperature
+
+        design_cooling_capacity = ((1.0 + ovr_sz) * (1.0 + load_f) *
+                                   (ua * (cool_temp - cool_set)) 
+                                   + int_gain + (pk_sol * heatgain))
         # Rounding design cooling capacity to the nearest multiple of 6000
         # TODO: figure out why 6000?
         self.design_cooling_capacity = math.ceil(design_cooling_capacity/6000) * 6000
@@ -1688,8 +1716,7 @@ class HVACDSOTSystemModel:
         if heating_system_type == HeatingSystemType.HEAT_PUMP:
             self.design_heating_capacity = design_cooling_capacity
         else:
-            design_heating_capacity = ((1.0 + self.over_sizing_factor) * etp_structure_params.UA *
-                                       (self.design_heating_setpoint - self.heating_design_temperature))
+            design_heating_capacity = ((1.0 + ovr_sz) * ua * (heat_set - heat_temp))
             self.design_heating_capacity = math.ceil(design_heating_capacity/10000.0) * 10000.0
         # TODO why 10,0000?
         return self.design_cooling_capacity, self.design_heating_capacity
@@ -1713,11 +1740,9 @@ class HVACDSOTPriceFlexibilityCurve:
         return CurveSlope, yIntercept
 
 
-
-
-
-
 class HVACDSOTBiddingStrategy:
+    """_summary_
+    """
     def __init__(self, attributes: dict,
                  schedule: HVACSchedule,
                  flexibility: HVACDSOTPriceFlexibilityCurve):
@@ -1739,12 +1764,163 @@ class HVACDSOTBiddingStrategy:
         self.hvac_schedule = schedule
         self.flexibility = flexibility
         self.bid = DSOT4pointBid()
+class HVACDSOTAssetModel:
+    """_summary_
+    """
+    def __init__(self, attributes: dict, 
+                 temperature_obj: HVACTemperatures, 
+                 asset_obj: HVACDSOTAssetState,
+                 forecasts_obj: DSOTForecasts,
+                 thermostat_mode: ThermoStatMode
+                 ):
 
+        # Externally defined attributes
+        # These are generally fixed throughout the simulation
+        self.heating_system_type = HeatingSystemType[attributes["heating_system_type"]]
+        self.cooling_system_type = CoolingSystemType[attributes["cooling_system_type"]]
+        
+        # Internally calculated simulation parameters or variables
+        # Generally not-fixed throughout simulation
+        self.forecasts = forecasts_obj
+        self.temperatures = temperature_obj
+        self.environment_model = HVACDSOTEnvironmentModel(attributes["environment_model"], 
+                                                          thermostat_mode,
+                                                          self.forecasts)                                                       
+        self.system_model = HVACDSOTSystemModel(attributes["system_model"], 
+                                                     self.environment_model,
+                                                     forecasts_obj)                                           
+        self.structure_model = HVACDSOTStructureModel(attributes["structure_model"])
+        self.environment_model.structure_model = self.structure_model
+        self.asset_state = asset_obj
+        self.A_ETP: np.ndarray = np.zeros([2, 2])
+        self.B_ETP_ON: np.ndarray = np.zeros([2, 1])
+        self.B_ETP_OFF: np.ndarray = np.zeros([2, 1])
+        self.AEI: np.ndarray = np.zeros([2, 2])
 
+        self.CA = self.structure_model.etp_structure_params.CA
+        self.UA = self.structure_model.etp_structure_params.UA
+        self.CM = self.structure_model.etp_structure_params.CM
+        self.HM = self.structure_model.etp_structure_params.HM
+        self.Qa_On = self.environment_model.Qa_ON
+        self.Qa_Off = self.environment_model.Qa_OFF
+        self.Qm = self.environment_model.Qm
 
+        self.system_model.calc_design_capacities(self.structure_model.etp_structure_params,
+                                                      self.heating_system_type,
+                                                      self.environment_model,
+                                                      self.structure_model)
 
+    def calc_AEI(self, environment_model: HVACDSOTEnvironmentModel = None):
+        if environment_model == None:
+            environment_model = self.environment_model
+        if self.CA != 0.0:
+            self.A_ETP[0][0] = -1.0 * (self.UA + self.HM) / self.CA
+            self.A_ETP[0][1] = self.HM / self.CA # 
+            self.B_ETP_ON[0] = (self.UA * environment_model.outside_air_temperature / self.CA) + (self.Qa_On / self.CA)
+            self.B_ETP_OFF[0] = (self.UA * environment_model.outside_air_temperature / self.CA) + (self.Qa_Off / self.CA)
+        if self.CM != 0.0:
+            self.A_ETP[1][0] = self.HM / self.CM
+            self.A_ETP[1][1] = -1.0 * self.HM / self.CM
+            self.B_ETP_ON[1] = self.Qm / self.CM
+            self.B_ETP_OFF[1] = self.Qm / self.CM
+        self.AEI = np.linalg.inv(self.A_ETP)
+        return self.AEI
+        
+    def simulate_time_step(self,
+                           state: HVACDSOTAssetState,
+                           environ: HVACDSOTEnvironmentModel,
+                           temperatures: HVACTemperatures, 
+                           time_step_size: dt.timedelta) -> tuple:
+        """Given an asset and environment state, simulates the HVAC system 
+        for the duration of a time_step_size.
 
+        Generally, it is expected that the asset state and environment model
+        passed in here will be copies of other objects that can be altered
+        over the run of the simulation (say, for example, in evaluating the
+        state of the system to form a bid). In the DSOT analysis, the actual
+        system was evolved in the GridLAB-D model and this model of the HVAC
+        system was used as part of the controller in a model-based-control
+        manner.
 
+        Note, just in like GridLAB-D, the model simulates one future state
+        from the current state. If you take a time step size of, say, one
+        day and start with the HVAC system off, the indoor air temperature 
+        will change dramatically as no intermediate states have been
+        calculated that would allow the HVAC to change state. Evolving the
+        system with finer time steps will produce more accurate results at the
+        cost of greater computation time. Consider the trade-off between
+        fidelity and computation time when choosing the time step size.
+
+        Args:
+            state (HVACDSOTAssetState): defined state of the system being
+                simulated. The state values in this object will be updated based
+                on the results of the simulation so only pass in an object whose
+                state can be or needs to be updated.
+            environ (HVACDSOTEnvironmentModel): defined environmental state of
+                the object (including heat flows) based on the results of the 
+                simulated system
+            time_step_size (dt.timedelta): time from the model's current 
+                state to evolve the simulated system.
+
+        Returns:
+            tuple: asset state and environment state objects. If attempting
+                to simulate multiple time steps in a row these objects become 
+                the inputs on subsequent calls to this method.
+        """
+    
+        state_vars = np.zeros([2, 1])
+        state_vars[0] = state.indoor_air_temp
+        state_vars[1] = state.mass_temp
+        Q_max = state.hvac_kw
+        Q_min = 0.0
+        time_step_s = time_step_size.total_seconds()
+
+        # TODO understand why the time_step_s is T/10 in original code
+        eAET = linalg.expm(self.A_ETP * time_step_s)
+        AIET = np.dot(self.AEI, eAET)
+        AEx = np.dot(self.A_ETP, state_vars)
+        if state.hvac_on == True:
+            AxB = AEx + self.B_ETP_ON
+            AIB = np.dot(self.AEI, self.B_ETP_ON)
+            AExB = np.dot(AIET, AxB)
+            state_vars = AExB - AIB 
+            if (((state_vars[0][0] < temperatures.cooling_setpoint - temperatures.deadband / 2.0)
+                    and state.thermostat_mode == ThermoStatMode.COOLING) 
+                or
+                 ((state_vars[0][0] > temperatures.heating_setpoint + temperatures.deadband / 2.0) 
+                    and state.thermostat_mode == ThermoStatMode.HEATING)):
+                state.hvac_on = False 
+            # TODO: Do we need an else?
+        else:
+            AxB = AEx + self.B_ETP_OFF
+            AIB = np.dot(self.AEI, self.B_ETP_OFF)
+            AExB = np.dot(AIET, AxB)
+            state_vars = AExB - AIB 
+            if (((state_vars[0][0] > temperatures.cooling_setpoint + temperatures.deadband / 2.0)
+                    and state.thermostat_mode == ThermoStatMode.COOLING) 
+                or
+                ((state_vars[0][0] < temperatures.heating_setpoint - temperatures.deadband / 2.0) 
+                    and state.thermostat_mode == ThermoStatMode.HEATING)):
+                state.hvac_on = True
+             # TODO: Do we need an else?
+        # Update the state varibles after solving the above linear system so
+        # that the returned state object has the results of this simulated 
+        # time step and can be used for any subsequent time steps.
+        state.indoor_air_temp = state_vars[0]     
+        state.mass_temp = state_vars[1]
+        return state, environ, temperatures
+    
+class HVACDSOTAsset:
+
+    def __init__(self, attributes: dict,
+                 forecasts_obj: DSOTForecasts,
+                 temperature_obj: HVACTemperatures):
+        self.asset_state = HVACDSOTAssetState(attributes["asset_state"])
+        self.asset_model = HVACDSOTAssetModel(attributes["asset_model"],
+                                              temperature_obj,
+                                              self.asset_state,
+                                              forecasts_obj,
+                                              self.asset_state.thermostat_mode)
 
 class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
     
@@ -1816,8 +1992,6 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
             self.previous_T_DA = attributes["RT_test_support"]["previous_T_DA"]
             self.opt_indoor_air_temperature = [attributes["RT_test_support"]["temp_room_value"] for _ in range(self.windowLength)]
 
-
-
     def update_forecast_temperature_limits(self) -> tuple:
         """Updates min and max forecasted temperature
 
@@ -1827,7 +2001,7 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
 
         Returns:
             tuple: 48 hour min and max (in that order) price forecast
-            followed by the delta between the two.
+                followed by the delta between the two.
         """
         self.forecast_temperature_min = min(self.forecasts.outside_air_temperature)
         self.forecast_temperature_max = max(self.forecasts.outside_air_temperature)
@@ -1856,8 +2030,9 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
             if self.temp_max_heat_da < heating_setpt:
                 self.temp_max_heat_da = heating_setpt
         
-
     def initialize_inside_air_temperature(self) -> None:
+        """TODO
+        """
         self.temp_da_prev = self.forecasts.inside_air_temperature
         # TODO - What do we need to do when the thermostat is "OFF"
         if self.state.thermostat_mode == ThermoStatMode.COOLING:
@@ -1865,8 +2040,12 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
         else:
             self.temp_room_init = self.temperatures.heating_setpoint
         
-    
     def update_da_temperature_limits(self, sim_time: dt.datetime) -> None:
+        """TODO
+
+        Args:
+            sim_time (dt.datetime): _description_
+        """
         self.update_forecast_temperature_limits()
         for time_idx in range(self.windowLength_hr):
             hour = sim_time.hour + sim_time.minute / 60 + time_idx + 1 / 60 # hours
@@ -1889,20 +2068,32 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
             self.temp_desired_48hour_heat[time_idx] = scheduled_heating_setpoint
         
     def setup_da_temperature_parameters(self, sim_time: dt.datetime) -> None:
+        """TODO
+
+        Args:
+            sim_time (dt.datetime): _description_
+        """
         self.update_da_temperature_limits(sim_time)
         self.system_model.calc_cooling_COP()
         self.system_model.calc_heating_COP()
         self.initialize_inside_air_temperature()
         
-
     def estimate_required_cooling_quantity(self, time_idx: int) -> float:
+        """TODO
+
+        Args:
+            time_idx (int): _description_
+
+        Returns:
+            float: _description_
+        """
         temp_room = self.temp_desired_48hour_cool
         cop_adj = (-np.array(self.system_model.cooling_cop_adj_da)).tolist()
         if time_idx == 0:
             t_pre = self.temp_room_previous_cool
         else:
             t_pre = temp_room[time_idx - 1]
-        temp1 = (((temp_room[t] - self.eps * t_pre) / (1 - self.eps)) 
+        temp1 = (((temp_room[time_idx] - self.eps * t_pre) / (1 - self.eps)) 
                  - self.forecasts.outside_air_temperature[time_idx])
         temp2 = (temp1 * self.etp_structure_params.UA - self.forecasts.internal_gain[time_idx] -
                     self.forecasts.solar_gain[time_idx] * self.structure.solar_heatgain_factor)
@@ -1911,8 +2102,16 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
         return quant_cool
     
     def estimate_required_heating_quantity(self, time_idx: int) -> float:
-        cop_adj = self.system_model.heating_cop_adj_da
+        """TODO
+
+        Args:
+            time_idx (int): _description_
+
+        Returns:
+            float: _description_
+        """
         temp_room = self.temp_desired_48hour_heat
+        cop_adj = self.system_model.heating_cop_adj_da
         if time_idx == 0:
             t_pre = self.temp_room_previous_heat
         else:
@@ -1926,6 +2125,14 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
         return quant_heat
 
     def get_uncntrl_hvac_load(self, sim_time: dt.datetime) -> float:
+        """TODO
+
+        Args:
+            sim_time (dt.datetime): _description_
+
+        Returns:
+            float: _description_
+        """
         self.update_da_temperature_limits(sim_time)
         quantity = []
         for time_idx in range(self.windowLength_hr):
@@ -1973,11 +2180,20 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
         else:
             temp = self.temp_desired_48hour_heat
         # TODO - Add something for when thermostat is in OFF mode?
-        if self.state.hvac_kw != 0 and self.price_delta != 0 and (self.schedule.range_low_limit + self.schedule.range_high_limit) != 0:
-            return sum(self.slider * (self.forecasts.price[t] - np.min(self.forecasts.price))
-                    / self.price_delta * m.quan_hvac[t] / self.state.hvac_kw
-                    + 0.1 * ((m.opt_indoor_air_temperature[t] - temp[t]) / (self.schedule.range_low_limit + self.schedule.range_high_limit)) ** 2
-                    + 0.001 * self.slider * (m.quan_hvac[t] / self.state.hvac_kw * m.quan_hvac[t] / self.state.hvac_kw)
+        # Short-form variable assignments employed for human-readability.
+        sld = self.slider
+        frcst = self.forecasts.price
+        price_delt = self.price_delta
+        hvac_q = m.quan_hvac
+        hvac_kw = self.state.hvac_kw
+        air_temp_i = m.opt_indoor_air_temperature
+        rng_low = self.schedule.range_low_limit
+        rng_hi = self.schedule.range_high_limit
+
+        if hvac_kw != 0 and price_delt != 0 and (rng_low + rng_hi) != 0:
+            return sum(sld * (frcst[t] - np.min(frcst)) / price_delt * hvac_q[t] / hvac_kw
+                    + 0.1 * ((air_temp_i[t] - temp[t]) / (rng_low + rng_hi)) ** 2
+                    + 0.001 * sld * (hvac_q[t] / hvac_kw * hvac_q[t] / hvac_kw)
                     for t in self.TIME)
         else:
             return 0
@@ -1993,43 +2209,54 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
         Returns:
             _type_: _description_
         """
+        # Short-form variable assignments employed for human-readability.
+        temp_in = m.inside_air_temperature
+        eps = self.eps
+        temp_init = self.temp_room_init
+        temp_out = self.forecasts.outside_air_temperature
+        cop_cool_da = self.system_model.cooling_cop_adj_da
+        cop_heat_da = self.system_model.heating_cop_adj_da
+        hvac_q = m.hvac_quant
+        lat_f = self.latent_factor
+        int_gain = self.forecasts.internal_gain
+        sol_gain = self.forecasts.solar_gain
+        sol_heatgain = self.structure.solar_heatgain_factor
+        ua = self.etp_structure_params.UA
+
         if self.state.thermostat_mode == ThermoStatMode.COOLING:
             if t == 0:
                 # Initial SOHC state
-                return m.inside_air_temperature[0] == (self.eps * self.temp_room_init + (1 - self.eps) 
-                                * (self.forecasts.outside_air_temperature[0] 
-                                + ((-self.system_model.cooling_cop_adj_da[0] * 0.98 * m.hvac_quant[0] 
-                                * KW_TO_BTU_PER_HR / self.latent_factor[0] + self.forecasts.internal_gain[0] 
-                                + self.forecasts.solar_gain[0] * self.structure.solar_heatgain_factor) 
-                                / self.etp_structure_params.UA)))
+                return temp_in[0] == (eps * temp_init + (1 - eps) 
+                                    * (temp_out[0] + ((-cop_cool_da[0] * 0.98 * hvac_q[0] 
+                                    * KW_TO_BTU_PER_HR / lat_f[0] + int_gain[0] 
+                                    + sol_gain[0] * sol_heatgain) / ua)))
             else:
                 # update SOHC
-                return m.inside_air_temperature[t] == (self.eps * m.inside_air_temperature[t - 1] 
-                                + (1 - self.eps) * (self.forecasts.outside_air_temperature[t] 
-                                + ((-self.system_model.cooling_cop_adj_da[t] * 0.98 * m.hvac_quant[t] 
-                                * KW_TO_BTU_PER_HR / self.latent_factor[t] + self.forecasts.internal_gain[t] 
-                                + self.forecasts.solar_gain[t] * self.structure.solar_heatgain_factor) 
-                                / self.etp_structure_params.UA)))
+                return temp_in[t] == (eps * temp_in[t - 1] + (1 - eps)
+                                    * (temp_out[t] + ((-cop_cool_da[t] * 0.98 * hvac_q[t] 
+                                    * KW_TO_BTU_PER_HR / lat_f[t] + int_gain[t] 
+                                    + sol_gain[t] * sol_heatgain) / ua)))
         else:
             if t == 0:
                 # Initial SOHC state
-                return m.inside_air_temperature[0] == (self.eps * self.temp_room_init + (1 - self.eps) 
-                                * (self.forecasts.outside_air_temperature[0] 
-                                + ((self.system_model.heating_cop_adj_da[0] * 1.02 * m.hvac_quant[0] 
-                                * KW_TO_BTU_PER_HR / self.latent_factor[0] + self.forecasts.internal_gain[0] 
-                                + self.forecasts.solar_gain[0] * self.structure.solar_heatgain_factor) 
-                                / self.etp_structure_params.UA)))
+                return temp_in[0] == (eps * temp_init + (1 - eps) 
+                                * (temp_out[0] + ((cop_heat_da[0] * 1.02 * hvac_q[0] 
+                                * KW_TO_BTU_PER_HR / lat_f[0] + int_gain[0] 
+                                + sol_gain[0] * sol_heatgain) / ua)))
             else:
                 # update SOHC
-                return m.inside_air_temperature[t] == (self.eps * m.inside_air_temperature[t - 1] + (1 - self.eps) 
-                                * (self.forecasts.outside_air_temperature[t] 
-                                + ((self.system_model.heating_cop_adj_da[t] * 1.02 * m.hvac_quant[t] 
-                                * KW_TO_BTU_PER_HR / self.latent_factor[t] + self.forecasts.internal_gain[t] 
-                                + self.forecasts.solar_gain[t] * self.structure.solar_heatgain_factor) 
-                                / self.etp_structure_params.UA)))
+                return temp_in[t] == (eps * temp_in[t - 1] + (1 - eps) 
+                                * (temp_out[t] + ((cop_heat_da[t] * 1.02 * hvac_q[t] 
+                                * KW_TO_BTU_PER_HR / lat_f[t] + int_gain[t] 
+                                + sol_gain[t] * sol_heatgain) / ua)))
         
 
     def solve_for_da_optimal_quantities(self) -> tuple:
+        """TODO
+
+        Returns:
+            tuple: _description_
+        """
         # Create model
         model = pyo.ConcreteModel()
         # Decision variables
@@ -2049,6 +2276,11 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
         return hvac_quantity, indoor_room_temperature
     
     def formulate_da_bid(self) -> list:
+        """TODO
+
+        Returns:
+            list: _description_
+        """
         self.Qopt_da_prev = self.bid_da[0][1][0]
         self.price_forecast_0 = self.forecasts.price[0]
         BID = []
@@ -2100,166 +2332,6 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
         return self.bid_da
 
 
-class HVACDSOTAssetModel:
-    """_summary_
-    """
-    def __init__(self, attributes: dict, 
-                 temperature_obj: HVACTemperatures, 
-                 asset_obj: HVACDSOTAssetState,
-                 forecasts_obj: DSOTForecasts,
-                 thermostat_mode: ThermoStatMode
-                 ):
-
-        # Externally defined attributes
-        # These are generally fixed throughout the simulation
-        self.heating_system_type = HeatingSystemType[attributes["heating_system_type"]]
-        self.cooling_system_type = CoolingSystemType[attributes["cooling_system_type"]]
-        
-        # Internally calculated simulation parameters or variables
-        # Generally not-fixed throughout simulation
-        self.forecasts = forecasts_obj
-        self.temperatures = temperature_obj
-        self.environment_model = HVACDSOTEnvironmentModel(attributes["environment_model"], 
-                                                          thermostat_mode,
-                                                          self.forecasts)                                                       
-        self.system_model = HVACDSOTSystemModel(attributes["system_model"], 
-                                                     self.environment_model,
-                                                     forecasts_obj)                                           
-        self.structure_model = HVACDSOTStructureModel(attributes["structure_model"])
-        self.environment_model.structure_model = self.structure_model
-        self.asset_state = asset_obj
-        self.A_ETP: np.ndarray = np.zeros([2, 2])
-        self.B_ETP_ON: np.ndarray = np.zeros([2, 1])
-        self.B_ETP_OFF: np.ndarray = np.zeros([2, 1])
-        self.AEI: np.ndarray = np.zeros([2, 2])
-
-        self.CA = self.structure_model.etp_structure_params.CA
-        self.UA = self.structure_model.etp_structure_params.UA
-        self.CM = self.structure_model.etp_structure_params.CM
-        self.HM = self.structure_model.etp_structure_params.HM
-        self.Qa_On = self.environment_model.Qa_ON
-        self.Qa_Off = self.environment_model.Qa_OFF
-        self.Qm = self.environment_model.Qm
-
-        self.system_model.calc_design_capacities(self.structure_model.etp_structure_params,
-                                                      self.heating_system_type,
-                                                      self.environment_model,
-                                                      self.structure_model)
-
-    def calc_AEI(self, environment_model: HVACDSOTEnvironmentModel = None):
-        if environment_model == None:
-            environment_model = self.environment_model
-        if self.CA != 0.0:
-            self.A_ETP[0][0] = -1.0 * (self.UA + self.HM) / self.CA
-            self.A_ETP[0][1] = self.HM / self.CA # 
-            self.B_ETP_ON[0] = (self.UA * environment_model.outside_air_temperature / self.CA) + (self.Qa_On / self.CA)
-            self.B_ETP_OFF[0] = (self.UA * environment_model.outside_air_temperature / self.CA) + (self.Qa_Off / self.CA)
-        if self.CM != 0.0:
-            self.A_ETP[1][0] = self.HM / self.CM
-            self.A_ETP[1][1] = -1.0 * self.HM / self.CM
-            self.B_ETP_ON[1] = self.Qm / self.CM
-            self.B_ETP_OFF[1] = self.Qm / self.CM
-        self.AEI = np.linalg.inv(self.A_ETP)
-        return self.AEI
-
-        
-        
-    def simulate_time_step(self,
-                           state: HVACDSOTAssetState,
-                           environ: HVACDSOTEnvironmentModel,
-                           temperatures: HVACTemperatures, 
-                           time_step_size: dt.timedelta) -> tuple:
-        """Given an asset and environment state, simulates the HVAC system 
-        for the duration of a time_step_size.
-
-        Generally, it is expected that the asset state and environment model
-        passed in here will be copies of other objects that can be altered
-        over the run of the simulation (say, for example, in evaluating the
-        state of the system to form a bid). In the DSOT analysis, the actual
-        system was evolved in the GridLAB-D model and this model of the HVAC
-        system was used as part of the controller in a model-based-control
-        manner.
-
-        Note, just in like GridLAB-D, the model simulates one future state
-        from the current state. If you take a time step size of, say, one
-        day and start with the HVAC system off, the indoor air temperature 
-        will change dramatically as no intermediate states have been
-        calculated that would allow the HVAC to change state. Evolving the
-        system with finer time steps will produce more accurate results at the
-        cost of greater computation time. Consider the trade-off between
-        fidelity and computation time when choosing the time step size.
-
-        Args:
-            state (HVACDSOTAssetState): defined state of the system being
-            simulated. The state values in this object will be updated based
-            on the results of the simulation so only pass in an object whose
-            state can be or needs to be updated.
-            environ (HVACDSOTEnvironmentModel): defined environmental state of
-            the object (including heat flows) based on the results of the 
-            simulated system
-            time_step_size (dt.timedelta): time from the model's current 
-            state to evolve the simulated system.
-
-        Returns:
-            tuple: asset state and environment state objects. If attempting
-            to simulate multiple time steps in a row these objects become the
-            inputs on subsequent calls to this method.
-        """
-    
-        state_vars = np.zeros([2, 1])
-        state_vars[0] = state.indoor_air_temp
-        state_vars[1] = state.mass_temp
-        Q_max = state.hvac_kw
-        Q_min = 0.0
-        time_step_s = time_step_size.total_seconds()
-
-        # TODO understand why the time_step_s is T/10 in original code
-        eAET = linalg.expm(self.A_ETP * time_step_s)
-        AIET = np.dot(self.AEI, eAET)
-        AEx = np.dot(self.A_ETP, state_vars)
-        if state.hvac_on == True:
-            AxB = AEx + self.B_ETP_ON
-            AIB = np.dot(self.AEI, self.B_ETP_ON)
-            AExB = np.dot(AIET, AxB)
-            state_vars = AExB - AIB 
-            if (((state_vars[0][0] < temperatures.cooling_setpoint - temperatures.deadband / 2.0)
-                    and state.thermostat_mode == ThermoStatMode.COOLING) 
-                or
-                 ((state_vars[0][0] > temperatures.heating_setpoint + temperatures.deadband / 2.0) 
-                    and state.thermostat_mode == ThermoStatMode.HEATING)):
-                state.hvac_on = False 
-            # TODO: Do we need an else?
-        else:
-            AxB = AEx + self.B_ETP_OFF
-            AIB = np.dot(self.AEI, self.B_ETP_OFF)
-            AExB = np.dot(AIET, AxB)
-            state_vars = AExB - AIB 
-            if (((state_vars[0][0] > temperatures.cooling_setpoint + temperatures.deadband / 2.0)
-                    and state.thermostat_mode == ThermoStatMode.COOLING) 
-                or
-                ((state_vars[0][0] < temperatures.heating_setpoint - temperatures.deadband / 2.0) 
-                    and state.thermostat_mode == ThermoStatMode.HEATING)):
-                state.hvac_on = True
-             # TODO: Do we need an else?
-        # Update the state varibles after solving the above linear system so
-        # that the returned state object has the results of this simulated 
-        # time step and can be used for any subsequent time steps.
-        state.indoor_air_temp = state_vars[0]     
-        state.mass_temp = state_vars[1]
-        return state, environ, temperatures
-    
-class HVACDSOTAsset:
-
-    def __init__(self, attributes: dict,
-                 forecasts_obj: DSOTForecasts,
-                 temperature_obj: HVACTemperatures):
-        self.asset_state = HVACDSOTAssetState(attributes["asset_state"])
-        self.asset_model = HVACDSOTAssetModel(attributes["asset_model"],
-                                              temperature_obj,
-                                              self.asset_state,
-                                              forecasts_obj,
-                                              self.asset_state.thermostat_mode)
-
 class HVACDSOTRTBiddingStrategy(HVACDSOTBiddingStrategy):
     def __init__(self, attributes: dict,
                  period: int,
@@ -2292,8 +2364,6 @@ class HVACDSOTRTBiddingStrategy(HVACDSOTBiddingStrategy):
         self.Qopt_DA: float = 0
         self.Topt_DA: float = 0
        
-
-
     def interpolate_DA_quantities_into_RT(self) -> tuple:
         if self.interpolation:
             if self.RT_minute_count_interpolation == 0.0:
@@ -2313,6 +2383,11 @@ class HVACDSOTRTBiddingStrategy(HVACDSOTBiddingStrategy):
         return self.Qopt_DA, self.Topt_DA
 
     def estimate_hvac_energy_in_rt_period(self) -> list:
+        """TODO
+
+        Returns:
+            list: _description_
+        """
         T = (self.bid_delay + self.period) / 3600.0  # 300
         time = np.linspace(0, T, num=10)  # [0,topt-dt, topt, topt+dt]
         # TODO: this needs to be more generic, like a function of slider
@@ -2370,6 +2445,11 @@ class HVACDSOTRTBiddingStrategy(HVACDSOTBiddingStrategy):
         return self.quantity_curve
 
     def create_bid(self) -> DSOT4pointBid:
+        """TODO
+
+        Returns:
+            DSOT4pointBid: _description_
+        """
         Q_min = min(self.quantity_curve)
         Q_max = max(self.quantity_curve)
         delta_DA_price = max(self.forecasts.price) - min(self.forecasts.price)
@@ -2431,6 +2511,11 @@ class HVACDSOTRTBiddingStrategy(HVACDSOTBiddingStrategy):
         return self.bid_rt
 
     def form_rt_bid(self):
+        """TODO
+
+        Returns:
+            _type_: _description_
+        """
         # If asset type or state doesn't allow participation in market
         if self.asset_model.heating_system_type != 'HEAT_PUMP' and self.asset_state.thermostat_mode == 'Heating':
             self.cooling_setpoint = self.temperatures.temp_min_cool
