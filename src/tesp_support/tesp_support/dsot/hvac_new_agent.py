@@ -877,18 +877,25 @@ class HVACDSOTStructureModel:
 
     def calc_HM(self) -> float:
         """Calculation of thermal resistivity between the indoor air and the
-        structure mass.
+        structure mass. Short-form variable assignments employed for equation
+        human-readability.
 
         Returns:
             float: thermal resistivity between the indoor air and the
         structure mass
         """
+        h_i = self.interior_heat_transfer_coefficient 
+        A_net = self.net_wall_area
+        wall_f = self.exterior_wall_fraction
+        A_gross = self.gross_exterior_wall_area
+        wall_r = self.interior_exterior_wall_ratio
+        A_ceil = self.ceiling_area
+        stories = self.stories
+        ceil_f = self.exterior_ceiling_fraction
+
         self.etp_structure_params.HM = \
-            self.interior_heat_transfer_coefficient * (
-            self.net_wall_area / self.exterior_wall_fraction \
-            + self.gross_exterior_wall_area * self.interior_exterior_wall_ratio \
-            + self.ceiling_area * self.stories / self.exterior_ceiling_fraction
-        )
+            h_i * ((A_net / wall_f) + (A_gross * wall_r) + A_ceil * (stories / ceil_f))
+        
         self.etp_structure_params.HM
 
     def calc_CM(self) -> float:
@@ -897,8 +904,8 @@ class HVACDSOTStructureModel:
         Returns:
             float: Thermal capacity of structural mass
         """
-        self.etp_structure_params.CM = self.sqft * self.thermal_mass_per_floor_area \
-            - 2 * self.interior_air_heat_capacity
+        self.etp_structure_params.CM = \
+            self.sqft * self.thermal_mass_per_floor_area - 2 * self.interior_air_heat_capacity
         return self.etp_structure_params.CM
 
     def calc_structure_ETP_parameters(self) -> ETPStructureParams:
@@ -1065,8 +1072,12 @@ class HVACDSOTEnvironmentModel:
             self.Qh = heating_capacity + 0.02 * heating_capacity
             self.Qh_org = hvac_kW
         elif thermostat_mode == ThermoStatMode.COOLING:
-            self.Qh = -cooling_capacity / (1.01 + self.latent_load_fraction / 1 + math.exp(4 - 10 * self.humidity)) \
-            + cooling_capacity * 0.02
+            # Short-form variable assignments employed for human-readability.
+            cool = cooling_capacity
+            load_f = self.latent_load_fraction
+            hum = self.humidity
+            self.Qh = \
+                -cool / (1.01 + load_f / (1 + math.exp(4 - 10 * hum))) + cool * 0.02
             self.Qh_org = -hvac_kW
         else:
             self.Qh = 0
