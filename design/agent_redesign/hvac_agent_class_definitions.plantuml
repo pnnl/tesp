@@ -1,0 +1,459 @@
+@startuml
+class ThermoStatMode {
+    UNDEFINED
+    OFF
+    COOLING
+    HEATING
+}
+
+class HeatingSystemType {
+    UNDEFINED
+    NONE
+    GAS
+    ELECTRIC
+    HEAT_PUMP
+}
+
+class CoolingSystemType {
+    UNDEFINED
+    NONE
+    ELECTRIC
+}
+
+class WindowFrameType {
+    UNDEFINED
+    NONE
+    ALUMINUM
+    THERMAL_BREAK
+    WOOD
+    INSULATED
+}
+
+class WindowGlazingTreatment {
+    UNDEFINED
+    CLEAR
+    ABS
+    REFLECTIVE
+}
+
+class WindowGlassType {
+    UNDEFINED
+    OTHER
+    NORMAL
+    LOW_E
+}
+
+class SortDirection {
+    ASCENDING
+    DESCENDING
+}
+
+class HVACDSOTAgent {
+    name: str
+    house_name: str
+    meter_name: str
+    period: int
+    sim_time: datetime
+    temperatures: HVACTemperatures
+    schedule: HVACSchedule
+    forecasts: DSOTForecasts
+    asset: HVACDSOTAsset
+    flexibility: HVACDSOTPriceFlexibilityCurve
+    da_bidding_strategy: HVACDSOTDABiddingStrategy
+    rt_bidding_strategy: HVACDSOTRTBiddingStrategy
+    helics_topic_map: dict
+    calc_capacites_and_all_heat_flows(): None
+}
+
+class HVACTemperatures {
+    name: str
+    T_lower_limit: float
+    T_upper_limit: float
+    cooling_setpoint_lower: float
+    cooling_setpoint_upper: float
+    heating_setpoint_lower: float
+    heating_setpoint_upper: float
+    basepoint_cooling: float
+    basepoint_heating: float
+    cooling_setpoint: float
+    heating_setpoint: float
+    wakeup_set_cool: float
+    daylight_set_cool: float
+    evening_set_cool: float
+    night_set_cool: float
+    weekend_day_set_cool: float
+    weekend_night_set_cool: float
+    wakeup_set_heat: float
+    daylight_set_heat: float
+    evening_set_heat: float
+    night_set_heat: float
+    weekend_day_set_heat: float
+    weekend_night_set_heat: float
+    deadband: float
+    temp_max_cool: float
+    temp_min_cool: float
+    temp_max_heat: float
+    temp_min_heat: float
+    validate_inputs(): None
+}
+
+class HVACSchedule {
+    name: str
+    wakeup_start: float
+    daylight_start: float
+    evening_start: float
+    night_start: float
+    weekend_day_start: float
+    weekend_night_start: float
+    ramp_high_limit: float
+    ramp_low_limit: float
+    ramp_low_cool: float
+    ramp_high_cool: float
+    ramp_low_heat: float
+    ramp_high_heat: float
+    range_high_limit: float
+    range_low_limit: float
+    range_low_cool: float
+    range_high_cool: float
+    range_low_heat: float
+    range_high_heat: float
+    temperatures: HVACTemperatures
+    validate_inputs(): None
+    get_scheduled_setpoint(hour_of_day: int, day_of_week: int): tuple
+    change_basepoint(sim_time: dt.datetime, temperatures: HVACTemperatures, model_diag_level: int): bool
+    calc_thermostat_settings(temperatures: HVACTemperatures, slider: float, model_diag_level: int): None
+}
+
+class DSOT4pointBid {
+    cumulative_curve: list
+    P: int
+    Q: int
+    points: list
+    make_marginal_price_curve(price_direction: SortDirection): list
+}
+
+class DSOTRTMarketinterface {
+    clearing_price: list
+    clearing_quantities: list
+}
+
+class DSOTDAMarketInterface {
+    clearing_price: float
+    clearing_quantities: float
+}
+
+class HVACDSOTAssetState {
+    indoor_air_temp: float
+    mass_temperature: float
+    hvac_kW: float
+    wh_kW: float
+    house_kW: float
+    mtr_v: float
+    hvac_on: bool
+    thermostat_mode: ThermoStatMode
+    copy_attributes_from(other_obj: object): None
+}
+
+class ETPStructureParams {
+    UA: float
+    CA: float
+    HM: float
+    CM: float
+}
+
+class HVACDSOTStructureModel {
+    name: str
+    sqft: float
+    stories: int
+    doors: int
+    Rroof: float
+    Rwall: float
+    Rfloor: float
+    Rdoors: float
+    window_transmission_coefficient: float
+    airchange_per_hour: float
+    ceiling_height: float
+    thermal_mass_per_floor_area: float
+    aspect_ratio: float
+    exterior_ceiling_fraction: float
+    exterior_floor_fraction: float
+    exterior_wall_fraction: float
+    interior_exterior_wall_ratio: float
+    WETC: float
+    glazing_layers: int
+    window_wall_ratio: float
+    gross_air_heat_capacity: float
+    interior_heat_transfer_coefficient: float
+    Rroof_lower_limit: float
+    Rroof_upper_limit: float
+    Rwall_lower_limit: float
+    Rwall_upper_limit: float
+    Rfloor_lower_limit: float
+    Rfloor_upper_limit: float
+    Rdoor_lower_limit: float
+    Rdoor_upper_limit: float
+    airchange_per_hour_lower_limit: float
+    airchange_per_hour_upper_limit: float
+    glazing_layers_lower_limit: float
+    glazing_layers_upper_limit: float
+    glass_type: WindowGlassType
+    window_frame_type: WindowFrameType
+    glazing_treatment: WindowGlazingTreatment
+    interior_air_heat_capacity: float
+    ceiling_area: float
+    gross_exterior_wall_area: float
+    gross_window_area: float
+    net_wall_area: float
+    floor_area: float
+    total_door_are: float
+    perimeter: float
+    etp_structure_params: ETPStructureParams
+    single_door_area: float
+    solar_heatgain_factor: float
+    Rg: float
+    validate_attributes(): None
+    lookup_window_transmission_coefficient(): float
+    lookup_Rwindow(): float
+    calc_structure_areas(): None
+    calc_solar_heatgain_factor(): float
+    div(numerator: float, denominator: float, def_val_if_zero_denom: float): float
+    calc_UA(): float
+    calc_CA(): float
+    calc_HM(): float
+    calc_CM(): float
+    calc_structure_ETP_parameters(): ETPStructureParams
+}
+
+class HVACDSOTEnvironmentModel {
+    name: str
+    surface_angles: list
+    mass_internal_gain_fraction: float
+    mass_solar_gain_fraction: float
+    lat: float
+    lon: float
+    humidity: float
+    latent_load_fraction: float
+    outside_air_temperature: float
+    solar_direct: float
+    solar_diffuse: float
+    solar_gain: float
+    temperature_forecast: list
+    humidity_forecast: list
+    internal_gain_forecast: list
+    solar_gain_forecast: list
+    Qi: float
+    Qh: float
+    Qh_org: float
+    Qa_ON: float
+    Qa_OFF: float
+    Qm: float
+    Qs: float
+    thermostate_mode: ThermoStatMode
+    structure_model: HVACDSOTStructureModel
+    copy_attributes_from(other_obj: object): None
+    calc_Qh(thermostat_mode: ThermoStatMode, hvac_on: bool, heating_capacity: float, cooling_capacity: float, hvac_kW: float): tuple
+    calc_Qi(house_kW: float, wh_kW: float, thermostat_mode: ThermoStatMode, hvac_on: bool, heating_capacity: float, cooling_capacity: float, hvac_kW: float, Qh_org: float): float
+    calc_Qs(solar_heatgain_factor: float, solar_gain: float): float
+    calc_Qa(house_kW: float, wh_kW: float, thermostat_mode: ThermoStatMode, hvac_on: bool, heating_capacity: float, cooling_capacity: float, hvac_kW: float, Qs: float, Qi: float, Qh: float, Qh_org: float): tuple
+    calc_Qm(house_kW: float, wh_kW: float, thermostat_mode: ThermoStatMode, hvac_on: bool, heating_capacity: float, cooling_capacity: float, hvac_kW: float, Qs: float, Qi: float): tuple
+    calc_all_heat_flows(house_kW: float, wh_kW: float, thermostat_mode: ThermoStatMode, hvac_on: bool, heating_capacity: float, cooling_capacity: float, hvac_kW: float): tuple
+    calc_solar_flux(cpt: str, day_of_yr: int, lat: float, sol_time: float, dnr_i: float, dhr_i: float, vertical_angle: float): float
+    calc_solargain(sim_time: dt.datetime, solar_direct: float, solar_diffuse: float): float
+}
+
+class DSOTForecasts {
+    name: str
+    price: list
+    outside_air_temperature: list
+    humidity: list
+    solar_direct: list
+    solar_diffuse: list
+    solar_gain: list
+    forecast_ziploads: list
+    full_forecast_zipload: list
+    internal_gain: list
+    zipload: list
+    inside_air_temperature: list
+    price_std_dev: float
+    price_delta: float
+    price_mean: float
+    price_forecast_0: float
+    price_forecast_0_new: float
+    outside_air_temp_min_48hour: float
+    outside_air_temp_max_48hour: float
+    calc_forecast_stats(): None
+    calc_solar_gain_forecast(times: list, environment_model: HVACDSOTEnvironmentModel, solar_direct: list, solar_diffuse: list): list
+}
+
+class HVACDSOTSystemModel {
+    name: str
+    heating_capacity_K0: float
+    heating_capacity_K1: float
+    heating_capacity_K2: float
+    design_cooling_capacity: float
+    cooling_capacity_K0: float
+    cooling_capacity_K1: float
+    heating_COP: float
+    heating_COP_limit: float
+    heating_COP_K0: float
+    heating_COP_K1: float
+    heating_COP_K2: float
+    heating_COP_K3: float
+    cooling_COP: float
+    cooling_COP_limit: float
+    cooling_COP_K0: float
+    cooling_COP_K1: float
+    over_sizing_factor: float
+    cooling_design_temperature: float
+    design_cooling_setpoint: float
+    design_heating_setpoint: float
+    heating_design_temperature: float
+    design_internal_gains: float
+    design_peak_solar: float
+    cooling_COP_lower_limit: float
+    cooling_COP_upper_limit: float
+    model_diag_level: int
+    environment_model: HVACDSOTEnvironmentModel
+    forecasts: DSOTForecasts
+    heating_cop_adj_da: list
+    cooling_cop_adj_da: list
+    heating_capacity: float
+    design_heating_capacity: float
+    validate_attributes(): None
+    calc_heating_capacity(): float
+    calc_cooling_capacity(): float
+    calc_heating_COP(): list
+    calc_cooling_COP(): list
+    calc_design_capacities(etp_structure_params: ETPStructureParams, heating_system_type: HeatingSystemType, environment_model: HVACDSOTEnvironmentModel, structure_model: HVACDSOTStructureModel): tuple
+}
+
+class HVACDSOTPriceFlexibilityCurve {
+    ProfitMargin_intercept: float
+    ProfitMargin_slope: float
+    price_cap: float
+    get_flexible_price(quantity: float, DA_price_delta: float, hvac_kW: float, price_forecast: float): float
+}
+
+class HVACDSOTBiddingStrategy {
+    name: str
+    price_cap: float
+    bid_delay: float
+    slider: float
+    cooling_participating: bool
+    heating_participating: bool
+    windowLength: int
+    interpolation: bool
+    ProfitMargin_intercept: float
+    ProfitMargin_slope: float
+    hvac_schedule: HVACSchedule
+    flexibility: HVACDSOTPriceFlexibilityCurve
+    bid: DSOT4pointBid
+}
+
+class HVACDSOTDABiddingStrategy {
+    RT_test_support: bool
+    forecasts: DSOTForecasts
+    temperatures: HVACTemperatures
+    system_model: HVACDSOTSystemModel
+    asset_state: HVACDSOTAssetState
+    structure: HVACDSOTStructureModel
+    etp_structure_params: ETPStructureParams
+    temp_max_cool_da: float
+    temp_min_cool_da: float
+    temp_max_heat_da: float
+    temp_min_heat_da: float
+    forecast_temperature_min: float
+    forecast_temperature_max: float
+    forecast_temperature_delta: float
+    ramp_high_limit: float
+    ramp_low_limit: float
+    TIME: list
+    optimized_Quantity: float
+    price_forecast_0_new: float
+    price_delta: float
+    price_mean: float
+    air_temp_agent: float
+    Qopt_da_prev: float
+    temp_da_prev: float
+    previous_Q_DA: float
+    previous_T_DA: float
+    delta_Q: float
+    delta_T: float
+    bid_da: list
+    temp_room: list
+    temp_desired_48hour_cool: list
+    temp_desired_48hour_heat: list
+    latent_factor: list
+    temp_room_previous_cool: float
+    temp_room_previous_heat: float
+    temp_outside_init: float
+    ProfitMargin_intercept: float
+    temp_room_init: float
+    eps: float
+    bid: DSOT4pointBid
+    update_forecast_temperature_limits(): tuple
+    update_da_indoor_temperature_limits(cooling_setpt: float, heating_setpt: float): None
+    initialize_inside_air_temperature(): None
+    update_da_temperature_limits(sim_time: dt.datetime): None
+    setup_da_temperature_parameters(sim_time: dt.datetime): None
+    estimate_required_cooling_quantity(time_idx: int): float
+    estimate_required_heating_quantity(time_idx: int): float
+    get_uncntrl_hvac_load(sim_time: dt.datetime): float
+    temperature_bound_rule(m: pyo.ConcreteModel, t: int): tuple
+    obj_rule(m: pyo.ConcreteModel): float
+    con_rule_eq1(m: pyo.ConcreteModel, t: int): None
+    solve_for_da_optimal_quantities(): tuple
+}
+
+class HVACDSOTAssetModel {
+    heating_system_type: HeatingSystemType
+    cooling_system_type: CoolingSystemType
+    forecasts: DSOTForecasts
+    temperatures: HVACTemperatures
+    environment_model: HVACDSOTEnvironmentModel
+    system_model: HVACDSOTSystemModel
+    structure_model: self
+    asset_state: HVACDSOTAssetState
+    A_ETP: ndarray
+    B_ETP_ON: ndarray
+    B_ETP_OFF: ndarray
+    AEI: ndarray
+    CA: None
+    UA: None
+    CM: None
+    HM: None
+    Qa_On: None
+    Qa_Off: None
+    Qm: None
+    calc_AEI(environment_model: HVACDSOTEnvironmentModel): None
+    simulate_time_step(state: HVACDSOTAssetState, environ: HVACDSOTEnvironmentModel, temperatures: HVACTemperatures, time_step_size: dt.timedelta): tuple
+}
+
+class HVACDSOTAsset {
+    asset_state: HVACDSOTAssetState
+    asset_model: HVACDSOTAssetModel
+}
+
+class HVACDSOTRTBiddingStrategy {
+    period: int
+    RT_minute_count_interpolation: int
+    bid_quantity: float
+    bid_quantity_rt: float
+    cleared_price: float
+    quantity_curve: list
+    temp_curve: list
+    asset_model: HVACDSOTAssetModel
+    asset_state: HVACDSOTAssetState
+    temperatures: HVACTemperatures
+    system_model: HVACDSOTSystemModel
+    da_bidding_strategy: HVACDSOTDABiddingStrategy
+    forecasts: DSOTForecasts
+    Qopt_DA: float
+    Topt_DA: float
+    interpolate_DA_quantities_into_RT(): tuple
+    estimate_hvac_energy_in_rt_period(): list
+    create_bid(): DSOT4pointBid
+    form_rt_bid(): None
+}
+
+@enduml
