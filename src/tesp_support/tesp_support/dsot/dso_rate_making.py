@@ -1600,7 +1600,7 @@ def calculate_tariff_prices(
     elif rate_scenario == "time-of-use":
         # Load in necessary data for the time-of-use rate
         data_path = os.path.expandvars('$TESPDIR/examples/analysis/dsot/data')
-        tou_params = load_json(data_path, "time_of_use_parameters.json", False)
+        tou_params = load_json(case_path, "time_of_use_parameters.json", False)
 
         # Determine the seasons under consideration in the time-of-use rate
         seasons_dict = {}
@@ -3106,7 +3106,7 @@ def DSO_rate_making(
         # Update the variables
         tariff["DSO_" + str(dso_num)]["flat_rate"] = prices["flat_rate"]
         data_path = os.path.expandvars('$TESPDIR/examples/analysis/dsot/data')
-        tou_params = load_json(data_path, "time_of_use_parameters.json", False)
+        tou_params = load_json(case, "time_of_use_parameters.json", False)
         for m in tou_params["DSO_" + str(dso_num)].keys():
             tou_params["DSO_" + str(dso_num)][m]["price"] = prices[
                 "tou_rate_" + tou_params["DSO_" + str(dso_num)][m]["season"]
