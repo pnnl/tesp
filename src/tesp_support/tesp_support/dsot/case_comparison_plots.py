@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from datetime import datetime, date, timedelta
 
 import tesp_support.dsot.plots as pt
 
@@ -101,6 +102,217 @@ def customer_monthly_stats(cases, data_paths, output_path, dso_num):
         '%Y%m%d') + 'Case_Compare_Customer_Monthly_Bills.png'
     file_path_fig = os.path.join(output_path, 'plots', plot_filename)
     plt.savefig(file_path_fig, bbox_inches='tight')
+
+
+def load_comparison_plot(day_range, metadata_path, cases, data_paths, output_path):
+    """  For a specified day range this function will load in the required data, plot the total DSO load.
+    Args:
+        day_range (range): the day range to plotted.
+        metadata_path (str): path of folder containing metadata
+        cases (List[str]): names of the cases
+        data_paths (str): location of the data files to be used.
+        output_path (str): path of the location where output (plots, csv) should be saved
+    Returns:
+        saves comparison load plot to file
+        """
+
+    line_colors = ['#e0813e', '#062c49', '#84baa9', '#965c79']
+
+    # Create a mapping between case and desired name
+    Case_name_dict = {
+        'Flat': 'Flat',
+        'TOU': 'TOU',
+        'DSOT': 'DE',
+        'RND': 'DE+C'}
+
+    for i in range(len(cases)):
+        case = cases[i]
+        case_name = Case_name_dict[case]
+        data_path = data_paths[i]
+
+        if case == cases[0]:
+            case_config = pt.load_json(data_path, 'generate_case_config.json')
+            # Load ERCOT load profile data
+            # metadata_file = os.path.join(metadata_path, case_config['refLoadMn'][5].split('/')[-1])
+            sim_start = datetime.strptime(case_config['StartTime'], '%Y-%m-%d %H:%M:%S')
+            # ercot_df = pt.load_ercot_data(metadata_file, sim_start, day_range)
+            # ames_rt_df = pt.load_ames_data(case, day_range)
+
+            start_time = sim_start + timedelta(days=day_range[0] - 1)
+            stop_time = sim_start + timedelta(days=day_range[-1]) - timedelta(minutes=5)
+
+        loads_df = pd.read_csv(data_path + '/der_stack_data_allDSOs.csv', index_col='time', parse_dates=True)
+        loads_df = loads_df.loc[start_time:stop_time, :]
+
+        if loads_df.index[-1] < stop_time:
+            raise Exception('DER stack plot data not available for case' + case + ' at ' + str(stop_time) + ".")
+
+        if i == 0:
+            # Plot load plot
+            plt.figure(figsize=(15, 10))
+
+            output_df = loads_df[['Substation']]
+            output_df['Substation'] += loads_df['Industrial Loads']
+            output_df = output_df.rename(columns={'Substation': case_name})
+        else:
+            output_df[case_name] = loads_df['Substation'] + loads_df['Industrial Loads']
+
+        plt.plot(loads_df.index, loads_df['Substation'] + loads_df['Industrial Loads'], label=case_name,
+                 color=line_colors[i], linewidth=3)
+
+        # if plot_ref:
+        #     bus_cols = [col for col in ercot_df.columns if 'Bus' in col]
+        #     plt.plot(ercot_df.index, ercot_df[bus_cols].sum(axis=1), label='ERCOT Load', color='grey', linestyle='--', linewidth=3)
+
+    large_font = True
+    if large_font:
+        tick_font = 18
+        label_font = 24
+        legend_font = 24
+    else:
+        tick_font = 17
+        label_font = 25
+        legend_font = 17
+
+    plt.legend(loc='lower left', prop={'size': legend_font})
+    # plt.legend(loc='lower left', prop={'size': legend_font}, ncol=2)
+    plt.xlabel('Time', size=label_font)
+    plt.ylabel('Load (MW)', size=label_font)
+    plt.ylim(top=80000, bottom=0)
+    ax = plt.gca()
+    ax.tick_params(axis='both', which='major', labelsize=tick_font)
+    # plt.title('DSO load profile by end-load type (ALL DSOs)', size=20)
+    plot_filename = 'Case_Compare_Load_Plots_' + loads_df.index[0].strftime('%m-%d') + '.png'
+    file_path_fig = os.path.join(output_path, 'plots', plot_filename)
+    plt.savefig(file_path_fig, bbox_inches='tight')
+
+    output_df.to_csv(path_or_buf=output_path + '/data/Case_Compare_System_Load_' + output_df.index[0].strftime('%m-%d') + '.csv')
+
+
+def retail_price_comparison_plot(dso, day_range, metadata_path, cases, data_paths, rate_scenarios, Month, output_path):
+    """  For a specified dso and day range this function will load in the required data, plot the retail price.
+    Args:
+        dso (num): the DSO range that should be plotted.
+        day_range (range): the day range to plotted.
+        metadata_path (str): path of folder containing metadata
+        cases (List[str]): names of the cases
+        data_paths (str): location of the data files to be used.
+        output_path (str): path of the location where output (plots, csv) should be saved
+    Returns:
+        saves comparison load plot to file
+        """
+
+    # line_colors = ['green', 'red', 'blue', 'black']
+    line_colors = ['#e0813e', '#062c49', '#84baa9', '#965c79']
+
+    # Create a mapping between month number and month abbreviation
+    Case_name_dict = {
+        'Flat': 'Flat',
+        'TOU': 'TOU',
+        'DSOT': 'DE',
+        'RND': 'DE+C'}
+
+    for i in range(len(cases)):
+        case = cases[i]
+        case_name = Case_name_dict[case]
+        data_path = data_paths[i]
+        rate_scenario = rate_scenarios[i]
+
+        if case == cases[0]:
+            case_config = pt.load_json(data_path +'/' + Month, 'generate_case_config.json')
+            # Load ERCOT load profile data
+            # metadata_file = os.path.join(metadata_path, case_config['refLoadMn'][5].split('/')[-1])
+            sim_start = datetime.strptime(case_config['StartTime'], '%Y-%m-%d %H:%M:%S')
+            # ercot_df = pt.load_ercot_data(metadata_file, sim_start, day_range)
+            # ames_rt_df = pt.load_ames_data(case, day_range)
+
+            start_time = sim_start + timedelta(days=day_range[0] - 1)
+            stop_time = sim_start + timedelta(days=day_range[-1]) - timedelta(minutes=5)
+
+            # Create a mapping between month number and month abbreviation
+            month_num_to_abbrev = {
+                1: "Jan",
+                2: "Feb",
+                3: "Mar",
+                4: "Apr",
+                5: "May",
+                6: "Jun",
+                7: "Jul",
+                8: "Aug",
+                9: "Sep",
+                10: "Oct",
+                11: "Nov",
+                12: "Dec",
+            }
+
+            # Identify the month name
+            month_name = month_num_to_abbrev[
+                pt.get_date(data_path +'/' + Month, dso, day_range[0]).month
+            ]
+
+        DA_LMPs_df = pd.read_csv(data_path + '/Annual_DA_LMP_Load_data.csv', index_col=0, parse_dates=True)
+        DA_LMPs_df = DA_LMPs_df.loc[start_time:stop_time, :]
+
+        # Load Tariff structure
+        file_name = "rate_case_values_" + rate_scenario + ".json"
+        tariff = pt.load_json(metadata_path, file_name, False)
+
+        if rate_scenario == "flat":
+            DA_LMPs_df['Retail'] = tariff['DSO_'+str(dso)]['flat_rate']
+        elif rate_scenario == "TOU":
+            tou_params = pt.load_json(os.path.join(data_path), "time_of_use_parameters.json", False)
+            for ii in DA_LMPs_df.index:
+                hour = ii.hour
+                for k in tou_params["DSO_" + dso][month_name]["periods"].keys():
+                    for t in range(len(tou_params["DSO_" + dso][month_name]["periods"][k]["hour_start"])):
+                        if hour >= tou_params["DSO_" + dso][month_name]["periods"][k]["hour_start"][t] \
+                                and hour < tou_params["DSO_" + dso][month_name]["periods"][k]["hour_end"][t]:
+                            DA_LMPs_df.loc[ii, 'Retail'] = tou_params["DSO_" + dso][month_name]["price"] \
+                                * tou_params["DSO_" + dso][month_name]["periods"][k]["ratio"]
+        elif rate_scenario == "DSOT":
+            DA_LMPs_df['Retail'] = DA_LMPs_df['da_lmp'+str(dso)]/1000 + tariff['DSO_'+str(dso)]['transactive_dist_rate']
+        elif rate_scenario == "RandD":
+            DA_LMPs_df['Retail'] = (DA_LMPs_df['da_lmp'+str(dso)])/1000 + tariff['DSO_'+str(dso)]['transactive_dist_rate']
+            # DA_LMPs_df['Retail'] = (DA_LMPs_df['da_lmp'+str(dso)] + 2 * DA_LMPs_df[' Adder'])/1000 + tariff['DSO_'+str(dso)]['transactive_dist_rate']
+
+        if i == 0:
+            # Plot load plot
+            plt.figure(figsize=(15, 10))
+
+            output_df = DA_LMPs_df[['Retail']]
+            output_df = output_df.rename(columns={'Retail': case_name})
+        else:
+            output_df[case] = DA_LMPs_df[['Retail']]
+
+        plt.plot(DA_LMPs_df.index, DA_LMPs_df['Retail'], label=case_name, color=line_colors[i], linewidth=3)
+
+        # if plot_ref:
+        #     bus_cols = [col for col in ercot_df.columns if 'Bus' in col]
+        #     plt.plot(ercot_df.index, ercot_df[bus_cols].sum(axis=1), label='ERCOT Load', color='grey', linestyle='--', linewidth=3)
+
+    large_font = True
+    if large_font:
+        tick_font = 18
+        label_font = 24
+        legend_font = 24
+    else:
+        tick_font = 17
+        label_font = 25
+        legend_font = 17
+
+    plt.legend(loc='lower left', prop={'size': legend_font})
+    # plt.legend(loc='lower left', prop={'size': legend_font}, ncol=2)
+    plt.xlabel('Time', size=label_font)
+    plt.ylabel('Retail Price ($/kW-hr)', size=label_font)
+    plt.ylim(bottom=0)
+    ax = plt.gca()
+    ax.tick_params(axis='both', which='major', labelsize=tick_font)
+    # plt.title('DSO load profile by end-load type (ALL DSOs)', size=20)
+    plot_filename = 'Case_Compare_Price_Plots_' + DA_LMPs_df.index[0].strftime('%m-%d') + '.png'
+    file_path_fig = os.path.join(output_path, 'plots', plot_filename)
+    plt.savefig(file_path_fig, bbox_inches='tight')
+
+    output_df.to_csv(path_or_buf=output_path + '/data/Case_Compare_Retail_Price_' + output_df.index[0].strftime('%m-%d') + '.csv')
 
 
 def plot_annual_stats(cases, data_paths, output_path, dso_num, variable):
