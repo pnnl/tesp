@@ -1184,11 +1184,11 @@ def calculate_consumer_bills(
                         trans_df.loc[(each, "DA_cost"), m] * trans_retail_scale
                     )
                     if include_RT:
-                        bill_df.loc[(each, "transactive_RT_energy_charge"), m] = (
+                        bill_df.loc[(each, "dsot_RT_energy_charge"), m] = (
                             trans_df.loc[(each, "RT_cost"), m] * trans_retail_scale
                         )
                     else:
-                        bill_df.loc[(each, "transactive_RT_energy_charge"), m] = 0.0
+                        bill_df.loc[(each, "dsot_RT_energy_charge"), m] = 0.0
 
                     # Calculate the consumer's fixed charge under the DSO+T tariff
                     bill_df.loc[(each, "dsot_fixed_charge"), m] = trans_fixed_charge
