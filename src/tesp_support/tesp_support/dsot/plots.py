@@ -1696,6 +1696,11 @@ def subscription_plot(dso, day_range, metadata_path, case, demand_case):
     demand_df['sum'] = demand_df.sum(axis=1)*case_config['DSO'][int(dso)-1][2]/1000
     basedemand_df['sum'] = basedemand_df.sum(axis=1)*case_config['DSO'][int(dso)-1][2]/1000
     basedemand_df = basedemand_df.loc[start_time:stop_time, :]
+
+    output_df = demand_df[['sum']]
+    output_df = output_df.rename(columns={'sum': 'Total Load'})
+    output_df['Block Load'] = basedemand_df[['sum']]
+
     # if basedemand_df.index[-1] < stop_time:
     #     raise Exception('Customer baseline demand data not available for ' + str(stop_time) + ".")
 
@@ -1726,6 +1731,9 @@ def subscription_plot(dso, day_range, metadata_path, case, demand_case):
         '%Y%m%d') + 'Subscription_plot_DSO_' + demand_df.index[0].strftime('%m-%d') + '.png'
     file_path_fig = os.path.join(case, 'plots', plot_filename)
     plt.savefig(file_path_fig, bbox_inches='tight')
+
+    output_df.to_csv(path_or_buf=case + '/plots/Subscription_plot_data_' + output_df.index[0].strftime('%m-%d') + '.csv')
+
 
 def daily_load_plots(dso, system, subsystem, variable, day, case, comp, agent_prefix, gld_prefix):
     """
