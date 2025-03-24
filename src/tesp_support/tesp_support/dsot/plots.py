@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import bisect
 
 plt.switch_backend('Agg')
 cache_output = {}
@@ -2762,10 +2763,35 @@ def dso_lmp_stats(month_list, output_path, renew_forecast_file, dso_range):
 
     # Check to see if Adder was used (for example in Rob and Don method) - if so correct LMPs - e.g. remove adder).
     if any(ames_lmps_df.columns.str.contains('Adder')):
-        da_lmps_df[' Adder'] = ames_lmps_df[' Adder']
-        for column in da_lmps_df.columns:
-            if 'lmp' in column:
-                da_lmps_df[column] = da_lmps_df[column] - da_lmps_df[' Adder']
+        file = '/'.join(renew_forecast_file.split('/')[:-1])
+        adder_curve_df = pd.read_csv(file +'/RandD.csv')
+
+        rd_curve = adder_curve_df['Load curve scaled (MWh)'].tolist()
+        rd_curve.reverse()
+        rd_adder = adder_curve_df['Marginal Quantity Price Surcharge ($/MWh)'].tolist()
+        rd_adder.reverse()
+
+        for t in da_lmps_df.index:
+            generation = da_lmps_df.loc[t, ' TotalLoad']
+            # bisection method taken from tso_psst.py
+            ii = bisect.bisect_left(rd_curve, generation)
+            if -1 < ii < len(rd_curve):
+                if generation - rd_curve[ii] < 0.0001:
+                    adder = rd_adder[ii]
+                else:
+                    # interpolation between upper and lower bounds
+                    percent = (generation - rd_curve[ii]) / (rd_curve[ii + 1] - rd_curve[ii])
+                    adder = ((rd_adder[ii + 1] - rd_adder[ii]) * percent) + rd_adder[ii + 1]
+            else:
+                if generation > rd_curve[-1]:
+                    adder = rd_adder[-1]
+                else:
+                    adder = rd_adder[0]
+            da_lmps_df.loc[t, ' Adder'] = adder
+
+    #     for column in da_lmps_df.columns:
+    #         if 'lmp' in column:
+    #             da_lmps_df[column] = da_lmps_df[column] - da_lmps_df[' Adder']
 
     # renew_forecast_file = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/data/mod_renew_forecast.csv'
     renew_forecast = pd.read_csv(renew_forecast_file, index_col='time', parse_dates=True)
