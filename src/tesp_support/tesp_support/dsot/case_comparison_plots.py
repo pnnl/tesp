@@ -6,6 +6,7 @@ from datetime import datetime
 
 import waterfall_chart #distribution name: waterfallcharts
 import matplotlib.pyplot as plt
+import matplotlib
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -23,6 +24,137 @@ def rec_diff(d1, d2):
             diff[k] = v1 - d2[k]
     return diff
 
+def customer_bill_component_comparison(cases, data_paths, output_path, dso_num):
+    """ Will plot key average bill components by month and duration and save to file.
+    Args:
+        cases (List[str]): names of the cases
+        data_paths (str): location of the data files to be used.
+        output_path (str): path of the location where output (plots, csv) should be saved
+        dso_num (str): bus number for LMP data to be plotted
+
+    Returns:
+        saves customer monthly bill plots to file
+        """
+
+    Customer_class = 'residential'
+    Cost_components = ['Fixed Charge', 'Volumetric Energy Charge', 'Volumetric Charge (Peak)',
+                         'Volumetric Charge (Off-Peak)', 'Demand Charge', 'Dynamic (DA) Charge', 'Dynamic (RT) Charge', 'Dynamic Swing Charge']
+
+    title_name = 'Average Customer Bills ($)'
+    upper_limit = 600
+    lower_limit = 0
+    units = '$'
+
+    months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Average']
+    # months = [ 'Apr', 'Aug', 'Dec', 'Average']
+
+    case_list = []
+    costs = []
+    month_list = []
+    for month in months:
+        for case in cases:
+            case_list.append(case)
+            month_list.append(month)
+
+    df = pd.DataFrame(
+        index=[month_list, case_list],
+        columns=Cost_components)
+
+    for cost in Cost_components:
+        # df[cost] = np.random.rand(len(df))
+        df[cost] = 0.0
+
+    for i in range(len(cases)):
+        case = cases[i]
+        data_path = data_paths[i]
+        var_df = pd.read_csv(data_path + '/billsum_dso_' + str(dso_num) + '_data.csv', index_col=[0, 1])
+        # Average out sum value
+        var_df['Average'] = var_df['sum']/12
+
+        rci_df = pd.read_csv(data_path + '/RCI_check.csv', index_col=[0])
+        # Calculate scaling factor to per customer basis TODO: find actual participating values:
+        if case == 'Flat':
+            cust_sf = rci_df.loc[int(dso_num), 'Scaling Factor'] *893
+        else:
+            cust_sf = rci_df.loc[int(dso_num), 'Scaling Factor'] *699
+
+        for month in months:
+            # Cost_components = ['Fixed Charge', 'Volumetric Energy Charge', 'Volumetric Charge (Peak)',
+            #                    'Volumetric Energy Charge (Off-Peak)', 'Dynamic (DA) Charge', 'Dynamic (RT) Charge']
+
+            if case == 'Flat':
+                df.loc[(month, case), 'Fixed Charge'] = var_df.loc[(Customer_class, 'flat_fixed_charge'), month] / cust_sf
+                df.loc[(month, case), 'Volumetric Energy Charge'] = var_df.loc[(Customer_class, 'flat_energy_charge'), month] / cust_sf
+                df.loc[(month, case), 'Demand Charge'] = var_df.loc[(Customer_class, 'flat_demand_charge'), month] / cust_sf
+
+            elif case == 'TOU':
+                df.loc[(month, case), 'Fixed Charge'] = var_df.loc[(Customer_class, 'tou_fixed_charge'), month] / cust_sf
+                df.loc[(month, case), 'Volumetric Charge (Peak)'] = var_df.loc[(Customer_class, 'tou_peak_energy_charge'), month] / cust_sf
+                df.loc[(month, case), 'Volumetric Charge (Off-Peak)'] = var_df.loc[(Customer_class, 'tou_off-peak_energy_charge'), month] / cust_sf
+                df.loc[(month, case), 'Demand Charge'] = var_df.loc[(Customer_class, 'tou_demand_charge'), month] / cust_sf
+
+            elif case == 'DE' or case == 'DE+C':
+                df.loc[(month, case), 'Fixed Charge'] = var_df.loc[(Customer_class, 'dsot_fixed_charge'), month] / cust_sf
+                df.loc[(month, case), 'Volumetric Energy Charge'] = var_df.loc[(Customer_class, 'dsot_volumetric_charge'), month] / cust_sf
+                df.loc[(month, case), 'Dynamic (DA) Charge'] = var_df.loc[(Customer_class, 'dsot_DA_energy_charge'), month] / cust_sf
+                df.loc[(month, case), 'Dynamic (RT) Charge'] = var_df.loc[(Customer_class, 'dsot_RT_energy_charge'), month] / cust_sf
+
+            # elif case == 'DE+C':
+            #     df.loc[(month, case), 'Fixed Charge'] = var_df.loc[(Customer_class, 'dsot_fixed_charge'), month] / cust_sf
+            #     df.loc[(month, case), 'Volumetric Energy Charge'] = var_df.loc[(Customer_class, 'dsot_volumetric_charge'), month] / cust_sf
+            #     df.loc[(month, case), 'Dynamic (DA) Charge'] = var_df.loc[(Customer_class, 'dsot_DA_energy_charge'), month] / cust_sf
+            #     df.loc[(month, case), 'Dynamic (RT) Charge'] = var_df.loc[(Customer_class, 'dsot_RT_energy_charge'), month] / cust_sf
+
+            elif case == 'B&S':
+                df.loc[(month, case), 'Fixed Charge'] = var_df.loc[(Customer_class, 'subscription_fixed_charge'), month] / cust_sf
+                df.loc[(month, case), 'Volumetric Energy Charge'] = var_df.loc[(Customer_class, 'subscription_energy_charge'), month] / cust_sf
+                df.loc[(month, case), 'Dynamic Swing Charge'] = var_df.loc[(Customer_class, 'subscription_net_deviation_charge'), month] / cust_sf
+
+    matplotlib.style.use('seaborn-v0_8-deep')
+
+    fig, axes = plt.subplots(nrows=1, ncols=len(months), figsize=(max(11,3*len(months)), 10))
+
+    ax_position = 0
+    for month in months:
+        idx = pd.IndexSlice
+        subset = df.loc[idx[[month], :],
+                        Cost_components]
+
+        # ax = subset.plot(kind="bar", stacked=True, colormap="Blues",
+        #                  ax=axes[ax_position])
+        ax = subset.plot(kind="bar", stacked=True,
+                         ax=axes[ax_position])
+        ax.set_title(month, fontsize=14, alpha=1.0)
+        ax.set_ylabel(title_name, fontsize=14),
+        ax.set_xlabel(month, fontsize=12, alpha=0.0),
+        ax.set_ylim(-5, 200)  # Need to use this otherwise each subplot will rescale and not match final Y-axis scale
+        # ax.set_yticks(range(0, 9000, 1000))
+        # ax.set_yticklabels(labels=range(0, 9000, 1000), rotation=0,
+        #                    minor=False, fontsize=28)
+        ax.set_xticklabels(labels=cases, rotation=90,
+                           minor=False, fontsize=10)
+        handles, labels = ax.get_legend_handles_labels()
+        # ax.legend(Cost_components,
+        #           loc='upper right', fontsize=28)
+        ax_position += 1
+
+
+    # look "one plot"
+    # plt.tight_layout(pad=0., w_pad=-16.5, h_pad=0.0)
+
+    for n in range(len(months)):
+        if n != 0:
+            axes[n].set_ylabel("")
+            axes[n].set_yticklabels("")
+        if n == range(len(months))[-1]:
+            axes[n].legend(Cost_components,
+                   loc='upper right', fontsize=10)
+        else:
+            axes[n].legend().set_visible(False)
+
+    plot_filename = 'Case_Compare_Bill_Components_DSO_' + str(dso_num) + '.png'
+    file_path_fig = os.path.join(output_path, 'plots', plot_filename)
+    plt.savefig(file_path_fig, bbox_inches='tight')
 
 def customer_monthly_stats(cases, data_paths, output_path, dso_num):
     """ Will plot key variables by month and duration and save to file.
@@ -699,9 +831,17 @@ def dso_cfs_delta(cases_list, data_paths_list, dso_range, metadata_file, metadat
     cases = []
     benefits = []
 
+    Case_name_dict = {
+        'Flat': 'Flat',
+        'TOU': 'TOU',
+        'DSOT': 'DE',
+        'RND': 'DE+C',
+        'Sub': 'B&S'}
+
     for i in range(len(cases_list)):
         results_path = data_paths_list[i][1]
         comp_path = data_paths_list[i][0]
+        case_name = Case_name_dict[cases_list[i][1]]
 
         if metadata_path == None:
             path = "../../../examples/dsot_data"
@@ -909,9 +1049,15 @@ def dso_cfs_delta(cases_list, data_paths_list, dso_range, metadata_file, metadat
         file_path_fig = os.path.join(results_path, 'plots', plot_filename)
         plt.savefig(file_path_fig, bbox_inches='tight')
 
-        assumptions.extend(['High', 'Nominal', 'Low'])
-        cases.extend([cases_list[i][1], cases_list[i][1], cases_list[i][1]])
-        benefits.extend([net_benefit_high, net_benefit, net_benefit_low])
+        sensitivity = False
+        if sensitivity:
+            assumptions.extend(['High', 'Nominal', 'Low'])
+            cases.extend([cases_list[i][1], cases_list[i][1], cases_list[i][1]])
+            benefits.extend([net_benefit_high, net_benefit, net_benefit_low])
+        else:
+            assumptions.extend(['Saving'])
+            cases.extend([case_name])
+            benefits.extend([net_benefit])
 
     # Add data to dataframe for summary plot
     benefits_sum = {'Assumption': assumptions,
@@ -921,11 +1067,19 @@ def dso_cfs_delta(cases_list, data_paths_list, dso_range, metadata_file, metadat
     summary_benefits_df = pd.DataFrame(benefits_sum, columns = ['Assumption', 'Case', 'Annual Net Benefit ($M)'])
 
     plt.figure(figsize=(20, 10))
-    sns.catplot(
-        data=summary_benefits_df, kind="bar",
-        x="Case", y="Annual Net Benefit ($M)", hue="Assumption",
-        ci="sd", palette="dark", alpha=.6, height=4
-    )
+    if sensitivity:
+        sns.catplot(
+            data=summary_benefits_df, kind="bar",
+            x="Case", y="Annual Net Benefit ($M)", hue="Assumption",
+            ci="sd", palette="dark", alpha=.6, height=4
+        )
+    else:
+        line_colors = ['#062c49', '#84baa9', '#965c79', 'red']
+        sns.catplot(
+            data=summary_benefits_df, kind="bar",
+            x="Case", y="Annual Net Benefit ($M)",
+            ci="sd", palette=line_colors, alpha=.6, height=4
+        )
     plt.xlabel("Case", size=12)
     plt.ylabel("Annual Net Benefit ($M)", size=12)
     plot_filename = datetime.now().strftime('%Y%m%d') + 'DSO_CFS_Benefits_Summary.png'
