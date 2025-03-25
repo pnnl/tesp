@@ -81,61 +81,66 @@ def init_class_attributes(obj: object, attr: dict):
             logger.warning(f"{class_name}: attribute '{obj_key}' in object '{obj.name}' was not defined in attribute dictionary")
     
 class HVACDSOTAgent:
-    def __init__(self, name: str, attributes: dict):
+    def __init__(self, attributes: dict):
         self.name: str = None
         self.house_name: str = None
         self.meter_name: str = None
         self.period: int = None
         self.sim_time: dt.datetime = None
         init_class_attributes(self, attributes["agent"])
-
-        self.temperatures = HVACTemperatures(attributes["temperature"])
-        self.schedule = HVACSchedule(attributes["schedule"],
-                                     self.temperatures)
+        
+        self.temp = HVACTemperatures(attributes["temperature"])
+        self.schedule = HVACSchedule(attributes["schedule"])
+        self.da_market_interface = DSOTDAMarketInterface()
         self.forecasts = DSOTForecasts(attributes["forecasts"])
-        self.asset = HVACDSOTAsset(attributes["asset"],
-                                   self.forecasts,
-                                   self.temperatures,
-                                   )
+        self.asset = HVACDSOTAsset(attributes["asset"])
+        self.asset_state = HVACDSOTAssetState()
+        self.structure_model = HVACDSOTStructureModel(attributes["structure_model"])
+        self.etp_structure_params = self.structure_model.ETPStructureParams()
+        self.thermostat_mode = ThermostatMode()
+        self.asset_model = HVACDSOTAssetModel()
+        self.env_model = self.asset_model.HVACDSOTEnvironmentModel()
+        self.system_model = HVACDSOTSystemModel(attributes["system_model"])
         self.flexibility = HVACDSOTPriceFlexibilityCurve()
         self.da_bidding_strategy = HVACDSOTDABiddingStrategy(
             attributes["da_bidding_strategy"],
             self.schedule,
             self.flexibility,
             self.forecasts,
-            self.temperatures, 
-            self.asset.asset_model.system_model,
-            self.asset.asset_state,
-            self.asset.asset_model.structure_model,
-            self.asset.asset_model.structure_model.etp_structure_params,
-            self.asset.asset_model
+            self.temp, 
+            self.system_model,
+            self.asset_state,
+            self.structure_model,
+            self.structure_model.etp_structure_params,
+            self.asset_model
             )
-
         self.rt_bidding_strategy = HVACDSOTRTBiddingStrategy(attributes["rt_bidding_strategy"],
                                                             self.period,
                                                             self.schedule,
                                                             self.flexibility,
-                                                            self.asset.asset_model,
-                                                            self.asset.asset_state,
-                                                            self.temperatures,
-                                                            self.asset.asset_model.system_model,
+                                                            self.asset_model,
+                                                            self.asset_state,
+                                                            self.temp,
+                                                            self.system_model,
                                                             self.da_bidding_strategy,
                                                             self.forecasts)
-        self.helics_topic_map = {}
+        self.rt_market_interface = DSOTRTMarketInterface()
+        self.helics_topic_map = {} # TODO: unused
 
     def calc_capacites_and_all_heat_flows(self):
-        # Easiest way to ensure that the capacities are calculated before the
-        # heat flows. These capacities are a function of the outdoor air 
-        # temperature and thus need to be updated regularly.
-        self.asset.asset_model.system_model.calc_cooling_capacity()
-        self.asset.asset_model.system_model.calc_heating_capacity()
-        self.asset.asset_model.env_model.calc_all_heat_flows(self.asset.asset_state.house_kW,
-                                                               self.asset.asset_state.wh_kW,
-                                                               self.asset.asset_state.thermostat_mode,
-                                                               self.asset.asset_state.hvac_on,
-                                                               self.asset.asset_model.system_model.heating_capacity,
-                                                               self.asset.asset_model.system_model.cooling_capacity,
-                                                               self.asset.asset_state.hvac_kW) 
+        """ Easiest way to ensure that the capacities are calculated before the
+        heat flows. These capacities are a function of the outdoor air 
+        temperature and thus need to be updated regularly.
+        """
+        HVACDSOTSystemModel.calc_cooling_capacity()
+        HVACDSOTSystemModel.calc_heating_capacity()
+        HVACDSOTAssetModel.HVACDSOTEnvironmentModel.calc_all_heat_flows(self.asset_state.house_kW,
+                                                               self.asset_state.wh_kW,
+                                                               self.asset_state.thermostat_mode,
+                                                               self.asset_state.hvac_on,
+                                                               self.system_model.heating_capacity,
+                                                               self.system_model.cooling_capacity,
+                                                               self.asset_state.hvac_kW) 
         
 class HVACTemperatures:
     """Sets attributes for object
@@ -188,15 +193,15 @@ class HVACTemperatures:
                     .format(self.name, 'init', self.daylight_set_heat, self.wakeup_set_heat))
 
 class HVACSchedule:
-    def __init__(self, attributes: dict, temperatures: HVACTemperatures):
+    def __init__(self, attributes: dict, agent: HVACDSOTAgent):
         """Sets attributes for object
 
         Args:
             name (str): object name
             attributes (dict): attributes dictionary, externally defined. These
                 are generally not fixed throughout the simulation.
-            temperatures (class): HVACTemperatures
         """
+        self.agent = agent
         self.name: str = None
         self.wakeup_start_hr: float = None
         self.daylight_start_hr: float = None
@@ -216,9 +221,8 @@ class HVACSchedule:
         self.range_high_cool: float = 0
         self.range_low_heat: float = 0
         self.range_high_heat: float = 0
-        self.temperatures = temperatures
         init_class_attributes(self, attributes)
-
+        
     def validate_inputs(self):
         if self.wakeup_start_hr > self.daylight_start_hr:
             logger.debug('{} {} -- wakeup_start_hr ({}) is not < daylight_start_hr ({}).'
@@ -233,9 +237,7 @@ class HVACSchedule:
             logger.debug('{} {} -- weekend_day_start_hr ({}) is not < weekend_night_start_hr ({}).'
                     .format(self.name, 'init', self.weekend_day_start_hr, self.weekend_night_start_hr))
 
-    def get_scheduled_setpoint(self, 
-                               hour_of_day: int,
-                               day_of_week: int) -> tuple:
+    def get_scheduled_setpoint(self, hour_of_day: int, day_of_week: int) -> tuple:
         if 23 < hour_of_day < 48:
             hour_of_day = hour_of_day - 24
             day_of_week = day_of_week + 1
@@ -248,85 +250,78 @@ class HVACSchedule:
         if day_of_week > 6:
             day_of_week = day_of_week - 7
         if day_of_week > 4:  # a weekend
-            val_cool = self.temperatures.weekend_night_set_cool
-            val_heat = self.temperatures.weekend_night_set_heat
+            val_cool = self.agent.temp.weekend_night_set_cool
+            val_heat = self.agent.temp.weekend_night_set_heat
             if self.weekend_day_start_hr <= day_of_week < self.weekend_night_start_hr:
-                val_cool = self.temperatures.weekend_day_set_cool
-                val_heat = self.temperatures.weekend_day_set_heat
+                val_cool = self.agent.temp.weekend_day_set_cool
+                val_heat = self.agent.temp.weekend_day_set_heat
         else:  # a weekday
-            val_cool = self.temperatures.night_set_cool
-            val_heat = self.temperatures.night_set_heat
+            val_cool = self.agent.temp.night_set_cool
+            val_heat = self.agent.temp.night_set_heat
             if self.wakeup_start_hr <= day_of_week < self.daylight_start_hr:
-                val_cool = self.temperatures.wakeup_set_cool
-                val_heat = self.temperatures.wakeup_set_heat
+                val_cool = self.agent.temp.wakeup_set_cool
+                val_heat = self.agent.temp.wakeup_set_heat
             elif self.daylight_start_hr <= day_of_week < self.evening_start_hr:
-                val_cool = self.temperatures.daylight_set_cool
-                val_heat = self.temperatures.daylight_set_heat
+                val_cool = self.agent.temp.daylight_set_cool
+                val_heat = self.agent.temp.daylight_set_heat
             elif self.evening_start_hr <= day_of_week < self.night_start_hr:
-                val_cool = self.temperatures.evening_set_cool
-                val_heat = self.temperatures.evening_set_heat
+                val_cool = self.agent.temp.evening_set_cool
+                val_heat = self.agent.temp.evening_set_heat
         return val_cool, val_heat
     
     def change_basepoint(self, 
                          sim_time: dt.datetime,
-                         temperatures: HVACTemperatures,
                          model_diag_level: int = 0) -> bool:
         """ Updates the time-scheduled thermostat setting
 
         Args:
             sim_time (datetime): Current simulation time
-            temperatures (object): Temperature object holding
-            many thermostat values
-            model_diag_level (int): Specific level for logging errors.
-            Defaults to whatever level the parent defines.
+            model_diag_level (int): Specific level for logging errors. Defaults 
+                to whatever level the parent defines.
             
-
         Returns:
             bool: True if the setting changed, False if not
         """
-
         if sim_time.weekday() > 4:  # a weekend
-            val_cool = temperatures.weekend_night_set_cool
-            val_heat = temperatures.weekend_night_set_heat
+            val_cool = self.agent.temp.weekend_night_set_cool
+            val_heat = self.agent.temp.weekend_night_set_heat
             if self.weekend_day_start_hr <= sim_time.hour < self.weekend_night_start_hr:
-                val_cool = temperatures.weekend_day_set_cool
-                val_heat = temperatures.weekend_day_set_heat
+                val_cool = self.agent.temp.weekend_day_set_cool
+                val_heat = self.agent.temp.weekend_day_set_heat
         else:  # a weekday
-            val_cool = temperatures.night_set_cool
-            val_heat = temperatures.night_set_heat
+            val_cool = self.agent.temp.night_set_cool
+            val_heat = self.agent.temp.night_set_heat
             if self.wakeup_start_hr <= sim_time.hour < self.daylight_start_hr:
-                val_cool = temperatures.wakeup_set_cool
-                val_heat = temperatures.wakeup_set_heat
+                val_cool = self.agent.temp.wakeup_set_cool
+                val_heat = self.agent.temp.wakeup_set_heat
             elif self.daylight_start_hr <= sim_time.hour < self.evening_start_hr:
-                val_cool = temperatures.daylight_set_cool
-                val_heat = temperatures.daylight_set_heat
+                val_cool = self.agent.temp.daylight_set_cool
+                val_heat = self.agent.temp.daylight_set_heat
             elif self.evening_start_hr <= sim_time.hour < self.night_start_hr:
-                val_cool = temperatures.evening_set_cool
-                val_heat = temperatures.evening_set_heat
-        if abs(temperatures.basepoint_cooling - val_cool) > 0.1 or \
-              abs(temperatures.basepoint_heating - val_heat) > 0.1:
-            temperatures.basepoint_cooling = val_cool
-            if temperatures.basepoint_cooling < 65 or temperatures.basepoint_cooling > 85:
+                val_cool = self.agent.temp.evening_set_cool
+                val_heat = self.agent.temp.evening_set_heat
+        if abs(self.agent.temp.basepoint_cooling - val_cool) > 0.1 or \
+              abs(self.agent.temp.basepoint_heating - val_heat) > 0.1:
+            self.agent.temp.basepoint_cooling = val_cool
+            if self.agent.temp.basepoint_cooling < 65 or self.agent.temp.basepoint_cooling > 85:
                 # TODO reimpliment this with the TBD standard TESP logging
                 logger.debug('{} {} -- basepoint_cooling ({}) is out of bounds.'
-                        .format(self.name, sim_time, self.basepoint_cooling))
-            self.basepoint_heating = val_heat
-            if temperatures.basepoint_heating < 60 or temperatures.basepoint_heating > 85:
+                        .format(self.name, sim_time, self.agent.temp.basepoint_cooling))
+            self.agent.temp.basepoint_heating = val_heat
+            if self.agent.temp.basepoint_heating < 60 or self.agent.temp.basepoint_heating > 85:
                 logger.debug('{} {} -- basepoint_heating ({}) is out of bounds.'
-                        .format(self.name, sim_time, self.basepoint_heating))
+                        .format(self.name, sim_time, self.agent.temp.basepoint_heating))
             self.calc_thermostat_settings(model_diag_level, sim_time)  # update thermostat settings
             return True
         return False
     
     def calc_thermostat_settings(self, 
-                                 temperatures: HVACTemperatures,
                                  slider: float,
                                  model_diag_level: int = 0) -> None:
         """ Sets the ETP parameters from configuration data
 
         Args:
             sim_time (datetime): Current simulation time
-            temperatures (object): Temperature object holding TODO:unused
             many thermostat values
             model_diag_level (int): Specific level for logging errors. TODO:unused
             Defaults to whatever level the parent defines.
@@ -334,7 +329,6 @@ class HVACSchedule:
         References:
             `Table 3 -  Easy to use slider settings <http://gridlab-d.shoutwiki.com/wiki/Transactive_controls>`_
         """
-
         self.range_high_cool = self.range_high_limit * slider 
         self.range_low_cool = self.range_low_limit * slider  
         self.range_high_heat = self.range_high_limit * slider  
@@ -356,29 +350,27 @@ class HVACSchedule:
             self.ramp_low_heat = 0.0
 
         # we need to check if heating and cooling bid curves overlap
-        if self.basepoint_cooling - self.temperatures.deadband / 2.0 - 0.5 < self.basepoint_heating + self.temperatures.deadband / 2.0 + 0.5:
-            # update minimum cooling and maximum heating temperatures
-            mid_point = (self.basepoint_cooling + self.basepoint_heating) / 2.0
-            self.basepoint_cooling = mid_point + self.temperatures.deadband / 2.0 + 0.5
-            self.basepoint_heating = mid_point - self.temperatures.deadband / 2.0 - 0.5
+        if self.agent.temp.basepoint_cooling - self.agent.temp.deadband / 2.0 - 0.5 < self.agent.temp.basepoint_heating + self.agent.temp.deadband / 2.0 + 0.5:
+            # update minimum cooling and maximum heating temp
+            mid_point = (self.agent.temp.basepoint_cooling + self.agent.temp.basepoint_heating) / 2.0
+            self.agent.temp.basepoint_cooling = mid_point + self.agent.temp.deadband / 2.0 + 0.5
+            self.agent.temp.basepoint_heating = mid_point - self.agent.temp.deadband / 2.0 - 0.5
 
-        cooling_setpt = self.basepoint_cooling
-        heating_setpt = self.basepoint_heating
         # def update_temp_limits(self, cooling_setpt, heating_setpt):
-        self.temperatures.temp_max_cool = cooling_setpt + self.range_high_cool  
-        self.temperatures.temp_min_cool = cooling_setpt - self.range_low_cool  
-        self.temperatures.temp_max_heat = heating_setpt + self.range_high_heat 
-        self.temperatures.temp_min_heat = heating_setpt - self.range_low_heat 
-        max_plus_deadband = self.temperatures.temp_max_heat + self.temperatures.deadband / 2.0 + 0.5
-        min_less_deadband = self.temperatures.temp_min_cool - self.temperatures.deadband / 2.0 - 0.5
+        self.temp_max_cool = self.agent.temp.basepoint_cooling + self.range_high_cool  
+        self.temp_min_cool = self.agent.temp.basepoint_cooling - self.range_low_cool  
+        self.temp_max_heat = self.agent.temp.basepoint_heating + self.range_high_heat 
+        self.temp_min_heat = self.agent.temp.basepoint_heating - self.range_low_heat 
+        max_plus_deadband = self.temp_max_heat + self.agent.temp.deadband / 2.0 + 0.5
+        min_less_deadband = self.temp_min_cool - self.agent.temp.deadband / 2.0 - 0.5
         if max_plus_deadband > min_less_deadband:
-            mid_point = (self.temperatures.temp_min_cool + self.temperatures.temp_max_heat) / 2.0
-            self.temperatures.temp_min_cool = mid_point + self.temperatures.deadband / 2.0 + 0.5
-            self.temperatures.temp_max_heat = mid_point - self.temperatures.deadband / 2.0 - 0.5
-            if self.temperatures.temp_min_cool > cooling_setpt:
-                self.temperatures.temp_min_cool = cooling_setpt
-            if self.temperatures.temp_max_heat < heating_setpt:
-                self.temperatures.temp_max_heat = heating_setpt
+            mid_point = (self.temp_min_cool + self.temp_max_heat) / 2.0
+            self.temp_min_cool = mid_point + self.agent.temp.deadband / 2.0 + 0.5
+            self.temp_max_heat = mid_point - self.agent.temp.deadband / 2.0 - 0.5
+            if self.temp_min_cool > self.agent.temp.basepoint_cooling:
+                self.temp_min_cool = self.agent.temp.basepoint_cooling
+            if self.temp_max_heat < self.agent.temp.basepoint_heating:
+                self.temp_max_heat = self.agent.temp.basepoint_heating
         
 class DSOTDAMarketInterface:
     def __init__(self):
@@ -442,7 +434,6 @@ class DSOTForecasts:
         return forecast_times
 
     def calc_solar_gain_forecast(self, times: list, 
-                                 env_model: 'HVACDSOTAssetModel.HVACDSOTEnvironmentModel',
                                  solar_direct: list = None,
                                  solar_diffuse: list = None) -> list:
 
@@ -460,32 +451,32 @@ class DSOTForecasts:
         # times = list of DateTimes
         for idx, time in enumerate(times):
             self.solar_gain.append(
-                env_model.calc_solargain(time, solar_direct[idx], solar_diffuse[idx]))
+                HVACDSOTAssetModel.HVACDSOTEnvironmentModel.calc_solargain(time, solar_direct[idx], solar_diffuse[idx]))
         return self.solar_gain
+    
 class HVACDSOTAsset:
-    def __init__(self, attributes: dict,
-                forecasts_obj: DSOTForecasts,
-                temperature_obj: HVACTemperatures):
+    def __init__(self, attributes: dict, agent: HVACDSOTAgent):
         """TODO
 
         Args:
-            attributes (dict): _description_
-            forecasts_obj (DSOTForecasts): _description_
-            temperature_obj (HVACTemperatures): _description_
+            attributes (dict): attributes dictionary, externally defined. These
+                are generally not fixed throughout the simulation.
         """
+        self.agent = agent
         self.asset_state = HVACDSOTAssetState(attributes["asset_state"])
         self.asset_model = HVACDSOTAssetModel(attributes["asset_model"],
-                                                temperature_obj,
+                                                self.agent.temp,
                                                 self.asset_state,
-                                                forecasts_obj,
+                                                self.agent.forecasts,
                                                 self.asset_state.thermostat_mode)    
 
 class HVACDSOTAssetState:
     def __init__(self, source_obj: object = None):
-        """TODO
+        """ Creates new object with same attribute values as the source object
+            passed-in.
 
         Args:
-            source_obj (object, optional): _description_. Defaults to None.
+            source_obj (object, optional): TODO. Defaults to None.
         """
         self.indoor_air_temp: float = 0
         self.mass_temp: float  = 0
@@ -494,9 +485,7 @@ class HVACDSOTAssetState:
         self.house_kW: float  = 0
         self.mtr_v: float  = 0
         self.hvac_on: bool = False
-        self.thermostat_mode = ThermostatMode.UNDEFINED
-        # Creates new object with same attribute values as the source
-        # object passed-in.
+        self.thermostat_mode = ThermostatMode.UNDEFINED #TODO this is unused here
         if source_obj is not None:
             self.copy_attributes_from(source_obj)
 
@@ -533,7 +522,6 @@ class HVACDSOTStructureModel:
             attributes (dict): attributes dictionary, externally defined. These
                 are generally fixed throughout the simulation.
         """
-
         self.name: str = None
         self.sqft: float = None
         self.stories: int = None
@@ -575,7 +563,7 @@ class HVACDSOTStructureModel:
         self.glazing_treatment = self.WindowGlazingTreatment[attributes["glazing_treatment"]]
 
         # Internally calculated attributes
-        # These are generally fixed throughout the simulation
+        # These are updated throughout the simulation
         self.interior_air_heat_capacity: float = 0
         self.ceiling_area: float = 0
         self.gross_exterior_wall_area: float = 0
@@ -937,7 +925,7 @@ class HVACDSOTStructureModel:
         self.etp_structure_params.HM = \
             h_i * ((A_net / wall_f) + (A_gross * wall_r) + A_ceil * (stories / ceil_f))
         
-        self.etp_structure_params.HM
+        return self.etp_structure_params.HM
 
     def calc_CM(self) -> float:
         """Calculation of structural mass thermal capacity
@@ -997,56 +985,40 @@ class ThermostatMode(Enum):
     COOLING = 1
     HEATING = 2
 class HVACDSOTAssetModel:
-    def __init__(self, attributes: dict,
-                 temperature_obj: HVACTemperatures, 
-                 asset_obj: HVACDSOTAssetState,
-                 forecasts_obj: DSOTForecasts,
-                 thermostat_mode: ThermostatMode
-                 ):
+    def __init__(self, attributes: dict, agent: HVACDSOTAgent):
         """TODO
 
         Args:
             attributes (dict): Dictionary of attributes, externally defined. 
                 These are generally fixed throughout the simulation.
-            temperature_obj (HVACTemperatures): _description_
-            asset_obj (HVACDSOTAssetState): _description_
-            forecasts_obj (DSOTForecasts): _description_
-            thermostat_mode (ThermostatMode): _description_
         """
-        self.heating_system_type = self.HeatingSystemType[attributes["heating_system_type"]]
-        self.cooling_system_type = self.CoolingSystemType[attributes["cooling_system_type"]]
-
-        self.forecasts = forecasts_obj
-        self.temperatures = temperature_obj
-        self.env_model = self.HVACDSOTEnvironmentModel(attributes["environment_model"], 
-                                                        thermostat_mode,
-                                                        self.forecasts)
-        self.system_model = HVACDSOTSystemModel(attributes["system_model"], 
-                                                    self.env_model,
-                                                    forecasts_obj)                                           
-        self.structure_model = HVACDSOTStructureModel(attributes["structure_model"])
-        self.asset_state = asset_obj
+        
+        self.agent = agent
+        self.etp_params = self.agent.structure_model.ETPStructureParams()
+        self.heating_system_type = HVACDSOTAssetModel.HeatingSystemType()
+        self.cooling_system_type = HVACDSOTAssetModel.CoolingSystemType()
+        self.env_model = HVACDSOTAssetModel.HVACDSOTEnvironmentModel()
         self.A_ETP: np.ndarray = np.zeros([2, 2])
         self.B_ETP_ON: np.ndarray = np.zeros([2, 1])
         self.B_ETP_OFF: np.ndarray = np.zeros([2, 1])
         self.AEI: np.ndarray = np.zeros([2, 2])
 
-        self.CA = self.structure_model.etp_structure_params.CA
-        self.UA = self.structure_model.etp_structure_params.UA
-        self.CM = self.structure_model.etp_structure_params.CM
-        self.HM = self.structure_model.etp_structure_params.HM
-        self.Qa_On = self.env_model.Qa_ON
-        self.Qa_Off = self.env_model.Qa_OFF
-        self.Qm = self.env_model.Qm
+        self.CA = self.etp_params.CA
+        self.UA = self.etp_params.UA
+        self.CM = self.etp_params.CM
+        self.HM = self.etp_params.HM
+        self.Qa_On = self.agent.env_model.Qa_ON
+        self.Qa_Off = self.agent.env_model.Qa_OFF
+        self.Qm = self.agent.env_model.Qm
 
-        self.system_model.calc_design_capacities(self.structure_model.etp_structure_params,
+        HVACDSOTSystemModel.calc_design_capacities(self.etp_params,
                                                     self.heating_system_type,
                                                     self.env_model,
-                                                    self.structure_model)
+                                                    self.agent.structure_model)
 
     def calc_AEI(self, env_model: 'HVACDSOTAssetModel.HVACDSOTEnvironmentModel' = None):
         if env_model == None:
-            env_model = self.env_model
+            env_model = env_model
         if self.CA != 0.0:
             self.A_ETP[0][0] = -1.0 * (self.UA + self.HM) / self.CA
             self.A_ETP[0][1] = self.HM / self.CA # 
@@ -1060,10 +1032,8 @@ class HVACDSOTAssetModel:
         self.AEI = np.linalg.inv(self.A_ETP)
         return self.AEI
         
-    def simulate_time_step(self,
-                        env_model: 'HVACDSOTAssetModel.HVACDSOTEnvironmentModel',
-                        temperatures: HVACTemperatures, 
-                        time_step_size: dt.timedelta) -> tuple:
+    def simulate_time_step(self, env_model: 'HVACDSOTAssetModel.HVACDSOTEnvironmentModel', 
+                           time_step_size: dt.timedelta) -> tuple:
         """Given an asset and environment state, simulates the HVAC system 
         for the duration of a time_step_size.
 
@@ -1085,11 +1055,7 @@ class HVACDSOTAssetModel:
         fidelity and computation time when choosing the time step size.
 
         Args:
-            state (HVACDSOTAssetState): defined state of the system being
-                simulated. The state values in this object will be updated based
-                on the results of the simulation so only pass in an object whose
-                state can be or needs to be updated. 
-            environ (HVACDSOTEnvironmentModel): defined environmental state of
+            env_model (HVACDSOTEnvironmentModel): defined environmental state of
                 the object (including heat flows) based on the results of the 
                 simulated system
             time_step_size (dt.timedelta): time from the model's current 
@@ -1101,11 +1067,10 @@ class HVACDSOTAssetModel:
                 the inputs on subsequent calls to this method.
         """
     
-        state = self.asset_state
         state_vars = np.zeros([2, 1])
-        state_vars[0] = state.indoor_air_temp
-        state_vars[1] = state.mass_temp
-        Q_max = state.hvac_kW #TODO:unused
+        state_vars[0] = self.agent.asset_state.indoor_air_temp
+        state_vars[1] = self.agent.asset_state.mass_temp
+        Q_max = self.agent.asset_state.hvac_kW #TODO:unused
         Q_min = 0.0 #TODO:unused
         time_step_s = time_step_size.total_seconds()
 
@@ -1113,36 +1078,36 @@ class HVACDSOTAssetModel:
         eAET = linalg.expm(self.A_ETP * time_step_s)
         AIET = np.dot(self.AEI, eAET) #TODO: DO we want AIET and AIB to be constants?
         AEx = np.dot(self.A_ETP, state_vars)
-        if state.hvac_on == True:
+        if self.agent.asset_state.hvac_on == True:
             AxB = AEx + self.B_ETP_ON
             AIB = np.dot(self.AEI, self.B_ETP_ON)
             AExB = np.dot(AIET, AxB)
             state_vars = AExB - AIB 
-            if (((state_vars[0][0] < temperatures.cooling_setpoint - temperatures.deadband / 2.0)
-                    and state.thermostat_mode == ThermostatMode.COOLING) 
+            if (((state_vars[0][0] < self.agent.temp.cooling_setpoint - self.agent.temp.deadband / 2.0)
+                    and self.agent.thermostat_mode == ThermostatMode.COOLING) 
                 or
-                ((state_vars[0][0] > temperatures.heating_setpoint + temperatures.deadband / 2.0) 
-                    and state.thermostat_mode == ThermostatMode.HEATING)):
-                state.hvac_on = False 
+                ((state_vars[0][0] > self.agent.temp.heating_setpoint + self.agent.temp.deadband / 2.0) 
+                    and self.agent.thermostat_mode == ThermostatMode.HEATING)):
+                self.agent.asset_state.hvac_on = False 
             # TODO: Do we need an else?
         else:
             AxB = AEx + self.B_ETP_OFF
             AIB = np.dot(self.AEI, self.B_ETP_OFF)
             AExB = np.dot(AIET, AxB)
             state_vars = AExB - AIB 
-            if (((state_vars[0][0] > temperatures.cooling_setpoint + temperatures.deadband / 2.0)
-                    and state.thermostat_mode == ThermostatMode.COOLING) 
+            if (((state_vars[0][0] > self.agent.temp.cooling_setpoint + self.agent.temp.deadband / 2.0)
+                    and self.agent.thermostat_mode == ThermostatMode.COOLING) 
                 or
-                ((state_vars[0][0] < temperatures.heating_setpoint - temperatures.deadband / 2.0) 
-                    and state.thermostat_mode == ThermostatMode.HEATING)):
-                state.hvac_on = True
+                ((state_vars[0][0] < self.agent.temp.heating_setpoint - self.agent.temp.deadband / 2.0) 
+                    and self.agent.thermostat_mode == ThermostatMode.HEATING)):
+                self.agent.asset_state.hvac_on = True
             # TODO: Do we need an else?
         # Update the state varibles after solving the above linear system so
         # that the returned state object has the results of this simulated 
         # time step and can be used for any subsequent time steps.
-        state.indoor_air_temp = state_vars[0]     
-        state.mass_temp = state_vars[1]
-        return state, env_model, temperatures
+        self.agent.asset_state.indoor_air_temp = state_vars[0]     
+        self.agent.asset_state.mass_temp = state_vars[1]
+        return self.agent.asset_state, env_model, self.agent.temp
     
     @dataclass(frozen=True)
     class HeatingSystemType(Enum):
@@ -1193,17 +1158,16 @@ class HVACDSOTAssetModel:
         recalculated.
 
         """
-        def __init__(self,
-                    attributes: dict, 
-                    thermostat_mode: ThermostatMode,
-                    source_obj: object = None):
+        def __init__(self, attributes: dict, agent: HVACDSOTAgent, source_obj: object = None, ):
             """Sets attributes for object
 
             Args:
                 name (str): object name
                 attributes (dict): attributes dictionary, externally defined. 
                     These are generally fixed throughout the simulation.
+                source_obj (obj): TODO
             """
+            self.agent = agent
             self.name: str = None
             self.surface_angles: list = None
             self.mass_internal_gain_fraction: float = None
@@ -1230,7 +1194,6 @@ class HVACDSOTAssetModel:
             self.Qa_OFF: float = 0
             self.Qm: float = 0
             self.Qs: float = 0
-            self.thermostate_mode = thermostat_mode
             init_class_attributes(self, attributes)
             self.structure_model: HVACDSOTStructureModel = None
             if source_obj is not None:
@@ -1251,7 +1214,6 @@ class HVACDSOTAssetModel:
                 self.__dict__.update(other_obj.__dict__)
         
         def calc_Qh(self, 
-                    thermostat_mode: ThermostatMode,
                     hvac_on: bool,
                     heating_capacity: float,
                     cooling_capacity: float,
@@ -1275,10 +1237,10 @@ class HVACDSOTAssetModel:
                 tuple: Qh and Qh_org TODO: what is Qh_org?
             """
         
-            if thermostat_mode == ThermostatMode.HEATING:
+            if self.agent.thermostat_mode == ThermostatMode.HEATING:
                 self.Qh = heating_capacity + 0.02 * heating_capacity
                 self.Qh_org = hvac_kW
-            elif thermostat_mode == ThermostatMode.COOLING:
+            elif self.agent.thermostat_mode == ThermostatMode.COOLING:
                 # Short-form variable assignments employed for human-readability.
                 cool = cooling_capacity
                 load_f = self.latent_load_fraction
@@ -1514,6 +1476,7 @@ class HVACDSOTAssetModel:
             Returns:
                 tuple: All heat flows (Qi, Qs, Qh, Qh_org, Qm)
             """
+    
             self.calc_Qs(self.structure_model.solar_heatgain_factor, self.solar_gain)
             self.calc_Qh(thermostat_mode, 
                         hvac_on, 
@@ -1637,11 +1600,7 @@ class HVACDSOTSystemModel:
     """Calculates and updates the perfomance of the HVAC system in response to
     the changing thermal environment.
     """
-    def __init__(self,
-                 attributes: dict,
-                 env_model: 'HVACDSOTAssetModel.HVACDSOTEnvironmentModel',
-                 forecasts: 'DSOTForecasts'
-                ):
+    def __init__(self, attributes: dict, agent: HVACDSOTAgent):
         """Sets attributes for object
 
         Args:
@@ -1649,6 +1608,7 @@ class HVACDSOTSystemModel:
             attributes (dict): attributes dictionary, externally defined. These
                 are generally fixed throughout the simulation.
         """
+        self.agent = agent
         self.name: str = None
         self.heating_capacity_K0: float = None
         self.heating_capacity_K1: float = None
@@ -1679,8 +1639,6 @@ class HVACDSOTSystemModel:
         init_class_attributes(self, attributes)
 
         # Internally calculated attributes. These are updated throughout the simulation
-        self.env_model = env_model
-        self.forecasts = forecasts
         self.heating_cop_adj_da = []
         self.cooling_cop_adj_da = []
         self.heating_capacity: float = None
@@ -1705,7 +1663,7 @@ class HVACDSOTSystemModel:
         current outside air temperture as a parameter. 
 
         TODO: Should this be updated to support working with a list of 
-        temperatures? That is, I don't know why it isn't being used for 
+        temp? That is, I don't know why it isn't being used for 
         estimating loads in the day-ahead market.
 
         Returns:
@@ -1715,7 +1673,7 @@ class HVACDSOTSystemModel:
         h_d = self.design_heating_capacity
         h_KO = self.heating_capacity_K0
         h_K1 = self.heating_capacity_K1
-        air_temp = self.env_model.outside_air_temperature
+        air_temp = self.agent.env_model.outside_air_temperature
         h_K2 = self.heating_capacity_K2
 
         self.heating_capacity = \
@@ -1732,7 +1690,7 @@ class HVACDSOTSystemModel:
         current outside air temperture as a parameter. 
 
         TODO: Should this be updated to support working with a list of 
-        temperatures? That is, I don't know why it isn't being used for 
+        temp? That is, I don't know why it isn't being used for 
         estimating loads in the day-ahead market.
 
         Returns:
@@ -1742,7 +1700,7 @@ class HVACDSOTSystemModel:
         c_d = self.design_cooling_capacity
         c_K0 = self.cooling_capacity_K0
         c_K1 = self.cooling_capacity_K1
-        air_temp = self.env_model.outside_air_temperature
+        air_temp = self.agent.env_model.outside_air_temperature
 
         self.cooling_capacity = c_d * (c_K0 + c_K1 * air_temp)
         return self.cooling_capacity
@@ -1762,8 +1720,7 @@ class HVACDSOTSystemModel:
         cop_limit = self.heating_COP_limit
         cop_K2 = self.heating_COP_K2
         cop_K3 = self.heating_COP_K3
-
-        for idx, temperature in enumerate(self.forecasts.outside_air_temperature):
+        for idx, temperature in enumerate(self.agent.forecasts.outside_air_temperature):
             if temperature < self.heating_COP_limit:
                 self.heating_cop_adj_da[idx] = \
                     cop / (cop_K0 + cop_K1 * cop_limit + 
@@ -1784,7 +1741,7 @@ class HVACDSOTSystemModel:
             list: Adjusted cooling COP values in a list the same length as the 
                 temperature forecast used in calculating the values.
         """
-        for idx, temperature in enumerate(self.forecasts.outside_air_temperature):
+        for idx, temperature in enumerate(self.agent.forecasts.outside_air_temperature):
             if temperature < self.cooling_COP_limit:
                 self.cooling_cop_adj_da[idx] = self.cooling_COP / (
                         self.cooling_COP_K0 + self.cooling_COP_K1 * self.cooling_COP_limit)
@@ -1793,11 +1750,7 @@ class HVACDSOTSystemModel:
                         self.cooling_COP_K0 + self.cooling_COP_K1 * temperature)
         return self.cooling_cop_adj_da
 
-    def calc_design_capacities(self, 
-                               etp_structure_params: 'HVACDSOTStructureModel.ETPStructureParams',
-                               heating_system_type: 'HVACDSOTAssetModel.HeatingSystemType',
-                               env_model: 'HVACDSOTAssetModel.HVACDSOTEnvironmentModel',
-                               structure_model: 'HVACDSOTStructureModel') -> tuple:
+    def calc_design_capacities(self) -> tuple:
         """Calculates the design cooling capacity
 
         Entirely a function of fixed attributes
@@ -1811,13 +1764,13 @@ class HVACDSOTSystemModel:
         """
         # Short-form variable assignments employed for human-readability.
         ovr_sz = self.over_sizing_factor
-        load_f = env_model.latent_load_fraction
-        ua = etp_structure_params.UA
+        load_f = self.agent.env_model.latent_load_fraction
+        ua = self.agent.etp_structure_params.UA
         cool_temp = self.cooling_design_temperature
         cool_set = self.design_cooling_setpoint
         int_gain = self.design_internal_gains
         pk_sol = self.design_peak_solar
-        heatgain = structure_model.solar_heatgain_factor
+        heatgain = self.agent.structure_model.solar_heatgain_factor
         heat_set = self.design_heating_setpoint
         heat_temp = self.heating_design_temperature
 
@@ -1828,7 +1781,7 @@ class HVACDSOTSystemModel:
         # TODO: figure out why 6000?
         self.design_cooling_capacity = math.ceil(design_cooling_capacity/6000) * 6000
 
-        if heating_system_type == HVACDSOTAssetModel.HeatingSystemType.HEAT_PUMP:
+        if self.agent.asset_model.heating_system_type == HVACDSOTAssetModel.HeatingSystemType.HEAT_PUMP:
             self.design_heating_capacity = design_cooling_capacity
         else:
             design_heating_capacity = ((1.0 + ovr_sz) * ua * (heat_set - heat_temp))
@@ -1865,17 +1818,14 @@ class HVACDSOTPriceFlexibilityCurve:
         CurveSlope = (DA_price_delta / (0 - hvac_kW) * (1 + self.ProfitMargin_slope / 100))
         yIntercept = (price_forecast - CurveSlope * quantity) 
         return CurveSlope, yIntercept
+    
 class HVACDSOTBiddingStrategy:
-    def __init__(self, attributes: dict, schedule: HVACSchedule, 
-                 flexibility: HVACDSOTPriceFlexibilityCurve):
+    def __init__(self, attributes: dict):
         """Contains the bidding strategy for the HVAC agent.
 
         Args:
             attributes (dict): Externally defined attributes, generally fixed
-                throughout the simulation.
-            schedule (HVACSchedule): TODO
-            flexibility (HVACDSOTPriceFlexibilityCurve): evaluates the 4-point 
-                bid and TODO
+                throughout the simulation. TODO - not initialized?
         """
         self.name: str = None
         self.price_cap: float = None
@@ -1890,8 +1840,6 @@ class HVACDSOTBiddingStrategy:
 
         # Internally calculated simulation parameters or variables
         # Generally not-fixed throughout simulation
-        self.hvac_schedule = schedule
-        self.flexibility = flexibility
         self.bid = DSOT4pointBid()
 
 class DSOT4pointBid:
@@ -1926,16 +1874,7 @@ class DSOT4pointBid:
         
 class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
     
-    def __init__(self, attributes: dict,
-                schedule: HVACSchedule,
-                flexibility: HVACDSOTPriceFlexibilityCurve,
-                forecasts: DSOTForecasts,
-                temperatures: HVACTemperatures,
-                system_model: HVACDSOTSystemModel,
-                asset_state: HVACDSOTAssetState,
-                structure: HVACDSOTStructureModel,
-                etp_structure_params: 'HVACDSOTStructureModel.ETPStructureParams',
-                asset_model: HVACDSOTAssetModel):
+    def __init__(self, attributes: dict, agent: HVACDSOTAgent):
         """TODO
 
         Args:
@@ -1944,31 +1883,14 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
             schedule (HVACSchedule): TODO
             flexibility (HVACDSOTPriceFlexibilityCurve): Used to evaluate the 
                 4-point bid and TODO
-            forecasts (DSOTForecasts): Object holding all the forecasted values
-            temperatures (HVACTemperatures): TODO
-            system_model (HVACDSOTSystemModel): Calculates and updates the 
-                performance of the HVAC system in response to the changing
-                thermal environment.
-            asset_state (HVACDSOTAssetState): TODO
-            structure (HVACDSOTStructureModel): TODO
-            etp_structure_params (HVACDSOTStructureModel.ETPStructureParams): 
-                Structure parameters used in solving the ETP model
-            asset_model (HVACDSOTAssetModel): TODO
         """
-        super().__init__(attributes, schedule, flexibility)
+        super().__init__(attributes, self.agent.schedule, self.agent.flexibility)
         self.RT_test_support: bool = None
         init_class_attributes(self, attributes)
 
         # Internally calculated simulation parameters or variables
         # Generally not-fixed throughout simulation
-        self.schedule = schedule
-        self.forecasts = forecasts
-        self.temperatures = temperatures
-        self.system_model = system_model
-        self.asset_state = asset_state # TODO unused?
-        self.structure = structure
-        self.asset_model = asset_model
-        self.etp_structure_params = etp_structure_params
+        self.agent = agent
         self.temp_max_cool_da: float = 0
         self.temp_min_cool_da: float = 0
         self.temp_max_heat_da: float = 0
@@ -2022,12 +1944,13 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
             tuple: 48 hour min and max (in that order) price forecast
                 followed by the delta between the two.
         """
-        self.forecast_temperature_min = min(self.forecasts.outside_air_temperature)
-        self.forecast_temperature_max = max(self.forecasts.outside_air_temperature)
+        self.forecast_temperature_min = min(self.agent.forecasts.outside_air_temperature)
+        self.forecast_temperature_max = max(self.agent.forecasts.outside_air_temperature)
         self.forecast_temperature_delta
         return self.forecast_temperature_min, self.forecast_temperature_max, self.forecast_temperature_delta
     
-    def update_da_indoor_temperature_limits(self, cooling_setpt: float, heating_setpt: float) -> None:
+    def update_da_indoor_temperature_limits(self, cooling_setpt: float,
+                                            heating_setpt: float) -> None:
         """Update indoor temperature limits based on current cooling and
         heating setpoints
 
@@ -2035,15 +1958,15 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
             cooling_setpt (float): Scheduled cooling setpoint
             heating_setpt (float): Scheduled heating setpoint
         """
-        self.temp_max_cool_da = cooling_setpt + self.schedule.range_high_cool 
-        self.temp_min_cool_da = cooling_setpt - self.schedule.range_low_cool  
-        self.temp_max_heat_da = heating_setpt + self.schedule.range_high_heat  
-        self.temp_min_heat_da = heating_setpt - self.schedule.range_low_heat  
-        if ((self.temp_max_heat_da + self.temperatures.deadband / 2.0 + 0.5)
-            > (self.temp_min_cool_da - self.temperatures.deadband / 2.0 - 0.5)):
+        self.temp_max_cool_da = cooling_setpt + self.agent.schedule.range_high_cool 
+        self.temp_min_cool_da = cooling_setpt - self.agent.schedule.range_low_cool  
+        self.temp_max_heat_da = heating_setpt + self.agent.schedule.range_high_heat  
+        self.temp_min_heat_da = heating_setpt - self.agent.schedule.range_low_heat  
+        if ((self.temp_max_heat_da + self.agent.temp.deadband / 2.0 + 0.5)
+            > (self.temp_min_cool_da - self.agent.temp.deadband / 2.0 - 0.5)):
             mid_point = (self.temp_min_cool_da + self.temp_max_heat_da) / 2.0
-            self.temp_min_cool_da = mid_point + self.temperatures.deadband / 2.0 + 0.5
-            self.temp_max_heat_da = mid_point - self.temperatures.deadband / 2.0 - 0.5
+            self.temp_min_cool_da = mid_point + self.agent.temp.deadband / 2.0 + 0.5
+            self.temp_max_heat_da = mid_point - self.agent.temp.deadband / 2.0 - 0.5
             if self.temp_min_cool_da > cooling_setpt:
                 self.temp_min_cool_da = cooling_setpt
             if self.temp_max_heat_da < heating_setpt:
@@ -2052,12 +1975,12 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
     def initialize_inside_air_temperature(self) -> None:
         """TODO
         """
-        self.temp_da_prev = self.forecasts.inside_air_temperature
+        self.temp_da_prev = self.agent.forecasts.inside_air_temperature
         # TODO - What do we need to do when the thermostat is "OFF"
-        if self.asset_state.thermostat_mode == ThermostatMode.COOLING:
-            self.temp_room_init = self.temperatures.cooling_setpoint
+        if self.agent.thermostat_mode == ThermostatMode.COOLING:
+            self.temp_room_init = self.agent.temp.cooling_setpoint
         else:
-            self.temp_room_init = self.temperatures.heating_setpoint
+            self.temp_room_init = self.agent.temp.heating_setpoint
         
     def update_da_temperature_limits(self, sim_time: dt.datetime) -> None:
         """Updates the desired temperature limits, making sure the desired 
@@ -2070,8 +1993,8 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
         self.update_forecast_temperature_limits()
         for time_idx in range(self.windowLength_hr):
             hour = sim_time.hour + sim_time.minute / 60 + time_idx + 1 / 60 # hours
-            scheduled_cooling_setpoint, scheduled_heating_setpoint = self.schedule.get_scheduled_setpoint(
-                hour, sim_time.weekday())
+            scheduled_cooling_setpoint, scheduled_heating_setpoint = HVACSchedule.get_scheduled_setpoint(hour, 
+                                                                                                         sim_time.weekday())
             # update temp limits
             self.update_da_indoor_temperature_limits(scheduled_cooling_setpoint, scheduled_heating_setpoint)
 
@@ -2093,8 +2016,8 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
             sim_time (dt.datetime): _description_
         """
         self.update_da_temperature_limits(sim_time)
-        self.system_model.calc_cooling_COP()
-        self.system_model.calc_heating_COP()
+        HVACDSOTSystemModel.calc_cooling_COP()
+        HVACDSOTSystemModel.calc_heating_COP()
         self.initialize_inside_air_temperature()
         
     def estimate_required_cooling_quantity(self, time_idx: int) -> float:
@@ -2107,15 +2030,15 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
             float: _description_
         """
         temp_room = self.temp_desired_48hour_cool
-        cop_adj = (-np.array(self.system_model.cooling_cop_adj_da)).tolist()
+        cop_adj = (-np.array(self.agent.system_model.cooling_cop_adj_da)).tolist()
         if time_idx == 0:
             t_pre = self.temp_room_previous_cool
         else:
             t_pre = temp_room[time_idx - 1]
         temp1 = (((temp_room[time_idx] - self.eps * t_pre) / (1 - self.eps)) 
-                - self.forecasts.outside_air_temperature[time_idx])
-        temp2 = (temp1 * self.etp_structure_params.UA - self.forecasts.internal_gain[time_idx] -
-                    self.forecasts.solar_gain[time_idx] * self.structure.solar_heatgain_factor)
+                - self.agent.forecasts.outside_air_temperature[time_idx])
+        temp2 = (temp1 * self.agent.structure_model.etp_structure_params.UA - self.agent.forecasts.internal_gain[time_idx] -
+                    self.agent.forecasts.solar_gain[time_idx] * self.agent.structure_model.solar_heatgain_factor)
         quant = temp2 / (cop_adj[time_idx] * KW_TO_BTU_PER_HR / self.latent_factor[time_idx])
         quant_cool = max(quant, 0)
         return quant_cool
@@ -2130,15 +2053,15 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
             float: _description_
         """
         temp_room = self.temp_desired_48hour_heat
-        cop_adj = self.system_model.heating_cop_adj_da
+        cop_adj = self.agent.system_model.heating_cop_adj_da
         if time_idx == 0:
             t_pre = self.temp_room_previous_heat
         else:
             t_pre = temp_room[time_idx - 1]
         temp1 = (((temp_room[time_idx] - self.eps * t_pre) / (1 - self.eps)) 
-            - self.forecasts.outside_air_temperature[time_idx])
-        temp2 = (temp1 * self.etp_structure_params.UA - self.forecasts.internal_gain[time_idx] -
-                    self.forecasts.solar_gain[time_idx] * self.structure.solar_heatgain_factor)
+            - self.agent.forecasts.outside_air_temperature[time_idx])
+        temp2 = (temp1 * self.agent.structure_model.etp_structure_params.UA - self.agent.forecasts.internal_gain[time_idx] -
+                    self.agent.forecasts.solar_gain[time_idx] * self.agent.structure_model.solar_heatgain_factor)
         quant = temp2 / (cop_adj[time_idx] * KW_TO_BTU_PER_HR / self.latent_factor[time_idx])
         quant_heat = max(quant, 0)
         return quant_heat
@@ -2178,12 +2101,12 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
         Returns:
             tuple: Lower and upper temperature limit
         """
-        if self.asset_state.thermostat_mode ==  ThermostatMode.COOLING:
-            return (self.temp_desired_48hour_cool[t] - self.schedule.range_low_cool,
-                    self.temp_desired_48hour_cool[t] + self.schedule.range_high_cool)
+        if self.agent.thermostat_mode ==  ThermostatMode.COOLING:
+            return (self.temp_desired_48hour_cool[t] - self.agent.schedule.range_low_cool,
+                    self.temp_desired_48hour_cool[t] + self.agent.schedule.range_high_cool)
         else:
-            return (self.temp_desired_48hour_heat[t] - self.schedule.range_low_heat,
-                    self.temp_desired_48hour_heat[t] + self.schedule.range_high_heat)
+            return (self.temp_desired_48hour_heat[t] - self.agent.schedule.range_low_heat,
+                    self.temp_desired_48hour_heat[t] + self.agent.schedule.range_high_heat)
 
     def obj_rule(self, m: pyo.ConcreteModel) -> float:
         """Defines the Pyomo object function based on HVAC mode
@@ -2194,21 +2117,21 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
         Returns:
             float: objective function value
         """
-        if self.asset_state.thermostat_mode == 'Cooling':
+        if self.agent.asset_state.thermostat_mode == 'Cooling':
             temp = self.temp_desired_48hour_cool
         else:
             temp = self.temp_desired_48hour_heat
         # TODO - Add something for when thermostat is in OFF mode?
         # Short-form variable assignments employed for human-readability.
         sld = self.slider
-        frcst = self.forecasts.price
+        frcst = self.agent.forecasts.price
         price_delt = self.price_delta
         hvac_q = m.quan_hvac
-        hvac_kW = self.asset_state.hvac_kW
+        hvac_kW = self.agent.asset_state.hvac_kW
         air_temp_i = m.inside_air_temperature #TODO check that this correction is accurate. 
         # This was: m.opt_indoor_air_temperature, which is part of the DA bidding strategy
-        rng_low = self.schedule.range_low_limit
-        rng_hi = self.schedule.range_high_limit
+        rng_low = self.agent.schedule.range_low_limit
+        rng_hi = self.agent.schedule.range_high_limit
 
         if hvac_kW != 0 and price_delt != 0 and (rng_low + rng_hi) != 0:
             return sum(sld * (frcst[t] - np.min(frcst)) / price_delt * hvac_q[t] / hvac_kW
@@ -2233,17 +2156,17 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
         temp_in = m.inside_air_temperature
         eps = self.eps
         temp_init = self.temp_room_init
-        temp_out = self.forecasts.outside_air_temperature
-        cop_cool_da = self.system_model.cooling_cop_adj_da
-        cop_heat_da = self.system_model.heating_cop_adj_da
+        temp_out = self.agent.forecasts.outside_air_temperature
+        cop_cool_da = self.agent.system_model.cooling_cop_adj_da
+        cop_heat_da = self.agent.system_model.heating_cop_adj_da
         hvac_q = m.hvac_quant
         lat_f = self.latent_factor
-        int_gain = self.forecasts.internal_gain
-        sol_gain = self.forecasts.solar_gain
-        sol_heatgain = self.structure.solar_heatgain_factor
-        ua = self.etp_structure_params.UA
+        int_gain = self.agent.forecasts.internal_gain
+        sol_gain = self.agent.forecasts.solar_gain
+        sol_heatgain = self.agent.structure_model.solar_heatgain_factor
+        ua = self.agent.structure_model.etp_structure_params.UA
 
-        if self.asset_state.thermostat_mode == ThermostatMode.COOLING:
+        if self.agent.thermostat_mode == ThermostatMode.COOLING:
             if t == 0:
                 # Initial SOHC state
                 return temp_in[0] == (eps * temp_init + (1 - eps) 
@@ -2280,7 +2203,7 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
         # Create model
         model = pyo.ConcreteModel()
         # Decision variables
-        model.hvac_quant= pyo.Var(range(self.windowLength_hr), bounds=(0.0, self.asset_state.hvac_kW))
+        model.hvac_quant= pyo.Var(range(self.windowLength_hr), bounds=(0.0, self.agent.asset_state.hvac_kW))
         model.inside_air_temperature = pyo.Var(range(self.windowLength_hr), bounds=self.temperature_bound_rule)
         # Objective of the problem
         model.obj = pyo.Objective(rule=self.obj_rule, sense=pyo.minimize)
@@ -2302,11 +2225,11 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
             list: TODO
         """
         self.Qopt_da_prev = self.bid_da[0][1][0]
-        self.price_forecast_0 = self.forecasts.price[0]
+        self.price_forecast_0 = self.agent.forecasts.price[0]
         BID = []
         for _ in self.TIME:
             BID.append([[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]])
-        if self.asset_model.heating_system_type != 'HEAT_PUMP' and self.asset_state.thermostat_mode == 'Heating':
+        if self.agent.asset_model.heating_system_type != 'HEAT_PUMP' and self.agent.asset_state.thermostat_mode == 'Heating':
             self.bid_da = BID
             return self.bid_da
         
@@ -2320,26 +2243,26 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
             CurveSlope.append(0.0)
             yIntercept.append(-1.0)
         #TODO: There is no price_forecast, there is price_forecast_0 or price_forecast_0_new
-        delta_DA_price = max(self.forecasts.price_forecast) - min(self.forecasts.price_forecast)
+        delta_DA_price = max(self.agent.forecasts.price_forecast) - min(self.agent.forecasts.price_forecast)
         for t in self.TIME:
-            CurveSlope[t] = (delta_DA_price / (0 - self.asset_state.hvac_kW) * (1 + self.ProfitMargin_slope / 100))
-            yIntercept[t] = (self.forecasts.price_forecast[t] - CurveSlope[t] * Quantity[t])
+            CurveSlope[t] = (delta_DA_price / (0 - self.agent.asset_state.hvac_kW) * (1 + self.ProfitMargin_slope / 100))
+            yIntercept[t] = (self.agent.forecasts.price_forecast[t] - CurveSlope[t] * Quantity[t])
             BID[t][0][Q] = 0
             BID[t][1][Q] = Quantity[t]
             BID[t][2][Q] = Quantity[t]
-            BID[t][3][Q] = self.asset_state.hvac_kW
+            BID[t][3][Q] = self.agent.asset_state.hvac_kW
 
             BID[t][0][P] = 0 * CurveSlope[t] + yIntercept[t] + (self.ProfitMargin_intercept / 100) * delta_DA_price
             BID[t][1][P] = Quantity[t] * CurveSlope[t] + yIntercept[t] + (
                     self.ProfitMargin_intercept / 100) * delta_DA_price
             BID[t][2][P] = Quantity[t] * CurveSlope[t] + yIntercept[t] - (
                     self.ProfitMargin_intercept / 100) * delta_DA_price
-            BID[t][3][P] = self.asset_state.hvac_kW * CurveSlope[t] + yIntercept[t] - (
+            BID[t][3][P] = self.agent.asset_state.hvac_kW * CurveSlope[t] + yIntercept[t] - (
                     self.ProfitMargin_intercept / 100) * delta_DA_price
 
             for i in range(4):
-                if BID[t][i][Q] > self.asset_state.hvac_kW:
-                    BID[t][i][Q] = self.asset_state.hvac_kW
+                if BID[t][i][Q] > self.agent.asset_state.hvac_kW:
+                    BID[t][i][Q] = self.agent.asset_state.hvac_kW
                 if BID[t][i][Q] < 0:
                     BID[t][i][Q] = 0
                 if BID[t][i][P] > self.price_cap:
@@ -2352,16 +2275,7 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
         return self.bid_da
         
 class HVACDSOTRTBiddingStrategy(HVACDSOTBiddingStrategy):
-    def __init__(self, attributes: dict,
-                period: int,
-                schedule: HVACSchedule,
-                flexibility: HVACDSOTPriceFlexibilityCurve,
-                asset_model: HVACDSOTAssetModel,
-                asset_state: HVACDSOTAssetState,
-                temperatures: HVACTemperatures,
-                system_model: HVACDSOTSystemModel,
-                da_bidding_strategy: HVACDSOTDABiddingStrategy,
-                forecasts: DSOTForecasts):
+    def __init__(self, attributes: dict, period: int, agent: HVACDSOTAgent):
         """TODO
         
         Args:
@@ -2371,15 +2285,10 @@ class HVACDSOTRTBiddingStrategy(HVACDSOTBiddingStrategy):
             period (int): _description_
             schedule (HVACSchedule): _description_
             flexibility (HVACDSOTPriceFlexibilityCurve): _description_
-            asset_model (HVACDSOTAssetModel): _description_
-            asset_state (HVACDSOTAssetState): _description_
-            temperatures (HVACTemperatures): _description_
-            system_model (HVACDSOTSystemModel): _description_
-            da_bidding_strategy (HVACDSOTBiddingStrategy): _description_
-            forecasts (DSOTForecasts): _description_
         """
-        super().__init__(attributes, schedule, flexibility)
+        super().__init__(attributes, self.agent.schedule, self.agent.flexibility)
         self.period = period
+        self.agent = agent
         init_class_attributes(self, attributes)
         self.RT_minute_count_interpolation: int = 0
         self.bid_quantity: float = 0
@@ -2387,35 +2296,32 @@ class HVACDSOTRTBiddingStrategy(HVACDSOTBiddingStrategy):
         self.cleared_price: float = 0
         self.quantity_curve = [0 for _ in range(10)]
         self.temp_curve = [0]
-        self.asset_model = asset_model
-        self.asset_state = asset_state
-        self.temperatures = temperatures
-        self.system_model = system_model
-        self.da_bidding_strategy = da_bidding_strategy
-        self.forecasts = forecasts
         self.Qopt_DA: float = 0
         self.Topt_DA: float = 0
     
     def interpolate_DA_quantities_into_RT(self) -> tuple:
         """TODO
 
+        Args:
+            da_bidding_strategy (HVACDSOTDABiddingStrategy): TODO
+
         Returns:
             tuple: _description_
         """
         if self.interpolation:
             if self.RT_minute_count_interpolation == 0.0:
-                self.delta_Q = (self.da_bidding_strategy.bid_da[0][1][0] - self.da_bidding_strategy.previous_Q_DA)
-                self.delta_T = (self.da_bidding_strategy.opt_indoor_air_temperature[0] - self.da_bidding_strategy.previous_T_DA)
+                self.delta_Q = (self.agent.da_bidding_strategy.bid_da[0][1][0] - self.agent.da_bidding_strategy.previous_Q_DA)
+                self.delta_T = (self.agent.da_bidding_strategy.opt_indoor_air_temperature[0] - self.agent.da_bidding_strategy.previous_T_DA)
             if self.RT_minute_count_interpolation == 30.0:
-                self.delta_Q = (self.da_bidding_strategy.bid_da[1][1][0] - self.da_bidding_strategy.previous_Q_DA) * 0.5
-                self.delta_T = (self.da_bidding_strategy.opt_indoor_air_temperature[1] - self.da_bidding_strategy.previous_T_DA) * 0.5
-            self.Qopt_DA = self.da_bidding_strategy.previous_Q_DA + self.delta_Q * (5.0 / 30.0)
-            self.Topt_DA = self.da_bidding_strategy.previous_T_DA + self.delta_T * (5.0 / 30.0)
-            self.da_bidding_strategy.previous_Q_DA = self.Qopt_DA
-            self.da_bidding_strategy.previous_T_DA = self.Topt_DA
+                self.delta_Q = (self.agent.da_bidding_strategy.bid_da[1][1][0] - self.agent.da_bidding_strategy.previous_Q_DA) * 0.5
+                self.delta_T = (self.agent.da_bidding_strategy.opt_indoor_air_temperature[1] - self.agent.da_bidding_strategy.previous_T_DA) * 0.5
+            self.Qopt_DA = self.agent.da_bidding_strategy.previous_Q_DA + self.delta_Q * (5.0 / 30.0)
+            self.Topt_DA = self.agent.da_bidding_strategy.previous_T_DA + self.delta_T * (5.0 / 30.0)
+            self.agent.da_bidding_strategy.previous_Q_DA = self.Qopt_DA
+            self.agent.da_bidding_strategy.previous_T_DA = self.Topt_DA
         else:
-            self.Qopt_DA = self.da_bidding_strategy.bid_da[0][1][0]
-            self.Topt_DA = self.da_bidding_strategy.opt_indoor_air_temperature[0]
+            self.Qopt_DA = self.agent.da_bidding_strategy.bid_da[0][1][0]
+            self.Topt_DA = self.agent.da_bidding_strategy.opt_indoor_air_temperature[0]
         
         return self.Qopt_DA, self.Topt_DA
 
@@ -2437,45 +2343,45 @@ class HVACDSOTRTBiddingStrategy(HVACDSOTBiddingStrategy):
 
         for itemp in range(npt):
             x = np.zeros([2, 1])
-            x[0] = self.asset_state.indoor_air_temp
-            x[1] = self.asset_state.mass_temp
-            Q_max = self.asset_state.hvac_kW #TODO:unused
+            x[0] = self.agent.asset_state.indoor_air_temp
+            x[1] = self.agent.asset_state.mass_temp
+            Q_max = self.agent.asset_state.hvac_kW #TODO:unused
             Q_min = 0.0 #TODO:unused
 
             # self.temp_curve[0] = self.air_temp
-            if ((self.asset_state.thermostat_mode == ThermostatMode.COOLING and self.asset_state.hvac_on) or
-                    (self.asset_state.thermostat_mode != ThermostatMode.COOLING and not self.asset_state.hvac_on)):
-                self.temp_curve[0] = self.asset_state.indoor_air_temp + self.temperatures.deadband / 2.0
-            elif ((self.asset_state.thermostat_mode != ThermostatMode.COOLING and self.asset_state.hvac_on) or
-                (self.asset_state.thermostat_mode == ThermostatMode.COOLING and not self.asset_state.hvac_on)):
-                self.temp_curve[0] = self.asset_state.indoor_air_temp- self.temperatures.deadband / 2.0
-            hvac_on_tmp = self.asset_state.hvac_on
+            if ((self.agent.thermostat_mode == ThermostatMode.COOLING and self.agent.asset_state.hvac_on) or
+                    (self.agent.thermostat_mode != ThermostatMode.COOLING and not self.agent.asset_state.hvac_on)):
+                self.temp_curve[0] = self.agent.asset_state.indoor_air_temp + self.agent.temp.deadband / 2.0
+            elif ((self.agent.thermostat_mode != ThermostatMode.COOLING and self.agent.asset_state.hvac_on) or
+                (self.agent.thermostat_mode == ThermostatMode.COOLING and not self.agent.asset_state.hvac_on)):
+                self.temp_curve[0] = self.agent.asset_state.indoor_air_temp - self.agent.temp.deadband / 2.0
+            hvac_on_tmp = self.agent.asset_state.hvac_on
             Q_total = 0
             for _ in range(1, len(time)):
                 # this is based on the assumption that only one status change happens in 5-min period
-                eAET = linalg.expm(self.asset_model.A_ETP * T / 10.0)
-                AIET = np.dot(self.asset_model.AEI, eAET)
-                AEx = np.dot(self.asset_model.A_ETP, x)
+                eAET = linalg.expm(self.agent.asset_model.A_ETP * T / 10.0)
+                AIET = np.dot(self.agent.asset_model.AEI, eAET)
+                AEx = np.dot(self.agent.asset_model.A_ETP, x)
                 if hvac_on_tmp:
-                    AxB = AEx + self.asset_model.B_ETP_ON
-                    AIB = np.dot(self.asset_model.AEI, self.asset_model.B_ETP_ON)
+                    AxB = AEx + self.agent.asset_model.B_ETP_ON
+                    AIB = np.dot(self.agent.asset_model.AEI, self.agent.asset_model.B_ETP_ON)
                     AExB = np.dot(AIET, AxB)
                     x = AExB - AIB
-                    Q_total += 1 / 10 * self.asset_state.hvac_kW
-                    if ((x[0][0] < self.temp_curve[itemp] - self.temperatures.deadband / 2.0 and
-                        self.asset_state.thermostat_mode == ThermostatMode.COOLING) or
-                            (x[0][0] > self.temp_curve[itemp] + self.temperatures.deadband / 2.0 and
-                            self.asset_state.thermostat_mode == ThermostatMode.HEATING)):
+                    Q_total += 1 / 10 * self.agent.asset_state.hvac_kW
+                    if ((x[0][0] < self.temp_curve[itemp] - self.agent.temp.deadband / 2.0 and
+                        self.agent.thermostat_mode == ThermostatMode.COOLING) or
+                            (x[0][0] > self.temp_curve[itemp] + self.agent.temp.deadband / 2.0 and
+                            self.agent.thermostat_mode == ThermostatMode.HEATING)):
                         hvac_on_tmp = False
                 else:
-                    AxB = AEx + self.asset_model.B_ETP_OFF
-                    AIB = np.dot(self.asset_model.AEI, self.asset_model.B_ETP_OFF)
+                    AxB = AEx + self.agent.asset_model.B_ETP_OFF
+                    AIB = np.dot(self.agent.asset_model.AEI, self.agent.asset_model.B_ETP_OFF)
                     AExB = np.dot(AIET, AxB)
                     x = AExB - AIB
-                    if ((x[0][0] > self.temp_curve[itemp] + self.temperatures.deadband / 2.0 and
-                        self.asset_state.thermostat_mode == ThermostatMode.COOLING) or
-                            (x[0][0] < self.temp_curve[itemp] - self.temperatures.deadband / 2.0 and
-                            self.asset_state.thermostat_mode == ThermostatMode.HEATING)):
+                    if ((x[0][0] > self.temp_curve[itemp] + self.agent.temp.deadband / 2.0 and
+                        self.agent.thermostat_mode == ThermostatMode.COOLING) or
+                            (x[0][0] < self.temp_curve[itemp] - self.agent.temp.deadband / 2.0 and
+                            self.agent.thermostat_mode == ThermostatMode.HEATING)):
                         hvac_on_tmp = True
 
             self.quantity_curve[itemp] = Q_total
@@ -2489,14 +2395,14 @@ class HVACDSOTRTBiddingStrategy(HVACDSOTBiddingStrategy):
         """
         Q_min = min(self.quantity_curve)
         Q_max = max(self.quantity_curve)
-        delta_DA_price = max(self.forecasts.price) - min(self.forecasts.price)
-        self.forecasts.price_forecast_0_new = self.forecasts.price[0]
+        delta_DA_price = max(self.agent.forecasts.price) - min(self.agent.forecasts.price)
+        self.agent.forecasts.price_forecast_0_new = self.agent.forecasts.price[0]
         BID = [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]]
         P = 1
         Q = 0
         if Q_min != Q_max:
-            CurveSlope = (delta_DA_price / (0 - self.asset_state.hvac_kW) * (1 + self.ProfitMargin_slope / 100))
-            yIntercept = self.forecasts.price_forecast_0 - CurveSlope * self.Qopt_DA
+            CurveSlope = (delta_DA_price / (0 - self.agent.asset_state.hvac_kW) * (1 + self.ProfitMargin_slope / 100))
+            yIntercept = self.agent.forecasts.price_forecast_0 - CurveSlope * self.Qopt_DA
             if Q_max > self.Qopt_DA > Q_min:
                 BID[0][Q] = Q_min
                 BID[1][Q] = self.Qopt_DA
@@ -2523,14 +2429,14 @@ class HVACDSOTRTBiddingStrategy(HVACDSOTBiddingStrategy):
             BID[2][Q] = Q_max
             BID[3][Q] = Q_max
 
-            BID[0][P] = max(self.forecasts.price) + (self.ProfitMargin_intercept / 100) * delta_DA_price
-            BID[1][P] = max(self.forecasts.price) + (self.ProfitMargin_intercept / 100) * delta_DA_price
-            BID[2][P] = min(self.forecasts.price) - (self.ProfitMargin_intercept / 100) * delta_DA_price
-            BID[3][P] = min(self.forecasts.price) - (self.ProfitMargin_intercept / 100) * delta_DA_price
+            BID[0][P] = max(self.agent.forecasts.price) + (self.ProfitMargin_intercept / 100) * delta_DA_price
+            BID[1][P] = max(self.agent.forecasts.price) + (self.ProfitMargin_intercept / 100) * delta_DA_price
+            BID[2][P] = min(self.agent.forecasts.price) - (self.ProfitMargin_intercept / 100) * delta_DA_price
+            BID[3][P] = min(self.agent.forecasts.price) - (self.ProfitMargin_intercept / 100) * delta_DA_price
 
         for i in range(4):
-            if BID[i][Q] > self.asset_state.hvac_kW:
-                BID[i][Q] = self.asset_state.hvac_kW
+            if BID[i][Q] > self.agent.asset_state.hvac_kW:
+                BID[i][Q] = self.agent.asset_state.hvac_kW
             if BID[i][Q] < 0:
                 BID[i][Q] = 0
             if BID[i][P] > self.price_cap:
@@ -2554,8 +2460,8 @@ class HVACDSOTRTBiddingStrategy(HVACDSOTBiddingStrategy):
             _type_: _description_
         """
         # If asset type or state doesn't allow participation in market
-        if self.asset_model.heating_system_type != 'HEAT_PUMP' and self.asset_state.thermostat_mode == 'Heating':
-            self.cooling_setpoint = self.temperatures.temp_min_cool
+        if self.agent.asset_model.heating_system_type != 'HEAT_PUMP' and self.agent.asset_state.thermostat_mode == 'Heating':
+            self.cooling_setpoint = self.agent.temp.temp_min_cool
             self.bid_rt = [[0, 0], [0, 0], [0, 0], [0, 0]]
             return self.bid_rt
 
