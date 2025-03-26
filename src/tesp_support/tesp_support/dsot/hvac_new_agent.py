@@ -63,6 +63,9 @@ def init_class_attributes(obj: object, attr: dict):
     Args:
         obj (object): Object whose attributes are being defined
         attr (dict): Dictionary used to define the attributes of the object
+
+    Return: 
+        None - writes info to log
     """
     # Getting class name to make logging more specific
     class_str = str(obj.__class__)
@@ -79,9 +82,42 @@ def init_class_attributes(obj: object, attr: dict):
     for obj_key, obj_val in obj.__dict__.items():
         if obj_val == None:
             logger.warning(f"{class_name}: attribute '{obj_key}' in object '{obj.name}' was not defined in attribute dictionary")
+
+    return None
     
 class HVACDSOTAgent:
     def __init__(self, attributes: dict):
+        """ The HVAC agent is responsible for coordinating the activity of a 
+        single-zone HVAC system in a transactive system. 
+        
+        Initializes all the required classes of the HVAC Agent:
+            - HVACTemperatures
+            - HVACSchedule
+            - DSOTDAMarketInterface
+            - DSOTForecasts
+            - HVACDSOTAsset
+            - HVACDSOTAssetState
+            - HVACDSOTStructureModel
+                - ETPStructureParams
+            - ThermostatMode
+            - HVACDSOTAssetModel
+                - HVACDSOTEnvironmentModel
+            - HVACDSOTSystemModel
+            - HVACDSOTPriceFlexibilityCurve
+            - HVACDSOTDABiddingStrategy
+            - HVACDSOTRTBiddingStrategy
+            - DSOTRTMarketInterface
+
+        Contains the following functions:
+            calc_capacites_and_all_heat_flows() - Easiest way to ensure that the
+              capacities are calculated before the heat flows. These capacities 
+              are a function of the outdoor air temperature and thus need to be 
+              updated regularly.
+
+        Args:
+            attributes (dict): dictionary of attributes, externally defined.
+                These are generally not fixed throughout the simulation.
+        """
         self.name: str = None
         self.house_name: str = None
         self.meter_name: str = None
@@ -149,8 +185,10 @@ class HVACTemperatures:
     def __init__(self, attributes: dict):
         """Sets attributes for object
 
+        Contains the following functions:
+            validate_inputs() - 
+
         Args:
-            name (str): object name
             attributes (dict): attributes dictionary, externally defined. These
                 are generally not fixed throughout the simulation.
         """
@@ -185,16 +223,27 @@ class HVACTemperatures:
         init_class_attributes(self, attributes)
 
     def validate_inputs(self) -> None:
+        """TODO
+        """
         if self.daylight_set_heat > self.night_set_heat:
             logger.debug('{} {} -- daylight_set_heat ({}) is not <= night_set_heat ({}).'
                     .format(self.name, 'init', self.daylight_set_heat, self.night_set_heat))
         if self.daylight_set_heat > self.wakeup_set_heat:
             logger.debug('{} {} -- daylight_set_heat ({}) is not <= wakeup_set_heat ({}).'
                     .format(self.name, 'init', self.daylight_set_heat, self.wakeup_set_heat))
+            
+        return None
 
 class HVACSchedule:
     def __init__(self, attributes: dict, agent: HVACDSOTAgent):
         """Sets attributes for object
+
+        Contains the following functions:
+            validate_inputs() - 
+            get_scheduled_setpoint() - 
+            change_basepoint() - updates the time-scheduled thermostat setting
+            calc_thermostat_setting() - sets the ETP parameters from the 
+                configuration data
 
         Args:
             name (str): object name
@@ -224,6 +273,8 @@ class HVACSchedule:
         init_class_attributes(self, attributes)
         
     def validate_inputs(self):
+        """TODO
+        """
         if self.wakeup_start_hr > self.daylight_start_hr:
             logger.debug('{} {} -- wakeup_start_hr ({}) is not < daylight_start_hr ({}).'
                     .format(self.name, 'init', self.wakeup_start_hr, self.daylight_start_hr))
@@ -238,6 +289,15 @@ class HVACSchedule:
                     .format(self.name, 'init', self.weekend_day_start_hr, self.weekend_night_start_hr))
 
     def get_scheduled_setpoint(self, hour_of_day: int, day_of_week: int) -> tuple:
+        """TODO
+
+        Args:
+            hour_of_day (int): The hour of the day
+            day_of_week (int): The day of the week
+
+        Returns:
+            tuple: val_cool, val_heat - cooling and heating setpoint value
+        """
         if 23 < hour_of_day < 48:
             hour_of_day = hour_of_day - 24
             day_of_week = day_of_week + 1
@@ -322,12 +382,21 @@ class HVACSchedule:
 
         Args:
             sim_time (datetime): Current simulation time
-            many thermostat values
-            model_diag_level (int): Specific level for logging errors. TODO:unused
-            Defaults to whatever level the parent defines.
+            model_diag_level (int): Specific level for logging errors. Defaults
+                to whatever level the parent defines. TODO:unused
+        
+        Returns:
+            self.range_high_cool, self.range_low_cool, self.range_high_heat,
+            self.range_low_heat, self.ramp_high_cool, self.ramp_low_cool, 
+            self.ramp_high_heat, self.ramp_low_heat, mid_point, 
+            self.agent.temp.basepoint_cooling, self.agent.temp.deadband, 
+            self.agent.temp.basepoint_heating, self.temp_max_cool, 
+            self.temp_min_cool, self.temp_max_heat, self.temp_min_heat, 
+            max_plus_deadband, min_less_deadband
 
         References:
-            `Table 3 -  Easy to use slider settings <http://gridlab-d.shoutwiki.com/wiki/Transactive_controls>`_
+            `Table 3 -  Easy to use slider settings 
+            <http://gridlab-d.shoutwiki.com/wiki/Transactive_controls>`_
         """
         self.range_high_cool = self.range_high_limit * slider 
         self.range_low_cool = self.range_low_limit * slider  
@@ -371,6 +440,9 @@ class HVACSchedule:
                 self.temp_min_cool = self.agent.temp.basepoint_cooling
             if self.temp_max_heat < self.agent.temp.basepoint_heating:
                 self.temp_max_heat = self.agent.temp.basepoint_heating
+                
+        # This is a huge return statement, is this what we want?
+        return self.range_high_cool, self.range_low_cool, self.range_high_heat,self.range_low_heat, self.ramp_high_cool, self.ramp_low_cool, self.ramp_high_heat, self.ramp_low_heat, mid_point, self.agent.temp.basepoint_cooling, self.agent.temp.deadband, self.agent.temp.basepoint_heating, self.temp_max_cool, self.temp_min_cool, self.temp_max_heat, self.temp_min_heat, max_plus_deadband, min_less_deadband
         
 class DSOTDAMarketInterface:
     def __init__(self):
@@ -380,6 +452,11 @@ class DSOTForecasts:
     def __init__(self, attributes: dict):
         """TODO
 
+        Contains the following functions:
+            calc_forecast_stats() - 
+            generate_forecast_times() - creates a list of simulation times of 
+                length windowLength
+            calc_solar_gain_forecast() - 
         Args:
             attributes (dict): attributes dictionary, externally defined. These
                 are generally not fixed throughout the simulation.
@@ -408,34 +485,56 @@ class DSOTForecasts:
         self.calc_forecast_stats()
 
     def calc_forecast_stats(self) -> None:
+        """TODO
+
+        Returns:
+            self.price_std_dev, self.price_delta, self.price_mean, 
+            self.outside_air_temp_min_48hour, self.outside_air_temp_max_48hour, 
+            self.price_forecast_0
+        """
         self.price_std_dev = np.std(self.price)
         self.price_delta = max(self.price) - min(self.price)
         self.price_mean = np.mean(self.price)
         self.outside_air_temp_min_48hour= min(self.outside_air_temperature)
-        self.outside_air_temp_min_48hour= max(self.outside_air_temperature)
+        self.outside_air_temp_max_48hour= max(self.outside_air_temperature)
         self.price_forecast_0 = self.price[0]
+
+        return self.price_std_dev, self.price_delta, self.price_mean, self.outside_air_temp_min_48hour, self.outside_air_temp_max_48hour, self.price_forecast_0
         
-    def generate_forecast_times(self, sim_time: dt.datetime, da_period: dt.timedelta, windowLength_hr: int):
-        """Creates the list of simulation times of length windowLength_hr. Note
-        windowLength_hr is unitless and simply the number of periods that 
-        need to be forecasted
+    def generate_forecast_times(self, sim_time: dt.datetime, da_period: dt.timedelta, windowLength: int):
+        """Creates the list of simulation times of length windowLength. 
 
         Args:
             sim_time (dt.datetime): _description_
             da_period (dt.timedelta): _description_
-            windowLength_hr (int): _description_
+            windowLength (int): the number of periods that needs to be 
+                forecasted (unitless)
 
         Returns:
-            _type_: _description_
+            _type_: forecast_times
         """
         forecast_times = []
-        for _ in range(windowLength_hr):
+        for _ in range(windowLength):
             forecast_times.append(sim_time + da_period)
         return forecast_times
 
     def calc_solar_gain_forecast(self, times: list, 
                                  solar_direct: list = None,
                                  solar_diffuse: list = None) -> list:
+        """TODO
+
+        Args:
+            times (list): _description_
+            solar_direct (list, optional): _description_. Defaults to None.
+            solar_diffuse (list, optional): _description_. Defaults to None.
+
+        Raises:
+            RuntimeError: Lengths need to be equal: len(times) = [], 
+                len(solar_direct) = [], len(solar_diffuse) = []
+
+        Returns:
+            list: self.solar_gain
+        """
 
         if len(times) != len(solar_direct) and len(times) != len(solar_diffuse) and len(solar_direct) != len(solar_diffuse):
             raise RuntimeError(f"Lengths need to be equal: len(times) = {len(times)}, \
@@ -475,6 +574,13 @@ class HVACDSOTAssetState:
         """ Creates new object with same attribute values as the source object
             passed-in.
 
+            Contains the following functions:
+                copy_attributes_from() - takes attributes from one object and 
+                    copies the values into the attributes of another object of 
+                    the same type.
+                update_asset_state() - changes current condition of HVAC and 
+                    house objects
+
         Args:
             source_obj (object, optional): TODO. Defaults to None.
         """
@@ -491,16 +597,20 @@ class HVACDSOTAssetState:
 
     def copy_attributes_from(self, other_obj: object) -> None:
         """Takes attributes from one object and copies the values into the
-        attributes of another objects of the same type.
+        attributes of another object of the same type.
 
         Allows the quick creation 
 
         Args:
             other_obj (HVACDSOTAgent): Object whose attributes are the source
             of the data being copied into the target object's attributes.
+        Returns:
+            None
         """
         if isinstance(other_obj, HVACDSOTAssetState):
             self.__dict__.update(other_obj.__dict__)
+
+        return None
 
     def update_asset_state(self, new_state: dict):
         """It's not clear if this is needed during normal operations where the
@@ -510,12 +620,48 @@ class HVACDSOTAssetState:
 
         Args:
             new_state (dict): _description_
+        
+        Returns:
+            None
         """
         init_class_attributes(self, new_state)    
+        
+        return None
         
 class HVACDSOTStructureModel:
     def __init__(self, attributes: dict):
         """Sets attributes for object
+
+        Contains the following subclasses:
+            ETPStructureParams - data class for holding the ETP model structure
+                parameters
+            WindowFrameType - enum
+            WindowGlazingTreatment - enum
+            WindowGlassType - enum
+
+        Contains the following functions:
+            validate_attributes() - evaluates values in attribute dictionary and
+                corrects as possible
+            lookup_window_transmission_coefficient() - calculates the window 
+                transmission coefficent for solar radiation based on the 
+                properties of the windows.
+            lookup_Rwindow() - calculates the thermal resistance of the window
+                based on the number of panes (glazing layers) and the window
+                frame material.
+            calc_structure_areas() - calculates various areas of the structure
+                based on object parameter values.
+            calc_solar_heatgain_factor() - calculates the solar heatgain factor
+            div() - division operator designed to gracefully handle potential 
+                division-by-zero problems.
+            calc_UA() - calculates the total thermal conductance (UA) of the 
+                specified structure, in Btu/degF*h.
+            calc_CA() - calculates the indoor air heat capacity (CA), or air    
+                thermal mass, in Btu/degF. 
+            calc_HM() - calculates the thermal resistivity (HM) between the air
+                and the structure mass.
+            calc_CM() - calculates the structural mass thermal capacity (CM).
+            calc_structure_ETP_parameters() - calculates the structural ETP
+                parameters.
 
         Args:
             name (str): object name
@@ -624,6 +770,9 @@ class HVACDSOTStructureModel:
 
     def validate_attributes(self) -> None:
         """Evaluate values in attribute dictionary and correct as possible
+
+        Returns:
+            None - info written to log
         """
         if self.aspect_ratio == 0.0:
             self.aspect_ratio = 1.5
@@ -663,6 +812,8 @@ class HVACDSOTStructureModel:
                             self.airchange_per_hour_lower_limit, 
                             self.airchange_per_hour_upper_limit))
         
+        return None
+
     def lookup_window_transmission_coefficient(self) -> float:
         """Calculates the window transmission coefficient for solar radiation
         based on the properties of the windows
@@ -833,6 +984,12 @@ class HVACDSOTStructureModel:
 
         Generally, this only needs to be done once when the structure
         model is initialized. 
+
+        Returns:
+            self.ceiling_area, self.floor_area, self.perimeter, 
+            self.gross_exterior_wall_area, self.total_door_area, 
+            self.net_wall_area, self.gross_window_area, 
+            self.interior_air_heat_capacity
         """
         self.ceiling_area = (self.sqft / self.stories) * self.exterior_ceiling_fraction
         self.floor_area = (self.sqft / self.stories) * self.exterior_floor_fraction
@@ -843,6 +1000,8 @@ class HVACDSOTStructureModel:
         self.net_wall_area = (self.gross_exterior_wall_area - self.gross_window_area - self.total_door_area) \
                                 * self.exterior_wall_fraction
         self.interior_air_heat_capacity = self.sqft * self.ceiling_height * self.gross_air_heat_capacity
+
+        return self.ceiling_area, self.floor_area, self.perimeter, self.gross_exterior_wall_area, self.total_door_area, self.net_wall_area, self.gross_window_area, self.interior_air_heat_capacity
 
     def calc_solar_heatgain_factor(self) -> float:
         """Calculates the solar heatgain factor
@@ -893,7 +1052,8 @@ class HVACDSOTStructureModel:
         return self.etp_structure_params.UA
         
     def calc_CA(self) -> float:
-        """Calculation of indoor air heat capacity, or air thermal mass, in Btu/F
+        """Calculation of indoor air heat capacity, or air thermal mass, in 
+        Btu/degF
         
         Note that the *3 multiplier is to reflect that the air mass includes
         surface effects from the mass as well
@@ -988,6 +1148,17 @@ class HVACDSOTAssetModel:
     def __init__(self, attributes: dict, agent: HVACDSOTAgent):
         """TODO
 
+        Contains the following functions:
+            simulate_time_step() - given an asset and environment state, 
+                simulates the HVAC system for the duration of a time_step_size.
+
+        Contains the following subclasses:
+            HeatingSystemType - enum
+            CoolingSystemType - enum
+            HVACDSOTEnvironmentModel - tracks environmental parameter values
+                necessary for simulating the HVAC + thermostat + structure 
+                system. Calculates the heat flows between modeled elements.
+            
         Args:
             attributes (dict): Dictionary of attributes, externally defined. 
                 These are generally fixed throughout the simulation.
@@ -1045,14 +1216,14 @@ class HVACDSOTAssetModel:
         system was used as part of the controller in a model-based-control
         manner.
 
-        Note, just in like GridLAB-D, the model simulates one future state
-        from the current state. If you take a time step size of, say, one
-        day and start with the HVAC system off, the indoor air temperature 
-        will change dramatically as no intermediate states have been
-        calculated that would allow the HVAC to change state. Evolving the
-        system with finer time steps will produce more accurate results at the
-        cost of greater computation time. Consider the trade-off between
-        fidelity and computation time when choosing the time step size.
+        Note, just in like GridLAB-D, the model simulates one future state from 
+        the current state. If you take a time step size of, say, one day and 
+        start with the HVAC system off, the indoor air temperature will change 
+        dramatically as no intermediate states have been calculated that would 
+        allow the HVAC to change state. Evolving the system with finer time 
+        steps will produce more accurate results at the cost of greater 
+        computation time. Consider the trade-off between fidelity and 
+        computation time when choosing the time step size.
 
         Args:
             env_model (HVACDSOTEnvironmentModel): defined environmental state of
@@ -1062,8 +1233,8 @@ class HVACDSOTAssetModel:
                 state to evolve the simulated system.
 
         Returns:
-            tuple: asset state and environment state objects. If attempting
-                to simulate multiple time steps in a row these objects become 
+            tuple: asset state and environment state objects. If attempting to 
+                simulate multiple time steps in a row these objects become 
                 the inputs on subsequent calls to this method.
         """
     
@@ -1124,10 +1295,9 @@ class HVACDSOTAssetModel:
         ELECTRIC = 1
 
     class HVACDSOTEnvironmentModel:
-        """
-        Tracks environmental parameter values necessary for simulating the HVAC +
-        thermostat + structure system. Calculates the heat flows between modeled
-        elements. 
+        """ Tracks environmental parameter values necessary for simulating the 
+        HVAC + thermostat + structure system. Calculates the heat flows between 
+        modeled elements. 
         
         Part of maintaining the environment model is calculating the heat flows.
         The fine ASCII art below shows the dependencies between the calculated
@@ -1156,6 +1326,28 @@ class HVACDSOTAssetModel:
         of those flows. If a value is passed in, it is used instead of 
         recalculating. If no value is passed it, the dependent heat flow is 
         recalculated.
+
+        Contains the following functions:
+            copy_attributes_from() - takes attributes from one object and 
+                copies the values into the attributes of another object of the 
+                same type.
+            calc_Qh() - calculates the heat flow (Qh) into the indoor air due
+                to the HVAC operation.
+            calc_Qi() - calculates the heat flow (Qi) into the indoor 
+                residential air due to other electrical energy consumption 
+                (e.g., appliances)
+            calc_Qs() - calculates the heat flow (Qs) into the structure mass
+                due to solar radiation.
+            calc_Qa() - calculates the heat flow (Qa) into the indoor air. 
+                TODO: need a unique definition to distinguish from Qh
+            calc_Qm() - calculates the heat flow (Qm) into the structure mass.
+                TODO: need a unique definition to distinguish from Qs.
+            calc_all_heat_flows() - calculates all heat flows in the correct
+                order such that no duplicate calculations take place.
+            calc_solar_flux() - calculates solar flux based on passed-in, time,
+                location, and orientation.
+            calc_solargain() - 
+
 
         """
         def __init__(self, attributes: dict, agent: HVACDSOTAgent, source_obj: object = None, ):
@@ -1203,15 +1395,19 @@ class HVACDSOTAssetModel:
             """Takes attributes from one object and copies the values into the
             attributes of another objects of the same type.
 
-            Allows the quick creation of a new object in the same state as another
-            object.
+            Allows the quick creation of a new object in the same state as 
+            another object.
 
             Args:
                 other_obj (HVACDSOTAgent): Object whose attributes are the source
                     of the data being copied into the target object's attributes.
+
+            Returns:
+                None
             """
             if isinstance(other_obj, HVACDSOTAssetModel.HVACDSOTEnvironmentModel):
                 self.__dict__.update(other_obj.__dict__)
+            return None
         
         def calc_Qh(self, 
                     hvac_on: bool,
@@ -1222,16 +1418,16 @@ class HVACDSOTAssetModel:
             operation.
 
             Args:
-                thermostat_mode (ThermostatMode): Indicates thermostat mode; from
-                    HVACDSOTAssetstate
+                thermostat_mode (ThermostatMode): Indicates thermostat mode; 
+                    from HVACDSOTAssetstate
                 hvac_on (bool): Indicates current state of HVAC; from 
                     HVACDSOTAssetstate
                 heating_capacity (float): Heating capacity from 
                     HVACDSOTSystemModel
                 cooling_capacity (float): Cooling capacity from 
                     HVACDSOTSystemModel
-                hvac_kW (float): Indicates current real power consumption of HVAC;
-                    from HVACDSOTAssetstate
+                hvac_kW (float): Indicates current real power consumption of 
+                    HVAC; from HVACDSOTAssetstate
 
             Returns:
                 tuple: Qh and Qh_org TODO: what is Qh_org?
@@ -1265,23 +1461,23 @@ class HVACDSOTAssetModel:
                     hvac_kW: float,
                     Qh_org: float = None) -> float:
             """Calculates Qi, the heat flow into indoor residential air due to 
-            other electrical energy consumpation (e.g. appliances).
+            other electrical energy consumption (e.g., appliances).
 
             Args:
                 house_kW (float): Current total house real power load (TODO?) as
                     simulated in GridLAB-D
-                wh_kW (float): Current real power consumption of the water heater as
-                    simulated in GridLAB-D
-                thermostat_mode (ThermostatMode): Indicates thermostat mode; from
-                    HVACDSOTAssetstate
+                wh_kW (float): Current real power consumption of the water 
+                    heater as simulated in GridLAB-D
+                thermostat_mode (ThermostatMode): Indicates thermostat mode; 
+                    from HVACDSOTAssetstate
                 hvac_on (bool): Indicates current state of HVAC; from 
                     HVACDSOTAssetstate
                 heating_capacity (float): Heating capacity from 
                     HVACDSOTSystemModel
                 cooling_capacity (float): Cooling capacity from 
                     HVACDSOTSystemModel
-                hvac_kW (float): Indicates current real power consumption of HVAC;
-                    from HVACDSOTAssetstate
+                hvac_kW (float): Indicates current real power consumption of 
+                    HVAC; from HVACDSOTAssetstate
                 Qh_org (float): TODO
 
             Returns:
@@ -1326,40 +1522,41 @@ class HVACDSOTAssetModel:
             """Calculates the heat flows into the indoor air.
 
             Two values are returned: one representing the heat flows if the HVAC
-            system is running and one if it is not. These values are used to allow
-            later estimations of the whole system (HVAC + thermostat + structure)
-            for arbitrary points of time in the future. So rather than just using 
-            the acutal current state of the HVAC system, we calculate two values 
-            and use whichever one is applicable in the future state we're modeling.
+            system is running and one if it is not. These values are used to 
+            allow later estimations of the whole system (HVAC + thermostat + 
+            structure) for arbitrary points of time in the future. So rather 
+            than just using the acutal current state of the HVAC system, we 
+            calculate two values and use whichever one is applicable in the 
+            future state we're modeling.
 
             Args:
                 house_kW (float): Current total house real power load (TODO?) as
                     simulated in GridLAB-D
-                wh_kW (float): Current real power consumption of the water heater as
-                    simulated in GridLAB-D
-                thermostat_mode (ThermostatMode): Indicates thermostat mode; from
-                    HVACDSOTAssetstate
+                wh_kW (float): Current real power consumption of the water 
+                    heater as simulated in GridLAB-D
+                thermostat_mode (ThermostatMode): Indicates thermostat mode; 
+                    from HVACDSOTAssetstate
                 hvac_on (bool): Indicates current state of HVAC; from 
                     HVACDSOTAssetstate
                 heating_capacity (float): Heating capacity from 
                     HVACDSOTSystemModel
                 cooling_capacity (float): Cooling capacity from 
                     HVACDSOTSystemModel
-                hvac_kW (float): Indicates current real power consumption of HVAC;
-                    from HVACDSOTAssetstate
+                hvac_kW (float): Indicates current real power consumption of 
+                    HVAC; from HVACDSOTAssetstate
                 Qs (float): (optional) Heat flows from solar radiation. If 
-                    previously calculated, it can be passed in. Otherwise, it will
-                    be calculated for use in this method.
+                    previously calculated, it can be passed in. Otherwise, it
+                    will be calculated for use in this method.
                 Qi (float): (optional) Heat flows into the indoor air. If 
-                    previously calculated, it can be passed in. Otherwise, it will
-                    be calculated for use in this method.
-                Qh (float): (optional) Heat flows into the indoor air due to HVAC
+                    previously calculated, it can be passed in. Otherwise, it 
+                    will be calculated for use in this method.
+                Qh (float): (optional) Heat flows into the indoor air due to 
+                    HVAC operation. If previously calculated, it can be passed 
+                    in. Otherwise, it will be calculated for use in this method.
+                Qh_org (float): TODO - this is the same as Qh. What is Qh_org?
+                    (optional) Heat flows into the indoor air due to HVAC 
                     operation. If previously calculated, it can be passed in. 
                     Otherwise, it will be calculated for use in this method.
-                Qh_org (float): TODO - this is the same as Qh. What is Qh_org?
-                    (optional) Heat flows into the indoor air due to HVAC operation. 
-                    If previously calculated, it can be passed in. Otherwise, it 
-                    will be calculated for use in this method.
 
             Returns:
                 tuple: Qa_OFF, Qa_ON
@@ -1408,24 +1605,24 @@ class HVACDSOTAssetModel:
             Args:
                 house_kW (float): Current total house real power load (TODO?) as
                     simulated in GridLAB-D
-                wh_kW (float): Current real power consumption of the water heater as
-                    simulated in GridLAB-D
-                thermostat_mode (ThermostatMode): Indicates thermostat mode; from
-                    HVACDSOTAssetstate
+                wh_kW (float): Current real power consumption of the water 
+                    heater as simulated in GridLAB-D
+                thermostat_mode (ThermostatMode): Indicates thermostat mode; 
+                    from HVACDSOTAssetstate
                 hvac_on (bool): Indicates current state of HVAC; from 
                     HVACDSOTAssetstate
                 heating_capacity (float): Heating capacity from 
                     HVACDSOTSystemModel
                 cooling_capacity (float): Cooling capacity from 
                     HVACDSOTSystemModel
-                hvac_kW (float): Indicates current real power consumption of HVAC;
-                    from HVACDSOTAssetstate
+                hvac_kW (float): Indicates current real power consumption of 
+                    HVAC; from HVACDSOTAssetstate
                 Qs (float): (optional) Heat flows from solar radiation. If 
-                    previously calculated, it can be passed in. Otherwise, it will
-                    be calculated for use in this method.
+                    previously calculated, it can be passed in. Otherwise, it 
+                    will be calculated for use in this method.
                 Qi (float): (optional) Heat flows into the indoor air. If 
-                    previously calculated, it can be passed in. Otherwise, it will
-                    be calculated for use in this method.
+                    previously calculated, it can be passed in. Otherwise, it 
+                    will be calculated for use in this method.
 
             Returns:
                 float: Qm
@@ -1446,6 +1643,8 @@ class HVACDSOTAssetModel:
                 self.Qs = Qs
             self.Qm = (self.mass_internal_gain_fraction * self.Qi) + (self.mass_solar_gain_fraction * self.Qs)
 
+            return self.Qm
+
         def calc_all_heat_flows(self,
                     house_kW: float,
                     wh_kW: float,
@@ -1460,18 +1659,18 @@ class HVACDSOTAssetModel:
             Args:
                 house_kW (float): Current total house real power load (TODO?) as
                     simulated in GridLAB-D
-                wh_kW (float): Current real power consumption of the water heater as
-                    simulated in GridLAB-D
-                thermostat_mode (ThermostatMode): Indicates thermostat mode; from
-                    HVACDSOTAssetstate
+                wh_kW (float): Current real power consumption of the water 
+                    heater as simulated in GridLAB-D
+                thermostat_mode (ThermostatMode): Indicates thermostat mode; 
+                    from HVACDSOTAssetstate
                 hvac_on (bool): Indicates current state of HVAC; from 
                     HVACDSOTAssetstate
                 heating_capacity (float): Heating capacity from 
                     HVACDSOTSystemModel
                 cooling_capacity (float): Cooling capacity from 
                     HVACDSOTSystemModel
-                hvac_kW (float): Indicates current real power consumption of HVAC;
-                    from HVACDSOTAssetstate
+                hvac_kW (float): Indicates current real power consumption of 
+                    HVAC; from HVACDSOTAssetstate
 
             Returns:
                 tuple: All heat flows (Qi, Qs, Qh, Qh_org, Qm)
@@ -1533,7 +1732,8 @@ class HVACDSOTAssetModel:
                 sol_time (float): Solar time
                 dnr_i (float): Solar direct normal radiance
                 dhr_i (float): Solar diffuse horizontal radiance
-                vertical_angle (float): Angle of plane absorbing the solar radiation
+                vertical_angle (float): Angle of plane absorbing the solar 
+                    radiation
                 
             Returns:
                 float: Total solar flux
@@ -1603,8 +1803,24 @@ class HVACDSOTSystemModel:
     def __init__(self, attributes: dict, agent: HVACDSOTAgent):
         """Sets attributes for object
 
+        Contains the following functions:
+            validate_attributes() - evaluates values in attribute dictionary 
+                and corrects as possible.
+            calc_heating_capacity() - calculates the true heating capacity of 
+                the HVAC system based on the design capacity, correction 
+                coefficients, and the outside air temperature.
+            calc_cooling_capacity() - calculates the true cooling capacity of
+                the HVAC system based on the design capacity, correction 
+                coefficients, and the outside air temperature.
+            calc_heating_COP() - calculates the adjusted heating COP for use
+                in the day-ahead market based on the temperature forecast and
+                correction curve co-efficients.
+            calc_cooling_COP() - calculates the adjusted cooling COP for use
+                in the day-ahead market based on the temperature forecast and
+                correction curve co-efficients.
+            calc_design_capacities() - calculates the design cooling capacity.
+
         Args:
-            name (str): object name
             attributes (dict): attributes dictionary, externally defined. These
                 are generally fixed throughout the simulation.
         """
@@ -1648,11 +1864,17 @@ class HVACDSOTSystemModel:
         self.validate_attributes()
         
     def validate_attributes(self) -> None:
+        """Evaluate values in attribute dictionary and correct as possible
+
+        Returns:
+            None - writes info to log
+        """
         if self.cooling_COP_lower_limit > self.cooling_COP >= self.cooling_COP_upper_limit:
             logger.debug('{} {} -- cooling_COP is {}, outside of nominal range of {} to {}'
                     .format(self.name, 'init', self.cooling_COP, 
                             self.cooling_COP_lower_limit, 
                             self.cooling_COP_upper_limit))
+        return None
 
     def calc_heating_capacity(self) -> float:
         """Calculates the true heating capacity of the HVAC system based on
@@ -1793,6 +2015,10 @@ class HVACDSOTSystemModel:
 class HVACDSOTPriceFlexibilityCurve:
     def __init__(self):
         """Class used to evaluate the 4-point bid and TODO
+
+        Contains the following functions:
+            get_flexible_price() - 
+
         """
         self.ProfitMargin_intercept: float
         self.ProfitMargin_slope: float
@@ -1812,7 +2038,7 @@ class HVACDSOTPriceFlexibilityCurve:
             price_forecast (float): _description_
 
         Returns:
-            float: _description_
+            float: CurveSlope, yIntercept
         """
         
         CurveSlope = (DA_price_delta / (0 - hvac_kW) * (1 + self.ProfitMargin_slope / 100))
@@ -1833,7 +2059,7 @@ class HVACDSOTBiddingStrategy:
         self.slider: float = None
         self.cooling_participating: bool = None
         self.heating_participating: bool = None
-        self.windowLength_hr: int = None
+        self.windowLength: int = None
         self.interpolation: bool = None
         self.ProfitMargin_intercept: float = None
         self.ProfitMargin_slope: float = None
@@ -1843,8 +2069,15 @@ class HVACDSOTBiddingStrategy:
         self.bid = DSOT4pointBid()
 
 class DSOT4pointBid:
-    """Data structure to hold DSOT 4-point bid"""
     def __init__(self):
+        """Data structure to hold DSOT 4-point bid.
+
+        Contains the following functions:
+            make_marginal_price_curve() - 
+        
+        Contains the following subclasses:
+            SortDirection - enum
+        """
         self.cumulative_curve = []
         self.P: int = 1
         self.Q: int = 0
@@ -1854,7 +2087,7 @@ class DSOT4pointBid:
         """TODO
 
         Returns:
-            list: _description_
+            list: self.cumulative_curve
         """
         # Sort by quantity
         if price_direction == self.SortDirection.ASCENDING:
@@ -1873,9 +2106,31 @@ class DSOT4pointBid:
         DESCENDING = 1
         
 class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
-    
     def __init__(self, attributes: dict, agent: HVACDSOTAgent):
         """TODO
+
+        Contains the following functions:
+            update_forecast_temperature_limits() - updates min and max
+                forecasted temperature.
+            update_da_indoor_temperature_limits() - updates indoor temperature
+                limits based on current cooling and heating setpoints.
+            initialize_inside_air_temperature() - 
+            update_da_temperature_limits() - updates the desired temperature
+                limits, making sure the desired temperature falls between min
+                and max temp values, which are then used to adjust the basepoint 
+                and vice-versa.
+            setup_da_temperature_parameters() - 
+            estimate_required_cooling_quantity() -
+            estimate_required_heating_quantity() -  
+            get_uncntrol_hvac_load() - 
+            temperature_bound_rule() - defines the temperature limits for the 
+                Pyomo optimization.
+            obj_rule() - defines the Pyomo object function based on HVAC model.
+            con_rule_eq1() - constraint equation for Pyomo optimization 
+                formulation based on the HVAC mode and the index in the list of 
+                times being estimated.
+            solve_for_da_optimal_quantities() - 
+            formulate_da_bid() - 
 
         Args:
             attributes (dict): Externally defined attributes, generally fixed
@@ -1932,7 +2187,7 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
             self.bid_da = attributes["RT_test_support"]["bid_da"]
             self.previous_Q_DA = attributes["RT_test_support"]["previous_Q_DA"]
             self.previous_T_DA = attributes["RT_test_support"]["previous_T_DA"]
-            self.opt_indoor_air_temperature = [attributes["RT_test_support"]["temp_room_value"] for _ in range(self.windowLength_hr)]
+            self.opt_indoor_air_temperature = [attributes["RT_test_support"]["temp_room_value"] for _ in range(self.windowLength)]
 
     def update_forecast_temperature_limits(self) -> tuple:
         """Updates min and max forecasted temperature
@@ -1957,6 +2212,10 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
         Args:
             cooling_setpt (float): Scheduled cooling setpoint
             heating_setpt (float): Scheduled heating setpoint
+
+        Returns:
+            self.temp_max_cool_da, self.temp_min_cool_da, self.temp_max_heat_da, 
+            self.temp_min_heat_da, mid_point, self.temp_max_heat_da 
         """
         self.temp_max_cool_da = cooling_setpt + self.agent.schedule.range_high_cool 
         self.temp_min_cool_da = cooling_setpt - self.agent.schedule.range_low_cool  
@@ -1972,8 +2231,13 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
             if self.temp_max_heat_da < heating_setpt:
                 self.temp_max_heat_da = heating_setpt
         
+        return self.temp_max_cool_da, self.temp_min_cool_da, self.temp_max_heat_da, self.temp_min_heat_da, mid_point, self.temp_max_heat_da 
+        
     def initialize_inside_air_temperature(self) -> None:
         """TODO
+
+        Returns:
+            self.temp_room_init
         """
         self.temp_da_prev = self.agent.forecasts.inside_air_temperature
         # TODO - What do we need to do when the thermostat is "OFF"
@@ -1981,6 +2245,7 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
             self.temp_room_init = self.agent.temp.cooling_setpoint
         else:
             self.temp_room_init = self.agent.temp.heating_setpoint
+        return self.temp_room_init
         
     def update_da_temperature_limits(self, sim_time: dt.datetime) -> None:
         """Updates the desired temperature limits, making sure the desired 
@@ -1989,9 +2254,13 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
 
         Args:
             sim_time (dt.datetime): TODO
+    
+        Returns:
+            scheduled_cooling_setpoint, scheduled_heating_setpoint, 
+            self.temp_desired_48hour_cool, self.temp_desired_48hour_heat
         """
         self.update_forecast_temperature_limits()
-        for time_idx in range(self.windowLength_hr):
+        for time_idx in range(self.windowLength):
             hour = sim_time.hour + sim_time.minute / 60 + time_idx + 1 / 60 # hours
             scheduled_cooling_setpoint, scheduled_heating_setpoint = HVACSchedule.get_scheduled_setpoint(hour, 
                                                                                                          sim_time.weekday())
@@ -2008,17 +2277,24 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
                 scheduled_heating_setpoint = self.temp_min_heat_da
             self.temp_desired_48hour_cool[time_idx] = scheduled_cooling_setpoint
             self.temp_desired_48hour_heat[time_idx] = scheduled_heating_setpoint
+
+        return scheduled_cooling_setpoint, scheduled_heating_setpoint, self.temp_desired_48hour_cool, self.temp_desired_48hour_heat
         
     def setup_da_temperature_parameters(self, sim_time: dt.datetime) -> None:
         """TODO
 
         Args:
             sim_time (dt.datetime): _description_
+        
+        Returns:
+            None
         """
         self.update_da_temperature_limits(sim_time)
         HVACDSOTSystemModel.calc_cooling_COP()
         HVACDSOTSystemModel.calc_heating_COP()
         self.initialize_inside_air_temperature()
+
+        return None
         
     def estimate_required_cooling_quantity(self, time_idx: int) -> float:
         """TODO
@@ -2027,7 +2303,7 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
             time_idx (int): _description_
 
         Returns:
-            float: _description_
+            float: quant_cool
         """
         temp_room = self.temp_desired_48hour_cool
         cop_adj = (-np.array(self.agent.system_model.cooling_cop_adj_da)).tolist()
@@ -2050,7 +2326,7 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
             time_idx (int): _description_
 
         Returns:
-            float: _description_
+            float: quant_heat
         """
         temp_room = self.temp_desired_48hour_heat
         cop_adj = self.agent.system_model.heating_cop_adj_da
@@ -2073,11 +2349,11 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
             sim_time (dt.datetime): _description_
 
         Returns:
-            float: _description_
+            float: quantity
         """
         self.update_da_temperature_limits(sim_time)
         quantity = []
-        for time_idx in range(self.windowLength_hr):
+        for time_idx in range(self.windowLength):
             quant_cool = self.estimate_required_cooling_quantity(time_idx)
             quant_heat = self.estimate_required_heating_quantity(time_idx)
 
@@ -2142,7 +2418,7 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
             return 0
     
     def con_rule_eq1(self, m: pyo.ConcreteModel, t: int) -> None:  # initialize SOHC state
-        """Constraint equation for Pyomo optimzation formulation based on the
+        """Constraint equation for Pyomo optimization formulation based on the
         HVAC mode and the index in the list of times being estimated
 
         Args:
@@ -2150,7 +2426,7 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
             t (int): Index for time vector
 
         Returns:
-            _type_: _description_
+            _type_: temp_in
         """
         # Short-form variable assignments employed for human-readability.
         temp_in = m.inside_air_temperature
@@ -2198,22 +2474,22 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
         """TODO
 
         Returns:
-            tuple: _description_
+            tuple: hvac_quantity, indoor_room_temperature
         """
         # Create model
         model = pyo.ConcreteModel()
         # Decision variables
-        model.hvac_quant= pyo.Var(range(self.windowLength_hr), bounds=(0.0, self.agent.asset_state.hvac_kW))
-        model.inside_air_temperature = pyo.Var(range(self.windowLength_hr), bounds=self.temperature_bound_rule)
+        model.hvac_quant= pyo.Var(range(self.windowLength), bounds=(0.0, self.agent.asset_state.hvac_kW))
+        model.inside_air_temperature = pyo.Var(range(self.windowLength), bounds=self.temperature_bound_rule)
         # Objective of the problem
         model.obj = pyo.Objective(rule=self.obj_rule, sense=pyo.minimize)
         # Constraints
-        model.con1 = pyo.Constraint(range(self.windowLength_hr), rule=self.con_rule_eq1)
+        model.con1 = pyo.Constraint(range(self.windowLength), rule=self.con_rule_eq1)
         # Solve
         results = get_run_solver("hvac_" + self.name, pyo, model, self.solver) #TODO: no self.solver
-        hvac_quantity = [0 for _ in range(self.windowLength_hr)]
-        indoor_room_temperature = [0 for _ in range(self.windowLength_hr)]
-        for t in range(self.windowLength_hr):
+        hvac_quantity = [0 for _ in range(self.windowLength)]
+        indoor_room_temperature = [0 for _ in range(self.windowLength)]
+        for t in range(self.windowLength):
             indoor_room_temperature[t] = pyo.value(model.inside_air_temperature[t])
             hvac_quantity[t] = pyo.value(model.quan_hvac[t])
         return hvac_quantity, indoor_room_temperature
@@ -2222,7 +2498,7 @@ class HVACDSOTDABiddingStrategy(HVACDSOTBiddingStrategy):
         """TODO
 
         Returns:
-            list: TODO
+            list: self.bid_da
         """
         self.Qopt_da_prev = self.bid_da[0][1][0]
         self.price_forecast_0 = self.agent.forecasts.price[0]
@@ -2278,6 +2554,13 @@ class HVACDSOTRTBiddingStrategy(HVACDSOTBiddingStrategy):
     def __init__(self, attributes: dict, period: int, agent: HVACDSOTAgent):
         """TODO
         
+        Contains the following functions:
+            interpolate_DA_quantities_into_RT() - 
+            estimate_hvac_energy_in_rt_period() - 
+            create_bid() - 
+            form_rt_bid() - 
+
+
         Args:
             attributes (dict): dictionary of attributes, internally calculated 
                 simulation parameters or variables, generally not-fixed 
@@ -2306,7 +2589,7 @@ class HVACDSOTRTBiddingStrategy(HVACDSOTBiddingStrategy):
             da_bidding_strategy (HVACDSOTDABiddingStrategy): TODO
 
         Returns:
-            tuple: _description_
+            tuple: self.Qopt_DA, self.Topt_DA
         """
         if self.interpolation:
             if self.RT_minute_count_interpolation == 0.0:
@@ -2329,7 +2612,7 @@ class HVACDSOTRTBiddingStrategy(HVACDSOTBiddingStrategy):
         """TODO
 
         Returns:
-            list: TODO
+            list: self.quantity_curve
         """
         T = (self.bid_delay + self.period) / 3600.0  # 300
         time = np.linspace(0, T, num=10)  # [0,topt-dt, topt, topt+dt]
@@ -2391,6 +2674,7 @@ class HVACDSOTRTBiddingStrategy(HVACDSOTBiddingStrategy):
         """TODO
 
         Returns:
+            self.bid_rt
             DSOT4pointBid: TODO
         """
         Q_min = min(self.quantity_curve)
@@ -2457,7 +2741,7 @@ class HVACDSOTRTBiddingStrategy(HVACDSOTBiddingStrategy):
         """TODO
 
         Returns:
-            _type_: _description_
+            _type_: self.bid_rt
         """
         # If asset type or state doesn't allow participation in market
         if self.agent.asset_model.heating_system_type != 'HEAT_PUMP' and self.agent.asset_state.thermostat_mode == 'Heating':
