@@ -976,7 +976,8 @@ def calculate_consumer_bills(
                     # Calculate the consumer's net deviation charge under the
                     # subscription rate
                     bill_df.loc[(each, "subscription_net_deviation_charge"), m] = sum(
-                        da_lmp_stats.loc[str(t), "da_lmp" + dso_num]
+                        (da_lmp_stats.loc[str(t), "da_lmp" + dso_num] +
+                         da_lmp_stats.loc[str(t), " Adder"])
                         * (demand_df.loc[t, each] - bl_demand_df.loc[t, each])
                         for t in demand_df.index
                     )
@@ -2069,7 +2070,8 @@ def calculate_tariff_prices(
                     # Update the total revenue from the net deviation charges for each
                     # residential and commercial consumer during each season
                     rev_net_deviation_charge_sub_rc[s] += sum(
-                        da_lmp_stats.loc[str(t), "da_lmp" + dso_num]
+                        (da_lmp_stats.loc[str(t), "da_lmp" + dso_num] +
+                         da_lmp_stats.loc[str(t), " Adder"])
                         * (demand_df[s].loc[t, each] - bl_demand_df[s].loc[t, each])
                         for t in demand_df[s].index
                     )
@@ -2154,7 +2156,8 @@ def calculate_tariff_prices(
                     # Update the total revenue from the net deviation charges for each
                     # industrial consumer during each season
                     rev_net_deviation_charge_sub_i[s] += sum(
-                        da_lmp_stats.loc[str(t), "da_lmp" + dso_num]
+                        (da_lmp_stats.loc[str(t), "da_lmp" + dso_num] +
+                         da_lmp_stats.loc[str(t), " Adder"])
                         * (demand_df[s].loc[t, each] - bl_demand_df[s].loc[t, each])
                         for t in demand_df[s].index
                     )
@@ -2250,7 +2253,8 @@ def calculate_tariff_prices(
                         # Update the total revenue from the net deviation charges for 
                         # subscription consumers during each season
                         rev_net_deviation_charge_sub[s] += sum(
-                            da_lmp_stats.loc[str(t), "da_lmp" + dso_num]
+                            (da_lmp_stats.loc[str(t), "da_lmp" + dso_num] +
+                             da_lmp_stats.loc[str(t), " Adder"])
                             * (demand_df[s].loc[t, each] - bl_demand_df[s].loc[t, each])
                             for t in demand_df[s].index
                         )
