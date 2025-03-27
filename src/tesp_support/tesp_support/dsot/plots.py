@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import bisect
+import re
 
 plt.switch_backend('Agg')
 cache_output = {}
@@ -69,6 +70,7 @@ def load_json(dir_path, file_name, use_cache=True):
         with open(name) as json_file:
             output = json.load(json_file)
         return output
+
 
 def get_date(dir_path, dso, day):
     """ Utility to return start time (datetime format) of simulation day (str) in question"""
@@ -622,6 +624,47 @@ def load_system_data(dir_path, folder_prefix, dso_num, day_num, system_name):
         # system_df = system_df.set_index(['date'])
         # system_df = system_df.loc[start_time:stop_time]
     return system_meta_df, system_df
+
+
+def load_surcharge_data(dir_path, gen_name, day_range):
+
+    # Open the file in read mode
+    with open(dir_path + '/tso.log', 'r') as file:
+        log_file_data = file.read()
+
+    # log_file_data = 'INFO:root:   Surcharge: [11.48, 10.59, 10.68, 10.59, 10.59, 10.59, 10.59, 10.77, 10.59, 10.59, 10.59, 12.1, 11.85, 12.75, 12.76, 13.3, 13.27, 13.8, 13.86, 13.6, 12.45, 10.86, 11.33, 10.7]'
+
+    # Use regular expression to find all numerical values after "Surcharge: ["
+    surcharge_matches = re.findall(r"Surcharge:\s*\[([0-9.,\s]+)\]", log_file_data)
+
+    # Initialize a list to hold all individual surcharge lists
+    all_surcharges = []
+
+    # Iterate through each match and split the numbers inside the brackets
+    day = 0
+    for match in surcharge_matches:
+        day += 1
+        # Split the string of numbers by commas and convert to a list of floats
+        values = [float(value.strip()) for value in match.split(',')]
+        if day >= day_range[0] and day <= day_range[-1]:
+            all_surcharges += values
+
+    # Determine first day of simulation and resulting slice to take
+    case_config = load_json(dir_path, 'generate_case_config.json')
+    sim_start = datetime.strptime(case_config['StartTime'], '%Y-%m-%d %H:%M:%S')
+    start_time = sim_start + timedelta(days=int(day_range[0]) - 1)
+    stop_time = start_time + (day_range[-1] - day_range[0] + 1) * timedelta(days=1) - timedelta(minutes=5)
+
+    # Create bespoke index arrays
+    dates = []
+    for day in day_range:
+        arr = np.array([sim_start + timedelta(days=1) * (day - 1) + timedelta(hours=i) for i in range(24)])
+        dates += arr.tolist()
+
+    adder_df = pd.DataFrame(index=dates, columns=[' Adder'])
+    adder_df[' Adder'] = all_surcharges
+
+    return adder_df
 
 
 def get_house_schedules(agent_metadata, gld_metadata, house_name):
