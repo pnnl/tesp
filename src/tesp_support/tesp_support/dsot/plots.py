@@ -2792,8 +2792,11 @@ def dso_lmp_stats(month_list, output_path, renew_forecast_file, dso_range):
     ames_lmps_df.index.set_names(['seconds'], inplace=True)
     ames_lmps_df.to_csv(path_or_buf=output_path + '/opf.csv')
 
-    # Aggregate all the monthly data for RT loads and LMPs
+    # Aggregate all the monthly data for DA, generation, loads and LMPs
     for i in range(len(month_list)):
+        # Load da_gen
+        da_gen_data_df = load_gen_data(month_list[i][1], 'da_gen', range(month_list[i][2], month_list[i][3]))
+
         # Load da_q and da_lmp
         ames_da_q_df = load_gen_data(month_list[i][1], 'da_q', range(month_list[i][2], month_list[i][3]))
         ames_da_q_df = ames_da_q_df.unstack(level=1)
@@ -2803,10 +2806,20 @@ def dso_lmp_stats(month_list, output_path, renew_forecast_file, dso_range):
         ames_da_lmp_df = ames_da_lmp_df.unstack(level=1)
         ames_da_lmp_df.columns = ames_da_lmp_df.columns.droplevel()
 
+        if any(ames_lmps_df.columns.str.contains('Adder')):
+            # Load Adder
+            adder_m = load_surcharge_data(month_list[i][1], 'da_gen', range(month_list[i][2], month_list[i][3]))
+            if i == 0:
+                adder_df = adder_m
+            else:
+                adder_df = pd.concat([adder_df, adder_m])
+
         if i == 0:
+            da_gen_df = da_gen_data_df
             da_loads_df = ames_da_q_df
             da_lmps_df = ames_da_lmp_df
         else:
+            da_gen_df = pd.concat([da_gen_df, da_gen_data_df])
             da_loads_df = pd.concat([da_loads_df, ames_da_q_df])
             da_lmps_df = pd.concat([da_lmps_df, ames_da_lmp_df])
 
@@ -2814,9 +2827,13 @@ def dso_lmp_stats(month_list, output_path, renew_forecast_file, dso_range):
 
     da_load_cols = [col for col in da_lmps_df.columns if 'da_q' in col]
     da_lmps_df[' TotalLoad'] = da_lmps_df[da_load_cols].sum(axis=1)
+    da_lmps_df['TotalGen'] = da_gen_df.groupby(level=0)['ClearQ'].sum()
 
     # Check to see if Adder was used (for example in Rob and Don method) - if so correct LMPs - e.g. remove adder).
+
     if any(ames_lmps_df.columns.str.contains('Adder')):
+        da_lmps_df[' Adder'] = adder_df
+
         file = '/'.join(renew_forecast_file.split('/')[:-1])
         adder_curve_df = pd.read_csv(file +'/RandD.csv')
 
@@ -2826,6 +2843,23 @@ def dso_lmp_stats(month_list, output_path, renew_forecast_file, dso_range):
         rd_adder.reverse()
 
         for t in da_lmps_df.index:
+            generation = da_lmps_df.loc[t, 'TotalGen']
+            # bisection method taken from tso_psst.py
+            ii = bisect.bisect_left(rd_curve, generation)
+            if -1 < ii < len(rd_curve):
+                if generation - rd_curve[ii] < 0.0001:
+                    adder = rd_adder[ii]
+                else:
+                    # interpolation between upper and lower bounds
+                    percent = (generation - rd_curve[ii]) / (rd_curve[ii + 1] - rd_curve[ii])
+                    adder = ((rd_adder[ii + 1] - rd_adder[ii]) * percent) + rd_adder[ii + 1]
+            else:
+                if generation > rd_curve[-1]:
+                    adder = rd_adder[-1]
+                else:
+                    adder = rd_adder[0]
+            da_lmps_df.loc[t, ' Adder-Gen'] = adder
+
             generation = da_lmps_df.loc[t, ' TotalLoad']
             # bisection method taken from tso_psst.py
             ii = bisect.bisect_left(rd_curve, generation)
@@ -2841,11 +2875,11 @@ def dso_lmp_stats(month_list, output_path, renew_forecast_file, dso_range):
                     adder = rd_adder[-1]
                 else:
                     adder = rd_adder[0]
-            da_lmps_df.loc[t, ' Adder'] = adder
+            da_lmps_df.loc[t, ' Adder-Load'] = adder
 
-    #     for column in da_lmps_df.columns:
-    #         if 'lmp' in column:
-    #             da_lmps_df[column] = da_lmps_df[column] - da_lmps_df[' Adder']
+        for column in da_lmps_df.columns:
+            if 'lmp' in column:
+                da_lmps_df[column] = da_lmps_df[column] - da_lmps_df[' Adder']
 
     # renew_forecast_file = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/data/mod_renew_forecast.csv'
     renew_forecast = pd.read_csv(renew_forecast_file, index_col='time', parse_dates=True)
@@ -2855,10 +2889,10 @@ def dso_lmp_stats(month_list, output_path, renew_forecast_file, dso_range):
     # narrow down to only modeled DSOs + system load data
     if any(ames_lmps_df.columns.str.contains('Adder')):
         dso_cols = ['da_lmp'+str(dso) for dso in dso_range] + ['da_q'+str(dso) for dso in dso_range] \
-                    + [' TotalLoad', 'TotalRenewGen', 'NetLoad', ' Adder']
+                    + [' TotalLoad', 'TotalGen', 'TotalRenewGen', 'NetLoad', ' Adder', ' Adder-Gen', ' Adder-Load']
     else:
         dso_cols = ['da_lmp'+str(dso) for dso in dso_range] + ['da_q'+str(dso) for dso in dso_range] \
-                    + [' TotalLoad', 'TotalRenewGen', 'NetLoad']
+                    + [' TotalLoad', 'TotalGen', 'TotalRenewGen', 'NetLoad']
     da_lmps_df[dso_cols].to_csv(path_or_buf=output_path + '/Annual_DA_LMP_Load_data.csv')
 
     # Determine Annual RT LMP Stats
