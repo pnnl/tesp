@@ -207,9 +207,20 @@ def load_gen_data(dir_path, gen_name, day_range):
                           'da_lmp': 'LMP_',
                           'da_gen': 'ClearQ_',
                           'da_line': 'Line_'}
-            dso_list = data_df.loc[(clear_time), :].index.tolist()
+            dso_list = data_df.index.unique(level=1).tolist()
             # Reduce raw data to day range of interest and reshape/flatten
             data_df = data_df.loc[start_time:stop_time, :]
+
+            #Issue with da_gen with missing data entries.
+            if gen_name in ['da_gen']:
+                idx = pd.MultiIndex.from_product([data_df.index.unique(level=0), data_df.index.unique(level=1)])
+                missing_values = len(idx.difference(data_df.index))
+                if missing_values != 0:
+                    data_df.index.difference(idx)
+                    data_df = data_df.reindex(idx, fill_value=0.0)
+                    print('WARNING: '+ str(missing_values) +' index values missing from ' + filename + ' located in ' + dir_path + \
+                          '. Missing values replaced with zero.')
+
             frame_size = len(data_df) * len(data_df.columns)
             test = np.reshape(data_df.values, frame_size)
 
