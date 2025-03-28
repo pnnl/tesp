@@ -15,7 +15,7 @@ logger = log.getLogger()
 
 class DSO_LMPs_vs_Q:
     """
-    This object creats the quadractive curves witht historical data from the base case
+    This object creates the quadratic curves with historical data from the base case
     
     Args:
         config_path (str): path to file directory
@@ -23,14 +23,14 @@ class DSO_LMPs_vs_Q:
         
     Attributes:
         config_path (str): path to file directory
-        df_dsos_lml_q (list od dataframes): list of lmps and associated quantity trou time
+        df_dsos_lml_q (list od dataframes): list of lmps and associated quantity through time
         lmps_names (list of str): list of lmps names
         q_lmps_names (list of str): list of quantities names
         
         degree (int): degree of curve to be fitted
             
-        coeficients_weekday (array of arrays): 24 arrays of 3 for every DSO
-        coeficients_weekend (array of arrays): 24 arrays of 3 for every DSO
+        coefficients_weekday (array of arrays): 24 arrays of 3 for every DSO
+        coefficients_weekend (array of arrays): 24 arrays of 3 for every DSO
     """
 
     def __init__(self, config_path='LMP_DATA', file_name='/Annual_DA_LMP_Load_data.csv'):
@@ -40,21 +40,21 @@ class DSO_LMPs_vs_Q:
         data_da = pd.read_csv(config_path + file_name, skiprows=0)  # Read data
         # Include data to self
         # Organize and remove outliers
-        self.df_dsos_lml_q, self.lmps_names, self.q_lmps_names = self.organize_remuve_outliers(data_da)
+        self.df_dsos_lml_q, self.lmps_names, self.q_lmps_names = self.organize_remove_outliers(data_da)
         # Curve parameters
         self.degree = 2  # quadratic curve
         # Fitted curves
         self.coeficients_weekday = None
         self.coeficients_weekend = None
 
-    def organize_remuve_outliers(self, data_da):
-        """ Orginize and remuve outliers from dataframe of multiple DSO
+    def organize_remove_outliers(self, data_da):
+        """ Organize and remove outliers from dataframe of multiple DSO
         
         Args:
-            data_da (dataframe): contaings historical data from DA LMPs with associated quantities 
+            data_da (dataframe): contains historical data from DA LMPs with associated quantities
         
         Returns:
-            df_dsos_lml_q (list of dataframes): every element of the list is a DSO with historical price and quantiti. The index is pandas datetime.
+            df_dsos_lml_q (list of dataframes): every element of the list is a DSO with historical price and quantity. The index is pandas datetime.
         """
         # Organize data
         data_da['Date/Time'] = pd.to_datetime(data_da[data_da.columns[0]], format='%Y-%m-%d %H:%M:%S')
@@ -73,7 +73,11 @@ class DSO_LMPs_vs_Q:
         df_dsos_lml_q = []
         for i in range(len(lmps)):
             raw = pd.DataFrame()
-            raw['y'] = data_da[lmps[i]].values / 1000.0
+            # If a price adder is used it should be included in training.
+            if any(data_da.columns.str.contains('Adder')):
+                raw['y'] = (data_da[lmps[i]].values + data_da[' Adder'].values) / 1000.0
+            else:
+                raw['y'] = data_da[lmps[i]].values / 1000.0
             raw['x'] = data_da[q_lmps[i]].values * 1000.0
             raw.index = data_da.index
             df_dsos_lml_q.append(raw)
@@ -86,14 +90,14 @@ class DSO_LMPs_vs_Q:
         return df_dsos_lml_q, lmps, q_lmps
 
     def fit_model(self, i, p_time):
-        """ Fit a quadractive curve utilizing sklearn
+        """ Fit a quadratic curve utilizing sklearn
         
         Args:
             i (int): DSO identifier 
-            p_time (np array bool): True for samples utilized in fiiting the quadractic curve 
+            p_time (np array bool): True for samples utilized in fitting the quadratic curve
         
         Returns:
-            df_dsos_lml_q (array): [['1', 'x', 'x^2']] quadractic curve coeficients 
+            df_dsos_lml_q (array): [['1', 'x', 'x^2']] quadratic curve coefficients
         """
         x = np.array(self.df_dsos_lml_q[i]['x'][p_time].values)
         y = np.array(self.df_dsos_lml_q[i]['y'][p_time].values)
@@ -124,7 +128,7 @@ class DSO_LMPs_vs_Q:
         
         Args:
             DSO (int): DSO identifier  
-            C (int): from 0 to 2 especifing the curve coeficient being taken  
+            C (int): from 0 to 2 specifying the curve coefficient being taken
         """
         curve_c_weekday = np.full((5, 24), self.coeficients_weekday[DSO][C])
         curve_c_weekend = np.full((2, 24), self.coeficients_weekend[DSO][C])
@@ -190,7 +194,7 @@ if __name__ == "__main__":
 
     fig, ax = plt.subplots()
     ax.plot(x, y, 'o', label='points')
-    ax.plot(xx, get_y(a, xx), 'red', label='fited curve')
+    ax.plot(xx, get_y(a, xx), 'red', label='fitted curve')
     ax.grid()
     ax.set(xlabel='quantity (KWh)', ylabel='price ($)', title='weekdays')
     fig.tight_layout()
@@ -206,7 +210,7 @@ if __name__ == "__main__":
 
     fig, ax = plt.subplots()
     ax.plot(x, y, 'o', label='points')
-    ax.plot(xx, get_y(a, xx), 'red', label='fited curve')
+    ax.plot(xx, get_y(a, xx), 'red', label='fitted curve')
     ax.grid()
     ax.set(xlabel='quantity (KWh)', ylabel='price ($)', title='weekends')
     fig.tight_layout()
