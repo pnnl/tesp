@@ -3,6 +3,7 @@
 # file: tso_psst.py
 
 import os
+import sys
 import math
 import json
 import bisect
@@ -72,7 +73,7 @@ def tso_psst_loop(casename):
     def get_sub(sub_idx):
         try:
             _sub = cache_sub[sub_idx]
-        except:
+        except KeyError:
             cache_sub[sub_idx] = helics.helicsFederateGetInputByIndex(hFed, sub_idx)
             _sub = cache_sub[sub_idx]
         return _sub
@@ -80,7 +81,7 @@ def tso_psst_loop(casename):
     def get_pub(pub_key):
         try:
             _pub = cache_pub[pub_key]
-        except:
+        except KeyError:
             cache_pub[pub_key] = helics.helicsFederateGetPublication(hFed, pub_key)
             _pub = cache_pub[pub_key]
         return _pub
@@ -130,24 +131,24 @@ def tso_psst_loop(casename):
             fle = os.path.join(output_Path, str(day) + "_dam.dat")
             os.rename(psst_case, fle)
 
+        status = True
         dispatch = {}
         if outcomes[1] == 'optimal':
-            status = True
             for g in sorted(instance.Generators.data()):
                 dispatch[g] = []
                 for tp in sorted(instance.TimePeriods):
                     dispatch[g].append(instance.PowerGenerated[g, tp].value * baseS)
         else:
             status = False
-            if da_lmps != {}:
+            if len(da_lmps) == 0:
+                log.critical('ERROR - No DA starting point')
+                sys.exit("No DA starting point")
+            else:
                 log.warning('Exception: unable to obtain LMPS and dispatch from PSST')
                 log.warning('Using previous day schedule, dispatch, and LMPs')
                 uc_df = da_schedule
                 DA_LMPs = da_lmps
                 dispatch = da_dispatch
-            else:
-                log.critical('ERROR - No DA starting point')
-                exit()
 
         # rob and don adder if used
         adder = [0 for _ in range(hours_in_a_day)]
@@ -162,7 +163,7 @@ def tso_psst_loop(casename):
                 for _ in range(total_bus_num):
                     generation[ii] += renew[ii][_]
                 adder[ii] = rob_and_don(generation[ii])
-                log.debug(f"generation: {generation[ii]}, adder: {adder[ii]}")
+                log.info(f"generation: {generation[ii]}, adder: {adder[ii]}")
                 for jj in range(dsoBus.shape[0]):
                     DA_LMPs[jj][ii] += adder[ii]
 
@@ -217,7 +218,6 @@ def tso_psst_loop(casename):
         #     outfile.write("%s\n" % str(b).ljust(8))
         #     for t in sorted(instance.TimePeriods):
         #       outfile.write(" %6.2f \n" % (SlackVariablePower[(b, t)].value))
-        #
 
         lseDispatch = {}
         if len(priceSenLoadData) != 0:
@@ -232,7 +232,7 @@ def tso_psst_loop(casename):
                 lse = 'LSE' + str(bus_num)
                 try:
                     row = lseDispatch[lse]
-                except:
+                except KeyError:
                     # log.debug("LSE "+str(bus_num) + " is not price sensitive, so returning zero for it")
                     row = np.zeros(24).tolist()  # hard-coded to be 24
                 for z in range(len(row)):
@@ -315,9 +315,9 @@ def tso_psst_loop(casename):
             print(rt_schedule, file=uc)
             uc.close()
 
+        status = True
         dispatch = {}
         if outcomes[1] == 'optimal':
-            status = True
             for g in sorted(instance.Generators.data()):
                 dispatch[g] = []
                 for tp in sorted(instance.TimePeriods):
@@ -326,7 +326,10 @@ def tso_psst_loop(casename):
                         break
         else:
             status = False
-            if rt_lmps != {}:
+            if len(rt_lmps) == 0:
+                log.critical('ERROR - No RT starting point')
+                sys.exit("No RT starting point")
+            else:
                 log.warning('Exception: unable to obtain LMPS and dispatch from PSST')
                 log.warning('Using previous day schedule, dispatch, and LMPs')
                 RT_LMPs = rt_lmps
@@ -335,12 +338,8 @@ def tso_psst_loop(casename):
                         name = "GenCo" + str(ii + 1)
                         dispatch[name] = []
                         dispatch[name].append(gen[ii, 1])
-            else:
-                log.critical('ERROR - No RT starting point')
-                exit()
 
         # set the lmps and generator dispatch and publish LMP
-        adder = 0.0
         generation = 0.0
         log.info(f"Renewables: {renew}")
         for ii in range(numGen):
@@ -354,10 +353,8 @@ def tso_psst_loop(casename):
             #     dispatch for renewables i.e. curtail
             #     gen[ii, 1] this was set in rt_curtail_renewables()
             generation += gen[ii, 1]
-        for _ in range(total_bus_num):
-            generation += renew[_]
 
-
+        adder = 0.0
         if r_and_d:
             adder = rob_and_don(generation)
             log.debug(f"generation: {generation}, adder: {adder}")
@@ -403,7 +400,7 @@ def tso_psst_loop(casename):
                 lse = 'LSE' + str(bus_num)
                 try:
                     row = lseDispatch[lse]
-                except:
+                except KeyError:
                     # log.debug("LSE " + str(ii+1) + " is not price sensitive, so returning zero for it")
                     row = np.zeros(TAU).tolist()
 
@@ -476,6 +473,7 @@ def tso_psst_loop(casename):
         log.info('Total TSO ramp up: ' + str(tot_gen_up) + ', Total TSO ramp down: ' + str(tot_gen_down))
 
         da_curtail = [[]] * hours_in_a_day
+        renew = [[]] * hours_in_a_day
         for jj in range(hours_in_a_day):
             total_neg = 0
             total_dso = 0
@@ -547,11 +545,12 @@ def tso_psst_loop(casename):
                     tot_dso += total
                     da_curtail[jj].append(total)
 
+            renew[jj].append(total_neg*curtail)
             log.info('DA Hour: ' + str(jj + 1))
             log.info('Total DSO Load: ' + str(total_dso))
             log.info('Total DSO to PSST: ' + str(tot_dso) + ', Total Renewables: ' + str(total_neg))
             log.info('Used Renewables:' + '{: .3f}'.format(total_neg*curtail) + ', Percent:' + '{: .0f}'.format(curtail*100))
-        return da_curtail
+        return da_curtail, renew
 
     def rt_curtail_renewables(znumGen, zgenFuel, zgen, tot_gen_down, tot_gen_up):
         log.info('Total TSO ramp up: ' + str(tot_gen_up) + ', Total TSO ramp down: ' + str(tot_gen_down))
@@ -588,7 +587,7 @@ def tso_psst_loop(casename):
         cnt = 0
         curtail = 1.0
         if used_curtail:
-            # in dost we want 100 MVA thermal generation, no renewables, min nuclear 43.2 MVA
+            # in dsot we want 100 MVA thermal generation, no renewables, min nuclear 43.2 MVA
             if total_dso - total_neg < genLowerLimit:
                 while True:
                     cnt += 1
@@ -638,10 +637,11 @@ def tso_psst_loop(casename):
                 tot_dso += total
                 rt_curtail.append(total)
 
+        renew = total_neg*curtail
         log.info('Total DSO Load: ' + str(total_dso))
         log.info('Total DSO to PSST: ' + str(tot_dso) + ', Total Renewables: ' + str(total_neg))
         log.info('Used Renewables:' + '{: .3f}'.format(total_neg*curtail) + ', Percent:' + '{: .0f}'.format(curtail*100))
-        return rt_curtail
+        return rt_curtail, renew
 
     def write_psst_file(fname, dayahead, zgen, zgenCost, zgenFuel, znumGen):
         fp = open(fname, 'w')
@@ -704,7 +704,7 @@ def tso_psst_loop(casename):
         print('param BalPenPos :=', str(priceCap), ';\n', file=fp)
         print('param BalPenNeg :=', str(priceCap), ';\n', file=fp)
 
-        # PSST time period length is in hours
+        # The PSST time period length is in hours
         if dayahead:
             print('param TimePeriodLength := 1 ;\n', file=fp)
             print('param NumTimePeriods := ', str(hours_in_a_day), ';\n', file=fp)
@@ -826,11 +826,9 @@ def tso_psst_loop(casename):
         # in dsot there are multiple bus' for a dso
         if dso_bid:
             if dayahead:
-                net = da_curtail_renewables(Pmin_avail, Pmax_avail)
-                renew = net
+                net, c_renew = da_curtail_renewables(Pmin_avail, Pmax_avail)
             else:
-                net = rt_curtail_renewables(znumGen, zgenFuel, zgen, Pmin_avail, Pmax_avail)
-                renew = net
+                net, c_renew = rt_curtail_renewables(znumGen, zgenFuel, zgen, Pmin_avail, Pmax_avail)
 
             print('param: NetFixedLoadForecast :=', file=fp)
             for ii in range(bus.shape[0]):
@@ -845,6 +843,7 @@ def tso_psst_loop(casename):
             print(';\n', file=fp)
 
             if priceSensLoad:
+                ii = 0
                 write_line = 'set PricesSensitiveLoadNames :='
                 for ii in range(dsoBus.shape[0] - 1):
                     write_line = write_line + ' LSE' + str(ii + 1) + ','
@@ -879,7 +878,7 @@ def tso_psst_loop(casename):
         else:
             # no bid using gld_load (tape player/gridlab)
             print('param: NetFixedLoadForecast :=', file=fp)
-            renew = [0] * hours_in_a_day
+            c_renew = [0] * hours_in_a_day
             for ii in range(bus.shape[0]):
                 bus_num = ii + 1
                 if dayahead:
@@ -893,7 +892,7 @@ def tso_psst_loop(casename):
                         else:
                             net = - ndg
                         print('Bus' + str(bus_num) + ' ' + str(jj + 1) + ' {:.4f}'.format(net / baseS), file=fp)
-                        renew[jj] += net
+                        c_renew[jj] += ndg
                 else:
                     ndg = 0
                     for key, row in generator_plants.items():
@@ -907,7 +906,7 @@ def tso_psst_loop(casename):
                         net = - ndg
                     for jj in range(TAU):
                         print('Bus' + str(bus_num) + ' ' + str(jj + 1) + ' {:.4f}'.format(net / baseS), file=fp)
-                    renew = net
+                    c_renew = ndg
                 print('', file=fp)
             print(';\n', file=fp)
 
@@ -924,7 +923,7 @@ def tso_psst_loop(casename):
                       '{: .5f}'.format(c1) + '{: .5f}'.format(c2) + ' ' + ns, file=fp)
         print(';\n', file=fp)
         fp.close()
-        return renew
+        return c_renew
 
     def update_cost_and_load():
         # update cost coefficients, set dispatchable load, put unresp load on bus
@@ -1016,367 +1015,363 @@ def tso_psst_loop(casename):
         return np.array(agen), np.array(agenCost), agenFuel, nGen
 
     # Initialize the program
-    try:
-        try:
-            hours_in_a_day = 24
-            secs_in_a_hr = 3600
+    hours_in_a_day = 24
+    secs_in_a_hr = 3600
 
-            ppc = load_json_case(casename + '.json')
-            ppopt_market = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['opf_dc'], OPF_ALG_DC=200)  # dc for
-            ppopt_regular = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['pf_dc'], PF_MAX_IT=20, PF_ALG=1)  # ac for power flow
+    ppc = load_json_case(casename + '.json')
+    ppopt_market = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['opf_dc'], OPF_ALG_DC=200)  # dc for
+    ppopt_regular = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['pf_dc'], PF_MAX_IT=20, PF_ALG=1)  # ac for power flow
 
-            logger = log.getLogger()
-            logger.setLevel(log.INFO)
-            # logger.setLevel(log.WARNING)
-            # logger.setLevel(log.DEBUG)
-            log.info('starting tso loop...')
+    logger = log.getLogger()
+    logger.setLevel(log.INFO)
+    # logger.setLevel(log.WARNING)
+    # logger.setLevel(log.DEBUG)
+    log.info(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    log.info('starting tso loop...')
 
-            solver = ppc['solver']
-            if pst.SOLVER is not None:
-                solver = pst.SOLVER
-            if solver == 'cbc':
-                ppc['gencost'][:, 4] = 0.0  # can't use quadratic costs with CBC solver
+    solver = ppc['solver']
+    if pst.SOLVER is not None:
+        solver = pst.SOLVER
+    if solver == 'cbc':
+        ppc['gencost'][:, 4] = 0.0  # can't use quadratic costs with CBC solver
 
-            # these have been aliased from case name .json file
-            bus = ppc['bus']
-            # bus: [[bus id, type, Pd, Qd, Gs, Bs, area, Vm, Va, baseKV, zone, Vmax, Vmin, LAM P, LAM Q]]
-            # bus type: 1 = load, 2 = gen(PV) and 3 = swing
-            branch = ppc['branch']
-            # branch: [[from bus, to bus, r, x, b, rateA, rateB, rateC, ratio, angle, status, angmin, angmax]]
-            gen = ppc['gen']
-            # gen: [[bus id, Pg, Qg, Qmax, Qmin, Vg, mBase, status, Pmax, Pmin,(11 zeros)]]
-            genCost = ppc['gencost']
-            # gencost: [[2, startup, shutdown, 3, c2, c1, c0]]
-            genFuel = ppc['genfuel']
-            # genFuel: [[fuel type, fuel name, id, uniton]]
-            zones = ppc['zones']
-            # zones: [[zone id, name, ReserveDownZonalPercent, ReserveUpZonalPercent]]
-            dsoBus = ppc['DSO']
-            # DSO: [[bus id, name, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit]]
+    # these have been aliased from case name .json file
+    bus = ppc['bus']
+    # bus: [[bus id, type, Pd, Qd, Gs, Bs, area, Vm, Va, baseKV, zone, Vmax, Vmin, LAM P, LAM Q]]
+    # bus type: 1 = load, 2 = gen(PV) and 3 = swing
+    branch = ppc['branch']
+    # branch: [[from bus, to bus, r, x, b, rateA, rateB, rateC, ratio, angle, status, angmin, angmax]]
+    gen = ppc['gen']
+    # gen: [[bus id, Pg, Qg, Qmax, Qmin, Vg, mBase, status, Pmax, Pmin,(11 zeros)]]
+    genCost = ppc['gencost']
+    # gencost: [[2, startup, shutdown, 3, c2, c1, c0]]
+    genFuel = ppc['genfuel']
+    # genFuel: [[fuel type, fuel name, id, uniton]]
+    zones = ppc['zones']
+    # zones: [[zone id, name, ReserveDownZonalPercent, ReserveUpZonalPercent]]
+    dsoBus = ppc['DSO']
+    # DSO: [[bus id, name, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit]]
 
-            # Not being used at this time
-            # UnitsOut: idx, time out[s], time back in[s]
-            # BranchesOut: idx, time out[s], time back in[s]
+    # Not being used at this time
+    # UnitsOut: idx, time out[s], time back in[s]
+    # BranchesOut: idx, time out[s], time back in[s]
 
-            numGen = gen.shape[0]
-            unumGen = gen.shape[0]
-            renewables = ppc['renewables']
+    numGen = gen.shape[0]
+    unumGen = gen.shape[0]
+    renewables = ppc['renewables']
 
-            # set configurations case name from .json file
-            priceSensLoad = 0
-            if ppc['priceSensLoad']:
-                priceSensLoad = 1
+    # set configurations case name from .json file
+    priceSensLoad = 0
+    if ppc['priceSensLoad']:
+        priceSensLoad = 1
 
-            StartTime = ppc['StartTime']
-            EndTime = ppc['EndTime']
-            tmax = int(ppc['Tmax'])
-            period = int(ppc['Period'])
-            dt = int(ppc['dt'])
-            swing_bus = int(ppc['swing_bus'])
-            noScale = ppc['noScale']
+    StartTime = ppc['StartTime']
+    EndTime = ppc['EndTime']
+    tmax = int(ppc['Tmax'])
+    period = int(ppc['Period'])
+    dt = int(ppc['dt'])
+    swing_bus = int(ppc['swing_bus'])
+    noScale = ppc['noScale']
 
-            piq = False
-            piq_hour = 0
-            piq_count = 0
-            if 'gridPIQ' in ppc:
-                piq = ppc['gridPIQ']
-                if piq:
-                    from gridpiq import GridPIQ
-                    pq = GridPIQ()
-                    pq.set_datetime(StartTime, EndTime, 24, 0)
+    pq = None
+    piq = False
+    piq_hour = 0
+    piq_count = 0
+    if 'gridPIQ' in ppc:
+        piq = ppc['gridPIQ']
+        if piq:
+            from gridpiq import GridPIQ
+            pq = GridPIQ()
+            pq.set_datetime(StartTime, EndTime, 24, 0)
 
-            ames = ppc['ames']
-            power_level = ppc['genPowerLevel']
-            priceCap = 2 * ppc['priceCap']
-            used_curtail = ppc['curtail']
-            genLowerLimit = ppc['genLowerLimit']
-            reserveDown = ppc['reserveDown']
-            reserveUp = ppc['reserveUp']
-            zonalReserves = ppc['zonalReserves']
-            casefile = ppc['caseName']
-            output_Path = ppc['outputPath']
-            baseS = int(ppc['baseMVA'])     # base_S in ercot_8.json baseMVA
-            baseV = int(bus[0, 9])          # base_V in ercot_8.json bus row 0-7, column 9, should be the same for all buses
-            # create bus dictionary
-            baseV_dict = {}
-            for ibus in range(len(bus)):
-                baseV_dict.update({int(bus[ibus, 0]): int(bus[ibus, 9])})
-        finally:
-            log.info('Finished reading settings')
-        try:
-            collector = MetricsCollector.factory(start_time=StartTime, write_hdf5=True)
-            # create lists of (name, unit) pairs (order determines indices)
-            bus_store = MetricsStore(
-                name_units_pairs=[
-                    ('LMP_P', 'USD/kwh'),
-                    ('LMP_Q', 'USD/kvarh'),
-                    ('PD', 'MW'),
-                    ('QD', 'MVAR'),
-                    ('Vang', 'deg'),
-                    ('Vmag', 'pu'),
-                    ('Vmax', 'pu'),
-                    ('Vmin', 'pu'),
-                    ('unresp', 'MW'),
-                    ('resp_max', 'MW'),
-                    ('c1', '$/MW'),
-                    ('c2', '$/MW^2')
-                ],
-                file_string='bus_{}'.format(casefile),
-                collector=collector,
-            )
-            gen_store = MetricsStore(
-                name_units_pairs=[
-                    ('Pgen', 'MW'),
-                    ('Qgen', 'MVAR'),
-                    ('LMP_P', 'USD/kwh')
-                ],
-                file_string='gen_{}'.format(casefile),
-                collector=collector,
-            )
-            sys_store = MetricsStore(
-                name_units_pairs=[
-                    ('Ploss', 'MW'),
-                    ('Converged', 'true/false')
-                ],
-                file_string='sys_{}'.format(casefile),
-                collector=collector
-            )
-            da_lmp_store = MetricsStore(
-                name_units_pairs=[
-                    ('LMP_1', 'USD/kwh'), ('LMP_2', 'USD/kwh'), ('LMP_3', 'USD/kwh'), ('LMP_4', 'USD/kwh'),
-                    ('LMP_5', 'USD/kwh'), ('LMP_6', 'USD/kwh'), ('LMP_7', 'USD/kwh'), ('LMP_8', 'USD/kwh'),
-                    ('LMP_9', 'USD/kwh'), ('LMP_10', 'USD/kwh'), ('LMP_11', 'USD/kwh'), ('LMP_12', 'USD/kwh'),
-                    ('LMP_13', 'USD/kwh'), ('LMP_14', 'USD/kwh'), ('LMP_15', 'USD/kwh'), ('LMP_16', 'USD/kwh'),
-                    ('LMP_17', 'USD/kwh'), ('LMP_18', 'USD/kwh'), ('LMP_19', 'USD/kwh'), ('LMP_20', 'USD/kwh'),
-                    ('LMP_21', 'USD/kwh'), ('LMP_22', 'USD/kwh'), ('LMP_23', 'USD/kwh'), ('LMP_24', 'USD/kwh')
-                ],
-                file_string='da_lmp_{}'.format(casefile),
-                collector=collector,
-            )
-            da_line_store = MetricsStore(
-                name_units_pairs=[
-                    ('Line_1', 'line/limit'), ('Line_2', 'line/limit'), ('Line_3', 'line/limit'), ('Line_4', 'line/limit'),
-                    ('Line_5', 'line/limit'), ('Line_6', 'line/limit'), ('Line_7', 'line/limit'), ('Line_8', 'line/limit'),
-                    ('Line_9', 'line/limit'), ('Line_10', 'line/limit'), ('Line_11', 'line/limit'), ('Line_12', 'line/limit'),
-                    ('Line_13', 'line/limit'), ('Line_14', 'line/limit'), ('Line_15', 'line/limit'), ('Line_16', 'line/limit'),
-                    ('Line_17', 'line/limit'), ('Line_18', 'line/limit'), ('Line_19', 'line/limit'), ('Line_20', 'line/limit'),
-                    ('Line_21', 'line/limit'), ('Line_22', 'line/limit'), ('Line_23', 'line/limit'), ('Line_24', 'line/limit')
-                ],
-                file_string='da_line_{}'.format(casefile),
-                collector=collector,
-            )
-            da_gen_q_store = MetricsStore(
-                name_units_pairs=[
-                    ('ClearQ_1', 'MW'), ('ClearQ_2', 'MW'), ('ClearQ_3', 'MW'), ('ClearQ_4', 'MW'),
-                    ('ClearQ_5', 'MW'), ('ClearQ_6', 'MW'), ('ClearQ_7', 'MW'), ('ClearQ_8', 'MW'),
-                    ('ClearQ_9', 'MW'), ('ClearQ_10', 'MW'), ('ClearQ_11', 'MW'), ('ClearQ_12', 'MW'),
-                    ('ClearQ_13', 'MW'), ('ClearQ_14', 'MW'), ('ClearQ_15', 'MW'), ('ClearQ_16', 'MW'),
-                    ('ClearQ_17', 'MW'), ('ClearQ_18', 'MW'), ('ClearQ_19', 'MW'), ('ClearQ_20', 'MW'),
-                    ('ClearQ_21', 'MW'), ('ClearQ_22', 'MW'), ('ClearQ_23', 'MW'), ('ClearQ_24', 'MW')
-                ],
-                file_string='da_gen_q_{}'.format(casefile),
-                collector=collector,
-            )
-            da_q_store = MetricsStore(
-                name_units_pairs=[
-                    ('ClearQ_1', 'MW'), ('ClearQ_2', 'MW'), ('ClearQ_3', 'MW'), ('ClearQ_4', 'MW'),
-                    ('ClearQ_5', 'MW'), ('ClearQ_6', 'MW'), ('ClearQ_7', 'MW'), ('ClearQ_8', 'MW'),
-                    ('ClearQ_9', 'MW'), ('ClearQ_10', 'MW'), ('ClearQ_11', 'MW'), ('ClearQ_12', 'MW'),
-                    ('ClearQ_13', 'MW'), ('ClearQ_14', 'MW'), ('ClearQ_15', 'MW'), ('ClearQ_16', 'MW'),
-                    ('ClearQ_17', 'MW'), ('ClearQ_18', 'MW'), ('ClearQ_19', 'MW'), ('ClearQ_20', 'MW'),
-                    ('ClearQ_21', 'MW'), ('ClearQ_22', 'MW'), ('ClearQ_23', 'MW'), ('ClearQ_24', 'MW')
-                ],
-                file_string='da_q_{}'.format(casefile),
-                collector=collector,
-            )
-            rt_line_store = MetricsStore(
-                name_units_pairs=[('Line', 'line/limit')],
-                file_string='rt_line_{}'.format(casefile),
-                collector=collector,
-            )
-            rt_q_store = MetricsStore(
-                name_units_pairs=[('ClearQ', 'MW')],
-                file_string='rt_q_{}'.format(casefile),
-                collector=collector,
-            )
-        finally:
-            log.info('Metrics collection started')
-        try:
-            # set day_of_year
-            s = datetime.strptime(ppc['StartTime'], '%Y-%m-%d %H:%M:%S')
-            # uncomment below for debug outages for good testing day 7, hour 144
-            # hour events 175,184,210,212...
-            # s = datetime.strptime("2016-01-07 00:00:00", '%Y-%m-%d %H:%M:%S')
-            day_of_year = s.timetuple().tm_yday
+    ames = ppc['ames']
+    power_level = ppc['genPowerLevel']
+    priceCap = 2 * ppc['priceCap']
+    used_curtail = ppc['curtail']
+    genLowerLimit = ppc['genLowerLimit']
+    reserveDown = ppc['reserveDown']
+    reserveUp = ppc['reserveUp']
+    zonalReserves = ppc['zonalReserves']
+    casefile = ppc['caseName']
+    output_Path = ppc['outputPath']
+    baseS = int(ppc['baseMVA'])     # base_S in ercot_8.json baseMVA
+    baseV = int(bus[0, 9])          # base_V in ercot_8.json bus row 0-7, column 9, should be the same for all buses
+    # create bus dictionary
+    baseV_dict = {}
+    for ibus in range(len(bus)):
+        baseV_dict.update({int(bus[ibus, 0]): int(bus[ibus, 9])})
+    log.info('Finished reading settings')
 
-            idx_add = []
-            idx_del = []
-            planned_df = []
-            unplanned_df = []
-            planned_outage_dict = {}
-            outages = ppc['outages']
-            outagesUnplanned = ppc['outagesUnplanned']
-            # read planned/unplanned outage data from csv file
-            if outages:
-                planned_df = pd.read_csv(ppc['planned'], index_col=0)
-            if outagesUnplanned:
-                unplanned_df = pd.read_csv(ppc['unplanned'], index_col=0)
+    collector = MetricsCollector.factory(start_time=StartTime, write_hdf5=True)
+    # create lists of (name, unit) pairs (order determines indices)
+    bus_store = MetricsStore(
+        name_units_pairs=[
+            ('LMP_P', 'USD/kwh'),
+            ('LMP_Q', 'USD/kvarh'),
+            ('PD', 'MW'),
+            ('QD', 'MVAR'),
+            ('Vang', 'deg'),
+            ('Vmag', 'pu'),
+            ('Vmax', 'pu'),
+            ('Vmin', 'pu'),
+            ('unresp', 'MW'),
+            ('resp_max', 'MW'),
+            ('c1', '$/MW'),
+            ('c2', '$/MW^2')
+        ],
+        file_string='bus_{}'.format(casefile),
+        collector=collector,
+    )
+    gen_store = MetricsStore(
+        name_units_pairs=[
+            ('Pgen', 'MW'),
+            ('Qgen', 'MVAR'),
+            ('LMP_P', 'USD/kwh')
+        ],
+        file_string='gen_{}'.format(casefile),
+        collector=collector,
+    )
+    sys_store = MetricsStore(
+        name_units_pairs=[
+            ('Ploss', 'MW'),
+            ('Converged', 'true/false')
+        ],
+        file_string='sys_{}'.format(casefile),
+        collector=collector
+    )
+    da_lmp_store = MetricsStore(
+        name_units_pairs=[
+            ('LMP_1', 'USD/kwh'), ('LMP_2', 'USD/kwh'), ('LMP_3', 'USD/kwh'), ('LMP_4', 'USD/kwh'),
+            ('LMP_5', 'USD/kwh'), ('LMP_6', 'USD/kwh'), ('LMP_7', 'USD/kwh'), ('LMP_8', 'USD/kwh'),
+            ('LMP_9', 'USD/kwh'), ('LMP_10', 'USD/kwh'), ('LMP_11', 'USD/kwh'), ('LMP_12', 'USD/kwh'),
+            ('LMP_13', 'USD/kwh'), ('LMP_14', 'USD/kwh'), ('LMP_15', 'USD/kwh'), ('LMP_16', 'USD/kwh'),
+            ('LMP_17', 'USD/kwh'), ('LMP_18', 'USD/kwh'), ('LMP_19', 'USD/kwh'), ('LMP_20', 'USD/kwh'),
+            ('LMP_21', 'USD/kwh'), ('LMP_22', 'USD/kwh'), ('LMP_23', 'USD/kwh'), ('LMP_24', 'USD/kwh')
+        ],
+        file_string='da_lmp_{}'.format(casefile),
+        collector=collector,
+    )
+    da_line_store = MetricsStore(
+        name_units_pairs=[
+            ('Line_1', 'line/limit'), ('Line_2', 'line/limit'), ('Line_3', 'line/limit'), ('Line_4', 'line/limit'),
+            ('Line_5', 'line/limit'), ('Line_6', 'line/limit'), ('Line_7', 'line/limit'), ('Line_8', 'line/limit'),
+            ('Line_9', 'line/limit'), ('Line_10', 'line/limit'), ('Line_11', 'line/limit'), ('Line_12', 'line/limit'),
+            ('Line_13', 'line/limit'), ('Line_14', 'line/limit'), ('Line_15', 'line/limit'), ('Line_16', 'line/limit'),
+            ('Line_17', 'line/limit'), ('Line_18', 'line/limit'), ('Line_19', 'line/limit'), ('Line_20', 'line/limit'),
+            ('Line_21', 'line/limit'), ('Line_22', 'line/limit'), ('Line_23', 'line/limit'), ('Line_24', 'line/limit')
+        ],
+        file_string='da_line_{}'.format(casefile),
+        collector=collector,
+    )
+    da_gen_q_store = MetricsStore(
+        name_units_pairs=[
+            ('ClearQ_1', 'MW'), ('ClearQ_2', 'MW'), ('ClearQ_3', 'MW'), ('ClearQ_4', 'MW'),
+            ('ClearQ_5', 'MW'), ('ClearQ_6', 'MW'), ('ClearQ_7', 'MW'), ('ClearQ_8', 'MW'),
+            ('ClearQ_9', 'MW'), ('ClearQ_10', 'MW'), ('ClearQ_11', 'MW'), ('ClearQ_12', 'MW'),
+            ('ClearQ_13', 'MW'), ('ClearQ_14', 'MW'), ('ClearQ_15', 'MW'), ('ClearQ_16', 'MW'),
+            ('ClearQ_17', 'MW'), ('ClearQ_18', 'MW'), ('ClearQ_19', 'MW'), ('ClearQ_20', 'MW'),
+            ('ClearQ_21', 'MW'), ('ClearQ_22', 'MW'), ('ClearQ_23', 'MW'), ('ClearQ_24', 'MW')
+        ],
+        file_string='da_gen_q_{}'.format(casefile),
+        collector=collector,
+    )
+    da_q_store = MetricsStore(
+        name_units_pairs=[
+            ('ClearQ_1', 'MW'), ('ClearQ_2', 'MW'), ('ClearQ_3', 'MW'), ('ClearQ_4', 'MW'),
+            ('ClearQ_5', 'MW'), ('ClearQ_6', 'MW'), ('ClearQ_7', 'MW'), ('ClearQ_8', 'MW'),
+            ('ClearQ_9', 'MW'), ('ClearQ_10', 'MW'), ('ClearQ_11', 'MW'), ('ClearQ_12', 'MW'),
+            ('ClearQ_13', 'MW'), ('ClearQ_14', 'MW'), ('ClearQ_15', 'MW'), ('ClearQ_16', 'MW'),
+            ('ClearQ_17', 'MW'), ('ClearQ_18', 'MW'), ('ClearQ_19', 'MW'), ('ClearQ_20', 'MW'),
+            ('ClearQ_21', 'MW'), ('ClearQ_22', 'MW'), ('ClearQ_23', 'MW'), ('ClearQ_24', 'MW')
+        ],
+        file_string='da_q_{}'.format(casefile),
+        collector=collector,
+    )
+    rt_line_store = MetricsStore(
+        name_units_pairs=[('Line', 'line/limit')],
+        file_string='rt_line_{}'.format(casefile),
+        collector=collector,
+    )
+    rt_q_store = MetricsStore(
+        name_units_pairs=[('ClearQ', 'MW')],
+        file_string='rt_q_{}'.format(casefile),
+        collector=collector,
+    )
+    log.info('Metrics collection started')
 
-            net = []
-            # initialize for variable wind/solar generator plants
-            generator_plants = {}
-            if ppc['genPower']:
-                log.info('wind/solar power fluctuation requested')
-                generator_plants = make_generator_plants(ppc, renewables)
-            if len(generator_plants) < 1:
-                log.info('there are no generator plants in this case')
-                log.info('remove any wind/solar generator in generator fleet')
-                ngen = []
-                ngenCost = []
-                ngenFuel = []
-                for i in range(numGen):
-                    if genFuel[i][0] not in renewables:
-                        ngen.append(gen[i])
-                        ngenCost.append(genCost[i])
-                        ngenFuel.append(genFuel[i])
-                ppc['gen'] = np.array(ngen)
-                ppc['gencost'] = np.array(ngenCost)
-                ppc['genfuel'] = ngenFuel
-                gen = ppc['gen']
-                genCost = ppc['gencost']
-                genFuel = ppc['genfuel']
-                numGen = gen.shape[0]
-                unumGen = gen.shape[0]
-        finally:
-            log.info('Started outages and renewables')
-        try:
-            log.info('making dictionary for plotting later')
-            make_dictionary(ppc)
+    # set day_of_year
+    s = datetime.strptime(ppc['StartTime'], '%Y-%m-%d %H:%M:%S')
+    # uncomment below for debug outages for good testing day: 7, hour: 144
+    # The hour events are 175,184,210,212...
+    # s = datetime.strptime("2016-01-07 00:00:00", '%Y-%m-%d %H:%M:%S')
+    day_of_year = s.timetuple().tm_yday
 
-            # initialize for day-ahead, OPF and time stepping
-            ts = 0
-            Pload = 0
-            opf = False
-            tnext_opf_pp = 0
-            tnext_opf_ames = 0
-            mn = 0
-            hour = -1
-            day = 1            
-            lastDay = 1
-            file_time = ''
-            print_time = ''
-            psst_case = ''
+    idx_add = []
+    idx_del = []
+    planned_df = []
+    unplanned_df = []
+    planned_outage_dict = {}
+    outages = ppc['outages']
+    outagesUnplanned = ppc['outagesUnplanned']
+    # read planned/unplanned outage data from csv file
+    if outages:
+        planned_df = pd.read_csv(ppc['planned'], index_col=0)
+    if outagesUnplanned:
+        unplanned_df = pd.read_csv(ppc['unplanned'], index_col=0)
 
-            RTDur_in_hrs = period / secs_in_a_hr
-            RTOPDur = period // 60  # in minutes
-            TAU = 1
-            NS = 4  # number of segments
-            dso_bid = False
-            schedule = {}
+    # initialize for variable wind/solar generator plants
+    generator_plants = {}
+    if ppc['genPower']:
+        log.info('wind/solar power fluctuation requested')
+        generator_plants = make_generator_plants(ppc, renewables)
+    if len(generator_plants) < 1:
+        log.info('there are no generator plants in this case')
+        log.info('remove any wind/solar generator in generator fleet')
+        ngen = []
+        ngenCost = []
+        ngenFuel = []
+        for i in range(numGen):
+            if genFuel[i][0] not in renewables:
+                ngen.append(gen[i])
+                ngenCost.append(genCost[i])
+                ngenFuel.append(genFuel[i])
+        ppc['gen'] = np.array(ngen)
+        ppc['gencost'] = np.array(ngenCost)
+        ppc['genfuel'] = ngenFuel
+        gen = ppc['gen']
+        genCost = ppc['gencost']
+        genFuel = ppc['genfuel']
+        numGen = gen.shape[0]
+        unumGen = gen.shape[0]
+    log.info('Started outages and renewables')
 
-            da_status = False
-            da_status_cnt = 0
-            da_run_cnt = 0
-            da_percent = 0
-            da_adder = []
-            da_schedule = {}
-            da_lmps = {}
-            da_dispatch = {}
-            last_dispatch = {}
+    log.info('making dictionary for plotting later')
+    make_dictionary(ppc)
 
-            rt_status = False
-            rt_status_cnt = 0
-            rt_run_cnt = 0
-            rt_percent = 0
-            rt_adder = 0
-            rt_schedule = {}
-            rt_lmps = {}
-            rt_dispatch = {}
+    # initialize for day-ahead, OPF and time stepping
+    ts = 0
+    Pload = 0
+    opf = False
+    tnext_opf_pp = 0
+    tnext_opf_ames = 0
+    mn = 0
+    hour = -1
+    day = 1
+    lastDay = 1
+    file_time = ''
+    print_time = ''
+    psst_case = ''
 
-            rd_curve = []
-            rd_adder = []
-            r_and_d = ppc["RandD"]
-            if r_and_d:
-                open_ldcurve(ppc["LDCurve"])
+    RTDur_in_hrs = period / secs_in_a_hr
+    RTOPDur = period // 60  # in minutes
+    TAU = 1
+    NS = 4  # number of segments
+    dso_bid = False
+    schedule = {}
 
-            # listening to message objects key on bus number
-            gld_load = {}
-            gld_load_hist = {}
-            ind_load_hist = {}
-            ref_load_hist = {}
-            nobid_unresp_da = [[]] * hours_in_a_day
-            nobid_unresp_rt = [0] * dsoBus.shape[0]
+    da_status = False
+    da_status_cnt = 0
+    da_run_cnt = 0
+    da_percent = 0
+    da_adder = []
+    da_schedule = {}
+    da_lmps = {}
+    da_dispatch = {}
+    last_dispatch = {}
 
-            # we need to adjust Pmin downward so the OPF and PF can converge, or else implement unit commitment
-            if not ames:
-                for rw in gen:
-                    rw[9] = 0.1 * rw[8]
+    rt_status = False
+    rt_status_cnt = 0
+    rt_run_cnt = 0
+    rt_percent = 0
+    rt_adder = 0
+    rt_schedule = {}
+    rt_lmps = {}
+    rt_dispatch = {}
 
-            # TODO: more efficient to concatenate outside a loop, lot to do
-            # dsoBus[] (i.e. dso) is one to one with the bus[] to fnscBus length
-            # bus length must be >= fnscBus length
-            # bus must be in order from low(138) to high(345) voltage
-            # dsoBus (DSOT, ERCOT stub) at this point only low voltage bus are used
-            for i in range(dsoBus.shape[0]):
-                busnum = i + 1
-                gld_load_hist[busnum] = {}
-                ind_load_hist[busnum] = {}
-                ref_load_hist[busnum] = {}
-                if noScale:
-                    dsoBus[i, 2] = 1.0  # gld_scale
-                # Sets a generator for each dso for responsive loads
-                ppc['gen'] = np.concatenate(
-                    (ppc['gen'], np.array([[busnum, 0, 0, 0, 0, 1, 250, 1, 0, -5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])))
-                ppc['gencost'] = np.concatenate(
-                    (ppc['gencost'], np.array([[2, 0, 0, 3, 0.0, 0.0, 0.0]])))
-                ppc['genfuel'].append(['', '', -busnum, 0])
+    rd_curve = []
+    rd_adder = []
+    r_and_d = ppc["RandD"]
+    if r_and_d:
+        open_ldcurve(ppc["LDCurve"])
 
-                gld_load[busnum] = {'pcrv': 0, 'qcrv': 0, 'p': 0, 'q': 0, 'p_r': 0, 'q_r': 0,
-                                    'unresp': 0, 'resp_max': 0, 'c2': 0, 'c1': 0, 'c0': 0, 'deg': 0, 'genidx': -busnum}
+    # listening to message objects key on bus number
+    gld_load = {}
+    gld_load_hist = {}
+    ind_load_hist = {}
+    ref_load_hist = {}
+    nobid_unresp_da = [[]] * hours_in_a_day
+    nobid_unresp_rt = [0] * dsoBus.shape[0]
 
-            # needed to be re-aliased after np.concatenate
-            gen = ppc['gen']
-            genCost = ppc['gencost']
-            genFuel = ppc['genfuel']
+    # we need to adjust Pmin downward so the OPF and PF can converge, or else implement unit commitment
+    if not ames:
+        for rw in gen:
+            rw[9] = 0.1 * rw[8]
 
-            # log.info('DSO Connections: bus, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit')
-            # log.info(dsoBus)
-            # log.info(gld_load)
-            # log.info(gen)
-            # log.info(genCost)
+    # TODO: more efficient to concatenate outside a loop, lot to do
+    # dsoBus[] (i.e. dso) is one to one with the bus[] to fnscBus length
+    # bus length must be >= fnscBus length
+    # bus must be in order from low(138) to high(345) voltage
+    # dsoBus (DSOT, ERCOT stub) at this point only low voltage bus are used
+    for i in range(dsoBus.shape[0]):
+        busnum = i + 1
+        gld_load_hist[busnum] = {}
+        ind_load_hist[busnum] = {}
+        ref_load_hist[busnum] = {}
+        if noScale:
+            dsoBus[i, 2] = 1.0  # gld_scale
+        # Sets a generator for each dso for responsive loads
+        ppc['gen'] = np.concatenate(
+            (ppc['gen'], np.array([[busnum, 0, 0, 0, 0, 1, 250, 1, 0, -5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])))
+        ppc['gencost'] = np.concatenate(
+            (ppc['gencost'], np.array([[2, 0, 0, 3, 0.0, 0.0, 0.0]])))
+        ppc['genfuel'].append(['', '', -busnum, 0])
 
-            # interval for metrics recording
-            tnext_metrics = 0
-            metrics_record_interval = ppc['Interval']
-            tnext_write_metrics = metrics_record_interval
+        gld_load[busnum] = {'pcrv': 0, 'qcrv': 0, 'p': 0, 'q': 0, 'p_r': 0, 'q_r': 0,
+                            'unresp': 0, 'resp_max': 0, 'c2': 0, 'c1': 0, 'c0': 0, 'deg': 0, 'genidx': -busnum}
 
-            loss_accum = 0
-            conv_accum = True
-            n_accum = 0
-            bus_accum = {}
-            gen_accum = {}
+    # needed to be re-aliased after np.concatenate
+    gen = ppc['gen']
+    genCost = ppc['gencost']
+    genFuel = ppc['genfuel']
 
-            for i in range(dsoBus.shape[0]):
-                busnum = int(dsoBus[i, 0])
-                bus_accum[str(busnum)] = [0, 0, 0, 0, 0, 0, 0, 99999.0, 0, 0, 0, 0]
+    # log.info('DSO Connections: bus, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit')
+    # log.info(dsoBus)
+    # log.info(gld_load)
+    # log.info(gen)
+    # log.info(genCost)
 
-            for i in range(gen.shape[0]):
-                gen_accum[str(genFuel[i][2])] = [0, 0, 0]
+    # interval for metrics recording
+    tnext_metrics = 0
+    metrics_record_interval = ppc['Interval']
+    tnext_write_metrics = metrics_record_interval
 
-            total_bus_num = bus.shape[0]
-            last_unRespMW = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
-            last_respMaxMW = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
-            unRespMW = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
-            respMaxMW = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
-            respC2 = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
-            respC1 = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
-            respC0 = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
-            resp_deg = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
-        finally:
-            log.info('Finished initialize for day-ahead, time stepping variables')
-            log.info('Finished initialize for bus and dso variables')
-    finally:
-        log.info('Finished initializing the program')
+    loss_accum = 0
+    conv_accum = True
+    n_accum = 0
+    opf_bus = None
+    opf_gen = None
+    bus_accum = {}
+    gen_accum = {}
+
+    for i in range(dsoBus.shape[0]):
+        busnum = int(dsoBus[i, 0])
+        bus_accum[str(busnum)] = [0, 0, 0, 0, 0, 0, 0, 99999.0, 0, 0, 0, 0]
+
+    for i in range(gen.shape[0]):
+        gen_accum[str(genFuel[i][2])] = [0, 0, 0]
+
+    total_bus_num = bus.shape[0]
+    last_unRespMW = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
+    last_respMaxMW = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
+    unRespMW = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
+    respMaxMW = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
+    respC2 = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
+    respC1 = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
+    respC0 = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
+    resp_deg = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
+    log.info('Finished initialize for day-ahead, time stepping variables')
+    log.info('Finished initialize for bus and dso variables')
+    log.info('Finished initializing the program')
 
     cache_sub = {}
     cache_pub = {}
@@ -1568,8 +1563,8 @@ def tso_psst_loop(casename):
                 da_gen, da_genCost, da_genFuel, da_numGen = use_generator(idx_add, idx_del)
 
                 psst_case = os.path.join(output_Path, file_time + "dam.dat")
-                renew = write_psst_file(psst_case, True, da_gen, da_genCost, da_genFuel, da_numGen)
-                da_adder, da_status, da_schedule, da_dispatch, da_lmps = scucDAM(psst_case, renew)
+                used_renew = write_psst_file(psst_case, True, da_gen, da_genCost, da_genFuel, da_numGen)
+                da_adder, da_status, da_schedule, da_dispatch, da_lmps = scucDAM(psst_case, used_renew)
                 da_run_cnt += 1
                 if da_status:
                     da_status_cnt += 1
@@ -1652,8 +1647,8 @@ def tso_psst_loop(casename):
 
                 # Run the real time and publish the LMP
                 psst_case = os.path.join(output_Path, file_time + "rtm.dat")
-                renew = write_psst_file(psst_case, False, gen, genCost, genFuel, numGen)
-                rt_adder, rt_status, rt_dispatch, rt_lmps = scedRTM(psst_case, rt_schedule, renew)
+                used_renew = write_psst_file(psst_case, False, gen, genCost, genFuel, numGen)
+                rt_adder, rt_status, rt_dispatch, rt_lmps = scedRTM(psst_case, rt_schedule, used_renew)
                 rt_run_cnt += 1
                 if rt_status:
                     rt_status_cnt += 1
@@ -1949,6 +1944,7 @@ def tso_psst_loop(casename):
     op.close()
     vp.close()
     log.info('finalizing HELICS tso federate')
+    log.info(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     helics.helicsFederateDestroy(hFed)
 
 if __name__ == "__main__":

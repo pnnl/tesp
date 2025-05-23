@@ -19,8 +19,8 @@ def generate_case(case_name, port, pv=None, bt=None, fl=None, ev=None):
 
     if split_case:
         while True:
-            for i in range(6, 9):
-                directory_name = str(case_start_year) + "_" + '{0:0>2}'.format(i+1)
+            for i in range(0, 12):
+                directory_name = str(case_start_year) + "_rnd_" + '{0:0>2}'.format(i+1)
                 ppc['caseName'] = node + "_" + directory_name
                 ppc['port'] = int(port + i)
 
