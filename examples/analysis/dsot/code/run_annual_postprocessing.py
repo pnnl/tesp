@@ -56,11 +56,12 @@ system_case = "8_hi_system_case_config.json"
 
 # Add cases to case list, in order of dependencies, if any
 # Note, do not add the base case to the case_list
-case_list = []
-case_list.append(DSOT_path)
-case_list.append(TOU_path)
-case_list.append(transactive_path)
-case_list.append(subscription_path)
+case_list = [
+    DSOT_path,
+    TOU_path,
+    transactive_path,
+    subscription_path
+]
 
 def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_path : str, run_base: bool):
     """This function loops through the run_annual_postprocessing script to 
@@ -70,7 +71,7 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
 
     Args:
         case_list (list): a list of the paths to each case that is NOT the base
-            case being post processesed
+            case being post processed
         base_case_path (str): the path to the base case folder (Flat)
         demand_case_path (str): the path to the demand case folder (TOU)
         run_base (bool): whether to run the base case first. Set to true for
@@ -216,18 +217,18 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
             ]
         else:
             month_def = [
-                ['Jan', case_path + '/8_2016_01_pv_bt_fl_ev', 4, 31],
-                ['Feb', case_path + '/8_2016_02_pv_bt_fl_ev', 4, 32],
-                ['March', case_path + '/8_2016_03_pv_bt_fl_ev', 4, 32],
-                ['April', case_path + '/8_2016_04_pv_bt_fl_ev', 4, 33],
-                ['May', case_path + '/8_2016_05_pv_bt_fl_ev', 4, 33],
-                ['June', case_path + '/8_2016_06_pv_bt_fl_ev', 4, 33],
-                ['July', case_path + '/8_2016_07_pv_bt_fl_ev', 4, 33],
-                ['August', case_path + '/8_2016_08_pv_bt_fl_ev', 4, 34],
-                ['Sept', case_path + '/8_2016_09_pv_bt_fl_ev', 4, 33],
-                ['Oct', case_path + '/8_2016_10_pv_bt_fl_ev', 4, 33],
-                ['Nov', case_path + '/8_2016_11_pv_bt_fl_ev', 4, 33],
-                ['Dec', case_path + '/8_2016_12_pv_bt_fl_ev', 4, 31]
+                ['Jan', case_path + '/8_rnd_2016_01_pv_bt_fl_ev', 4, 31],
+                ['Feb', case_path + '/8_rnd_2016_02_pv_bt_fl_ev', 4, 32],
+                ['March', case_path + '/8_rnd_2016_03_pv_bt_fl_ev', 4, 32],
+                ['April', case_path + '/8_rnd_2016_04_pv_bt_fl_ev', 4, 33],
+                ['May', case_path + '/8_rnd_2016_05_pv_bt_fl_ev', 4, 33],
+                ['June', case_path + '/8_rnd_2016_06_pv_bt_fl_ev', 4, 33],
+                ['July', case_path + '/8_rnd_2016_07_pv_bt_fl_ev', 4, 33],
+                ['August', case_path + '/8_rnd_2016_08_pv_bt_fl_ev', 4, 34],
+                ['Sept', case_path + '/8_rnd_2016_09_pv_bt_fl_ev', 4, 33],
+                ['Oct', case_path + '/8_rnd_2016_10_pv_bt_fl_ev', 4, 33],
+                ['Nov', case_path + '/8_rnd_2016_11_pv_bt_fl_ev', 4, 33],
+                ['Dec', case_path + '/8_rnd_2016_12_pv_bt_fl_ev', 4, 31]
             ]
 
 
@@ -495,10 +496,10 @@ def batch_process():
 
 def one_process():
     # Select case to post-process
-    case = TOU_path
+    case = RND_path
 
     base_case_path = flat_path
-    demand_case_path = TOU_path
+    demand_case_path = RND_path
     run_base = False
     case_list = []
     case_list.append(str(case))
