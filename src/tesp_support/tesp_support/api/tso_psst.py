@@ -153,17 +153,15 @@ def tso_psst_loop(casename):
         # rob and don adder if used
         adder = [0 for _ in range(hours_in_a_day)]
         if r_and_d:
-            log.debug(f"Renewables: {renew}")
             generation = [0 for _ in range(hours_in_a_day)]
             for g in dispatch:
                 row = dispatch[g]
                 for ii in range(hours_in_a_day):
                     generation[ii] += row[ii]
             for ii in range(hours_in_a_day):
-                for _ in range(total_bus_num):
-                    generation[ii] += renew[ii][_]
+                generation[ii] += renew[ii] * baseS
                 adder[ii] = rob_and_don(generation[ii])
-                log.info(f"generation: {generation[ii]}, adder: {adder[ii]}")
+                log.info(f"generation: {generation[ii]}, renewables: {renew[ii]}, adder: {adder[ii]}")
                 for jj in range(dsoBus.shape[0]):
                     DA_LMPs[jj][ii] += adder[ii]
 
