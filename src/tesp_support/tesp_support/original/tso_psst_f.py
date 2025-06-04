@@ -145,7 +145,7 @@ def tso_psst_loop_f(casename):
             for ii in range(hours_in_a_day):
                 generation[ii] += renew[ii] * baseS
                 adder[ii] = rob_and_don(generation[ii])
-                log.info(f"generation: {generation[ii]}, renewables: {renew[ii]}, adder: {adder[ii]}")
+                log.info(f"generation: {generation[ii]}, renewables: {renew[ii] * baseS}, adder: {adder[ii]}")
                 for jj in range(dsoBus.shape[0]):
                     DA_LMPs[jj][ii] += adder[ii]
 
@@ -158,7 +158,11 @@ def tso_psst_loop_f(casename):
                 row[0], row[1], row[2], row[3], row[4], row[5],
                 row[6], row[7], row[8], row[9], row[10], row[11],
                 row[12], row[13], row[14], row[15], row[16], row[17],
-                row[18], row[19], row[20], row[21], row[22], row[23]
+                row[18], row[19], row[20], row[21], row[22], row[23],
+                adder[0], adder[1], adder[2], adder[3], adder[4], adder[5],
+                adder[6], adder[7], adder[8], adder[9], adder[10], adder[11],
+                adder[12], adder[13], adder[14], adder[15], adder[16], adder[17],
+                adder[18], adder[19], adder[20], adder[21], adder[22], adder[23]
             )
 
         # log.debug("DA line power")
@@ -320,7 +324,6 @@ def tso_psst_loop_f(casename):
 
         # set the lmps and generator dispatch and publish LMP
         generation = 0.0
-        log.info(f"Renewables: {renew}")
         for ii in range(numGen):
             # if using gridpiq to gauge environmental emission concerns
             if piq and day > 1:
@@ -336,7 +339,7 @@ def tso_psst_loop_f(casename):
         adder = 0.0
         if r_and_d:
             adder = rob_and_don(generation)
-            log.info(f"generation: {generation}, adder: {adder}")
+            log.debug(f"generation: {generation}, renewables: {renew * baseS}, adder: {adder}")
             if adder > 0:
                 for ii in range(total_bus_num):
                     for jj in range(TAU):
@@ -449,7 +452,7 @@ def tso_psst_loop_f(casename):
         log.info('Total TSO ramp up: ' + str(tot_gen_up) + ', Total TSO ramp down: ' + str(tot_gen_down))
 
         da_curtail = [[]] * hours_in_a_day
-        renew = [] * hours_in_a_day
+        renew = []
         for jj in range(hours_in_a_day):
             total_neg = 0
             total_dso = 0
@@ -521,7 +524,7 @@ def tso_psst_loop_f(casename):
                     tot_dso += total
                     da_curtail[jj].append(total)
 
-            renew[jj].append(total_neg*curtail)
+            renew.append(total_neg*curtail)
             log.info('DA Hour: ' + str(jj + 1))
             log.info('Total DSO Load: ' + str(total_dso))
             log.info('Total DSO to PSST: ' + str(tot_dso) + ', Total Renewables: ' + str(total_neg))
@@ -1122,7 +1125,13 @@ def tso_psst_loop_f(casename):
             ('LMP_9', 'USD/kwh'), ('LMP_10', 'USD/kwh'), ('LMP_11', 'USD/kwh'), ('LMP_12', 'USD/kwh'),
             ('LMP_13', 'USD/kwh'), ('LMP_14', 'USD/kwh'), ('LMP_15', 'USD/kwh'), ('LMP_16', 'USD/kwh'),
             ('LMP_17', 'USD/kwh'), ('LMP_18', 'USD/kwh'), ('LMP_19', 'USD/kwh'), ('LMP_20', 'USD/kwh'),
-            ('LMP_21', 'USD/kwh'), ('LMP_22', 'USD/kwh'), ('LMP_23', 'USD/kwh'), ('LMP_24', 'USD/kwh')
+            ('LMP_21', 'USD/kwh'), ('LMP_22', 'USD/kwh'), ('LMP_23', 'USD/kwh'), ('LMP_24', 'USD/kwh'),
+            ('Adder_1', 'USD/kwh'), ('Adder_2', 'USD/kwh'), ('Adder_3', 'USD/kwh'), ('Adder_4', 'USD/kwh'),
+            ('Adder_5', 'USD/kwh'), ('Adder_6', 'USD/kwh'), ('Adder_7', 'USD/kwh'), ('Adder_8', 'USD/kwh'),
+            ('Adder_9', 'USD/kwh'), ('Adder_10', 'USD/kwh'), ('Adder_11', 'USD/kwh'), ('Adder_12', 'USD/kwh'),
+            ('Adder_13', 'USD/kwh'), ('Adder_14', 'USD/kwh'), ('Adder_15', 'USD/kwh'), ('Adder_16', 'USD/kwh'),
+            ('Adder_17', 'USD/kwh'), ('Adder_18', 'USD/kwh'), ('Adder_19', 'USD/kwh'), ('Adder_20', 'USD/kwh'),
+            ('Adder_21', 'USD/kwh'), ('Adder_22', 'USD/kwh'), ('Adder_23', 'USD/kwh'), ('Adder_24', 'USD/kwh')
         ],
         file_string='da_lmp_{}'.format(casefile),
         collector=collector,
@@ -1523,8 +1532,8 @@ def tso_psst_loop_f(casename):
                 da_gen, da_genCost, da_genFuel, da_numGen = use_generator(idx_add, idx_del)
 
                 psst_case = os.path.join(output_Path, file_time + "dam.dat")
-                used_renew = write_psst_file(psst_case, True, da_gen, da_genCost, da_genFuel, da_numGen)
-                da_adder, da_status, da_schedule, da_dispatch, da_lmps = scucDAM(psst_case, used_renew)
+                da_used_renew = write_psst_file(psst_case, True, da_gen, da_genCost, da_genFuel, da_numGen)
+                da_adder, da_status, da_schedule, da_dispatch, da_lmps = scucDAM(psst_case, da_used_renew)
                 da_run_cnt += 1
                 if da_status:
                     da_status_cnt += 1
