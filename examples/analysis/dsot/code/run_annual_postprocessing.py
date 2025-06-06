@@ -86,7 +86,7 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
     else: 
         pass
     # Run each case once to generate required files, once to square up 
-    case_list = np.repeat(case_list, 2)  
+    # case_list = np.repeat(case_list, 2)
     
     for case_path in case_list:
         #  STEP 0 -- Determine which metrics to post-process
@@ -125,7 +125,7 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
             print('No Quadratic Curves found, running train_lmps')
             train_lmps = True
         else:
-            train_lmps = False
+            train_lmps = True
 
         if not os.path.isfile(os.path.join(case_path, 'DSO1_Market_Purchases.json')):
             print('No Market Purchases found, running wholesale')
@@ -312,6 +312,8 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
             obj.multiple_fit_calls()
             obj.make_json_out()
 
+            # TODO: Need better workflow to write output coefficients to specific DSO coefficient file of case(s) in question.
+
         # --------------- DETERMINE WHOLESALE PURCHASES  -----------------------
         # dso_num = '1'
         if wholesale:
@@ -489,16 +491,16 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
 
 def batch_process():
     base_case_path = flat_path
-    demand_case_path = TOU_path
+    demand_case_path = flat_path
     run_base = True
     run_annual_postprocessing(case_list, base_case_path, demand_case_path, run_base)
 
 def one_process():
     # Select case to post-process
-    case = TOU_path
+    case = transactive_path
 
     base_case_path = flat_path
-    demand_case_path = TOU_path
+    demand_case_path = flat_path
     run_base = False
     case_list = []
     case_list.append(str(case))
@@ -506,5 +508,5 @@ def one_process():
     
 
 if __name__ == "__main__":
-    batch_process()
-    #one_process()
+    # batch_process()
+    one_process()

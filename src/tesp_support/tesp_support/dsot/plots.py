@@ -235,6 +235,12 @@ def load_gen_data(dir_path, gen_name, day_range):
                     dates += arr.tolist()
                     dsos += np.array([dso for i in range(24)]).tolist()
 
+            # Expanding dataframe size for when there are LMP Adders present.
+            if data_df.columns.str.contains('Adder').any():
+                adders = [item.replace("lmp", "adder") for item in dsos]
+                gen_data_df = pd.DataFrame(index=[dates + dates, dsos + adders], columns=[column_key[gen_name][:-1]])
+
+            else:
             gen_data_df = pd.DataFrame(index=[dates, dsos], columns=[column_key[gen_name][:-1]])
             gen_data_df[column_key[gen_name][:-1]] = test
 
