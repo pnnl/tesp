@@ -1,3 +1,4 @@
+
 # Copyright (C) 2021-2024 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: case_merge.py
@@ -130,19 +131,28 @@ def merge_glm_dict(target, sources, xfmva):
     for fdr in sources:
         lp = open(path.dirname(target) + '/' + fdr + '_glm_dict.json').read()
         cfg = json.loads(lp)
-        fdr_id = gld_strict_name(cfg['base_feeder'])
         if sources.index(fdr) == 0:
             diction['bulkpower_bus'] = cfg['bulkpower_bus']
             diction['message_name'] = cfg['message_name']
             diction['climate'] = cfg['climate']
-        diction['feeders'][fdr_id] = {'house_count': cfg['feeders']['network_node']['house_count'],
+        if not cfg['base_feeder']:
+            pass
+        else:
+            fdr_id = gld_strict_name(cfg['base_feeder'])
+            try:
+                diction['feeders'][fdr_id] = {'house_count': cfg['feeders'][fdr]['house_count'],
+                                        'inverter_count': cfg['feeders'][fdr]['inverter_count'],
+                                        'ev_count': cfg['feeders'][fdr]['ev_count']}
+            # To retain compatability with archived dsot prepare_case
+            except KeyError:
+               diction['feeders'][fdr_id] = {'house_count': cfg['feeders']['network_node']['house_count'],
                                       'inverter_count': cfg['feeders']['network_node']['inverter_count'],
-                                      'ev_count': cfg['feeders']['network_node']['ev_count']}
-        for key in ['billingmeters', 'houses', 'inverters', 'capacitors', 'regulators', 'ev']:
-            for obj in cfg[key]:
-                if 'feeder_id' in cfg[key][obj]:
-                    cfg[key][obj]['feeder_id'] = fdr_id
-            diction[key].update(cfg[key])
+                                      'ev_count': cfg['feeders']['network_node']['ev_count']} 
+            for key in ['billingmeters', 'houses', 'inverters', 'capacitors', 'regulators', 'ev']:
+                for obj in cfg[key]:
+                    if 'feeder_id' in cfg[key][obj]:
+                        cfg[key][obj]['feeder_id'] = fdr_id
+                diction[key].update(cfg[key])
     op = open(target, 'w')
     print(json.dumps(diction), file=op)
     op.close()
@@ -162,15 +172,19 @@ def merge_agent_dict(target, sources):
                'ev': {},
                'pv': {},
                'site_agent': {},
-               'StartTime': "",
-               'EndTime': "",
+               'start_time': "",
+               'end_time': "",
                'rate': "",
-               'LogLevel': ""}
+               'log_level': ""}
     for fdr in sources:
         lp = open(path.dirname(target) + '/' + fdr + '_agent_dict.json').read()
         cfg = json.loads(lp)
         for key in cfg.keys():
-            if key in ["StartTime", "EndTime", "rate", "LogLevel", "solver", "numCore", "priceSensLoad", "serverPort",
+            if key in ["start_time", "end_time", "rate", "log_level", "solver", "num_core", "price_sens_load", "port",
+                       "metrics", "metrics_extension", "metrics_interval"]:
+                diction[key] = cfg[key]
+            # To retain compatability with archived dsot prepare_case:    
+            elif key in ["StartTime", "EndTime", "rate", "LogLevel", "solver", "numCore", "priceSensLoad", "serverPort",
                        "Metrics", "MetricsType", "MetricsInterval"]:
                 diction[key] = cfg[key]
             else:

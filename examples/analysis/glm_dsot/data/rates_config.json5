@@ -1,0 +1,547 @@
+{
+    "case_name": "gld_feeder_test",
+    "start_time": "2016-08-05 00:00:00", // simulation start time, YYYY-MM-DD HH:MM:SS
+    "end_time": "2016-08-12 00:00:00", // simulation end time, YYYY-MM-DD HH:MM:SS
+    "nodes": 8, // 8 or 200 bus case
+    "scenario": "hi", // Renewables scenario, High: "hi", Moderate: ""
+    "renewables": [
+        "wind",
+        "solar"
+    ],
+    'messager': "FNCS", // "HELICS" or "FNCS"
+    "RECS": true, // If using RECS population data
+    "time_zone": "CST+6CDT",
+    "case_type": {    
+        "bt": 0, // bt = battery participates
+        "fl": 0, // fl = flexible loads (houses) participate
+        "ev": 0, // ev = electric vehicles participate
+        "pv": 0 // pv = photovoltaics
+    },
+    "transactive_house_percentage": 0.80, // Participation rate. Default: 0.80
+    "water_heater_percentage": 0.80, // Percent of homes with electric water heaters
+    "water_heater_participation": 0.50, // Participation rate of elec water heaters [NOT USED]
+    "electric_cooling_percentage": 0.90, // Percentage of homes with electric cooling
+    "solar_deployment": 0.11, // Percentage of homes with solar
+    "storage_deployment": 0.03, // Percentage of homes with storage
+    "storage_participation": 1.00, // Participation Rate of storage
+    "ev_deployment": 0.08, // Percentage of homes with EVs
+    "ev_participation": 1.00, // Participation rate of EVs
+    "solar_percentage": {
+        "Low": 0.12,
+        "Middle": 0.3,
+        "Upper": 0.58
+    }, // Income distribution of solar (only single-family homes)
+    "storage_percentage": {
+        "Low": 0.12,
+        "Middle": 0.3,
+        "Upper": 0.58
+    }, // Income distribution of storage (only single-family homes)
+    "ev_percentage": {
+        "Low": 0.1,
+        "Middle": 0.3,
+        "Upper": 0.6
+    }, // Income distribution of EVs (any home type)
+    "rate": "", // rate tariff name for post-processing. "" = DSOT ['', 'Flat', 'EandC', 'TOU']
+    "EandC": false, // True if running Dynamic Energy and Capacity rate (EandC)
+    "market": false, // case_type sets whether the market is true (bt, fl, or ev = true)
+    "price_sens_load": false, // true = Substation load is flexible, false = inflexible
+    "no_scale": true, // FNCS gld_scale set to 1 if false
+    "curve": false, // FNCS no curve if set to false
+    "curtail": true, // true = curtail renewables when needed, false = no curtailment
+    "reserve_down": 0.15, // Reserve down system percent
+    "reserve_up": 0.15, // Reserve up system percent
+    "quadratic": true,
+    "price_cap": 1000.0,
+    "zonal_reserves": false,
+    "simplified_feeders": false,
+    "key_load": "ind", // The key to be used for the load player -> refLoadMn, readLoadHr or indLoad, should be sync with Startdate
+    "base_MVA": 100.0, // Conversion facter to p.u.
+    "gen_lower_limit": 150.0, // Set generation lower limit in MVA
+    "gen_power_level": 0.5, // percent generation power level at start up (0.6-0.7 typical, try 0.85 for high demand months)
+    "gen_power": true, // true= renewables are turned on, false = renewables off
+    "seed": 1, // Random number seed
+    "t_max": 604800, // The duration for the simulation in seconds
+    "interval": 86400,
+    "period": 300, // Time interval for the simulation in seconds for opf/ames
+    "dt": 15, // The delta time for the simulation in seconds for pf
+    "pf_dc": 1,
+    "opf_dc": 1,
+    "log_level": "INFO",
+    "gld_debug": 0,
+    "DSOT_case": true,
+    "out_path": "", // Default: blank, ~/grid/tesp/examples/dsot/output
+    "make_plot": "False",
+    "archive_path": "/mnt/simdata/done",
+    "source_directory": "",
+    "version": "2",
+    "bulkpower_bus": 1,
+    "ames": true, // false = pypower running opf
+    "solver": "cbc", // ipopt
+    "num_core": 12,
+    "method": "FBS",
+    "other_method": "NR",
+    "outages": true,
+    "outages_unplanned": true,
+    "planned": "../../data/planned_outages.csv",
+    "unplanned": "../../data/unplanned_outages.csv",
+    "LD_curve": "../../data/EandC.csv",
+    "port": 5570,
+    "split_case": true,
+    "case_start_year": 2016,
+    "case_end_year": 2016,
+    "grid_PIQ": false,
+    "units_out": [], // An array for each units out[idx, time out[s], time back in[s]]
+    "branches_out": [], // An array for each branches out [idx, time out[s], time back in[s]]
+    "swing_bus": 1,
+    "thermostat_schedule_version": 2,
+    "slider_ranges": {
+        "bt": {"_UP": 1, "_DOWN": 0.001 },
+        "ev": {"_UP": 1, "_DOWN": 0.001 },
+        "hv": {"_UP": 1, "_DOWN": 0.4 },
+        "pv": {"_UP": 1, "_DOWN": 0.001 },
+        "wh": {"_UP": 1, "_DOWN": 0.001 }
+    },
+    "solar_data_path": "../../../data/solar_data/solar_pv_power_profiles/",
+    "solar_P_player_file": "5_minute_dist_power.csv", // solar active power data to be injected in gridlabd
+    "solar_Q_player_file": "no_file", // solar reactive power data to be injected in gridlabd; if 'no_file' means 0 reactive power
+    "solar_agent_forecast_file_8": "8-node_dist_hourly_forecast_power.csv", // 1 hour tape of rooftop ground truth with uncertainty (forecast error) added.  This is what will be read into the PV (unresponsive) agent with a scaling factor
+    "solar_agent_forecast_file_200": "200-node_dist_hourly_forecast_power.csv",
+    "data_path": "../../dsot/data",
+    "system_file_8": "8_system_config.json5",
+    "system_file_8_hi": "8_hi_system_config.json5",
+    "system_file_200": "200_system_config.json5",
+    "system_file_200_hi": "200_hi_system_config.json5",
+    "population_file_8": "8-metadata-lean.json",
+    "population_file_8_hi": "8-hi-metadata-lean.json",
+    "population_file_200": "200-metadata-lean.json",
+    "population_file_200_hi": "200-hi-metadata-lean.json",
+    "population_file_RECS": "8-hi-metadata-recs.json",
+    "weather_data_source_path_8": "/8-node data/DAT formatted files/",
+    "weather_data_source_path_200": "/200-node data/DAT formatted files/",
+    "hvac_set_point": "hvac_setpt.json",
+    "hvac_RECS_set_point": "hvac_setpt_RECS.json",
+    "quadratic_file_8": "8_quadratic_curves.json",
+    "quadratic_file_8_hi": "8_hi_quadratic_curves.json",
+    "quadratic_file_200": "200_quadratic_curves.json",
+    "quadratic_file_200_hi": "200_hi_quadratic_curves.json",
+    "quadratic_file_RECS": "8_hi_quadratic_curves_Flat.json",
+    "commercial_meta_file": "DSOT_commercial_metadata.json",
+    "residential_meta_file": "DSOT_residential_metadata.json",
+    "residential_meta_file_RECS": "RECS_residential_metadata.json",
+    "battery_meta_file": "DSOT_battery_metadata.json",
+    "ev_meta_file": "DSOT_ev_model_metadata.json",
+    "ev_driving_meta_file": "DSOT_ev_driving_metadata.csv",
+    "schedule_server_file_8": "8_schedule_server_metadata.json",
+    "schedule_server_file_200": "200_schedule_server_metadata.json",
+    "copperplate_feeder": true,
+    "copperplate_feeder_name": "commercial_copperplate_feeder",
+    "copperplate_feeder_file": "../data/feeders/commercial_copperplate_feeder.glm",
+    "backbone_files": {
+    "taxonomy": "", // taxonomy feeder file
+    "seed": 0, // random seed
+    "support_path": "../../../../../../data/schedules/",
+    "weather_path": "../../../../../../data/weather/"
+    },
+    "metrics": [
+        "house",
+        "waterheater",
+        "meter",
+        "line",
+        "transformer",
+        "capacitor",
+        "inverter",
+        "regulator",
+        "substation"
+    ],
+    "metrics_extension": "h5",
+    "metrics_interval": 300,
+    "metrics_interim": 7200,
+    "metrics_filename": "${METRICS_FILE}",
+    "metrics_alternate": "yes", 
+    "metrics_full_detail": true, // Level of reporting detail. False = limited, true = full
+    "minimum_step": 30,
+    "solar_inverter_mode": "CONSTANT_PQ",
+    "interpolate": "QUADRATIC",
+    "storage_inverter_mode": "CONSTANT_PQ",
+    "inverter_efficiency": 1.0,
+    "battery_roundtrip_efficiency": 1.0,
+    "water_heater_model": "TWONODE",
+    "bill_mode": "TIERED",
+    "monthly_fee": 13,
+    "price": 0.102013,
+    "tier_1_energy": 500,
+    "tier_2_energy": 1000,
+    "tier_3_energy": 0,
+    "tier_1_price": 0.117013,
+    "tier_2_price": 0.122513,
+    "tier_3_price": 0,
+    "energyplus_bus": "",
+    "energyplus_service_v": 480,
+    "energyplus_xfmr_kva": 250,
+    "WeatherPrep": {
+        "Name": "",
+        "WeatherChoice": "",
+        "DataSource": "",
+        "Latitude": "",
+        "Longitude": "",
+        "TimeZoneOffset": ""
+    },
+    "BuildingPrep": {
+        "ResBldgMetaData": "",
+        "ASHRAEZone": "",
+        "CommBldgMetaData": "",
+        "CommBldgPopulation": ""
+    },
+    "MarketPrep": {
+        "DSO": {
+            "Name": "DSO_1",
+            "Bus": 1,
+            "Unit": "kW",
+            "PriceCap": 0.5,
+            "CurveSamples": 100,
+            "TimeWindowDA": 48,
+            "MaximumQuantity": 2000,
+            "TransformerDegradation": false,
+            "Pnom": 1,
+            "Qnom": 1,
+            "dso_retail_scaling": 1.04,
+            "distribution_charge_rate": 0.04
+        },
+        "Retail": {
+            "Name": "Retail_1",
+            "Unit": "kW",
+            "PriceCap": 1.0,
+            "CurveSamples": 100,
+            "TimeWindowDA": 48,
+            "QMax": 3600,
+            "MaxPuLoading": 1.5,
+            "period_da": 3600,
+            "period_rt": 300,
+            "OperatingPeriod": 1440,
+            "timeStep": 1,
+            "Tamb": 30,
+            "delta_T_TO_init": 25,
+            "delta_T_W_init": 25,
+            "BP": 100000,
+            "toc_A": 3430,
+            "toc_B": 1090,
+            "Base_Year": 20.54794520547945,
+            "P_Rated": 2500000.0,
+            "NLL_rate": 0.3,
+            "LL_rate": 1.0,
+            "Sec_V": 69000,
+            "TOU_TOR": 75.0,
+            "TOU_GR": 5,
+            "Oil_n": 0.8,
+            "Wind_m": 0.8,
+            "delta_T_TOR": 55,
+            "delta_T_ave_wind_R": 65
+        }
+    },
+    "agent_debug_mode": {
+        "ON": 0, // ON==1 allows only hvac or only wh participation within fl = 1
+        "flex_wh": 0,
+        "flex_hvac": 0
+    },
+    "AgentPrep": {
+        "HVAC": {
+            "TimeStepGldAgents": 15,
+            "MarketClearingPeriod": 300,
+            "ThermostatRangeHi": 5.0,
+            "ThermostatRangeLo": 3.0,
+            "ThermostatRampHi": 5.0,
+            "ThermostatRampLo": 5.0,
+            "ThermostatSliderHi": 0.8,
+            "ThermostatSliderLo": 0.2,
+            "ThermostatBandLo": 2.0,
+            "ThermostatBandHi": 2.0,
+            "PriceCapLo": 1.0,
+            "PriceCapHi": 1.0,
+            "InitialPriceMean": 0.0342,
+            "InitialPriceStdDev": 0.0279
+        },
+        "Battery": {
+            "TimeStepGldAgents": 15,
+            "BatteryReserveLo": 20,
+            "BatteryReserveHi": 20,
+            "BatteryProfitMarginLo": 5,
+            "BatteryProfitMarginHi": 20,
+            "lifetime_cycles": 3650,
+            "installed_system_first_cost($/kWh)": 83
+        },
+        "EV": {
+            "TimeStepGldAgents": 15,
+            "EVReserveLo": 20,
+            "EVReserveHi": 20,
+            "EVProfitMarginLo": 5,
+            "EVProfitMarginHi": 20,
+            "lifetime_cycles": 3650,
+            "installed_system_first_cost($/kWh)": 83,
+            "boundary_cond": "slider_based",
+            "ev_mode": "V1G"
+        },
+        "WaterHeater": {
+            "TimeStepGldAgents": 15,
+            "InletWaterTemperature": 70,
+            "AmbientTemperature": 50,
+            "DesiredTemperature": 130,
+            "MaximumTemperature": 150,
+            "MinimumTemperature": 90,
+            "MemoryLength": 1152,
+            "WaterDrawSensor": false,
+            "WindowLength": 48,
+            "WeightSOHC": 0.34,
+            "WeightComfort": 0.5,
+            "ProfitMarginIntercept": 10,
+            "ProfitMarginSlope": 0,
+            "PriceCap": 1.0
+        }
+    },
+    "PYPOWERConfiguration": {
+        "TransformerBase": 12,
+        "TransmissionVoltage": 345
+    },
+    "ThermostatSchedule": {
+        "WeekdayWakeStartLo": 5.0,
+        "WeekdayWakeStartHi": 6.5,
+        "WeekdayDaylightStartLo": 8.0,
+        "WeekdayDaylightStartHi": 9.0,
+        "WeekdayEveningStartLo": 17.0,
+        "WeekdayEveningStartHi": 18.5,
+        "WeekdayNightStartLo": 22.0,
+        "WeekdayNightStartHi": 23.5,
+        "WeekdayWakeSetLo": 78.0,
+        "WeekdayWakeSetHi": 80.0,
+        "WeekdayDaylightSetLo": 84.0,
+        "WeekdayDaylightSetHi": 86.0,
+        "WeekdayEveningSetLo": 78.0,
+        "WeekdayEveningSetHi": 80.0,
+        "WeekdayNightSetLo": 72.0,
+        "WeekdayNightSetHi": 74.0,
+        "WeekendDaylightSetLo": 76.0,
+        "WeekendDaylightSetHi": 84.0,
+        "WeekendDaylightStartLo": 8.0,
+        "WeekendDaylightStartHi": 9.0,
+        "WeekendNightSetLo": 72.0,
+        "WeekendNightSetHi": 74.0,
+        "WeekendNightStartLo": 22.0,
+        "WeekendNightStartHi": 23.5
+    },
+    "ThermostatScheduleV2": {
+        "WeekdayWakeStart": {
+            "mean": 6.5,
+            "std": 2,
+            "min": 4.0,
+            "max": 10.0
+        },
+        "WeekdayWakeToDaylightTime": {
+            "mean": 1.0,
+            "std": 2,
+            "min": 0.5,
+            "max": 4.0
+        },
+        "WeekdayEveningStart": {
+            "mean": 17.5,
+            "std": 3,
+            "min": 12.0,
+            "max": 21.0
+        },
+        "WeekdayEveningToNightTime": {
+            "mean": 2.5,
+            "std": 2,
+            "min": 0.0,
+            "max": 6.0
+        },
+        "WeekendDaylightStart": {
+            "mean": 8.0,
+            "std": 2,
+            "min": 6.0,
+            "max": 11.0
+        },
+        "WeekendNightStart": {
+            "mean": 22,
+            "std": 2,
+            "min": 21.0,
+            "max": 23.9
+        },
+        "TemperatureMidPoint": {
+            "mean": 70.0,
+            "std": 4,
+            "min": 64.0,
+            "max": 80.0
+        },
+        "ScheduleScalar": {
+            "mean": 0.7,
+            "std": 0.8,
+            "min": 0.0,
+            "max": 2
+        },
+        "WeekdayScheduleOffset": {
+            "wakeup": 2.0,
+            "daylight": 4.0,
+            "evening": 2.0,
+            "night": 0.0
+        },
+        "WeekendScheduleOffset": {
+            "daylight": 2.0,
+            "night": 0.0
+        }
+    },
+    "Q_bid_forecast_correction": {
+        "default": {
+            "correct": false
+    },
+    "DSO_1": {
+        "correct": true,
+        "Q_gain": [
+            0.8432719833248055,
+            0.7852307135796892
+        ],
+        "t_65": [
+            -1.183780313682675,
+            -1.4913287559582358
+        ],
+        "t_65_2": [
+            2.4209461160607337,
+            3.1966259833252844
+        ],
+        "DC_change_Q_DA": [
+            1240.3175715267969,
+            1892.4862691083563
+        ]
+    },
+    "DSO_2": {
+        "correct": true,
+        "Q_gain": [
+            0.8118144652585926,
+            0.7231953442395413
+        ],
+        "t_65": [
+            4.849915786232735,
+            13.648482103801072
+        ],
+        "t_65_2": [
+            2.5866797966771014,
+            3.089277672740714
+        ],
+        "DC_change_Q_DA": [
+            1595.5168418125359,
+            2504.9756509881286
+        ]
+    },
+    "DSO_3": {
+        "correct": true,
+        "Q_gain": [
+            0.8497463035497925,
+            0.8018700899818214
+        ],
+        "t_65": [
+            -3.331975069962633,
+            -0.6634153345892049
+        ],
+        "t_65_2": [
+            0.21204294866232487,
+            0.1470040802295049
+        ],
+        "DC_change_Q_DA": [
+            30.518777360426053,
+            30.324735727429836
+        ]
+    },
+    "DSO_4": {
+        "correct": true,
+        "Q_gain": [
+            0.7023805999672099,
+            0.6676497140548733
+        ],
+        "t_65": [
+            -12.957544363782551,
+            2.743006231438347
+        ],
+        "t_65_2": [
+            1.545457244198972,
+            1.176176617063642
+        ],
+        "DC_change_Q_DA": [
+            703.5397097910571,
+            772.7264143999012
+        ]
+    },
+    "DSO_5": {
+        "correct": true,
+        "Q_gain": [
+            0.7861996892055955,
+            0.7766987016024219
+        ],
+        "t_65": [
+            8.86593080289446,
+            -12.560485176914831
+        ],
+        "t_65_2": [
+            1.2898957918632412,
+            2.372601262330644
+        ],
+        "DC_change_Q_DA": [
+            826.882523791278,
+            968.1897361022956
+        ]
+    },
+    "DSO_6": {
+        "correct": true,
+        "Q_gain": [
+            0.6809004177127939,
+            0.6620575900046219
+        ],
+        "t_65": [
+            0.8737239094895604,
+            1.1283862836097007
+        ],
+        "t_65_2": [
+            0.08408223657673644,
+            0.11173743228486016
+        ],
+        "DC_change_Q_DA": [
+            111.80327962830987,
+            110.94543236153801
+        ]
+    },
+    "DSO_7": {
+        "correct": true,
+        "Q_gain": [
+            0.7823319181691977,
+            0.6240743685117078
+        ],
+        "t_65": [
+            13.59456562839983,
+            11.970891095344314
+        ],
+        "t_65_2": [
+            0.5554048883935649,
+            1.4065368671048422
+        ],
+        "DC_change_Q_DA": [
+            480.94753859829774,
+            916.8706503357253
+        ]
+    },
+    "DSO_8": {
+        "correct": true,
+        "Q_gain": [
+            0.770918573105145,
+            0.85414544775404
+        ],
+        "t_65": [
+            -1.0829592884100054,
+            -0.4226991768149394
+        ],
+        "t_65_2": [
+            0.09752615284118005,
+            0.07053480821782598
+        ],
+        "DC_change_Q_DA": [
+            17.830883097838168,
+            5.281144840340772
+        ]
+    }
+    }
+}

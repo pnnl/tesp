@@ -1,3 +1,4 @@
+
 # Copyright (C) 2023-2023 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: glm_modifier.py
@@ -838,6 +839,7 @@ class GLMModifier:
             if self.defaults.message_broker == "fncs_msg":
                 def_params = dict()
                 t_name = "gld" + self.defaults.substation_name
+                def_params["name"] = t_name
                 def_params["parent"] = "network_node"
                 def_params["configure"] = self.defaults.case_name + '_gridlabd.txt'
                 def_params["option"] = "transport:hostname localhost, port " + str(self.defaults.port)
