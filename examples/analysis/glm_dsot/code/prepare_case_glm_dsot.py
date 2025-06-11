@@ -64,11 +64,10 @@ import tesp_support.dsot.glm_dictionary as gd
 import tesp_support.api.gld_feeder_generator as gld_feeder
 
 
-
 # Configuration settings for the experimental case
 def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
     # We need to load in the case metadata (*config.json5)
-    config_file = str(case + '.json5')
+    config_file = str('../data/' + case + '.json5')
     with open(config_file, 'r', encoding='utf-8') as json5_file:
         config = pyjson5.load(json5_file)
 
