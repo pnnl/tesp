@@ -36,14 +36,14 @@ def write_mircogrids_management_script(master_file, case_path, system_config=Non
     """
 
     out_folder = './' + case_path
-    outPath = system_config['outputPath']
-    if outPath == "":
-        outPath = "."
+    out_path = system_config['out_path']
+    if out_path == "":
+        out_path = "."
     dsoNum = len(substation_config.keys())  # the market agents/federates
     substNum = dsoNum  # the GridLAB-D federates
     weatherAgNum = len(weather_config.keys())  # the weather agents/federates
     dbgOptions = ['', 'gdb -x ../../gdbinit --args ', 'valgrind --track-origins=yes ']
-    dbg = dbgOptions[system_config['gldDebug']]
+    dbg = dbgOptions[system_config['gld_debug']]
 
     with open(out_folder + '/run.sh', 'w') as outfile:
         outfile.write('# !/bin/bash\n\n')
@@ -63,28 +63,28 @@ def write_mircogrids_management_script(master_file, case_path, system_config=Non
             % (str(len(substation_config) * 2 + sum(
                 [len(substation_config[dso]['microgrids']) for dso in substation_config]) + sum(
                 [len(substation_config[dso]['generators']) for dso in substation_config]) + len(
-                weather_config)), outPath))
+                weather_config)), out_path))
 
         for w_key, w_val in weather_config.items():
             outfile.write('cd %s\n' % w_key)
             outfile.write('(export WEATHER_CONFIG=weather_Config.json '
                           '&& exec python3 -c "import tesp_support.consensus.weather_agent as tesp;'
                           'tesp.startWeatherAgent(\'weather.dat\')" &> %s/%s_weather.log &)\n'
-                          % (outPath, w_key))
+                          % (out_path, w_key))
             outfile.write('cd ..\n')
 
         for sub_key, sub_val in substation_config.items():
             outfile.write('cd %s\n' % sub_val['substation'])
             outfile.write(
                 '(%sgridlabd -D USE_HELICS -D METRICS_FILE="%s/%s_metrics_" %s.glm &> %s/%s_gridlabd.log &)\n'
-                % (dbg, outPath, sub_val['substation'], sub_val['substation'], outPath, sub_val['substation']))
+                % (dbg, out_path, sub_val['substation'], sub_val['substation'], out_path, sub_val['substation']))
             outfile.write('cd ..\n')
 
             outfile.write('cd %s\n' % sub_key)
             outfile.write('(exec python3 -c "import tesp_support.consensus.dso_agent as DSO_agent;'
                           'DSO_agent.substation_loop(\'%s_agent_dict.json\',\'%s\',$with_market)" &> '
                           '%s/%s_substation.log &)\n'
-                          % (sub_val['substation'], sub_val['substation'], outPath, sub_key))
+                          % (sub_val['substation'], sub_val['substation'], out_path, sub_key))
             outfile.write('cd ..\n')
 
             for microgrid_key in sub_val['microgrids']:
@@ -92,7 +92,7 @@ def write_mircogrids_management_script(master_file, case_path, system_config=Non
                 outfile.write('(exec python3 -c "import tesp_support.consensus.microgrid_agent as MG_agent;'
                               'MG_agent.substation_loop(\'%s_agent_dict.json\',\'%s\',$with_market)" &> '
                               '%s/%s_substation.log &)\n'
-                              % (microgrid_key, microgrid_key, outPath, microgrid_key))
+                              % (microgrid_key, microgrid_key, out_path, microgrid_key))
                 outfile.write('cd ..\n')
 
             for dg_key in sub_val['generators']:
@@ -100,7 +100,7 @@ def write_mircogrids_management_script(master_file, case_path, system_config=Non
                 outfile.write('(exec python3 -c "import tesp_support.consensus.dg_agent as DG_agent;'
                               'DG_agent.substation_loop(\'%s_agent_dict.json\',\'%s\',$with_market)" &> '
                               '%s/%s_substation.log &)\n'
-                              % (dg_key, dg_key, outPath, dg_key))
+                              % (dg_key, dg_key, out_path, dg_key))
                 outfile.write('cd ..\n')
 
     with open(out_folder + '/monitor.sh', 'w') as outfile:
@@ -141,7 +141,7 @@ done
         outfile.write('pkill -9 gridlab\n')
 
     with open(out_folder + '/clean.sh', 'w') as outfile:
-        outfile.write('cd ' + outPath + '\n')
+        outfile.write('cd ' + out_path + '\n')
         outfile.write('find . -name \\*.log -type f -delete\n')
         outfile.write('find . -name \\*.csv -type f -delete\n')
         # outfile.write('find . -name \\*.out -type f -delete\n')
@@ -159,7 +159,7 @@ done
     subprocess.run(['chmod', '+x', out_folder + '/docker-run.sh'])
 
 
-def write_dsot_management_script(master_file, case_path, system_config=None, substation_config=None,
+def write_dsot_management_script(master_file, case_path, config=None, system_config=None, substation_config=None,
                                  weather_config=None):
     """ Write experiment management scripts from JSON configuration data,
     linux and helics only
@@ -182,13 +182,18 @@ def write_dsot_management_script(master_file, case_path, system_config=None, sub
     tso = 1 + len(players)
     if master_file == '':
         tso = 0
-    outPath = system_config['outputPath']
-    if outPath == "":
-        outPath = "."
+    #out_path = system_config['out_path']
+    #if out_path == "":
+    out_path = "."
+    try:
+        archive_folder = config['archive_path']
+    except TypeError:
+        archive_folder = system_config['archivePath']
 
-    archive_folder = system_config['archivePath']
-
-    config_file = system_config['dataPath'] + '/' + system_config['dsoScheduleServerFile']
+    try:
+        config_file = config['data_path'] + '/' + config['schedule_server_file_' + str(config['nodes'])]
+    except TypeError:
+        config_file = system_config['dataPath'] + '/' + system_config['schedule_server_file_'] + str(config['nodes'])
     # count how many schedule servers we need
     ports = []
     for sub_key, sub_val in substation_config.items():
@@ -205,7 +210,10 @@ def write_dsot_management_script(master_file, case_path, system_config=None, sub
             ports.append(dm[0])
 
     dbgOptions = ['', 'gdb -x ../../gdbinit --args ', 'valgrind --track-origins=yes ']
-    dbg = dbgOptions[system_config['gldDebug']]
+    try:
+        dbg = dbgOptions[config['gld_debug']]
+    except TypeError:
+        dbg = dbgOptions[system_config['gldDebug']]
 
     with open(out_folder + '/run.sh', 'w') as outfile:
         outfile.write('#!/bin/bash\n\n')
@@ -215,30 +223,35 @@ def write_dsot_management_script(master_file, case_path, system_config=None, sub
             if dyldPath is not None:
                 outfile.write('export DYLD_LIBRARY_PATH=%s\n\n' % dyldPath)
 
-        outfile.write('(exec date &> ./debug.log &)\n')      
         outfile.write('mkdir -p PyomoTempFiles\n\n')
         outfile.write('# To run agents set with_market=1 else set with_market=0\n')
-        if system_config["market"]:
-            outfile.write('with_market=1\n\n')
-        else:
-            outfile.write('with_market=0\n\n')
+        try:
+            if config["market"]:
+                outfile.write('with_market=1\n\n')
+            else:
+                outfile.write('with_market=0\n\n')
+        except TypeError:
+            if system_config["market"]:
+                outfile.write('with_market=1\n\n')
+            else:
+                outfile.write('with_market=0\n\n')
 
         for cnt in range(len(ports)):
             outfile.write('(exec python3 -c "import tesp_support.api.schedule_server as tesp;'
                           'tesp.schedule_server(\'../%s\', %s)" &> %s/schedule.log &)\n'
-                          % (config_file, str(5150 + ports[cnt]), outPath))
+                          % (config_file, str(5150 + ports[cnt]), out_path))
         outfile.write('# wait schedule server to populate\n')
         outfile.write('sleep 60\n')
 
         outfile.write('(helics_broker -f %s --loglevel=warning --name=mainbroker &> %s/broker.log &)\n'
-                      % (str(len(weather_config) * 3 + tso), outPath))
+                      % (str(len(weather_config) * 3 + tso), out_path))
 
         for w_key, w_val in weather_config.items():
             outfile.write('cd %s\n' % w_key)
             outfile.write('(export WEATHER_CONFIG=weather_Config.json '
                           '&& exec python3 -c "import tesp_support.weather.weather_agent as tesp;'
                           'tesp.startWeatherAgent(\'weather.dat\')" &> %s/%s_weather.log &)\n'
-                          % (outPath, w_key))
+                          % (out_path, w_key))
             outfile.write('cd ..\n')
 
         for sub_key, sub_val in substation_config.items():
@@ -252,31 +265,33 @@ def write_dsot_management_script(master_file, case_path, system_config=None, sub
             outfile.write('cd %s\n' % sub_val['substation'])
             outfile.write(
                 '(%sgridlabd -D USE_HELICS -D METRICS_FILE="%s/%s_metrics_" %s.glm &> %s/%s_gridlabd.log &)\n'
-                % (dbg, outPath, sub_val['substation'], sub_val['substation'], outPath, sub_val['substation']))
+                % (dbg, out_path, sub_val['substation'], sub_val['substation'], out_path, sub_val['substation']))
             outfile.write('cd ..\n')
             outfile.write('cd %s\n' % sub_key)
             outfile.write('(exec python3 -c "import tesp_support.dsot.substation as tesp;'
                           'tesp.dso_loop(\'%s\',$with_market)" &> '
                           '%s/%s_substation.log &)\n'
-                          % (sub_val['substation'], outPath, sub_key))
+                          % (sub_val['substation'], out_path, sub_key))
             outfile.write('cd ..\n')
 
         if master_file != '':
             outfile.write('(exec python3 -c "import tesp_support.api.tso_psst as tesp;'
                           'tesp.tso_psst_loop(\'./%s\')" &> %s/tso.log &)\n'
-                          % (master_file, outPath))
+                          % (master_file, out_path))
             for plyr in range(len(players)):
                 player = system_config[players[plyr]]
                 if player[6] or player[7]:
                     outfile.write('(exec python3 -c "import tesp_support.api.player as tesp;'
                                   'tesp.load_player_loop(\'./%s\', \'%s\')" &> %s/%s_player.log &)\n'
-                                  % (master_file, players[plyr], outPath, player[0]))
-        outfile.write('(exec date &> ./debug.log &)\n')
+                                  % (master_file, players[plyr], out_path, player[0]))
 
-    write_management_script(archive_folder, case_path, outPath, system_config['gldDebug'], 1)
+    try:
+        write_management_script(archive_folder, case_path, out_path, config['gld_debug'], 1)
+    except TypeError:
+        write_management_script(archive_folder, case_path, out_path, system_config['gldDebug'], 1)
 
 
-def write_dsot_management_script_f(master_file, case_path, system_config=None, substation_config=None,
+def write_dsot_management_script_f(master_file, case_path, config=None, system_config=None, substation_config=None,
                                    weather_config=None):
     """ Write experiment management scripts from JSON configuration data,
     windows and linux, fncs only
@@ -299,13 +314,19 @@ def write_dsot_management_script_f(master_file, case_path, system_config=None, s
     tso = 1 + len(players)
     if master_file == '':
         tso = 0
-    outPath = system_config['outputPath']
-    if outPath == "":
-        outPath = "."
+    #out_path = system_config['out_path']
+    #if out_path == "":
+    out_path = "."
 
-    archive_folder = system_config['archivePath']
+    try:
+        archive_folder = config['archive_path']
+    except TypeError:
+        archive_folder = system_config['archivePath']
 
-    config_file = system_config['dataPath'] + '/' + system_config['dsoScheduleServerFile']
+    try:
+        config_file = config['data_path'] + '/' + config['schedule_server_file_' + str(config['nodes'])]
+    except TypeError:
+        config_file = system_config['dataPath'] + '/' + system_config['schedule_server_file_'] + str(config['nodes'])
     # count how many schedule servers we need
     ports = []
     for sub_key, sub_val in substation_config.items():
@@ -322,9 +343,13 @@ def write_dsot_management_script_f(master_file, case_path, system_config=None, s
             ports.append(dm[0])
 
     dbgOptions = ['', 'gdb -x ../../gdbinit --args ', 'valgrind --track-origins=yes ']
-    dbg = dbgOptions[system_config['gldDebug']]
+    try:
+        dbg = dbgOptions[config['gld_debug']]
+    except TypeError:
+        dbg = dbgOptions[system_config['gldDebug']]
 
     if platform.system() == 'Windows':
+        print("Windows")
         with open(out_folder + '/run.bat', 'w') as outfile:
             outfile.write('set FNCS_FATAL=yes\n')
             outfile.write('set FNCS_LOG_STDOUT=yes\n')
@@ -334,27 +359,33 @@ def write_dsot_management_script_f(master_file, case_path, system_config=None, s
             # outfile.write('set FNCS_BROKER="tcp://*:' + str(system_config['port']) + '"\n')
 
             outfile.write('rem To run agents set with_market=1 else set with_market=0 \n')
-            if system_config["market"]:
-                outfile.write('set with_market=1\n')
-            else:
-                outfile.write('set with_market=0\n')
+            try:
+                if config["market"]:
+                    outfile.write('with_market=1\n\n')
+                else:
+                    outfile.write('with_market=0\n\n')
+            except TypeError:
+                if system_config["market"]:
+                    outfile.write('with_market=1\n\n')
+                else:
+                    outfile.write('with_market=0\n\n')
 
             for cnt in range(len(ports)):
                 outfile.write('start /b cmd /c python -c "import tesp_support.api.schedule_server as tesp;'
                               'tesp.schedule_server(\'..\\%s\', %s)" ^> %s\\schedule.log 2^>^&1\n'
-                              % (config_file, str(5150 + ports[cnt]), outPath))
+                              % (config_file, str(5150 + ports[cnt]), out_path))
             outfile.write('rem wait schedule server to populate\n')
             outfile.write('sleep 60\n')
 
             outfile.write('start /b cmd /c fncs_broker %s ^>%s\\broker.log 2^>^&1\n'
-                          % (str(len(weather_config) * 3 + tso), outPath))
+                          % (str(len(weather_config) * 3 + tso), out_path))
 
             for w_key, w_val in weather_config.items():
                 outfile.write('set FNCS_CONFIG_FILE=%s.zpl\n' % w_key)
                 outfile.write('cd %s\n' % w_key)
                 outfile.write('start /b cmd /c python -c "import tesp_support.weather.weather_agent_f as tesp;'
                               'tesp.startWeatherAgent(\'weather.dat\')" ^> %s\\%s_weather.log 2^>^&1\n'
-                              % (outPath, w_key))
+                              % (out_path, w_key))
                 outfile.write('cd ..\n')
 
             for sub_key, sub_val in substation_config.items():
@@ -368,20 +399,20 @@ def write_dsot_management_script_f(master_file, case_path, system_config=None, s
                 outfile.write('cd %s\n' % sub_val['substation'])
                 outfile.write('start /b cmd /c gridlabd -D USE_FNCS -D METRICS_FILE="%s_metrics_" %s.glm ^> '
                               '%s\\%s_gridlabd.log 2^>^&1\n'
-                              % (sub_val['substation'], sub_val['substation'], outPath, sub_val['substation']))
+                              % (sub_val['substation'], sub_val['substation'], out_path, sub_val['substation']))
                 outfile.write('set FNCS_CONFIG_FILE=%s.yaml\n' % sub_val['substation'])
                 outfile.write('cd ..\n')
                 outfile.write('cd %s\n' % sub_key)
                 outfile.write('start /b cmd /c python -c "import tesp_support.dsot.substation_f as tesp;'
                               'tesp.dso_loop_f(\'%s_agent_dict.json\',\'%s\',%%with_market%%)" ^> '
                               '%s\\%s_substation.log 2^>^&1\n'
-                              % (sub_val['substation'], sub_val['substation'], outPath, sub_key))
+                              % (sub_val['substation'], sub_val['substation'], out_path, sub_key))
                 outfile.write('cd ..\n')
             if master_file != '':
                 outfile.write('set FNCS_CONFIG_FILE=tso.yaml\n')
                 outfile.write('start /b cmd /c python -c "import tesp_support.original.tso_psst_f as tesp;'
                               'tesp.tso_psst_loop_f(\'./%s\')" ^> %s\\tso.log 2^>^&1\n'
-                              % (master_file, outPath))
+                              % (master_file, out_path))
 
                 for plyr in range(len(players)):
                     player = system_config[players[plyr]]
@@ -389,7 +420,7 @@ def write_dsot_management_script_f(master_file, case_path, system_config=None, s
                         outfile.write('set FNCS_CONFIG_FILE=%s_player.yaml\n' % (player[0]))
                         outfile.write('start /b cmd /c python -c "import tesp_support.original.player_f as tesp;'
                                       'tesp.load_player_loop_f(\'./%s\', \'%s\')" ^> %s\\%s_player.log 2^>^&1\n'
-                                      % (master_file, players[plyr], outPath, player[0]))
+                                      % (master_file, players[plyr], out_path, player[0]))
 
         with open(out_folder + '/kill.bat', 'w') as outfile:
             outfile.write('taskkill /F /IM fncs_broker.exe\n')
@@ -397,16 +428,16 @@ def write_dsot_management_script_f(master_file, case_path, system_config=None, s
             outfile.write('taskkill /F /IM gridlabd.exe\n')
 
         with open(out_folder + '/clean.bat', 'w') as outfile:
-            outfile.write('del ' + outPath + '\\*.log /s\n')
-            outfile.write('del ' + outPath + '\\*.csv /s\n')
-            outfile.write('del ' + outPath + '\\*.out /s\n')
-            outfile.write('del ' + outPath + '\\*rtm.dat /s\n')
-            outfile.write('del ' + outPath + '\\*dam.dat /s\n')
-            outfile.write('del ' + outPath + '\\*uc.dat /s\n')
-            outfile.write('del ' + outPath + '\\*ames.dat /s\n')
-            outfile.write('del ' + outPath + '\\*metrics*.json* /s\n')
-            outfile.write('del ' + outPath + '\\*metrics*.h5 /s\n')
-            outfile.write('del ' + outPath + '\\*model_dict.json /s\n')
+            outfile.write('del ' + out_path + '\\*.log /s\n')
+            outfile.write('del ' + out_path + '\\*.csv /s\n')
+            outfile.write('del ' + out_path + '\\*.out /s\n')
+            outfile.write('del ' + out_path + '\\*rtm.dat /s\n')
+            outfile.write('del ' + out_path + '\\*dam.dat /s\n')
+            outfile.write('del ' + out_path + '\\*uc.dat /s\n')
+            outfile.write('del ' + out_path + '\\*ames.dat /s\n')
+            outfile.write('del ' + out_path + '\\*metrics*.json* /s\n')
+            outfile.write('del ' + out_path + '\\*metrics*.h5 /s\n')
+            outfile.write('del ' + out_path + '\\*model_dict.json /s\n')
             outfile.write('del broker_trace.txt\n')
     else:  # Unix
         with open(out_folder + '/run.sh', 'w') as outfile:
@@ -420,28 +451,39 @@ def write_dsot_management_script_f(master_file, case_path, system_config=None, s
 
             outfile.write('mkdir -p PyomoTempFiles\n\n')
             outfile.write('# To run agents set with_market=1 else set with_market=0 \n')
-            if system_config["market"]:
-                outfile.write('with_market=1\n\n')
-            else:
-                outfile.write('with_market=0\n\n')
+            try:
+                if config["market"]:
+                    outfile.write('with_market=1\n\n')
+                else:
+                    outfile.write('with_market=0\n\n')
+            except TypeError:
+                if system_config["market"]:
+                    outfile.write('with_market=1\n\n')
+                else:
+                    outfile.write('with_market=0\n\n')
 
             for cnt in range(len(ports)):
                 outfile.write('(exec python3 -c "import tesp_support.api.schedule_server as tesp;'
                               'tesp.schedule_server(\'../%s\', %s)" &> %s/schedule.log &)\n'
-                              % (config_file, str(5150 + ports[cnt]), outPath))
+                              % (config_file, str(5150 + ports[cnt]), out_path))
             outfile.write('# wait schedule server to populate\n')
             outfile.write('sleep 60\n')
-
-            outfile.write('(export FNCS_BROKER="tcp://*:' + str(system_config['port'])
-                          + '" && fncs_broker %s &> %s/broker.log &)\n'
-                          % (str(len(weather_config) * 3 + tso), outPath))
+            
+            try:
+                outfile.write('(export FNCS_BROKER="tcp://*:' + str(system_config['port'])
+                            + '" && fncs_broker %s &> %s/broker.log &)\n'
+                            % (str(len(weather_config) * 3 + tso), out_path))
+            except KeyError:
+                outfile.write('(export FNCS_BROKER="tcp://*:' + str(config['port'])
+                            + '" && fncs_broker %s &> %s/broker.log &)\n'
+                            % (str(len(weather_config) * 3 + tso), out_path))
 
             for w_key, w_val in weather_config.items():
                 outfile.write('cd %s\n' % w_key)
                 outfile.write('(export FNCS_CONFIG_FILE=%s.zpl && export WEATHER_CONFIG=weather_Config.json '
                               '&& exec python3 -c "import tesp_support.weather.weather_agent_f as tesp;'
                               'tesp.startWeatherAgent(\'weather.dat\')" &> %s/%s_weather.log &)\n'
-                              % (w_key, outPath, w_key))
+                              % (w_key, out_path, w_key))
                 outfile.write('cd ..\n')
 
             for sub_key, sub_val in substation_config.items():
@@ -455,33 +497,36 @@ def write_dsot_management_script_f(master_file, case_path, system_config=None, s
                 outfile.write('cd %s\n' % sub_val['substation'])
                 outfile.write(
                     '(%sgridlabd -D USE_FNCS -D METRICS_FILE="%s/%s_metrics_" %s.glm &> %s/%s_gridlabd.log &)\n'
-                    % (dbg, outPath, sub_val['substation'], sub_val['substation'], outPath, sub_val['substation']))
+                    % (dbg, out_path, sub_val['substation'], sub_val['substation'], out_path, sub_val['substation']))
                 outfile.write('cd ..\n')
                 outfile.write('cd %s\n' % sub_key)
                 outfile.write('(export FNCS_CONFIG_FILE=%s.yaml '
                               '&& exec python3 -c "import tesp_support.dsot.substation_f as tesp;'
                               'tesp.dso_loop_f(\'%s_agent_dict.json\',\'%s\',$with_market)" &> '
                               '%s/%s_substation.log &)\n'
-                              % (sub_val['substation'], sub_val['substation'], sub_val['substation'], outPath, sub_key))
+                              % (sub_val['substation'], sub_val['substation'], sub_val['substation'], out_path, sub_key))
                 outfile.write('cd ..\n')
 
             if master_file != '':
                 outfile.write('(export FNCS_CONFIG_FILE=tso.yaml '
                               '&& exec python3 -c "import tesp_support.original.tso_psst_f as tesp;'
                               'tesp.tso_psst_loop_f(\'./%s\')" &> %s/tso.log &)\n'
-                              % (master_file, outPath))
+                              % (master_file, out_path))
                 for plyr in range(len(players)):
                     player = system_config[players[plyr]]
                     if player[6] or player[7]:
                         outfile.write('(export FNCS_CONFIG_FILE=%s_player.yaml '
                                       '&& exec python3 -c "import tesp_support.original.player_f as tesp;'
                                       'tesp.load_player_loop_f(\'./%s\', \'%s\')" &> %s/%s_player.log &)\n'
-                                      % (player[0], master_file, players[plyr], outPath, player[0]))
+                                      % (player[0], master_file, players[plyr], out_path, player[0]))
 
-        write_management_script(archive_folder, case_path, outPath, system_config['gldDebug'], 1)
+        try:
+            write_management_script(archive_folder, case_path, out_path, config['gld_debug'], 1)
+        except TypeError:
+            write_management_script(archive_folder, case_path, out_path, system_config['gldDebug'], 1)
 
 
-def write_management_script(archive_folder, case_path, outPath, gld_Debug, run_post):
+def write_management_script(archive_folder, case_path, out_path, gld_Debug, run_post):
     out_folder = './' + case_path
 
     with open(out_folder + '/monitor.sh', 'w') as outfile:
@@ -523,8 +568,8 @@ done
     with open(out_folder + '/docker-run.sh', 'w') as outfile:
         gdb_extra = "" if gld_Debug == 0 else \
             """
-        --cap-add=SYS_PTRACE \\
-        --security-opt seccomp=unconfined \\"""
+                   --cap-add=SYS_PTRACE \\
+                   --security-opt seccomp=unconfined\\"""
         outfile.write("""
 IMAGE="cosim-cplex:tesp_22.04.1"
 
@@ -532,16 +577,11 @@ git describe --tags > tesp_version
 docker images -q ${IMAGE} > docker_version
 hostname > hostname
 
-CASE="%s"
-SRCWORK_DIR="$TESPDIR/examples/analysis/dsot/code/$CASE"
-WORKING_DIR="$SIM_HOME/tesp/examples/analysis/dsot/code/$CASE"
+WORKING_DIR="$SIM_HOME/tesp/examples/analysis/dsot/code/%s"
 ARCHIVE_DIR="%s"
 
-chown -fR ${UID}:${SIM_GID} "$SRCWORK_DIR"
-chmod -fR 774 "$SRCWORK_DIR"
-
 docker run \\
-       -e LOCAL_UID=$UID \\
+       -e LOCAL_USER_ID=$SIM_UID \\
        -itd \\
        --rm \\
        --network=none \\%s
@@ -549,7 +589,6 @@ docker run \\
        -w=${WORKING_DIR} \\
        ${IMAGE} \\
        /bin/bash -c "./run.sh; ./monitor.sh"
-
         """ % (path.basename(out_folder), archive_folder, gdb_extra))
 
     with open(out_folder + '/postprocess.sh', 'w') as outfile:
@@ -566,7 +605,7 @@ docker run \\
         outfile.write('pkill -9 gridlabd\n')
 
     with open(out_folder + '/clean.sh', 'w') as outfile:
-        outfile.write('cd ' + outPath + '\n')
+        outfile.write('cd ' + out_path + '\n')
         outfile.write('rm -rf PyomoTempFiles/*\n')
         outfile.write('find . -name \\*.log -type f -delete\n')
         outfile.write('find . -name \\*.csv -type f -delete\n')
@@ -887,3 +926,4 @@ def test():
 
 if __name__ == "__main__":
     test()
+    
