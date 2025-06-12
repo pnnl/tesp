@@ -28,7 +28,7 @@
     "rate": "", // rate tariff name for post-processing. "" = DSOT ['', 'Flat', 'EandC', 'TOU']
     "EandC": false, // True if running Dynamic Energy and Capacity rate (EandC)
     "market": false, // case_type sets whether the market is true (bt, fl, or ev = true)
-    "PriceSensLoad": false, // true = Substation load is flexible, false = inflexible
+    "priceSensLoad": false, // true = Substation load is flexible, false = inflexible
     "no_scale": true, // FNCS gld_scale set to 1 if false
     "curve": false, // FNCS no curve if set to false
     "curtail": true, // true = curtail renewables when needed, false = no curtailment
