@@ -2183,14 +2183,14 @@ class Feeder:
         if hasattr(config, 'out_file_glm'):
             self.glm.write_model(os.path.join(config.data_path, config.out_file_glm))
         else:
-            self.glm.write_model(config.out_path)
+            self.glm.write_model(config.outputPath)
 
         # Plot the model using the networkx package:
         if self.config.make_plot == "True":
             if hasattr(config, 'out_file_glm'):
                 i_glm, success = self.glm.read_model(os.path.join(self.config.data_path, self.config.out_file_glm))
             else:
-                i_glm, success = self.glm.read_model(self.config.out_path)
+                i_glm, success = self.glm.read_model(self.config.outputPath)
             if self.config.gis_file:
                 # The substation (network_node) and substation transformer have no connections 
                 # to the rest of the feeder. For now, assign them position values that align

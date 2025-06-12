@@ -15,17 +15,17 @@ def generate_case(caseName, port, pv=None, bt=None, fl=None, ev=None):
     with open(config_file, 'r', encoding='utf-8') as json5_file:
         ppc = pyjson5.load(json5_file)
     split_case = ppc['split_case']
-    case_start_year = ppc['case_start_year']
-    case_end_year = ppc['case_end_year']
+    caseStartYear = ppc['caseStartYear']
+    caseEndYear = ppc['caseEndYear']
 
     if split_case:
         while True:
             for i in range(3, 5):
-                directory_name = str(case_start_year) + "_" + '{0:0>2}'.format(i+1)
+                directory_name = str(caseStartYear) + "_" + '{0:0>2}'.format(i+1)
                 ppc['caseName'] = node + "_" + directory_name
                 ppc['port'] = int(port + i)
 
-                year = case_start_year
+                year = caseStartYear
                 month = '{0:0>2}'.format(i)
                 daytime = "-29 00:00:00"
                 if i == 0:
@@ -33,7 +33,7 @@ def generate_case(caseName, port, pv=None, bt=None, fl=None, ev=None):
                     month = '01'
                 ppc['StartTime'] = str(year) + "-" + month + daytime
 
-                year = case_start_year
+                year = caseStartYear
                 month = '{0:0>2}'.format(i+2)
                 daytime = "-01 00:00:00"
                 if i == 11:
@@ -47,9 +47,9 @@ def generate_case(caseName, port, pv=None, bt=None, fl=None, ev=None):
                     file.write(config_dump)
                 prep_case.prepare_case(int(node), "generate_config", pv=pv, bt=bt, fl=fl, ev=ev)
 
-            if case_start_year == case_end_year:
+            if caseStartYear == caseEndYear:
                 break
-            case_start_year += 1
+            caseStartYear += 1
 
 if __name__ == "__main__":
     if len(sys.argv) > 6:

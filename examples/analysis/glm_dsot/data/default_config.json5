@@ -53,27 +53,27 @@
     "log_level": "INFO",
     "gld_debug": 0,
     "DSOT_case": true,
-    "out_path": "", // Default: blank, ~/grid/tesp/examples/dsot/output
+    "outputPath": "", // Default: blank, ~/grid/tesp/examples/dsot/output
     "make_plot": "False",
-    "archive_path": "/mnt/simdata/done",
+    "archivePath": "/mnt/simdata/done",
     "source_directory": "",
     "version": "2",
     "bulkpower_bus": 1,
     "ames": true, // false = pypower running opf
     "solver": "cbc", // ipopt
-    "num_core": 12,
+    "numCore": 12,
     "method": "FBS",
     "other_method": "NR",
     "outages": true,
     "outages_unplanned": true,
     "planned": "../../data/planned_outages.csv",
     "unplanned": "../../data/unplanned_outages.csv",
-    "LD_curve": "../../data/EandC.csv",
+    "LDCurve": "../../data/EandC.csv",
     "port": 5570,
     "split_case": true,
-    "case_start_year": 2016,
-    "case_end_year": 2016,
-    "grid_PIQ": false,
+    "caseStartYear": 2016,
+    "caseEndYear": 2016,
+    "gridPIQ": false,
     "UnitsOut": [], // An array for each units out[idx, time out[s], time back in[s]]
     "BranchesOut": [], // An array for each branches out [idx, time out[s], time back in[s]]
     "swing_bus": 1,

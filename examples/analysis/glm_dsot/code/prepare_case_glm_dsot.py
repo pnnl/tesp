@@ -177,8 +177,8 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
     weaPrep = config["WeatherPrep"]
     weather_config = {}
 
-    # TODO: out_path used and rewritten many times throughout this script
-    out_path = caseName # currently only used for the experiment management scripts
+    # TODO: outputPath used and rewritten many times throughout this script
+    outputPath = caseName # currently only used for the experiment management scripts
 
     # Remove 10 AM bid correction to AMES
     if not hasattr(config, "Q_bid_forecast_correction"):
@@ -199,11 +199,11 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
         print('Case name is blank or Case name is "." or ".." and could cause file deletion')
 
     # Create the output folder, if different. If it already exists, delete and create it
-    if caseName != out_path and out_path != "" and out_path != ".." and out_path != ".":
-        if os.path.isdir(out_path):
+    if caseName != outputPath and outputPath != "" and outputPath != ".." and outputPath != ".":
+        if os.path.isdir(outputPath):
             print("output folder already exists, deleting and moving on...")
-            shutil.rmtree(out_path)     
-        os.makedirs(out_path)
+            shutil.rmtree(outputPath)     
+        os.makedirs(outputPath)
 
     # Record the case and system configs for this experiment in generate_case_config
     with open(os.path.join(caseName, 'generate_case_config.json'), 'w', encoding='utf-8') as json_file:
@@ -339,7 +339,7 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
         config["dso_key"] = dso_val
         config["caseName"] = dso_key
         config["substation"] = sub_key
-        config["out_path"] = caseName + '/' + dso_key
+        config["outputPath"] = caseName + '/' + dso_key
         config["bulk_power_bus"] = dso_val['bus_number']
         config["DSO_type"] = dso_val['utility_type']
         if config["RECS"]:
@@ -446,7 +446,7 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
             else:
                 print("\t<<<<< Going with the full feeders. >>>>>")
             os.makedirs(caseName + '/' + feed_key)
-            config["out_path"] = caseName + '/' + feed_key
+            config["outputPath"] = caseName + '/' + feed_key
             config["caseName"] = feed_key
             taxchoice = {item[0]: item[1:] for item in base_config["taxchoice"]}
             config["vll"] = taxchoice[feed_val['name']][0]
@@ -497,7 +497,7 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
             config["income_level"] = dso_val['income_level']
             config["ev_reserved_soc"] = config["AgentPrep"]['EV']['EVReserveLo']
             config["climate"] = dso_val['ashrae_zone']
-            config["out_path"] = f'{config["out_path"]}/{config["caseName"]}.glm'
+            config["outputPath"] = f'{config["outputPath"]}/{config["caseName"]}.glm'
             
             # Dump the modified config to json5 to be read in by feeder generator
             config_dump = pyjson5.dumps(config, indent=2)
@@ -534,9 +534,9 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
                 feed_val['name'] = feed_key
                 dso_val['feeders'][feed_key] = feed_val
                 os.makedirs(caseName + '/' + feed_key)
-                config["out_path"] = caseName + '/' + feed_key
+                config["outputPath"] = caseName + '/' + feed_key
                 config["caseName"] = feed_key
-                config["out_path"] = f'{config["out_path"]}/{config["caseName"]}.glm'
+                config["outputPath"] = f'{config["outputPath"]}/{config["caseName"]}.glm'
                 config['taxonomy'] = f'{config["copperplate_feeder_name"]}.glm'
                 config["backbone_files"] = config["copperplate_feeder_file"]
                 config["gis_path"] = False
