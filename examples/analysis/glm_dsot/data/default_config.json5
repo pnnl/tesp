@@ -65,7 +65,7 @@
     "method": "FBS",
     "other_method": "NR",
     "outages": true,
-    "outages_unplanned": true,
+    "outagesUnplanned": true,
     "planned": "../../data/planned_outages.csv",
     "unplanned": "../../data/unplanned_outages.csv",
     "LDCurve": "../../data/EandC.csv",

@@ -2779,7 +2779,7 @@ def dso_lmp_stats(month_list, output_path, renew_forecast_file, dso_range):
     cols = [' TotalLoad', ' TotalGen', 'NetLoad'] + lmp_cols
     # dso_lmps_df = dso_lmps_df.join(ames_lmps_df[cols])
 
-    # Check to see if Adder was used (for example in Rob and Don method) - if so correct LMPs - e.g. remove adder).
+    # Check to see if Adder was used (for example in Energy and Capacity method) - if so correct LMPs - e.g. remove adder).
     if any(ames_lmps_df.columns.str.contains('Adder')):
         cols = cols + [' Adder']
         for column in ames_lmps_df.columns:
@@ -2829,52 +2829,52 @@ def dso_lmp_stats(month_list, output_path, renew_forecast_file, dso_range):
     da_lmps_df[' TotalLoad'] = da_lmps_df[da_load_cols].sum(axis=1)
     da_lmps_df['TotalGen'] = da_gen_df.groupby(level=0)['ClearQ'].sum()
 
-    # Check to see if Adder was used (for example in Rob and Don method) - if so correct LMPs - e.g. remove adder).
+    # Check to see if Adder was used (for example in Energy and Capacity method) - if so correct LMPs - e.g. remove adder).
 
     if any(ames_lmps_df.columns.str.contains('Adder')):
         da_lmps_df[' Adder'] = adder_df
 
         file = '/'.join(renew_forecast_file.split('/')[:-1])
-        adder_curve_df = pd.read_csv(file +'/RandD.csv')
+        adder_curve_df = pd.read_csv(file +'/EandC.csv')
 
-        rd_curve = adder_curve_df['Load curve scaled (MWh)'].tolist()
-        rd_curve.reverse()
-        rd_adder = adder_curve_df['Marginal Quantity Price Surcharge ($/MWh)'].tolist()
-        rd_adder.reverse()
+        ec_curve = adder_curve_df['Load curve scaled (MWh)'].tolist()
+        ec_curve.reverse()
+        ec_adder = adder_curve_df['Marginal Quantity Price Surcharge ($/MWh)'].tolist()
+        ec_adder.reverse()
 
         for t in da_lmps_df.index:
             generation = da_lmps_df.loc[t, 'TotalGen']
             # bisection method taken from tso_psst.py
-            ii = bisect.bisect_left(rd_curve, generation)
-            if -1 < ii < len(rd_curve):
-                if generation - rd_curve[ii] < 0.0001:
-                    adder = rd_adder[ii]
+            ii = bisect.bisect_left(ec_curve, generation)
+            if -1 < ii < len(ec_curve):
+                if generation - ec_curve[ii] < 0.0001:
+                    adder = ec_adder[ii]
                 else:
                     # interpolation between upper and lower bounds
-                    percent = (generation - rd_curve[ii]) / (rd_curve[ii + 1] - rd_curve[ii])
-                    adder = ((rd_adder[ii + 1] - rd_adder[ii]) * percent) + rd_adder[ii + 1]
+                    percent = (generation - ec_curve[ii]) / (ec_curve[ii + 1] - ec_curve[ii])
+                    adder = ((ec_adder[ii + 1] - ec_adder[ii]) * percent) + ec_adder[ii + 1]
             else:
-                if generation > rd_curve[-1]:
-                    adder = rd_adder[-1]
+                if generation > ec_curve[-1]:
+                    adder = ec_adder[-1]
                 else:
-                    adder = rd_adder[0]
+                    adder = ec_adder[0]
             da_lmps_df.loc[t, ' Adder-Gen'] = adder
 
             generation = da_lmps_df.loc[t, ' TotalLoad']
             # bisection method taken from tso_psst.py
-            ii = bisect.bisect_left(rd_curve, generation)
-            if -1 < ii < len(rd_curve):
-                if generation - rd_curve[ii] < 0.0001:
-                    adder = rd_adder[ii]
+            ii = bisect.bisect_left(ec_curve, generation)
+            if -1 < ii < len(ec_curve):
+                if generation - ec_curve[ii] < 0.0001:
+                    adder = ec_adder[ii]
                 else:
                     # interpolation between upper and lower bounds
-                    percent = (generation - rd_curve[ii]) / (rd_curve[ii + 1] - rd_curve[ii])
-                    adder = ((rd_adder[ii + 1] - rd_adder[ii]) * percent) + rd_adder[ii + 1]
+                    percent = (generation - ec_curve[ii]) / (ec_curve[ii + 1] - ec_curve[ii])
+                    adder = ((ec_adder[ii + 1] - ec_adder[ii]) * percent) + ec_adder[ii + 1]
             else:
-                if generation > rd_curve[-1]:
-                    adder = rd_adder[-1]
+                if generation > ec_curve[-1]:
+                    adder = ec_adder[-1]
                 else:
-                    adder = rd_adder[0]
+                    adder = ec_adder[0]
             da_lmps_df.loc[t, ' Adder-Load'] = adder
 
         for column in da_lmps_df.columns:

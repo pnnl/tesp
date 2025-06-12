@@ -403,7 +403,7 @@ def retail_price_comparison_plot(dso, day_range, metadata_path, cases, data_path
                                 * tou_params["DSO_" + dso][month_name]["periods"][k]["ratio"]
         elif rate_scenario == "DSOT":
             DA_LMPs_df['Retail'] = DA_LMPs_df['da_lmp'+str(dso)]/1000 + tariff['DSO_'+str(dso)]['transactive_dist_rate']
-        elif rate_scenario == "RandD":
+        elif rate_scenario == "EandC":
             DA_LMPs_df['Retail'] = (DA_LMPs_df['da_lmp'+str(dso)])/1000 + tariff['DSO_'+str(dso)]['transactive_dist_rate']
             # DA_LMPs_df['Retail'] = (DA_LMPs_df['da_lmp'+str(dso)] + 2 * DA_LMPs_df[' Adder'])/1000 + tariff['DSO_'+str(dso)]['transactive_dist_rate']
 

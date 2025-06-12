@@ -190,7 +190,7 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
             case_name = 'TOU'
             rate_scenario = "time-of-use"
         if case_path == transactive_path:
-            case_name = 'RandD'
+            case_name = 'EandC'
             rate_scenario = "transactive"
         if case_path == subscription_path:
             case_name = 'Sub'

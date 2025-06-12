@@ -186,7 +186,7 @@ def write_dsot_management_script(master_file, case_path, config=None, system_con
     #if out_path == "":
     out_path = "."
     try:
-        archive_folder = config['archive_path']
+        archive_folder = config['archivePath']
     except TypeError:
         archive_folder = system_config['archivePath']
 
