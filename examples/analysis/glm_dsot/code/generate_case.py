@@ -31,7 +31,7 @@ def generate_case(case_name, port, pv=None, bt=None, fl=None, ev=None):
                 if i == 0:
                     daytime = "-01 00:00:00"
                     month = '01'
-                ppc['start_time'] = str(year) + "-" + month + daytime
+                ppc['StartTime'] = str(year) + "-" + month + daytime
 
                 year = case_start_year
                 month = '{0:0>2}'.format(i+2)
@@ -39,7 +39,7 @@ def generate_case(case_name, port, pv=None, bt=None, fl=None, ev=None):
                 if i == 11:
                     daytime = "-30 00:00:00"
                     month = '12'
-                ppc['end_time'] = str(year) + "-" + month + daytime
+                ppc['EndTime'] = str(year) + "-" + month + daytime
 
                 config_dump = pyjson5.dumps(ppc, indent=2)
                 out_file = str("generate_config" + '.json5')

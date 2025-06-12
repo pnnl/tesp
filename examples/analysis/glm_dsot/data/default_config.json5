@@ -1,7 +1,7 @@
 {
     "case_name": "gld_feeder_test",
-    "start_time": "2016-08-05 00:00:00", // simulation start time, YYYY-MM-DD HH:MM:SS
-    "end_time": "2016-08-12 00:00:00", // simulation end time, YYYY-MM-DD HH:MM:SS
+    "StartTime": "2016-08-05 00:00:00", // simulation start time, YYYY-MM-DD HH:MM:SS
+    "EndTime": "2016-08-12 00:00:00", // simulation end time, YYYY-MM-DD HH:MM:SS
     "nodes": 8, // 8 or 200 bus case
     "scenario": "hi", // Renewables scenario, High: "hi", Moderate: "" (no solar) 
     "renewables": [
@@ -44,7 +44,7 @@
     "gen_power_level": 0.5, // percent generation power level at start up (0.6-0.7 typical, try 0.85 for high demand months)
     "gen_power": true, // true= renewables are turned on, false = renewables off
     "seed": 1, // Random number seed
-    "t_max": 604800, // The duration for the simulation in seconds
+    "Tmax": 604800, // The duration for the simulation in seconds
     "interval": 86400,
     "period": 300, // Time interval for the simulation in seconds for opf/ames
     "dt": 15, // The delta time for the simulation in seconds for pf

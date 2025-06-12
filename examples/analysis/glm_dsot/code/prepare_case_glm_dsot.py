@@ -157,16 +157,16 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
         base_config = json.load(json_file)
     
     case_name = config["case_name"]
-    start_time = config["start_time"]
-    end_time = config["end_time"]
+    StartTime = config["StartTime"]
+    EndTime = config["EndTime"]
 
-    # setting t_max in seconds
+    # setting Tmax in seconds
     ep = datetime.datetime(1970, 1, 1)
-    s = datetime.datetime.strptime(start_time, '%Y-%m-%d %H:%M:%S')
-    e = datetime.datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S')
+    s = datetime.datetime.strptime(StartTime, '%Y-%m-%d %H:%M:%S')
+    e = datetime.datetime.strptime(EndTime, '%Y-%m-%d %H:%M:%S')
     sIdx = (s - ep).total_seconds()
     eIdx = (e - ep).total_seconds()
-    config["t_max"] = int((eIdx - sIdx))
+    config["Tmax"] = int((eIdx - sIdx))
 
     gen = sys_config["gen"]
     genfuel = sys_config["genfuel"]

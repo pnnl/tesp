@@ -224,12 +224,12 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
         # check if this weather agent is already implemented
         if not os.path.isfile(weatherfileroot + 'weather_Config.json'):
             time_fmt = '%Y-%m-%d %H:%M:%S'
-            dt1 = datetime.strptime(case_config['start_time'], time_fmt)
-            dt2 = datetime.strptime(case_config['end_time'], time_fmt)
+            dt1 = datetime.strptime(case_config['StartTime'], time_fmt)
+            dt2 = datetime.strptime(case_config['EndTime'], time_fmt)
             seconds = int((dt2 - dt1).total_seconds())
             minutes = int(seconds / 60)
             wconfig = {'name': gd['climate']['name'],
-                       'start_time': case_config['start_time'],
+                       'StartTime': case_config['StartTime'],
                        'time_stop': str(minutes) + 'm',
                        'time_delta': '1s',
                        'publishInterval': '5m',
@@ -354,7 +354,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                             thermostat_schedule_config['WeekdayEveningToNightTime'])
                         weekend_day_start = random_norm_trunc(thermostat_schedule_config['WeekendDaylightStart'])
                         weekend_night_start = random_norm_trunc(thermostat_schedule_config['WeekendNightStart'])
-                        # check if night_start_time is not beyond 24.0
+                        # check if night_StartTime is not beyond 24.0
                         night_start = min(night_start, 23.9)
                         weekend_night_start = min(weekend_night_start, 23.9)
 
@@ -519,7 +519,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                                                       'Tcold': inlet_water_temperature,
                                                       'Tambient': ambient_temperature,
                                                       'Tdesired': desired_temperature,
-                                                      't_max': maximum_temperature,
+                                                      'Tmax': maximum_temperature,
                                                       'Tmin': minimum_temperature,
                                                       'length_memory': memory_length,
                                                       'wd_sensor': water_draw_sensor,
@@ -766,8 +766,8 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
             'ev': ev_agents,
             'pv': pv_agents,
             'site_agent': site_agent,
-            'start_time': case_config['start_time'],
-            'end_time': case_config['end_time'],
+            'StartTime': case_config['StartTime'],
+            'EndTime': case_config['EndTime'],
             'rate': case_config['rate'],
             'log_level': case_config['log_level'],
             'solver': case_config['solver'],

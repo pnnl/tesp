@@ -164,16 +164,16 @@ generate_case_config = ''
 for month in month_def:
     generate_case_config = pt.load_json(month[1], 'generate_case_config.json')
 
-    num_sim_days = (datetime.strptime(generate_case_config['end_time'], '%Y-%m-%d %H:%M:%S') -
-                    datetime.strptime(generate_case_config['start_time'], '%Y-%m-%d %H:%M:%S')).days
+    num_sim_days = (datetime.strptime(generate_case_config['EndTime'], '%Y-%m-%d %H:%M:%S') -
+                    datetime.strptime(generate_case_config['StartTime'], '%Y-%m-%d %H:%M:%S')).days
 
     # Start at day 'n' after first few days are discarded.  
     # Assumes that simulation runs to end of month with 'm' extra days at the end.
     if determine_days:
         month[2] = first_data_day
         month[3] = num_sim_days - discard_end_days + 1
-    month.append(generate_case_config['start_time'])
-    month.append(generate_case_config['end_time'])
+    month.append(generate_case_config['StartTime'])
+    month.append(generate_case_config['EndTime'])
     total_sim_days += month[3] - month[2]
 
 total_day_range = range(1, total_sim_days + 1)

@@ -212,12 +212,12 @@ def post_process():
 
     first_data_day = 4  # First day in the simulation that data to be analyzed. Run-in days before this are discarded.
     discard_end_days = 1  # Number of days at the end of the simulation to be discarded
-    num_sim_days = (datetime.strptime(case_config['end_time'], '%Y-%m-%d %H:%M:%S') -
-                    datetime.strptime(case_config['start_time'], '%Y-%m-%d %H:%M:%S')).days
+    num_sim_days = (datetime.strptime(case_config['EndTime'], '%Y-%m-%d %H:%M:%S') -
+                    datetime.strptime(case_config['StartTime'], '%Y-%m-%d %H:%M:%S')).days
     month_dict = {1: "January", 2: "February", 3: "March", 4: "April", 5: "May", 6: "June", 7: "July",
                   8: "August", 9: "September", 10: "October", 11: "November", 12: "December"}
     month_num = (
-        datetime.strptime(case_config["start_time"], "%Y-%m-%d %H:%M:%S")
+        datetime.strptime(case_config["StartTime"], "%Y-%m-%d %H:%M:%S")
         + timedelta(days=first_data_day)
     ).month
     month_name = month_dict[month_num]
