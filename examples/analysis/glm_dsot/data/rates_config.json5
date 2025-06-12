@@ -61,7 +61,7 @@
     "genPower": true, // true= renewables are turned on, false = renewables off
     "seed": 1, // Random number seed
     "Tmax": 604800, // The duration for the simulation in seconds
-    "interval": 86400,
+    "Interval": 86400,
     "Period": 300, // Time interval for the simulation in seconds for opf/ames
     "dt": 15, // The delta time for the simulation in seconds for pf
     "pf_dc": 1,
