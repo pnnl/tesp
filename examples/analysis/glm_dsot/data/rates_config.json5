@@ -44,7 +44,7 @@
     "rate": "", // rate tariff name for post-processing. "" = DSOT ['', 'Flat', 'EandC', 'TOU']
     "EandC": false, // True if running Dynamic Energy and Capacity rate (EandC)
     "market": false, // case_type sets whether the market is true (bt, fl, or ev = true)
-    "price_sens_load": false, // true = Substation load is flexible, false = inflexible
+    "PriceSensLoad": false, // true = Substation load is flexible, false = inflexible
     "no_scale": true, // FNCS gld_scale set to 1 if false
     "curve": false, // FNCS no curve if set to false
     "curtail": true, // true = curtail renewables when needed, false = no curtailment
@@ -90,8 +90,8 @@
     "case_start_year": 2016,
     "case_end_year": 2016,
     "grid_PIQ": false,
-    "units_out": [], // An array for each units out[idx, time out[s], time back in[s]]
-    "branches_out": [], // An array for each branches out [idx, time out[s], time back in[s]]
+    "UnitsOut": [], // An array for each units out[idx, time out[s], time back in[s]]
+    "BranchesOut": [], // An array for each branches out [idx, time out[s], time back in[s]]
     "swing_bus": 1,
     "thermostat_schedule_version": 2,
     "slider_ranges": {

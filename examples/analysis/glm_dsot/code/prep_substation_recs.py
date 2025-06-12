@@ -772,7 +772,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
             'log_level': case_config['log_level'],
             'solver': case_config['solver'],
             'num_core': case_config['num_core'],
-            'price_sens_load': case_config['price_sens_load'],
+            'PriceSensLoad': case_config['PriceSensLoad'],
             'port': case_config['port'],
             'metrics': case_config['metrics'],
             'metrics_extension': case_config['metrics_extension'],
