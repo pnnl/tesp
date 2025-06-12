@@ -892,13 +892,9 @@ def glm_dict(case_name, feed_key):
 
     print(feeders[feed_key])
 
-    if glm.message_broker == 'fncs_msg':
-        message_name = 'fncs_msg'
-    elif glm.message_broker == 'helics_msg':
-        message_name = glm.t_name #f'gld{glm.substation_name}'
     for sub_name, substations in glm.substation.items():
         substation = {'bulkpower_bus': 1, 
-                    'message_name': message_name,
+                    'message_name': f'gldSubstation_{feed_key}',
                     'transformer_MVA': float(substations["base_power"].strip('MVA')) * 1.0e-6,
                     'base_feeder': substations["groupid"],
                     'feeders': feeders,                  

@@ -165,6 +165,21 @@ class Config:
         if hasattr(self, 'defines'):
             for key, value in self.defines:
                 self.glm.model.add_define(key, value)
+        
+        if hasattr(self, 'messager'):
+            if self.messager == 'HELICS':
+                params = {
+                    "configure": f'Substation_{self.dso_key}.json'
+                }
+                self.mdl.helics_msg.add(f'gldSubstation_{self.dso_key}', params)
+            if self.messager == 'FNCS':
+                params = {
+                    "parent": "network_node",
+                    "configure": f'Substation_{self.dso_key}_gridlabd.txt',
+                    "option": "transport:hostname localhost, port 5570",
+                    "aggregate_subscriptions": 'true',
+                    "aggregate_publications": 'true'
+                }
 
         # Add voltage dump file
         if self.base.WANT_VI_DUMP:
