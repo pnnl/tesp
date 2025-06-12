@@ -256,7 +256,7 @@
         "Qmax -maximum reactive power output (MVAr)",
         "Qmin -minimum reactive power output (MVAr)",
         "Vg -voltage magnitude set point (p.u.)",
-        "mBase -total MVA base of machine, defaults to base_MVA",
+        "mBase -total MVA base of machine, defaults to baseMVA",
         "status -machine status > 0 = machine in-service, machine status \u2264 0 = machine out-of-service",
         "Pmax -maximum real power output (MW)",
         "Pmin -minimum real power output (MW)",

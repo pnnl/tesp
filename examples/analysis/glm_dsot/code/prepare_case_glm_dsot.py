@@ -240,7 +240,7 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
         print('values:', file=yp)
 
     # Config HELICS or FNCS subs/pubs. Running renewables: wind, solar
-    if config["gen_power"]:
+    if config["genPower"]:
         for i in range(len(gen)):
             if genfuel[i][0] in config["renewables"]:
                 idx = str(genfuel[i][2])
@@ -439,7 +439,7 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
         for feed_key, feed_val in feeders.items():
             print("\t<<<<< Chosen feeder -->> {0} >>>>>".format(feed_val['name']))
             config["taxonomy"] = feed_val['name']
-            if config["simplified_feeders"]:
+            if config["simplifiedFeeders"]:
                 feed_val['name'] = 'config_' + feed_val['name']
                 print("\t<<<<< Going with the simplified feeders. >>>>>")
                 print("\t<<<<< Feeder name changed to -->> {0} >>>>>".format(feed_val['name']))

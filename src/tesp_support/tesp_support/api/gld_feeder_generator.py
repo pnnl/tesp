@@ -149,7 +149,7 @@ class Config:
             player_file = str(os.path.join(self.solar_data_path, self.solar_P_player_file))
             self.glm.model.add_class("player", "double", "P_out_inj", False, player_file)
 
-        self.glm.model.set_clock(self.start_time, self.end_time, self.time_zone)
+        self.glm.model.set_clock(self.StartTime, self.EndTime, self.time_zone)
 
         # Add includes
         if hasattr(self, 'includes'):

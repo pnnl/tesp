@@ -795,7 +795,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
         print('    default: 0', file=yp)
         print('    type: complex', file=yp)
         print('    list: false', file=yp)
-        plyr = case_config['key_load']
+        plyr = case_config['keyLoad']
         print('  ' + plyr + '_rt_load:', file=yp)
         print('    topic: ' + plyr + 'player/' + plyr + '_load_' + bus, file=yp)
         print('    default: 0', file=yp)

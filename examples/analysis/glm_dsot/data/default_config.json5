@@ -29,24 +29,24 @@
     "EandC": false, // True if running Dynamic Energy and Capacity rate (EandC)
     "market": false, // case_type sets whether the market is true (bt, fl, or ev = true)
     "priceSensLoad": false, // true = Substation load is flexible, false = inflexible
-    "no_scale": true, // FNCS gld_scale set to 1 if false
+    "noScale": true, // FNCS gld_scale set to 1 if false
     "curve": false, // FNCS no curve if set to false
     "curtail": true, // true = curtail renewables when needed, false = no curtailment
-    "reserve_down": 0.15, // Reserve down system percent
-    "reserve_up": 0.15, // Reserve up system percent
+    "reserveDown": 0.15, // Reserve down system percent
+    "reserveUp": 0.15, // Reserve up system percent
     "quadratic": true,
-    "price_cap": 1000.0,
-    "zonal_reserves": false,
-    "simplified_feeders": false,
-    "key_load": "ind", // The key to be used for the load player -> refLoadMn, readLoadHr or indLoad, should be sync with Startdate
-    "base_MVA": 100.0, // Conversion facter to p.u.
-    "gen_lower_limit": 150.0, // Set generation lower limit in MVA
-    "gen_power_level": 0.5, // percent generation power level at start up (0.6-0.7 typical, try 0.85 for high demand months)
-    "gen_power": true, // true= renewables are turned on, false = renewables off
+    "priceCap": 1000.0,
+    "zonalReserves": false,
+    "simplifiedFeeders": false,
+    "keyLoad": "ind", // The key to be used for the load player -> refLoadMn, readLoadHr or indLoad, should be sync with Startdate
+    "baseMVA": 100.0, // Conversion facter to p.u.
+    "genLowerLimit": 150.0, // Set generation lower limit in MVA
+    "genPowerLevel": 0.5, // percent generation power level at start up (0.6-0.7 typical, try 0.85 for high demand months)
+    "genPower": true, // true= renewables are turned on, false = renewables off
     "seed": 1, // Random number seed
     "Tmax": 604800, // The duration for the simulation in seconds
     "interval": 86400,
-    "period": 300, // Time interval for the simulation in seconds for opf/ames
+    "Period": 300, // Time interval for the simulation in seconds for opf/ames
     "dt": 15, // The delta time for the simulation in seconds for pf
     "pf_dc": 1,
     "opf_dc": 1,
