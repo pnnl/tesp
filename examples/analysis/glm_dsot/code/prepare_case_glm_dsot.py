@@ -88,21 +88,21 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
     if pv is not None:
         case_type['pv'] = pv
         if pv > 0:
-            config["case_name"] = config["case_name"] + "_pv"
+            config["caseName"] = config["caseName"] + "_pv"
     if bt is not None:
         case_type['bt'] = bt
         if bt > 0:
-            config["case_name"] = config["case_name"] + "_bt"
+            config["caseName"] = config["caseName"] + "_bt"
             config["market"] = True
     if fl is not None:
         case_type["fl"] = fl
         if fl > 0:
-            config["case_name"] = config["case_name"] + "_fl"
+            config["caseName"] = config["caseName"] + "_fl"
             config["market"] = True
     if ev is not None:
         case_type["ev"] = ev
         if ev > 0:
-            config["case_name"] = config["case_name"] + "_ev"
+            config["caseName"] = config["caseName"] + "_ev"
             config["market"] = True
 
     # Define scenario and import required config files
@@ -156,7 +156,7 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
     with open(feeder_defaults, 'r', encoding='utf-8') as json_file:
         base_config = json.load(json_file)
     
-    case_name = config["case_name"]
+    caseName = config["caseName"]
     StartTime = config["StartTime"]
     EndTime = config["EndTime"]
 
@@ -178,7 +178,7 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
     weather_config = {}
 
     # TODO: out_path used and rewritten many times throughout this script
-    out_path = case_name # currently only used for the experiment management scripts
+    out_path = caseName # currently only used for the experiment management scripts
 
     # Remove 10 AM bid correction to AMES
     if not hasattr(config, "Q_bid_forecast_correction"):
@@ -190,23 +190,23 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
         print('NO 10 AM AMES bid correction')
 
     # Create the case folder. If it already exists, delete and create it
-    if case_name != "" and case_name != ".." and case_name != ".":
-        if os.path.isdir(case_name):
+    if caseName != "" and caseName != ".." and caseName != ".":
+        if os.path.isdir(caseName):
             print("experiment folder already exists, deleting and moving on...")
-            shutil.rmtree(case_name)
-        os.makedirs(case_name)
+            shutil.rmtree(caseName)
+        os.makedirs(caseName)
     else:
         print('Case name is blank or Case name is "." or ".." and could cause file deletion')
 
     # Create the output folder, if different. If it already exists, delete and create it
-    if case_name != out_path and out_path != "" and out_path != ".." and out_path != ".":
+    if caseName != out_path and out_path != "" and out_path != ".." and out_path != ".":
         if os.path.isdir(out_path):
             print("output folder already exists, deleting and moving on...")
             shutil.rmtree(out_path)     
         os.makedirs(out_path)
 
     # Record the case and system configs for this experiment in generate_case_config
-    with open(os.path.join(case_name, 'generate_case_config.json'), 'w', encoding='utf-8') as json_file:
+    with open(os.path.join(caseName, 'generate_case_config.json'), 'w', encoding='utf-8') as json_file:
         json.dump(config | sys_config, json_file, indent=2)
 
     # write player helics config json file for load and generator players
@@ -214,7 +214,7 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
     sys_config["renewables"] = config["renewables"]
 
     if config["messager"] == 'HELICS':
-        helpers.write_players_msg(case_name, sys_config, dt)
+        helpers.write_players_msg(caseName, sys_config, dt)
         tso = HelicsMsg("pypower", dt)
 
     elif config["messager"] == 'FNCS':
@@ -222,7 +222,7 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
         players = sys_config["players"]
         for idx in range(len(players)):
             player = sys_config[players[idx]]
-            yamlfile = case_name + '/' + player[0] + '_player.yaml'
+            yamlfile = caseName + '/' + player[0] + '_player.yaml'
             yp = open(yamlfile, 'w')
             print('name: ' + player[0] + 'player', file=yp)
             print('time_delta: ' + str(dt) + 's', file=yp)
@@ -232,7 +232,7 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
             yp.close()
 
         # write tso yaml beginning
-        yamlfile = case_name + '/tso.yaml'
+        yamlfile = caseName + '/tso.yaml'
         yp = open(yamlfile, 'w')
         print('name: pypower', file=yp)
         print('time_delta: ' + str(dt) + 's', file=yp)
@@ -332,14 +332,14 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
         except:
             pass
 
-        os.makedirs(case_name + '/' + dso_key)
+        os.makedirs(caseName + '/' + dso_key)
 
         # Copy dso default config
         config["DSO"] = dso_key
         config["dso_key"] = dso_val
-        config["case_name"] = dso_key
+        config["caseName"] = dso_key
         config["substation"] = sub_key
-        config["out_path"] = case_name + '/' + dso_key
+        config["out_path"] = caseName + '/' + dso_key
         config["bulk_power_bus"] = dso_val['bus_number']
         config["DSO_type"] = dso_val['utility_type']
         if config["RECS"]:
@@ -402,13 +402,13 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
 
         # Make weather agent folder
         try:
-            os.makedirs(case_name + '/' + weather_agent_name)
+            os.makedirs(caseName + '/' + weather_agent_name)
         except:
             pass
 
         # Copy the .dat file from its location into the weather agent folder
         src = os.path.join(os.path.abspath(data_path + config["weather_data_source_path_" + nodes]), dso_val['weather_file'])
-        dst = os.path.join(os.path.abspath(case_name), weather_agent_name, 'weather.dat')
+        dst = os.path.join(os.path.abspath(caseName), weather_agent_name, 'weather.dat')
         shutil.copy(src, dst)
 
         # Copy the case configs for each DSO
@@ -423,7 +423,7 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
                 return obj
 
         case_config_dump = convert_sets_to_lists(config)
-        with open(case_name + '/case_config_' + str(dso_val['bus_number']) + '.json', 'w') as outfile:
+        with open(caseName + '/case_config_' + str(dso_val['bus_number']) + '.json', 'w') as outfile:
             json.dump(case_config_dump, outfile, ensure_ascii=False, indent=2)
 
         if config["messager"] == 'HELICS':
@@ -445,9 +445,9 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
                 print("\t<<<<< Feeder name changed to -->> {0} >>>>>".format(feed_val['name']))
             else:
                 print("\t<<<<< Going with the full feeders. >>>>>")
-            os.makedirs(case_name + '/' + feed_key)
-            config["out_path"] = case_name + '/' + feed_key
-            config["case_name"] = feed_key
+            os.makedirs(caseName + '/' + feed_key)
+            config["out_path"] = caseName + '/' + feed_key
+            config["caseName"] = feed_key
             taxchoice = {item[0]: item[1:] for item in base_config["taxchoice"]}
             config["vll"] = taxchoice[feed_val['name']][0]
             config["vln"] = taxchoice[feed_val['name']][1]
@@ -497,7 +497,7 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
             config["income_level"] = dso_val['income_level']
             config["ev_reserved_soc"] = config["AgentPrep"]['EV']['EVReserveLo']
             config["climate"] = dso_val['ashrae_zone']
-            config["out_path"] = f'{config["out_path"]}/{config["case_name"]}.glm'
+            config["out_path"] = f'{config["out_path"]}/{config["caseName"]}.glm'
             
             # Dump the modified config to json5 to be read in by feeder generator
             config_dump = pyjson5.dumps(config, indent=2)
@@ -510,14 +510,14 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
             os.remove(output_file)
            
             # Write the glm_dictionary for each substation
-            gd.glm_dict(case_name, feed_key)        
-            shutil.move(case_name + '/' + feed_key + '/' + feed_key + '_glm_dict.json',
-                        case_name + '/' + dso_key + '/' + feed_key + '_glm_dict.json')
+            gd.glm_dict(caseName, feed_key)        
+            shutil.move(caseName + '/' + feed_key + '/' + feed_key + '_glm_dict.json',
+                        caseName + '/' + dso_key + '/' + feed_key + '_glm_dict.json')
 
             # Create the agent dictionary along with the substation YAML file
-            prep.prep_substation(case_name + '/' + feed_key + '/' + feed_key,
-                                 case_name + '/' + dso_key + '/' + feed_key,
-                                 case_name + '/' + weather_agent_name + '/',
+            prep.prep_substation(caseName + '/' + feed_key + '/' + feed_key,
+                                 caseName + '/' + dso_key + '/' + feed_key,
+                                 caseName + '/' + weather_agent_name + '/',
                                  feedercnt,
                                  config=config,
                                  hvacSetpt=hvac_setpt)
@@ -533,10 +533,10 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
                 feed_key = "copperplate_feeder"
                 feed_val['name'] = feed_key
                 dso_val['feeders'][feed_key] = feed_val
-                os.makedirs(case_name + '/' + feed_key)
-                config["out_path"] = case_name + '/' + feed_key
-                config["case_name"] = feed_key
-                config["out_path"] = f'{config["out_path"]}/{config["case_name"]}.glm'
+                os.makedirs(caseName + '/' + feed_key)
+                config["out_path"] = caseName + '/' + feed_key
+                config["caseName"] = feed_key
+                config["out_path"] = f'{config["out_path"]}/{config["caseName"]}.glm'
                 config['taxonomy'] = f'{config["copperplate_feeder_name"]}.glm'
                 config["backbone_files"] = config["copperplate_feeder_file"]
                 config["gis_path"] = False
@@ -548,14 +548,14 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
                 gld_feeder.Feeder(config_dump, "copp")
                 os.remove(output_file)
 
-                gd.glm_dict(case_name, feed_key)   
-                shutil.move(case_name + '/' + feed_key + '/' + feed_key + '_glm_dict.json',
-                            case_name + '/' + dso_key + '/' + feed_key + '_glm_dict.json')
+                gd.glm_dict(caseName, feed_key)   
+                shutil.move(caseName + '/' + feed_key + '/' + feed_key + '_glm_dict.json',
+                            caseName + '/' + dso_key + '/' + feed_key + '_glm_dict.json')
 
                 # Create the agent dictionary along with the substation YAML file
-                prep.prep_substation(case_name + '/' + feed_key + '/' + feed_key,
-                                     case_name + '/' + dso_key + '/' + feed_key,
-                                     case_name + '/' + weather_agent_name + '/',
+                prep.prep_substation(caseName + '/' + feed_key + '/' + feed_key,
+                                     caseName + '/' + dso_key + '/' + feed_key,
+                                     caseName + '/' + weather_agent_name + '/',
                                      feedercnt,
                                      config=config,
                                      hvacSetpt=hvac_setpt)
@@ -564,53 +564,53 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
 
         # ======================================================================
         print("\n=== MERGING THE FEEDERS UNDER ONE SUBSTATION =====")
-        os.makedirs(case_name + "/" + sub_key)
-        cm.merge_glm(os.path.abspath(case_name + '/' + sub_key + '/' + sub_key + '.glm'), list(dso_val['feeders'].keys()), 20)
+        os.makedirs(caseName + "/" + sub_key)
+        cm.merge_glm(os.path.abspath(caseName + '/' + sub_key + '/' + sub_key + '.glm'), list(dso_val['feeders'].keys()), 20)
 
         print("\n=== MERGING/WRITING THE SUBSTATION(GRIDLABD) MESSAGE FILE =====")
         if config["messager"] == 'HELICS':
-            HelicsMsg.gld.write_file(os.path.abspath(case_name + '/' + sub_key + '/' + sub_key + '.json'))
+            HelicsMsg.gld.write_file(os.path.abspath(caseName + '/' + sub_key + '/' + sub_key + '.json'))
         elif config["messager"] == 'FNCS':
-            cm.merge_fncs_config(os.path.abspath(case_name + '/' + sub_key + '/' + sub_key + '_gridlabd.txt'), list(dso_val['feeders'].keys()))
+            cm.merge_fncs_config(os.path.abspath(caseName + '/' + sub_key + '/' + sub_key + '_gridlabd.txt'), list(dso_val['feeders'].keys()))
 
         print("\n=== MERGING/WRITING THE FEEDERS GLM DICTIONARIES =====")
-        cm.merge_glm_dict(os.path.abspath(case_name + '/' + dso_key + '/' + sub_key + '_glm_dict.json'), list(dso_val['feeders'].keys()), 20)
+        cm.merge_glm_dict(os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '_glm_dict.json'), list(dso_val['feeders'].keys()), 20)
         if config["RECS"]:
-            glm_dict_list[dso_key] = os.path.abspath(case_name + '/' + dso_key + '/' + sub_key + '_glm_dict.json')
+            glm_dict_list[dso_key] = os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '_glm_dict.json')
 
         print("\n=== MERGING/WRITING THE SUBSTATION AGENT DICTIONARIES =====")
-        cm.merge_agent_dict(os.path.abspath(case_name + '/' + dso_key + '/' + sub_key + '_agent_dict.json'), list(dso_val['feeders'].keys()))
+        cm.merge_agent_dict(os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '_agent_dict.json'), list(dso_val['feeders'].keys()))
         if config["RECS"]:
-            agent_dict_list[dso_key] = os.path.abspath(case_name + '/' + dso_key + '/' + sub_key + '_agent_dict.json')
+            agent_dict_list[dso_key] = os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '_agent_dict.json')
 
         print("\n=== MERGING/WRITING THE DSO MESSAGE FILE =====")
         if config["messager"] == 'HELICS':
-            HelicsMsg.dso.write_file(os.path.abspath(case_name + '/' + dso_key + '/' + sub_key + '.json'))
+            HelicsMsg.dso.write_file(os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '.json'))
         elif config["messager"] == 'FNCS':
-            cm.merge_substation_yaml(os.path.abspath(case_name + '/' + dso_key + '/' + sub_key + '.yaml'), list(dso_val['feeders'].keys()))
+            cm.merge_substation_yaml(os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '.yaml'), list(dso_val['feeders'].keys()))
 
         # Cleanup after feeders had been merged
-        foldersToDelete = [name for name in os.listdir(os.path.abspath(case_name))
-                           if os.path.isdir(os.path.join(os.path.abspath(case_name), name)) and 'feeder' in name]
+        foldersToDelete = [name for name in os.listdir(os.path.abspath(caseName))
+                           if os.path.isdir(os.path.join(os.path.abspath(caseName), name)) and 'feeder' in name]
         print("=== Removing the following folders: {0}. ===".format(foldersToDelete))
-        [shutil.rmtree(os.path.join(os.path.abspath(case_name), folder)) for folder in foldersToDelete]
+        [shutil.rmtree(os.path.join(os.path.abspath(caseName), folder)) for folder in foldersToDelete]
 
-        filesToDelete = [name for name in os.listdir(os.path.abspath(case_name + '/' + dso_key))
-                         if os.path.isfile(os.path.join(os.path.abspath(case_name + '/' + dso_key), name)) and 'feeder' in name]
+        filesToDelete = [name for name in os.listdir(os.path.abspath(caseName + '/' + dso_key))
+                         if os.path.isfile(os.path.join(os.path.abspath(caseName + '/' + dso_key), name)) and 'feeder' in name]
         print("=== Removing the following files: {0} for {1}. ===".format(filesToDelete, dso_key))
-        [os.remove(os.path.join(os.path.abspath(case_name + '/' + dso_key), fileName)) for fileName in filesToDelete]
+        [os.remove(os.path.join(os.path.abspath(caseName + '/' + dso_key), fileName)) for fileName in filesToDelete]
 
         # Create the launch, kill and clean scripts for this case
         if config["messager"] == 'HELICS':
             helpers.write_dsot_management_script(master_file="generate_case_config",
-                                                case_path=case_name,
+                                                case_path=caseName,
                                                 config=config,
                                                 system_config=sys_config,
                                                 substation_config=dso_config,
                                                 weather_config=weather_config)
         elif config["messager"] == 'FNCS':
             helpers.write_dsot_management_script_f(master_file="generate_case_config",
-                                    case_path=case_name,
+                                    case_path=caseName,
                                     config=config,
                                     system_config=sys_config,
                                     substation_config=dso_config,
@@ -618,7 +618,7 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
         
         if config["messager"] == 'HELICS':
             # os.remove(output_file)
-            tso.write_file(case_name + '/tso_h.json')
+            tso.write_file(caseName + '/tso_h.json')
         else:
             pass
 
@@ -677,9 +677,9 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
             temp_df2['DSO'] = dso_k # add a column for DSO number
             hvac_agent_df = pd.concat([hvac_agent_df,temp_df2],ignore_index=True)
         # Save for later analysis
-        hse_df.to_csv(os.path.abspath(case_name + '/' + 'house_parameters.csv'))
-        #bldg_df.to_csv(os.path.abspath(case_name + '/' + 'bldg_parameters.csv'))
-        hvac_agent_df.to_csv(os.path.abspath(case_name + '/' + 'hvac_agents.csv'))
+        hse_df.to_csv(os.path.abspath(caseName + '/' + 'house_parameters.csv'))
+        #bldg_df.to_csv(os.path.abspath(caseName + '/' + 'bldg_parameters.csv'))
+        hvac_agent_df.to_csv(os.path.abspath(caseName + '/' + 'hvac_agents.csv'))
         # Get totals
         low_hses = len(hse_df.loc[(hse_df['income_level']=='Low')])
         middle_hses = len(hse_df.loc[(hse_df['income_level']=='Middle')])
@@ -714,7 +714,7 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
         print(f"=== Solar: {round(100*sol_hses/tot_hses,2)}%, EVs: {round(100*ev_hses/tot_hses,2)}%, Batteries: {round(100*bat_hses/tot_hses,2)}%. ===")
         print(f"=== Electric Water Heating/Space Heating (Percent of all homes) ===")
         print(f"=== Water Heating: {round(100*elec_wh_hses/tot_hses,2)}%, Space Heating: {round(100*elec_sh_hses/tot_hses,2)}%. ===")
-        print(f"=== COMMERCIAL POPULATION SUMMARY for {case_name} ===")
+        print(f"=== COMMERCIAL POPULATION SUMMARY for {caseName} ===")
         print(f"Number of commercial buildings: {com_bldgs}")
         print(f"=== DERs (Percent of all buildings) ===")
         print(f"=== Solar: {round(100*sol_com/com_bldgs,2)}%, EVs: {round(100*ev_com/com_bldgs,2)}%, Batteries: {round(100*bat_com/com_bldgs,2)}%. ===")

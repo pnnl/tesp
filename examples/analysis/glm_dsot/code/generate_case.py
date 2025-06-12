@@ -9,9 +9,9 @@ import sys
 import prepare_case_glm_dsot as prep_case
 
 
-def generate_case(case_name, port, pv=None, bt=None, fl=None, ev=None):
+def generate_case(caseName, port, pv=None, bt=None, fl=None, ev=None):
 
-    config_file = str('../data/' + case_name + '.json5')
+    config_file = str('../data/' + caseName + '.json5')
     with open(config_file, 'r', encoding='utf-8') as json5_file:
         ppc = pyjson5.load(json5_file)
     split_case = ppc['split_case']
@@ -22,7 +22,7 @@ def generate_case(case_name, port, pv=None, bt=None, fl=None, ev=None):
         while True:
             for i in range(3, 5):
                 directory_name = str(case_start_year) + "_" + '{0:0>2}'.format(i+1)
-                ppc['case_name'] = node + "_" + directory_name
+                ppc['caseName'] = node + "_" + directory_name
                 ppc['port'] = int(port + i)
 
                 year = case_start_year

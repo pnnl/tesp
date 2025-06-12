@@ -168,7 +168,7 @@ class Config:
 
         # Add voltage dump file
         if self.base.WANT_VI_DUMP:
-            self.glm.add_voltage_dump(self.case_name)
+            self.glm.add_voltage_dump(self.caseName)
 
         # Add metrics interval and interim interval
         if self.metrics_interval > 0:

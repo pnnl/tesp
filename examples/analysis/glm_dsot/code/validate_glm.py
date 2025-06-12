@@ -5,62 +5,62 @@ import shutil
 from tesp_support.api.modify_GLM import GLMModifier, GLMModel
 import tesp_support.dsot.glm_dictionary as gd
 
-def read_glm(data_path, case_name):
+def read_glm(data_path, caseName):
     """Read in the substation .glms written from a prepare_case_dsot.py that 
     did not use GLMModifier, then write out an equivalent .glm using the new
     GLMModifier. Then create a glm_dict for each substation. 
 
     Args:
         data_path (str): the data path
-        case_name (str): the name of the case folder
+        caseName (str): the name of the case folder
     """
     glm = GLMModifier()
     for dso_key in range(1,8):
-        in_file_glm = os.path.abspath(case_name + '/Substation_' + str(dso_key) + '/Substation_' + str(dso_key) + '.glm')
+        in_file_glm = os.path.abspath(caseName + '/Substation_' + str(dso_key) + '/Substation_' + str(dso_key) + '.glm')
         i_glm, success = glm.read_model(os.path.join(data_path, in_file_glm))
         glm.write_model(os.path.join(data_path, in_file_glm))
         if not success:
             exit()
-        gd.glm_dict(case_name, "Substation_" + str(dso_key))
-        shutil.move(f'{case_name}/Substation_{dso_key}/Substation_{dso_key}_glm_dict.json',
-                        f'{case_name}/DSO_{dso_key}/Substation_{dso_key}_glm_dict.json')     
+        gd.glm_dict(caseName, "Substation_" + str(dso_key))
+        shutil.move(f'{caseName}/Substation_{dso_key}/Substation_{dso_key}_glm_dict.json',
+                        f'{caseName}/DSO_{dso_key}/Substation_{dso_key}_glm_dict.json')     
         
-def read_feeder_glm(data_path, case_name, feeder_name):
+def read_feeder_glm(data_path, caseName, feeder_name):
     """Read in a particular feeder .glms written from a prepare_case_dsot.py that 
     did not use GLMModifier, then write out an equivalent .glm using the new
     GLMModifier. Then create a glm_dict for each substation. 
 
     Args:
         data_path (str): the data path
-        case_name (str): the name of the case folder
+        caseName (str): the name of the case folder
         feeder_name (str): the particular feeder name
     """
     glm = GLMModifier()
-    in_file_glm = os.path.abspath(case_name + '/' + feeder_name + '/' + feeder_name + '.glm')
+    in_file_glm = os.path.abspath(caseName + '/' + feeder_name + '/' + feeder_name + '.glm')
     i_glm, success = glm.read_model(os.path.join(data_path, in_file_glm))
     glm.write_model(os.path.join(data_path, in_file_glm))
     if not success:
         exit()
-    gd.glm_dict(case_name, feeder_name)
+    gd.glm_dict(caseName, feeder_name)
     try:
-        shutil.move(f'{case_name}/{feeder_name}/{feeder_name}_glm_dict.json',
-                        f'{case_name}/DSO_1/{feeder_name}_glm_dict.json')
+        shutil.move(f'{caseName}/{feeder_name}/{feeder_name}_glm_dict.json',
+                        f'{caseName}/DSO_1/{feeder_name}_glm_dict.json')
     except:
-        shutil.move(f'{case_name}/{feeder_name}/{feeder_name}_glm_dict.json',
-                        f'{case_name}/copperplate_feeder/{feeder_name}_glm_dict.json')
+        shutil.move(f'{caseName}/{feeder_name}/{feeder_name}_glm_dict.json',
+                        f'{caseName}/copperplate_feeder/{feeder_name}_glm_dict.json')
     glm.model.plot_model()
 
-def read_dict(case_name, level:str):    
+def read_dict(caseName, level:str):    
     glm_dict_list = {}
     agent_dict_list = {}
     if level == "DSO":
         for dso_key in range(1,8):
-            glm_dict_list[dso_key] = os.path.abspath(case_name + '/DSO_' + str(dso_key) + '/Substation_' + str(dso_key) + '_glm_dict.json')
+            glm_dict_list[dso_key] = os.path.abspath(caseName + '/DSO_' + str(dso_key) + '/Substation_' + str(dso_key) + '_glm_dict.json')
     elif level == "feeder":
-        glm_dict_list[1] = os.path.abspath(case_name + '/DSO_1' + '/feeder1' + '_glm_dict.json')
+        glm_dict_list[1] = os.path.abspath(caseName + '/DSO_1' + '/feeder1' + '_glm_dict.json')
         dso_k = 1
     elif level == "copper":
-        glm_dict_list[1] = os.path.abspath(case_name + '/copperplate_feeder' + '/copperplate_feeder' + '_glm_dict.json')
+        glm_dict_list[1] = os.path.abspath(caseName + '/copperplate_feeder' + '/copperplate_feeder' + '_glm_dict.json')
         dso_k = 1
     hse_df = pd.DataFrame()
     hvac_agent_df = pd.DataFrame()
@@ -105,9 +105,9 @@ def read_dict(case_name, level:str):
         temp_df2['DSO'] = dso_k # add a column for DSO number
         hvac_agent_df = pd.concat([hvac_agent_df,temp_df2],ignore_index=True)
     # Save for later analysis
-    hse_df.to_csv(os.path.abspath(case_name + '/' + 'house_parameters.csv'))
-    #bldg_df.to_csv(os.path.abspath(case_name + '/' + 'bldg_parameters.csv'))
-    hvac_agent_df.to_csv(os.path.abspath(case_name + '/' + 'hvac_agents.csv'))
+    hse_df.to_csv(os.path.abspath(caseName + '/' + 'house_parameters.csv'))
+    #bldg_df.to_csv(os.path.abspath(caseName + '/' + 'bldg_parameters.csv'))
+    hvac_agent_df.to_csv(os.path.abspath(caseName + '/' + 'hvac_agents.csv'))
     # Get totals
     low_hses = len(hse_df.loc[(hse_df['income_level']=='Low')])
     middle_hses = len(hse_df.loc[(hse_df['income_level']=='Middle')])
@@ -123,7 +123,7 @@ def read_dict(case_name, level:str):
     bat_com = len(bldg_df.loc[(bldg_df['house']=='Yes') & (bldg_df['battery']=='Yes') & (hse_df['income_level'] =='')])
     elec_wh_hses = len(hse_df.loc[(hse_df['house']=='Yes') & (hse_df['wh_gallons']!=0) & (hse_df['income_level'] !='')])
     elec_sh_hses = len(hse_df.loc[(hse_df['house']=='Yes') & (hse_df['fuel_type']=='electric') & (hse_df['income_level'] !='')])
-    print(f"=== RESIDENTIAL POPULATION SUMMARY for {case_name} ===")
+    print(f"=== RESIDENTIAL POPULATION SUMMARY for {caseName} ===")
     print(f"Number of residential homes {tot_hses}")
     print(f"=== Income (Percent of all homes) ===")
     print(f"=== Low: {round(100*low_hses/tot_hses,2)}%, Middle: {round(100*middle_hses/tot_hses,2)}%, Upper: {round(100*upper_hses/tot_hses,2)}%. ===")
@@ -131,7 +131,7 @@ def read_dict(case_name, level:str):
     print(f"=== Solar: {round(100*sol_hses/tot_hses,2)}%, EVs: {round(100*ev_hses/tot_hses,2)}%, Batteries: {round(100*bat_hses/tot_hses,2)}%. ===")
     print(f"=== Electric Water Heating/Space Heating (Percent of all homes) ===")
     print(f"=== Water Heating: {round(100*elec_wh_hses/tot_hses,2)}%, Space Heating: {round(100*elec_sh_hses/tot_hses,2)}%. ===")
-    print(f"=== COMMERCIAL POPULATION SUMMARY for {case_name} ===")
+    print(f"=== COMMERCIAL POPULATION SUMMARY for {caseName} ===")
     print(f"Number of commercial buildings: {com_bldgs}")
     print(f"=== DERs (Percent of all buildings) ===")
     print(f"=== Solar: {round(100*sol_com/com_bldgs,2)}%, EVs: {round(100*ev_com/com_bldgs,2)}%, Batteries: {round(100*bat_com/com_bldgs,2)}%. ===")

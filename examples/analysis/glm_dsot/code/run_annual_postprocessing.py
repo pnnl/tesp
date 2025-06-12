@@ -102,25 +102,25 @@ for DSO in DSOmetadata.keys():
         if DSOmetadata[DSO]['used']:
             dso_range.append(int(DSO.split('_')[-1]))
 
-case_name = ''
+caseName = ''
 month_def = []
 rate_scenario = None
 
 # Determine the rate scenario to investigate
 if case_path == flat_path:
-    case_name = 'Flat'
+    caseName = 'Flat'
     rate_scenario = "flat"
 if case_path == DSOT_path:
-    case_name = 'DSOT'
+    caseName = 'DSOT'
     rate_scenario = "dsot"
 if case_path == TOU_path:
-    case_name = 'TOU'
+    caseName = 'TOU'
     rate_scenario = "time-of-use"
 if case_path == transactive_path:
-    case_name = 'EandC'
+    caseName = 'EandC'
     rate_scenario = "transactive"
 if case_path == subscription_path:
-    case_name = 'Sub'
+    caseName = 'Sub'
     rate_scenario = "subscription"
 
 
@@ -304,7 +304,7 @@ if retail:
             metadata_path,
             dso_scaling_factor,
             num_ind_cust,
-            case_name,
+            caseName,
             squareup_revenue,
             rate_scenario,
             trans_cost_balance_method,

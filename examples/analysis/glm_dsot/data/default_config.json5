@@ -1,5 +1,5 @@
 {
-    "case_name": "gld_feeder_test",
+    "caseName": "gld_feeder_test",
     "StartTime": "2016-08-05 00:00:00", // simulation start time, YYYY-MM-DD HH:MM:SS
     "EndTime": "2016-08-12 00:00:00", // simulation end time, YYYY-MM-DD HH:MM:SS
     "nodes": 8, // 8 or 200 bus case

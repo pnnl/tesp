@@ -187,7 +187,7 @@ def post_process():
     if "rate" in case_config:
         rate_scenario = case_config["rate"]
 
-    case_path = dirname(abspath(__file__)) + '/' + case_config['case_name']
+    case_path = dirname(abspath(__file__)) + '/' + case_config['caseName']
     metadata_path = "../" + case_config['data_path']
 
     # Identify the proper metadata file depending on the rate scenario
