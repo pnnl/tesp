@@ -892,9 +892,16 @@ def glm_dict(case_name, feed_key):
 
     print(feeders[feed_key])
 
+    try:
+        for name, helics_msg in glm.helics_msg.items():    
+            message_name = name
+    except KeyError:
+        for name, fncs_msg in glm.fncs_msg.items():    
+            message_name = name
+
     for sub_name, substations in glm.substation.items():
         substation = {'bulkpower_bus': 1, 
-                    'message_name': f'gldSubstation_{feed_key}',
+                    'message_name': message_name,
                     'transformer_MVA': float(substations["base_power"].strip('MVA')) * 1.0e-6,
                     'base_feeder': substations["groupid"],
                     'feeders': feeders,                  

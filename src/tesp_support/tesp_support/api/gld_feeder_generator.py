@@ -168,14 +168,15 @@ class Config:
         
         if hasattr(self, 'messager'):
             if self.messager == 'HELICS':
+                num = self.DSO.replace('DSO_', '')
                 params = {
-                    "configure": f'Substation_{self.dso_key}.json'
+                    "configure": f'Substation_{num}.json'
                 }
-                self.mdl.helics_msg.add(f'gldSubstation_{self.dso_key}', params)
+                self.mdl.helics_msg.add(f'gldSubstation_{num}', params)
             if self.messager == 'FNCS':
                 params = {
                     "parent": "network_node",
-                    "configure": f'Substation_{self.dso_key}_gridlabd.txt',
+                    "configure": f'Substation_{num}_gridlabd.txt',
                     "option": "transport:hostname localhost, port 5570",
                     "aggregate_subscriptions": 'true',
                     "aggregate_publications": 'true'
