@@ -101,7 +101,7 @@
         "pv": {"_UP": 1, "_DOWN": 0.001 },
         "wh": {"_UP": 1, "_DOWN": 0.001 }
     },
-    "solar_data_path": "../../dsot/data/solar_data/solar_pv_power_profiles/",
+    "solar_data_path": "../../../dsot/data/solar_data/solar_pv_power_profiles/",
     "solar_P_player_file": "5_minute_dist_power.csv", // solar active power data to be injected in gridlabd
     "solar_Q_player_file": "no_file", // solar reactive power data to be injected in gridlabd; if 'no_file' means 0 reactive power
     "solar_agent_forecast_file_8": "8-node_dist_hourly_forecast_power.csv", // 1 hour tape of rooftop ground truth with uncertainty (forecast error) added.  This is what will be read into the PV (unresponsive) agent with a scaling factor
@@ -139,8 +139,8 @@
     "backbone_files": {
     "taxonomy": "", // taxonomy feeder file
     "seed": 0, // random seed
-    "support_path": "../../../../../../../dsot/data/schedules/",
-    "weather_path": "../../../../../../../dsot/data/weather/"
+    "support_path": "../../../dsot/data/schedules/",
+    "weather_path": "../../../dsot/data/weather/"
     },
     "metrics": [
         "house",
