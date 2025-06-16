@@ -232,15 +232,15 @@ def load_gen_data(dir_path, gen_name, day_range):
             for day in day_range:
                 for dso in dso_list:
                     arr = np.array([sim_start + timedelta(days=1) * (day - 1) + timedelta(hours=i) for i in range(24)])
-                    dates += arr.tolist()
-                    dsos += np.array([dso for i in range(24)]).tolist()
+                    if data_df.columns.str.contains('Adder').any():
+                        dates += arr.tolist() + arr.tolist()
+                        dsos_day = np.array([dso for i in range(24)]).tolist()
+                        adders = [item.replace("lmp", "adder") for item in dsos_day]
+                        dsos += dsos_day + adders
+                    else:
+                        dsos += np.array([dso for i in range(24)]).tolist()
+                        dates += arr.tolist()
 
-            # Expanding dataframe size for when there are LMP Adders present.
-            if data_df.columns.str.contains('Adder').any():
-                adders = [item.replace("lmp", "adder") for item in dsos]
-                gen_data_df = pd.DataFrame(index=[dates + dates, dsos + adders], columns=[column_key[gen_name][:-1]])
-
-            else:
             gen_data_df = pd.DataFrame(index=[dates, dsos], columns=[column_key[gen_name][:-1]])
             gen_data_df[column_key[gen_name][:-1]] = test
 
