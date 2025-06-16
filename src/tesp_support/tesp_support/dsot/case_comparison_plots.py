@@ -45,8 +45,8 @@ def customer_bill_component_comparison(cases, data_paths, output_path, dso_num):
     lower_limit = 0
     units = '$'
 
-    months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Average']
-    # months = [ 'Apr', 'Aug', 'Dec', 'Average']
+    # months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Average']
+    months = [ 'Apr', 'Aug', 'Dec', 'Average']
 
     case_list = []
     costs = []
@@ -93,17 +93,17 @@ def customer_bill_component_comparison(cases, data_paths, output_path, dso_num):
                 df.loc[(month, case), 'Volumetric Charge (Off-Peak)'] = var_df.loc[(Customer_class, 'tou_off-peak_energy_charge'), month] / cust_sf
                 df.loc[(month, case), 'Demand Charge'] = var_df.loc[(Customer_class, 'tou_demand_charge'), month] / cust_sf
 
-            elif case == 'DE' or case == 'DE+C':
+            elif case == 'DE':
                 df.loc[(month, case), 'Fixed Charge'] = var_df.loc[(Customer_class, 'dsot_fixed_charge'), month] / cust_sf
                 df.loc[(month, case), 'Volumetric Energy Charge'] = var_df.loc[(Customer_class, 'dsot_volumetric_charge'), month] / cust_sf
                 df.loc[(month, case), 'Dynamic (DA) Charge'] = var_df.loc[(Customer_class, 'dsot_DA_energy_charge'), month] / cust_sf
                 df.loc[(month, case), 'Dynamic (RT) Charge'] = var_df.loc[(Customer_class, 'dsot_RT_energy_charge'), month] / cust_sf
 
-            # elif case == 'DE+C':
-            #     df.loc[(month, case), 'Fixed Charge'] = var_df.loc[(Customer_class, 'dsot_fixed_charge'), month] / cust_sf
-            #     df.loc[(month, case), 'Volumetric Energy Charge'] = var_df.loc[(Customer_class, 'dsot_volumetric_charge'), month] / cust_sf
-            #     df.loc[(month, case), 'Dynamic (DA) Charge'] = var_df.loc[(Customer_class, 'dsot_DA_energy_charge'), month] / cust_sf
-            #     df.loc[(month, case), 'Dynamic (RT) Charge'] = var_df.loc[(Customer_class, 'dsot_RT_energy_charge'), month] / cust_sf
+            elif case == 'DE+C':
+                df.loc[(month, case), 'Fixed Charge'] = var_df.loc[(Customer_class, 'transactive_fixed_charge'), month] / cust_sf
+                df.loc[(month, case), 'Volumetric Energy Charge'] = var_df.loc[(Customer_class, 'transactive_volumetric_charge'), month] / cust_sf
+                df.loc[(month, case), 'Dynamic (DA) Charge'] = var_df.loc[(Customer_class, 'transactive_DA_energy_charge'), month] / cust_sf
+                df.loc[(month, case), 'Dynamic (RT) Charge'] = var_df.loc[(Customer_class, 'transactive_RT_energy_charge'), month] / cust_sf
 
             elif case == 'B&S':
                 df.loc[(month, case), 'Fixed Charge'] = var_df.loc[(Customer_class, 'subscription_fixed_charge'), month] / cust_sf
@@ -203,13 +203,15 @@ def customer_monthly_stats(cases, data_paths, output_path, dso_num):
                     results_df.loc[(customer, case, month), 'total bill'] = var_df.loc[(customer), month].sum()
                     results_df.loc[(customer, case, month), 'month'] = month
                     results_df.loc[(customer, case, month), 'case'] = case
-                    results_df.loc[(customer, case, month), 'change'] = results_df.loc[(customer, case, month), 'total bill'] \
-                                                                            - results_df.loc[(customer, cases[0], month), 'total bill']
+                    results_df.loc[(customer, case, month), 'change'] = 100 * (results_df.loc[(customer, case, month), 'total bill'] \
+                                                                            - results_df.loc[(customer, cases[0], month), 'total bill']) \
+                                                                            / results_df.loc[(customer, cases[0], month), 'total bill']
 
     plt.clf()
 
     fig, axes = plt.subplots(2, 1, figsize=(11, 10), sharex=True)
-    pal = ['violet'] + ['lightgreen'] + ["gold"] + ['skyblue']
+    # pal = ['violet'] + ['lightgreen'] + ["gold"] + ['skyblue']
+    pal = ['#e0813e'] + ['#062c49'] + ['#84baa9'] + ['#965c79'] + ["gold"]
     # pal = sns.color_palette("Paired")
     pal = pal[0:len(cases)]
 
@@ -223,7 +225,7 @@ def customer_monthly_stats(cases, data_paths, output_path, dso_num):
     axes[0].legend(handles=handles, labels=labels, framealpha=1)
 
     sns.boxplot(data=results_df, x='month', y='change', hue='case', ax=axes[1], palette=pal)
-    axes[1].set_ylabel(units)
+    axes[1].set_ylabel('Percent Change (%)')
     axes[1].set_title('Change in ' + title_name + ' compared to ' + cases[0] + ' case')
     axes[1].set_xlabel('Month')
     axes[1].set_ylim(top=upper_limit / 6, bottom=-upper_limit / 6)
@@ -255,7 +257,12 @@ def load_comparison_plot(day_range, metadata_path, cases, data_paths, output_pat
         'Flat': 'Flat',
         'TOU': 'TOU',
         'DSOT': 'DE',
-        'RND': 'DE+C'}
+        'RND': 'DE+C',
+        'TOU-20': 'TOU-20%',
+        'TOU-40': 'TOU-40%',
+        'TOU-60': 'TOU-60%',
+        'TOU-80': 'TOU-80%'
+    }
 
     for i in range(len(cases)):
         case = cases[i]
@@ -404,8 +411,8 @@ def retail_price_comparison_plot(dso, day_range, metadata_path, cases, data_path
         elif rate_scenario == "DSOT":
             DA_LMPs_df['Retail'] = DA_LMPs_df['da_lmp'+str(dso)]/1000 + tariff['DSO_'+str(dso)]['transactive_dist_rate']
         elif rate_scenario == "RandD":
-            DA_LMPs_df['Retail'] = (DA_LMPs_df['da_lmp'+str(dso)])/1000 + tariff['DSO_'+str(dso)]['transactive_dist_rate']
-            # DA_LMPs_df['Retail'] = (DA_LMPs_df['da_lmp'+str(dso)] + 2 * DA_LMPs_df[' Adder'])/1000 + tariff['DSO_'+str(dso)]['transactive_dist_rate']
+            # DA_LMPs_df['Retail'] = (DA_LMPs_df['da_lmp'+str(dso)])/1000 + tariff['DSO_'+str(dso)]['transactive_dist_rate']
+            DA_LMPs_df['Retail'] = (DA_LMPs_df['da_lmp'+str(dso)] + DA_LMPs_df[' Adder'])/1000 + tariff['DSO_'+str(dso)]['transactive_dist_rate']
 
         if i == 0:
             # Plot load plot
@@ -566,6 +573,11 @@ def plot_annual_stats(cases, data_paths, output_path, dso_num, variable):
             var_daily_comparison_df = pd.concat([var_daily_comparison_df, var_daily_df])
 
     # ==============  Plot box and whiskers ==========================
+    # pal = ['violet'] + ['lightgreen'] + ["gold"] + ['skyblue']
+    # pal = sns.color_palette("Paired")
+    pal = ['#e0813e'] + ['#062c49'] + ['#84baa9'] + ['#965c79']
+    pal = pal[0:len(cases)]
+
     if variable == 'Hybrid':
         for i in range(len(cases)):
             case = cases[i]
@@ -581,10 +593,7 @@ def plot_annual_stats(cases, data_paths, output_path, dso_num, variable):
             else:
                 var2_comparison_df = pd.concat([var2_comparison_df, var2_df])
 
-
         fig, axes = plt.subplots(2, 1, figsize=(11, 10), sharex=True)
-        pal = ['violet'] + ['lightgreen'] + ["gold"] + ['skyblue']
-        pal = pal[0:len(cases)]
 
         sns.boxplot(data=var_comparison_df, x='Month', y=variable, hue='Case', ax=axes[0], palette=pal)
         axes[0].set_ylabel(units, fontsize=label_size)
@@ -614,9 +623,6 @@ def plot_annual_stats(cases, data_paths, output_path, dso_num, variable):
             fig, axes = plt.subplots(3, 1, figsize=(11, 10), sharex=True)
         else:
             fig, axes = plt.subplots(2, 1, figsize=(11, 10), sharex=True)
-        pal = ['violet'] + ['lightgreen'] + ["gold"] + ['skyblue']
-        # pal = sns.color_palette("Paired")
-        pal = pal[0:len(cases)]
 
         if box_plot:
             sns.boxplot(data=var_comparison_df, x='Month', y=variable, hue='Case', ax=axes[0], palette=pal)
