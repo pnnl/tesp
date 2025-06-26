@@ -151,7 +151,6 @@ class HVACDSOTAssetState {
     mtr_v: float
     hvac_on: bool
     thermostat_mode: ThermoStatMode
-    copy_attributes_from(other_obj: object): None
 }
 
 class ETPStructureParams {

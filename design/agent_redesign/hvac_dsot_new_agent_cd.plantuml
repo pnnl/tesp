@@ -1,6 +1,6 @@
 @startuml
 
-!include ./hvac_agent_class_definitions.plantuml
+!include ./hvac_dsot_class_definitions.plantuml
 
 HVACDSOTAgent "1" *-- "1" HVACDSOTRTBiddingStrategy
 HVACDSOTAgent "1" *-- "1" HVACDSOTDABiddingStrategy
