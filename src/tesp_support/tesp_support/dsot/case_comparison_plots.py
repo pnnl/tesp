@@ -4,11 +4,13 @@
 import os
 from datetime import datetime
 
-import waterfall_chart
+import waterfall_chart #distribution name: waterfallcharts
 import matplotlib.pyplot as plt
+import matplotlib
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from datetime import datetime, date, timedelta
 
 import tesp_support.dsot.plots as pt
 
@@ -22,6 +24,137 @@ def rec_diff(d1, d2):
             diff[k] = v1 - d2[k]
     return diff
 
+def customer_bill_component_comparison(cases, data_paths, output_path, dso_num):
+    """ Will plot key average bill components by month and duration and save to file.
+    Args:
+        cases (List[str]): names of the cases
+        data_paths (str): location of the data files to be used.
+        output_path (str): path of the location where output (plots, csv) should be saved
+        dso_num (str): bus number for LMP data to be plotted
+
+    Returns:
+        saves customer monthly bill plots to file
+        """
+
+    Customer_class = 'residential'
+    Cost_components = ['Fixed Charge', 'Volumetric Energy Charge', 'Volumetric Charge (Peak)',
+                         'Volumetric Charge (Off-Peak)', 'Demand Charge', 'Dynamic (DA) Charge', 'Dynamic (RT) Charge', 'Dynamic Swing Charge']
+
+    title_name = 'Average Customer Bills ($)'
+    upper_limit = 600
+    lower_limit = 0
+    units = '$'
+
+    months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Average']
+    # months = [ 'Apr', 'Aug', 'Dec', 'Average']
+
+    case_list = []
+    costs = []
+    month_list = []
+    for month in months:
+        for case in cases:
+            case_list.append(case)
+            month_list.append(month)
+
+    df = pd.DataFrame(
+        index=[month_list, case_list],
+        columns=Cost_components)
+
+    for cost in Cost_components:
+        # df[cost] = np.random.rand(len(df))
+        df[cost] = 0.0
+
+    for i in range(len(cases)):
+        case = cases[i]
+        data_path = data_paths[i]
+        var_df = pd.read_csv(data_path + '/billsum_dso_' + str(dso_num) + '_data.csv', index_col=[0, 1])
+        # Average out sum value
+        var_df['Average'] = var_df['sum']/12
+
+        rci_df = pd.read_csv(data_path + '/RCI_check.csv', index_col=[0])
+        # Calculate scaling factor to per customer basis TODO: find actual participating values:
+        if case == 'Flat':
+            cust_sf = rci_df.loc[int(dso_num), 'Scaling Factor'] *893
+        else:
+            cust_sf = rci_df.loc[int(dso_num), 'Scaling Factor'] *699
+
+        for month in months:
+            # Cost_components = ['Fixed Charge', 'Volumetric Energy Charge', 'Volumetric Charge (Peak)',
+            #                    'Volumetric Energy Charge (Off-Peak)', 'Dynamic (DA) Charge', 'Dynamic (RT) Charge']
+
+            if case == 'Flat':
+                df.loc[(month, case), 'Fixed Charge'] = var_df.loc[(Customer_class, 'flat_fixed_charge'), month] / cust_sf
+                df.loc[(month, case), 'Volumetric Energy Charge'] = var_df.loc[(Customer_class, 'flat_energy_charge'), month] / cust_sf
+                df.loc[(month, case), 'Demand Charge'] = var_df.loc[(Customer_class, 'flat_demand_charge'), month] / cust_sf
+
+            elif case == 'TOU':
+                df.loc[(month, case), 'Fixed Charge'] = var_df.loc[(Customer_class, 'tou_fixed_charge'), month] / cust_sf
+                df.loc[(month, case), 'Volumetric Charge (Peak)'] = var_df.loc[(Customer_class, 'tou_peak_energy_charge'), month] / cust_sf
+                df.loc[(month, case), 'Volumetric Charge (Off-Peak)'] = var_df.loc[(Customer_class, 'tou_off-peak_energy_charge'), month] / cust_sf
+                df.loc[(month, case), 'Demand Charge'] = var_df.loc[(Customer_class, 'tou_demand_charge'), month] / cust_sf
+
+            elif case == 'DE' or case == 'DE+C':
+                df.loc[(month, case), 'Fixed Charge'] = var_df.loc[(Customer_class, 'dsot_fixed_charge'), month] / cust_sf
+                df.loc[(month, case), 'Volumetric Energy Charge'] = var_df.loc[(Customer_class, 'dsot_volumetric_charge'), month] / cust_sf
+                df.loc[(month, case), 'Dynamic (DA) Charge'] = var_df.loc[(Customer_class, 'dsot_DA_energy_charge'), month] / cust_sf
+                df.loc[(month, case), 'Dynamic (RT) Charge'] = var_df.loc[(Customer_class, 'dsot_RT_energy_charge'), month] / cust_sf
+
+            # elif case == 'DE+C':
+            #     df.loc[(month, case), 'Fixed Charge'] = var_df.loc[(Customer_class, 'dsot_fixed_charge'), month] / cust_sf
+            #     df.loc[(month, case), 'Volumetric Energy Charge'] = var_df.loc[(Customer_class, 'dsot_volumetric_charge'), month] / cust_sf
+            #     df.loc[(month, case), 'Dynamic (DA) Charge'] = var_df.loc[(Customer_class, 'dsot_DA_energy_charge'), month] / cust_sf
+            #     df.loc[(month, case), 'Dynamic (RT) Charge'] = var_df.loc[(Customer_class, 'dsot_RT_energy_charge'), month] / cust_sf
+
+            elif case == 'B&S':
+                df.loc[(month, case), 'Fixed Charge'] = var_df.loc[(Customer_class, 'subscription_fixed_charge'), month] / cust_sf
+                df.loc[(month, case), 'Volumetric Energy Charge'] = var_df.loc[(Customer_class, 'subscription_energy_charge'), month] / cust_sf
+                df.loc[(month, case), 'Dynamic Swing Charge'] = var_df.loc[(Customer_class, 'subscription_net_deviation_charge'), month] / cust_sf
+
+    matplotlib.style.use('seaborn-v0_8-deep')
+
+    fig, axes = plt.subplots(nrows=1, ncols=len(months), figsize=(max(11,3*len(months)), 10))
+
+    ax_position = 0
+    for month in months:
+        idx = pd.IndexSlice
+        subset = df.loc[idx[[month], :],
+                        Cost_components]
+
+        # ax = subset.plot(kind="bar", stacked=True, colormap="Blues",
+        #                  ax=axes[ax_position])
+        ax = subset.plot(kind="bar", stacked=True,
+                         ax=axes[ax_position])
+        ax.set_title(month, fontsize=14, alpha=1.0)
+        ax.set_ylabel(title_name, fontsize=14),
+        ax.set_xlabel(month, fontsize=12, alpha=0.0),
+        ax.set_ylim(-5, 200)  # Need to use this otherwise each subplot will rescale and not match final Y-axis scale
+        # ax.set_yticks(range(0, 9000, 1000))
+        # ax.set_yticklabels(labels=range(0, 9000, 1000), rotation=0,
+        #                    minor=False, fontsize=28)
+        ax.set_xticklabels(labels=cases, rotation=90,
+                           minor=False, fontsize=10)
+        handles, labels = ax.get_legend_handles_labels()
+        # ax.legend(Cost_components,
+        #           loc='upper right', fontsize=28)
+        ax_position += 1
+
+
+    # look "one plot"
+    # plt.tight_layout(pad=0., w_pad=-16.5, h_pad=0.0)
+
+    for n in range(len(months)):
+        if n != 0:
+            axes[n].set_ylabel("")
+            axes[n].set_yticklabels("")
+        if n == range(len(months))[-1]:
+            axes[n].legend(Cost_components,
+                   loc='upper right', fontsize=10)
+        else:
+            axes[n].legend().set_visible(False)
+
+    plot_filename = 'Case_Compare_Bill_Components_DSO_' + str(dso_num) + '.png'
+    file_path_fig = os.path.join(output_path, 'plots', plot_filename)
+    plt.savefig(file_path_fig, bbox_inches='tight')
 
 def customer_monthly_stats(cases, data_paths, output_path, dso_num):
     """ Will plot key variables by month and duration and save to file.
@@ -101,6 +234,217 @@ def customer_monthly_stats(cases, data_paths, output_path, dso_num):
         '%Y%m%d') + 'Case_Compare_Customer_Monthly_Bills.png'
     file_path_fig = os.path.join(output_path, 'plots', plot_filename)
     plt.savefig(file_path_fig, bbox_inches='tight')
+
+
+def load_comparison_plot(day_range, metadata_path, cases, data_paths, output_path):
+    """  For a specified day range this function will load in the required data, plot the total DSO load.
+    Args:
+        day_range (range): the day range to plotted.
+        metadata_path (str): path of folder containing metadata
+        cases (List[str]): names of the cases
+        data_paths (str): location of the data files to be used.
+        output_path (str): path of the location where output (plots, csv) should be saved
+    Returns:
+        saves comparison load plot to file
+        """
+
+    line_colors = ['#e0813e', '#062c49', '#84baa9', '#965c79']
+
+    # Create a mapping between case and desired name
+    Case_name_dict = {
+        'Flat': 'Flat',
+        'TOU': 'TOU',
+        'DSOT': 'DE',
+        'RND': 'DE+C'}
+
+    for i in range(len(cases)):
+        case = cases[i]
+        case_name = Case_name_dict[case]
+        data_path = data_paths[i]
+
+        if case == cases[0]:
+            case_config = pt.load_json(data_path, 'generate_case_config.json')
+            # Load ERCOT load profile data
+            # metadata_file = os.path.join(metadata_path, case_config['refLoadMn'][5].split('/')[-1])
+            sim_start = datetime.strptime(case_config['StartTime'], '%Y-%m-%d %H:%M:%S')
+            # ercot_df = pt.load_ercot_data(metadata_file, sim_start, day_range)
+            # ames_rt_df = pt.load_ames_data(case, day_range)
+
+            start_time = sim_start + timedelta(days=day_range[0] - 1)
+            stop_time = sim_start + timedelta(days=day_range[-1]) - timedelta(minutes=5)
+
+        loads_df = pd.read_csv(data_path + '/der_stack_data_allDSOs.csv', index_col='time', parse_dates=True)
+        loads_df = loads_df.loc[start_time:stop_time, :]
+
+        if loads_df.index[-1] < stop_time:
+            raise Exception('DER stack plot data not available for case' + case + ' at ' + str(stop_time) + ".")
+
+        if i == 0:
+            # Plot load plot
+            plt.figure(figsize=(15, 10))
+
+            output_df = loads_df[['Substation']]
+            output_df['Substation'] += loads_df['Industrial Loads']
+            output_df = output_df.rename(columns={'Substation': case_name})
+        else:
+            output_df[case_name] = loads_df['Substation'] + loads_df['Industrial Loads']
+
+        plt.plot(loads_df.index, loads_df['Substation'] + loads_df['Industrial Loads'], label=case_name,
+                 color=line_colors[i], linewidth=3)
+
+        # if plot_ref:
+        #     bus_cols = [col for col in ercot_df.columns if 'Bus' in col]
+        #     plt.plot(ercot_df.index, ercot_df[bus_cols].sum(axis=1), label='ERCOT Load', color='grey', linestyle='--', linewidth=3)
+
+    large_font = True
+    if large_font:
+        tick_font = 18
+        label_font = 24
+        legend_font = 24
+    else:
+        tick_font = 17
+        label_font = 25
+        legend_font = 17
+
+    plt.legend(loc='lower left', prop={'size': legend_font})
+    # plt.legend(loc='lower left', prop={'size': legend_font}, ncol=2)
+    plt.xlabel('Time', size=label_font)
+    plt.ylabel('Load (MW)', size=label_font)
+    plt.ylim(top=80000, bottom=0)
+    ax = plt.gca()
+    ax.tick_params(axis='both', which='major', labelsize=tick_font)
+    # plt.title('DSO load profile by end-load type (ALL DSOs)', size=20)
+    plot_filename = 'Case_Compare_Load_Plots_' + loads_df.index[0].strftime('%m-%d') + '.png'
+    file_path_fig = os.path.join(output_path, 'plots', plot_filename)
+    plt.savefig(file_path_fig, bbox_inches='tight')
+
+    output_df.to_csv(path_or_buf=output_path + '/data/Case_Compare_System_Load_' + output_df.index[0].strftime('%m-%d') + '.csv')
+
+
+def retail_price_comparison_plot(dso, day_range, metadata_path, cases, data_paths, rate_scenarios, Month, output_path):
+    """  For a specified dso and day range this function will load in the required data, plot the retail price.
+    Args:
+        dso (num): the DSO range that should be plotted.
+        day_range (range): the day range to plotted.
+        metadata_path (str): path of folder containing metadata
+        cases (List[str]): names of the cases
+        data_paths (str): location of the data files to be used.
+        output_path (str): path of the location where output (plots, csv) should be saved
+    Returns:
+        saves comparison load plot to file
+        """
+
+    # line_colors = ['green', 'red', 'blue', 'black']
+    line_colors = ['#e0813e', '#062c49', '#84baa9', '#965c79']
+
+    # Create a mapping between month number and month abbreviation
+    Case_name_dict = {
+        'Flat': 'Flat',
+        'TOU': 'TOU',
+        'DSOT': 'DE',
+        'RND': 'DE+C'}
+
+    for i in range(len(cases)):
+        case = cases[i]
+        case_name = Case_name_dict[case]
+        data_path = data_paths[i]
+        rate_scenario = rate_scenarios[i]
+
+        if case == cases[0]:
+            case_config = pt.load_json(data_path +'/' + Month, 'generate_case_config.json')
+            # Load ERCOT load profile data
+            # metadata_file = os.path.join(metadata_path, case_config['refLoadMn'][5].split('/')[-1])
+            sim_start = datetime.strptime(case_config['StartTime'], '%Y-%m-%d %H:%M:%S')
+            # ercot_df = pt.load_ercot_data(metadata_file, sim_start, day_range)
+            # ames_rt_df = pt.load_ames_data(case, day_range)
+
+            start_time = sim_start + timedelta(days=day_range[0] - 1)
+            stop_time = sim_start + timedelta(days=day_range[-1]) - timedelta(minutes=5)
+
+            # Create a mapping between month number and month abbreviation
+            month_num_to_abbrev = {
+                1: "Jan",
+                2: "Feb",
+                3: "Mar",
+                4: "Apr",
+                5: "May",
+                6: "Jun",
+                7: "Jul",
+                8: "Aug",
+                9: "Sep",
+                10: "Oct",
+                11: "Nov",
+                12: "Dec",
+            }
+
+            # Identify the month name
+            month_name = month_num_to_abbrev[
+                pt.get_date(data_path +'/' + Month, dso, day_range[0]).month
+            ]
+
+        DA_LMPs_df = pd.read_csv(data_path + '/Annual_DA_LMP_Load_data.csv', index_col=0, parse_dates=True)
+        DA_LMPs_df = DA_LMPs_df.loc[start_time:stop_time, :]
+
+        # Load Tariff structure
+        file_name = "rate_case_values_" + rate_scenario + ".json"
+        tariff = pt.load_json(metadata_path, file_name, False)
+
+        if rate_scenario == "flat":
+            DA_LMPs_df['Retail'] = tariff['DSO_'+str(dso)]['flat_rate']
+        elif rate_scenario == "TOU":
+            tou_params = pt.load_json(os.path.join(data_path), "time_of_use_parameters.json", False)
+            for ii in DA_LMPs_df.index:
+                hour = ii.hour
+                for k in tou_params["DSO_" + dso][month_name]["periods"].keys():
+                    for t in range(len(tou_params["DSO_" + dso][month_name]["periods"][k]["hour_start"])):
+                        if hour >= tou_params["DSO_" + dso][month_name]["periods"][k]["hour_start"][t] \
+                                and hour < tou_params["DSO_" + dso][month_name]["periods"][k]["hour_end"][t]:
+                            DA_LMPs_df.loc[ii, 'Retail'] = tou_params["DSO_" + dso][month_name]["price"] \
+                                * tou_params["DSO_" + dso][month_name]["periods"][k]["ratio"]
+        elif rate_scenario == "DSOT":
+            DA_LMPs_df['Retail'] = DA_LMPs_df['da_lmp'+str(dso)]/1000 + tariff['DSO_'+str(dso)]['transactive_dist_rate']
+        elif rate_scenario == "RandD":
+            DA_LMPs_df['Retail'] = (DA_LMPs_df['da_lmp'+str(dso)])/1000 + tariff['DSO_'+str(dso)]['transactive_dist_rate']
+            # DA_LMPs_df['Retail'] = (DA_LMPs_df['da_lmp'+str(dso)] + 2 * DA_LMPs_df[' Adder'])/1000 + tariff['DSO_'+str(dso)]['transactive_dist_rate']
+
+        if i == 0:
+            # Plot load plot
+            plt.figure(figsize=(15, 10))
+
+            output_df = DA_LMPs_df[['Retail']]
+            output_df = output_df.rename(columns={'Retail': case_name})
+        else:
+            output_df[case] = DA_LMPs_df[['Retail']]
+
+        plt.plot(DA_LMPs_df.index, DA_LMPs_df['Retail'], label=case_name, color=line_colors[i], linewidth=3)
+
+        # if plot_ref:
+        #     bus_cols = [col for col in ercot_df.columns if 'Bus' in col]
+        #     plt.plot(ercot_df.index, ercot_df[bus_cols].sum(axis=1), label='ERCOT Load', color='grey', linestyle='--', linewidth=3)
+
+    large_font = True
+    if large_font:
+        tick_font = 18
+        label_font = 24
+        legend_font = 24
+    else:
+        tick_font = 17
+        label_font = 25
+        legend_font = 17
+
+    plt.legend(loc='lower left', prop={'size': legend_font})
+    # plt.legend(loc='lower left', prop={'size': legend_font}, ncol=2)
+    plt.xlabel('Time', size=label_font)
+    plt.ylabel('Retail Price ($/kW-hr)', size=label_font)
+    plt.ylim(bottom=0)
+    ax = plt.gca()
+    ax.tick_params(axis='both', which='major', labelsize=tick_font)
+    # plt.title('DSO load profile by end-load type (ALL DSOs)', size=20)
+    plot_filename = 'Case_Compare_Price_Plots_' + DA_LMPs_df.index[0].strftime('%m-%d') + '.png'
+    file_path_fig = os.path.join(output_path, 'plots', plot_filename)
+    plt.savefig(file_path_fig, bbox_inches='tight')
+
+    output_df.to_csv(path_or_buf=output_path + '/data/Case_Compare_Retail_Price_' + output_df.index[0].strftime('%m-%d') + '.csv')
 
 
 def plot_annual_stats(cases, data_paths, output_path, dso_num, variable):
@@ -487,9 +831,17 @@ def dso_cfs_delta(cases_list, data_paths_list, dso_range, metadata_file, metadat
     cases = []
     benefits = []
 
+    Case_name_dict = {
+        'Flat': 'Flat',
+        'TOU': 'TOU',
+        'DSOT': 'DE',
+        'RND': 'DE+C',
+        'Sub': 'B&S'}
+
     for i in range(len(cases_list)):
         results_path = data_paths_list[i][1]
         comp_path = data_paths_list[i][0]
+        case_name = Case_name_dict[cases_list[i][1]]
 
         if metadata_path == None:
             path = "../../../examples/dsot_data"
@@ -697,9 +1049,15 @@ def dso_cfs_delta(cases_list, data_paths_list, dso_range, metadata_file, metadat
         file_path_fig = os.path.join(results_path, 'plots', plot_filename)
         plt.savefig(file_path_fig, bbox_inches='tight')
 
-        assumptions.extend(['High', 'Nominal', 'Low'])
-        cases.extend([cases_list[i][1], cases_list[i][1], cases_list[i][1]])
-        benefits.extend([net_benefit_high, net_benefit, net_benefit_low])
+        sensitivity = False
+        if sensitivity:
+            assumptions.extend(['High', 'Nominal', 'Low'])
+            cases.extend([cases_list[i][1], cases_list[i][1], cases_list[i][1]])
+            benefits.extend([net_benefit_high, net_benefit, net_benefit_low])
+        else:
+            assumptions.extend(['Saving'])
+            cases.extend([case_name])
+            benefits.extend([net_benefit])
 
     # Add data to dataframe for summary plot
     benefits_sum = {'Assumption': assumptions,
@@ -709,11 +1067,19 @@ def dso_cfs_delta(cases_list, data_paths_list, dso_range, metadata_file, metadat
     summary_benefits_df = pd.DataFrame(benefits_sum, columns = ['Assumption', 'Case', 'Annual Net Benefit ($M)'])
 
     plt.figure(figsize=(20, 10))
-    sns.catplot(
-        data=summary_benefits_df, kind="bar",
-        x="Case", y="Annual Net Benefit ($M)", hue="Assumption",
-        ci="sd", palette="dark", alpha=.6, height=4
-    )
+    if sensitivity:
+        sns.catplot(
+            data=summary_benefits_df, kind="bar",
+            x="Case", y="Annual Net Benefit ($M)", hue="Assumption",
+            ci="sd", palette="dark", alpha=.6, height=4
+        )
+    else:
+        line_colors = ['#062c49', '#84baa9', '#965c79', 'red']
+        sns.catplot(
+            data=summary_benefits_df, kind="bar",
+            x="Case", y="Annual Net Benefit ($M)",
+            ci="sd", palette=line_colors, alpha=.6, height=4
+        )
     plt.xlabel("Case", size=12)
     plt.ylabel("Annual Net Benefit ($M)", size=12)
     plot_filename = datetime.now().strftime('%Y%m%d') + 'DSO_CFS_Benefits_Summary.png'
@@ -1172,7 +1538,7 @@ def plot_customer_pdf(attribute, variables, metric, pop_df, case, output_path):
     plt.savefig(file_path_fig, bbox_inches='tight')
 
 
-if __name__ == '__main__':
+def DSOT_plots():
     pd.set_option('display.max_columns', 50)
 
     # ------------ Selection of DSO and Day  ---------------------------------
@@ -1334,3 +1700,101 @@ if __name__ == '__main__':
     # reduction_by_class(Cases, Data_paths, Output_path, 'Load')
     if dso_valuation_waterfall:
         dso_cfs_delta(Cases_list, Data_paths_list, dso_range, metadata_file)
+
+
+def rates_plots():
+    # ------------ Selection of DSO and Day  ---------------------------------
+    dso_num = '1'  # Needs to be non-zero integer
+    day_num = '4'  # Needs to be non-zero integer
+    # Set day range of interest (1 = day 1)
+    # 1 = Day 1. Starting at day two as agent data is missing first hour of run.
+    day_range = range(3, 5)  
+    dso_range = range(1, 9)  # 1 = DSO 1 (end range should be last DSO +1)
+
+    #  ------------ Select folder locations for different cases ---------
+    # Load System Case Config
+    # Set current working directory to location of case folder.
+    case = 'Flat'
+    data_path = os.path.expandvars('$TESPDIR/examples/analysis/dsot/data/post_processing')
+    config_path = os.path.join(data_path, case)
+
+    # you should always use 'generate_case_config.json' as it is copied when case is created
+    system_case = 'generate_case_config.json'
+    case_config = pt.load_json(config_path, system_case)
+    case_config_file = config_path + '/' + system_case
+
+    agent_prefix = '/DSO_'
+    GLD_prefix = '/Substation_'
+
+    metadata_path = os.path.expandvars('$TESPDIR/examples/analysis/dsot/data/')
+
+    metadata_file = case_config["dsoPopulationFile"]
+    if "rate" in case_config:
+        metadata_file = case_config["dsoRECSPopulationFile"]
+    dso_meta_file = os.path.join(metadata_path, metadata_file)
+
+    flat_path = os.path.join(data_path, 'Flat')
+    DSOT_path = os.path.join(data_path, 'DSOT')
+    TOU_path = os.path.join(data_path, 'TOU')
+
+    # Check if there is a plots folder - create if not.
+    check_folder = os.path.isdir(data_path + '/plots')
+    if not check_folder:
+        os.makedirs(data_path + '/plots')
+
+    ##  1. DER Load Plotting - Plot gets saved in case_path\plots folder.
+    # Provides stacked time series plots of end loads.  E.g., Figure 6, 32, 36, 37 in DSO+T Volume 1.
+
+    #Flat case plot
+    flat_aug_path = os.path.join(flat_path, '8_2016_08_pv_bt_fl_ev')
+    day_range = range(12, 17) # Set day range and case path around August 11 peak - peak load is given in load stats csv.
+    pt.der_stack_plot(dso_range, day_range, metadata_path, flat_aug_path, None, False)
+
+    # Compare TOU and DSO+T to Flat (BAU case)
+    TOU_aug_path = os.path.join(TOU_path, '8_2016_08_pv_bt_fl_ev')
+    pt.der_stack_plot(dso_range, day_range, metadata_path, TOU_aug_path, flat_aug_path, False)
+
+    DSOT_aug_path = os.path.join(DSOT_path, '8_2016_08_pv_bt_fl_ev')
+    pt.der_stack_plot(dso_range, day_range, metadata_path, DSOT_aug_path, flat_aug_path, False)
+
+    # TODO: Add Winter Peak as well as system min load (4/4/2016) plots.
+
+    ##  2. Annual System Load Plotting - Plot gets saved in case_path\plots folder.
+    # Provides annual box and whisker like Figure 14, 16, 40 in Vol1.
+    Cases = ['Flat', 'TOU', 'DSOT']
+    Data_paths = [flat_path, TOU_path, DSOT_path]  # TODO: Add other cases as they are completed.
+    Variables = ['DA LMP', 'Total Load', 'Hybrid']
+    for Variable in Variables:
+        plot_annual_stats(Cases, Data_paths, data_path, dso_num, Variable)
+
+    ##  3. Generator Plotting.
+    # Provides stacked time series plots of bulk generation.  
+    # E.g., Figure 15 in DSO+T Volume 1.
+    pt.generation_load_profiles(flat_aug_path, metadata_path, flat_aug_path, day_range, False)
+
+    ##  4. CFS Waterfall.
+    # Total grid cost water fall: Figure 42 in Vol 1
+    Cases_list = [['Flat', 'TOU'], ['Flat', 'DSOT']]
+    Data_paths_list = [[flat_path, TOU_path], [flat_path, DSOT_path]]
+    dso_cfs_delta(Cases_list, Data_paths_list, dso_range, metadata_file, metadata_path)
+
+    ##  5. Customer PDFs.
+    # Probably density Functions of customer populations: e.g., Figure 45 in Vol 1
+    Cases = ['Flat', 'TOU']
+    Data_paths = [flat_path, TOU_path]
+    customer_cfs_delta(Cases, Data_paths, metadata_file, metadata_path)
+    # TODO: Need to debug DSO+T rate making..
+    # Data_paths = [flat_path, DSOT_path]
+    # comp_pt.customer_cfs_delta(Cases, Data_paths, metadata_file, metadata_path)
+
+    ##  6. House/Customer Daily HVAC / Load Examples.
+    # Probably density Functions of customer populations: e.g., Figure 45 in Vol 1
+
+    ##  7. Population Attribute PDFs.
+    # Probably density Functions of customer populations: e.g., Figure 45 in Vol 1
+
+
+
+if __name__ == '__main__':
+    #DSOT_plots()
+    rates_plots()

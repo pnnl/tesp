@@ -13,32 +13,56 @@ fi
 tesp_ver=$(cat "${TESPDIR}/scripts/tesp_version")
 grid_ver=$(cat "${TESPDIR}/scripts/grid_version")
 docker_tag=${tesp_ver}_ubuntu_${grid_ver}
-ver=$(cat "${TESPDIR}/scripts/grid_version")
 IMAGE=pnnl/tesp:${docker_tag}
 
 # for custom use
+#IMAGE=cosim-ubuntu:tesp_${grid_ver}
+#IMAGE=cosim-library:tesp_${grid_ver}
 #IMAGE=cosim-build:tesp_${grid_ver}
 #IMAGE=cosim-cplex:tesp_${grid_ver}
-#IMAGE=cosim-user:tesp_${grid_ver}
+IMAGE=cosim-user:tesp_${grid_ver}
 
 echo "Should always confirm that you are logged in to docker using 'docker login'"
+
+# Once attached to a container, users can detach from it and
+# leave it running using the using CTRL-p CTRL-q key sequence.
+# To running docker
+#   docker attach [name] or [ID]
+
+# Setting mount point for pnnl/tesp docker
+# For best results $SRC_DIR should be derivative of user $TESPDIR directory
+# and DES_DIR should be derivative of docker $SIM_HOME directory.
+SRC_DIR=${TESPDIR}
+DES_DIR=${SIM_HOME}/tesp
+
+# For best results $WORKDIR should be path
+# relative and subdirectory to $TESPDIR
+WORKDIR="/examples"
+
+# Set chown working directory for sharing
+chown -fR ${SIM_UID}:${SIM_GID} "${SRC_DIR}${WORKDIR}"
+#chmod -fR 775 "${SRC_DIR}${WORKDIR}" > /dev/null
+
+# if in git repo, so we don't change mode
+git config core.fileMode false
 
 if [[ -z $1 ]] ; then
   echo "Running foreground image $IMAGE"
   docker run -it --rm \
-         --name foregroundWorker \
-         -e LOCAL_USER_ID=${SIM_UID} \
-         --mount type=bind,source="$TESPDIR",destination="$SIM_HOME/tesp" \
-         -w=$SIM_HOME \
+         -e LOCAL_UID=${UID} \
+         --mount type=bind,source="$SRC_DIR",destination="$DES_DIR" \
+         -w="$DES_DIR$WORKDIR" \
          $IMAGE \
          bash
 else
   echo "Running background image $IMAGE"
   docker run -itd --rm \
-         --name backgroundWorker \
-         -e LOCAL_USER_ID=${SIM_UID} \
-         --mount type=bind,source="$TESPDIR",destination="$SIM_HOME/tesp" \
-         -w=$SIM_HOME \
+         -e LOCAL_UID=${UID} \
+         --mount type=bind,source="$SRC_DIR",destination="$DES_DIR" \
+         -w="$DES_DIR$WORKDIR" \
          $IMAGE \
          bash -c "$1"
 fi
+
+# Set chown user directory for sharing
+chown -fR ${UID} "${SRC_DIR}${WORKDIR}"

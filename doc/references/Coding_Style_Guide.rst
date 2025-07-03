@@ -151,3 +151,42 @@ For multi-line comments::
 .. _PEP 8: https://peps.python.org/pep-0008/
 .. _PEP 257: https://peps.python.org/pep-0257/
 .. _PEP 484: https://peps.python.org/pep-0257/
+
+
+Testing Strategy
+=========================
+* Pytest will be used for running unit testing.
+* Use mypy for static type checking on new code.
+* Flake8 will be used with automated github actions to check new code.
+* Black is recommended for creating uniform formatted code.
+
+Unit Testing
+----------------------
+* Tests should be written and used as you write. They may be informal tests to ensure your code runs as intended.
+* Proper tests that are recognizable by Pytest should also be added to the `src/tesp_support/test/dsot` directory.
+  Pytest runs functions that start with "test" in files that start with test.
+* At a minimum write one end-to-end test to ensure the model runs.
+   If possible validate results with old version of model or some other ground truth
+* Write unit tests for functions and methods. Prioritize the most critical or fragile methods/functions.
+
+Static Type Checker
+---------------------------
+Install mypy in your local environment and use it to check your code. It should be free from errors before merging your
+code.
+
+[mypy.readthedocs](https://mypy.readthedocs.io/en/stable/index.html)
+
+    Type checkers help ensure that you’re using variables and functions in your code correctly.
+    With mypy, add type hints (PEP 484) to your Python programs,
+    and mypy will warn you when you use those types incorrectly.
+
+Flake8
+---------
+
+Flake8 will be used to enforce code style and prevent semantic errors from passing
+  * the styles to be enforced will be determined and configured
+  * the scope will be confined to the new agents
+
+Formatter
+------------
+The use of a formatter like black is encouraged to aid in proper code style compliance

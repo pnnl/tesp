@@ -14,7 +14,7 @@ numpy~=1.26.4
 openpyxl~=3.1.5
 pandas~=2.2.2
 plotly~=5.24.0
-psst
+psst~=0.1.1a0
 PuLP~=2.9.0
 PyGLM~=2.7.1
 pyjson5~=1.6.7

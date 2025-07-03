@@ -9,10 +9,9 @@ ARG SIM_GRP
 ARG SIM_UID
 ARG SIM_USER
 
-RUN echo "===== Building CoSim Library =====" && \
+RUN echo "===== Building TESP Library =====" && \
   export DEBIAN_FRONTEND=noninteractive && \
   export DEBCONF_NONINTERACTIVE_SEEN=true && \
-  echo "===== Install Libraries =====" && \
   apt-get update && \
   apt-get dist-upgrade -y && \
   apt-get install -y \
@@ -23,11 +22,8 @@ RUN echo "===== Building CoSim Library =====" && \
   libtool \
   libjsoncpp-dev \
   gfortran \
-  cmake \
-  subversion && \
+  cmake && \
   echo "root:${SIM_USER}" | chpasswd && \
   addgroup --gid ${SIM_GID} ${SIM_GRP} && \
-  useradd -m -s /bin/bash -u ${SIM_UID} ${SIM_USER} && \
-  echo "<<<< Changing '${SIM_USER}' password >>>>" && \
-  echo "${SIM_USER}:${SIM_USER}" | chpasswd && \
-  usermod -aG sudo,${SIM_GRP} ${SIM_USER}
+  useradd -m -s /bin/bash -g ${SIM_GRP} -G sudo,${SIM_GRP} -u ${SIM_UID} ${SIM_USER} && \
+  echo "${SIM_USER}:${SIM_USER}" | chpasswd

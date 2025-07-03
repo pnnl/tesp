@@ -47,7 +47,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num,
     # Load in necessary data for the defined rate scenario
     if (rate_scenario in ["time-of-use", "TOU"]):
         # Load time-of-use rate parameters
-        tou_params = load_json(os.path.join("../" + dso_data_path), "time_of_use_parameters.json")
+        tou_params = load_json(os.path.join("../" + dso_data_path), "time_of_use_parameters.json", False)
 
         # Create a mapping between month number and month abbreviation
         month_num_to_abbrev = {
@@ -692,266 +692,6 @@ def create_baseline_demand_profiles_for_each_meter(
     return bl_demand_df
 
 
-def calc_cust_bill(metadata, meter_df, trans_df, energy_sum_df, tariff, dso_num, SF, ind_cust):
-    """ Calculate the customer bill using summary meter data and fixed tariff structure.
-    Args:
-        metadata (dict): metadata structure for the DSO to be analyzed
-        meter_df (dataframe): monthly and total energy consumption and peak power by house (meter)
-        trans_df:
-        energy_sum_df:
-        tariff (dict): dictionary of fixed tariff structure
-        dso_num:
-        SF (float): Scaling factor to scale GLD results to TSO scale (e.g. 1743)
-        ind_cust (int): number of industrial customers
-    Returns:
-        bill_df : dataframe of monthly and total bill for each house broken out by each element (energy, demand,
-        connection, and total bill)
-        """
-
-    # Create empty dataframe structure for all bills for first month.
-    meter = []
-    variable = []
-    month = []
-
-    for each in metadata['billingmeters']:
-        meter.append(each)
-        variable.append('fix_energy')
-        month.append(0)
-        meter.append(each)
-        variable.append('demand')
-        month.append(0)
-        meter.append(each)
-        variable.append('fix_connect')
-        month.append(0)
-        meter.append(each)
-        variable.append('fix_total')
-        month.append(0)
-        meter.append(each)
-        variable.append('DA_energy')
-        month.append(0)
-        meter.append(each)
-        variable.append('RT_energy')
-        month.append(0)
-        meter.append(each)
-        variable.append('trans_connect')
-        month.append(0)
-        meter.append(each)
-        variable.append('distribution')
-        month.append(0)
-        meter.append(each)
-        variable.append('trans_total')
-        month.append(0)
-        meter.append(each)
-        variable.append('quantity_purchased')
-        month.append(0)
-        meter.append(each)
-        variable.append('blended_rate')
-        month.append(0)
-
-    bill_df = pd.DataFrame(month,
-                           index=[meter, variable],
-                           columns=['sum'])
-
-    month = []
-    variable = []
-    loads = []
-    loadtype = ['residential', 'commercial', 'industrial', 'total']
-
-    for each in loadtype:
-        loads.append(each)
-        variable.append('fix_energy')
-        month.append(0)
-        loads.append(each)
-        variable.append('demand')
-        month.append(0)
-        loads.append(each)
-        variable.append('fix_connect')
-        month.append(0)
-        loads.append(each)
-        variable.append('fix_total')
-        month.append(0)
-        loads.append(each)
-        variable.append('fix_blended_rate')
-        month.append(0)
-        loads.append(each)
-        variable.append('DA_energy')
-        month.append(0)
-        loads.append(each)
-        variable.append('RT_energy')
-        month.append(0)
-        loads.append(each)
-        variable.append('trans_connect')
-        month.append(0)
-        loads.append(each)
-        variable.append('distribution')
-        month.append(0)
-        loads.append(each)
-        variable.append('trans_total')
-        month.append(0)
-        loads.append(each)
-        variable.append('trans_blended_rate')
-        month.append(0)
-        loads.append(each)
-        variable.append('da_blended_rate')
-        month.append(0)
-        loads.append(each)
-        variable.append('rt_blended_rate')
-        month.append(0)
-
-    billsum_df = pd.DataFrame(month,
-                              index=[loads, variable],
-                              columns=['sum'])
-
-    # Set up dynamic (transactive) tariff structure
-    flat = tariff['DSO_' + dso_num]['flat_rate']
-    connection = tariff['DSO_' + dso_num]['base_connection_charge']
-    trans_dist_rate = tariff['DSO_' + dso_num]['transactive_dist_rate']
-    trans_connection = tariff['DSO_' + dso_num]['transactive_connection_charge']
-    trans_retail_scale = tariff['DSO_' + dso_num]['transactive_LMP_multiplier']
-
-    # Cycle through each month for which there is energy data and calculate customer bill
-    months = list(meter_df.columns[~meter_df.columns.str.contains('sum')])
-
-    for m in months:
-        bill_df[m] = [0] * len(bill_df)
-        billsum_df[m] = [0] * len(billsum_df)
-        if energy_sum_df.loc[('total', 'da_q'), m] + energy_sum_df.loc[('total', 'rt_q'), m] == 0:
-            congestion_rebate = 0
-        else:
-            congestion_rebate = energy_sum_df.loc[('total', 'congest_$'), m] / (
-                    energy_sum_df.loc[('total', 'da_q'), m] + energy_sum_df.loc[('total', 'rt_q'), m])
-
-        for each in metadata['billingmeters']:
-            kw_hrs = meter_df.loc[(each, 'kw-hr'), m]
-            max_kw = meter_df.loc[(each, 'max_kw'), m]
-
-            if metadata['billingmeters'][each]['cust_participating']:
-                # Calculate bill for transactive customer
-                bill_df.loc[(each, 'DA_energy'), m] = trans_df.loc[(each, 'DA_cost'), m] * trans_retail_scale
-                bill_df.loc[(each, 'RT_energy'), m] = trans_df.loc[(each, 'RT_cost'), m] * trans_retail_scale
-                bill_df.loc[(each, 'trans_connect'), m] = trans_connection
-                bill_df.loc[(each, 'distribution'), m] = \
-                    meter_df.loc[(each, 'kw-hr'), m] * trans_dist_rate - congestion_rebate
-                bill_df.loc[(each, 'trans_total'), m] = \
-                    bill_df.loc[(each, 'DA_energy'), m] + bill_df.loc[(each, 'RT_energy'), m] + \
-                    bill_df.loc[(each, 'trans_connect'), m] + bill_df.loc[(each, 'distribution'), m]
-            else:
-                # Calculate bill for baseline (non-participating) customer on fixed tariff structure
-                tier2 = 0
-                tier3 = 0
-                tariff_class = metadata['billingmeters'][each]['tariff_class']
-                T1P = tariff['DSO_' + dso_num][tariff_class]['tier_1']['price']
-                T1Q = tariff['DSO_' + dso_num][tariff_class]['tier_1']['max_quantity']
-                T2P = tariff['DSO_' + dso_num][tariff_class]['tier_2']['price']
-                T2Q = tariff['DSO_' + dso_num][tariff_class]['tier_2']['max_quantity']
-                demand = tariff['DSO_' + dso_num][tariff_class]['demand_charge']
-
-                if kw_hrs >= T1Q:
-                    tier2 = 1
-                if kw_hrs >= T2Q:
-                    tier3 = 1
-                bill_df.loc[(each, 'fix_energy'), m] = \
-                    flat * kw_hrs + T1P * tier2 * (kw_hrs - T1Q) + T2P * tier3 * (kw_hrs - T2Q)
-                bill_df.loc[(each, 'demand'), m] = demand * max_kw
-                # TODO: Need to fix connection charge for street lights (gets too expensive given how many there are).
-                bill_df.loc[(each, 'fix_connect'), m] = connection
-                bill_df.loc[(each, 'fix_total'), m] = \
-                    bill_df.loc[(each, 'fix_energy'), m] + \
-                    bill_df.loc[(each, 'demand'), m] + \
-                    bill_df.loc[(each, 'fix_connect'), m]
-
-            #  Calculated average electricity price (blended rate) for each customer
-            if kw_hrs == 0:
-                bill_df.loc[(each, 'blended_rate'), m] = 0
-            else:
-                bill_df.loc[(each, 'blended_rate'), m] = (bill_df.loc[(each, 'fix_total'), m] +
-                                                          bill_df.loc[(each, 'trans_total'), m]) / kw_hrs
-
-            bill_df.loc[(each, 'quantity_purchased'), m] = kw_hrs
-
-            # Calculate total revenue for each customer class (aka load type)
-        for each in metadata['billingmeters']:
-            for load in loadtype:
-                if metadata['billingmeters'][each]['tariff_class'] == load:
-                    # Sum transactive values
-                    billsum_df.loc[(load, 'DA_energy'), m] += bill_df.loc[(each, 'DA_energy'), m] * SF
-                    billsum_df.loc[(load, 'RT_energy'), m] += bill_df.loc[(each, 'RT_energy'), m] * SF
-                    billsum_df.loc[(load, 'trans_connect'), m] += bill_df.loc[(each, 'trans_connect'), m] * SF
-                    billsum_df.loc[(load, 'distribution'), m] += bill_df.loc[(each, 'distribution'), m] * SF
-                    billsum_df.loc[(load, 'trans_total'), m] += bill_df.loc[(each, 'trans_total'), m] * SF
-                    # Sum non-partipating / base-case values
-                    billsum_df.loc[(load, 'fix_energy'), m] += bill_df.loc[(each, 'fix_energy'), m] * SF
-                    billsum_df.loc[(load, 'demand'), m] += bill_df.loc[(each, 'demand'), m] * SF
-                    billsum_df.loc[(load, 'fix_connect'), m] += bill_df.loc[(each, 'fix_connect'), m] * SF
-                    billsum_df.loc[(load, 'fix_total'), m] += bill_df.loc[(each, 'fix_total'), m] * SF
-
-    # Calculate industrial load bill.  This lumps all industrial loads as one entity and surplants any individual
-    # industrial load bills calculated for individual GLD meters above.  This is OK as those meters are small zip loads
-    # representing streetlights.
-    for m in months:
-        # Calculate bill for baseline (non-participating) customer on fixed tariff structure
-        tier2 = 0
-        tier3 = 0
-        tariff_class = 'industrial'
-        T1P = tariff['DSO_' + dso_num][tariff_class]['tier_1']['price']
-        T1Q = tariff['DSO_' + dso_num][tariff_class]['tier_1']['max_quantity']
-        T2P = tariff['DSO_' + dso_num][tariff_class]['tier_2']['price']
-        T2Q = tariff['DSO_' + dso_num][tariff_class]['tier_2']['max_quantity']
-        demand = tariff['DSO_' + dso_num][tariff_class]['demand_charge']
-
-        kw_hrs = energy_sum_df.loc[('industrial', 'kw-hr'), m]
-        max_kw = energy_sum_df.loc[('industrial', 'demand_quantity'), m]
-        if kw_hrs >= T1Q:
-            tier2 = 1
-        if kw_hrs >= T2Q:
-            tier3 = 1
-        billsum_df.loc[('industrial', 'fix_energy'), m] = \
-            flat * kw_hrs + T1P * tier2 * (kw_hrs - T1Q) + T2P * tier3 * (kw_hrs - T2Q)
-        billsum_df.loc[('industrial', 'demand'), m] = demand * max_kw
-        billsum_df.loc[('industrial', 'fix_connect'), m] = connection * ind_cust
-        billsum_df.loc[('industrial', 'fix_total'), m] = \
-            billsum_df.loc[('industrial', 'fix_energy'), m] + \
-            billsum_df.loc[('industrial', 'demand'), m] + \
-            billsum_df.loc[('industrial', 'fix_connect'), m]
-
-    # Calculate total values across all customer classes.
-    for item in ['DA_energy', 'RT_energy', 'trans_connect', 'distribution', 'trans_total', 'fix_energy', 'demand',
-                 'fix_connect', 'fix_total']:
-        for load in ['residential', 'commercial', 'industrial']:
-            billsum_df.loc[('total', item), :] += billsum_df.loc[(load, item), :]
-
-    # Calculate the annual sum.
-    bill_df['sum'] = bill_df.loc[:, bill_df.columns[~bill_df.columns.str.contains('sum')]].sum(axis=1)
-    for each in metadata['billingmeters']:
-        bill_df.loc[(each, 'blended_rate'), 'sum'] = (bill_df.loc[(each, 'fix_total'), 'sum'] +
-                                                      bill_df.loc[(each, 'trans_total'), 'sum']) / bill_df.loc[
-                                                         (each, 'quantity_purchased'), 'sum']
-    billsum_df['sum'] = billsum_df.loc[:, billsum_df.columns[~billsum_df.columns.str.contains('sum')]].sum(
-        axis=1)
-
-    #  Calculated average electricity price (blended rate) for each customer class and purchase type
-    for load in ['residential', 'commercial', 'industrial', 'total']:
-        fixed_energy_q = energy_sum_df.loc[(load, 'kw-hr')] - energy_sum_df.loc[(load, 'da_q')] \
-                         - energy_sum_df.loc[(load, 'rt_q')]
-        billsum_df.loc[(load, 'fix_blended_rate')] = billsum_df.loc[(load, 'fix_total')] / fixed_energy_q
-        # Find fraction of day ahead energy to proportion distribution and connection costs.
-        da_fraction = energy_sum_df.loc[(load, 'da_q')] / (
-                    energy_sum_df.loc[(load, 'da_q')] + energy_sum_df.loc[(load, 'rt_q')])
-        billsum_df.loc[(load, 'da_blended_rate')] = (billsum_df.loc[(load, 'DA_energy')] + da_fraction *
-                                                     (billsum_df.loc[(load, 'trans_connect')] +
-                                                      billsum_df.loc[(load, 'distribution')])) / energy_sum_df.loc[
-                                                        (load, 'da_q')]
-        billsum_df.loc[(load, 'rt_blended_rate')] = (billsum_df.loc[(load, 'RT_energy')] + (1 - da_fraction) *
-                                                     (billsum_df.loc[(load, 'trans_connect')] +
-                                                      billsum_df.loc[(load, 'distribution')])) / energy_sum_df.loc[
-                                                        (load, 'rt_q')]
-        billsum_df.loc[(load, 'trans_blended_rate')] = billsum_df.loc[(load, 'trans_total')] / \
-                                                       (energy_sum_df.loc[(load, 'da_q')] + energy_sum_df.loc[
-                                                           (load, 'rt_q')])
-
-    return bill_df, billsum_df
-
-
 def calculate_consumer_bills(
     case_path,
     base_path,
@@ -964,6 +704,7 @@ def calculate_consumer_bills(
     sf,
     num_ind_cust,
     rate_scenario,
+    include_RT = True,
 ):
     """Calculates the consumers' bills for the four different scenarios considered in 
     the Rates Analysis work.
@@ -991,7 +732,7 @@ def calculate_consumer_bills(
 
     # Load in necessary data for the defined rate scenario
     if rate_scenario in ["time-of-use", "subscription"]:
-        tou_params = load_json(case_path, "time_of_use_parameters.json")
+        tou_params = load_json(case_path, "time_of_use_parameters.json", False)
 
     # Specify the bill components that will be recorded
     bill_components = [
@@ -1093,8 +834,8 @@ def calculate_consumer_bills(
     months = list(meter_df.columns[~meter_df.columns.str.contains("sum")])
     for m in months:
         # Initialize the DataFrames for each month
-        bill_df[m] = [0] * len(bill_df)
-        billsum_df[m] = [0] * len(billsum_df)
+        bill_df[m] = [0.0] * len(bill_df)
+        billsum_df[m] = [0.0] * len(billsum_df)
 
         if rate_scenario == "subscription":
             # Create a mapping between month name and month number
@@ -1235,13 +976,15 @@ def calculate_consumer_bills(
                     # Calculate the consumer's net deviation charge under the
                     # subscription rate
                     bill_df.loc[(each, "subscription_net_deviation_charge"), m] = sum(
-                        da_lmp_stats.loc[str(t), "da_lmp" + dso_num]
+                        (da_lmp_stats.loc[str(t), "da_lmp" + dso_num] +
+                         da_lmp_stats.loc[str(t), " Adder"])
                         * (demand_df.loc[t, each] - bl_demand_df.loc[t, each])
                         for t in demand_df.index
                     )
+                    # TODO: also record net deviation energy net, plus, and minus
 
                     # Calculate the consumer's energy charge under the time-of-use rate
-                    # associated with the subscription rate
+                    # associated with the subscription rate (this is for reporting by peak and off-peak
                     bill_df.loc[(each, "subscription_energy_charge"), m] = sum(
                         tou_params["DSO_" + dso_num][m]["price"]
                         * tou_params["DSO_" + dso_num][m]["periods"][k]["ratio"]
@@ -1393,14 +1136,18 @@ def calculate_consumer_bills(
                     bill_df.loc[(each, "transactive_DA_energy_charge"), m] = (
                         trans_df.loc[(each, "DA_cost"), m] * trans_retail_scale
                     )
-                    bill_df.loc[(each, "transactive_RT_energy_charge"), m] = (
-                        trans_df.loc[(each, "RT_cost"), m] * trans_retail_scale
-                    )
+                    if include_RT:
+                        bill_df.loc[(each, "transactive_RT_energy_charge"), m] = (
+                            trans_df.loc[(each, "RT_cost"), m] * trans_retail_scale
+                        )
+                    else:
+                        bill_df.loc[(each, "transactive_RT_energy_charge"), m] = 0.0
 
                     # Calculate the consumer's fixed charge under the transactive tariff
                     bill_df.loc[
                         (each, "transactive_fixed_charge"), m
-                    ] = trans_fixed_charge
+                    ] = trans_fixed_charge  * \
+                            tariff["DSO_" + dso_num][metadata["billingmeters"][each]["tariff_class"]]["connection_charge_multiplier"]
 
                     # Calculate the consumer's volumetric energy charge under the
                     # transactive tariff
@@ -1437,9 +1184,12 @@ def calculate_consumer_bills(
                     bill_df.loc[(each, "dsot_DA_energy_charge"), m] = (
                         trans_df.loc[(each, "DA_cost"), m] * trans_retail_scale
                     )
-                    bill_df.loc[(each, "dsot_RT_energy_charge"), m] = (
-                        trans_df.loc[(each, "RT_cost"), m] * trans_retail_scale
-                    )
+                    if include_RT:
+                        bill_df.loc[(each, "dsot_RT_energy_charge"), m] = (
+                            trans_df.loc[(each, "RT_cost"), m] * trans_retail_scale
+                        )
+                    else:
+                        bill_df.loc[(each, "dsot_RT_energy_charge"), m] = 0.0
 
                     # Calculate the consumer's fixed charge under the DSO+T tariff
                     bill_df.loc[(each, "dsot_fixed_charge"), m] = trans_fixed_charge
@@ -1588,30 +1338,45 @@ def calculate_consumer_bills(
 
     # Calculate the average prices at the meter level
     for each in metadata["billingmeters"]:
-        bill_df.loc[(each, "flat_average_price"), "sum"] = (
-            bill_df.loc[(each, "flat_total_charge"), "sum"]
-            / bill_df.loc[(each, "flat_energy_purchased"), "sum"]
-        )
+        if bill_df.loc[(each, "flat_energy_purchased"), "sum"] == 0.0:
+            bill_df.loc[(each, "flat_average_price"), "sum"] = 0.0
+        else:
+            bill_df.loc[(each, "flat_average_price"), "sum"] = (
+                bill_df.loc[(each, "flat_total_charge"), "sum"]
+                / bill_df.loc[(each, "flat_energy_purchased"), "sum"]
+            )
         if rate_scenario == "time-of-use":
-            bill_df.loc[(each, "tou_average_price"), "sum"] = (
-                bill_df.loc[(each, "tou_total_charge"), "sum"]
-                / bill_df.loc[(each, "tou_energy_purchased"), "sum"]
-            )
+            if bill_df.loc[(each, "tou_energy_purchased"), "sum"] == 0.0:
+                bill_df.loc[(each, "tou_average_price"), "sum"] = 0.0
+            else:
+                bill_df.loc[(each, "tou_average_price"), "sum"] = (
+                    bill_df.loc[(each, "tou_total_charge"), "sum"]
+                    / bill_df.loc[(each, "tou_energy_purchased"), "sum"]
+                )
         elif rate_scenario == "subscription":
-            bill_df.loc[(each, "subscription_average_price"), "sum"] = (
-                bill_df.loc[(each, "subscription_total_charge"), "sum"]
-                / bill_df.loc[(each, "subscription_energy_purchased"), "sum"]
-            )
+            if bill_df.loc[(each, "subscription_energy_purchased"), "sum"] == 0.0:
+                bill_df.loc[(each, "subscription_average_price"), "sum"] = 0.0
+            else:
+                bill_df.loc[(each, "subscription_average_price"), "sum"] = (
+                    bill_df.loc[(each, "subscription_total_charge"), "sum"]
+                    / bill_df.loc[(each, "subscription_energy_purchased"), "sum"]
+                )
         elif rate_scenario == "transactive":
-            bill_df.loc[(each, "transactive_average_price"), "sum"] = (
-                bill_df.loc[(each, "transactive_total_charge"), "sum"]
-                / bill_df.loc[(each, "transactive_energy_purchased"), "sum"]
-            )
+            if bill_df.loc[(each, "transactive_energy_purchased"), "sum"] == 0.0:
+                bill_df.loc[(each, "transactive_average_price"), "sum"] = 0.0
+            else:
+                bill_df.loc[(each, "transactive_average_price"), "sum"] = (
+                    bill_df.loc[(each, "transactive_total_charge"), "sum"]
+                    / bill_df.loc[(each, "transactive_energy_purchased"), "sum"]
+                )
         elif rate_scenario == "dsot":
-            bill_df.loc[(each, "dsot_average_price"), "sum"] = (
-                bill_df.loc[(each, "dsot_total_charge"), "sum"]
-                / bill_df.loc[(each, "dsot_energy_purchased"), "sum"]
-            )
+            if bill_df.loc[(each, "dsot_energy_purchased"), "sum"] == 0.0:
+                bill_df.loc[(each, "dsot_average_price"), "sum"] = 0.0
+            else:
+                bill_df.loc[(each, "dsot_average_price"), "sum"] = (
+                    bill_df.loc[(each, "dsot_total_charge"), "sum"]
+                    / bill_df.loc[(each, "dsot_energy_purchased"), "sum"]
+                )
         
     # Calculate the average prices at the sector level
     for load in ["residential", "commercial", "industrial", "total"]:
@@ -1710,6 +1475,7 @@ def calculate_tariff_prices(
     industrial_file,
     rate_scenario,
     trans_cost_balance_method=None,
+    include_RT = True,
 ):
     """Determines the prices that ensure enough revenue is collected to recover the 
     DSO's expenses.
@@ -1834,7 +1600,8 @@ def calculate_tariff_prices(
         ) / (sf * total_consumption_rc + total_consumption_i)
     elif rate_scenario == "time-of-use":
         # Load in necessary data for the time-of-use rate
-        tou_params = load_json(case_path, "time_of_use_parameters.json")
+        data_path = os.path.expandvars('$TESPDIR/examples/analysis/dsot/data')
+        tou_params = load_json(case_path, "time_of_use_parameters.json", False)
 
         # Determine the seasons under consideration in the time-of-use rate
         seasons_dict = {}
@@ -2094,7 +1861,7 @@ def calculate_tariff_prices(
         ) / (sf * total_consumption_flat_rc + total_consumption_flat_i)
     elif rate_scenario == "subscription":
         # Load in necessary data for the time-of-use rate
-        tou_params = load_json(case_path, "time_of_use_parameters.json")
+        tou_params = load_json(case_path, "time_of_use_parameters.json", False)
 
         # Create a mapping between month name and month number
         month_map = {
@@ -2286,7 +2053,7 @@ def calculate_tariff_prices(
                     # Update the total revenue from demand charges for each residential
                     # and commercial consumer during each season
                     rev_demand_charge_sub_rc[s] += tariff["DSO_" + dso_num][
-                        "industrial"
+                        metadata["billingmeters"][each]["tariff_class"]
                     ]["demand_charge"] * sum(
                         bl_demand_df[s][
                             bl_demand_df[s].index.month == int(month_map[m])
@@ -2302,9 +2069,9 @@ def calculate_tariff_prices(
 
                     # Update the total revenue from the net deviation charges for each
                     # residential and commercial consumer during each season
-                    # TODO: Incorporate dynamic capital cost recovery price
                     rev_net_deviation_charge_sub_rc[s] += sum(
-                        da_lmp_stats.loc[str(t), "da_lmp" + dso_num]
+                        (da_lmp_stats.loc[str(t), "da_lmp" + dso_num] +
+                         da_lmp_stats.loc[str(t), " Adder"])
                         * (demand_df[s].loc[t, each] - bl_demand_df[s].loc[t, each])
                         for t in demand_df[s].index
                     )
@@ -2388,9 +2155,9 @@ def calculate_tariff_prices(
 
                     # Update the total revenue from the net deviation charges for each
                     # industrial consumer during each season
-                    # TODO: Incorporate dynamic capital cost recovery price
                     rev_net_deviation_charge_sub_i[s] += sum(
-                        da_lmp_stats.loc[str(t), "da_lmp" + dso_num]
+                        (da_lmp_stats.loc[str(t), "da_lmp" + dso_num] +
+                         da_lmp_stats.loc[str(t), " Adder"])
                         * (demand_df[s].loc[t, each] - bl_demand_df[s].loc[t, each])
                         for t in demand_df[s].index
                     )
@@ -2486,7 +2253,8 @@ def calculate_tariff_prices(
                         # Update the total revenue from the net deviation charges for 
                         # subscription consumers during each season
                         rev_net_deviation_charge_sub[s] += sum(
-                            da_lmp_stats.loc[str(t), "da_lmp" + dso_num]
+                            (da_lmp_stats.loc[str(t), "da_lmp" + dso_num] +
+                             da_lmp_stats.loc[str(t), " Adder"])
                             * (demand_df[s].loc[t, each] - bl_demand_df[s].loc[t, each])
                             for t in demand_df[s].index
                         )
@@ -2649,6 +2417,7 @@ def calculate_tariff_prices(
             - rev_fixed_charge_flat_i
             - total_tier_credit_flat_i
         ) / (sf * total_consumption_flat_rc + total_consumption_flat_i)
+
     elif rate_scenario == "transactive":
         # Load in necessary data for the transactive rate
         if trans_cost_balance_method in [None, "volumetric"]:
@@ -2686,7 +2455,8 @@ def calculate_tariff_prices(
                     rev_fixed_charge_trans_rc += trans_fixed_charge * len(months)
                 elif trans_cost_balance_method == "fixed":
                     # Update the total number of consumers
-                    total_consumers_trans_rc += 1
+                    total_consumers_trans_rc += 1 * \
+                    tariff["DSO_" + dso_num][metadata["billingmeters"][each]["tariff_class"]]["connection_charge_multiplier"]
 
                     # Update the total revenue from volumetric charges
                     rev_volumetric_charge_trans_rc += (
@@ -2699,9 +2469,11 @@ def calculate_tariff_prices(
                 )
 
                 # Update the total revenue from RT energy charges
-                rev_RT_energy_charge_trans_rc += (
-                    trans_df.loc[(each, "RT_cost"), "sum"] * trans_retail_scale
-                )
+                if include_RT:
+                    rev_RT_energy_charge_trans_rc += (
+                        trans_df.loc[(each, "RT_cost"), "sum"] * trans_retail_scale
+                    )
+
             elif metadata["billingmeters"][each]["tariff_class"] == "industrial":
                 # Update the total revenue from DA energy charges
                 rev_DA_energy_charge_trans_i += (
@@ -2709,16 +2481,17 @@ def calculate_tariff_prices(
                 )
 
                 # Update the total revenue from RT energy charges
-                rev_RT_energy_charge_trans_i += (
-                    trans_df.loc[(each, "RT_cost"), "sum"] * trans_retail_scale
-                )
+                if include_RT:
+                    rev_RT_energy_charge_trans_i += (
+                        trans_df.loc[(each, "RT_cost"), "sum"] * trans_retail_scale
+                    )
 
         # Calculate the necessary rate components for industrial consumers
         if trans_cost_balance_method in [None, "volumetric"]:
             total_consumption_trans_i = energy_sum_df.loc[("industrial", "kw-hr"), "sum"]
             rev_fixed_charge_trans_i = trans_fixed_charge * len(months) * num_ind_cust
         elif trans_cost_balance_method == "fixed":
-            total_consumers_trans_i = num_ind_cust
+            total_consumers_trans_i = num_ind_cust * tariff["DSO_" + dso_num]["industrial"]["connection_charge_multiplier"]
             rev_volumetric_charge_trans_i = (
                 energy_sum_df.loc[("industrial", "kw-hr"), "sum"] * trans_vol_charge
             )
@@ -2728,6 +2501,8 @@ def calculate_tariff_prices(
             )
             / 1000
         )
+        # TODO: need to fix scaling for when there will be industrial customers in GLD.  The fixed industrial load
+        #  includes the scaling factor effect but this is adding to any GLD load that does not.
         indust_df = load_indust_data(industrial_file, range(1, 2)) * 1000
         rev_DA_energy_charge_trans_i += (
             indust_df.loc[0, "Bus" + dso_num]
@@ -2759,10 +2534,10 @@ def calculate_tariff_prices(
                     rev_DA_energy_charge_trans_rc
                     + rev_RT_energy_charge_trans_rc
                     + rev_volumetric_charge_trans_rc
-                    + rev_DA_energy_charge_trans_i
                     + rev_RT_energy_charge_trans_i
                 )
-                - rev_volumetric_charge_trans_i
+                - (rev_volumetric_charge_trans_i
+                + rev_DA_energy_charge_trans_i)
             ) / (12 * (sf * total_consumers_trans_rc + total_consumers_trans_i))
 
         # Initialize some of the closed-form solution components
@@ -2790,9 +2565,10 @@ def calculate_tariff_prices(
                     rev_DA_energy_charge_trans += (
                         trans_df.loc[(each, "DA_cost"), "sum"] * trans_retail_scale
                     )
-                    rev_RT_energy_charge_trans += (
-                        trans_df.loc[(each, "RT_cost"), "sum"] * trans_retail_scale
-                    )
+                    if include_RT:
+                        rev_RT_energy_charge_trans += (
+                                trans_df.loc[(each, "RT_cost"), "sum"] * trans_retail_scale
+                        )
 
                     # Calculate the consumer's volumetric charge and fixed charge under
                     # the transactive tariff depending on the cost balance method
@@ -2806,7 +2582,8 @@ def calculate_tariff_prices(
                         rev_volumetric_charge_trans += (
                             meter_df.loc[(each, "kw-hr"), "sum"] * trans_vol_charge
                         )
-                        rev_fixed_charge_trans += prices["transactive_fixed_charge"]
+                        rev_fixed_charge_trans += prices["transactive_fixed_charge"] * len(months) * \
+                            tariff["DSO_" + dso_num][metadata["billingmeters"][each]["tariff_class"]]["connection_charge_multiplier"]
                 else:
                     # Update total consumption for the flat rate consumers
                     total_consumption_flat_rc += meter_df.loc[(each, "kw-hr"), "sum"]
@@ -2824,8 +2601,10 @@ def calculate_tariff_prices(
 
                     # Update total revenue from fixed charges for the flat rate 
                     # consumers
+                    # if trans_cost_balance_method in [None, "volumetric"]:
+                    #     rev_fixed_charge_flat_rc += trans_fixed_charge * len(months)
+                    # elif trans_cost_balance_method == "fixed":
                     rev_fixed_charge_flat_rc += fixed_charge * len(months)
-
                     # Update the total tier credit for the flat rate consumers, if the 
                     # consumer qualifies
                     if metadata["billingmeters"][each]["tariff_class"] in [
@@ -2916,9 +2695,11 @@ def calculate_tariff_prices(
                 )
 
                 # Update the total revenue from RT energy charges
-                rev_RT_energy_charge_dsot_rc += (
-                    trans_df.loc[(each, "RT_cost"), "sum"] * trans_retail_scale
-                )
+                if include_RT:
+                    rev_RT_energy_charge_dsot_rc += (
+                        trans_df.loc[(each, "RT_cost"), "sum"] * trans_retail_scale
+                    )
+
             elif metadata["billingmeters"][each]["tariff_class"] == "industrial":
                 # Update the total revenue from DA energy charges
                 rev_DA_energy_charge_dsot_i += (
@@ -2926,9 +2707,10 @@ def calculate_tariff_prices(
                 )
 
                 # Update the total revenue from RT energy charges
-                rev_RT_energy_charge_dsot_i += (
-                    trans_df.loc[(each, "RT_cost"), "sum"] * trans_retail_scale
-                )
+                if include_RT:
+                    rev_RT_energy_charge_dsot_i += (
+                        trans_df.loc[(each, "RT_cost"), "sum"] * trans_retail_scale
+                    )
 
         # Calculate the necessary rate components for industrial consumers
         total_consumption_dsot_i = energy_sum_df.loc[("industrial", "kw-hr"), "sum"]
@@ -2987,9 +2769,10 @@ def calculate_tariff_prices(
                     rev_DA_energy_charge_dsot += (
                         trans_df.loc[(each, "DA_cost"), "sum"] * trans_retail_scale
                     )
-                    rev_RT_energy_charge_dsot += (
-                        trans_df.loc[(each, "RT_cost"), "sum"] * trans_retail_scale
-                    )
+                    if include_RT:
+                        rev_RT_energy_charge_dsot += (
+                            trans_df.loc[(each, "RT_cost"), "sum"] * trans_retail_scale
+                        )
 
                     # Calculate the consumer's volumetric charge under the DSO+T tariff
                     rev_volumetric_charge_dsot += (
@@ -3075,7 +2858,7 @@ def calculate_tariff_prices(
         ) / (sf * total_consumption_flat_rc + total_consumption_flat_i)
     
     # Return the prices dictionary
-    return prices
+    return prices, dso_expenses
 
 
 def get_total_dso_costs(case_path, dso_num, rate_scenario, seasons_dict=None):
@@ -3236,14 +3019,13 @@ def DSO_rate_making(
         base_case,
         dso_num,
         metadata,
-        dso_expenses,
         tariff_path,
         dso_scaling_factor,
         num_indust_cust,
         case_name="",
-        iterate=False,
         rate_scenario=None,
         trans_cost_balance_method=None,
+        include_RT = True,
 ):
     """ Main function to call for calculating the customer energy consumption, monthly bills, and tariff adjustments to
     ensure revenue matches expenses.  Saves meter and bill dataframes to a hdf5 file.
@@ -3252,12 +3034,10 @@ def DSO_rate_making(
         base_case (str): directory path for the base case containing baseline demand values
         dso_num (str): number of the DSO folder to be opened
         metadata:
-        dso_expenses (TBD): dso expenses that need to be matched by customer revenue
         tariff_path:
         dso_scaling_factor (float): multiplier on customer bills to reflect the total number of customers in the DSO
         num_indust_cust (int): number of industrial customers
         case_name (str): name of the case ('MR-BAU', 'MR-Batt', 'MR-Flex', 'MR-BAU', 'MR-Batt', 'MR-Flex')
-        iterate (Boolean): If True will iterate once to square up revenue.
         rate_scenario (str): A str specifying the rate scenario under investigation: flat,
         time-of-use, subscription, or transactive. If None, this function defaults to DSO+T.
         trans_cost_balance_method (str): A str indicating the cost component of the transactive 
@@ -3273,31 +3053,18 @@ def DSO_rate_making(
     counter_factual = False
 
     # Specify the Tariff file name for DSO+T-related scenarios
-    if counter_factual:
-        if case_name in ['8-MR-BAU', '8-MR-Batt', '8-MR-Flex']:
-            file_name = 'rate_case_values_8-MR-BAU.json'
-        elif case_name in ['8-HR-BAU', '8-HR-Batt', '8-HR-Flex']:
-            file_name = 'rate_case_values_8-HR-BAU.json'
-        elif case_name in ['200-MR-BAU', '200-MR-Batt', '200-MR-Flex']:
-            file_name = 'rate_case_values_200-MR-BAU.json'
-        elif case_name in ['200-HR-BAU', '200-HR-Batt', '200-HR-Flex']:
-            file_name = 'rate_case_values_200-HR-BAU.json'
-        else:
-            raise Exception("Tariff rate case does not exist for case " + case_name + '.')
-    else:
-        file_name = 'rate_case_values_' + case_name + '.json'
+    file_name = 'rate_case_values_' + case_name + '.json'
     
     # Specify the Tariff file name for scenarios related to the rates scenarios project
     if (rate_scenario is not None) and (case_name == ""):
         file_name = "rate_case_values_" + rate_scenario + ".json"
 
     # Load Tariff structure
-    tariff = load_json(tariff_path, file_name)
+    tariff = load_json(tariff_path, file_name, False)
 
     # Load in transactive A values from simulation settings to ensure consistency
     default_config = load_json(tariff_path, 'default_case_config.json')
-    for DSO in tariff:
-        tariff[DSO]['transactive_LMP_multiplier'] = default_config['MarketPrep']['DSO']['dso_retail_scaling']
+    tariff['DSO_'+ str(dso_num)]['transactive_LMP_multiplier'] = default_config['MarketPrep']['DSO']['dso_retail_scaling']
 
     energy_file = case + '/energy_dso_' + str(dso_num) + '_data.h5'
     trans_file = case + '/transactive_dso_' + str(dso_num) + '_data.h5'
@@ -3305,258 +3072,101 @@ def DSO_rate_making(
     year_energysum_df = pd.read_hdf(energy_file, key='energy_sums', mode='r')
     year_trans_df = pd.read_hdf(trans_file, key='trans_data', mode='r')
 
-    if rate_scenario is None:
-        if not counter_factual:
-            if case_name not in ["8-MR-BAU", "8-HR-BAU", "200-MR-BAU", "200-HR-BAU"]:
-                # Calculate the transactive volumetric rate as if all customers were participating:
+    # Specify the file path of the bulk industrial loads
+    case_config = load_json(case, "generate_case_config.json")
+    industrial_file = os.path.join(tariff_path, case_config["indLoad"][5].split("/")[-1])
 
-                DA_Sales = (
-                    year_trans_df.loc[(slice(None), "DA_cost"), "sum"].sum()
-                    * dso_scaling_factor
-                    * default_config["MarketPrep"]["DSO"]["dso_retail_scaling"]
-                )
-                RT_Sales = (
-                    year_trans_df.loc[(slice(None), "RT_cost"), "sum"].sum()
-                    * dso_scaling_factor
-                    * default_config["MarketPrep"]["DSO"]["dso_retail_scaling"]
-                )
-
-                # Load in bulk industrial loads
-                case_config = load_json(case, "generate_case_config.json")
-                industrial_file = os.path.join(
-                    tariff_path, case_config["indLoad"][5].split("/")[-1]
-                )
-                indust_df = load_indust_data(industrial_file, range(1, 2))
-                da_lmp_stats = pd.read_csv(
-                    case + "\\" + "Annual_DA_LMP_Load_data.csv", index_col=0
-                )
-                Indust_Sales = (
-                    indust_df.loc[0, "Bus" + str(dso_num)]
-                    * da_lmp_stats.loc[:, "da_lmp" + str(dso_num)].sum()
-                )
-                Customer_Count = 0
-                for meter in metadata["billingmeters"]:
-                    if metadata["billingmeters"][meter]["tariff_class"] in [
-                        "residential",
-                        "commercial",
-                    ]:
-                        Customer_Count += 1
-                Connection_fees = tariff["DSO_" + str(dso_num)][
-                    "base_connection_charge"
-                ] * (num_indust_cust + dso_scaling_factor * Customer_Count)
-
-                transactive_dist_rate = (
-                    dso_expenses
-                    - (DA_Sales + RT_Sales + Indust_Sales + Connection_fees)
-                ) / year_energysum_df.loc[("total", "kw-hr"), "sum"]
-
-                tariff["DSO_" + str(dso_num)][
-                    "transactive_dist_rate"
-                ] = transactive_dist_rate
-
-                # Calculate the required revenue to be collected from non-participating customers.
-
-                NP_Customer_Count = 0
-                NP_DA_Sales = 0
-                NP_RT_Sales = 0
-                NP_Energy = 0
-                for meter in metadata["billingmeters"]:
-                    if (
-                        metadata["billingmeters"][meter]["tariff_class"]
-                        in ["residential", "commercial"]
-                        and not metadata["billingmeters"][meter]["cust_participating"]
-                    ):
-                        NP_Customer_Count += 1
-                        NP_DA_Sales += (
-                            year_trans_df.loc[(meter, "DA_cost"), "sum"].sum()
-                            * dso_scaling_factor
-                            * default_config["MarketPrep"]["DSO"]["dso_retail_scaling"]
-                        )
-                        NP_RT_Sales += (
-                            year_trans_df.loc[(meter, "RT_cost"), "sum"].sum()
-                            * dso_scaling_factor
-                            * default_config["MarketPrep"]["DSO"]["dso_retail_scaling"]
-                        )
-                        NP_Energy += (
-                            year_meter_df.loc[(meter, "kw-hr"), "sum"].sum()
-                            * dso_scaling_factor
-                            * default_config["MarketPrep"]["DSO"]["dso_retail_scaling"]
-                        )
-
-                NP_Energy += (
-                    indust_df.loc[0, "Bus" + str(dso_num)]
-                    * 1000
-                    * len(da_lmp_stats.loc[:, "da_lmp" + str(dso_num)])
-                )
-                NP_connection_fees = tariff["DSO_" + str(dso_num)][
-                    "base_connection_charge"
-                ] * (num_indust_cust + dso_scaling_factor * NP_Customer_Count)
-                Non_participating_revenue_req = (
-                    Indust_Sales
-                    + NP_DA_Sales
-                    + NP_RT_Sales
-                    + NP_connection_fees
-                    + NP_Energy * transactive_dist_rate
-                )
-
-        #  Calculate data frame of month customer bills
-        #tic()
-        # Legacy code used in DSO+T analysis
-        cust_bill_df, billsum_df = calc_cust_bill(
-            metadata,
-            year_meter_df,
-            year_trans_df,
-            year_energysum_df,
-            tariff,
-            str(dso_num),
-            dso_scaling_factor,
-            num_indust_cust,
-        )
-        #toc()
-    else:
-        # Specify the file path of the bulk industrial loads
-        case_config = load_json(case, "generate_case_config.json")
-        industrial_file = os.path.join(tariff_path, case_config["indLoad"][5].split("/")[-1])
-
-        # Check the value of the transactive cost balance method flag
-        if trans_cost_balance_method not in [None, "volumetric", "fixed"]:
-            raise ValueError(
-                f"{trans_cost_balance_method} is not a supported cost balance method "
-                + "for the transactive rate. Please try again."
-            )
-
-        # Calculate the prices the ensure enough revenue is collected to recover the  
-        # DSO's expenses in the Rate Scenario analysis
-        prices = calculate_tariff_prices(
-            case,
-            base_case,
-            metadata,
-            year_meter_df,
-            year_trans_df,
-            year_energysum_df,
-            tariff,
-            str(dso_num),
-            dso_scaling_factor,
-            num_indust_cust,
-            industrial_file,
-            rate_scenario,
-            trans_cost_balance_method
+    # Check the value of the transactive cost balance method flag
+    if trans_cost_balance_method not in [None, "volumetric", "fixed"]:
+        raise ValueError(
+            f"{trans_cost_balance_method} is not a supported cost balance method "
+            + "for the transactive rate. Please try again."
         )
 
-        # Update the price datasets accordingly
-        if rate_scenario == "flat":
-            # Update the variables
-            tariff["DSO_" + str(dso_num)]["flat_rate"] = prices["flat_rate"]
-        elif rate_scenario == "time-of-use":
-            # Update the variables
-            tariff["DSO_" + str(dso_num)]["flat_rate"] = prices["flat_rate"]
-            tou_params = load_json(case, "time_of_use_parameters.json")
-            for m in tou_params["DSO_" + str(dso_num)].keys():
-                tou_params["DSO_" + str(dso_num)][m]["price"] = prices[
-                    "tou_rate_" + tou_params["DSO_" + str(dso_num)][m]["season"]
-                ]
+    # Calculate the prices the ensure enough revenue is collected to recover the
+    # DSO's expenses in the Rate Scenario analysis
+    prices, dso_expenses = calculate_tariff_prices(
+        case,
+        base_case,
+        metadata,
+        year_meter_df,
+        year_trans_df,
+        year_energysum_df,
+        tariff,
+        str(dso_num),
+        dso_scaling_factor,
+        num_indust_cust,
+        industrial_file,
+        rate_scenario,
+        trans_cost_balance_method,
+        include_RT
+    )
 
-            # Store the variables in the appropriate files, if not done later
-            with open(os.path.join(case, "time_of_use_parameters.json"), "w") as fp:
-                json.dump(tou_params, fp)
-        elif rate_scenario == "subscription":
-            # Update the variables
-            tariff["DSO_" + str(dso_num)]["flat_rate"] = prices["flat_rate"]
-            tou_params = load_json(case, "time_of_use_parameters.json")
-            for m in tou_params["DSO_" + str(dso_num)].keys():
-                tou_params["DSO_" + str(dso_num)][m]["price"] = prices[
-                    "subscription_rate_" + tou_params["DSO_" + str(dso_num)][m]["season"]
-                ]
-
-            # Store the variables in the appropriate files, if not done later
-            with open(os.path.join(case, "time_of_use_parameters.json"), "w") as fp:
-                json.dump(tou_params, fp)
-        elif rate_scenario == "transactive":
-            # Update the variables
-            tariff["DSO_" + str(dso_num)]["flat_rate"] = prices["flat_rate"]
-            if trans_cost_balance_method in [None, "volumetric"]:
-                tariff["DSO_" + str(dso_num)]["transactive_dist_rate"] = prices[
-                    "transactive_volumetric_rate"
-                ]
-            elif trans_cost_balance_method == "fixed":
-                tariff["DSO_" + str(dso_num)][
-                    "transactive_connection_charge"
-                ] = prices["transactive_fixed_charge"]
-        elif rate_scenario == "dsot":
-            # Update the variables
-            tariff["DSO_" + str(dso_num)]["flat_rate"] = prices["flat_rate"]
-            tariff["DSO_" + str(dso_num)]["transactive_dist_rate"] = prices[
-                "dsot_volumetric_rate"
+    # Update the price datasets accordingly
+    if rate_scenario == "flat":
+        # Update the variables
+        tariff["DSO_" + str(dso_num)]["flat_rate"] = prices["flat_rate"]
+    elif rate_scenario == "time-of-use":
+        # Update the variables
+        tariff["DSO_" + str(dso_num)]["flat_rate"] = prices["flat_rate"]
+        data_path = os.path.expandvars('$TESPDIR/examples/analysis/dsot/data')
+        tou_params = load_json(case, "time_of_use_parameters.json", False)
+        for m in tou_params["DSO_" + str(dso_num)].keys():
+            tou_params["DSO_" + str(dso_num)][m]["price"] = prices[
+                "tou_rate_" + tou_params["DSO_" + str(dso_num)][m]["season"]
             ]
-        
-        # Calculate consumer bills in the Rate Scenario analysis
-        cust_bill_df, billsum_df = calculate_consumer_bills(
-            case,
-            base_case,
-            metadata,
-            year_meter_df,
-            year_trans_df,
-            year_energysum_df,
-            tariff,
-            str(dso_num),
-            dso_scaling_factor,
-            num_indust_cust,
-            rate_scenario
-        )
 
-    # Initialize surplus for export purposes when rate_scenario is not None
-    surplus = 0 
+        # Store the variables in the appropriate files, if not done later
+        with open(os.path.join(case, "time_of_use_parameters.json"), "w") as fp:
+            json.dump(tou_params, fp)
+    elif rate_scenario == "subscription":
+        # Update the variables
+        tariff["DSO_" + str(dso_num)]["flat_rate"] = prices["flat_rate"]
+        tou_params = load_json(case, "time_of_use_parameters.json", False)
+        for m in tou_params["DSO_" + str(dso_num)].keys():
+            tou_params["DSO_" + str(dso_num)][m]["price"] = prices[
+                "subscription_rate_" + tou_params["DSO_" + str(dso_num)][m]["season"]
+            ]
 
-    if rate_scenario is None:
-        surplus = (
-            billsum_df.loc[("total", "fix_total"), "sum"]
-            + billsum_df.loc[("total", "trans_total"), "sum"]
-        ) - dso_expenses
-    
-        if case_name in ['8-MR-BAU', '8-HR-BAU', '200-MR-BAU', '200-HR-BAU']:
-            rebate = surplus / year_energysum_df.loc[('total', 'kw-hr'), 'sum']
-        elif case_name in [
-            '8-MR-Batt',
-            '8-MR-Flex',
-            '8-HR-Batt',
-            '8-HR-Flex',
-            '200-MR-Batt',
-            '200-MR-Flex',
-            '200-HR-Batt',
-            '200-HR-Flex',
-        ]:
-            if counter_factual:
-                rebate = surplus / (year_energysum_df.loc[('total', 'da_q'), 'sum'] + year_energysum_df.loc[
-                    ('total', 'rt_q'), 'sum'])
-            else:
-                rebate = surplus / NP_Energy
-        if iterate:
-            if counter_factual:
-                if case_name in ['8-MR-BAU', '8-HR-BAU', '200-MR-BAU', '200-HR-BAU', '200-MR-Batt', '200-MR-Flex',
-                                 '200-HR-Batt', '200-HR-Flex']:
-                    tariff['DSO_' + str(dso_num)]['flat_rate'] = tariff['DSO_' + str(dso_num)]['flat_rate'] - rebate
-                elif case_name in ['8-MR-Batt', '8-MR-Flex', '8-HR-Batt', '8-HR-Flex']:
-                    tariff['DSO_' + str(dso_num)]['transactive_dist_rate'] = tariff['DSO_' + str(dso_num)][
-                                                                                 'transactive_dist_rate'] - rebate
-            else:
-                tariff['DSO_' + str(dso_num)]['flat_rate'] = tariff['DSO_' + str(dso_num)]['flat_rate'] - rebate
+        # Store the variables in the appropriate files, if not done later
+        with open(os.path.join(case, "time_of_use_parameters.json"), "w") as fp:
+            json.dump(tou_params, fp)
+    elif rate_scenario == "transactive":
+        # Update the variables
+        tariff["DSO_" + str(dso_num)]["flat_rate"] = prices["flat_rate"]
+        if trans_cost_balance_method in [None, "volumetric"]:
+            tariff["DSO_" + str(dso_num)]["transactive_dist_rate"] = prices[
+                "transactive_volumetric_rate"
+            ]
+        elif trans_cost_balance_method == "fixed":
+            tariff["DSO_" + str(dso_num)][
+                "transactive_connection_charge"
+            ] = prices["transactive_fixed_charge"]
+            # tariff["DSO_" + str(dso_num)][
+            #     "base_connection_charge"
+            # ] = prices["transactive_fixed_charge"]
+    elif rate_scenario == "dsot":
+        # Update the variables
+        tariff["DSO_" + str(dso_num)]["flat_rate"] = prices["flat_rate"]
+        tariff["DSO_" + str(dso_num)]["transactive_dist_rate"] = prices[
+            "dsot_volumetric_rate"
+        ]
 
-            cust_bill_df, billsum_df = calc_cust_bill(
-                metadata,
-                year_meter_df,
-                year_trans_df,
-                year_energysum_df,
-                tariff,
-                str(dso_num),
-                dso_scaling_factor,
-                num_indust_cust
-            )
-
-            surplus = (
-                billsum_df.loc[('total', 'fix_total'), 'sum']
-                + billsum_df.loc[('total', 'trans_total'), 'sum']
-            ) - dso_expenses
-            rebate = surplus / year_energysum_df.loc[('total', 'kw-hr'), 'sum']
+    # Calculate consumer bills in the Rate Scenario analysis
+    cust_bill_df, billsum_df = calculate_consumer_bills(
+        case,
+        base_case,
+        metadata,
+        year_meter_df,
+        year_trans_df,
+        year_energysum_df,
+        tariff,
+        str(dso_num),
+        dso_scaling_factor,
+        num_indust_cust,
+        rate_scenario,
+        include_RT
+    )
 
     # Need to save files to hdf5 format.
     os.chdir(case)
@@ -3568,405 +3178,267 @@ def DSO_rate_making(
     with open(os.path.join(tariff_path, file_name), "w") as out_file:
         json.dump(tariff, out_file, indent=2)
 
-    if rate_scenario is None:
-        # Calculate congestion averages and catch for zero values
-        if year_energysum_df.loc[('residential', 'congest_q'), 'sum'] == 0:
-            TransactiveCongestAvgPriceRes = 0
-        else:
-            TransactiveCongestAvgPriceRes = (year_energysum_df.loc[('residential', 'congest_$'), 'sum'] /
-                                             year_energysum_df.loc[('residential', 'congest_q'), 'sum'])  # $/kW-hr
-        if year_energysum_df.loc[('commercial', 'congest_q'), 'sum'] == 0:
-            TransactiveCongestAvgPriceComm = 0
-        else:
-            TransactiveCongestAvgPriceComm = (
-                        year_energysum_df.loc[('commercial', 'congest_$'), 'sum'] / year_energysum_df.loc[
-                    ('commercial', 'congest_q'), 'sum'])  # $/kW-hr
-        if year_energysum_df.loc[('industrial', 'congest_q'), 'sum'] == 0:
-            TransactiveCongestAvgPriceInd = 0
-        else:
-            TransactiveCongestAvgPriceInd = (
-                        year_energysum_df.loc[('industrial', 'congest_$'), 'sum'] / year_energysum_df.loc[
-                    ('industrial', 'congest_q'), 'sum'])  # $/kW-hr
-
-        DSO_Revenues_and_Energy_Sales = {
-            'RetailSales': {
-                'FixedSales': {
-                    'ConnChargesFix': {
-                        'ConnChargesFixRes': billsum_df.loc[('residential', 'fix_connect'), 'sum'] / 1000,  # $k
-                        'ConnChargesFixComm': billsum_df.loc[('commercial', 'fix_connect'), 'sum'] / 1000,  # $k
-                        'ConnChargesFixInd': billsum_df.loc[('industrial', 'fix_connect'), 'sum'] / 1000  # $k
-                    },
-                    'SalesFixRes': {
-                        'EnergyFixPriceRes': year_energysum_df.loc[('residential', 'kw-hr'), 'sum'] / 1000,  # MW-hr/year
-                        'EnergyFixRes': billsum_df.loc[('residential', 'fix_energy'), 'sum'] / 1000,  # $k
-                        'DemandQuantityRes': year_energysum_df.loc[('residential', 'demand_quantity'), 'sum'] / 1000,  # MW
-                        'DemandChargesRes': billsum_df.loc[('residential', 'demand'), 'sum'] / 1000,  # $k
-                        'AvgPriceFixRes': billsum_df.loc[('residential', 'fix_blended_rate'), 'sum']  # $/kW-hr
-                    },
-                    'SalesFixComm': {
-                        'EnergyFixPriceComm': year_energysum_df.loc[('commercial', 'kw-hr'), 'sum'] / 1000,  # MW-hr/year
-                        'EnergyFixComm': billsum_df.loc[('commercial', 'fix_energy'), 'sum'] / 1000,  # $k
-                        'DemandQuantityComm': year_energysum_df.loc[('commercial', 'demand_quantity'), 'sum'] / 1000,  # MW
-                        'DemandChargesComm': billsum_df.loc[('commercial', 'demand'), 'sum'] / 1000,  # $k
-                        'AvgPriceFixComm': billsum_df.loc[('commercial', 'fix_blended_rate'), 'sum']  # $/kW-hr
-                    },
-                    'SalesFixInd': {
-                        'EnergyFixPriceInd': year_energysum_df.loc[('industrial', 'kw-hr'), 'sum'] / 1000,  # MW-hr/year
-                        'EnergyFixInd': billsum_df.loc[('industrial', 'fix_energy'), 'sum'] / 1000,  # $k
-                        'DemandQuantityInd': year_energysum_df.loc[('industrial', 'demand_quantity'), 'sum'] / 1000,  # MW
-                        'DemandChargesInd': billsum_df.loc[('industrial', 'demand'), 'sum'] / 1000,  # $k
-                        'AvgPriceFixInd': billsum_df.loc[('industrial', 'fix_blended_rate'), 'sum']  # $/kW-hr
-                    }
+    # Initialize the DSO_Revenues_and_Energy_Sales and DSO_Cash_Flows dicts
+    DSO_Revenues_and_Energy_Sales = {
+        "RetailSales": {
+            "FlatSales": {
+                "FlatSalesRes": {
+                    "FlatEnergySalesRes": billsum_df.loc[("residential", "flat_energy_purchased"), "sum"] / 1000, # MW-hr/year
+                    "FlatEnergyChargesRes": billsum_df.loc[("residential", "flat_energy_charge"), "sum"] / 1000, # $k
+                    "FlatDemandChargesRes": billsum_df.loc[("residential", "flat_demand_charge"), "sum"] / 1000, # $k
+                    "FlatFixedChargesRes": billsum_df.loc[("residential", "flat_fixed_charge"), "sum"] / 1000, # $k
+                    "FlatAveragePriceRes": billsum_df.loc[("residential", "flat_average_price"), "sum"], # $/kW-hr
                 },
-                'TransactiveSales': {
-                    'ConnChargesDyn': {
-                        'ConnChargesDynRes': billsum_df.loc[('residential', 'trans_connect'), 'sum'] / 1000,  # $k
-                        'ConnChargesDynComm': billsum_df.loc[('commercial', 'trans_connect'), 'sum'] / 1000,  # $k
-                        'ConnChargesDynInd': billsum_df.loc[('industrial', 'trans_connect'), 'sum'] / 1000  # $k
-                    },
-                    'DistCharges': {
-                        'DistChargesRes': billsum_df.loc[('residential', 'distribution'), 'sum'] / 1000,  # $k
-                        'DistChargesComm': billsum_df.loc[('commercial', 'distribution'), 'sum'] / 1000,  # $k
-                        'DistChargesInd': billsum_df.loc[('industrial', 'distribution'), 'sum'] / 1000  # $k
-                    },
-                    'RetailDASales': {
-                        'RetailDASalesRes': billsum_df.loc[('residential', 'DA_energy'), 'sum'] / 1000,  # $k
-                        'RetailDASalesComm': billsum_df.loc[('commercial', 'DA_energy'), 'sum'] / 1000,  # $k
-                        'RetailDASalesInd': billsum_df.loc[('industrial', 'DA_energy'), 'sum'] / 1000  # $k
-                    },
-                    'RetailDAEnergy': {
-                        'RetailDAEnergyRes': year_energysum_df.loc[('residential', 'da_q'), 'sum'] / 1000,  # MW-hrs
-                        'RetailDAEnergyComm': year_energysum_df.loc[('commercial', 'da_q'), 'sum'] / 1000,  # MW-hrs
-                        'RetailDAEnergyInd': year_energysum_df.loc[('industrial', 'da_q'), 'sum'] / 1000  # MW-hrs
-                    },
-                    'RetailDAAvgPrice': {
-                        'RetailDAAvgPriceRes': billsum_df.loc[('residential', 'da_blended_rate'), 'sum'],  # $/kW-hr
-                        'RetailDAAvgPriceComm': billsum_df.loc[('commercial', 'da_blended_rate'), 'sum'],  # $/kW-hr
-                        'RetailDAAvgPriceInd': billsum_df.loc[('industrial', 'da_blended_rate'), 'sum']  # $/kW-hr
-                    },
-                    'RetailRTSales': {
-                        'RetailRTSalesRes': billsum_df.loc[('residential', 'RT_energy'), 'sum'] / 1000,  # $k
-                        'RetailRTSalesComm': billsum_df.loc[('commercial', 'RT_energy'), 'sum'] / 1000,  # $k
-                        'RetailRTSalesInd': billsum_df.loc[('industrial', 'RT_energy'), 'sum'] / 1000  # $k
-                    },
-                    'RetailRTEnergy': {
-                        'RetailRTEnergyRes': year_energysum_df.loc[('residential', 'rt_q'), 'sum'] / 1000,  # MW-hrs
-                        'RetailRTEnergyComm': year_energysum_df.loc[('commercial', 'rt_q'), 'sum'] / 1000,  # MW-hrs
-                        'RetailRTEnergyInd': year_energysum_df.loc[('industrial', 'rt_q'), 'sum'] / 1000  # MW-hrs
-                    },
-                    'RetailRTAvgPrice': {
-                        'RetailRTAvgPriceRes': billsum_df.loc[('residential', 'rt_blended_rate'), 'sum'],  # $/kW-hr
-                        'RetailRTAvgPriceComm': billsum_df.loc[('commercial', 'rt_blended_rate'), 'sum'],  # $/kW-hr
-                        'RetailRTAvgPriceInd': billsum_df.loc[('industrial', 'rt_blended_rate'), 'sum']  # $/kW-hr
-                    },
-                    'TransactiveAvgPrice': {
-                        'TransactiveAvgPriceRes': billsum_df.loc[('residential', 'trans_blended_rate'), 'sum'],  # $/kW-hr
-                        'TransactiveAvgPriceComm': billsum_df.loc[('commercial', 'trans_blended_rate'), 'sum'],  # $/kW-hr
-                        'TransactiveAvgPriceInd': billsum_df.loc[('industrial', 'trans_blended_rate'), 'sum']  # $/kW-hr
-                    },
-                    'TransactiveCongestionEnergy': {
-                        'TransactiveCongestEnergyRes': year_energysum_df.loc[('residential', 'congest_q'), 'sum'] / 1000,   # MW-hrs
-                        'TransactiveCongestEnergyComm': year_energysum_df.loc[('commercial', 'congest_q'), 'sum'] / 1000,   # MW-hrs
-                        'TransactiveCongestEnergyInd': year_energysum_df.loc[('industrial', 'congest_q'), 'sum'] / 1000   # MW-hrs
-                    },
-                    'TransactiveCongestionSales': {
-                        'TransactiveCongestSalesRes': year_energysum_df.loc[('residential', 'congest_$'), 'sum'] / 1000,  # $k
-                        'TransactiveCongestSalesComm': year_energysum_df.loc[('commercial', 'congest_$'), 'sum'] / 1000,  # $k
-                        'TransactiveCongestSalesInd': year_energysum_df.loc[('industrial', 'congest_$'), 'sum'] / 1000  # $k
-                    },
-                    'TransactiveCongestionAvgPrice': {
-                        'TransactiveCongestAvgPriceRes': TransactiveCongestAvgPriceRes,  # $/kW-hr
-                        'TransactiveCongestAvgPriceComm': TransactiveCongestAvgPriceComm,  # $/kW-hr
-                        'TransactiveCongestAvgPriceInd': TransactiveCongestAvgPriceInd  # $/kW-hr
-                    }
-                }
-            },
-            'EnergySold': year_energysum_df.loc[('total', 'kw-hr'), 'sum'] / 1000,  # Energy Sold in MW-hr
-            'RequiredRevenue': (billsum_df.loc[('total', 'fix_total'), 'sum'] + billsum_df.loc[
-                ('total', 'trans_total'), 'sum']) / 1000,  # Energy Charges in $k
-            'EffectiveCostRetailEnergy': (billsum_df.loc[('total', 'fix_total'), 'sum'] +
-                                          billsum_df.loc[('total', 'trans_total'), 'sum']) \
-                                         / year_energysum_df.loc[('total', 'kw-hr'), 'sum'],  # $/kW-hr
-            'DistLosses': {
-                'DistLossesCost': year_energysum_df.loc[('total', 'dist_loss_$'), 'sum'] / 1000,  # DSO Losses in $k
-                'DistLossesEnergy': year_energysum_df.loc[('total', 'dist_loss_q'), 'sum'] / 1000,  # DSO Losses in MW-hrs
-            }
-        }
-
-        DSO_Cash_Flows = {
-            'Revenues': {
-                'RetailSales': {
-                    'FixedSales': {
-                        'FixedEnergyCharges': billsum_df.loc[('total', 'fix_energy'), 'sum'] / 1000,  # Energy Charges in $k
-                        'DemandCharges': billsum_df.loc[('total', 'demand'), 'sum'] / 1000,  # Demand Charges in $k
-                        'ConnectChargesFix': billsum_df.loc[('total', 'fix_connect'), 'sum'] / 1000
-                        # Connection Charges in $k
-                    },
-                    'TransactiveSales': {
-                        'RetailDACharges': billsum_df.loc[('total', 'DA_energy'), 'sum'] / 1000,  # DA Energy Charges in $k
-                        'RetailRTCharges': billsum_df.loc[('total', 'RT_energy'), 'sum'] / 1000,  # RT Energy Charges in $k
-                        'DistCharges': billsum_df.loc[('total', 'distribution'), 'sum'] / 1000,  # Distribution Charges in $k
-                        'ConnectChargesDyn': billsum_df.loc[('total', 'trans_connect'), 'sum'] / 1000  # Connection Charges in $k
-                    }
+                "FlatSalesComm": {
+                    "FlatEnergySalesComm": billsum_df.loc[("commercial", "flat_energy_purchased"), "sum"] / 1000, # MW-hr/year
+                    "FlatEnergyChargesComm": billsum_df.loc[("commercial", "flat_energy_charge"), "sum"] / 1000, # $k
+                    "FlatDemandChargesComm": billsum_df.loc[("commercial", "flat_demand_charge"), "sum"] / 1000, # $k
+                    "FlatFixedChargesComm": billsum_df.loc[("commercial", "flat_fixed_charge"), "sum"] / 1000, # $k
+                    "FlatAveragePriceComm": billsum_df.loc[("commercial", "flat_average_price"), "sum"], # $/kW-hr
+                },
+                "FlatSalesInd": {
+                    "FlatEnergySalesInd": billsum_df.loc[("industrial", "flat_energy_purchased"), "sum"] / 1000, # MW-hr/year
+                    "FlatEnergyChargesInd": billsum_df.loc[("industrial", "flat_energy_charge"), "sum"] / 1000, # $k
+                    "FlatDemandChargesInd": billsum_df.loc[("industrial", "flat_demand_charge"), "sum"] / 1000, # $k
+                    "FlatFixedChargesInd": billsum_df.loc[("industrial", "flat_fixed_charge"), "sum"] / 1000, # $k
+                    "FlatAveragePriceInd": billsum_df.loc[("industrial", "flat_average_price"), "sum"], # $/kW-hr
                 },
             },
-        }
-    else:
-        # Initialize the DSO_Revenues_and_Energy_Sales and DSO_Cash_Flows dicts
-        DSO_Revenues_and_Energy_Sales = {
+        },
+        "EnergySold": billsum_df.loc[("total", "flat_energy_purchased"), "sum"] / 1000,  # Energy Sold in MW-hr
+        "EnergySoldMonthly": {
+            m: billsum_df.loc[("total", "flat_energy_purchased"), m] / 1000
+            for m in billsum_df
+            if m != "sum"
+        }, # Energy Sold in MW-hr
+        "RequiredRevenue": billsum_df.loc[("total", "flat_total_charge"), "sum"] / 1000, # Energy charges in $k
+        "EffectiveCostRetailEnergy": billsum_df.loc[
+            ("total", "flat_total_charge"), "sum"
+        ]
+        / billsum_df.loc[("total", "flat_energy_purchased"), "sum"],  # $/kW-hr
+        "DistLosses": {
+            "DistLossesCost": year_energysum_df.loc[("total", "dist_loss_$"), "sum"] / 1000,  # DSO Losses in $k
+            "DistLossesEnergy": year_energysum_df.loc[("total", "dist_loss_q"), "sum"] / 1000,  # DSO Losses in MW-hrs
+        },
+    }
+    DSO_Cash_Flows = {
+        "Revenues": {
             "RetailSales": {
                 "FlatSales": {
-                    "FlatSalesRes": {
-                        "FlatEnergySalesRes": billsum_df.loc[("residential", "flat_energy_purchased"), "sum"] / 1000, # MW-hr/year
-                        "FlatEnergyChargesRes": billsum_df.loc[("residential", "flat_energy_charge"), "sum"] / 1000, # $k
-                        "FlatDemandChargesRes": billsum_df.loc[("residential", "flat_demand_charge"), "sum"] / 1000, # $k
-                        "FlatFixedChargesRes": billsum_df.loc[("residential", "flat_fixed_charge"), "sum"] / 1000, # $k
-                        "FlatAveragePriceRes": billsum_df.loc[("residential", "flat_average_price"), "sum"], # $/kW-hr
-                    },
-                    "FlatSalesComm": {
-                        "FlatEnergySalesComm": billsum_df.loc[("commercial", "flat_energy_purchased"), "sum"] / 1000, # MW-hr/year
-                        "FlatEnergyChargesComm": billsum_df.loc[("commercial", "flat_energy_charge"), "sum"] / 1000, # $k
-                        "FlatDemandChargesComm": billsum_df.loc[("commercial", "flat_demand_charge"), "sum"] / 1000, # $k
-                        "FlatFixedChargesComm": billsum_df.loc[("commercial", "flat_fixed_charge"), "sum"] / 1000, # $k
-                        "FlatAveragePriceComm": billsum_df.loc[("commercial", "flat_average_price"), "sum"], # $/kW-hr
-                    },
-                    "FlatSalesInd": {
-                        "FlatEnergySalesInd": billsum_df.loc[("industrial", "flat_energy_purchased"), "sum"] / 1000, # MW-hr/year
-                        "FlatEnergyChargesInd": billsum_df.loc[("industrial", "flat_energy_charge"), "sum"] / 1000, # $k
-                        "FlatDemandChargesInd": billsum_df.loc[("industrial", "flat_demand_charge"), "sum"] / 1000, # $k
-                        "FlatFixedChargesInd": billsum_df.loc[("industrial", "flat_fixed_charge"), "sum"] / 1000, # $k
-                        "FlatAveragePriceInd": billsum_df.loc[("industrial", "flat_average_price"), "sum"], # $/kW-hr
-                    },
+                    "FlatEnergyCharges": billsum_df.loc[("total", "flat_energy_charge"), "sum"] / 1000, # $k
+                    "FlatDemandCharges": billsum_df.loc[("total", "flat_demand_charge"), "sum"] / 1000, # $k
+                    "FlatFixedCharges": billsum_df.loc[("total", "flat_fixed_charge"), "sum"] / 1000, # $k
+                },
+                "TOUSales": {
+                    "TOUEnergyCharges": 0,  # $k
+                    "TOUDemandCharges": 0,  # $k
+                    "TOUFixedCharges": 0
+                },
+                "SubscriptionSales": {
+                    "SubscriptionEnergyCharges": 0,  # $k
+                    "SubscriptionDemandCharges": 0,  # $k
+                    "SubscriptionFixedCharges": 0,
+                    "SubscriptionNetDeviationCharges": 0
+                },
+                "TransactiveSales": {
+                    "TransactiveDAEnergyCharges": 0,  # $k
+                    "TransactiveRTEnergyCharges": 0,  # $k
+                    "TransactiveFixedCharges": 0,
+                    "TransactiveVolumetricCharges": 0
+                },
+                "DSOTSales": {
+                    "DSOTDAEnergyCharges": 0,  # $k
+                    "DSOTRTEnergyCharges": 0,  # $k
+                    "DSOTFixedCharges": 0,
+                    "DSOTVolumetricCharges": 0
                 },
             },
-            "EnergySold": billsum_df.loc[("total", "flat_energy_purchased"), "sum"] / 1000,  # Energy Sold in MW-hr
-            "EnergySoldMonthly": {
-                m: billsum_df.loc[("total", "flat_energy_purchased"), m] / 1000
-                for m in billsum_df
-                if m != "sum"
-            }, # Energy Sold in MW-hr
-            "RequiredRevenue": billsum_df.loc[("total", "flat_total_charge"), "sum"] / 1000, # Energy charges in $k
-            "EffectiveCostRetailEnergy": billsum_df.loc[
-                ("total", "flat_total_charge"), "sum"
-            ]
-            / billsum_df.loc[("total", "flat_energy_purchased"), "sum"],  # $/kW-hr
-            "DistLosses": {
-                "DistLossesCost": year_energysum_df.loc[("total", "dist_loss_$"), "sum"] / 1000,  # DSO Losses in $k
-                "DistLossesEnergy": year_energysum_df.loc[("total", "dist_loss_q"), "sum"] / 1000,  # DSO Losses in MW-hrs
+        },
+    }
+
+    # Assign additional information based on the rate scenario
+    if rate_scenario == "time-of-use":
+        DSO_Revenues_and_Energy_Sales["RetailSales"]["TOUSales"] = {
+            "TOUSalesRes": {
+                "TOUEnergySalesRes": billsum_df.loc[("residential", "tou_energy_purchased"), "sum"] / 1000, # MW-hr/year
+                "TOUEnergyChargesRes": billsum_df.loc[("residential", "tou_energy_charge"), "sum"] / 1000, # $k
+                "TOUDemandChargesRes": billsum_df.loc[("residential", "tou_demand_charge"), "sum"] / 1000, # $k
+                "TOUFixedChargesRes": billsum_df.loc[("residential", "tou_fixed_charge"), "sum"] / 1000, # $k
+                "TOUAveragePriceRes": billsum_df.loc[("residential", "tou_average_price"), "sum"], # $/kW-hr
+            },
+            "TOUSalesComm": {
+                "TOUEnergySalesComm": billsum_df.loc[("commercial", "tou_energy_purchased"), "sum"] / 1000, # MW-hr/year
+                "TOUEnergyChargesComm": billsum_df.loc[("commercial", "tou_energy_charge"), "sum"] / 1000, # $k
+                "TOUDemandChargesComm": billsum_df.loc[("commercial", "tou_demand_charge"), "sum"] / 1000, # $k
+                "TOUFixedChargesComm": billsum_df.loc[("commercial", "tou_fixed_charge"), "sum"] / 1000, # $k
+                "TOUAveragePriceComm": billsum_df.loc[("commercial", "tou_average_price"), "sum"], # $/kW-hr
+            },
+            "TOUSalesInd": {
+                "TOUEnergySalesInd": billsum_df.loc[("industrial", "tou_energy_purchased"), "sum"] / 1000, # MW-hr/year
+                "TOUEnergyChargesInd": billsum_df.loc[("industrial", "tou_energy_charge"), "sum"] / 1000, # $k
+                "TOUDemandChargesInd": billsum_df.loc[("industrial", "tou_demand_charge"), "sum"] / 1000, # $k
+                "TOUFixedChargesInd": billsum_df.loc[("industrial", "tou_fixed_charge"), "sum"] / 1000, # $k
+                "TOUAveragePriceInd": billsum_df.loc[("industrial", "tou_average_price"), "sum"], # $/kW-hr
             },
         }
-        DSO_Cash_Flows = {
-            "Revenues": {
-                "RetailSales": {
-                    "FlatSales": {
-                        "FlatEnergyCharges": billsum_df.loc[("total", "flat_energy_charge"), "sum"] / 1000, # $k
-                        "FlatDemandCharges": billsum_df.loc[("total", "flat_demand_charge"), "sum"] / 1000, # $k
-                        "FlatFixedCharges": billsum_df.loc[("total", "flat_fixed_charge"), "sum"] / 1000, # $k
-                    },
-                    "TOUSales": {
-                        "TOUEnergyCharges": 0,  # $k
-                        "TOUDemandCharges": 0,  # $k
-                        "TOUFixedCharges": 0
-                    },
-                    "SubscriptionSales": {
-                        "SubscriptionEnergyCharges": 0,  # $k
-                        "SubscriptionDemandCharges": 0,  # $k
-                        "SubscriptionFixedCharges": 0,
-                        "SubscriptionNetDeviationCharges": 0
-                    },
-                    "TransactiveSales": {
-                        "TransactiveDAEnergyCharges": 0,  # $k
-                        "TransactiveRTEnergyCharges": 0,  # $k
-                        "TransactiveFixedCharges": 0,
-                        "TransactiveVolumetricCharges": 0
-                    },
-                    "DSOTSales": {
-                        "DSOTDAEnergyCharges": 0,  # $k
-                        "DSOTRTEnergyCharges": 0,  # $k
-                        "DSOTFixedCharges": 0,
-                        "DSOTVolumetricCharges": 0
-                    },
-                },
+        DSO_Revenues_and_Energy_Sales["EnergySold"] += billsum_df.loc[("total", "tou_energy_purchased"), "sum"] / 1000 # Energy Sold in MW-hr
+        for m in billsum_df:
+            if m != "sum":
+                DSO_Revenues_and_Energy_Sales["EnergySoldMonthly"][m] += billsum_df.loc[("total", "tou_energy_purchased"), m] / 1000
+        DSO_Revenues_and_Energy_Sales["RequiredRevenue"] += billsum_df.loc[("total", "tou_total_charge"), "sum"] / 1000 # Energy charges in $k
+        DSO_Revenues_and_Energy_Sales["EffectiveCostRetailEnergy"] = (
+            billsum_df.loc[("total", "flat_total_charge"), "sum"]
+            + billsum_df.loc[("total", "tou_total_charge"), "sum"]
+        ) / (
+            billsum_df.loc[("total", "flat_energy_purchased"), "sum"]
+            + billsum_df.loc[("total", "tou_energy_purchased"), "sum"]
+        )
+        DSO_Cash_Flows["Revenues"]["RetailSales"]["TOUSales"] = {
+            "TOUEnergyCharges": billsum_df.loc[("total", "tou_energy_charge"), "sum"] / 1000, # $k
+            "TOUDemandCharges": billsum_df.loc[("total", "tou_demand_charge"), "sum"] / 1000, # $k
+            "TOUFixedCharges": billsum_df.loc[("total", "tou_fixed_charge"), "sum"] / 1000, # $k
+        }
+    elif rate_scenario == "subscription":
+        DSO_Revenues_and_Energy_Sales["RetailSales"]["SubscriptionSales"] = {
+            "SubscriptionSalesRes": {
+                "SubscriptionEnergySalesRes": billsum_df.loc[("residential", "subscription_energy_purchased"), "sum"] / 1000, # MW-hr/year
+                "SubscriptionEnergyChargesRes": billsum_df.loc[("residential", "subscription_energy_charge"), "sum"] / 1000, # $k
+                "SubscriptionDemandChargesRes": billsum_df.loc[("residential", "subscription_demand_charge"), "sum"] / 1000, # $k
+                "SubscriptionFixedChargesRes": billsum_df.loc[("residential", "subscription_fixed_charge"), "sum"] / 1000, # $k
+                "SubscriptionNetDeviationChargesRes": billsum_df.loc[("residential", "subscription_net_deviation_charge"), "sum"] / 1000, # $k
+                "SubscriptionAveragePriceRes": billsum_df.loc[("residential", "subscription_average_price"), "sum"], # $/kW-hr
             },
+            "SubscriptionSalesComm": {
+                "SubscriptionEnergySalesComm": billsum_df.loc[("commercial", "subscription_energy_purchased"), "sum"] / 1000, # MW-hr/year
+                "SubscriptionEnergyChargesComm": billsum_df.loc[("commercial", "subscription_energy_charge"), "sum"] / 1000, # $k
+                "SubscriptionDemandChargesComm": billsum_df.loc[("commercial", "subscription_demand_charge"), "sum"] / 1000, # $k
+                "SubscriptionFixedChargesComm": billsum_df.loc[("commercial", "subscription_fixed_charge"), "sum"] / 1000, # $k
+                "SubscriptionNetDeviationChargesComm": billsum_df.loc[("commercial", "subscription_net_deviation_charge"), "sum"] / 1000, # $k
+                "SubscriptionAveragePriceComm": billsum_df.loc[("commercial", "subscription_average_price"), "sum"], # $/kW-hr
+            },
+            "SubscriptionSalesInd": {
+                "SubscriptionEnergySalesInd": billsum_df.loc[("industrial", "subscription_energy_purchased"), "sum"] / 1000, # MW-hr/year
+                "SubscriptionEnergyChargesInd": billsum_df.loc[("industrial", "subscription_energy_charge"), "sum"] / 1000, # $k
+                "SubscriptionDemandChargesInd": billsum_df.loc[("industrial", "subscription_demand_charge"), "sum"] / 1000, # $k
+                "SubscriptionFixedChargesInd": billsum_df.loc[("industrial", "subscription_fixed_charge"), "sum"] / 1000, # $k
+                "SubscriptionNetDeviationChargesInd": billsum_df.loc[("industrial", "subscription_net_deviation_charge"), "sum"] / 1000, # $k
+                "SubscriptionAveragePriceInd": billsum_df.loc[("industrial", "subscription_average_price"), "sum"], # $/kW-hr
+            },
+        }
+        DSO_Revenues_and_Energy_Sales["EnergySold"] += billsum_df.loc[("total", "subscription_energy_purchased"), "sum"] / 1000 # Energy Sold in MW-hr
+        for m in billsum_df:
+            if m != "sum":
+                DSO_Revenues_and_Energy_Sales["EnergySoldMonthly"][m] += billsum_df.loc[("total", "subscription_energy_purchased"), m] / 1000
+        DSO_Revenues_and_Energy_Sales["RequiredRevenue"] += billsum_df.loc[("total", "subscription_total_charge"), "sum"] / 1000 # Energy charges in $k
+        DSO_Revenues_and_Energy_Sales["EffectiveCostRetailEnergy"] = (
+            billsum_df.loc[("total", "flat_total_charge"), "sum"]
+            + billsum_df.loc[("total", "subscription_total_charge"), "sum"]
+        ) / (
+            billsum_df.loc[("total", "flat_energy_purchased"), "sum"]
+            + billsum_df.loc[("total", "subscription_energy_purchased"), "sum"]
+        )
+        DSO_Cash_Flows["Revenues"]["RetailSales"]["SubscriptionSales"] = {
+            "SubscriptionEnergyCharges": billsum_df.loc[("total", "subscription_energy_charge"), "sum"] / 1000, # $k
+            "SubscriptionDemandCharges": billsum_df.loc[("total", "subscription_demand_charge"), "sum"] / 1000, # $k
+            "SubscriptionFixedCharges": billsum_df.loc[("total", "subscription_fixed_charge"), "sum"] / 1000, # $k
+            "SubscriptionNetDeviationCharges": billsum_df.loc[("total", "subscription_net_deviation_charge"), "sum"] / 1000, # $k
+        }
+    elif rate_scenario == "transactive":
+        DSO_Revenues_and_Energy_Sales["RetailSales"]["TransactiveSales"] = {
+            "TransactiveSalesRes": {
+                "TransactiveEnergySalesRes": billsum_df.loc[("residential", "transactive_energy_purchased"), "sum"] / 1000, # MW-hr/year
+                "TransactiveDAEnergyChargesRes": billsum_df.loc[("residential", "transactive_DA_energy_charge"), "sum"] / 1000, # $k
+                "TransactiveRTEnergyChargesRes": billsum_df.loc[("residential", "transactive_RT_energy_charge"), "sum"] / 1000, # $k
+                "TransactiveFixedChargesRes": billsum_df.loc[("residential", "transactive_fixed_charge"), "sum"] / 1000, # $k
+                "TransactiveVolumetricChargeRes": billsum_df.loc[("residential", "transactive_volumetric_charge"), "sum"] / 1000, # $k
+                "TransactiveAveragePriceRes": billsum_df.loc[("residential", "transactive_average_price"), "sum"], # $/kW-hr
+            },
+            "TransactiveSalesComm": {
+                "TransactiveEnergySalesComm": billsum_df.loc[("commercial", "transactive_energy_purchased"), "sum"] / 1000, # MW-hr/year
+                "TransactiveDAEnergyChargesComm": billsum_df.loc[("commercial", "transactive_DA_energy_charge"), "sum"] / 1000, # $k
+                "TransactiveRTEnergyChargesComm": billsum_df.loc[("commercial", "transactive_RT_energy_charge"), "sum"] / 1000, # $k
+                "TransactiveFixedChargesComm": billsum_df.loc[("commercial", "transactive_fixed_charge"), "sum"] / 1000, # $k
+                "TransactiveVolumetricChargeComm": billsum_df.loc[("commercial", "transactive_volumetric_charge"), "sum"] / 1000, # $k
+                "TransactiveAveragePriceComm": billsum_df.loc[("commercial", "transactive_average_price"), "sum"], # $/kW-hr
+            },
+            "TransactiveSalesInd": {
+                "TransactiveEnergySalesInd": billsum_df.loc[("industrial", "transactive_energy_purchased"), "sum"] / 1000, # MW-hr/year
+                "TransactiveDAEnergyChargesInd": billsum_df.loc[("industrial", "transactive_DA_energy_charge"), "sum"] / 1000, # $k
+                "TransactiveRTEnergyChargesInd": billsum_df.loc[("industrial", "transactive_RT_energy_charge"), "sum"] / 1000, # $k
+                "TransactiveFixedChargesInd": billsum_df.loc[("industrial", "transactive_fixed_charge"), "sum"] / 1000, # $k
+                "TransactiveVolumetricChargeInd": billsum_df.loc[("industrial", "transactive_volumetric_charge"), "sum"] / 1000, # $k
+                "TransactiveAveragePriceInd": billsum_df.loc[("industrial", "transactive_average_price"), "sum"], # $/kW-hr
+            },
+        }
+        DSO_Revenues_and_Energy_Sales["EnergySold"] += billsum_df.loc[("total", "transactive_energy_purchased"), "sum"] / 1000 # Energy Sold in MW-hr
+        for m in billsum_df:
+            if m != "sum":
+                DSO_Revenues_and_Energy_Sales["EnergySoldMonthly"][m] += billsum_df.loc[("total", "transactive_energy_purchased"), m] / 1000
+        DSO_Revenues_and_Energy_Sales["RequiredRevenue"] += billsum_df.loc[("total", "transactive_total_charge"), "sum"] / 1000 # Energy charges in $k
+        DSO_Revenues_and_Energy_Sales["EffectiveCostRetailEnergy"] = (
+            billsum_df.loc[("total", "flat_total_charge"), "sum"]
+            + billsum_df.loc[("total", "transactive_total_charge"), "sum"]
+        ) / (
+            billsum_df.loc[("total", "flat_energy_purchased"), "sum"]
+            + billsum_df.loc[("total", "transactive_energy_purchased"), "sum"]
+        )
+        DSO_Cash_Flows["Revenues"]["RetailSales"]["TransactiveSales"] = {
+            "TransactiveDAEnergyCharges": billsum_df.loc[("total", "transactive_DA_energy_charge"), "sum"] / 1000, # $k
+            "TransactiveRTEnergyCharges": billsum_df.loc[("total", "transactive_RT_energy_charge"), "sum"] / 1000, # $k
+            "TransactiveFixedCharges": billsum_df.loc[("total", "transactive_fixed_charge"), "sum"] / 1000, # $k
+            "TransactiveVolumetricCharges": billsum_df.loc[("total", "transactive_volumetric_charge"), "sum"] / 1000, # $k
+        }
+    elif rate_scenario == "dsot":
+        DSO_Revenues_and_Energy_Sales["RetailSales"]["DSOTSales"] = {
+            "DSOTSalesRes": {
+                "DSOTEnergySalesRes": billsum_df.loc[("residential", "dsot_energy_purchased"), "sum"] / 1000, # MW-hr/year
+                "DSOTDAEnergyChargesRes": billsum_df.loc[("residential", "dsot_DA_energy_charge"), "sum"] / 1000, # $k
+                "DSOTRTEnergyChargesRes": billsum_df.loc[("residential", "dsot_RT_energy_charge"), "sum"] / 1000, # $k
+                "DSOTFixedChargesRes": billsum_df.loc[("residential", "dsot_fixed_charge"), "sum"] / 1000, # $k
+                "DSOTVolumetricChargeRes": billsum_df.loc[("residential", "dsot_volumetric_charge"), "sum"] / 1000, # $k
+                "DSOTAveragePriceRes": billsum_df.loc[("residential", "dsot_average_price"), "sum"], # $/kW-hr
+            },
+            "DSOTSalesComm": {
+                "DSOTEnergySalesComm": billsum_df.loc[("commercial", "dsot_energy_purchased"), "sum"] / 1000, # MW-hr/year
+                "DSOTDAEnergyChargesComm": billsum_df.loc[("commercial", "dsot_DA_energy_charge"), "sum"] / 1000, # $k
+                "DSOTRTEnergyChargesComm": billsum_df.loc[("commercial", "dsot_RT_energy_charge"), "sum"] / 1000, # $k
+                "DSOTFixedChargesComm": billsum_df.loc[("commercial", "dsot_fixed_charge"), "sum"] / 1000, # $k
+                "DSOTVolumetricChargeComm": billsum_df.loc[("commercial", "dsot_volumetric_charge"), "sum"] / 1000, # $k
+                "DSOTAveragePriceComm": billsum_df.loc[("commercial", "dsot_average_price"), "sum"], # $/kW-hr
+            },
+            "DSOTSalesInd": {
+                "DSOTEnergySalesInd": billsum_df.loc[("industrial", "dsot_energy_purchased"), "sum"] / 1000, # MW-hr/year
+                "DSOTDAEnergyChargesInd": billsum_df.loc[("industrial", "dsot_DA_energy_charge"), "sum"] / 1000, # $k
+                "DSOTRTEnergyChargesInd": billsum_df.loc[("industrial", "dsot_RT_energy_charge"), "sum"] / 1000, # $k
+                "DSOTFixedChargesInd": billsum_df.loc[("industrial", "dsot_fixed_charge"), "sum"] / 1000, # $k
+                "DSOTVolumetricChargeInd": billsum_df.loc[("industrial", "dsot_volumetric_charge"), "sum"] / 1000, # $k
+                "DSOTAveragePriceInd": billsum_df.loc[("industrial", "dsot_average_price"), "sum"], # $/kW-hr
+            },
+        }
+        DSO_Revenues_and_Energy_Sales["EnergySold"] += billsum_df.loc[("total", "dsot_energy_purchased"), "sum"] / 1000 # Energy Sold in MW-hr
+        for m in billsum_df:
+            if m != "sum":
+                DSO_Revenues_and_Energy_Sales["EnergySoldMonthly"][m] += billsum_df.loc[("total", "dsot_energy_purchased"), m] / 1000
+        DSO_Revenues_and_Energy_Sales["RequiredRevenue"] += billsum_df.loc[("total", "dsot_total_charge"), "sum"] / 1000 # Energy charges in $k
+        DSO_Revenues_and_Energy_Sales["EffectiveCostRetailEnergy"] = (
+            billsum_df.loc[("total", "flat_total_charge"), "sum"]
+            + billsum_df.loc[("total", "dsot_total_charge"), "sum"]
+        ) / (
+            billsum_df.loc[("total", "flat_energy_purchased"), "sum"]
+            + billsum_df.loc[("total", "dsot_energy_purchased"), "sum"]
+        )
+        DSO_Cash_Flows["Revenues"]["RetailSales"]["DSOTSales"] = {
+            "DSOTDAEnergyCharges": billsum_df.loc[("total", "dsot_DA_energy_charge"), "sum"] / 1000, # $k
+            "DSOTRTEnergyCharges": billsum_df.loc[("total", "dsot_RT_energy_charge"), "sum"] / 1000, # $k
+            "DSOTFixedCharges": billsum_df.loc[("total", "dsot_fixed_charge"), "sum"] / 1000, # $k
+            "DSOTVolumetricCharges": billsum_df.loc[("total", "dsot_volumetric_charge"), "sum"] / 1000, # $k
         }
 
-        # Assign additional information based on the rate scenario
-        if rate_scenario == "time-of-use":
-            DSO_Revenues_and_Energy_Sales["RetailSales"]["TOUSales"] = {
-                "TOUSalesRes": {
-                    "TOUEnergySalesRes": billsum_df.loc[("residential", "tou_energy_purchased"), "sum"] / 1000, # MW-hr/year
-                    "TOUEnergyChargesRes": billsum_df.loc[("residential", "tou_energy_charge"), "sum"] / 1000, # $k
-                    "TOUDemandChargesRes": billsum_df.loc[("residential", "tou_demand_charge"), "sum"] / 1000, # $k
-                    "TOUFixedChargesRes": billsum_df.loc[("residential", "tou_fixed_charge"), "sum"] / 1000, # $k
-                    "TOUAveragePriceRes": billsum_df.loc[("residential", "tou_average_price"), "sum"], # $/kW-hr
-                },
-                "TOUSalesComm": {
-                    "TOUEnergySalesComm": billsum_df.loc[("commercial", "tou_energy_purchased"), "sum"] / 1000, # MW-hr/year
-                    "TOUEnergyChargesComm": billsum_df.loc[("commercial", "tou_energy_charge"), "sum"] / 1000, # $k
-                    "TOUDemandChargesComm": billsum_df.loc[("commercial", "tou_demand_charge"), "sum"] / 1000, # $k
-                    "TOUFixedChargesComm": billsum_df.loc[("commercial", "tou_fixed_charge"), "sum"] / 1000, # $k
-                    "TOUAveragePriceComm": billsum_df.loc[("commercial", "tou_average_price"), "sum"], # $/kW-hr
-                },
-                "TOUSalesInd": {
-                    "TOUEnergySalesInd": billsum_df.loc[("industrial", "tou_energy_purchased"), "sum"] / 1000, # MW-hr/year
-                    "TOUEnergyChargesInd": billsum_df.loc[("industrial", "tou_energy_charge"), "sum"] / 1000, # $k
-                    "TOUDemandChargesInd": billsum_df.loc[("industrial", "tou_demand_charge"), "sum"] / 1000, # $k
-                    "TOUFixedChargesInd": billsum_df.loc[("industrial", "tou_fixed_charge"), "sum"] / 1000, # $k
-                    "TOUAveragePriceInd": billsum_df.loc[("industrial", "tou_average_price"), "sum"], # $/kW-hr
-                },
-            }
-            DSO_Revenues_and_Energy_Sales["EnergySold"] += billsum_df.loc[("total", "tou_energy_purchased"), "sum"] / 1000 # Energy Sold in MW-hr
-            for m in billsum_df:
-                if m != "sum":
-                    DSO_Revenues_and_Energy_Sales["EnergySoldMonthly"][m] += billsum_df.loc[("total", "tou_energy_purchased"), m] / 1000
-            DSO_Revenues_and_Energy_Sales["RequiredRevenue"] += billsum_df.loc[("total", "tou_total_charge"), "sum"] / 1000 # Energy charges in $k
-            DSO_Revenues_and_Energy_Sales["EffectiveCostRetailEnergy"] = (
-                billsum_df.loc[("total", "flat_total_charge"), "sum"]
-                + billsum_df.loc[("total", "tou_total_charge"), "sum"]
-            ) / (
-                billsum_df.loc[("total", "flat_energy_purchased"), "sum"]
-                + billsum_df.loc[("total", "tou_energy_purchased"), "sum"]
-            )
-            DSO_Cash_Flows["Revenues"]["RetailSales"]["TOUSales"] = {
-                "TOUEnergyCharges": billsum_df.loc[("total", "tou_energy_charge"), "sum"] / 1000, # $k
-                "TOUDemandCharges": billsum_df.loc[("total", "tou_demand_charge"), "sum"] / 1000, # $k
-                "TOUFixedCharges": billsum_df.loc[("total", "tou_fixed_charge"), "sum"] / 1000, # $k
-            }
-        elif rate_scenario == "subscription":
-            DSO_Revenues_and_Energy_Sales["RetailSales"]["SubscriptionSales"] = {
-                "SubscriptionSalesRes": {
-                    "SubscriptionEnergySalesRes": billsum_df.loc[("residential", "subscription_energy_purchased"), "sum"] / 1000, # MW-hr/year
-                    "SubscriptionEnergyChargesRes": billsum_df.loc[("residential", "subscription_energy_charge"), "sum"] / 1000, # $k
-                    "SubscriptionDemandChargesRes": billsum_df.loc[("residential", "subscription_demand_charge"), "sum"] / 1000, # $k
-                    "SubscriptionFixedChargesRes": billsum_df.loc[("residential", "subscription_fixed_charge"), "sum"] / 1000, # $k
-                    "SubscriptionNetDeviationChargesRes": billsum_df.loc[("residential", "subscription_net_deviation_charge"), "sum"] / 1000, # $k
-                    "SubscriptionAveragePriceRes": billsum_df.loc[("residential", "subscription_average_price"), "sum"], # $/kW-hr
-                },
-                "SubscriptionSalesComm": {
-                    "SubscriptionEnergySalesComm": billsum_df.loc[("commercial", "subscription_energy_purchased"), "sum"] / 1000, # MW-hr/year
-                    "SubscriptionEnergyChargesComm": billsum_df.loc[("commercial", "subscription_energy_charge"), "sum"] / 1000, # $k
-                    "SubscriptionDemandChargesComm": billsum_df.loc[("commercial", "subscription_demand_charge"), "sum"] / 1000, # $k
-                    "SubscriptionFixedChargesComm": billsum_df.loc[("commercial", "subscription_fixed_charge"), "sum"] / 1000, # $k
-                    "SubscriptionNetDeviationChargesComm": billsum_df.loc[("commercial", "subscription_net_deviation_charge"), "sum"] / 1000, # $k
-                    "SubscriptionAveragePriceComm": billsum_df.loc[("commercial", "subscription_average_price"), "sum"], # $/kW-hr
-                },
-                "SubscriptionSalesInd": {
-                    "SubscriptionEnergySalesInd": billsum_df.loc[("industrial", "subscription_energy_purchased"), "sum"] / 1000, # MW-hr/year
-                    "SubscriptionEnergyChargesInd": billsum_df.loc[("industrial", "subscription_energy_charge"), "sum"] / 1000, # $k
-                    "SubscriptionDemandChargesInd": billsum_df.loc[("industrial", "subscription_demand_charge"), "sum"] / 1000, # $k
-                    "SubscriptionFixedChargesInd": billsum_df.loc[("industrial", "subscription_fixed_charge"), "sum"] / 1000, # $k
-                    "SubscriptionNetDeviationChargesInd": billsum_df.loc[("industrial", "subscription_net_deviation_charge"), "sum"] / 1000, # $k
-                    "SubscriptionAveragePriceInd": billsum_df.loc[("industrial", "subscription_average_price"), "sum"], # $/kW-hr
-                },
-            }
-            DSO_Revenues_and_Energy_Sales["EnergySold"] += billsum_df.loc[("total", "subscription_energy_purchased"), "sum"] / 1000 # Energy Sold in MW-hr
-            for m in billsum_df:
-                if m != "sum":
-                    DSO_Revenues_and_Energy_Sales["EnergySoldMonthly"][m] += billsum_df.loc[("total", "subscription_energy_purchased"), m] / 1000
-            DSO_Revenues_and_Energy_Sales["RequiredRevenue"] += billsum_df.loc[("total", "subscription_total_charge"), "sum"] / 1000 # Energy charges in $k
-            DSO_Revenues_and_Energy_Sales["EffectiveCostRetailEnergy"] = (
-                billsum_df.loc[("total", "flat_total_charge"), "sum"]
-                + billsum_df.loc[("total", "subscription_total_charge"), "sum"]
-            ) / (
-                billsum_df.loc[("total", "flat_energy_purchased"), "sum"]
-                + billsum_df.loc[("total", "subscription_energy_purchased"), "sum"]
-            )
-            DSO_Cash_Flows["Revenues"]["RetailSales"]["SubscriptionSales"] = {
-                "SubscriptionEnergyCharges": billsum_df.loc[("total", "subscription_energy_charge"), "sum"] / 1000, # $k
-                "SubscriptionDemandCharges": billsum_df.loc[("total", "subscription_demand_charge"), "sum"] / 1000, # $k
-                "SubscriptionFixedCharges": billsum_df.loc[("total", "subscription_fixed_charge"), "sum"] / 1000, # $k
-                "SubscriptionNetDeviationCharges": billsum_df.loc[("total", "subscription_net_deviation_charge"), "sum"] / 1000, # $k
-            }
-        elif rate_scenario == "transactive":
-            DSO_Revenues_and_Energy_Sales["RetailSales"]["TransactiveSales"] = {
-                "TransactiveSalesRes": {
-                    "TransactiveEnergySalesRes": billsum_df.loc[("residential", "transactive_energy_purchased"), "sum"] / 1000, # MW-hr/year
-                    "TransactiveDAEnergyChargesRes": billsum_df.loc[("residential", "transactive_DA_energy_charge"), "sum"] / 1000, # $k
-                    "TransactiveRTEnergyChargesRes": billsum_df.loc[("residential", "transactive_RT_energy_charge"), "sum"] / 1000, # $k
-                    "TransactiveFixedChargesRes": billsum_df.loc[("residential", "transactive_fixed_charge"), "sum"] / 1000, # $k
-                    "TransactiveVolumetricChargeRes": billsum_df.loc[("residential", "transactive_volumetric_charge"), "sum"] / 1000, # $k
-                    "TransactiveAveragePriceRes": billsum_df.loc[("residential", "transactive_average_price"), "sum"], # $/kW-hr
-                },
-                "TransactiveSalesComm": {
-                    "TransactiveEnergySalesComm": billsum_df.loc[("commercial", "transactive_energy_purchased"), "sum"] / 1000, # MW-hr/year
-                    "TransactiveDAEnergyChargesComm": billsum_df.loc[("commercial", "transactive_DA_energy_charge"), "sum"] / 1000, # $k
-                    "TransactiveRTEnergyChargesComm": billsum_df.loc[("commercial", "transactive_RT_energy_charge"), "sum"] / 1000, # $k
-                    "TransactiveFixedChargesComm": billsum_df.loc[("commercial", "transactive_fixed_charge"), "sum"] / 1000, # $k
-                    "TransactiveVolumetricChargeComm": billsum_df.loc[("commercial", "transactive_volumetric_charge"), "sum"] / 1000, # $k
-                    "TransactiveAveragePriceComm": billsum_df.loc[("commercial", "transactive_average_price"), "sum"], # $/kW-hr
-                },
-                "TransactiveSalesInd": {
-                    "TransactiveEnergySalesInd": billsum_df.loc[("industrial", "transactive_energy_purchased"), "sum"] / 1000, # MW-hr/year
-                    "TransactiveDAEnergyChargesInd": billsum_df.loc[("industrial", "transactive_DA_energy_charge"), "sum"] / 1000, # $k
-                    "TransactiveRTEnergyChargesInd": billsum_df.loc[("industrial", "transactive_RT_energy_charge"), "sum"] / 1000, # $k
-                    "TransactiveFixedChargesInd": billsum_df.loc[("industrial", "transactive_fixed_charge"), "sum"] / 1000, # $k
-                    "TransactiveVolumetricChargeInd": billsum_df.loc[("industrial", "transactive_volumetric_charge"), "sum"] / 1000, # $k
-                    "TransactiveAveragePriceInd": billsum_df.loc[("industrial", "transactive_average_price"), "sum"], # $/kW-hr
-                },
-            }
-            DSO_Revenues_and_Energy_Sales["EnergySold"] += billsum_df.loc[("total", "transactive_energy_purchased"), "sum"] / 1000 # Energy Sold in MW-hr
-            for m in billsum_df:
-                if m != "sum":
-                    DSO_Revenues_and_Energy_Sales["EnergySoldMonthly"][m] += billsum_df.loc[("total", "transactive_energy_purchased"), m] / 1000
-            DSO_Revenues_and_Energy_Sales["RequiredRevenue"] += billsum_df.loc[("total", "transactive_total_charge"), "sum"] / 1000 # Energy charges in $k
-            DSO_Revenues_and_Energy_Sales["EffectiveCostRetailEnergy"] = (
-                billsum_df.loc[("total", "flat_total_charge"), "sum"]
-                + billsum_df.loc[("total", "transactive_total_charge"), "sum"]
-            ) / (
-                billsum_df.loc[("total", "flat_energy_purchased"), "sum"]
-                + billsum_df.loc[("total", "transactive_energy_purchased"), "sum"]
-            )
-            DSO_Cash_Flows["Revenues"]["RetailSales"]["TransactiveSales"] = {
-                "TransactiveDAEnergyCharges": billsum_df.loc[("total", "transactive_DA_energy_charge"), "sum"] / 1000, # $k
-                "TransactiveRTEnergyCharges": billsum_df.loc[("total", "transactive_RT_energy_charge"), "sum"] / 1000, # $k
-                "TransactiveFixedCharges": billsum_df.loc[("total", "transactive_fixed_charge"), "sum"] / 1000, # $k
-                "TransactiveVolumetricCharges": billsum_df.loc[("total", "transactive_volumetric_charge"), "sum"] / 1000, # $k
-            }
-        elif rate_scenario == "dsot":
-            DSO_Revenues_and_Energy_Sales["RetailSales"]["DSOTSales"] = {
-                "DSOTSalesRes": {
-                    "DSOTEnergySalesRes": billsum_df.loc[("residential", "dsot_energy_purchased"), "sum"] / 1000, # MW-hr/year
-                    "DSOTDAEnergyChargesRes": billsum_df.loc[("residential", "dsot_DA_energy_charge"), "sum"] / 1000, # $k
-                    "DSOTRTEnergyChargesRes": billsum_df.loc[("residential", "dsot_RT_energy_charge"), "sum"] / 1000, # $k
-                    "DSOTFixedChargesRes": billsum_df.loc[("residential", "dsot_fixed_charge"), "sum"] / 1000, # $k
-                    "DSOTVolumetricChargeRes": billsum_df.loc[("residential", "dsot_volumetric_charge"), "sum"] / 1000, # $k
-                    "DSOTAveragePriceRes": billsum_df.loc[("residential", "dsot_average_price"), "sum"], # $/kW-hr
-                },
-                "DSOTSalesComm": {
-                    "DSOTEnergySalesComm": billsum_df.loc[("commercial", "dsot_energy_purchased"), "sum"] / 1000, # MW-hr/year
-                    "DSOTDAEnergyChargesComm": billsum_df.loc[("commercial", "dsot_DA_energy_charge"), "sum"] / 1000, # $k
-                    "DSOTRTEnergyChargesComm": billsum_df.loc[("commercial", "dsot_RT_energy_charge"), "sum"] / 1000, # $k
-                    "DSOTFixedChargesComm": billsum_df.loc[("commercial", "dsot_fixed_charge"), "sum"] / 1000, # $k
-                    "DSOTVolumetricChargeComm": billsum_df.loc[("commercial", "dsot_volumetric_charge"), "sum"] / 1000, # $k
-                    "DSOTAveragePriceComm": billsum_df.loc[("commercial", "dsot_average_price"), "sum"], # $/kW-hr
-                },
-                "DSOTSalesInd": {
-                    "DSOTEnergySalesInd": billsum_df.loc[("industrial", "dsot_energy_purchased"), "sum"] / 1000, # MW-hr/year
-                    "DSOTDAEnergyChargesInd": billsum_df.loc[("industrial", "dsot_DA_energy_charge"), "sum"] / 1000, # $k
-                    "DSOTRTEnergyChargesInd": billsum_df.loc[("industrial", "dsot_RT_energy_charge"), "sum"] / 1000, # $k
-                    "DSOTFixedChargesInd": billsum_df.loc[("industrial", "dsot_fixed_charge"), "sum"] / 1000, # $k
-                    "DSOTVolumetricChargeInd": billsum_df.loc[("industrial", "dsot_volumetric_charge"), "sum"] / 1000, # $k
-                    "DSOTAveragePriceInd": billsum_df.loc[("industrial", "dsot_average_price"), "sum"], # $/kW-hr
-                },
-            }
-            DSO_Revenues_and_Energy_Sales["EnergySold"] += billsum_df.loc[("total", "dsot_energy_purchased"), "sum"] / 1000 # Energy Sold in MW-hr
-            for m in billsum_df:
-                if m != "sum":
-                    DSO_Revenues_and_Energy_Sales["EnergySoldMonthly"][m] += billsum_df.loc[("total", "dsot_energy_purchased"), m] / 1000
-            DSO_Revenues_and_Energy_Sales["RequiredRevenue"] += billsum_df.loc[("total", "dsot_total_charge"), "sum"] / 1000 # Energy charges in $k
-            DSO_Revenues_and_Energy_Sales["EffectiveCostRetailEnergy"] = (
-                billsum_df.loc[("total", "flat_total_charge"), "sum"]
-                + billsum_df.loc[("total", "dsot_total_charge"), "sum"]
-            ) / (
-                billsum_df.loc[("total", "flat_energy_purchased"), "sum"]
-                + billsum_df.loc[("total", "dsot_energy_purchased"), "sum"]
-            )
-            DSO_Cash_Flows["Revenues"]["RetailSales"]["DSOTSales"] = {
-                "DSOTDAEnergyCharges": billsum_df.loc[("total", "dsot_DA_energy_charge"), "sum"] / 1000, # $k
-                "DSOTRTEnergyCharges": billsum_df.loc[("total", "dsot_RT_energy_charge"), "sum"] / 1000, # $k
-                "DSOTFixedCharges": billsum_df.loc[("total", "dsot_fixed_charge"), "sum"] / 1000, # $k
-                "DSOTVolumetricCharges": billsum_df.loc[("total", "dsot_volumetric_charge"), "sum"] / 1000, # $k
-            }
+    # Calculate any mismatch in revenue versus expenses
+    if rate_scenario in ["time-of-use", "subscription"]:
+        dso_expenses = sum(dso_expenses.values())
+
+    surplus = (DSO_Revenues_and_Energy_Sales["RequiredRevenue"]*1000 - dso_expenses) / dso_expenses * 100
 
     return DSO_Cash_Flows, DSO_Revenues_and_Energy_Sales, tariff, surplus
 

@@ -304,7 +304,7 @@ def customer_CFS(GLD_metadata,
             })
 
         elif rate_scenario == "dsot":
-            PurchasesDyn = dso_helper.returnDictSum(customer_bill['BillsTransactive']['PurchasesDyn'])
+            # PurchasesDyn = dso_helper.returnDictSum(customer_bill['BillsTransactive']['PurchasesDyn'])
             DAEnergy = customer_bill['BillsTransactive']['PurchasesDyn']['DAEnergy']
             RTEnergy = customer_bill['BillsTransactive']['PurchasesDyn']['RTEnergy']
             DistCharges = customer_bill['BillsTransactive']['DistCharges']
@@ -317,6 +317,38 @@ def customer_CFS(GLD_metadata,
                 'RTEnergy': RTEnergy,
                 'DistCharges': DistCharges,
                 'ConnChargesDyn': ConnChargesDyn
+            })
+
+        elif rate_scenario == "transactive":
+            # PurchasesDyn = dso_helper.returnDictSum(customer_bill['BillsTransactive']['PurchasesDyn'])
+            DAEnergy = customer_bill['BillsTransactive']['PurchasesDyn']['DAEnergy']
+            RTEnergy = customer_bill['BillsTransactive']['PurchasesDyn']['RTEnergy']
+            DistCharges = customer_bill['BillsTransactive']['DistCharges']
+            ConnChargesDyn = customer_bill['BillsTransactive']['ConnChargesDyn']
+            BillsTransactive = customer_bill['BillsTransactive']['TotalDyn']
+
+            Customer_Cash_Flows_csv.update({
+                'BillsTransactive': BillsTransactive,
+                'DAEnergy': DAEnergy,
+                'RTEnergy': RTEnergy,
+                'DistCharges': DistCharges,
+                'ConnChargesDyn': ConnChargesDyn
+            })
+
+        elif rate_scenario == "subscription":
+            # PurchasesDyn = dso_helper.returnDictSum(customer_bill['BillsTransactive']['PurchasesDyn'])
+            EnergySub = customer_bill['BillsSubscription']['PurchasesSub']['EnergySub']
+            EnergyDevSub = customer_bill['BillsSubscription']['PurchasesSub']['EnergyDeviationSub']
+            DemandChargesSub = customer_bill['BillsSubscription']['DemandChargesSub']
+            ConnChargesSub = customer_bill['BillsSubscription']['ConnChargesSub']
+            BillsSub = customer_bill['BillsSubscription']['TotalSub']
+
+            Customer_Cash_Flows_csv.update({
+                'BillsSubscription': BillsSub,
+                'EnergySub': EnergySub,
+                'EnergyDeviationSub': EnergyDevSub,
+                'DistCharges': DemandChargesSub,
+                'ConnChargesDyn': ConnChargesSub
             })
 
         return Customer_Cash_Flows_dict, Customer_Cash_Flows_csv

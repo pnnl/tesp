@@ -30,7 +30,8 @@ dependencies = [
     "pyjson5~=1.6.7",
     "PYPOWER==5.1.16",
     "pyutilib==6.0.0",
-    "Pyomo==6.5.0"
+    "Pyomo==6.5.0",
+    "psst~=0.1.1a0"
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -53,9 +54,6 @@ Repository = "https://github.com/pnnl/tesp"
 
 [tool.setuptools.packages.find]
 where = [".","tesp_support"]
-
-[tool.setuptools.dynamic]
-version = {attr = "tesp_support.__version__"}
 
 [tool.setuptools.package-data]
 api = ["*"]

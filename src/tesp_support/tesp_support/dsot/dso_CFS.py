@@ -338,7 +338,7 @@ def dso_CFS(
             * metadata_general["ACCF"]["grid_assets"]["transmission_owner"]["transmission_infrastructure"]
             * metadata_general["transmission_capital_benefit_factor"]
             * (
-                pd.to_datetime(m + " 1, 2016", infer_datetime_format=True).days_in_month
+                pd.to_datetime(m + " 1, 2016").days_in_month
                 / 366
             )
         )
@@ -819,7 +819,7 @@ def dso_CFS(
     CapitalExpensesMonthly = {}
     for m in months:
         CapitalExpensesMonthly[m] = CapitalExpenses * (
-            pd.to_datetime(m + " 1, 2016", infer_datetime_format=True).days_in_month
+            pd.to_datetime(m + " 1, 2016").days_in_month
             / 366
         )
 
@@ -869,7 +869,7 @@ def dso_CFS(
             + WhISOMonthly[m]
             + WhLosses
             * (
-                pd.to_datetime(m + " 1, 2016", infer_datetime_format=True).days_in_month
+                pd.to_datetime(m + " 1, 2016").days_in_month
                 / 366
             )
         )
@@ -891,7 +891,7 @@ def dso_CFS(
                 + Space
             )
             * (
-                pd.to_datetime(m + " 1, 2016", infer_datetime_format=True).days_in_month
+                pd.to_datetime(m + " 1, 2016").days_in_month
                 / 366
             )
         )

@@ -2,18 +2,10 @@
 
 import setuptools
 
-
-# Get the version from the "version" file which is an output from "stamp.sh"
-version = open("version", 'r').readline().strip()
-
-# Set the long-description string which is used by PyPI for the project
-# description on the webpage for the package.
-from pathlib import Path
-this_directory = Path(__file__).parent
-long_description = (this_directory / "README.rst").read_text()
-long_description += (this_directory / "CHANGELOG.rst").read_text()
-
 if __name__ == "__main__":
-    setuptools.setup(version=version,
-                     long_description=long_description,
-                     )
+    from pathlib import Path
+    # Get the version and long description
+    version = Path("version").read_text()
+    long_description = Path("README.rst").read_text()
+    long_description += Path("CHANGELOG.rst").read_text()
+    setuptools.setup(version=version, long_description=long_description)

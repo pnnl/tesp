@@ -15,8 +15,3 @@ Example:
         import tesp_support.api.tso_PYPOWER as tesp
         tesp.tso_pypower_loop('te30_pp.json','TE_Challenge', helicsConfig='tso.json')
 """
-# Get the version from the "version" file which is an output from "stamp.sh"
-import os.path
-version_file_path = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'version'))
-version = open(version_file_path, 'r').readline().strip()
-__version__ = version

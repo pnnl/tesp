@@ -12,6 +12,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import bisect
+import re
 
 plt.switch_backend('Agg')
 cache_output = {}
@@ -44,16 +46,30 @@ def tic():
     toc(False)
 
 
-def load_json(dir_path, file_name):
-    """ Utility to open Json files."""
+def load_json(dir_path, file_name, use_cache=True):
+    """ Utility to open Json files.
+    Args:
+        dir_path (str): location of json file
+        filename (str): name json file
+        use_cache (bool): set true to use cache.  False to avoid cache (important to use for
+        files updated and accessed multiple times in analysis - e.g., TOU_parameters)
+
+    Returns:
+        output: json file contents
+    """
     name = os.path.join(dir_path, file_name)
-    try:
-        cache = cache_output[name]
-        return cache
-    except:
+    if use_cache:
+        try:
+            cache = cache_output[name]
+            return cache
+        except:
+            with open(name) as json_file:
+                cache_output[name] = json.load(json_file)
+        return cache_output[name]
+    else:
         with open(name) as json_file:
-            cache_output[name] = json.load(json_file)
-    return cache_output[name]
+            output = json.load(json_file)
+        return output
 
 
 def get_date(dir_path, dso, day):
@@ -193,9 +209,20 @@ def load_gen_data(dir_path, gen_name, day_range):
                           'da_lmp': 'LMP_',
                           'da_gen': 'ClearQ_',
                           'da_line': 'Line_'}
-            dso_list = data_df.loc[(clear_time), :].index.tolist()
+            dso_list = data_df.index.unique(level=1).tolist()
             # Reduce raw data to day range of interest and reshape/flatten
             data_df = data_df.loc[start_time:stop_time, :]
+
+            #Issue with da_gen with missing data entries.
+            if gen_name in ['da_gen']:
+                idx = pd.MultiIndex.from_product([data_df.index.unique(level=0), data_df.index.unique(level=1)])
+                missing_values = len(idx.difference(data_df.index))
+                if missing_values != 0:
+                    data_df.index.difference(idx)
+                    data_df = data_df.reindex(idx, fill_value=0.0)
+                    print('WARNING: '+ str(missing_values) +' index values missing from ' + filename + ' located in ' + dir_path + \
+                          '. Missing values replaced with zero.')
+
             frame_size = len(data_df) * len(data_df.columns)
             test = np.reshape(data_df.values, frame_size)
 
@@ -597,6 +624,47 @@ def load_system_data(dir_path, folder_prefix, dso_num, day_num, system_name):
         # system_df = system_df.set_index(['date'])
         # system_df = system_df.loc[start_time:stop_time]
     return system_meta_df, system_df
+
+
+def load_surcharge_data(dir_path, gen_name, day_range):
+
+    # Open the file in read mode
+    with open(dir_path + '/tso.log', 'r') as file:
+        log_file_data = file.read()
+
+    # log_file_data = 'INFO:root:   Surcharge: [11.48, 10.59, 10.68, 10.59, 10.59, 10.59, 10.59, 10.77, 10.59, 10.59, 10.59, 12.1, 11.85, 12.75, 12.76, 13.3, 13.27, 13.8, 13.86, 13.6, 12.45, 10.86, 11.33, 10.7]'
+
+    # Use regular expression to find all numerical values after "Surcharge: ["
+    surcharge_matches = re.findall(r"Surcharge:\s*\[([0-9.,\s]+)\]", log_file_data)
+
+    # Initialize a list to hold all individual surcharge lists
+    all_surcharges = []
+
+    # Iterate through each match and split the numbers inside the brackets
+    day = 0
+    for match in surcharge_matches:
+        day += 1
+        # Split the string of numbers by commas and convert to a list of floats
+        values = [float(value.strip()) for value in match.split(',')]
+        if day >= day_range[0] and day <= day_range[-1]:
+            all_surcharges += values
+
+    # Determine first day of simulation and resulting slice to take
+    case_config = load_json(dir_path, 'generate_case_config.json')
+    sim_start = datetime.strptime(case_config['StartTime'], '%Y-%m-%d %H:%M:%S')
+    start_time = sim_start + timedelta(days=int(day_range[0]) - 1)
+    stop_time = start_time + (day_range[-1] - day_range[0] + 1) * timedelta(days=1) - timedelta(minutes=5)
+
+    # Create bespoke index arrays
+    dates = []
+    for day in day_range:
+        arr = np.array([sim_start + timedelta(days=1) * (day - 1) + timedelta(hours=i) for i in range(24)])
+        dates += arr.tolist()
+
+    adder_df = pd.DataFrame(index=dates, columns=[' Adder'])
+    adder_df[' Adder'] = all_surcharges
+
+    return adder_df
 
 
 def get_house_schedules(agent_metadata, gld_metadata, house_name):
@@ -1646,6 +1714,82 @@ def der_stack_plot(dso_range, day_range, metadata_path, case, comp=None, plot_re
     plt.savefig(file_path_fig, bbox_inches='tight')
 
 
+def subscription_plot(dso, day_range, metadata_path, case, demand_case):
+    """  Plots comparison of subscription load and base demand load (as well as price comparison).
+    Args:
+        dso (int): the DSO range that should be plotted.
+        day_range (range): the day range to plotted.
+        metadata_path (str): path of folder containing metadata
+        case (str): folder extension of case of interest
+        comp (str): folder extension for reference case to be plotted in comparison
+    Returns:
+        saves hdf and csv data files of combined dso data
+        saves DER stack plot to file
+        """
+    # Load generate_case_config
+    case_config = load_json(case, 'generate_case_config.json')
+    # Load ERCOT load profile data
+    metadata_file = os.path.join(metadata_path, case_config['refLoadMn'][5].split('/')[-1])
+    sim_start = datetime.strptime(case_config['StartTime'], '%Y-%m-%d %H:%M:%S')
+    ercot_df = load_ercot_data(metadata_file, sim_start, day_range)
+
+    demand_df = pd.read_hdf(case + '/Substation_' + str(dso) + '/Substation_'
+                                + str(dso) + '_demand_by_meter.h5', key='demand', mode='r')
+
+    basedemand_df = pd.read_hdf(demand_case + '/Substation_' + str(dso) + '/Substation_'
+                                + str(dso) + '_baseline_demand_by_meter.h5', key='demand', mode='r')
+
+    start_time = sim_start + timedelta(days=day_range[0] - 1)
+    stop_time = sim_start + timedelta(days=day_range[-1]) - timedelta(minutes=5)
+    # der_df = der_df.groupby(['time']).sum()
+    demand_df = demand_df.loc[start_time:stop_time, :]
+
+    # if der_df.index[-1] < stop_time:
+    #     raise Exception('DER stack plot data not available for ' + str(stop_time) + ".")
+
+    # Determine total customer base demand (subscription value) ensuring to use scaling factor and correct for kW-to-MW
+    demand_df['sum'] = demand_df.sum(axis=1)*case_config['DSO'][int(dso)-1][2]/1000
+    basedemand_df['sum'] = basedemand_df.sum(axis=1)*case_config['DSO'][int(dso)-1][2]/1000
+    basedemand_df = basedemand_df.loc[start_time:stop_time, :]
+
+    output_df = demand_df[['sum']]
+    output_df = output_df.rename(columns={'sum': 'Total Load'})
+    output_df['Block Load'] = basedemand_df[['sum']]
+
+    # if basedemand_df.index[-1] < stop_time:
+    #     raise Exception('Customer baseline demand data not available for ' + str(stop_time) + ".")
+
+    # Plot Building Stacked Chart with ERCOT and Substation loads for reference
+    plt.figure(figsize=(15, 10))
+    plt.plot(demand_df.index, demand_df['sum'], label='Total Customer Demand', color='black')
+    plt.plot(basedemand_df.index, basedemand_df['sum'], label='Total Customer Subscriptions', color='red')
+
+    large_font = True
+    if large_font:
+        tick_font = 17
+        label_font = 32
+        legend_font = 24
+    else:
+        tick_font = 17
+        label_font = 25
+        legend_font = 17
+
+    plt.legend(loc='lower left', prop={'size': legend_font})
+    # plt.legend(loc='lower left', prop={'size': legend_font}, ncol=2)
+    plt.xlabel('Time', size=label_font)
+    plt.ylabel('Load (MW)', size=label_font)
+    plt.ylim(top=30000, bottom=0)
+    ax = plt.gca()
+    ax.tick_params(axis='both', which='major', labelsize=tick_font)
+    # plt.title('DSO load profile by end-load type (ALL DSOs)', size=20)
+    plot_filename = datetime.now().strftime(
+        '%Y%m%d') + 'Subscription_plot_DSO_' + demand_df.index[0].strftime('%m-%d') + '.png'
+    file_path_fig = os.path.join(case, 'plots', plot_filename)
+    plt.savefig(file_path_fig, bbox_inches='tight')
+
+    output_df.to_csv(path_or_buf=case + '/plots/Subscription_plot_data_' + output_df.index[0].strftime('%m-%d') + '.csv')
+
+
 def daily_load_plots(dso, system, subsystem, variable, day, case, comp, agent_prefix, gld_prefix):
     """
     For a specified dso, system, variable, and day this function will load in the required data, plot the daily
@@ -2526,19 +2670,19 @@ def dso_load_stats(dso_range, month_list, data_path, metadata_path, plot=False):
         plt.savefig(file_path_fig, bbox_inches='tight')
 
         #  Daily Load Values and Range Box Plot (side-by-side comparison)
-        comparison_df = dso_total_df[['Total Load', 'Month']]
+        comparison_df = dso_total_df[['Total Load', 'Month']].copy()
         comparison_df['Case'] = 'DSO+T'
-        compare2_df = dso_total_df[['ERCOT Net Load', 'Month']]
+        compare2_df = dso_total_df[['ERCOT Net Load', 'Month']].copy()
         compare2_df['Case'] = 'ERCOT'
         compare2_df.rename(columns={'ERCOT Net Load': 'Total Load'}, inplace=True)
-        comparison_df = pd.concat([compare2_df, comparison_df])
+        comparison_df = pd.concat([compare2_df, comparison_df]).reset_index(drop=True)
 
-        range_compare_df = dso_daily_range_df[['Total Load', 'Month']]
+        range_compare_df = dso_daily_range_df[['Total Load', 'Month']].copy()
         range_compare_df['Case'] = 'DSO+T'
-        range_compare2_df = dso_daily_range_df[['ERCOT Net Load', 'Month']]
+        range_compare2_df = dso_daily_range_df[['ERCOT Net Load', 'Month']].copy()
         range_compare2_df['Case'] = 'ERCOT'
         range_compare2_df.rename(columns={'ERCOT Net Load': 'Total Load'}, inplace=True)
-        range_compare_df = pd.concat([range_compare2_df, range_compare_df])
+        range_compare_df = pd.concat([range_compare2_df, range_compare_df]).reset_index(drop=True)
 
         fig, axes = plt.subplots(2, 1, figsize=(11, 10), sharex=True)
         pal = ["gold"] + ['skyblue']
@@ -2580,7 +2724,7 @@ def non_participating_dso_loads(dso_range, case, metadata_path):
     case_config = load_json(case, 'generate_case_config.json')
     # Load ERCOT load profile data
     dso_load_file = os.path.join(metadata_path, case_config['refLoadMn'][5].split('/')[-1])
-    dso_load_profiles = pd.read_csv(dso_load_file, index_col='Seconds', parse_dates=True)
+    dso_load_profiles = pd.read_csv(dso_load_file, index_col='Seconds', parse_dates=True, date_format='%Y-%m-%d %H:%M:%S')
 
     start_time = datetime.strptime("2015-12-29 00:00:00", '%Y-%m-%d %H:%M:%S')
     arr = np.array([start_time + timedelta(seconds=float(i)) for i in dso_load_profiles.index.values])
@@ -2632,11 +2776,12 @@ def dso_lmp_stats(month_list, output_path, renew_forecast_file, dso_range):
 
     ames_lmps_df['NetLoad'] = ames_lmps_df[' TotalLoad'] - ames_lmps_df[' TotRenGen']
     lmp_cols = [col for col in ames_lmps_df.columns if 'LMP' in col]
-    cols = [' TotalLoad', ' TotalGen', 'NetLoad', ' Adder'] + lmp_cols
+    cols = [' TotalLoad', ' TotalGen', 'NetLoad'] + lmp_cols
     # dso_lmps_df = dso_lmps_df.join(ames_lmps_df[cols])
 
     # Check to see if Adder was used (for example in Rob and Don method) - if so correct LMPs - e.g. remove adder).
     if any(ames_lmps_df.columns.str.contains('Adder')):
+        cols = cols + [' Adder']
         for column in ames_lmps_df.columns:
             if 'LMP' in column:
                 ames_lmps_df[column] = ames_lmps_df[column] - ames_lmps_df[' Adder']
@@ -2647,8 +2792,11 @@ def dso_lmp_stats(month_list, output_path, renew_forecast_file, dso_range):
     ames_lmps_df.index.set_names(['seconds'], inplace=True)
     ames_lmps_df.to_csv(path_or_buf=output_path + '/opf.csv')
 
-    # Aggregate all the monthly data for RT loads and LMPs
+    # Aggregate all the monthly data for DA, generation, loads and LMPs
     for i in range(len(month_list)):
+        # Load da_gen
+        da_gen_data_df = load_gen_data(month_list[i][1], 'da_gen', range(month_list[i][2], month_list[i][3]))
+
         # Load da_q and da_lmp
         ames_da_q_df = load_gen_data(month_list[i][1], 'da_q', range(month_list[i][2], month_list[i][3]))
         ames_da_q_df = ames_da_q_df.unstack(level=1)
@@ -2658,10 +2806,20 @@ def dso_lmp_stats(month_list, output_path, renew_forecast_file, dso_range):
         ames_da_lmp_df = ames_da_lmp_df.unstack(level=1)
         ames_da_lmp_df.columns = ames_da_lmp_df.columns.droplevel()
 
+        if any(ames_lmps_df.columns.str.contains('Adder')):
+            # Load Adder
+            adder_m = load_surcharge_data(month_list[i][1], 'da_gen', range(month_list[i][2], month_list[i][3]))
+            if i == 0:
+                adder_df = adder_m
+            else:
+                adder_df = pd.concat([adder_df, adder_m])
+
         if i == 0:
+            da_gen_df = da_gen_data_df
             da_loads_df = ames_da_q_df
             da_lmps_df = ames_da_lmp_df
         else:
+            da_gen_df = pd.concat([da_gen_df, da_gen_data_df])
             da_loads_df = pd.concat([da_loads_df, ames_da_q_df])
             da_lmps_df = pd.concat([da_lmps_df, ames_da_lmp_df])
 
@@ -2669,10 +2827,56 @@ def dso_lmp_stats(month_list, output_path, renew_forecast_file, dso_range):
 
     da_load_cols = [col for col in da_lmps_df.columns if 'da_q' in col]
     da_lmps_df[' TotalLoad'] = da_lmps_df[da_load_cols].sum(axis=1)
+    da_lmps_df['TotalGen'] = da_gen_df.groupby(level=0)['ClearQ'].sum()
 
     # Check to see if Adder was used (for example in Rob and Don method) - if so correct LMPs - e.g. remove adder).
+
     if any(ames_lmps_df.columns.str.contains('Adder')):
-        da_lmps_df[' Adder'] = ames_lmps_df[' Adder']
+        da_lmps_df[' Adder'] = adder_df
+
+        file = '/'.join(renew_forecast_file.split('/')[:-1])
+        adder_curve_df = pd.read_csv(file +'/RandD.csv')
+
+        rd_curve = adder_curve_df['Load curve scaled (MWh)'].tolist()
+        rd_curve.reverse()
+        rd_adder = adder_curve_df['Marginal Quantity Price Surcharge ($/MWh)'].tolist()
+        rd_adder.reverse()
+
+        for t in da_lmps_df.index:
+            generation = da_lmps_df.loc[t, 'TotalGen']
+            # bisection method taken from tso_psst.py
+            ii = bisect.bisect_left(rd_curve, generation)
+            if -1 < ii < len(rd_curve):
+                if generation - rd_curve[ii] < 0.0001:
+                    adder = rd_adder[ii]
+                else:
+                    # interpolation between upper and lower bounds
+                    percent = (generation - rd_curve[ii]) / (rd_curve[ii + 1] - rd_curve[ii])
+                    adder = ((rd_adder[ii + 1] - rd_adder[ii]) * percent) + rd_adder[ii + 1]
+            else:
+                if generation > rd_curve[-1]:
+                    adder = rd_adder[-1]
+                else:
+                    adder = rd_adder[0]
+            da_lmps_df.loc[t, ' Adder-Gen'] = adder
+
+            generation = da_lmps_df.loc[t, ' TotalLoad']
+            # bisection method taken from tso_psst.py
+            ii = bisect.bisect_left(rd_curve, generation)
+            if -1 < ii < len(rd_curve):
+                if generation - rd_curve[ii] < 0.0001:
+                    adder = rd_adder[ii]
+                else:
+                    # interpolation between upper and lower bounds
+                    percent = (generation - rd_curve[ii]) / (rd_curve[ii + 1] - rd_curve[ii])
+                    adder = ((rd_adder[ii + 1] - rd_adder[ii]) * percent) + rd_adder[ii + 1]
+            else:
+                if generation > rd_curve[-1]:
+                    adder = rd_adder[-1]
+                else:
+                    adder = rd_adder[0]
+            da_lmps_df.loc[t, ' Adder-Load'] = adder
+
         for column in da_lmps_df.columns:
             if 'lmp' in column:
                 da_lmps_df[column] = da_lmps_df[column] - da_lmps_df[' Adder']
@@ -2683,8 +2887,12 @@ def dso_lmp_stats(month_list, output_path, renew_forecast_file, dso_range):
     da_lmps_df = pd.merge(da_lmps_df, renew_forecast[['TotalRenewGen']], left_index=True, right_index=True)
     da_lmps_df['NetLoad'] = da_lmps_df[' TotalLoad'] - da_lmps_df['TotalRenewGen']
     # narrow down to only modeled DSOs + system load data
-    dso_cols = ['da_lmp'+str(dso) for dso in dso_range] + ['da_q'+str(dso) for dso in dso_range] \
-               + [' TotalLoad', 'TotalRenewGen', 'NetLoad', ' Adder']
+    if any(ames_lmps_df.columns.str.contains('Adder')):
+        dso_cols = ['da_lmp'+str(dso) for dso in dso_range] + ['da_q'+str(dso) for dso in dso_range] \
+                    + [' TotalLoad', 'TotalGen', 'TotalRenewGen', 'NetLoad', ' Adder', ' Adder-Gen', ' Adder-Load']
+    else:
+        dso_cols = ['da_lmp'+str(dso) for dso in dso_range] + ['da_q'+str(dso) for dso in dso_range] \
+                    + [' TotalLoad', 'TotalGen', 'TotalRenewGen', 'NetLoad']
     da_lmps_df[dso_cols].to_csv(path_or_buf=output_path + '/Annual_DA_LMP_Load_data.csv')
 
     # Determine Annual RT LMP Stats
@@ -2735,37 +2943,38 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
     rt_lmps_df = rt_lmps_df.set_index(pd.to_datetime(rt_lmps_df.index))
     rt_lmps_df['Month'] = rt_lmps_df.index.month
 
-    da_lmps_daily_df = pd.Series.to_frame(da_lmps_df['da_lmp' + dso_num].groupby(pd.Grouper(freq='D')).max()
-                                          - da_lmps_df['da_lmp' + dso_num].groupby(pd.Grouper(freq='D')).min())
-    da_lmps_daily_df['stdev'] = da_lmps_df['da_lmp' + dso_num].groupby(pd.Grouper(freq='D')).std()
+    da_lmps_daily_df = pd.Series.to_frame(da_lmps_df['da_lmp' + str(dso_num)].groupby(pd.Grouper(freq='D')).max()
+                                          - da_lmps_df['da_lmp' + str(dso_num)].groupby(pd.Grouper(freq='D')).min())
+    da_lmps_daily_df['stdev'] = da_lmps_df['da_lmp' + str(dso_num)].groupby(pd.Grouper(freq='D')).std()
     da_lmps_daily_df['Month'] = da_lmps_daily_df.index.month
-    da_lmps_daily_df.dropna(subset=['da_lmp' + dso_num], inplace=True)
+    da_lmps_daily_df.dropna(subset=['da_lmp' + str(dso_num)], inplace=True)
 
-    rt_lmps_daily_df = pd.Series.to_frame(rt_lmps_df[' LMP' + dso_num].groupby(pd.Grouper(freq='D')).max()
-                                          - rt_lmps_df[' LMP' + dso_num].groupby(pd.Grouper(freq='D')).min())
-    rt_lmps_daily_df['stdev'] = rt_lmps_df[' LMP' + dso_num].groupby(pd.Grouper(freq='D')).std()
+    rt_lmps_daily_df = pd.Series.to_frame(rt_lmps_df[' LMP' + str(dso_num)].groupby(pd.Grouper(freq='D')).max()
+                                          - rt_lmps_df[' LMP' + str(dso_num)].groupby(pd.Grouper(freq='D')).min())
+    rt_lmps_daily_df['stdev'] = rt_lmps_df[' LMP' + str(dso_num)].groupby(pd.Grouper(freq='D')).std()
     rt_lmps_daily_df['Month'] = rt_lmps_daily_df.index.month
-    rt_lmps_daily_df.dropna(subset=[' LMP' + dso_num], inplace=True)
+    rt_lmps_daily_df.dropna(subset=[' LMP' + str(dso_num)], inplace=True)
 
     # Create summary comparison plots of simulation LMP versus actual data.
     stats = True
     # TODO: Add default mode that does not compare to real data
-    ERCOTDApricerange = pd.read_hdf(data_path + '/ERCOT_LMP.h5', key='DADeltaLMP_data', mode='r')
-    ERCOTDAPrices = pd.read_hdf(data_path + '/ERCOT_LMP.h5', key='DALMP_data', mode='r')
+    data = os.path.expandvars('$TESPDIR/examples/analysis/dsot/data')
+    ERCOTDApricerange = pd.read_hdf(os.path.join(data, 'ERCOT_LMP.h5'), key='DADeltaLMP_data', mode='r')
+    ERCOTDAPrices = pd.read_hdf(os.path.join(data, 'ERCOT_LMP.h5'), key='DALMP_data', mode='r')
 
-    ERCOTRTpricerange = pd.read_hdf(data_path + '/ERCOT_LMP.h5', key='RTDeltaLMP_data', mode='r')
-    ERCOTRTPrices = pd.read_hdf(data_path + '/ERCOT_LMP.h5', key='RTLMP_data', mode='r')
+    ERCOTRTpricerange = pd.read_hdf(os.path.join(data, 'ERCOT_LMP.h5'), key='RTDeltaLMP_data', mode='r')
+    ERCOTRTPrices = pd.read_hdf(os.path.join(data, 'ERCOT_LMP.h5'), key='RTLMP_data', mode='r')
 
-    CAISODApricerange = pd.read_hdf(data_path + '/CAISO_LMP.h5', key='DADeltaLMP_data', mode='r')
-    CAISODAPrices = pd.read_hdf(data_path + '/CAISO_LMP.h5', key='DALMP_data', mode='r')
+    CAISODApricerange = pd.read_hdf(os.path.join(data, 'CAISO_LMP.h5'), key='DADeltaLMP_data', mode='r')
+    CAISODAPrices = pd.read_hdf(os.path.join(data, 'CAISO_LMP.h5'), key='DALMP_data', mode='r')
 
-    PJMDApricerange = pd.read_hdf(data_path + '/PJM_LMP.h5', key='DADeltaLMP_data', mode='r')
-    PJMDAPrices = pd.read_hdf(data_path + '/PJM_LMP.h5', key='DALMP_data', mode='r')
+    PJMDApricerange = pd.read_hdf(os.path.join(data, 'PJM_LMP.h5'), key='DADeltaLMP_data', mode='r')
+    PJMDAPrices = pd.read_hdf(os.path.join(data, 'PJM_LMP.h5'), key='DALMP_data', mode='r')
 
-    PJMRTpricerange = pd.read_hdf(data_path + '/PJM_LMP.h5', key='RTDeltaLMP_data', mode='r')
-    PJMRTPrices = pd.read_hdf(data_path + '/PJM_LMP.h5', key='RTLMP_data', mode='r')
+    PJMRTpricerange = pd.read_hdf(os.path.join(data, 'PJM_LMP.h5'), key='RTDeltaLMP_data', mode='r')
+    PJMRTPrices = pd.read_hdf(os.path.join(data, 'PJM_LMP.h5'), key='RTLMP_data', mode='r')
 
-    ERCOT_LMP_DELTA = pd.read_excel(data_path + '/DAM_2016.xlsx', sheet_name='LMP Delta')
+    ERCOT_LMP_DELTA = pd.read_excel(os.path.join(data, 'DAM_2016.xlsx'), sheet_name='LMP Delta')
 
     # =========== Create box plots 1- DA spread ===========================
 
@@ -2861,8 +3070,8 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
 
     # =========== Create DA LMP value and range plot - all cases side by side ===========================
 
-    lmp_comparison_df = da_lmps_df[['da_lmp' + dso_num, 'Month']]
-    lmp_comparison_df.rename(columns={'da_lmp' + dso_num: 'DA LMP'}, inplace=True)
+    lmp_comparison_df = da_lmps_df[['da_lmp' + str(dso_num), 'Month']]
+    lmp_comparison_df.rename(columns={'da_lmp' + str(dso_num): 'DA LMP'}, inplace=True)
     lmp_comparison_df['Case'] = 'DSO+T'
     ERCOTcompare_df = ERCOTDAPrices[['Houston $_mwh', 'Month']]
     ERCOTcompare_df['Case'] = 'ERCOT'
@@ -2875,8 +3084,8 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
     CALISOcompare_df.rename(columns={'LMP_PRC': 'DA LMP'}, inplace=True)
     lmp_comparison_df = pd.concat([CALISOcompare_df, PJMcompare_df, ERCOTcompare_df, lmp_comparison_df])
 
-    rangelmp_comparison_df = da_lmps_daily_df[['da_lmp' + dso_num, 'Month']]
-    rangelmp_comparison_df.rename(columns={'da_lmp' + dso_num: 'DA LMP'}, inplace=True)
+    rangelmp_comparison_df = da_lmps_daily_df[['da_lmp' + str(dso_num), 'Month']]
+    rangelmp_comparison_df.rename(columns={'da_lmp' + str(dso_num): 'DA LMP'}, inplace=True)
     # rangelmp_comparison_df['DA LMP STD'] = da_lmps_daily_df['stdev']
     rangelmp_comparison_df['Case'] = 'DSO+T'
     rangeERCOTcompare_df = ERCOTDApricerange[['Houston $_mwh', 'Month']]
@@ -2931,8 +3140,8 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
 
     # =========== Create RT LMP value and range plot - all cases side by side ===========================
 
-    lmp_rt_comparison_df = rt_lmps_df[[' LMP' + dso_num, 'Month']]
-    lmp_rt_comparison_df.rename(columns={' LMP' + dso_num: 'RT LMP'}, inplace=True)
+    lmp_rt_comparison_df = rt_lmps_df[[' LMP' + str(dso_num), 'Month']]
+    lmp_rt_comparison_df.rename(columns={' LMP' + str(dso_num): 'RT LMP'}, inplace=True)
     lmp_rt_comparison_df['Case'] = 'DSO+T'
     ERCOTRTcompare_df = ERCOTRTPrices[['Houston $_mwh', 'Month']]
     ERCOTRTcompare_df['Case'] = 'ERCOT'
@@ -2943,8 +3152,8 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
     # NOTE CALISO RT LMP data not available for 2016 or 2017.
     lmp_rt_comparison_df = pd.concat([PJMRTcompare_df, ERCOTRTcompare_df, lmp_rt_comparison_df])
 
-    range_rt_lmp_comparison_df = rt_lmps_daily_df[[' LMP' + dso_num, 'Month']]
-    range_rt_lmp_comparison_df.rename(columns={' LMP' + dso_num: 'RT LMP'}, inplace=True)
+    range_rt_lmp_comparison_df = rt_lmps_daily_df[[' LMP' + str(dso_num), 'Month']]
+    range_rt_lmp_comparison_df.rename(columns={' LMP' + str(dso_num): 'RT LMP'}, inplace=True)
     range_rt_lmp_comparison_df['RT LMP STD'] = rt_lmps_daily_df['stdev']
     range_rt_lmp_comparison_df['Case'] = 'DSO+T'
     range_rt_ERCOTcompare_df = ERCOTRTpricerange[['Houston $_mwh', 'Month']]
@@ -3008,7 +3217,7 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
     PJMLDC_data.sort(reverse=False)
     PJMLDC_data = np.array(PJMLDC_data)
 
-    DSOT_data = da_lmps_daily_df['da_lmp' + dso_num].values.tolist()
+    DSOT_data = da_lmps_daily_df['da_lmp' + str(dso_num)].values.tolist()
     DSOT_data.sort(reverse=False)
     DSOT_data = np.array(DSOT_data)
 
@@ -3075,7 +3284,7 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
     PJMLDC_data.sort(reverse=False)
     PJMLDC_data = np.array(PJMLDC_data)
 
-    DSOT_data = da_lmps_df['da_lmp' + dso_num].values.tolist()
+    DSOT_data = da_lmps_df['da_lmp' + str(dso_num)].values.tolist()
     DSOT_data.sort(reverse=False)
     DSOT_data = np.array(DSOT_data)
 
@@ -3138,7 +3347,7 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
     PJMRTLDC_data.sort(reverse=False)
     PJMRTLDC_data = np.array(PJMRTLDC_data)
 
-    DSOT_RT_data = da_lmps_daily_df['da_lmp' + dso_num].values.tolist()
+    DSOT_RT_data = da_lmps_daily_df['da_lmp' + str(dso_num)].values.tolist()
     DSOT_RT_data.sort(reverse=False)
     DSOT_RT_data = np.array(DSOT_RT_data)
 
@@ -3196,7 +3405,7 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
     PJM_RTLMP_LDC_data.sort(reverse=False)
     PJM_RTLMP_LDC_data = np.array(PJM_RTLMP_LDC_data)
 
-    DSOT_RTLMP_data = rt_lmps_df[' LMP' + dso_num].values.tolist()
+    DSOT_RTLMP_data = rt_lmps_df[' LMP' + str(dso_num)].values.tolist()
     DSOT_RTLMP_data.sort(reverse=False)
     DSOT_RTLMP_data = np.array(DSOT_RTLMP_data)
 

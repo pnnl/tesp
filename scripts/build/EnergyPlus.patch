@@ -1,49 +1,17 @@
-diff --git a/cmake/FindFNCS.cmake b/cmake/FindFNCS.cmake
-index cf2dfe483..798356a3e 100644
---- a/cmake/FindFNCS.cmake
-+++ b/cmake/FindFNCS.cmake
-@@ -8,15 +8,18 @@ find_path(
-     HINTS ${PC_FNCS_INCLUDEDIR} ${PC_FNCS_INCLUDE_DIRS}
- )
- message("FNCS_INCLUDE_DIR=${FNCS_INCLUDE_DIR}")
-+
- find_library(
-     FNCS_LIBRARY
-     NAMES fncs
-     HINTS ${PC_FNCS_LIBDIR} ${PC_FNCS_LIBRARY_DIRS}
- )
-+message("PC_FNCS_LIBRARY_DIRS=${PC_FNCS_LIBRARY_DIRS}")
-+message("FNCS_LIBRARY=${FNCS_LIBRARY}")
- 
- find_package(CZMQ)
- if (CZMQ_FOUND)
--    message("CZMQ found in FindFNCS.cmake")
-+    message("CZMQ found")
- endif ()
- 
- set(FNCS_LIBRARIES ${FNCS_LIBRARY} ${CZMQ_LIBRARIES})
 diff --git a/cmake/FindHELICS.cmake b/cmake/FindHELICS.cmake
-index f5374bee5..691274ecd 100644
+index f5374bee5..819893807 100644
 --- a/cmake/FindHELICS.cmake
 +++ b/cmake/FindHELICS.cmake
-@@ -1,34 +1,19 @@
+@@ -1,6 +1,6 @@
  message("inside FindHELICS.cmake")
  include(FindPkgConfig)
 -PKG_CHECK_MODULES(PC_HELICS "helicsSharedLib")# "helicsSharedLibd" "helics-shared" "helics-apps-shared")
--message("PKG_CONFIG_FOUND=${PKG_CONFIG_FOUND}")
--message("PKG_CONFIG_EXECUTABLE=${PKG_CONFIG_EXECUTABLE}")
--message("PKG_CONFIG_VERSION_STRING=${PKG_CONFIG_VERSION_STRING}")
--message("PC_HELICS_FOUND=${PC_HELICS_FOUND}")
--message("PC_HELICS_LIBRARIES=${PC_HELICS_LIBRARIES}")
--message("CMAKE_FRAMEWORK_PATH=${CMAKE_FRAMEWORK_PATH}")
--message("PATH_SUFFIXES=${PATH_SUFFIXES}")
--message("PC_HELICS_INCLUDEDIR=${PC_HELICS_INCLUDEDIR}")
--message("PC_HELICS_INCLUDE_DIRS=${PC_HELICS_INCLUDE_DIRS}")
--message("HELICS_INCLUDE_DIR=${HELICS_INCLUDE_DIR}")
--message("PC_HELICS_LIBDIR=${PC_HELICS_LIBDIR}")
--message("PC_HELICS_LIBRARY_DIRS=${PC_HELICS_LIBRARY_DIRS}")
 +PKG_CHECK_MODULES(PC_HELICS "helics")
-+
+ message("PKG_CONFIG_FOUND=${PKG_CONFIG_FOUND}")
+ message("PKG_CONFIG_EXECUTABLE=${PKG_CONFIG_EXECUTABLE}")
+ message("PKG_CONFIG_VERSION_STRING=${PKG_CONFIG_VERSION_STRING}")
+@@ -15,7 +15,7 @@ message("PC_HELICS_LIBDIR=${PC_HELICS_LIBDIR}")
+ message("PC_HELICS_LIBRARY_DIRS=${PC_HELICS_LIBRARY_DIRS}")
  find_path(
      HELICS_INCLUDE_DIR
 -    NAMES helics#/ValueFederate.hpp #Inputs.hpp Publications.hpp
@@ -51,9 +19,7 @@ index f5374bee5..691274ecd 100644
      HINTS ${PC_HELICS_INCLUDEDIR} ${PC_HELICS_INCLUDE_DIRS}
  )
  message("HELICS_INCLUDE_DIR=${HELICS_INCLUDE_DIR}")
--message("PC_HELICS_LIBDIR=${PC_HELICS_LIBDIR}")
--message("PC_HELICS_LIBRARY_DIRS=${PC_HELICS_LIBRARY_DIRS}")
--message("HELICS_LIBRARY=${HELICS_LIBRARY}")
+@@ -25,7 +25,7 @@ message("HELICS_LIBRARY=${HELICS_LIBRARY}")
  
  find_library(
      HELICS_LIBRARY
@@ -61,10 +27,7 @@ index f5374bee5..691274ecd 100644
 +    NAMES helics
      HINTS ${PC_HELICS_LIBDIR} ${PC_HELICS_LIBRARY_DIRS}
  )
--message("PC_HELICS_LIBDIR=${PC_HELICS_LIBDIR}")
- message("PC_HELICS_LIBRARY_DIRS=${PC_HELICS_LIBRARY_DIRS}")
- message("HELICS_LIBRARY=${HELICS_LIBRARY}")
- 
+ message("PC_HELICS_LIBDIR=${PC_HELICS_LIBDIR}")
 diff --git a/src/EnergyPlus/ExternalInterface.cc b/src/EnergyPlus/ExternalInterface.cc
 index 667e11bff..db7bc42aa 100644
 --- a/src/EnergyPlus/ExternalInterface.cc
