@@ -411,7 +411,7 @@ def load_CFS_delta_data(results_path, comp_path, dso_range, update_data, scale, 
     return data
 
 
-def load_energy_data(results_path, dso_range, update_data, scale, labelvals, calibrate=True):
+def load_energy_data(results_path, dso_range, update_data, scale, labelvals, calibrate=True, mode='Average'):
     """ Initiates and updates Sankey diagram data structure for simulation energy data.
     Args:
         results_path (str): directory path for the case to be analyzed.  Should be run after annual post-processing
@@ -420,6 +420,7 @@ def load_energy_data(results_path, dso_range, update_data, scale, labelvals, cal
         scale (bool): If True scales data to GW from standard MW CFS units
         labelvals (bool): If True adds quantitative values to node labels
         calibrate (bool): If True it squares up values that are typically slightly off in the analysis
+        mode (string): Determines if the power plotted is for annual 'Average' or coincident 'Peak'
     Returns:
         data (dict): Sankey data structure for Plotly Sankey diagram plotting
 """
@@ -427,16 +428,25 @@ def load_energy_data(results_path, dso_range, update_data, scale, labelvals, cal
     path = expandvars("$TESPDIR/examples/analysis/dsot/data")
     data = pt.load_json(path, 'sankey_energy_structure.json')
 
+    if mode == 'Average':
+        load_field = 'Average'
+    elif mode == 'Peak':
+        load_field = 'Coincident Peak'
+
     if update_data:
         # Set default values to zero
         data['data'][0]['link']['value'] = [0] * len(data['data'][0]['link']['value'])
 
         # Load and assign generator data:
         gendata_df = pd.read_csv(results_path + "/generator_statistics_AMES.csv", index_col=[0], dtype=object)
+        if mode == 'Average':
         gendata_df.loc['Capacity (MW)', :] = \
             gendata_df.loc['Capacity (MW)', :].apply(pd.to_numeric, errors='ignore')
         gendata_df.loc['Capacity Factor (-)', :] = \
             gendata_df.loc['Capacity Factor (-)', :].apply(pd.to_numeric, errors='ignore')
+        elif mode == 'Peak':
+            gendata_df.loc['Coincident Peak Power (MW)', :] = \
+                gendata_df.loc['Coincident Peak Power (MW)', :].apply(pd.to_numeric, errors='ignore')
 
         #  Create dictionary of fuel keys and number of first link number
         fuel_key = {'nuc': 4,
@@ -447,16 +457,20 @@ def load_energy_data(results_path, dso_range, update_data, scale, labelvals, cal
 
         for fuel in ['nuc', 'coal', 'gas', 'wind', 'solar']:
             link_id = fuel_key[fuel]
+            if mode == 'Average':
             if gendata_df.loc['Capacity (MW)', fuel] != 0:
                 data['data'][0]['link']['value'][link_id] = gendata_df.loc['Capacity (MW)', fuel] * \
                                                             gendata_df.loc['Capacity Factor (-)', fuel]
+            elif mode == 'Peak':
+                if gendata_df.loc['Coincident Peak Power (MW)', fuel] != 0:
+                    data['data'][0]['link']['value'][link_id] = gendata_df.loc['Coincident Peak Power (MW)', fuel]
 
         # Load Building and DER load totals:
         loaddata_df = pd.read_csv(results_path + "/DSO_load_stats.csv", index_col=[0], dtype=object)
-        loaddata_df.loc['Average', :] = loaddata_df.loc['Average', :].apply(pd.to_numeric, errors='ignore')
-        total_load = loaddata_df.loc['Average', 'Total Load'] + loaddata_df.loc['Average', 'PV']
-        RC_ratio = loaddata_df.loc['Average', 'total_res'] / (
-                    loaddata_df.loc['Average', 'total_comm'] + loaddata_df.loc['Average', 'total_res'])
+        loaddata_df.loc[load_field, :] = loaddata_df.loc[load_field, :].apply(pd.to_numeric, errors='ignore')
+        total_load = loaddata_df.loc[load_field, 'Total Load'] + loaddata_df.loc[load_field, 'PV']
+        RC_ratio = loaddata_df.loc[load_field, 'total_res'] / (
+                    loaddata_df.loc[load_field, 'total_comm'] + loaddata_df.loc[load_field, 'total_res'])
 
         #  Create dictionary of load keys and number of first link number
         load_key = {'total_res': 8,
@@ -471,31 +485,31 @@ def load_energy_data(results_path, dso_range, update_data, scale, labelvals, cal
         for load in load_key.keys():
             link_id = load_key[load]
             if load in ['Plug Loads', 'HVAC Loads']:
-                data['data'][0]['link']['value'][link_id] = loaddata_df.loc['Average', load] * RC_ratio
-                data['data'][0]['link']['value'][link_id + 5] = loaddata_df.loc['Average', load] * (1 - RC_ratio)
+                data['data'][0]['link']['value'][link_id] = loaddata_df.loc[load_field, load] * RC_ratio
+                data['data'][0]['link']['value'][link_id + 5] = loaddata_df.loc[load_field, load] * (1 - RC_ratio)
             elif load in ['Battery']:   # Matching sign convention of battery data (negative is charging).
-                data['data'][0]['link']['value'][link_id] = -loaddata_df.loc['Average', load] * RC_ratio
-                data['data'][0]['link']['value'][link_id + 5] = -loaddata_df.loc['Average', load] * (1 - RC_ratio)
+                data['data'][0]['link']['value'][link_id] = -loaddata_df.loc[load_field, load] * RC_ratio
+                data['data'][0]['link']['value'][link_id + 5] = -loaddata_df.loc[load_field, load] * (1 - RC_ratio)
             else:
-                data['data'][0]['link']['value'][link_id] = loaddata_df.loc['Average', load]
+                data['data'][0]['link']['value'][link_id] = loaddata_df.loc[load_field, load]
 
         # Add Industrial Loads to Unrepsonsive Loads
         data['data'][0]['link']['value'][21] = data['data'][0]['link']['value'][10]
 
         # Distribution losses equal substation less commercial and residential buildings
         data['data'][0]['link']['value'][7] = \
-            loaddata_df.loc['Average', 'Substation'] - \
-            loaddata_df.loc['Average', 'total_comm'] - \
-            loaddata_df.loc['Average', 'total_res']
+            loaddata_df.loc[load_field, 'Substation'] - \
+            loaddata_df.loc[load_field, 'total_comm'] - \
+            loaddata_df.loc[load_field, 'total_res']
 
         # Add Rooftop Solar
-        data['data'][0]['link']['value'][0] = loaddata_df.loc['Average', 'PV'] * RC_ratio
-        data['data'][0]['link']['value'][1] = loaddata_df.loc['Average', 'PV'] * (1 - RC_ratio)
+        data['data'][0]['link']['value'][0] = loaddata_df.loc[load_field, 'PV'] * RC_ratio
+        data['data'][0]['link']['value'][1] = loaddata_df.loc[load_field, 'PV'] * (1 - RC_ratio)
 
         # Calibration step to balance loads whose splits that are only estimates:
         if calibrate:
             # Adjust residential solar to meet residential loads
-            if loaddata_df.loc['Average', 'PV'] != 0:
+            if loaddata_df.loc[load_field, 'PV'] != 0:
                 data['data'][0]['link']['value'][0] = data['data'][0]['link']['value'][11] + \
                                                       data['data'][0]['link']['value'][12] + \
                                                       data['data'][0]['link']['value'][13] + \
@@ -505,7 +519,7 @@ def load_energy_data(results_path, dso_range, update_data, scale, labelvals, cal
 
                 # Update commercial solar:
                 data['data'][0]['link']['value'][1] = \
-                    loaddata_df.loc['Average', 'PV'] - data['data'][0]['link']['value'][0]
+                    loaddata_df.loc[load_field, 'PV'] - data['data'][0]['link']['value'][0]
 
             # Adjust commercial plug loads to match up commercial loads
             data['data'][0]['link']['value'][17] = data['data'][0]['link']['value'][1] + data['data'][0]['link']['value'][9] - data['data'][0]['link']['value'][16] - \
@@ -515,20 +529,30 @@ def load_energy_data(results_path, dso_range, update_data, scale, labelvals, cal
             data['data'][0]['link']['value'][12] = data['data'][0]['link']['value'][0] + data['data'][0]['link']['value'][8] - data['data'][0]['link']['value'][11] - \
                                                    data['data'][0]['link']['value'][13] - data['data'][0]['link']['value'][14] - data['data'][0]['link']['value'][15]
 
-            # Adjust bulk generation to match DSO loads
+            # Adjust bulk renewable generation to match DSO loads (this is due to AMES dropping or curtailing renewalbes)
             gap = (data['data'][0]['link']['value'][7] + data['data'][0]['link']['value'][8]
                       + data['data'][0]['link']['value'][9] + data['data'][0]['link']['value'][10]) - \
                       (data['data'][0]['link']['value'][2] + data['data'][0]['link']['value'][3]
                       + data['data'][0]['link']['value'][4] + data['data'][0]['link']['value'][5]
                       + data['data'][0]['link']['value'][6])
+
+            if (data['data'][0]['link']['value'][2] + data['data'][0]['link']['value'][3]) != 0:
             factor = gap / (data['data'][0]['link']['value'][2] + data['data'][0]['link']['value'][3])
             data['data'][0]['link']['value'][2] = (1+factor) * data['data'][0]['link']['value'][2]
             data['data'][0]['link']['value'][3] = (1+factor) * data['data'][0]['link']['value'][3]
+            else:
+                # Method to estimate wind and solar when AMES has error and does not report them.  Scales utility solar
+                # off of dist PV solar
+                data['data'][0]['link']['value'][2] = 0.68 * loaddata_df.loc[load_field, 'PV']
+                data['data'][0]['link']['value'][3] = gap - data['data'][0]['link']['value'][2]
 
         # Scale to GW
         if scale:
             data['data'][0]['link']['value'] = [value / 1e3 for value in data['data'][0]['link']['value']]
-            data['data'][0]['valuesuffix'] = "GW(average)"
+            if mode == 'Average':
+                data['data'][0]['valuesuffix'] = "GW(Ave)"
+            elif mode == 'Peak':
+                data['data'][0]['valuesuffix'] = "GW(Peak)"
             total_load = total_load / 1000
 
         # Find the total max value for each node and add it to the label
@@ -577,8 +601,14 @@ def sankey_plot():
     scaledata = True
     label_values = True
     remove_labels = True
+    rerun_loads_gen = False  # Reproduces Load and Generator Stats csv files in case Peak was not included.
+    power_mode = 'Peak'
+    # power_mode = 'Average'
+    # metric_mode = 'Power'
+    metric_mode = 'CashFlow'
 
-    config_path = 'C:/Users/reev057/PycharmProjects/examples/dsot_v3'
+
+    config_path = 'C:/Users/reev057/PycharmProjects/TESP_Public/examples/analysis/dsot/code'
     case_config = pt.load_json(config_path, system_case)
 
     # metadata_path = '../dso_data'
@@ -595,10 +625,11 @@ def sankey_plot():
             if DSOmetadata[DSO]['used']:
                 dsorange.append(int(DSO.split('_')[-1]))
 
-
-    # data = load_CFS_data(data_path, dsorange, updatedata, scaledata, label_values, calibration)
+    if metric_mode == 'CashFlow':
+        data = load_CFS_data(data_path, dsorange, updatedata, scaledata, label_values, calibration)
     # data = load_CFS_delta_data(data_path, mr_bau_path, dsorange, updatedata, scaledata, label_values, system_case, calibration)
-    data = load_energy_data(data_path, dsorange, updatedata, scaledata, label_values, calibration)
+    elif metric_mode == 'Power':
+        data = load_energy_data(data_path, dsorange, updatedata, scaledata, label_values, calibration, power_mode)
 
     # override gray link colors with 'source' colors
     opacity = 0.4
@@ -619,10 +650,28 @@ def sankey_plot():
         # Set default values to zero
         data['data'][0]['node']['label'] = [' '] * len(data['data'][0]['node']['label'])
 
+    if 'bau' in data_path:
+        title_suffix = ' - Business-as-Usual'
+    elif 'Flex' in data_path:
+        title_suffix = ' - Flexible Loads'
+    else:
+        title_suffix = ' '
+
+    if metric_mode == 'Power':
+        if remove_labels:
+            filename = metric_mode + power_mode + title_suffix + '-no labels.html'
+        else:
+            filename = metric_mode + power_mode + title_suffix + '.html'
+    else:
+        if remove_labels:
+            filename = metric_mode + title_suffix + '-no labels.html'
+        else:
+            filename = metric_mode + title_suffix + '.html'
+
     fig = go.Figure(data=[go.Sankey(
         valueformat=".0f",
         valuesuffix=data['data'][0]['valuesuffix'],
-        textfont=dict(size=20),
+        textfont=dict(size=12),
         # Define nodes
         node=dict(
             pad=15,
@@ -640,9 +689,10 @@ def sankey_plot():
             color=data['data'][0]['link']['color']
         ))])
 
-    fig.update_layout(title_text=data['layout']['title']['text'],
+    fig.update_layout(title_text=data['layout']['title']['text']+title_suffix,
                       font_size=10)
-    fig.show()
+    # fig.show()
+    fig.write_html('C:/Users/reev057/DSOT-DATA/Rates/' + filename, auto_open=True)
 
 
 if __name__ == "__main__":
