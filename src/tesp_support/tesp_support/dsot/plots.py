@@ -2585,7 +2585,7 @@ def dso_load_stats(dso_range, month_list, data_path, metadata_path, plot=False):
     # Merge to remove any duplicate dso timestamps.
     dso_total_df = pd.merge(ercot_loads_df['ERCOT Net Load'], dso_total_df, left_index=True, right_index=True)
 
-    dso_load_stats = pd.DataFrame(index=['Average', 'Sum', 'Max', 'Min', 'Average Daily Range'],
+    dso_load_stats = pd.DataFrame(index=['Average', 'Sum', 'Max', 'Min', 'Average Daily Range', 'Coincident Peak'],
                                   columns=dso_total_df.columns)
 
     dso_daily_max_df = dso_total_df.groupby(pd.Grouper(freq='D')).max()
@@ -2610,6 +2610,10 @@ def dso_load_stats(dso_range, month_list, data_path, metadata_path, plot=False):
         dso_load_stats.loc['Min Index', col] = dso_total_df[col].idxmin()
         dso_load_stats.loc['Max Daily Range Index', col] = dso_daily_range_df[col].idxmax()
         dso_load_stats.loc['Min Daily Range Index', col] = dso_daily_range_df[col].idxmin()
+
+    # Once total load peak ('Max Index' for coincident peak total load) is determined write out peak loads:
+    for col in dso_load_stats.columns:
+        dso_load_stats.loc['Coincident Peak', col] = dso_total_df.loc[dso_load_stats.loc['Max Index', 'Total Load'], col]
 
     # Find and save QMax for each DSO.
     Qmax = {}
@@ -3959,6 +3963,7 @@ def generation_statistics(dir_path, config_dir, config_file, day_range, use_gen_
 
     total_hours = len(day_range) * 24
     sum_df = pd.DataFrame(columns=fuel_list)
+    Max_Index = ames_df[' TotalLoad'].idxmax()
     for fuel in fuel_list:
         gen_cols = [col for col in data_df.columns if fuel in gen_key[col][0]]
 
@@ -4012,6 +4017,7 @@ def generation_statistics(dir_path, config_dir, config_file, day_range, use_gen_
                 generator_df.loc['Ramp/Limit (-)', gen] = max(abs(generator_df.loc['Max Ramp down (MW/min)', gen]),
                                                               generator_df.loc['Max Ramp up (MW/min)', gen]) \
                                                           / generator_df.loc['Ramp Limit (MW/min)', gen]
+            generator_df.loc['Coincident Peak Power (MW)', gen] = data_df.loc[Max_Index, gen]
 
         sum_df[fuel] = data_df[gen_cols].sum(axis=1)
         generator_df.loc['Fuel', fuel] = fuel
@@ -4035,6 +4041,8 @@ def generation_statistics(dir_path, config_dir, config_file, day_range, use_gen_
                                                         generator_df.loc['Capacity (MW)', fuel]
             generator_df.loc['Max Ramp down (-)', fuel] = generator_df.loc['Max Ramp down (MW/min)', fuel] / \
                                                           generator_df.loc['Capacity (MW)', fuel]
+        generator_df.loc['Coincident Peak Power (MW)', fuel] = sum_df.loc[Max_Index, fuel]
+
     if use_gen_data:
         file_name = '/generator_statistics_PYPower.csv'
     else:
