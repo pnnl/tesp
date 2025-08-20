@@ -23,12 +23,16 @@ if __name__ == "__main__":
     #                    f"LA_Alexandria_{gridsize}_{customsuffix}",
     #                    f"AK_Anchorage_{gridsize}_{customsuffix}",
     #                    f"MT_Greatfalls_{gridsize}_{customsuffix}"]
-    weather_folders = [f"AZ_Tucson_{gridsize}_{customsuffix}"]
+    weather_folders = [f"AZ_Tucson_{gridsize}_{customsuffix}",
+                       f"WA_Tacoma_{gridsize}_{customsuffix}",
+                       f"AL_Dothan_{gridsize}_{customsuffix}",
+                       f"LA_Alexandria_{gridsize}_{customsuffix}"]
+    # weather_folders = [f"AZ_Tucson_{gridsize}_{customsuffix}"]
     # weather_folders = [f"AZ_Tucson_Large_{customsuffix}"]
     # folder_count_list = [10, 10, 10, 10, 10, 10, 10]
     # folder_count_list = [2, 2, 2, 2, 2, 2, 2]
-    # folder_count_list = [17, 17, 17, 17, 17, 16, 16]
-    folder_count_list = [17]
+    folder_count_list = [17, 17, 17, 17]
+    # folder_count_list = [17]
     batch_size = 10  # If the VM is good, you can make this equal to folder_count_list[i], the parallel sim code will
     # try to deploy all jobs successfully as long as VM can handle it (ports, helics etc etc if possible)
 

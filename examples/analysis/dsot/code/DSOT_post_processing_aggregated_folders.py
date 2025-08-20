@@ -310,6 +310,26 @@ def load_weather_data(dir_path, folder_prefix, dso_num, day_num, data, check):
     # else:
     return weather_df, data
 
+
+def get_peak_demand_data(df, col_name, reuse, days_elasped):
+
+    if not reuse:
+        # substation demand plot (peak day)
+        df = df.reset_index()
+        # get peak day
+        peak_index = df[col_name].idxmax()
+        days_elasped = math.floor(peak_index / 24)
+        y = list(df[col_name][days_elasped * 24:(days_elasped * 24) + 24])
+        # readjust hours to be 24 hour continuous format.
+        # y = y[-7:] + y[:-7]
+        x = [i for i in range(len(y))]
+    else:
+        y = list(df[col_name][days_elasped * 24:(days_elasped * 24) + 24])
+        # readjust hours to be 24 hour continuous format.
+        # y = y[-7:] + y[:-7]
+        x = [i for i in range(len(y))]
+    return x, y, days_elasped
+
 def Load_substation_data(dso, day_range, base_case_list, plots_folder_name, plot_load= False, plot_weather=False):
     """  For a specified dso range and case this function will analyze the ratios of Res, Comm, and Industrial.
     Arguments:
@@ -323,9 +343,11 @@ def Load_substation_data(dso, day_range, base_case_list, plots_folder_name, plot
     starting_load_dataframe = 1
     starting_weather_dataframe = 1
     dsoload_df = pd.DataFrame()
+    dsoload_df2 = pd.DataFrame()
     #dsoload_df = None
     weather_df = pd.DataFrame()
     list_load_data=[]
+    list_load_data2 = []
 
                 #################### Collecting Weather Data ####################
     for day in day_range:
@@ -337,12 +359,18 @@ def Load_substation_data(dso, day_range, base_case_list, plots_folder_name, plot
                 temp_weather_df, w_data = load_weather_data(base_case_list[0], '/DSO_', str(dso), str(day), w_data, False)
                 weather_df = pd.concat([weather_df, temp_weather_df], axis=0)
             starting_weather_dataframe += 1
-
+    house_counts_each_folder = []
     for case in base_case_list:
         print(f"loading substation h5 file ---> {case}")
         for day in day_range:
             print(f"Loading h5 --> day = {str(day)}. PS for future: h5 can be loaded once and for other days same h5 inside python memory could be used. Fixed a similar issue for weather.dat above.")
             substation_meta_df, substation_df = load_system_data(case, '/Substation_', str(dso), str(day), 'substation')
+
+            huse_meta_df, huse_df = load_system_data(case, '/Substation_', str(dso), str(day), 'house')
+
+            if day == 1:
+                house_counts_each_folder.append(len(list(huse_df["name"].unique())))
+
             if starting_load_dataframe == 1:
                 temp_df = pd.DataFrame()
                 temp_df['Substation Actual'] = substation_df['real_power_avg'].values /1000 # .values.tolist()
@@ -358,12 +386,57 @@ def Load_substation_data(dso, day_range, base_case_list, plots_folder_name, plot
                 temp_df.index = [datetime.strptime(date.split(' CDT')[0], "%Y-%m-%d %H:%M:%S") for date in substation_df.date]
                 dsoload_df = pd.concat([dsoload_df, temp_df], axis=0)
                 list_load_data.append(dsoload_df)
+
+
+            if starting_load_dataframe == 1:
+                temp_df2 = pd.DataFrame()
+                temp_df2['House Actual'] = huse_df['total_load_avg'].values
+                temp_df2['House max'] = huse_df['total_load_max'].values
+                temp_df2.index = [datetime.strptime(date.split(' CDT')[0], "%Y-%m-%d %H:%M:%S") for date in
+                                  huse_df.date]
+                dsoload_df2 = temp_df2
+                list_load_data2.append(dsoload_df2)
+                b=1
+            else:
+                temp_df2 = pd.DataFrame()
+                temp_df2['House Actual'] = huse_df['total_load_avg'].values
+                temp_df2['House max'] = huse_df['total_load_max'].values
+                temp_df2.index = [datetime.strptime(date.split(' CDT')[0], "%Y-%m-%d %H:%M:%S") for date in
+                                  huse_df.date]
+                dsoload_df2 = pd.concat([dsoload_df2, temp_df2], axis=0)
+                list_load_data2.append(dsoload_df2)
+
             starting_load_dataframe += 1
     dsoload_df_sum = dsoload_df.groupby(dsoload_df.index).sum()
+    dsoload_df_sum2 = dsoload_df2.groupby(dsoload_df2.index).sum()
+
     peak_substation_load = dsoload_df_sum['Substation Actual'].max()
+    peak_huse_load = dsoload_df_sum2['House Actual'].max()
+
     directory = f"/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/code/{plots_folder_name}"
     if not os.path.exists(directory):
         os.makedirs(directory)
+
+    sub_df = dsoload_df_sum.iloc[::12]
+    huseee_df = dsoload_df_sum2.iloc[::12]
+
+    x_sub, y_sub, days_elasped = get_peak_demand_data(sub_df, col_name="Substation Actual", reuse=False, days_elasped=0)
+    x_huse, y_huse, days_elasped = get_peak_demand_data(huseee_df, col_name="House max", reuse=True, days_elasped=days_elasped)
+
+    list_of_lists_h = list(zip(x_sub, y_sub, y_huse))
+    needed_df = pd.DataFrame(list_of_lists_h, columns=['Hour', 'Substation', 'House'])
+    needed_df["Commercial"] = needed_df["Substation"] - needed_df["House"]
+    needed_df["Scaled House"] = needed_df["House"]*(3234/sum(house_counts_each_folder))
+    needed_df["New Substation"] = needed_df["Commercial"] + needed_df["Scaled House"]
+    new_order = ["Hour", "New Substation", "Commercial", "Scaled House", "Substation", "House"]
+    needed_df_reordered = needed_df.reindex(columns=new_order)
+
+    needed_df_reordered.to_excel(f"/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/code/"
+                    f"{plots_folder_name}/{plots_folder_name}_substation_demand.xlsx")
+    # huse_df.to_excel(f"/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/code/"
+    #                  f"{plots_folder_name}/{plots_folder_name}_{sum(house_counts_each_folder)}_house_demand.xlsx")
+
+    # exit()
 
     if plot_load:
         fig, ax = plt.subplots(figsize=(12,6))
@@ -457,6 +530,9 @@ def Load_substation_data_mod(dso, day_range, base_case_list, plots_folder_name, 
     directory = f"/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/code/{plots_folder_name}"
     if not os.path.exists(directory):
         os.makedirs(directory)
+
+    # sub_df = dsoload_df_sum.iloc[::12]
+    # huse_df =
 
     if plot_load:
         fig, ax = plt.subplots(figsize=(12,6))
@@ -987,6 +1063,8 @@ H is the hatch used for identification of the different dataframe"""
 
     return axe_h
 
+
+# noinspection PyUnboundLocalVariable
 def plot1a_task_percentoverload(zone_name, input_basecase_folder_name, GLD_prefix, sets_in_all_folders,
                                 plots_folder_name, extrafoldersexist, plot_plotly, replace_threshold):
     input_basecase_without_ev = input_basecase_folder_name + '_uncontrolled'
@@ -1502,11 +1580,13 @@ def plot1a_task_percentoverload(zone_name, input_basecase_folder_name, GLD_prefi
                 plotly.offline.plot(fig,
                                     filename=f"/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/code/{plots_folder_name}/{plots_folder_name}_max_bubble_{each_year}_{info_info}.html", auto_open=False)
 
-                df_std = df_std.sort_values("Variability in % loading of transformer", ascending=False)
-                df_std["Transformer indices"] = range(1, df_std.shape[0] + 1)
-                df_std_dict = df_std.groupby("name")["Transformer indices"].apply(lambda x: int(x.iloc[0]))
-                df_std_dict = df_std_dict.to_dict()
-                df_to_plot["Transformer indices"] = df_to_plot["name"].map(df_std_dict)
+
+                # # sorting and assigning new indices to transformers so plots look beutiful - decreasing function
+                # df_std = df_std.sort_values("Variability in % loading of transformer", ascending=False)
+                # df_std["Transformer indices"] = range(1, df_std.shape[0] + 1)
+                # df_std_dict = df_std.groupby("name")["Transformer indices"].apply(lambda x: int(x.iloc[0]))
+                # df_std_dict = df_std_dict.to_dict()
+                # df_to_plot["Transformer indices"] = df_to_plot["name"].map(df_std_dict)
 
                 var = "Variability in % loading of transformer"
                 fig = px.scatter(df_to_plot, x="Transformer indices", y="Variability in % loading of transformer",
@@ -1605,11 +1685,12 @@ def plot1a_task_percentoverload(zone_name, input_basecase_folder_name, GLD_prefi
                                     auto_open=False)
                 # fig.show()
 
-                df_cum = df_cum.sort_values("Transformer overload periods as a % of total time", ascending=False)
-                df_cum["Transformer indices"] = range(1, df_cum.shape[0] + 1)
-                df_cum_dict = df_cum.groupby("name")["Transformer indices"].apply(lambda x: int(x.iloc[0]))
-                df_cum_dict = df_cum_dict.to_dict()
-                df_to_plot["Transformer indices"] = df_to_plot["name"].map(df_cum_dict)
+                # # sorting and assigning new indices to transformers so plots look beutiful - decreasing function
+                # df_cum = df_cum.sort_values("Transformer overload periods as a % of total time", ascending=False)
+                # df_cum["Transformer indices"] = range(1, df_cum.shape[0] + 1)
+                # df_cum_dict = df_cum.groupby("name")["Transformer indices"].apply(lambda x: int(x.iloc[0]))
+                # df_cum_dict = df_cum_dict.to_dict()
+                # df_to_plot["Transformer indices"] = df_to_plot["name"].map(df_cum_dict)
 
                 var = "Transformer overload periods as a % of total time"
 
@@ -2184,7 +2265,7 @@ if __name__ == '__main__':
 
     sens_flag = "tight"
     sensitivity_suffix = f"scm_{sens_flag}"
-    date_name = f"jul14_{sens_flag}"  # f"april21_{sens_flag}"
+    date_name = f"jul14_grid_kW_data_{sens_flag}"  # f"april21_{sens_flag}"
     threshold_cutoff = 1
     custom_suffix_sim_run = (f"randsoc{randomsoc}_sensflag{sens_flag}_evongrid{xfrmrrating_evshare}"
                              f"{EV_placement_on_grid}_threshold{threshold_cutoff}_{date_name}")
@@ -2197,27 +2278,27 @@ if __name__ == '__main__':
     size_name_l = "large"
     size_name_m = "medium"
     size_name_s = "small"
-    # zone_name_list_l = ["AZ_Tucson_Large", "WA_Tacoma_Large", "AL_Dothan_Large", "LA_Alexandria_Large"]
+    zone_name_list_l = ["AZ_Tucson_Large", "WA_Tacoma_Large", "AL_Dothan_Large", "LA_Alexandria_Large"]
     # zone_name_list_s = ["AZ_Tucson_Small", "WA_Tacoma_Small", "AL_Dothan_Small", "IA_Johnston_Small",
     #                   "LA_Alexandria_Small", "AK_Anchorage_Small", "MT_Greatfalls_Small"]
     # zone_name_list_m = ["AZ_Tucson_Medium", "WA_Tacoma_Medium", "AL_Dothan_Medium", "IA_Johnston_Medium", "LA_Alexandria_Medium", "AK_Anchorage_Medium", "MT_Greatfalls_Medium"]  # ["AZ_Tucson_Medium", "WA_Tacoma_Medium"]
 
-    zone_name_list_l = ["AZ_Tucson_Large"]
+    # zone_name_list_l = ["AZ_Tucson_Large"]
     zone_name_list_s = []
     zone_name_list_m = []
 
-    # state_list_l = ["az", "wa", "al", "la"]
+    state_list_l = ["az", "wa", "al", "la"]
     # state_list_m = ["az", "wa", "al", "ia", "la", "ak", "mt"]
     # state_list_s = ["az", "wa", "al", "ia", "la", "ak", "mt"]
 
-    state_list_l = ["az"]
+    # state_list_l = ["az"]
     state_list_m = []
     state_list_s = []
-    # folder_list_l = [17, 17, 17, 17]
+    folder_list_l = [17, 17, 17, 17]
     # folder_list_s = [2, 2, 2, 2, 2, 2, 2]
     # folder_list_m = [10, 10, 10, 10, 10, 10, 10]
 
-    folder_list_l = [17]
+    # folder_list_l = [17]
     folder_list_s = []
     folder_list_m = []
 
@@ -2279,7 +2360,7 @@ if __name__ == '__main__':
             input_1a = f"{zone_name}_{customsuffix}"
 
 
-            plots_folder_name = f"{folder_name}_plots"
+            plots_folder_name = f"{folder_name}_plots_formetrics"
             base_case_list =[]
             for name in folder_names:
 
@@ -2317,18 +2398,20 @@ if __name__ == '__main__':
             ####################### Transformer loading ###############################
             ##########################################################################
 
-            (year_list, total_basecase_xfrmrs_with_evs, total_uncontrolled_vios, total_controlled_vios,
-             merged_df_uncontrolled, total_basecase_vios, merged_df_uncontrolled_in_kws, df_final_divided_inkws_hourly,
-             all_year_ev_uncontrolled_laod_in_kw, merged_df_controlled_in_kws, all_year_ev_controlled_laod_in_kw,
-             total_xfrmrs_need_replacing_120, replace_df, total_comm_xfrmr_uncontrolled_violation_count,
-             total_res_xfrmr_uncontrolled_violation_count) =\
-                plot1a_task_percentoverload(zone_name, input_1a, GLD_prefix, [total_folders]*len(zone_name_list),
-                                                                                        plots_folder_name,
-                                                                                        extrafoldersexist, plot_plotly,
-                                            replace_threshold=120)
+            # # TODO: uncomment below function.
+            # (year_list, total_basecase_xfrmrs_with_evs, total_uncontrolled_vios, total_controlled_vios,
+            #  merged_df_uncontrolled, total_basecase_vios, merged_df_uncontrolled_in_kws, df_final_divided_inkws_hourly,
+            #  all_year_ev_uncontrolled_laod_in_kw, merged_df_controlled_in_kws, all_year_ev_controlled_laod_in_kw,
+            #  total_xfrmrs_need_replacing_120, replace_df, total_comm_xfrmr_uncontrolled_violation_count,
+            #  total_res_xfrmr_uncontrolled_violation_count) =\
+            #     plot1a_task_percentoverload(zone_name, input_1a, GLD_prefix, [total_folders]*len(zone_name_list),
+            #                                                                             plots_folder_name,
+            #                                                                             extrafoldersexist, plot_plotly,
+            #                                 replace_threshold=120)
 
 
 
+            # exit()
 
             # NOTE TO SELF AND PS: SAVE THE VARIABLE "replace_df" to csv and share with Christine!!! FIX THE RANDOM
             # EV ASSIGNMENT ISSUE AND RERUN STUDIES AND PLOTS AND GENERATE THIS SAID CSV FILE AND GIVE TO CHRISTINE
@@ -2356,275 +2439,278 @@ if __name__ == '__main__':
 
             # extract substation data for base case
             substation_data_df,weather_df, peak_substation_load = Load_substation_data(dso, day_range, base_case_list, plots_folder_name, plot_load=True, plot_weather=True) #GOOD
-            basecase_peak_demand_all_folders.append(peak_substation_load)
-
-            # plot the count of EV transformers with violations for several years for a given climate zone
-            file_to_save = f"/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/code/{plots_folder_name}/Multiyear_barplot_EVxfmrviolation_percent_{plots_folder_name}.html"
-            total_basecase_vios_y = [(val/total_basecase_xfrmrs_with_evs[idx])*100 for idx, val in enumerate(total_basecase_vios)]
-            total_uncontrolled_vios_y = [(val / total_basecase_xfrmrs_with_evs[idx]) * 100 for idx, val in
-                                     enumerate(total_uncontrolled_vios)]
-            total_controlled_vios_y = [(val / total_basecase_xfrmrs_with_evs[idx]) * 100 for idx, val in
-                                     enumerate(total_controlled_vios)]
-            title = "Percentage of EV transformers with violations"
-            x_title = "Years"
-            year_list = [int(x) for x in year_list]
-            idx_sort = list(np.argsort(year_list))
-            year_list = [year_list[x] for x in idx_sort]
-            total_basecase_vios_y = [total_basecase_vios_y[x] for x in idx_sort]
-            total_uncontrolled_vios_y = [total_uncontrolled_vios_y[x] for x in idx_sort]
-            total_controlled_vios_y = [total_controlled_vios_y[x] for x in idx_sort]
-            total_comm_xfrmr_uncontrolled_violation_count_y = [total_comm_xfrmr_uncontrolled_violation_count[x] for
-                                                               x in idx_sort]
-            total_res_xfrmr_uncontrolled_violation_count_y = [total_res_xfrmr_uncontrolled_violation_count[x] for x
-                                                              in idx_sort]
-
-            list_of_lists = [year_list, total_comm_xfrmr_uncontrolled_violation_count_y,
-                             total_res_xfrmr_uncontrolled_violation_count_y, total_uncontrolled_vios_y]
-            list_of_lists = np.array(list_of_lists).T.tolist()
-            col_names_here = ["Year", "Comm xfrmr count violations", "Res xfrmr count violations",
-                              "Total uncontroled violations"]
-            df_to_save_here_kop = pd.DataFrame(data=list_of_lists, columns=col_names_here)
-            df_to_save_here_kop.to_excel("xfrmr_uncontrolled_viola_count.xlsx", index=False)
-
-            total_basecase_vios = [total_basecase_vios[x] for x in idx_sort]
-            total_uncontrolled_vios = [total_uncontrolled_vios[x] for x in idx_sort]
-            total_controlled_vios = [total_controlled_vios[x] for x in idx_sort]
-            size_val = 28
-            plot_histogram_plotly(plots_folder_name, total_basecase_vios_y,
-                                      total_uncontrolled_vios_y, total_controlled_vios_y,
-                                      year_list, title, x_title, file_to_save, size_val, total_basecase_xfrmrs_with_evs[0])
-            # same plot as bove but the y-axis is count instead of percentage
-            file_to_save = f"/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/code/{plots_folder_name}/Multiyear_barplot_EVxfmrviolation_count_{plots_folder_name}.html"
-            title = "Count of EV transformers with overloads"
-            x_title = "Years"
-            year_list = [int(x) for x in year_list]
-            size_val = 28
 
 
-            plot_histogram_plotly(plots_folder_name, total_basecase_vios,
-                                  total_uncontrolled_vios, total_controlled_vios,
-                                  year_list, title, x_title, file_to_save, size_val, total_basecase_xfrmrs_with_evs[0])
 
-            # below piece code of written to remove the base case violations from the plot results based on feedback
-            # received.
-            total_uncontrolled_vios = [x-total_basecase_vios[ixxx] for ixxx, x in enumerate(total_uncontrolled_vios)]
-            total_controlled_vios = [x-total_basecase_vios[ixxx] for ixxx, x in enumerate(total_controlled_vios)]
-            total_basecase_vios = [0]*len(total_uncontrolled_vios)
-            file_to_save = f"/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/code/{plots_folder_name}/Multiyear_barplot_EVxfmrviolation_count_{plots_folder_name}_v2.html"
-            plot_histogram_plotly(plots_folder_name, total_basecase_vios,
-                                  total_uncontrolled_vios, total_controlled_vios,
-                                  year_list, title, x_title, file_to_save, size_val, total_basecase_xfrmrs_with_evs[0])
-
-            # plot time series substation demand for all years
-            file_to_save = f"/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/code/{plots_folder_name}/Multiyear_lineplots_uncontrolled_in_kws_{plots_folder_name}.html"
-            title = "Demand in KWs"
-            x_title = "Timestamp"
-            year_list = sorted(year_list)
-            merged_df_uncontrolled_in_kws = merged_df_uncontrolled_in_kws.sort_values(by="# timestamp", ascending=True)
-            # time_list = []
-            # data_list = []
-            df_here = pd.DataFrame()
-            # for uncontrolled EV demand merged with base case for several years
-            for x in year_list:
-                line_to_plot = list(merged_df_uncontrolled_in_kws[merged_df_uncontrolled_in_kws["year_i"] == x].sum(axis=1, numeric_only=True))
-                # data_list.append(line_to_plot)
-                time_here = list(merged_df_uncontrolled_in_kws["# timestamp"].astype(str).str[5:].str[:-6])
-                # time_list.append(time_here)
-                current_df = pd.DataFrame(list(zip(time_here, line_to_plot)), columns=["time", "data"])
-                current_df["category"] = str(x)
-                df_here = pd.concat([df_here, current_df])
-            # for base case info
-            df_final_divided_inkws_hourly = df_final_divided_inkws_hourly.reset_index(drop=True)
-            df_final_divided_inkws_hourly = df_final_divided_inkws_hourly.sort_values(by="# timestamp", ascending=True)
-            base_data_in_kws = list(df_final_divided_inkws_hourly.sum(axis=1, numeric_only=True))
-            time_stamp_info_basecase = list(df_final_divided_inkws_hourly["# timestamp"].astype(str).str[5:].str[:-6])
-            current_df = pd.DataFrame(list(zip(time_stamp_info_basecase, base_data_in_kws)), columns=["time", "data"])
-            current_df["category"] = "basecase_with_uncontrolled_EV"
-            df_here = pd.concat([df_here, current_df])
-
-            fig = px.line(df_here, x="time", y="data", color='category')
-            fig.update_layout(
-                yaxis=dict(
-                    title=title,
-                    titlefont_size=30,
-                    tickfont_size=28,
-                ),
-                xaxis=dict(
-                    title=x_title,
-                    titlefont_size=30,
-                    tickfont_size=28,
-                ),
-                font=dict(
-                    family="Times New Roman",
-                    size=30,
-                    color="black"
-                ),
-                paper_bgcolor='rgba(255,255,255,1)',
-                plot_bgcolor='rgba(255,255,255,1)'
-            )
-            fig.update_xaxes(showline=True, linewidth=4, linecolor='black')
-            fig.update_yaxes(showline=True, linewidth=4, linecolor='black')
-            plotly.offline.plot(fig,
-                                filename=file_to_save, auto_open=False)
-
-            # plot time series substation demand for all years
-            file_to_save = f"/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/code/{plots_folder_name}/Multiyear_lineplots_controlled_in_kws_{plots_folder_name}.html"
-            title = "Demand in KWs"
-            x_title = "Timestamp"
-            year_list = sorted(year_list)
-            merged_df_controlled_in_kws = merged_df_controlled_in_kws.sort_values(by="# timestamp", ascending=True)
-            # time_list = []
-            # data_list = []
-            df_here = pd.DataFrame()
-            # for uncontrolled EV demand merged with base case for several years
-            for x in year_list:
-                line_to_plot = list(
-                    merged_df_controlled_in_kws[merged_df_controlled_in_kws["year_i"] == x].sum(axis=1,
-                                                                                                    numeric_only=True))
-                # data_list.append(line_to_plot)
-                time_here = list(merged_df_controlled_in_kws["# timestamp"].astype(str).str[5:].str[:-6])
-                # time_list.append(time_here)
-                current_df = pd.DataFrame(list(zip(time_here, line_to_plot)), columns=["time", "data"])
-                current_df["category"] = str(x)
-                df_here = pd.concat([df_here, current_df])
-            # for base case info
-            df_final_divided_inkws_hourly = df_final_divided_inkws_hourly.reset_index(drop=True)
-            df_final_divided_inkws_hourly = df_final_divided_inkws_hourly.sort_values(by="# timestamp", ascending=True)
-            base_data_in_kws = list(df_final_divided_inkws_hourly.sum(axis=1, numeric_only=True))
-            time_stamp_info_basecase = list(df_final_divided_inkws_hourly["# timestamp"].astype(str).str[5:].str[:-6])
-            current_df = pd.DataFrame(list(zip(time_stamp_info_basecase, base_data_in_kws)), columns=["time", "data"])
-            current_df["category"] = "basecase_with_Controlled_EV"
-            df_here = pd.concat([df_here, current_df])
-
-            fig = px.line(df_here, x="time", y="data", color='category')
-            fig.update_layout(
-                yaxis=dict(
-                    title=title,
-                    titlefont_size=30,
-                    tickfont_size=28,
-                ),
-                xaxis=dict(
-                    title=x_title,
-                    titlefont_size=30,
-                    tickfont_size=28,
-                ),
-                font=dict(
-                    family="Times New Roman",
-                    size=30,
-                    color="black"
-                ),
-                paper_bgcolor='rgba(255,255,255,1)',
-                plot_bgcolor='rgba(255,255,255,1)'
-            )
-            fig.update_xaxes(showline=True, linewidth=4, linecolor='black')
-            fig.update_yaxes(showline=True, linewidth=4, linecolor='black')
-            plotly.offline.plot(fig,
-                                filename=file_to_save, auto_open=False)
-
-            # extract peak demad for uncontrolled and controlled cases for all years
-            uncontrolled_peak_demand_all_years = []
-            controlled_peak_demand_all_years = []
-            basecase_peak_demand_all_years = []
-            all_year_ev_uncontrolled_laod_in_kw = all_year_ev_uncontrolled_laod_in_kw.drop(columns=["year_i", "day",
-                                                                                                    "hour"])
-            all_year_ev_controlled_laod_in_kw = all_year_ev_controlled_laod_in_kw.drop(columns=["year_i", "day",
-                                                                                                "hour"])
-            df_lst_uncontrolled_scenario_base_EV_demand = []
-            df_lst_controlled_scenario_base_EV_demand = []
-
-            for x in year_list:
-                mini_list1 = []
-                mini_list2 = []
-                k_df = all_year_ev_uncontrolled_laod_in_kw[all_year_ev_uncontrolled_laod_in_kw["Year"] == str(x)]
-                k_df = k_df.drop(columns=["Year"])
-                k = k_df.sum(axis=1).max()
-                uncontrolled_peak_demand_all_years.append(k/1000)   # convert to MWs
-
-                kc_df = all_year_ev_controlled_laod_in_kw[all_year_ev_controlled_laod_in_kw["Year"] == str(x)]
-                kc_df = kc_df.drop(columns=["Year"])
-                kc = kc_df.sum(axis=1).max()
-                controlled_peak_demand_all_years.append(kc/1000)  # convert to MWs
-                basecase_peak_demand_all_years.append(0)
-
-                # extract required data for grouped stack bar plots
-                # need to find coincident peak information and use that
-                unc_df = k_df.sum(axis=1, numeric_only=True)
-                idxmax_uncontrolled = unc_df.idxmax()
-                max_uncontrolled = unc_df.max()
-                # get max baseload at coinicdent peak of uncontrolled
-                base_uncontrolled = base_data_in_kws[idxmax_uncontrolled]
-                # mini_list1.append(x)
-                mini_list1.append(base_uncontrolled / 1000)
-                mini_list1.append(max_uncontrolled/1000)
-                df_lst_uncontrolled_scenario_base_EV_demand.append(mini_list1)  # convert to mw
-
-                c_df = kc_df.sum(axis=1, numeric_only=True)
-                idxmax_controlled = c_df.idxmax()
-                max_controlled = c_df.max()
-                # get max baseload at coinicdent peak of controlled
-                base_controlled = base_data_in_kws[idxmax_controlled]
-                # mini_list2.append(x)
-                mini_list2.append(base_controlled / 1000)
-                mini_list2.append(max_controlled / 1000)
-                df_lst_controlled_scenario_base_EV_demand.append(mini_list2)  # convert to mw
-                # df_lst_controlled_scenario_EV_demand.append(max_controlled/1000)
-                # df_lst_controlled_scenario_base_demand.append(base_controlled/1000) # convert to mw
-
-            file_to_save = f"/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/code/{plots_folder_name}/Multiyear_barplot_EV_peak_demand_{plots_folder_name}.html"
-            title = "Peak EV demand in MWs"
-            x_title = "Years"
-            year_list = [int(x) for x in year_list]
-            # scenario = "Uncontrolled scenario"
-            # plot_histogram_plotly_1plot(plots_folder_name, uncontrolled_peak_demand_all_years, year_list, title,
+            # basecase_peak_demand_all_folders.append(peak_substation_load)
+            #
+            # # plot the count of EV transformers with violations for several years for a given climate zone
+            # file_to_save = f"/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/code/{plots_folder_name}/Multiyear_barplot_EVxfmrviolation_percent_{plots_folder_name}.html"
+            # total_basecase_vios_y = [(val/total_basecase_xfrmrs_with_evs[idx])*100 for idx, val in enumerate(total_basecase_vios)]
+            # total_uncontrolled_vios_y = [(val / total_basecase_xfrmrs_with_evs[idx]) * 100 for idx, val in
+            #                          enumerate(total_uncontrolled_vios)]
+            # total_controlled_vios_y = [(val / total_basecase_xfrmrs_with_evs[idx]) * 100 for idx, val in
+            #                          enumerate(total_controlled_vios)]
+            # title = "Percentage of EV transformers with violations"
+            # x_title = "Years"
+            # year_list = [int(x) for x in year_list]
+            # idx_sort = list(np.argsort(year_list))
+            # year_list = [year_list[x] for x in idx_sort]
+            # total_basecase_vios_y = [total_basecase_vios_y[x] for x in idx_sort]
+            # total_uncontrolled_vios_y = [total_uncontrolled_vios_y[x] for x in idx_sort]
+            # total_controlled_vios_y = [total_controlled_vios_y[x] for x in idx_sort]
+            # total_comm_xfrmr_uncontrolled_violation_count_y = [total_comm_xfrmr_uncontrolled_violation_count[x] for
+            #                                                    x in idx_sort]
+            # total_res_xfrmr_uncontrolled_violation_count_y = [total_res_xfrmr_uncontrolled_violation_count[x] for x
+            #                                                   in idx_sort]
+            #
+            # list_of_lists = [year_list, total_comm_xfrmr_uncontrolled_violation_count_y,
+            #                  total_res_xfrmr_uncontrolled_violation_count_y, total_uncontrolled_vios_y]
+            # list_of_lists = np.array(list_of_lists).T.tolist()
+            # col_names_here = ["Year", "Comm xfrmr count violations", "Res xfrmr count violations",
+            #                   "Total uncontroled violations"]
+            # df_to_save_here_kop = pd.DataFrame(data=list_of_lists, columns=col_names_here)
+            # df_to_save_here_kop.to_excel("xfrmr_uncontrolled_viola_count.xlsx", index=False)
+            #
+            # total_basecase_vios = [total_basecase_vios[x] for x in idx_sort]
+            # total_uncontrolled_vios = [total_uncontrolled_vios[x] for x in idx_sort]
+            # total_controlled_vios = [total_controlled_vios[x] for x in idx_sort]
+            # size_val = 28
+            # plot_histogram_plotly(plots_folder_name, total_basecase_vios_y,
+            #                           total_uncontrolled_vios_y, total_controlled_vios_y,
+            #                           year_list, title, x_title, file_to_save, size_val, total_basecase_xfrmrs_with_evs[0])
+            # # same plot as bove but the y-axis is count instead of percentage
+            # file_to_save = f"/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/code/{plots_folder_name}/Multiyear_barplot_EVxfmrviolation_count_{plots_folder_name}.html"
+            # title = "Count of EV transformers with overloads"
+            # x_title = "Years"
+            # year_list = [int(x) for x in year_list]
+            # size_val = 28
+            #
+            #
+            # plot_histogram_plotly(plots_folder_name, total_basecase_vios,
+            #                       total_uncontrolled_vios, total_controlled_vios,
+            #                       year_list, title, x_title, file_to_save, size_val, total_basecase_xfrmrs_with_evs[0])
+            #
+            # # below piece code of written to remove the base case violations from the plot results based on feedback
+            # # received.
+            # total_uncontrolled_vios = [x-total_basecase_vios[ixxx] for ixxx, x in enumerate(total_uncontrolled_vios)]
+            # total_controlled_vios = [x-total_basecase_vios[ixxx] for ixxx, x in enumerate(total_controlled_vios)]
+            # total_basecase_vios = [0]*len(total_uncontrolled_vios)
+            # file_to_save = f"/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/code/{plots_folder_name}/Multiyear_barplot_EVxfmrviolation_count_{plots_folder_name}_v2.html"
+            # plot_histogram_plotly(plots_folder_name, total_basecase_vios,
+            #                       total_uncontrolled_vios, total_controlled_vios,
+            #                       year_list, title, x_title, file_to_save, size_val, total_basecase_xfrmrs_with_evs[0])
+            #
+            # # plot time series substation demand for all years
+            # file_to_save = f"/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/code/{plots_folder_name}/Multiyear_lineplots_uncontrolled_in_kws_{plots_folder_name}.html"
+            # title = "Demand in KWs"
+            # x_title = "Timestamp"
+            # year_list = sorted(year_list)
+            # merged_df_uncontrolled_in_kws = merged_df_uncontrolled_in_kws.sort_values(by="# timestamp", ascending=True)
+            # # time_list = []
+            # # data_list = []
+            # df_here = pd.DataFrame()
+            # # for uncontrolled EV demand merged with base case for several years
+            # for x in year_list:
+            #     line_to_plot = list(merged_df_uncontrolled_in_kws[merged_df_uncontrolled_in_kws["year_i"] == x].sum(axis=1, numeric_only=True))
+            #     # data_list.append(line_to_plot)
+            #     time_here = list(merged_df_uncontrolled_in_kws["# timestamp"].astype(str).str[5:].str[:-6])
+            #     # time_list.append(time_here)
+            #     current_df = pd.DataFrame(list(zip(time_here, line_to_plot)), columns=["time", "data"])
+            #     current_df["category"] = str(x)
+            #     df_here = pd.concat([df_here, current_df])
+            # # for base case info
+            # df_final_divided_inkws_hourly = df_final_divided_inkws_hourly.reset_index(drop=True)
+            # df_final_divided_inkws_hourly = df_final_divided_inkws_hourly.sort_values(by="# timestamp", ascending=True)
+            # base_data_in_kws = list(df_final_divided_inkws_hourly.sum(axis=1, numeric_only=True))
+            # time_stamp_info_basecase = list(df_final_divided_inkws_hourly["# timestamp"].astype(str).str[5:].str[:-6])
+            # current_df = pd.DataFrame(list(zip(time_stamp_info_basecase, base_data_in_kws)), columns=["time", "data"])
+            # current_df["category"] = "basecase_with_uncontrolled_EV"
+            # df_here = pd.concat([df_here, current_df])
+            #
+            # fig = px.line(df_here, x="time", y="data", color='category')
+            # fig.update_layout(
+            #     yaxis=dict(
+            #         title=title,
+            #         titlefont_size=30,
+            #         tickfont_size=28,
+            #     ),
+            #     xaxis=dict(
+            #         title=x_title,
+            #         titlefont_size=30,
+            #         tickfont_size=28,
+            #     ),
+            #     font=dict(
+            #         family="Times New Roman",
+            #         size=30,
+            #         color="black"
+            #     ),
+            #     paper_bgcolor='rgba(255,255,255,1)',
+            #     plot_bgcolor='rgba(255,255,255,1)'
+            # )
+            # fig.update_xaxes(showline=True, linewidth=4, linecolor='black')
+            # fig.update_yaxes(showline=True, linewidth=4, linecolor='black')
+            # plotly.offline.plot(fig,
+            #                     filename=file_to_save, auto_open=False)
+            #
+            # # plot time series substation demand for all years
+            # file_to_save = f"/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/code/{plots_folder_name}/Multiyear_lineplots_controlled_in_kws_{plots_folder_name}.html"
+            # title = "Demand in KWs"
+            # x_title = "Timestamp"
+            # year_list = sorted(year_list)
+            # merged_df_controlled_in_kws = merged_df_controlled_in_kws.sort_values(by="# timestamp", ascending=True)
+            # # time_list = []
+            # # data_list = []
+            # df_here = pd.DataFrame()
+            # # for uncontrolled EV demand merged with base case for several years
+            # for x in year_list:
+            #     line_to_plot = list(
+            #         merged_df_controlled_in_kws[merged_df_controlled_in_kws["year_i"] == x].sum(axis=1,
+            #                                                                                         numeric_only=True))
+            #     # data_list.append(line_to_plot)
+            #     time_here = list(merged_df_controlled_in_kws["# timestamp"].astype(str).str[5:].str[:-6])
+            #     # time_list.append(time_here)
+            #     current_df = pd.DataFrame(list(zip(time_here, line_to_plot)), columns=["time", "data"])
+            #     current_df["category"] = str(x)
+            #     df_here = pd.concat([df_here, current_df])
+            # # for base case info
+            # df_final_divided_inkws_hourly = df_final_divided_inkws_hourly.reset_index(drop=True)
+            # df_final_divided_inkws_hourly = df_final_divided_inkws_hourly.sort_values(by="# timestamp", ascending=True)
+            # base_data_in_kws = list(df_final_divided_inkws_hourly.sum(axis=1, numeric_only=True))
+            # time_stamp_info_basecase = list(df_final_divided_inkws_hourly["# timestamp"].astype(str).str[5:].str[:-6])
+            # current_df = pd.DataFrame(list(zip(time_stamp_info_basecase, base_data_in_kws)), columns=["time", "data"])
+            # current_df["category"] = "basecase_with_Controlled_EV"
+            # df_here = pd.concat([df_here, current_df])
+            #
+            # fig = px.line(df_here, x="time", y="data", color='category')
+            # fig.update_layout(
+            #     yaxis=dict(
+            #         title=title,
+            #         titlefont_size=30,
+            #         tickfont_size=28,
+            #     ),
+            #     xaxis=dict(
+            #         title=x_title,
+            #         titlefont_size=30,
+            #         tickfont_size=28,
+            #     ),
+            #     font=dict(
+            #         family="Times New Roman",
+            #         size=30,
+            #         color="black"
+            #     ),
+            #     paper_bgcolor='rgba(255,255,255,1)',
+            #     plot_bgcolor='rgba(255,255,255,1)'
+            # )
+            # fig.update_xaxes(showline=True, linewidth=4, linecolor='black')
+            # fig.update_yaxes(showline=True, linewidth=4, linecolor='black')
+            # plotly.offline.plot(fig,
+            #                     filename=file_to_save, auto_open=False)
+            #
+            # # extract peak demad for uncontrolled and controlled cases for all years
+            # uncontrolled_peak_demand_all_years = []
+            # controlled_peak_demand_all_years = []
+            # basecase_peak_demand_all_years = []
+            # all_year_ev_uncontrolled_laod_in_kw = all_year_ev_uncontrolled_laod_in_kw.drop(columns=["year_i", "day",
+            #                                                                                         "hour"])
+            # all_year_ev_controlled_laod_in_kw = all_year_ev_controlled_laod_in_kw.drop(columns=["year_i", "day",
+            #                                                                                     "hour"])
+            # df_lst_uncontrolled_scenario_base_EV_demand = []
+            # df_lst_controlled_scenario_base_EV_demand = []
+            #
+            # for x in year_list:
+            #     mini_list1 = []
+            #     mini_list2 = []
+            #     k_df = all_year_ev_uncontrolled_laod_in_kw[all_year_ev_uncontrolled_laod_in_kw["Year"] == str(x)]
+            #     k_df = k_df.drop(columns=["Year"])
+            #     k = k_df.sum(axis=1).max()
+            #     uncontrolled_peak_demand_all_years.append(k/1000)   # convert to MWs
+            #
+            #     kc_df = all_year_ev_controlled_laod_in_kw[all_year_ev_controlled_laod_in_kw["Year"] == str(x)]
+            #     kc_df = kc_df.drop(columns=["Year"])
+            #     kc = kc_df.sum(axis=1).max()
+            #     controlled_peak_demand_all_years.append(kc/1000)  # convert to MWs
+            #     basecase_peak_demand_all_years.append(0)
+            #
+            #     # extract required data for grouped stack bar plots
+            #     # need to find coincident peak information and use that
+            #     unc_df = k_df.sum(axis=1, numeric_only=True)
+            #     idxmax_uncontrolled = unc_df.idxmax()
+            #     max_uncontrolled = unc_df.max()
+            #     # get max baseload at coinicdent peak of uncontrolled
+            #     base_uncontrolled = base_data_in_kws[idxmax_uncontrolled]
+            #     # mini_list1.append(x)
+            #     mini_list1.append(base_uncontrolled / 1000)
+            #     mini_list1.append(max_uncontrolled/1000)
+            #     df_lst_uncontrolled_scenario_base_EV_demand.append(mini_list1)  # convert to mw
+            #
+            #     c_df = kc_df.sum(axis=1, numeric_only=True)
+            #     idxmax_controlled = c_df.idxmax()
+            #     max_controlled = c_df.max()
+            #     # get max baseload at coinicdent peak of controlled
+            #     base_controlled = base_data_in_kws[idxmax_controlled]
+            #     # mini_list2.append(x)
+            #     mini_list2.append(base_controlled / 1000)
+            #     mini_list2.append(max_controlled / 1000)
+            #     df_lst_controlled_scenario_base_EV_demand.append(mini_list2)  # convert to mw
+            #     # df_lst_controlled_scenario_EV_demand.append(max_controlled/1000)
+            #     # df_lst_controlled_scenario_base_demand.append(base_controlled/1000) # convert to mw
+            #
+            # file_to_save = f"/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/code/{plots_folder_name}/Multiyear_barplot_EV_peak_demand_{plots_folder_name}.html"
+            # title = "Peak EV demand in MWs"
+            # x_title = "Years"
+            # year_list = [int(x) for x in year_list]
+            # # scenario = "Uncontrolled scenario"
+            # # plot_histogram_plotly_1plot(plots_folder_name, uncontrolled_peak_demand_all_years, year_list, title,
+            # #                             x_title, file_to_save, scenario)
+            # # peak ev demand
+            # plot_histogram_plotly(plots_folder_name, basecase_peak_demand_all_years,
+            #                       uncontrolled_peak_demand_all_years, controlled_peak_demand_all_years,
+            #                       year_list, title, x_title, file_to_save, size_val, 'dont care')
+            #
+            # scenario = ""
+            # title = "Transformer upgrades"
+            # x_title = "Years"
+            # file_to_save = f"/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/code/{plots_folder_name}/Multiyear_xfrmr_upgrade_{plots_folder_name}.html"
+            # total_xfrmrs_need_replacing_120_h = list(np.cumsum(total_xfrmrs_need_replacing_120))
+            # plot_histogram_plotly_1plot(plots_folder_name, total_xfrmrs_need_replacing_120_h, year_list, title,
             #                             x_title, file_to_save, scenario)
-            # peak ev demand
-            plot_histogram_plotly(plots_folder_name, basecase_peak_demand_all_years,
-                                  uncontrolled_peak_demand_all_years, controlled_peak_demand_all_years,
-                                  year_list, title, x_title, file_to_save, size_val, 'dont care')
-
-            scenario = ""
-            title = "Transformer upgrades"
-            x_title = "Years"
-            file_to_save = f"/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/code/{plots_folder_name}/Multiyear_xfrmr_upgrade_{plots_folder_name}.html"
-            total_xfrmrs_need_replacing_120_h = list(np.cumsum(total_xfrmrs_need_replacing_120))
-            plot_histogram_plotly_1plot(plots_folder_name, total_xfrmrs_need_replacing_120_h, year_list, title,
-                                        x_title, file_to_save, scenario)
-
-            # plot grouped stack plot of base+ev demand for uncontrolled and controlled
-            uncontrolled_np = np.array(df_lst_uncontrolled_scenario_base_EV_demand)
-            controlled_np = np.array(df_lst_controlled_scenario_base_EV_demand)
-
-            coincident_peak = False  # IMPORTANT FLAG TO MODIFYING THE BELOW PLOT
-            df1_uncontrolled = pd.DataFrame(uncontrolled_np, index=[str(x) for x in year_list], columns=["Base Load", "EV Demand"])
-            df2_controlled = pd.DataFrame(controlled_np, index=[str(x) for x in year_list], columns=["Base Load", "EV Demand"])
-            base_building_peak_demand = df_final_divided_inkws_hourly.sum(axis=1).max()
-            # bs_ld = [base_building_peak_demand]*controlled_np.shape[0]
-            # ev_ld = [0]*controlled_np.shape[0]
-            # desrd_np = np.column_stack((bs_ld, ev_ld))
-
-            title = "Demand in MWs"
-            x_title = "Years"
-            col_name = 'Uncontrolled EV Demand'
-            file_to_save = f"/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/code/{plots_folder_name}/Uncontrolled_stack_plot_with_baseload_line_{plots_folder_name}.html"
-            plot_stacked_plot_for_uncontrolled_ev(year_list, list(df1_uncontrolled["Base Load"]), list(df1_uncontrolled["EV Demand"]), size_val, file_to_save,
-                                                  base_building_peak_demand, title, x_title, col_name)
-
-            title = "Demand in MWs"
-            x_title = "Years"
-            col_name = 'Controlled EV Demand'
-            file_to_save = (f"/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/code/"
-                            f"{plots_folder_name}/Controlled_stack_plot_with_baseload_line_{plots_folder_name}.html")
-            plot_stacked_plot_for_uncontrolled_ev(year_list, list(df2_controlled["Base Load"]),
-                                                  list(df2_controlled["EV Demand"]), size_val, file_to_save,
-                                                  base_building_peak_demand, title, x_title, col_name)
-
-            if not coincident_peak:
-                base_building_peak_demand = df_final_divided_inkws_hourly.sum(axis=1).max()
-                # replace coincident building peak demand with the peak(across one week) value
-                df1_uncontrolled["Base Load"] = base_building_peak_demand/1000  # in mw
-                df2_controlled["Base Load"] = base_building_peak_demand/1000  # in mw
-
-            name_to_save = f"/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/code/{plots_folder_name}/{plots_folder_name}_grouped_stack_plot.pdf"
-            plot_clustered_stacked([df1_uncontrolled, df2_controlled], name_to_save,["Uncontrolled scenario", "Controlled scenario"], cmap=plt.cm.viridis)
+            #
+            # # plot grouped stack plot of base+ev demand for uncontrolled and controlled
+            # uncontrolled_np = np.array(df_lst_uncontrolled_scenario_base_EV_demand)
+            # controlled_np = np.array(df_lst_controlled_scenario_base_EV_demand)
+            #
+            # coincident_peak = False  # IMPORTANT FLAG TO MODIFYING THE BELOW PLOT
+            # df1_uncontrolled = pd.DataFrame(uncontrolled_np, index=[str(x) for x in year_list], columns=["Base Load", "EV Demand"])
+            # df2_controlled = pd.DataFrame(controlled_np, index=[str(x) for x in year_list], columns=["Base Load", "EV Demand"])
+            # base_building_peak_demand = df_final_divided_inkws_hourly.sum(axis=1).max()
+            # # bs_ld = [base_building_peak_demand]*controlled_np.shape[0]
+            # # ev_ld = [0]*controlled_np.shape[0]
+            # # desrd_np = np.column_stack((bs_ld, ev_ld))
+            #
+            # title = "Demand in MWs"
+            # x_title = "Years"
+            # col_name = 'Uncontrolled EV Demand'
+            # file_to_save = f"/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/code/{plots_folder_name}/Uncontrolled_stack_plot_with_baseload_line_{plots_folder_name}.html"
+            # plot_stacked_plot_for_uncontrolled_ev(year_list, list(df1_uncontrolled["Base Load"]), list(df1_uncontrolled["EV Demand"]), size_val, file_to_save,
+            #                                       base_building_peak_demand, title, x_title, col_name)
+            #
+            # title = "Demand in MWs"
+            # x_title = "Years"
+            # col_name = 'Controlled EV Demand'
+            # file_to_save = (f"/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/code/"
+            #                 f"{plots_folder_name}/Controlled_stack_plot_with_baseload_line_{plots_folder_name}.html")
+            # plot_stacked_plot_for_uncontrolled_ev(year_list, list(df2_controlled["Base Load"]),
+            #                                       list(df2_controlled["EV Demand"]), size_val, file_to_save,
+            #                                       base_building_peak_demand, title, x_title, col_name)
+            #
+            # if not coincident_peak:
+            #     base_building_peak_demand = df_final_divided_inkws_hourly.sum(axis=1).max()
+            #     # replace coincident building peak demand with the peak(across one week) value
+            #     df1_uncontrolled["Base Load"] = base_building_peak_demand/1000  # in mw
+            #     df2_controlled["Base Load"] = base_building_peak_demand/1000  # in mw
+            #
+            # name_to_save = f"/home/gudd172/tesp/repository/tesp/examples/analysis/dsot/code/{plots_folder_name}/{plots_folder_name}_grouped_stack_plot.pdf"
+            # plot_clustered_stacked([df1_uncontrolled, df2_controlled], name_to_save,["Uncontrolled scenario", "Controlled scenario"], cmap=plt.cm.viridis)
 
             k = 1
