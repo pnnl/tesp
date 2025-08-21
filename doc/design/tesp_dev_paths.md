@@ -1,9 +1,9 @@
-# TESP Development Pathways
+# TESP tesp_supportment Pathways
 
 ## MindMap Style
 ```mermaid
 mindmap
-  root((TESP Development Pathways))
+  root((TESP tesp_supportment Pathways))
     User Experience
       (Examples)
       (Documentation)
@@ -30,50 +30,63 @@ mindmap
 %%{init: { 'logLevel': 'debug',  'gitGraph': {'rotateCommitLabel': 'false'}, 'themeVariables': {'commitLabelFontSize': '16px'}} }%%
 gitGraph TB:
     commit id: " "
-    branch develop
+    branch tesp_support
     commit id: "v1.3.6"
-    branch capacity_building
+    branch arch_des
+    branch use_case_support
+    branch bug_fix
     branch agent_design
     branch user_experience
-    branch electric_vehicles
-    checkout capacity_building
+    branch cosim_toolbox
+    branch CICD
+    branch indiv_usecase
+    branch tool_int
+    branch TENT
+    branch hpc
+    checkout use_case_support
         commit id: "Feeder Generator Integration"
-        branch rates_analysis
-        checkout develop
-        merge capacity_building
-        checkout rates_analysis
+        checkout use_case_support
             commit id: "TOUDesign"
     
+    checkout arch_des
+        commit id: "tso_rework"
+
     checkout agent_design
         commit id: "HVAC"
     
-    
+    checkout indiv_usecase
+      commit id: "glm_dsot creation"
+      commit id: "glm_dsot validation"
+
     checkout user_experience
       commit id: "Examples"
       commit id: "Documentation"
       commit id: "BugFixes"
+      commit id: "Messaging&Logging"
+
     checkout agent_design
         commit id: "EV"
         commit id: "WaterHeater"
         commit id: "Battery"
-    checkout develop
+    checkout tesp_support
     merge agent_design
-    checkout electric_vehicles
-      commit id: "BidirectionalCharging"
-      commit id: "UpdateEVModels"
-    checkout rates_analysis
+    checkout CICD
+      commit id: "Testing"
+      commit id: "Validation"
+    
+    checkout use_case_support
         
-        merge electric_vehicles id: "EV Update"
-        commit id: "EV Rate Tariff"
-    checkout develop
-    merge rates_analysis
+        merge cosim_toolbox id: "Testing&Validation"
+        commit id: "Example Testing"
+    checkout tesp_support
+    merge use_case_support
 
     
     checkout user_experience
       commit id: "Examples2"
       commit id: "Documentation2"
       commit id: "BugFixes2"
-    checkout develop
+    checkout tesp_support
     merge user_experience id: "v1.3.7"
 
 ```
