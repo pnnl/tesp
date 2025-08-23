@@ -1,0 +1,165 @@
+@startuml
+participant User
+
+User -> substation: <<call>>
+activate substation
+
+substation -> substation: inner_substation_loop()
+activate substation
+
+substation -> substation: timing()
+substation -> substation: *enable_logging()*
+note right: Methods framed by "*" are imported from other modules.
+substation -> substation: !open_metadata_dicts()!
+note right: Methods framed by "!" do not exist but describe functionality present in code.
+substation -> substation: !configure_simulation()!
+
+substation -> Forecast: <<create>>
+activate Forecast
+
+Forecast -> Forecast: set_sch_year()
+
+loop number of markets
+    substation -> DSOMarket: <<create>>
+    activate DSOMarket
+    DSOMarket -> DSOMarket: update_wholesale_node_curve()
+
+    substation -> RetailMarket: <<create>>
+    activate RetailMarket
+end
+
+substation -> substation: !create_agents!
+activate substation
+loop number of Agents
+    substation -> Agents: <<create>>
+    activate Agents
+end
+deactivate substation
+
+substation -> substation: !create_metrics_stores()!
+activate substation
+substation -> MetricsCollector: <<create>>
+activate MetricsCollector
+loop number of metrics stores
+    substation -> MetricsStore: <<create>>
+    activate MetricsStore
+end
+deactivate substation
+
+substation -> substation: !configure_market_timing()!
+substation -> substation: !initialize_bidding()!
+substation -> substation: !create_substation_federation()!
+
+loop simulation time
+    loop number of Agents
+        substation -> Agents: !initialize_agents()
+    end
+    substation -> substation: !get_input_from_federation()!
+    substation -> DSOMarket: update_wholesale_node_curve()
+    substation -> RetailMarket: clean_bids_RT()
+    
+    substation -> substation: !formulate_RT_bids
+    activate substation
+    loop number of Agents
+        Agents -> Agents: formulate_bid_rt()
+        substation <- Agents: Agent_rt_bid
+        substation -> RetailMarket: curve_aggregator_RT()
+    end
+    deactivate
+    substation -> RetailMarket: curve_aggregator_RT()
+    note right: Buyer curve aggregation
+
+    substation -> DSOMarket: update_wholesale_node_curve()
+    substation -> RetailMarket: clean_bids_DA()
+    substation -> substation: !clear_household_heatgain()!
+
+    substation -> substation: !formulate_DA_bids!
+    activate substation
+    loop number of Agents
+        Agents -> Agents: formulate_bid_DA()
+        substation <- Agents: Agent_DA_bid
+        substation -> RetailMarket: curve_aggregator_DA()
+    end
+    deactivate
+    substation -> substation: !bid_uncontrollable_loads_DA()!
+    substation -> substation: !agents_optimize_bids_in_parallel()!
+    substation -> RetailMarket: curve_aggregator_DA()
+    substation -> substation: !bid_industrial_load_DA()!
+    substation -> RetailMarket: curve_aggregator_DA()
+    substation -> substation: !perform_DSO_RT_bid()!
+    activate substation
+    substation -> DSOMarket: clean_bid_rt()
+    substation -> DSOMarket: curve_aggregator_DSO_RT()
+    deactivate substation
+    substation -> substation: !perform_DSO_DA_bid()!
+    activate substation
+    substation -> DSOMarket: clean_bid_DA()
+    substation -> DSOMarket: curve_aggregator_DSO_DA()
+    deactivate substation
+    substation -> substation: !perform_wholesale_bidding_RT()!
+    activate substation
+    substation -> RetailMarket: curve_aggregator_AMES_RT()
+    substation -> substation: !send_RT_bid_to AMES()!
+    deactivate substation
+    substation -> substation: !perform_wholesale_bidding_DA()!
+    substation -> substation: !send_DA_bid_to AMES()!
+    activate substation
+    substation -> RetailMarket: curve_aggregator_AMES_DA()
+    deactivate substation
+    substation -> substation: !write_metrics()!
+    substation -> substation: !get_wholesale_RT_clearing_price()!
+    activate substation
+    substation -> substation: !write_metrics()!
+    deactivate substation
+    substation -> substation: !get_wholesale_DA_clearing_price()!
+    activate substation
+    substation -> substation: !write_metrics()!
+    deactivate substation
+    substation -> substation: !clear_DSO_RT()!
+    activate substation
+    substation -> DSOMarket: set_Pwclear_RT()
+    substation -> DSOMarket: !update_RT_supply_curve()!
+    deactivate substation
+    substation -> substation: !clear_DSO_DA()!
+    activate substation
+    substation -> DSOMarket: set_Pwclear_DA()
+    substation -> DSOMarket: !update_DA_supply_curve()!
+    deactivate substation
+    substation -> substation: !clear_retail_market_RT()!
+    activate substation
+    substation -> RetailMarket: clear_market_RT()
+    loop number of Agents
+        substation -> Agents: inform_bid()
+    end
+    substation -> substation: !write_metrics()!
+    deactivate substation
+    substation -> substation: !clear_retail_market_DA()!
+    activate substation
+    substation -> RetailMarket: clear_market_DA()
+    substation -> Forecast: set_retail_price_forecast()
+    substation -> RetailMarket: update_price_CA()
+
+    substation -> substation: !clear_DA_market!
+    activate substation
+    loop number of Agents
+        Agents -> Agents: !set_DA_clearing()!
+        substation -> RetailMarket: !write_metrics()!
+    end
+    deactivate
+    substation -> substation: !write_metrics()!
+    deactivate substation
+
+    substation -> substation: !adjust_agents_RT()!
+    activate substation
+    loop number of Agents
+        Agents -> Agents: !set_RT_setpoints()!
+        substation -> RetailMarket: !write_metrics()!
+    end
+    deactivate
+    substation -> substation: !write_metrics()!
+    deactivate substation
+    substation -> MetricsCollector: !write_metrics_to_file()!
+end
+
+
+@enduml
