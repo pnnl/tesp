@@ -167,8 +167,8 @@ class Config:
                 self.glm.model.add_define(key, value)
         
         if hasattr(self, 'messager'):
+            num = self.DSO.replace('DSO_', '')
             if self.messager == 'HELICS':
-                num = self.DSO.replace('DSO_', '')
                 params = {
                     "configure": f'Substation_{num}.json'
                 }

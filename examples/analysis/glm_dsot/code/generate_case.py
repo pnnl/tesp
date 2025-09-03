@@ -5,6 +5,7 @@
 
 import pyjson5
 import sys
+import os
 
 import prepare_case_glm_dsot as prep_case
 
@@ -42,10 +43,10 @@ def generate_case(caseName, port, pv=None, bt=None, fl=None, ev=None):
                 ppc['EndTime'] = str(year) + "-" + month + daytime
 
                 config_dump = pyjson5.dumps(ppc, indent=2)
-                out_file = str("generate_config" + '.json5')
+                out_file = os.path.join("../data/", "generate_config_dump.json5")
                 with open(out_file, 'w', encoding='utf-8') as file:
                     file.write(config_dump)
-                prep_case.prepare_case(int(node), "generate_config", pv=pv, bt=bt, fl=fl, ev=ev)
+                prep_case.prepare_case(int(node), "generate_config_dump", pv=pv, bt=bt, fl=fl, ev=ev)
 
             if caseStartYear == caseEndYear:
                 break
