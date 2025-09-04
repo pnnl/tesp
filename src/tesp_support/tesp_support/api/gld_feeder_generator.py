@@ -181,6 +181,7 @@ class Config:
                     "aggregate_subscriptions": 'true',
                     "aggregate_publications": 'true'
                 }
+                self.mdl.fncs_msg.add(f'gldSubstation_{num}', params)
 
         # Add voltage dump file
         if self.base.WANT_VI_DUMP:

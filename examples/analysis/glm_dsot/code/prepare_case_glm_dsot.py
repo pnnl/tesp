@@ -502,12 +502,12 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
             # Dump the modified config to json5 to be read in by feeder generator
             config_dump = pyjson5.dumps(config, indent=2)
             output_file = 'config_dump.json5'
-            with open(output_file, 'w', encoding='utf-8') as file:
+            with open(os.path.join("../data/", output_file), 'w', encoding='utf-8') as file:
                 file.write(config_dump)
-            config_dump = gld_feeder.Config(output_file)
+            config_dump = gld_feeder.Config(os.path.join("../data/", output_file))
             gld_feeder.Feeder(config_dump, "full")
             config["BuildingPrep"]['CommBldgPopulation'] = gld_feeder.comm_bldgs_pop
-            os.remove(output_file)
+            os.remove(os.path.join("../data/", output_file))
            
             # Write the glm_dictionary for each substation
             gd.glm_dict(caseName, feed_key)        
