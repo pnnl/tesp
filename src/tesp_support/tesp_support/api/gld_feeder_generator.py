@@ -207,8 +207,7 @@ class Config:
             self.mdl.climate.add(self.weather_name, {
                 "interpolate": str(self.interpolate),
                 "latitude": str(self.latitude),
-                "longitude": str(self.longitude),
-                "WeatherChoice": str(self.weather) })
+                "longitude": str(self.longitude)})
 
     def generate_recs(self) -> None:
         """Generate RECS metadata if it does not yet exist based on user config.

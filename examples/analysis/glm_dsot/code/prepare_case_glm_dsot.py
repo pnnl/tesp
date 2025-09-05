@@ -384,7 +384,8 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
         # coordinates (lat/long) for solar gain calcs and such.
         # NOTE: This can be misused
         weather_agent_name = 'weather_' + sub_key
-        weaPrep['WeatherChoice'] = str.upper(os.path.splitext(dso_val['weather_file'])[1][1:])
+        #WeatherChoice is not used
+        #weaPrep['WeatherChoice'] = str.upper(os.path.splitext(dso_val['weather_file'])[1][1:])
         weaPrep['Name'] = weather_agent_name
         weaPrep['DataSource'] = dso_val['weather_file']
         weaPrep['Latitude'] = dso_val['latitude']
@@ -394,7 +395,7 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
         # Could eliminate code here by changing helpers_dsot.py, since only one 
         # weather for DSO.
         weather_config[weather_agent_name] = {
-                'type': weaPrep['WeatherChoice'],
+                #'type': weaPrep['WeatherChoice'],
                 'source': weaPrep['DataSource'],
                 'latitude': weaPrep['Latitude'],
                 'longitude': weaPrep['Longitude'],
@@ -486,7 +487,7 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
             config["weather_name"] = 'weather_' + sub_key
             config["latitude"] = weaPrep['Latitude']
             config["longitude"] = weaPrep['Longitude']
-            config["weather"] = weaPrep['WeatherChoice']
+            #config["weather"] = weaPrep['WeatherChoice']
             config["region"] = dso_val['climate_zone']
             config["state"] = dso_val['state']
             config["res_dso_type"] = 'No_DSO_Type'
