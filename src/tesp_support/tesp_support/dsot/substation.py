@@ -202,7 +202,7 @@ def inner_substation_loop(metrics_root, with_market):
             # check the unit of the market
             dso_bus = config['markets'][key]['bus']
             dso_unit = config['markets'][key]['unit']
-            dso_full_metrics = config['markets'][key]['full_metrics_detail']  # True for full
+            dso_full_metrics = config['markets'][key]['metrics_full_detail']  # True for full
 
             # Update the supply curves for the wholesale. Only once as this will define a curve per day
             # might need to play around with the curve a,b,c here but for now let's run with the defaults
@@ -237,7 +237,7 @@ def inner_substation_loop(metrics_root, with_market):
 
             # check the unit of the market
             retail_unit = config['markets'][key]['unit']
-            retail_full_metrics = config['markets'][key]['full_metrics_detail']  # True for full
+            retail_full_metrics = config['markets'][key]['metrics_full_detail']  # True for full
             log.info('instantiated Retail market agent')
 
     # instantiate the HVAC controller objects and map their message inputs

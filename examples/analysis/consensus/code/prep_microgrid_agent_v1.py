@@ -646,9 +646,9 @@ def process_glm_with_microgrids(gldfileroot, substationfileroot, weatherfileroot
                 num_market_agents += 1
                 # The same metricsDetail level basically provides the collection level for both DSO and Retail TODO: maybe make both of them independent.
                 if simulation_config['metricsFullDetail'] is True:
-                    full_metrics_detail = True
+                    metrics_full_detail = True
                 else:
-                    full_metrics_detail = False
+                    metrics_full_detail = False
                 market_name = market_config['DSO']['Name']
                 markets[market_name] = {
                     'bus': market_config['DSO']['Bus'],
@@ -666,7 +666,7 @@ def process_glm_with_microgrids(gldfileroot, substationfileroot, weatherfileroot
                     'number_of_gld_homes': market_config['DSO']['number_of_gld_homes'],
                     'distribution_charge_rate': market_config['DSO']['distribution_charge_rate'],
                     'dso_retail_scaling': market_config['DSO']['dso_retail_scaling'],
-                    'full_metrics_detail': full_metrics_detail
+                    'metrics_full_detail': metrics_full_detail
                 }
 
             elif market == 'Retail':
@@ -702,7 +702,7 @@ def process_glm_with_microgrids(gldfileroot, substationfileroot, weatherfileroot
                     'Wind_m': market_config['Retail']['Wind_m'],
                     'delta_T_TOR': market_config['Retail']['delta_T_TOR'],
                     'delta_T_ave_wind_R': market_config['Retail']['delta_T_ave_wind_R'],
-                    'full_metrics_detail': full_metrics_detail
+                    'metrics_full_detail': metrics_full_detail
                 }
             else:
                 print('WARNING: unknown market in configuration')

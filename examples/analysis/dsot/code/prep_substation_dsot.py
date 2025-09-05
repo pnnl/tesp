@@ -691,7 +691,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                 'number_of_gld_homes': market_config['DSO']['number_of_gld_homes'],
                 'distribution_charge_rate': market_config['DSO']['distribution_charge_rate'],
                 'dso_retail_scaling': market_config['DSO']['dso_retail_scaling'],
-                'full_metrics_detail': simulation_config['metricsFullDetail'],
+                'metrics_full_detail': simulation_config['metricsFullDetail'],
                 'quadratic': simulation_config['quadratic']
             }
             if DSO_quadratic_curves:
@@ -733,7 +733,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                 'Wind_m': market_config['Retail']['Wind_m'],
                 'delta_T_TOR': market_config['Retail']['delta_T_TOR'],
                 'delta_T_ave_wind_R': market_config['Retail']['delta_T_ave_wind_R'],
-                'full_metrics_detail': simulation_config['metricsFullDetail']
+                'metrics_full_detail': simulation_config['metricsFullDetail']
             }
 
         else:
