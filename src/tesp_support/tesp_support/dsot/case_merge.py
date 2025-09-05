@@ -180,7 +180,7 @@ def merge_agent_dict(target, sources):
         lp = open(path.dirname(target) + '/' + fdr + '_agent_dict.json').read()
         cfg = json.loads(lp)
         for key in cfg.keys():
-            if key in ["start_time", "end_time", "rate", "LogLevel", "solver", "num_core", "priceSensLoad", "port",
+            if key in ["StartTime", "EndTime", "rate", "LogLevel", "solver", "num_core", "priceSensLoad", "serverPort",
                        "metrics", "metrics_extension", "metrics_interval"]:
                 diction[key] = cfg[key]
             # To retain compatability with archived dsot prepare_case:    

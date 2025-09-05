@@ -347,7 +347,7 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
             config["income_level"] = dso_val['income_level']
         config["rooftop_pv_rating_MW"] = dso_val['rooftop_pv_rating_MW']
         config["scaling_factor"] = dso_val['scaling_factor']
-        config["port"] = 5150 + (int(bus) // 20)
+        config["serverPort"] = 5150 + (int(bus) // 20)
 
         bldPrep['solar_data_path'] = config["solar_data_path"]
         prefix = ''

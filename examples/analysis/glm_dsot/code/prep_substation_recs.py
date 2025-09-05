@@ -685,7 +685,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
             markets[market_name] = {
                 'bus': market_config['DSO']['Bus'],
                 'rate': case_config['rate'],
-                'port': case_config['port'],
+                'serverPort': case_config['serverPort'],
                 'unit': market_config['DSO']['Unit'],
                 'pricecap': market_config['DSO']['PriceCap'],
                 'num_samples': market_config['DSO']['CurveSamples'],
@@ -713,7 +713,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
             market_name = market_config['Retail']['Name']
             markets[market_name] = {
                 'rate': case_config['rate'],
-                'port': case_config['port'],
+                'serverPort': case_config['serverPort'],
                 'unit': market_config['Retail']['Unit'],
                 'pricecap': market_config['Retail']['PriceCap'],
                 'num_samples': market_config['Retail']['CurveSamples'],
@@ -773,7 +773,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
             'solver': case_config['solver'],
             'numCore': case_config['numCore'],
             'priceSensLoad': case_config['priceSensLoad'],
-            'port': case_config['port'],
+            'serverPort': case_config['serverPort'],
             'metrics': case_config['metrics'],
             'metrics_extension': case_config['metrics_extension'],
             'metrics_interval': case_config['metrics_interval']}
