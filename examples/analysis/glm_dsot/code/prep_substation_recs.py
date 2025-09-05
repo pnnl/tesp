@@ -769,7 +769,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
             'StartTime': case_config['StartTime'],
             'EndTime': case_config['EndTime'],
             'rate': case_config['rate'],
-            'log_level': case_config['log_level'],
+            'LogLevel': case_config['LogLevel'],
             'solver': case_config['solver'],
             'numCore': case_config['numCore'],
             'priceSensLoad': case_config['priceSensLoad'],
