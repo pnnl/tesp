@@ -2959,7 +2959,7 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
     port = config['SimulationConfig']['port']
     timestep = int(config['FeederGenerator']['MinimumStep'])
     metrics = config['FeederGenerator']['Metrics']
-    metrics_type = config['FeederGenerator']['MetricsType']
+    metrics_type = config['FeederGenerator']['metrics_extension']
     metrics_interval = int(config['FeederGenerator']['metrics_interval'])
     metrics_interim = int(config['FeederGenerator']['MetricsInterim'])
     solar_percentage = 0.01 * float(config['FeederGenerator']['SolarPercentage'])
