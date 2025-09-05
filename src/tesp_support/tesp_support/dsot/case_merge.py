@@ -185,7 +185,7 @@ def merge_agent_dict(target, sources):
                 diction[key] = cfg[key]
             # To retain compatability with archived dsot prepare_case:    
             elif key in ["StartTime", "EndTime", "rate", "LogLevel", "solver", "numCore", "priceSensLoad", "serverPort",
-                       "Metrics", "MetricsType", "MetricsInterval"]:
+                       "Metrics", "MetricsType", "metrics_interval"]:
                 diction[key] = cfg[key]
             else:
                 diction[key].update(cfg[key])

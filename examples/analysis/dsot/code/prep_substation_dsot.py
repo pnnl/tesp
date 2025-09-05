@@ -767,7 +767,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
             'serverPort': simulation_config['serverPort'],
             'Metrics': feeder_config['Metrics'],
             'MetricsType': feeder_config['MetricsType'],
-            'MetricsInterval': feeder_config['MetricsInterval']}
+            'metrics_interval': feeder_config['metrics_interval']}
     print(json.dumps(meta), file=dp)
     dp.close()
 

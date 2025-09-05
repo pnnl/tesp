@@ -200,7 +200,8 @@ class HVACDSOT:  # TODO: update class name
         self.sqft = float(house_properties['sqft'])
         self.stories = float(house_properties['stories'])
         self.doors = float(house_properties['doors'])
-        self.thermal_integrity = house_properties['thermal_integrity']
+        # thermal integrity is not set in the .glms, the R-values are
+        #self.thermal_integrity = house_properties['thermal_integrity']
         self.Rroof = float(house_properties['Rroof'])
         self.Rwall = float(house_properties['Rwall'])
         self.Rfloor = float(house_properties['Rfloor'])
