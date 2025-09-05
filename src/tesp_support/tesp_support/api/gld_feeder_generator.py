@@ -1095,13 +1095,14 @@ class Commercial_Build:
         self.glm = config.glm
         self.mdl = config.glm.glm
 
-    def add_one_commercial_zone(self, bldg: dict, key: str) -> None:
+    def add_one_commercial_zone(self, bldg: dict, key: str, phases:str) -> None:
         """Write one pre-configured commercial zone as a house and small loads
         such as lights, plug loads, and gas water heaters as ZIPLoads.
 
         Args:
             bldg (dict): dictionary of GridLAB-D house and zipload attributes
             key (str): location name for object
+            phases (str): the phase of the building's meter
         Returns:
             None
         """
@@ -1204,10 +1205,10 @@ class Commercial_Build:
 
         # add solar, ev, and battery based on overall deployment levels
         if self.config.case_type['pv']:
-            self.config.sol.add_solar(self.config.solar_deployment, mtr, f'{mtr}_solmtr', f'{mtr}_sol', f'{mtr}_solinv', "ABC", 120.0, bldg['floor_area'])
+            self.config.sol.add_solar(self.config.solar_deployment, mtr, f'{mtr}_solmtr', f'{mtr}_sol', f'{mtr}_solinv', phases, 120.0, bldg['floor_area'])
 
         if self.config.case_type['bt']:
-            self.config.batt.add_batt(self.config.storage_deployment, 1, mtr, f'{mtr}_batmtr', f'{mtr}_bat', f'{mtr}_batinv', "ABC", 120.0)
+            self.config.batt.add_batt(self.config.storage_deployment, 1, mtr, f'{mtr}_batmtr', f'{mtr}_bat', f'{mtr}_batinv', phases, 120.0)
 
         if self.config.case_type['ev']:
             self.config.ev.add_ev(self.config.ev_deployment, name)
@@ -1393,7 +1394,7 @@ class Commercial_Build:
                         bldg['adj_occ'] = (0.9 + 0.1 * rng.random()) * floor_area / 1000.
 
                         bldg['zonename'] = gld_strict_name(f'{key}_floor_{floor}_zone_{zone}_{comm_type}')
-                        Commercial_Build.add_one_commercial_zone(self, bldg, key)
+                        Commercial_Build.add_one_commercial_zone(self, bldg, key, phases)
 
             elif comm_type == 'big_box':
                 bldg['ceiling_height'] = 14.
@@ -1452,7 +1453,7 @@ class Commercial_Build:
                     bldg['adj_occ'] = (0.9 + 0.1 * rng.random()) * floor_area / 1000.
 
                     bldg['zonename'] = gld_strict_name(f'{key}_zone_{zone}_{comm_type}')
-                    Commercial_Build.add_one_commercial_zone(self, bldg, key)
+                    Commercial_Build.add_one_commercial_zone(self, bldg, key, phases)
 
             elif comm_type == 'strip_mall':
                 bldg['ceiling_height'] = 17
@@ -1498,7 +1499,7 @@ class Commercial_Build:
                     bldg['adj_ext'] = (0.8 + 0.4 * rng.random()) * floor_area / 1000.0
                     bldg['adj_occ'] = (0.8 + 0.4 * rng.random()) * floor_area / 1000.0
                     bldg['zonename'] = gld_strict_name(f'{key}_zone_{zone}_{comm_type}')
-                    Commercial_Build.add_one_commercial_zone(self, bldg, key)
+                    Commercial_Build.add_one_commercial_zone(self, bldg, key, phases)
 
             else: # For all other building types
                 self.bldg_area = floor_area
@@ -1543,7 +1544,7 @@ class Commercial_Build:
                 elif comm_type == 'low_occupancy':
                     bldg['base_schedule'] = 'lowocc'
                 bldg['zonename'] = gld_strict_name(f'{key}_{comm_type}')
-                Commercial_Build.add_one_commercial_zone(self, bldg, key)
+                Commercial_Build.add_one_commercial_zone(self, bldg, key, phases)
 
     def define_comm_bldg(self, dso_type: str, num_bldgs: float) -> list:
         """Randomly selects a set number of buildings by type and size (sqft).
