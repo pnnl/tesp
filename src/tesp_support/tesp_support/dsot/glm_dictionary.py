@@ -852,7 +852,7 @@ def glm_dict(case_name, feed_key):
     
     for ev_name, evcharger_det in glm.evcharger_det.items():
         try:
-            ev[f'ev_{ev_name}'] = {'name': f'ev_{ev_name}',
+            ev[ev_name] = {'name': ev_name,
                         'feeder_id': feed_key,
                         'billingmeter_id': glm.triplex_meter.instances[glm.house.instances[evcharger_det['parent']]['parent']]['parent'],
                         'parent': evcharger_det["parent"],
@@ -868,9 +868,9 @@ def glm_dict(case_name, feed_key):
                         'range_miles': float(evcharger_det["mileage_classification"]),
                         'efficiency': float(evcharger_det["charging_efficiency"])}
             if billingmeters[glm.triplex_meter.instances[glm.house.instances[evcharger_det['parent']]['parent']]['parent']]:
-                billingmeters[glm.triplex_meter.instances[glm.house.instances[evcharger_det['parent']]['parent']]['parent']]['children'].append(f'ev_{ev_name}')
+                billingmeters[glm.triplex_meter.instances[glm.house.instances[evcharger_det['parent']]['parent']]['parent']]['children'].append(ev_name)
         except KeyError:
-            ev[f'ev_{ev_name}'] = {'name': f'ev_{ev_name}',
+            ev[ev_name] = {'name': ev_name,
                         'feeder_id': feed_key,
                         'billingmeter_id': glm.house.instances[evcharger_det['parent']]['parent'],
                         'parent': evcharger_det["parent"],
@@ -886,7 +886,7 @@ def glm_dict(case_name, feed_key):
                         'range_miles': float(evcharger_det["mileage_classification"]),
                         'efficiency': float(evcharger_det["charging_efficiency"])}
             if billingmeters[glm.house.instances[evcharger_det['parent']]['parent']]:
-                billingmeters[glm.house.instances[evcharger_det['parent']]['parent']]['children'].append(f'ev_{ev_name}')
+                billingmeters[glm.house.instances[evcharger_det['parent']]['parent']]['children'].append(ev_name)
 
     feeders[feed_key] = {'house_count': len(houses), 'inverter_count': len(inverters), 'ev_count': len(ev)}
 
