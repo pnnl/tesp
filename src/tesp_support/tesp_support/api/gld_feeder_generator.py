@@ -1948,7 +1948,7 @@ class Electric_Vehicle:
                         "charging_efficiency": ev_charge_eff}
             ev_name = ev_name.replace(" ","_")
             self.glm.add_object("evcharger_det", f'{ev_name}_{self.ev_count}', params)
-            self.glm.add_metrics_collector(ev_name, "evcharger_det")
+            self.glm.add_metrics_collector(f'{ev_name}_{self.ev_count}', "evcharger_det")
             # Additional recorders
             # self.glm.add_collector("class=evcharger_det", "sum(actual_charge_rate)", "EV_charging_total.csv")
             # self.glm.add_group_recorder("class=evcharger_det", "actual_charge_rate", "EV_charging_power.csv")
@@ -2033,8 +2033,9 @@ class Electric_Vehicle:
         commute_duration = min(3600, 24 * 3600 - home_duration)
          
         # Estimate remaining time at work
-        work_duration = max(24 * 3600 - (home_duration + commute_duration), 1)  
-        # minimum work duration is 1 sec to avoid 0 that may give error in GridLABD
+        work_duration = max(24 * 3600 - (home_duration + commute_duration), 3600)  
+        # minimum work duration is 3600 sec or 1 hour to set reasonable schedule
+        # Note that minimum must be at least 1 to avoid errors in GridLAB-D 
         work_arr_secs = get_secs_from_hhmm(home_leave_time) + int(commute_duration / 2)
         if work_arr_secs > 24 * 3600:  # if midnight crossing
             work_arr_secs = work_arr_secs - 24 * 3600

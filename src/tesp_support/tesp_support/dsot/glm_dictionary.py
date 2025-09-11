@@ -852,7 +852,7 @@ def glm_dict(case_name, feed_key):
     
     for ev_name, evcharger_det in glm.evcharger_det.items():
         try:
-            ev[ev_name] = {'name': ev_name,
+            ev[hs_name] = {'name': ev_name,
                         'feeder_id': feed_key,
                         'billingmeter_id': glm.triplex_meter.instances[glm.house.instances[evcharger_det['parent']]['parent']]['parent'],
                         'parent': evcharger_det["parent"],
@@ -870,7 +870,7 @@ def glm_dict(case_name, feed_key):
             if billingmeters[glm.triplex_meter.instances[glm.house.instances[evcharger_det['parent']]['parent']]['parent']]:
                 billingmeters[glm.triplex_meter.instances[glm.house.instances[evcharger_det['parent']]['parent']]['parent']]['children'].append(ev_name)
         except KeyError:
-            ev[ev_name] = {'name': ev_name,
+            ev[hs_name] = {'name': ev_name,
                         'feeder_id': feed_key,
                         'billingmeter_id': glm.house.instances[evcharger_det['parent']]['parent'],
                         'parent': evcharger_det["parent"],
