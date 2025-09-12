@@ -2033,7 +2033,7 @@ class Electric_Vehicle:
         commute_duration = min(3600, 24 * 3600 - home_duration)
          
         # Estimate remaining time at work
-        work_duration = max(24 * 3600 - (home_duration + commute_duration), 3600)  
+        work_duration = max(24 * 3600 - (home_duration + commute_duration), 1)  
         # minimum work duration is 3600 sec or 1 hour to set reasonable schedule
         # Note that minimum must be at least 1 to avoid errors in GridLAB-D 
         work_arr_secs = get_secs_from_hhmm(home_leave_time) + int(commute_duration / 2)

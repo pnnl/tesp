@@ -543,11 +543,11 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
                 config["gis_path"] = False
                 config_dump = pyjson5.dumps(config, indent=2)
                 output_file = 'copper_config_dump.json5'
-                with open(output_file, 'w', encoding='utf-8') as file:
+                with open(os.path.join("../data/", output_file), 'w', encoding='utf-8') as file:
                     file.write(config_dump)
-                config_dump = gld_feeder.Config(output_file)
+                config_dump = gld_feeder.Config(os.path.join("../data/", output_file))
                 gld_feeder.Feeder(config_dump, "copp")
-                os.remove(output_file)
+                os.remove(os.path.join("../data/", output_file))
 
                 gd.glm_dict(caseName, feed_key)   
                 shutil.move(caseName + '/' + feed_key + '/' + feed_key + '_glm_dict.json',
