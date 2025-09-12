@@ -1946,6 +1946,7 @@ class Electric_Vehicle:
                         "mileage_efficiency": ev_mileage,
                         "mileage_classification": ev_range,
                         "charging_efficiency": ev_charge_eff}
+            ev_name = f'{house_name}_{ev_name}'
             ev_name = ev_name.replace(" ","_")
             self.glm.add_object("evcharger_det", f'{ev_name}_{self.ev_count}', params)
             self.glm.add_metrics_collector(f'{ev_name}_{self.ev_count}', "evcharger_det")

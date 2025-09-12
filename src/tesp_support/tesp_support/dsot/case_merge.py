@@ -65,7 +65,7 @@ def merge_glm(target, sources, xfmva):
                                 toks = line.split()
                                 name = toks[1][:-1]
                                 line = '  ' + toks[0] + ' ' + fdr + '_' + name + ';'
-                    if '#ifdef USE_FNCS' in line:
+                    if ('#ifdef USE_FNCS' in line) or ("fncs_msg" in line):
                         inSubstation = True
                     if inSubstation:
                         if ' configure ' in line:
@@ -98,7 +98,7 @@ def merge_glm(target, sources, xfmva):
                         canWrite = False
                     if canWrite:
                         print(line.rstrip(), file=op)
-                if '#endif' in line:
+                if ('#endif' in line) or (".txt" in line) or (".json" in line):
                     numEndif += 1
         inFirstFile = False
     op.close()
