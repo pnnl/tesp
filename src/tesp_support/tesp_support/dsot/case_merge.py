@@ -16,6 +16,7 @@ import json
 from os import path
 
 from tesp_support.api.helpers import gld_strict_name
+from tesp_support.api.modify_GLM import GLMModifier
 
 def merge_glm(target, sources, xfmva):
     """ Combines GridLAB-D input files into "target". The source files must already exist.
@@ -65,7 +66,7 @@ def merge_glm(target, sources, xfmva):
                                 toks = line.split()
                                 name = toks[1][:-1]
                                 line = '  ' + toks[0] + ' ' + fdr + '_' + name + ';'
-                    if ('#ifdef USE_FNCS' in line) or ("fncs_msg" in line):
+                    if ('#ifdef USE_FNCS' in line) or ("fncs_msg" in line) or ("helics_msg" in line) or ("voltdump" in line):
                         inSubstation = True
                     if inSubstation:
                         if ' configure ' in line:
@@ -98,12 +99,39 @@ def merge_glm(target, sources, xfmva):
                         canWrite = False
                     if canWrite:
                         print(line.rstrip(), file=op)
-                if ('#endif' in line) or (".txt" in line) or (".json" in line):
+                if ('#endif' in line) or ('.txt' in line) or ('.json' in line) or ('.csv' in line):
                     numEndif += 1
         inFirstFile = False
     op.close()
 
+def glm_merge(target, sources):
+    """ Combines GridLAB-D input files into "target". The source files must already exist.
+
+    Args:
+        target (str): the path to the target GLM file, including the name of the file
+        sources (list): list of feeder names in the target directory to merge
+    """
+    print('combining', sources, 'glm files into', target)
+    workdir = path.split(path.dirname(target))[0]
+    op = open(target, 'w')
+    inFirstFile = True
+    for fdr in sources:
+        glm = GLMModifier()
+        i_glm, success = glm.read_model(workdir + '/' + fdr + '/' + fdr + '.glm')
+        if inFirstFile == True:
+            diction = glm.model.instancesToGLM()
+            inFirstFile = False
+        else:
+            glm.del_object('fncs_msg', i_glm.fncs_msg.instances()[0].name)
+            #glm.delete_object('helics_msg')
+            #glm.del_object('voltdump')
+            #glm.del_object('currdump')
+            diction = i_glm.model.glm_merge()
+        print(diction, op)
+    op.close()
+
 def merge_glm_dict(target, sources, xfmva):
+
     """ Combines GridLAB-D metadata files into "target". The source files must already exist.
 
     The output JSON won't have a top-level base_feeder attribute. Instead,

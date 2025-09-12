@@ -177,7 +177,7 @@ class Config:
                 params = {
                     "parent": "network_node",
                     "configure": f'Substation_{num}_gridlabd.txt',
-                    "option": "transport:hostname localhost, port 5570",
+                    "option": '"transport:hostname localhost, port 5570"',
                     "aggregate_subscriptions": 'true',
                     "aggregate_publications": 'true'
                 }

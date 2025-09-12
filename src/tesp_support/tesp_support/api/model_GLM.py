@@ -443,6 +443,31 @@ class GLMModel:
             diction += "\n"
         return diction
 
+    def glm_merge(self):
+        G = self.draw_network()
+        power_entities = []
+        for node_name in G:
+            for object_name in self.object_entities:
+                for name in self.object_entities[object_name].instances:
+                    if node_name == name:
+                        if node_name in power_entities:
+                            continue
+                        diction += self.get_diction(self.object_entities, object_name, self.instanceToObject, name)
+                        power_entities.append(name)
+
+        # Write the objects
+        for object_name in self.object_entities:
+            for name in self.object_entities[object_name].instances:
+                if name not in power_entities:
+                    diction += self.get_diction(self.object_entities, object_name, self.instanceToObject, name)
+
+        # Write the schedules
+        for name in self.schedule_types:
+            for line in self.schedule_types[name]:
+                diction += line + "\n"
+            diction += "\n"
+        return diction
+
     def instancesToSQLite(self, filename):
         if os.path.isfile(filename):
             try:
