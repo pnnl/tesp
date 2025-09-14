@@ -776,8 +776,8 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
             'priceSensLoad': simulation_config['priceSensLoad'],
             'serverPort': simulation_config['serverPort'],
             'Metrics': feeder_config['Metrics'],
-            'metrics_extension': feeder_config['metrics_extension'],
-            'metrics_interval': feeder_config['metrics_interval']}
+            'metrics_extension': feeder_config['MetricsType'],
+            'metrics_interval': feeder_config['MetricsInterval']}
     print(json.dumps(meta), file=dp)
     dp.close()
 

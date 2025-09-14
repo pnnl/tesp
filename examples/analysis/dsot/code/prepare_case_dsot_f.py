@@ -379,7 +379,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
             res_FG.populate_feeder(config=case_config)
 
             # Then we want to create a JSON dictionary with the Feeder information
-            gd.glm_dict(caseName + '/' + feed_key + '/' + feed_key, config=case_config,
+            gd.glm_dict_line(caseName + '/' + feed_key + '/' + feed_key, config=case_config,
                         ercot=sim['simplifiedFeeders'])
             shutil.move(caseName + '/' + feed_key + '/' + feed_key + '_glm_dict.json',
                         caseName + '/' + dso_key + '/' + feed_key + '_glm_dict.json')
@@ -410,7 +410,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
                 case_config['BackboneFiles']['CopperplateFeederFile'] = sim['CopperplateFeederFile']
                 cp_FG.populate_feeder(config=case_config)
 
-                gd.glm_dict(caseName + '/' + feed_key + '/' + feed_key, config=case_config,
+                gd.glm_dict_line(caseName + '/' + feed_key + '/' + feed_key, config=case_config,
                             ercot=sim['simplifiedFeeders'])
                 shutil.move(caseName + '/' + feed_key + '/' + feed_key + '_glm_dict.json',
                             caseName + '/' + dso_key + '/' + feed_key + '_glm_dict.json')

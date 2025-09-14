@@ -1268,10 +1268,9 @@ class Commercial_Build:
             xfmr_params = {"phases": phases,
                            "from": "feeder_head_meter",
                            "to": mtr,
-                           "configuration": "transf_conf_" + key
+                           "configuration": "feeder_XF3_POLETOP_ABCN_30"
                             }
             self.mdl.transformer.add("transformer_" + key, xfmr_params)
-
 
         log.info('load: %s, mtr: %s, type: %s, kVA: %.4f, nphs: %s, phases: %s, vln: %.3f', key, mtr, comm_type, kva, nphs, phases, vln)
 

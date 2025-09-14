@@ -66,7 +66,7 @@ def merge_glm(target, sources, xfmva):
                                 toks = line.split()
                                 name = toks[1][:-1]
                                 line = '  ' + toks[0] + ' ' + fdr + '_' + name + ';'
-                    if ('#ifdef USE_FNCS' in line) or ("fncs_msg" in line) or ("helics_msg" in line) or ("voltdump" in line):
+                    if '#ifdef USE_FNCS' in line:
                         inSubstation = True
                     if inSubstation:
                         if ' configure ' in line:
@@ -99,12 +99,18 @@ def merge_glm(target, sources, xfmva):
                         canWrite = False
                     if canWrite:
                         print(line.rstrip(), file=op)
-                if ('#endif' in line) or ('.txt' in line) or ('.json' in line) or ('.csv' in line):
+                if '#endif' in line:
                     numEndif += 1
         inFirstFile = False
     op.close()
 
-def glm_merge(target, sources):
+def rename(glm: GLMModifier, glm_type: str, i_glm_obj, fdr: str):
+    keys = list(i_glm_obj.keys())
+    for k in keys:
+        glm.rename_object(glm_type, k, fdr + "_" + k)
+
+
+def glm_merge(target, sources, xfmva):
     """ Combines GridLAB-D input files into "target". The source files must already exist.
 
     Args:
@@ -118,16 +124,43 @@ def glm_merge(target, sources):
     for fdr in sources:
         glm = GLMModifier()
         i_glm, success = glm.read_model(workdir + '/' + fdr + '/' + fdr + '.glm')
-        if inFirstFile == True:
-            diction = glm.model.instancesToGLM()
+        rename(glm, 'line_configuration', i_glm.line_configuration, fdr)
+        rename(glm, 'regulator_configuration', i_glm.regulator_configuration, fdr)
+        rename(glm, 'transformer_configuration', i_glm.transformer_configuration, fdr)
+        rename(glm, 'triplex_line_configuration', i_glm.triplex_line_configuration, fdr)
+        rename(glm, 'overhead_line_conductor', i_glm.overhead_line_conductor, fdr)
+        rename(glm, 'underground_line_conductor', i_glm.underground_line_conductor, fdr)
+        rename(glm, 'triplex_line_conductor', i_glm.triplex_line_conductor, fdr)
+        rename(glm, 'line_spacing', i_glm.line_spacing, fdr)
+        if inFirstFile:
+            i_glm.transformer_configuration[fdr + "_substation_xfmr_config"]["power_rating"] = xfmva * 1e3
+            i_glm.substation["network_node"]["base_power"] = xfmva * 1e6
+            firstHeadNode = i_glm.transformer["substation_transformer"]["to"]
+            print(glm.model.instancesToGLM(), file=op)
             inFirstFile = False
         else:
-            glm.del_object('fncs_msg', i_glm.fncs_msg.instances()[0].name)
-            #glm.delete_object('helics_msg')
-            #glm.del_object('voltdump')
-            #glm.del_object('currdump')
-            diction = i_glm.model.glm_merge()
-        print(diction, op)
+            params = {
+                "phases": 'ABCN',
+                "from": firstHeadNode,
+                "to": i_glm.transformer["substation_transformer"]["to"],
+                "status": "CLOSED"
+            }
+            glm.add_object("switch", "tie_" + fdr, params)
+
+            glm.del_object('voltdump', next(iter(i_glm.voltdump.instances)))
+            glm.del_object('currdump', next(iter(i_glm.currdump.instances)))
+            glm.del_object('climate', next(iter(i_glm.climate.instances)))
+            glm.del_object('metrics_collector_writer', next(iter(i_glm.metrics_collector_writer.instances)))
+            glm.del_object('player', next(iter(i_glm.player.instances)))
+            glm.del_object('recorder', next(iter(i_glm.recorder.instances)))
+            glm.del_object('fncs_msg', next(iter(i_glm.fncs_msg.instances)))
+            #glm.del_object('helics_msg', next(iter(i_glm.helics_msg.instances)))
+
+            glm.del_object('substation', 'network_node')
+            glm.del_object('transformer', 'substation_transformer')
+            glm.del_object('metrics_collector', 'mc_network_node')
+
+            print(glm.model.glm_merge(), file=op)
     op.close()
 
 def merge_glm_dict(target, sources, xfmva):

@@ -732,7 +732,7 @@ class GLMModifier:
                 self.add_metrics_collector(e_name, prefix + gld_class)
             self.add_object(prefix + gld_class, e_name, params)
 
-    # TODO params xfrm diction
+    # TODO params xfmr diction
     def add_xfmr_config(self,
                         key: str, phs: str, kvat: float, v_nom: float,
                         v_sec: float, install_type: str,
@@ -826,7 +826,7 @@ class GLMModifier:
             params["diameter"] = str(row[4])
             self.add_object("triplex_line_configuration", name, params)
 
-    def add_substation(self, name: str, phs: str, v_ll: float) -> None:
+    def add_substation(self, node_name: str, phs: str, v_ll: float) -> None:
         """Write the substation swing node, transformer, metrics collector and fncs_msg/helics object
 
         Args:
@@ -866,7 +866,7 @@ class GLMModifier:
 
         name = "substation_transformer"
         params = {"from": "network_node",
-                  "to": name, "phases": phs,
+                  "to": node_name, "phases": phs,
                   "configuration": "substation_xfmr_config"}
         self.add_object("transformer", name, params)
 

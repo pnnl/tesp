@@ -444,6 +444,8 @@ class GLMModel:
         return diction
 
     def glm_merge(self):
+        diction = ""
+
         G = self.draw_network()
         power_entities = []
         for node_name in G:

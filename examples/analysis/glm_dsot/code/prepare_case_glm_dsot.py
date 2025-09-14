@@ -567,7 +567,7 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
         print("\n=== MERGING THE FEEDERS UNDER ONE SUBSTATION =====")
         os.makedirs(caseName + "/" + sub_key)
         #cm.merge_glm(os.path.abspath(caseName + '/' + sub_key + '/' + sub_key + '.glm'), list(dso_val['feeders'].keys()), 20)
-        cm.glm_merge(os.path.abspath(caseName + '/' + sub_key + '/' + sub_key + '.glm'), list(dso_val['feeders'].keys()))
+        cm.glm_merge(os.path.abspath(caseName + '/' + sub_key + '/' + sub_key + '.glm'), list(dso_val['feeders'].keys()), 20)
         print('did we do it?')
 
         print("\n=== MERGING/WRITING THE SUBSTATION(GRIDLABD) MESSAGE FILE =====")
