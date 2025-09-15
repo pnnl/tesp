@@ -158,7 +158,7 @@ def glm_merge(target, sources, xfmva):
             glm.del_object('recorder', next(iter(i_glm.recorder.instances)))
             try:
                 glm.del_object('fncs_msg', next(iter(i_glm.fncs_msg.instances)))
-            except KeyError:
+            except StopIteration:
                 glm.del_object('helics_msg', next(iter(i_glm.helics_msg.instances)))
 
             glm.del_object('substation', 'network_node')
