@@ -351,7 +351,7 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
 
         bldPrep['solar_data_path'] = config["solar_data_path"]
         prefix = ''
-        if node == 8:
+        if nodes == "8":
             prefix = '8-node '
         bldPrep['solar_P_player_file'] = prefix + dso_key + '/' + dso_key + '_' + config["solar_P_player_file"]
         bldPrep['solar_Q_player_file'] = prefix + dso_key + '/' + dso_key + '_' + config["solar_Q_player_file"]

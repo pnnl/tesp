@@ -146,7 +146,7 @@ class Config:
 
         # Add player files if pre-defining solar generation
         if self.use_solar_player == "True":
-            player_file = str(os.path.join(self.solar_data_path, self.solar_P_player_file))
+            player_file = str(os.path.join(self.solar_data_path, self.BuildingPrep['solar_P_player_file']))
             self.glm.model.add_class("player", "double", "P_out_inj", False, f'"{player_file}"')
 
         self.glm.model.set_clock(self.StartTime, self.EndTime, self.time_zone)
