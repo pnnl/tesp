@@ -111,7 +111,10 @@ def rename(glm: GLMModifier, glm_type: str, i_glm_obj, fdr: str):
 
 
 def glm_merge(target, sources, xfmva):
-    """ Combines GridLAB-D input files into "target". The source files must already exist.
+    """ Combines GridLAB-D input files into "target". The source files must 
+    already exist. This is an updated version of merge_glm() that utilizes 
+    GLMModifier and GLMModel to achieve the same goal for feeders generated with
+    gld_feeder_generator, using the same.
 
     Args:
         target (str): the path to the target GLM file, including the name of the file
@@ -153,8 +156,10 @@ def glm_merge(target, sources, xfmva):
             glm.del_object('metrics_collector_writer', next(iter(i_glm.metrics_collector_writer.instances)))
             glm.del_object('player', next(iter(i_glm.player.instances)))
             glm.del_object('recorder', next(iter(i_glm.recorder.instances)))
-            glm.del_object('fncs_msg', next(iter(i_glm.fncs_msg.instances)))
-            #glm.del_object('helics_msg', next(iter(i_glm.helics_msg.instances)))
+            try:
+                glm.del_object('fncs_msg', next(iter(i_glm.fncs_msg.instances)))
+            except KeyError:
+                glm.del_object('helics_msg', next(iter(i_glm.helics_msg.instances)))
 
             glm.del_object('substation', 'network_node')
             glm.del_object('transformer', 'substation_transformer')

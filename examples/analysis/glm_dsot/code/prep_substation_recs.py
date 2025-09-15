@@ -975,23 +975,28 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
         for key, val in water_heater_agents.items():
             wh_name = key
             substation_sim_key = substation_name + '/' + key
-            print('publish "commit:' + wh_name + '.lower_tank_temperature -> '
-                + wh_name + '/lower_tank_temperature; 0.01";', file=op)
-            print('publish "commit:' + wh_name + '.upper_tank_temperature -> '
-                + wh_name + '/upper_tank_temperature; 0.01";', file=op)
-            print('publish "commit:' + wh_name + '.lower_heating_element_state -> '
-                + wh_name + '/lower_heating_element_state; 0.01";', file=op)
-            print('publish "commit:' + wh_name + '.upper_heating_element_state -> '
-                + wh_name + '/upper_heating_element_state; 0.01";', file=op)
-            print('publish "commit:' + wh_name + '.heating_element_capacity -> '
-                + wh_name + '/heating_element_capacity; 0.01";', file=op)
-            print('publish "commit:' + wh_name + '.water_demand -> '
-                + wh_name + '/water_demand; 0.01";', file=op)
+            if val['waterheater_model'] == "MULTILAYER":
+                print('publish "commit:' + wh_name + '.lower_tank_temperature -> '
+                    + wh_name + '/lower_tank_temperature; 0.01";', file=op)
+                print('publish "commit:' + wh_name + '.upper_tank_temperature -> '
+                    + wh_name + '/upper_tank_temperature; 0.01";', file=op)
+                print('publish "commit:' + wh_name + '.lower_heating_element_state -> '
+                    + wh_name + '/lower_heating_element_state; 0.01";', file=op)
+                print('publish "commit:' + wh_name + '.upper_heating_element_state -> '
+                    + wh_name + '/upper_heating_element_state; 0.01";', file=op)
+                print('publish "commit:' + wh_name + '.heating_element_capacity -> '
+                    + wh_name + '/heating_element_capacity; 0.01";', file=op)
+                print('publish "commit:' + wh_name + '.water_demand -> '
+                    + wh_name + '/water_demand; 0.01";', file=op)
 
-            print('subscribe "precommit:' + wh_name + '.lower_tank_setpoint <- '
-                + substation_sim_key + '/lower_tank_setpoint";', file=op)
-            print('subscribe "precommit:' + wh_name + '.upper_tank_setpoint <- '
-                + substation_sim_key + '/upper_tank_setpoint";', file=op)
+                print('subscribe "precommit:' + wh_name + '.lower_tank_setpoint <- '
+                    + substation_sim_key + '/lower_tank_setpoint";', file=op)
+                print('subscribe "precommit:' + wh_name + '.upper_tank_setpoint <- '
+                    + substation_sim_key + '/upper_tank_setpoint";', file=op)
+            elif val['waterheater_model'] == "TWONODE":
+                print('subscribe "precommit:' + wh_name + '.tank_setpoint <- '
+                    + substation_sim_key + '/tank_setpoint";', file=op)
+
 
         for key, val in battery_agents.items():
             # key is the name of inverter resource
@@ -1049,14 +1054,17 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
 
         for key, val in water_heater_agents.items():
             wh_name = val["waterheaterName"]
-            dso.pubs_n(False, key + "/lower_tank_setpoint", "double")
-            dso.pubs_n(False, key + "/upper_tank_setpoint", "double")
-            dso.subs_n(gld_sim_name + "/" + wh_name + "#LTTemp", "string")
-            dso.subs_n(gld_sim_name + "/" + wh_name + "#UTTemp", "string")
-            dso.subs_n(gld_sim_name + "/" + wh_name + "#LTState", "string")
-            dso.subs_n(gld_sim_name + "/" + wh_name + "#UTState", "string")
-            dso.subs_n(gld_sim_name + "/" + wh_name + "#WHLoad", "string")
-            dso.subs_n(gld_sim_name + "/" + wh_name + "#WDRate", "string")
+            if val['waterheater_model'] == "MULTILAYER":
+                dso.pubs_n(False, key + "/lower_tank_setpoint", "double")
+                dso.pubs_n(False, key + "/upper_tank_setpoint", "double")
+                dso.subs_n(gld_sim_name + "/" + wh_name + "#LTTemp", "string")
+                dso.subs_n(gld_sim_name + "/" + wh_name + "#UTTemp", "string")
+                dso.subs_n(gld_sim_name + "/" + wh_name + "#LTState", "string")
+                dso.subs_n(gld_sim_name + "/" + wh_name + "#UTState", "string")
+                dso.subs_n(gld_sim_name + "/" + wh_name + "#WHLoad", "string")
+                dso.subs_n(gld_sim_name + "/" + wh_name + "#WDRate", "string")
+            elif val['wateheater_model'] == "TWONODE":
+                dso.pubs_n(False, key + "/tank_setpoint", "double")
 
         for key, val in battery_agents.items():
             # key is the name of inverter resource
@@ -1115,14 +1123,17 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
         for key, val in water_heater_agents.items():
             wh_name = key
             substation_sim_key = "dso" + substation_name + '/' + key
-            gld.pubs(False, wh_name + "#LTTemp", "double", wh_name, "lower_tank_temperature")
-            gld.pubs(False, wh_name + "#UTTemp", "double", wh_name, "upper_tank_temperature")
-            gld.pubs(False, wh_name + "#LTState", "string", wh_name, "lower_heating_element_state")
-            gld.pubs(False, wh_name + "#UTState", "string", wh_name, "upper_heating_element_state")
-            gld.pubs(False, wh_name + "#WHLoad", "double", wh_name, "heating_element_capacity")
-            gld.pubs(False, wh_name + "#WDRate", "double", wh_name, "water_demand")
-            gld.subs(substation_sim_key + "/lower_tank_setpoint", "double", wh_name, "lower_tank_setpoint")
-            gld.subs(substation_sim_key + "/upper_tank_setpoint", "double", wh_name, "upper_tank_setpoint")
+            if val['waterheater_model'] == "MULTILAYER":
+                gld.pubs(False, wh_name + "#LTTemp", "double", wh_name, "lower_tank_temperature")
+                gld.pubs(False, wh_name + "#UTTemp", "double", wh_name, "upper_tank_temperature")
+                gld.pubs(False, wh_name + "#LTState", "string", wh_name, "lower_heating_element_state")
+                gld.pubs(False, wh_name + "#UTState", "string", wh_name, "upper_heating_element_state")
+                gld.pubs(False, wh_name + "#WHLoad", "double", wh_name, "heating_element_capacity")
+                gld.pubs(False, wh_name + "#WDRate", "double", wh_name, "water_demand")
+                gld.subs(substation_sim_key + "/lower_tank_setpoint", "double", wh_name, "lower_tank_setpoint")
+                gld.subs(substation_sim_key + "/upper_tank_setpoint", "double", wh_name, "upper_tank_setpoint")
+            elif val['waterheater_model'] == 'TWONODE':
+                gld.subs(substation_sim_key + "/tank_setpoint", "double", wh_name, "tank_setpoint")
 
         for key, val in battery_agents.items():
             # key is the name of inverter resource

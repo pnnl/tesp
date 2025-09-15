@@ -566,9 +566,7 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
         # ======================================================================
         print("\n=== MERGING THE FEEDERS UNDER ONE SUBSTATION =====")
         os.makedirs(caseName + "/" + sub_key)
-        #cm.merge_glm(os.path.abspath(caseName + '/' + sub_key + '/' + sub_key + '.glm'), list(dso_val['feeders'].keys()), 20)
         cm.glm_merge(os.path.abspath(caseName + '/' + sub_key + '/' + sub_key + '.glm'), list(dso_val['feeders'].keys()), 20)
-        print('did we do it?')
 
         print("\n=== MERGING/WRITING THE SUBSTATION(GRIDLABD) MESSAGE FILE =====")
         if config["messager"] == 'HELICS':
@@ -688,17 +686,20 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
         middle_hses = len(hse_df.loc[(hse_df['income_level']=='Middle')])
         upper_hses = len(hse_df.loc[(hse_df['income_level']=='Upper')])
         com_bldgs = len(hse_df.loc[(hse_df['income_level']=='')])
-        office = len(bldg_df.loc[(bldg_df['house_class']=='office') & (bldg_df['house']!='')])
-        warehouse = len(bldg_df.loc[(bldg_df['house_class']=='warehouse_storage') & (bldg_df['house']!='')])
-        box = len(bldg_df.loc[(bldg_df['house_class']=='big_box') & (bldg_df['house']!='')])
-        strip = len(bldg_df.loc[(bldg_df['house_class']=='strip_mall') & (bldg_df['house']!='')])
-        edu = len(bldg_df.loc[(bldg_df['house_class']=='education') & (bldg_df['house']!='')])
-        food_serv = len(bldg_df.loc[(bldg_df['house_class']=='food_service') & (bldg_df['house']!='')])
-        food_sale = len(bldg_df.loc[(bldg_df['house_class']=='food_sales') & (bldg_df['house']!='')])
-        lodging = len(bldg_df.loc[(bldg_df['house_class']=='lodging') & (bldg_df['house']!='')])
-        health = len(bldg_df.loc[(bldg_df['house_class']=='healthcare_inpatient') & (bldg_df['house']!='')])
-        low_occ = len(bldg_df.loc[(bldg_df['house_class']=='low_occupancy') & (bldg_df['house']!='')])
-        #com_bldgs = office + warehouse + box + strip + edu + food_serv + food_sale + lodging + health + low_occ
+        def get_total(bldg_name:str):
+            """Returns the total number of buildings in the case population of 
+            the given building type.
+
+            Args:
+                bldg_name (str): office, warehouse_storage, big_box, strip_mall
+                    education, food_service, food_sales, lodging, 
+                    healthcare_inpatient, and low_occupancy
+
+            Returns:
+                _type_: _description_
+            """
+            bldg_tot = len(bldg_df.loc[(bldg_df['house_class']==bldg_name) & (bldg_df['house']!='')])
+            return bldg_tot
         # Excluding commercial and industrial buildings where income_level = None:
         tot_hses = low_hses + middle_hses + upper_hses
         sol_hses = len(hse_df.loc[(hse_df['house']=='Yes') & (hse_df['solar']=='Yes') & (hse_df['income_level'] !='')])
