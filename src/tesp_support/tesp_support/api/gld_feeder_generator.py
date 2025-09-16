@@ -1021,10 +1021,14 @@ class Residential_Build:
             #   trends as solar, but allow the user to specify a different
             #   deployment level in the config.
             #-------------------------------------------------------------------
+            prob_single = self.housing_type[self.config.state][self.config.res_dso_type][income]["single_family_detached"] + \
+                        self.housing_type[self.config.state][self.config.res_dso_type][income]["single_family_attached"]
+            prob_apt = self.housing_type[self.config.state][self.config.res_dso_type][income]["apartment_2_4_units"] + \
+                            self.housing_type[self.config.state][self.config.res_dso_type][income]["apartment_5_units"]
+            prob_mobile = self.housing_type[self.config.state][self.config.res_dso_type][income]["mobile_home"]
+
             if hasattr(self.config, 'in_file_glm') and self.config.use_recs == "True":
                 if bldg == 0:
-                    prob_single = self.housing_type[self.config.state][self.config.res_dso_type][income]["single_family_detached"] + \
-                        self.housing_type[self.config.state][self.config.res_dso_type][income]["single_family_attached"]
                     prob_solar = self.config.solar_deployment * (self.solar_pv[self.config.state][self.config.res_dso_type]
                                                                 [income]["single_family_detached"] +
                                                                 self.solar_pv[self.config.state][self.config.res_dso_type]
@@ -1037,8 +1041,6 @@ class Residential_Build:
                                                             ["single_family_detached"] + self.ev[self.config.state]
                                                             [self.config.res_dso_type][income]["single_family_attached"])/prob_single
                 elif bldg == 1:
-                    prob_apt = self.housing_type[self.config.state][self.config.res_dso_type][income]["apartment_2_4_units"] + \
-                            self.housing_type[self.config.state][self.config.res_dso_type][income]["apartment_5_units"]
                     prob_solar = self.config.solar_deployment * (self.solar_pv[self.config.state][self.config.res_dso_type]
                                                                 [income]["apartment_2_4_units"] +
                                                                 self.solar_pv[self.config.state][self.config.res_dso_type]
@@ -1051,12 +1053,10 @@ class Residential_Build:
                                                             ["apartment_2_4_units"] + self.ev[self.config.state]
                                                             [self.config.res_dso_type][income]["apartment_5_units"])/prob_apt
                 else:
-                    prob_mobile = self.housing_type[self.config.state][self.config.res_dso_type][income]["mobile_home"]
                     prob_solar = (self.config.solar_deployment * self.solar_pv[self.config.state][self.config.res_dso_type][income]["mobile_home"])/prob_mobile
                     prob_batt = (self.config.storage_deployment * self.solar_pv[self.config.state][self.config.res_dso_type][income]["mobile_home"])/prob_mobile
                     prob_ev = (self.config.ev_deployment * self.ev[self.config.state][self.config.res_dso_type][income]["mobile_home"])/prob_mobile
 
-            
             # User-defined income distribution of DER, no restrictions by housing type:
             elif hasattr(self.config, 'user_dist') and self.config.user_dist == "True":
                 prob_inc = self.income_level[self.config.state][self.config.res_dso_type][income]
@@ -1068,12 +1068,10 @@ class Residential_Build:
             # This is a special case, implemented for the Rates Analysis work. Only single-family homes have solar or batteries. 
             else:
                 prob_inc = self.income_level[self.config.state][self.config.res_dso_type][income]
-                prob_sf = self.housing_type[self.config.state][self.config.res_dso_type][income]['single_family_detached'] + \
-                         self.housing_type[self.config.state][self.config.res_dso_type][income]['single_family_attached']
                 # EVs are not restricted by house type. The probability a house has an EV by income:
-                prob_ev = (self.config.ev_deployment*self.config.ev_percentage[income])/prob_inc
+                prob_ev = (self.config.ev_deployment*self.config.ev_percentage[income])
                 if bldg == 0: 
-                    prob_solar = (self.config.solar_deployment * self.config.solar_percentage[income])/(prob_sf * prob_inc)
+                    prob_solar = (self.config.solar_deployment * self.config.solar_percentage[income])/(prob_single * prob_inc)
                     prob_batt = (self.config.storage_deployment * self.config.storage_percentage[income])/(self.config.solar_deployment * self.config.solar_percentage[income])
                 else:
                     prob_solar = 0

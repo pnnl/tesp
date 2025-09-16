@@ -658,6 +658,52 @@ def glm_dict(case_name, feed_key):
             wh_diameter = 0
             wh_setpoint = 0
             wh_model = ""
+    
+        try:
+            wh_scalar = glm.waterheater.instances[wh_name]["scalar"]
+            wh_tmix = glm.waterheater.instances[wh_name]["tmix"]
+            wh_mlayer = glm.waterheater.instances[wh_name]["mlayer"]
+        except KeyError:
+            wh_scalar = 0
+            wh_tmix = ""
+            wh_mlayer = ""
+        
+        # For residential houses
+        if "hse" in hs_name:
+            un_zip_name = hs_name.replace(hs_name, f'{hs_name}_unresponsive')
+            re_zip_name = hs_name.replace(hs_name, f'{hs_name}_responsive')
+        elif 'hs' in hs_name:
+            un_zip_name = hs_name.replace(hs_name, f'{hs_name}_unresponsive')
+            re_zip_name = hs_name.replace(hs_name, f'{hs_name}_responsive')       
+        # For commercial buildings
+        else:
+            un_zip_name = False
+            lights = hs_name.replace(hs_name, f'{hs_name}_lights')
+            plugs = hs_name.replace(hs_name, f'{hs_name}_plug_loads')
+            whs = hs_name.replace(hs_name, f'{hs_name}_gas_waterheater')
+            ext_lights = hs_name.replace(hs_name, f'{hs_name}_exterior_lights')
+            occ = hs_name.replace(hs_name, f'{hs_name}_occupancy')
+            off_lights = hs_name.replace(hs_name, f'{hs_name}_office_lights')
+
+        if un_zip_name:
+            names = {un_zip_name, re_zip_name}
+        else:
+            names = {lights, plugs, whs, ext_lights, occ, off_lights}
+
+        for zip_name in names:
+            try:
+                zip_skew = glm.ZIPload.instances[zip_name]['schedule_skew']
+                zip_heatgain_fraction = glm.ZIPload.instances[zip_name]['heatgain_fraction']
+                zip_power_fraction = glm.ZIPload.instances[zip_name]['power_fraction']
+                zip_power_pf = glm.ZIPload.instances[zip_name]['power_pf']
+                if "*" in glm.ZIPload.instances[zip_name]['base_power']:
+                    # if base power is set via schedule, extract just the numeric part after the "*"
+                    zip_scalar = glm.ZIPload.instances[zip_name]['base_power'].split("*")[-1].strip()
+                else: 
+                    houses[hs_name]['zip_scalar']['constant'] = glm.ZIPload.instances[zip_name]['base_power']
+            except KeyError:
+                 # Not every building will have all six ZIPLoad types
+                 pass
 
         # Assign Residential vs C&I buildings parameters
         if building_type in ['SINGLE_FAMILY', 'MOBILE_HOME', 'APARTMENTS', 'MULTI_FAMILY']:
@@ -703,12 +749,20 @@ def glm_dict(case_name, feed_key):
                 'over_sizing_factor': float(house["over_sizing_factor"]),
                 'fuel_type': fuel_type,
                 'wh_name': wh_name,
-                'wh_skew': wh_skew,
+                'wh_skew': float(wh_skew),
                 'wh_schedule_name': wh_schedule_name,
-                'wh_UA': wh_gallons,
-                'wh_diameter': wh_diameter,
-                'wh_setpoint': wh_setpoint,
-                'wh_model': wh_model
+                'wh_UA': float(wh_gallons),
+                'wh_diameter': float(wh_diameter),
+                'wh_setpoint': float(wh_setpoint),
+                'wh_model': wh_model,
+                'wh_scalar': float(wh_scalar),
+                'wh_tmix': wh_tmix,
+                'wh_mlayer': wh_mlayer,
+                'zip_scalar': float(zip_scalar),
+                'zip_skew': float(zip_skew),
+                'zip_heatgain_fraction': float(zip_heatgain_fraction),
+                'zip_power_fraction': float(zip_power_fraction),
+                'zip_power_pf': float(zip_power_pf)
                 }
             # except KeyError:
             #     pass
@@ -738,7 +792,6 @@ def glm_dict(case_name, feed_key):
                     'doors': int(number_of_doors), 
                     'cooling': house['cooling_system_type'], 
                     'heating': house['heating_system_type'], 
-                    'wh_gallons': wh_gallons,
                     'house_class': house['groupid'], 
                     'Rroof': float(house["Rroof"]), 
                     'Rwall': float(house["Rwall"]), 
@@ -759,6 +812,15 @@ def glm_dict(case_name, feed_key):
                     'cooling_COP': float(house["cooling_COP"]), 
                     'over_sizing_factor': float(house["over_sizing_factor"]),
                     'fuel_type': fuel_type,
+                    'wh_gallons': float(wh_gallons),
+                    'wh_scalar': float(wh_scalar),
+                    'wh_tmix': wh_tmix,
+                    'wh_mlayer': wh_mlayer,
+                    'zip_scalar': float(zip_scalar),
+                    'zip_skew': float(zip_skew),
+                    'zip_heatgain_fraction': float(zip_heatgain_fraction),
+                    'zip_power_fraction': float(zip_power_fraction),
+                    'zip_power_pf': float(zip_power_pf)
                     }
             except KeyError:
                 houses[hs_name] = {'feeder_id': feed_key, 
@@ -770,7 +832,6 @@ def glm_dict(case_name, feed_key):
                     'doors': int(number_of_doors), 
                     'cooling': house['cooling_system_type'], 
                     'heating': house['heating_system_type'], 
-                    'wh_gallons': wh_gallons,
                     'house_class': house['groupid'], 
                     'Rroof': float(house["Rroof"]), 
                     'Rwall': float(house["Rwall"]), 
@@ -787,6 +848,15 @@ def glm_dict(case_name, feed_key):
                     'cooling_COP': float(house["cooling_COP"]), 
                     'over_sizing_factor': float(house["over_sizing_factor"]),
                     'fuel_type': fuel_type,
+                    'wh_gallons': float(wh_gallons),
+                    'wh_scalar': float(wh_scalar),
+                    'wh_tmix': wh_tmix,
+                    'wh_mlayer': wh_mlayer,
+                    'zip_scalar': float(zip_scalar),
+                    'zip_skew': float(zip_skew),
+                    'zip_heatgain_fraction': float(zip_heatgain_fraction),
+                    'zip_power_fraction': float(zip_power_fraction),
+                    'zip_power_pf': float(zip_power_pf)
                     }
 
             #billingmeters[glm.meter.instances[house['parent']]['children']].append(hs_name)
@@ -889,8 +959,6 @@ def glm_dict(case_name, feed_key):
                 billingmeters[glm.house.instances[evcharger_det['parent']]['parent']]['children'].append(ev_name)
 
     feeders[feed_key] = {'house_count': len(houses), 'inverter_count': len(inverters), 'ev_count': len(ev)}
-
-    print(feeders[feed_key])
 
     try:
         for name, helics_msg in glm.helics_msg.items():    
