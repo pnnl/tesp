@@ -1336,6 +1336,10 @@ def calculate_consumer_bills(
         :, billsum_df.columns[~billsum_df.columns.str.contains("sum")]
     ].sum(axis=1)
 
+    # Calculate bill volatility
+    bill_df["volatility"] = (bill_df.loc[:, months].max(axis=1) - bill_df.loc[:, months].min(axis=1))  \
+        / bill_df.loc[:, months].mean(axis=1)
+
     # Calculate the average prices at the meter level
     for each in metadata["billingmeters"]:
         if bill_df.loc[(each, "flat_energy_purchased"), "sum"] == 0.0:
@@ -3457,6 +3461,8 @@ def get_cust_bill(cust, bill_df, bill_metadata, energy_df, rate_scenario):
 
     # TODO: Generalize this format - e.g. average rate - inclusion of transactive and subscription etc...
 
+    bill_df = bill_df.fillna(0.0)
+
     customer_annual_bill = {
         'BillsFix': {
             'PurchasesFix': {
@@ -3474,8 +3480,8 @@ def get_cust_bill(cust, bill_df, bill_metadata, energy_df, rate_scenario):
         'CustomerType': {
             'BuildingType': bill_metadata['billingmeters'][cust]['building_type'],
             'TariffClass': bill_metadata['billingmeters'][cust]['tariff_class'],
-
-        }
+        },
+        'Volatility': bill_df.loc[(cust, 'flat_total_charge'), 'volatility']
     }
 
     if rate_scenario == "time-of-use":
@@ -3497,7 +3503,9 @@ def get_cust_bill(cust, bill_df, bill_metadata, energy_df, rate_scenario):
                             / (bill_df.loc[(cust, 'flat_energy_purchased'), 'sum'] +
                               bill_df.loc[(cust, 'tou_energy_purchased'), 'sum']),
             'EnergyQuantity': bill_df.loc[(cust, 'flat_energy_purchased'), 'sum'] +
-                              bill_df.loc[(cust, 'tou_energy_purchased'), 'sum']
+                              bill_df.loc[(cust, 'tou_energy_purchased'), 'sum'],
+        'Volatility': bill_df.loc[(cust, 'tou_total_charge'), 'volatility']
+                      + bill_df.loc[(cust, 'flat_total_charge'), 'volatility']
         })
 
     elif rate_scenario == "subscription":
@@ -3518,7 +3526,9 @@ def get_cust_bill(cust, bill_df, bill_metadata, energy_df, rate_scenario):
                             / (bill_df.loc[(cust, 'flat_energy_purchased'), 'sum'] +
                               bill_df.loc[(cust, 'subscription_energy_purchased'), 'sum']),
             'EnergyQuantity': bill_df.loc[(cust, 'flat_energy_purchased'), 'sum'] + bill_df.loc[
-                (cust, 'subscription_energy_purchased'), 'sum']
+                (cust, 'subscription_energy_purchased'), 'sum'],
+            'Volatility': bill_df.loc[(cust, 'subscription_total_charge'), 'volatility']
+                          + bill_df.loc[(cust, 'flat_total_charge'), 'volatility']
         })
 
     elif rate_scenario == "transactive":
@@ -3539,7 +3549,9 @@ def get_cust_bill(cust, bill_df, bill_metadata, energy_df, rate_scenario):
                             / (bill_df.loc[(cust, 'flat_energy_purchased'), 'sum'] +
                               bill_df.loc[(cust, 'transactive_energy_purchased'), 'sum']),
             'EnergyQuantity': bill_df.loc[(cust, 'flat_energy_purchased'), 'sum'] + bill_df.loc[
-                (cust, 'transactive_energy_purchased'), 'sum']
+                (cust, 'transactive_energy_purchased'), 'sum'],
+            'Volatility': bill_df.loc[(cust, 'transactive_total_charge'), 'volatility']
+                          + bill_df.loc[(cust, 'flat_total_charge'), 'volatility']
         })
 
     elif rate_scenario == "dsot":
@@ -3560,7 +3572,9 @@ def get_cust_bill(cust, bill_df, bill_metadata, energy_df, rate_scenario):
                             / (bill_df.loc[(cust, 'flat_energy_purchased'), 'sum'] +
                               bill_df.loc[(cust, 'dsot_energy_purchased'), 'sum']),
             'EnergyQuantity': bill_df.loc[(cust, 'flat_energy_purchased'), 'sum'] + bill_df.loc[
-                (cust, 'dsot_energy_purchased'), 'sum']
+                (cust, 'dsot_energy_purchased'), 'sum'],
+            'Volatility': bill_df.loc[(cust, 'dsot_total_charge'), 'volatility']
+                          + bill_df.loc[(cust, 'flat_total_charge'), 'volatility']
         })
 
     return customer_annual_bill
