@@ -772,9 +772,14 @@ def glm_dict(case_name, feed_key):
         elif building_type in ['office', 'warehouse_storage', 'big_box', 'strip_mall', 'education', 'food_service', 'food_sales', 'lodging', 'healthcare_inpatient', 'low_occupancy']:
             tariff_class = 'commercial'
             number_of_doors = house["number_of_doors"]
-            number_of_stories = 0
-            ceiling_height = 0
-            window_exterior_transmission_coefficient = 0
+            try:
+                number_of_stories = house["number_of_stories"]
+                ceiling_height = house["ceiling_height"]
+                window_exterior_transmission_coefficient = house["window_exterior_transmission_coefficient"]
+            except KeyError:
+                number_of_stories = 1
+                ceiling_height = 13
+                window_exterior_transmission_coefficient = 0
             billingmeters[house['parent']] = {'feeder_id': feed_key, 
                             'phases': glm.meter.instances[house['parent']]['phases'], 
                             'vll': math.sqrt(3.0)*float(glm.meter.instances[house['parent']]['nominal_voltage']), 
@@ -805,10 +810,10 @@ def glm_dict(case_name, feed_key):
                     'exterior_floor_fraction': float(house["exterior_floor_fraction"]), 
                     'exterior_ceiling_fraction': float(house["exterior_ceiling_fraction"]),
                     'window_exterior_transmission_coefficient': float(window_exterior_transmission_coefficient),
-                    'glazing_layers': house["glazing_layers"], 
-                    'glass_type': house["glass_type"],
-                    'window_frame': house["window_frame"], 
-                    'glazing_treatment': house["glazing_treatment"],
+                    'glazing_layers': int(house["glazing_layers"]), 
+                    'glass_type': int(house["glass_type"]),
+                    'window_frame': int(house["window_frame"]), 
+                    'glazing_treatment':  int(house["glazing_treatment"]),
                     'cooling_COP': float(house["cooling_COP"]), 
                     'over_sizing_factor': float(house["over_sizing_factor"]),
                     'fuel_type': fuel_type,

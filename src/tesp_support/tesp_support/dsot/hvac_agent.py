@@ -625,6 +625,11 @@ class HVACDSOT:  # TODO: update class name
                     Rg = 1.0 / 0.34
         elif self.glass_type == 0:
             Rg = 2.0
+        try:
+            glazing = Rg
+        except UnboundLocalError:
+            log.error(f'We could not calculate Rg. Glass type = {self.glass_type}, Glazing layers = {self.glazing_layers}, Window Frame = {self.window_frame}.')
+
 
         # transmission coefficient through window due to glazing
         if self.glazing_layers == 1:
@@ -643,6 +648,14 @@ class HVACDSOT:  # TODO: update class name
                 elif self.window_frame == 3 or self.window_frame == 4:
                     Wg = 0.54
             elif self.glazing_treatment == 3:
+                if self.window_frame == 0:
+                    Wg = 0.31
+                elif self.window_frame == 1 or self.window_frame == 2:
+                    Wg = 0.28
+                elif self.window_frame == 3 or self.window_frame == 4:
+                    Wg = 0.24
+            elif self.glazing_treatment == 4:
+                # TODO: using placeholders for now
                 if self.window_frame == 0:
                     Wg = 0.31
                 elif self.window_frame == 1 or self.window_frame == 2:
@@ -671,6 +684,14 @@ class HVACDSOT:  # TODO: update class name
                     Wg = 0.27
                 elif self.window_frame == 3 or self.window_frame == 4:
                     Wg = 0.22
+            elif self.glazing_treatment == 4:
+                # TODO: using placeholders for now
+                if self.window_frame == 0:
+                    Wg = 0.31
+                elif self.window_frame == 1 or self.window_frame == 2:
+                    Wg = 0.28
+                elif self.window_frame == 3 or self.window_frame == 4:
+                    Wg = 0.24
         elif self.glazing_layers == 3:
             if self.glazing_treatment == 1:
                 if self.window_frame == 0:
@@ -693,6 +714,18 @@ class HVACDSOT:  # TODO: update class name
                     Wg = 0.31
                 elif self.window_frame == 3 or self.window_frame == 4:
                     Wg = 0.26
+            elif self.glazing_treatment == 4:
+                # TODO: using placeholders for now
+                if self.window_frame == 0:
+                    Wg = 0.31
+                elif self.window_frame == 1 or self.window_frame == 2:
+                    Wg = 0.28
+                elif self.window_frame == 3 or self.window_frame == 4:
+                    Wg = 0.24
+        try:
+            trans_coeff = Wg
+        except UnboundLocalError:
+            log.error(f'We could not calculate Wg. Glazing Treatment {self.glazing_treatment} Glazing Layers {self.glazing_layers} Window Frame {self.window_frame}')
 
         Rd = self.Rdoors
         I = self.airchange_per_hour

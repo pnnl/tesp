@@ -66,7 +66,7 @@
     "dt": 15, // The delta time for the simulation in seconds for pf
     "pf_dc": 1,
     "opf_dc": 1,
-    "LogLevel": "INFO",
+    "LogLevel": "DEBUG",
     "gld_debug": 0,
     "DSOT_case": true,
     "outputPath": "", // Default: blank, ~/grid/tesp/examples/dsot/output
@@ -165,7 +165,7 @@
     "storage_inverter_mode": "CONSTANT_PQ",
     "inverter_efficiency": 1.0,
     "battery_roundtrip_efficiency": 1.0,
-    "water_heater_model": "TWONODE",
+    "water_heater_model": "MULTILAYER",
     "bill_mode": "TIERED",
     "monthly_fee": 13,
     "price": 0.102013,

@@ -955,6 +955,7 @@ class Residential_Build:
             
             if wh_fuel_type == 'electric':  # if the water heater fuel type is electric, install wh
                 heat_element = 3.0 + 0.5 * rng.integers(1, 6)  # numpy integers (lo, hi) returns lo..(hi-1)
+                heat_element = heat_element * 1000 # heating element capacity should be in Watts
                 tank_set = 110 + 16 * rng.random()
                 therm_dead = 1  # 4 + 4 * rng.random()
                 tank_UA = 2 + 2 * rng.random()
@@ -988,6 +989,7 @@ class Residential_Build:
                             "heating_element_capacity": '{:.1f}'.format(heat_element),
                             "thermostat_deadband": '{:.1f}'.format(therm_dead),
                             "location": "INSIDE",
+                            "heat_mode": "ELECTRIC",
                             "tank_diameter": "1.5",
                             "tank_UA": '{:.1f}'.format(tank_UA),
                             "water_demand": wh_demand_str,
@@ -1003,6 +1005,7 @@ class Residential_Build:
                             "heating_element_capacity": '{:.1f}'.format(heat_element),
                             "thermostat_deadband": '{:.1f}'.format(therm_dead),
                             "location": "INSIDE",
+                            "heat_mode": "ELECTRIC",
                             "tank_diameter": "1.5",
                             "tank_UA": '{:.1f}'.format(tank_UA),
                             "water_demand": wh_demand_str,
@@ -1126,10 +1129,10 @@ class Commercial_Build:
             "Rfloor": str(bldg['Rfloor']),
             "Rdoors": str(bldg['Rdoors']),
             "exterior_wall_fraction": '{:.2f}'.format(bldg['exterior_wall_fraction']),
-            "glazing_layers": '{:s}'.format(bldg['glazing_layers']),
-            "glass_type": '{:s}'.format(bldg['glass_type']),
-            "glazing_treatment": '{:s}'.format(bldg['glazing_treatment']),
-            "window_frame": '{:s}'.format(bldg['window_frame']),
+            "glazing_layers": str(bldg['glazing_layers']),
+            "glass_type": str(bldg['glass_type']),
+            "glazing_treatment": str(bldg['glazing_treatment']),
+            "window_frame": str(bldg['window_frame']),
             "airchange_per_hour": '{:.2f}'.format(bldg['airchange_per_hour']),
             "window_wall_ratio": '{:0.3f}'.format(bldg['window_wall_ratio']),
             "heating_system_type": '{:s}'.format(bldg['heat_type']),
@@ -1278,13 +1281,13 @@ class Commercial_Build:
                 'heat_type': 'GAS',
                 'cool_type': 'ELECTRIC',
                 'aux_type': 'NONE',
-                'no_of_stories': 1,
+                'number_of_stories': 1,
                 'surface_heat_trans_coeff': 0.59,
                 'oversize': self.config.base.over_sizing_factor[rgn - 1],
-                'glazing_layers': 'TWO',
-                'glass_type': 'GLASS', 
-                'glazing_treatment': 'LOW_S',
-                'window_frame': 'NONE',
+                'glazing_layers': 2, #TWO
+                'glass_type': 1, #GLASS
+                'glazing_treatment': 4, #LOW_S,
+                'window_frame': 0, #NONE,
                 'c_z_frac': self.config.base.c_z_frac,
                 'c_i_frac': self.config.base.c_i_frac,
                 'c_p_frac': 1.0 - self.config.base.c_z_frac - self.config.base.c_i_frac,
@@ -1320,7 +1323,7 @@ class Commercial_Build:
             bldg['floor_area'] = floor_area
             bldg['aspect_ratio'] = bld_specs["aspect_ratio"] * rng.normal(1, 0.01)
             bldg['window_wall_ratio'] = bld_specs["window-wall_ratio"] * rng.normal(1, 0.2)
-            wall_area = (bld_specs['ceiling_height'] * 2 * math.sqrt(bldg['floor_area'] / bldg['no_of_stories'] / 
+            wall_area = (bld_specs['ceiling_height'] * 2 * math.sqrt(bldg['floor_area'] / bldg['number_of_stories'] / 
                                                                     bldg['aspect_ratio']) * (bldg['aspect_ratio'] + 1))
             ratio = wall_area * (1 - bldg['window_wall_ratio']) / bldg['floor_area']
             age = Commercial_Build.normalize_dict_prob('vintage', bld_specs['vintage'])

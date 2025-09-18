@@ -149,7 +149,7 @@
     "storage_inverter_mode": "CONSTANT_PQ",
     "inverter_efficiency": 1.0,
     "battery_roundtrip_efficiency": 1.0,
-    "water_heater_model": "TWONODE",
+    "water_heater_model": "MULTILAYER",
     "bill_mode": "TIERED",
     "monthly_fee": 13,
     "price": 0.102013,
