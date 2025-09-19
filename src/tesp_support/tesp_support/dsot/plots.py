@@ -1762,13 +1762,19 @@ def subscription_plot(dso, day_range, metadata_path, case, demand_case):
     output_df = output_df.rename(columns={'sum': 'Total Load'})
     output_df['Block Load'] = basedemand_df[['sum']]
 
-    # if basedemand_df.index[-1] < stop_time:
-    #     raise Exception('Customer baseline demand data not available for ' + str(stop_time) + ".")
+    #  Load in retail price data
+    # Load Tariff structure
+    # TODO: read in actual rate scenario (currently hard coded to 'RandD')
+    file_name = "rate_case_values_" + "RandD" + ".json"
+    tariff = load_json(metadata_path, file_name, False)
 
-    # Plot Building Stacked Chart with ERCOT and Substation loads for reference
-    plt.figure(figsize=(15, 10))
-    plt.plot(demand_df.index, demand_df['sum'], label='Total Customer Demand', color='black')
-    plt.plot(basedemand_df.index, basedemand_df['sum'], label='Total Customer Subscriptions', color='red')
+    price_path = os.path.dirname(case)
+    DA_LMPs_df = pd.read_csv(price_path + '/Annual_DA_LMP_Load_data.csv', index_col=0, parse_dates=True)
+    DA_LMPs_df = DA_LMPs_df.loc[start_time:stop_time, :]
+    DA_LMPs_df['Retail'] = (DA_LMPs_df['da_lmp' + str(dso)] + DA_LMPs_df[' Adder']) / 1000 + tariff['DSO_' + str(dso)][
+        'transactive_dist_rate']
+
+    fig, ax1 = plt.subplots(figsize=(15, 10))
 
     large_font = True
     if large_font:
@@ -1780,14 +1786,24 @@ def subscription_plot(dso, day_range, metadata_path, case, demand_case):
         label_font = 25
         legend_font = 17
 
-    plt.legend(loc='lower left', prop={'size': legend_font})
-    # plt.legend(loc='lower left', prop={'size': legend_font}, ncol=2)
-    plt.xlabel('Time', size=label_font)
-    plt.ylabel('Load (MW)', size=label_font)
-    plt.ylim(top=30000, bottom=0)
-    ax = plt.gca()
-    ax.tick_params(axis='both', which='major', labelsize=tick_font)
-    # plt.title('DSO load profile by end-load type (ALL DSOs)', size=20)
+    # Plot the first dataset
+    ax1.plot(demand_df.index, demand_df['sum'], label='Total Customer Demand', color='black')
+    ax1.plot(basedemand_df.index, basedemand_df['sum'], label='Total Customer Block Purchase', color='red')
+    ax1.set_xlabel('Time', size=label_font)
+    ax1.set_ylabel('Load (MW)', size=label_font)
+    ax1.tick_params(axis='both', which='major', labelsize=tick_font)
+    ax1.set_ylim(top=30000, bottom=0)
+    ax2 = ax1.twinx()  # Create a second axes that shares the same x-axis
+
+    # Plot the second dataset
+    ax2.plot(DA_LMPs_df.index, DA_LMPs_df['Retail'], label='Retail Price', color='#965c79', linewidth=3)
+    ax2.set_ylabel('Retail Price ($/kW-hr)', size=label_font)
+    ax2.tick_params(axis='both', which='major', labelsize=tick_font)
+    ax2.set_ylim(top=0.4, bottom=0)
+
+    ax1.legend(loc='lower left', fontsize=legend_font)
+    ax2.legend(loc='lower right', fontsize=legend_font)
+
     plot_filename = datetime.now().strftime(
         '%Y%m%d') + 'Subscription_plot_DSO_' + demand_df.index[0].strftime('%m-%d') + '.png'
     file_path_fig = os.path.join(case, 'plots', plot_filename)
