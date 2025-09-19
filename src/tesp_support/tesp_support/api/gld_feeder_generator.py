@@ -654,13 +654,13 @@ class Residential_Build:
                 inc = 'Upper'
             hsename = f'{basenode}_{inc}_hs_{idx}'
             hse_m_name = f'{basenode}_hsmtr_{idx}'
-            whname = f'{basenode}_wh_{idx}'
-            sol_i_name = f'{basenode}_solinv_{idx}'
-            bat_i_name = f'{basenode}_batinv_{idx}'
-            sol_m_name = f'{basenode}_solmtr_{idx}'
-            sol_name = f'{basenode}_sol_{idx}'
-            bat_m_name = f'{basenode}_batmtr_{idx}'
-            bat_name = f'{basenode}_bat_{idx}'
+            whname = f'{hsename}_wh'
+            sol_i_name = f'{hsename}_solinv'
+            bat_i_name = f'{hsename}_batinv'
+            sol_m_name = f'{hsename}_solmtr'
+            sol_name = f'{hsename}_sol'
+            bat_m_name = f'{hsename}_batmtr'
+            bat_name = f'{hsename}_bat'
             # Add position data to house and meter objects, if available
             if hasattr(self.config, 'gis_file'):
                 self.config.pos[mtrname1] = self.config.pos_data[basenode]

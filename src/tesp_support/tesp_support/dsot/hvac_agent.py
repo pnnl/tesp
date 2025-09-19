@@ -654,14 +654,6 @@ class HVACDSOT:  # TODO: update class name
                     Wg = 0.28
                 elif self.window_frame == 3 or self.window_frame == 4:
                     Wg = 0.24
-            elif self.glazing_treatment == 4:
-                # TODO: using placeholders for now
-                if self.window_frame == 0:
-                    Wg = 0.31
-                elif self.window_frame == 1 or self.window_frame == 2:
-                    Wg = 0.28
-                elif self.window_frame == 3 or self.window_frame == 4:
-                    Wg = 0.24
         elif self.glazing_layers == 2:
             if self.glazing_treatment == 1:
                 if self.window_frame == 0:
@@ -685,13 +677,21 @@ class HVACDSOT:  # TODO: update class name
                 elif self.window_frame == 3 or self.window_frame == 4:
                     Wg = 0.22
             elif self.glazing_treatment == 4:
-                # TODO: using placeholders for now
+                # LOW_S
                 if self.window_frame == 0:
-                    Wg = 0.31
+                    Wg = 0.41
                 elif self.window_frame == 1 or self.window_frame == 2:
-                    Wg = 0.28
+                    Wg = 0.37
                 elif self.window_frame == 3 or self.window_frame == 4:
-                    Wg = 0.24
+                    Wg = 0.31
+            elif self.glazing_treatment == 5:
+                # HIGH_S
+                if self.window_frame == 0:
+                    Wg = 0.70
+                elif self.window_frame == 1 or self.window_frame == 2:
+                    Wg = 0.62
+                elif self.window_frame == 3 or self.window_frame == 4:
+                    Wg = 0.52
         elif self.glazing_layers == 3:
             if self.glazing_treatment == 1:
                 if self.window_frame == 0:
@@ -715,13 +715,21 @@ class HVACDSOT:  # TODO: update class name
                 elif self.window_frame == 3 or self.window_frame == 4:
                     Wg = 0.26
             elif self.glazing_treatment == 4:
-                # TODO: using placeholders for now
+                # LOW_S
                 if self.window_frame == 0:
-                    Wg = 0.31
+                    Wg = 0.27
                 elif self.window_frame == 1 or self.window_frame == 2:
-                    Wg = 0.28
+                    Wg = 0.25
                 elif self.window_frame == 3 or self.window_frame == 4:
-                    Wg = 0.24
+                    Wg = 0.21
+            elif self.glazing_treatment == 5:
+                # HIGH_S
+                if self.window_frame == 0:
+                    Wg = 0.62
+                elif self.window_frame == 1 or self.window_frame == 2:
+                    Wg = 0.55
+                elif self.window_frame == 3 or self.window_frame == 4:
+                    Wg = 0.46
         try:
             trans_coeff = Wg
         except UnboundLocalError:

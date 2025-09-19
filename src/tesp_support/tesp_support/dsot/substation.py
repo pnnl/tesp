@@ -323,6 +323,7 @@ def inner_substation_loop(metrics_root, with_market):
         # key is the name of inverter resource,
         # but we need battery name, thus the replacement
         topic_map[key.replace('ibat', 'bat') + '#SOC'] = [battery_agent_objs[key].set_SOC]
+        topic_map[key.replace('batinv', 'bat') + '#SOC'] = [battery_agent_objs[key].set_SOC]
     log.info('instantiated %s battery control agents' % (len(battery_keys)))
 
     # instantiate the ev controller objects and map their message inputs
@@ -1975,3 +1976,4 @@ def dso_loop(metrics_root, with_market):
         market = False
 
     inner_substation_loop(metrics_root, market)
+    

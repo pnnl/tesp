@@ -614,6 +614,8 @@ def glm_dict(case_name, feed_key):
     capacitors = {}
     weather = {}
     feeders = {}
+    ziploads = {}
+    waterheaters = {}
 
     for name, climate in glm.climate.items():
         weather = {'name': str(name), 
@@ -637,73 +639,37 @@ def glm_dict(case_name, feed_key):
         else:
             fuel_type = 'electric'
 
+        wh_name = hs_name.replace(hs_name, f'{hs_name}_wh')
         try:
-            if "hse" in hs_name:
-                wh_name = hs_name.replace(inc_level + '_hse', 'wh')
-                wh_setpoint = float(glm.waterheater.instances[wh_name]["lower_tank_setpoint"])
-            else:
-                wh_name = hs_name.replace(inc_level + '_hs', 'wh')
-                wh_setpoint = float(glm.waterheater.instances[wh_name]["tank_setpoint"])
             wh_gallons = float(glm.waterheater.instances[wh_name]["tank_volume"])    
             wh_skew = float(glm.waterheater.instances[wh_name]["schedule_skew"])
             wh_schedule_name = glm.waterheater.instances[wh_name]["water_demand"]
             wh_diameter = float(glm.waterheater.instances[wh_name]["tank_diameter"])
             wh_model = glm.waterheater.instances[wh_name]["waterheater_model"]
+
+            houses[hs_name]['wh_name'] = wh_name
+            houses[hs_name]['wh_UA'] = float(wh_gallons)
+            houses[hs_name]['wh_skew'] = float(wh_skew)
+            houses[hs_name]['wh_schedule_name'] = wh_schedule_name
+            houses[hs_name]['wh_diameter'] = float(wh_diameter)
+            houses[hs_name]['wh_model'] = wh_model            
         except KeyError:
             # If the house doesn't have an electric water heater
-            wh_name = ""
-            wh_gallons = 0
-            wh_skew = 0
-            wh_schedule_name = ""
-            wh_diameter = 0
-            wh_setpoint = 0
-            wh_model = ""
+            pass
     
-        try:
+        if wh_model == 'MULTILAYER':
             wh_scalar = glm.waterheater.instances[wh_name]["scalar"]
             wh_tmix = glm.waterheater.instances[wh_name]["tmix"]
             wh_mlayer = glm.waterheater.instances[wh_name]["mlayer"]
-        except KeyError:
-            wh_scalar = 0
-            wh_tmix = ""
-            wh_mlayer = ""
-        
-        # For residential houses
-        if "hse" in hs_name:
-            un_zip_name = hs_name.replace(hs_name, f'{hs_name}_unresponsive')
-            re_zip_name = hs_name.replace(hs_name, f'{hs_name}_responsive')
-        elif 'hs' in hs_name:
-            un_zip_name = hs_name.replace(hs_name, f'{hs_name}_unresponsive')
-            re_zip_name = hs_name.replace(hs_name, f'{hs_name}_responsive')       
-        # For commercial buildings
-        else:
-            un_zip_name = False
-            lights = hs_name.replace(hs_name, f'{hs_name}_lights')
-            plugs = hs_name.replace(hs_name, f'{hs_name}_plug_loads')
-            whs = hs_name.replace(hs_name, f'{hs_name}_gas_waterheater')
-            ext_lights = hs_name.replace(hs_name, f'{hs_name}_exterior_lights')
-            occ = hs_name.replace(hs_name, f'{hs_name}_occupancy')
-            off_lights = hs_name.replace(hs_name, f'{hs_name}_office_lights')
+            wh_setpoint = float(glm.waterheater.instances[wh_name]["lower_tank_setpoint"])
 
-        if un_zip_name:
-            names = {un_zip_name, re_zip_name}
-        else:
-            names = {lights, plugs, whs, ext_lights, occ, off_lights}
-
-        for zip_name in names:
-            try:
-                zip_skew = glm.ZIPload.instances[zip_name]['schedule_skew']
-                zip_heatgain_fraction = glm.ZIPload.instances[zip_name]['heatgain_fraction']
-                zip_power_fraction = glm.ZIPload.instances[zip_name]['power_fraction']
-                zip_power_pf = glm.ZIPload.instances[zip_name]['power_pf']
-                if "*" in glm.ZIPload.instances[zip_name]['base_power']:
-                    # if base power is set via schedule, extract just the numeric part after the "*"
-                    zip_scalar = glm.ZIPload.instances[zip_name]['base_power'].split("*")[-1].strip()
-                else: 
-                    houses[hs_name]['zip_scalar']['constant'] = glm.ZIPload.instances[zip_name]['base_power']
-            except KeyError:
-                 # Not every building will have all six ZIPLoad types
-                 pass
+            houses[hs_name]['wh_scalar'] = float(wh_scalar)
+            houses[hs_name]['wh_tmix'] = wh_tmix   
+            houses[hs_name]['wh_mlayer'] = wh_mlayer
+            houses[hs_name]['wh_setpoint'] = float(wh_setpoint)
+        else: 
+            wh_setpoint = float(glm.waterheater.instances[wh_name]["tank_setpoint"])
+            houses[hs_name]['wh_setpoint'] = float(wh_setpoint)
 
         # Assign Residential vs C&I buildings parameters
         if building_type in ['SINGLE_FAMILY', 'MOBILE_HOME', 'APARTMENTS', 'MULTI_FAMILY']:
@@ -748,22 +714,51 @@ def glm_dict(case_name, feed_key):
                 'cooling_COP': float(house["cooling_COP"]), 
                 'over_sizing_factor': float(house["over_sizing_factor"]),
                 'fuel_type': fuel_type,
-                'wh_name': wh_name,
-                'wh_skew': float(wh_skew),
-                'wh_schedule_name': wh_schedule_name,
-                'wh_UA': float(wh_gallons),
-                'wh_diameter': float(wh_diameter),
-                'wh_setpoint': float(wh_setpoint),
-                'wh_model': wh_model,
-                'wh_scalar': float(wh_scalar),
-                'wh_tmix': wh_tmix,
-                'wh_mlayer': wh_mlayer,
-                'zip_scalar': float(zip_scalar),
-                'zip_skew': float(zip_skew),
-                'zip_heatgain_fraction': float(zip_heatgain_fraction),
-                'zip_power_fraction': float(zip_power_fraction),
-                'zip_power_pf': float(zip_power_pf)
+                "zip_skew": 0,
+                "zip_heatgain_fraction": {'constant': 1.0},
+                "zip_scalar": {'constant': 0.0},
+                "zip_power_fraction": {'constant': 1.0},
+                "zip_power_pf": {'constant': 1.0}
                 }
+           
+            if "hse" in hs_name:
+                un_zip_name = hs_name.replace(hs_name, f'{hs_name}_unresponsive')
+                re_zip_name = hs_name.replace(hs_name, f'{hs_name}_responsive')
+            elif 'hs' in hs_name:
+                un_zip_name = hs_name.replace(hs_name, f'{hs_name}_unresponsive')
+                re_zip_name = hs_name.replace(hs_name, f'{hs_name}_responsive')   
+
+            names = {re_zip_name, un_zip_name}
+            strings = {'responsive', 'unresponsive'}
+            for zip_name in names:
+                scalar = {}
+                hf = {}
+                pf = {}
+                p_pf = {}
+                try: 
+                    zip_skew = glm.ZIPload.instances[zip_name]['schedule_skew']
+                    hf[zip_name] = glm.ZIPload.instances[zip_name]['heatgain_fraction']
+                    pf[zip_name] = glm.ZIPload.instances[zip_name]['power_fraction']
+                    p_pf[zip_name] = glm.ZIPload.instances[zip_name]['power_pf']
+                    if "*" in glm.ZIPload.instances[zip_name]['base_power']:
+                        # if base power is set via schedule, extract just the numeric part after the "*"
+                        zip_scalar = glm.ZIPload.instances[zip_name]['base_power'].split("*")[-1].strip()
+                        scalar[zip_name] = zip_scalar
+                    else: 
+                        scalar[zip_name] = glm.ZIPload.instances[zip_name]['base_power']
+                except KeyError:
+                    # Not every house has ziploads
+                    pass
+                
+                for string in strings:
+                    if string in zip_name:
+                        houses[hs_name]["zip_skew"] = float(zip_skew)
+                        houses[hs_name]["zip_heatgain_fraction"][f'{string}_loads'] = float(hf[zip_name])
+                        houses[hs_name]["zip_scalar"][f'{string}_loads'] = float(scalar[zip_name])
+                        houses[hs_name]["zip_power_fraction"][f'{string}_loads'] = float(pf[zip_name])
+                        houses[hs_name]["zip_power_pf"][f'{string}_loads'] = float(p_pf[zip_name])
+
+
             # except KeyError:
             #     pass
 
@@ -817,15 +812,11 @@ def glm_dict(case_name, feed_key):
                     'cooling_COP': float(house["cooling_COP"]), 
                     'over_sizing_factor': float(house["over_sizing_factor"]),
                     'fuel_type': fuel_type,
-                    'wh_gallons': float(wh_gallons),
-                    'wh_scalar': float(wh_scalar),
-                    'wh_tmix': wh_tmix,
-                    'wh_mlayer': wh_mlayer,
-                    'zip_scalar': float(zip_scalar),
-                    'zip_skew': float(zip_skew),
-                    'zip_heatgain_fraction': float(zip_heatgain_fraction),
-                    'zip_power_fraction': float(zip_power_fraction),
-                    'zip_power_pf': float(zip_power_pf)
+                    "zip_skew": 0,
+                    "zip_heatgain_fraction": {'constant': 1.0},
+                    "zip_scalar": {'constant': 0.0},
+                    "zip_power_fraction": {'constant': 1.0},
+                    "zip_power_pf": {'constant': 1.0}
                     }
             except KeyError:
                 houses[hs_name] = {'feeder_id': feed_key, 
@@ -853,16 +844,48 @@ def glm_dict(case_name, feed_key):
                     'cooling_COP': float(house["cooling_COP"]), 
                     'over_sizing_factor': float(house["over_sizing_factor"]),
                     'fuel_type': fuel_type,
-                    'wh_gallons': float(wh_gallons),
-                    'wh_scalar': float(wh_scalar),
-                    'wh_tmix': wh_tmix,
-                    'wh_mlayer': wh_mlayer,
-                    'zip_scalar': float(zip_scalar),
-                    'zip_skew': float(zip_skew),
-                    'zip_heatgain_fraction': float(zip_heatgain_fraction),
-                    'zip_power_fraction': float(zip_power_fraction),
-                    'zip_power_pf': float(zip_power_pf)
-                    }
+                    "zip_heatgain_fraction": {'constant': 1.0},
+                    "zip_scalar": {'constant': 0.0},
+                    "zip_power_fraction": {'constant': 1.0},
+                    "zip_power_pf": {'constant': 1.0}
+                    }       
+    
+                # For commercial buildings
+                lights = hs_name.replace(hs_name, f'{hs_name}_lights')
+                plugs = hs_name.replace(hs_name, f'{hs_name}_plug_loads')
+                whs = hs_name.replace(hs_name, f'{hs_name}_gas_waterheater')
+                ext_lights = hs_name.replace(hs_name, f'{hs_name}_exterior_lights')
+                occ = hs_name.replace(hs_name, f'{hs_name}_occupancy')
+                off_lights = hs_name.replace(hs_name, f'{hs_name}_office_lights')
+
+                names = {lights, plugs, whs, ext_lights, occ, off_lights}
+                strings = {'lights', 'plug_loads', 'gas_waterheater', 'exterior_lights', 'occupancy', 'office_lights'}
+                for zip_name in names:
+                    scalar = {}
+                    hf = {}
+                    pf = {}
+                    p_pf = {}
+                    try: 
+                        zip_skew = glm.ZIPload.instances[zip_name]['schedule_skew']
+                        hf[zip_name] = glm.ZIPload.instances[zip_name]['heatgain_fraction']
+                        pf[zip_name] = glm.ZIPload.instances[zip_name]['power_fraction']
+                        p_pf[zip_name] = glm.ZIPload.instances[zip_name]['power_pf']
+                        if "*" in glm.ZIPload.instances[zip_name]['base_power']:
+                            # if base power is set via schedule, extract just the numeric part after the "*"
+                            zip_scalar = glm.ZIPload.instances[zip_name]['base_power'].split("*")[-1].strip()
+                            scalar[zip_name] = zip_scalar
+                        else: 
+                            scalar[zip_name] = glm.ZIPload.instances[zip_name]['base_power']
+                    except KeyError:
+                        # Not every building will have all six ZIPLoad types
+                        pass
+
+                    for string in strings:
+                        if string in zip_name:
+                            houses[hs_name]["zip_heatgain_fraction"][string] = float(hf[zip_name])
+                            houses[hs_name]["zip_scalar"][string] = float(scalar[zip_name])
+                            houses[hs_name]["zip_power_fraction"][string] = float(pf[zip_name])
+                            houses[hs_name]["zip_power_pf"][string] = float(p_pf[zip_name])
 
             #billingmeters[glm.meter.instances[house['parent']]['children']].append(hs_name)
 
