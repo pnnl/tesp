@@ -708,7 +708,7 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
         ev_com = len(bldg_df.loc[(bldg_df['house']=='Yes') & (bldg_df['ev']=='Yes')& (hse_df['income_level'] =='')])
         bat_hses = len(hse_df.loc[(hse_df['house']=='Yes') & (hse_df['battery']=='Yes') & (hse_df['income_level'] !='')])
         bat_com = len(bldg_df.loc[(bldg_df['house']=='Yes') & (bldg_df['battery']=='Yes')& (hse_df['income_level'] =='')])
-        elec_wh_hses = len(hse_df.loc[(hse_df['house']=='Yes') & (hse_df['wh_gallons']!=0) & (hse_df['income_level'] !='')])
+        elec_wh_hses = len(hse_df.loc[(hse_df['house']=='Yes') & (hasattr(hse_df, 'wh_gallons')) & (hse_df['income_level'] !='')])
         elec_sh_hses = len(hse_df.loc[(hse_df['house']=='Yes') & (hse_df['fuel_type']=='electric') & (hse_df['income_level'] !='')])
         print(f"=== RESIDENTIAL POPULATION SUMMARY ===")
         print(f"Number of residential homes {tot_hses}")

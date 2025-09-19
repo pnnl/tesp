@@ -587,7 +587,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
             if participating:
                 num_battery_agents += 1
 
-            battery_name = inverter_name.replace('ibat', 'bat')
+            #battery_name = inverter_name.replace('ibat', 'bat')
             battery_name = inverter_name.replace('batinv', 'bat')
             battery_agents[inverter_name] = {'batteryName': battery_name,
                                              'meterName': meter_name,

@@ -919,11 +919,11 @@ def RCI_analysis(dso_range, case, data_path, metadata_path, dso_metadata_file, e
 
         # Determine count and ratings/capacities of inverter based technologies
         for inverter in metadata['inverters']:
-            if 'ibat' in inverter:
+            if 'ibat' in inverter or 'batinv' in inverter:
                 Battrating += metadata['inverters'][inverter]['rated_W'] / 1000
                 Battcapacity += metadata['inverters'][inverter]['bat_capacity'] / 1000
                 Battcount += 1
-            elif 'isol' in inverter:
+            elif 'isol' in inverter or 'solinv' in inverter:
                 PVrating += metadata['inverters'][inverter]['rated_W'] / 1000
                 PVcount += 1
         Batt_tot.append(Battcount)

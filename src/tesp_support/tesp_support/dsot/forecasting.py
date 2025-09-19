@@ -295,7 +295,10 @@ class Forecasting:
         return df
 
     def forecasting_schedules(self, name, time, len_forecast=48):
-        self.DA_output = self.gProxy.forecasting_schedules(name, time, len_forecast)
+        try:
+            self.DA_output = self.gProxy.forecasting_schedules(name, time, len_forecast)
+        except KeyError:
+            print(f'Did not expect {name} zipload')
         return self.DA_output
 
     def set_solar_diffuse_forecast(self, fncs_str):
