@@ -1030,6 +1030,8 @@ class Residential_Build:
                             self.housing_type[self.config.state][self.config.res_dso_type][income]["apartment_5_units"]
             prob_mobile = self.housing_type[self.config.state][self.config.res_dso_type][income]["mobile_home"]
 
+            prob_inc = self.income_level[self.config.state][self.config.res_dso_type][income]
+
             if hasattr(self.config, 'in_file_glm') and self.config.use_recs == "True":
                 if bldg == 0:
                     prob_solar = self.config.solar_deployment * (self.solar_pv[self.config.state][self.config.res_dso_type]
@@ -1061,18 +1063,16 @@ class Residential_Build:
                     prob_ev = (self.config.ev_deployment * self.ev[self.config.state][self.config.res_dso_type][income]["mobile_home"])/prob_mobile
 
             # User-defined income distribution of DER, no restrictions by housing type:
+            
             elif hasattr(self.config, 'user_dist') and self.config.user_dist == "True":
-                prob_inc = self.income_level[self.config.state][self.config.res_dso_type][income]
-
                 prob_solar = (self.config.solar_deployment*self.config.solar_percentage[income])/prob_inc
                 prob_batt = (self.config.storage_deployment*self.config.storage_percentage[income])/prob_inc
                 prob_ev = (self.config.ev_deployment*self.config.ev_percentage[income])/prob_inc
 
             # This is a special case, implemented for the Rates Analysis work. Only single-family homes have solar or batteries. 
             else:
-                prob_inc = self.income_level[self.config.state][self.config.res_dso_type][income]
                 # EVs are not restricted by house type. The probability a house has an EV by income:
-                prob_ev = (self.config.ev_deployment*self.config.ev_percentage[income])
+                prob_ev = (self.config.ev_deployment*self.config.ev_percentage[income])/prob_inc
                 if bldg == 0: 
                     prob_solar = (self.config.solar_deployment * self.config.solar_percentage[income])/(prob_single * prob_inc)
                     prob_batt = (self.config.storage_deployment * self.config.storage_percentage[income])/(self.config.solar_deployment * self.config.solar_percentage[income])
@@ -1946,7 +1946,7 @@ class Electric_Vehicle:
                         "mileage_efficiency": ev_mileage,
                         "mileage_classification": ev_range,
                         "charging_efficiency": ev_charge_eff}
-            ev_name = f'{house_name}_{ev_name}'
+            ev_name = f'{house_name}_{ev_name}_chgr'
             ev_name = ev_name.replace(" ","_")
             self.glm.add_object("evcharger_det", f'{ev_name}_{self.ev_count}', params)
             self.glm.add_metrics_collector(f'{ev_name}_{self.ev_count}', "evcharger_det")

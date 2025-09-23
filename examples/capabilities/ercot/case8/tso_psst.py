@@ -784,6 +784,10 @@ def tso_psst_loop():
             t = np.append(t, [1, 1, 1])
             tck_load = [t, [x, y], 3]
             
+            solver = ppc['solver']
+            if pst.SOLVER is not None:
+                solver = pst.SOLVER
+                
             if ppc['solver'] == 'cbc':
                 ppc['gencost'][:, 4] = 0.0  # can't use quadratic costs with CBC solver
             
@@ -829,9 +833,6 @@ def tso_psst_loop():
             curve = ppc['curve']
             
             ames = ppc['ames']
-            solver = ppc['solver']
-            if pst.SOLVER is not None:
-                solver = pst.SOLVER
             
             priceCap = 2 * ppc['priceCap']
             reserveDown = ppc['reserveDown']

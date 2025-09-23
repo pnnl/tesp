@@ -648,7 +648,7 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
             #com_df['DSO'] = dso_k # add a column for DSO number
             # Add columns to distinguish houses and each DER
             for inc in ['Low', 'Middle', 'Upper', '']:
-                for k, v in {'house':inc, 'battery':'bat', 'solar':'sol', 'ev':'ev'}.items():
+                for k, v in {'house':inc, 'battery':'bat', 'solar':'sol', 'ev':'chgr'}.items():
                     for val in glm_dict['billingmeters'].values():
                         children = val['children']
                         if len([s for s in children if inc in s]) > 0:
@@ -696,20 +696,20 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
                     healthcare_inpatient, and low_occupancy
 
             Returns:
-                _type_: _description_
+                int: bldg_tot, the number of buildings of a given building type
             """
             bldg_tot = len(bldg_df.loc[(bldg_df['house_class']==bldg_name) & (bldg_df['house']!='')])
             return bldg_tot
         # Excluding commercial and industrial buildings where income_level = None:
         tot_hses = low_hses + middle_hses + upper_hses
-        sol_hses = len(hse_df.loc[(hse_df['house']=='Yes') & (hse_df['solar']=='Yes') & (hse_df['income_level'] !='')])
-        sol_com = len(bldg_df.loc[(bldg_df['house']=='Yes') & (bldg_df['solar']=='Yes') & (hse_df['income_level'] =='')])
-        ev_hses = len(hse_df.loc[(hse_df['house']=='Yes') & (hse_df['ev']=='Yes') & (hse_df['income_level'] !='')])
-        ev_com = len(bldg_df.loc[(bldg_df['house']=='Yes') & (bldg_df['ev']=='Yes')& (hse_df['income_level'] =='')])
-        bat_hses = len(hse_df.loc[(hse_df['house']=='Yes') & (hse_df['battery']=='Yes') & (hse_df['income_level'] !='')])
-        bat_com = len(bldg_df.loc[(bldg_df['house']=='Yes') & (bldg_df['battery']=='Yes')& (hse_df['income_level'] =='')])
-        elec_wh_hses = len(hse_df.loc[(hse_df['house']=='Yes') & (hasattr(hse_df, 'wh_gallons')) & (hse_df['income_level'] !='')])
-        elec_sh_hses = len(hse_df.loc[(hse_df['house']=='Yes') & (hse_df['fuel_type']=='electric') & (hse_df['income_level'] !='')])
+        sol_hses = len(hse_df.loc[(hse_df['solar']=='Yes') & (hse_df['income_level'] !='')])
+        sol_com = len(bldg_df.loc[(bldg_df['solar']=='Yes') & (hse_df['income_level'] =='')])
+        ev_hses = len(hse_df.loc[(hse_df['ev']=='Yes') & (hse_df['income_level'] !='')])
+        ev_com = len(bldg_df.loc[(bldg_df['ev']=='Yes')& (hse_df['income_level'] =='')])
+        bat_hses = len(hse_df.loc[(hse_df['battery']=='Yes') & (hse_df['income_level'] !='')])
+        bat_com = len(bldg_df.loc[(bldg_df['battery']=='Yes')& (hse_df['income_level'] =='')])
+        elec_wh_hses = len(hse_df.loc[(hasattr(hse_df, 'wh_gallons')) & (hse_df['income_level'] !='')])
+        elec_sh_hses = len(hse_df.loc[(hse_df['fuel_type']=='electric') & (hse_df['income_level'] !='')])
         print(f"=== RESIDENTIAL POPULATION SUMMARY ===")
         print(f"Number of residential homes {tot_hses}")
         print(f"=== Income (Percent of all homes) ===")
@@ -719,8 +719,8 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
         print(f"=== Electric Water Heating/Space Heating (Percent of all homes) ===")
         print(f"=== Water Heating: {round(100*elec_wh_hses/tot_hses,2)}%, Space Heating: {round(100*elec_sh_hses/tot_hses,2)}%. ===")
         print(f"=== COMMERCIAL POPULATION SUMMARY for {caseName} ===")
-        print(f"Number of commercial buildings: {com_bldgs}")
-        print(f"=== DERs (Percent of all buildings) ===")
+        print(f"Number of commercial building zones: {com_bldgs}")
+        print(f"=== DERs (Percent of all building zones) ===")
         print(f"=== Solar: {round(100*sol_com/com_bldgs,2)}%, EVs: {round(100*ev_com/com_bldgs,2)}%, Batteries: {round(100*bat_com/com_bldgs,2)}%. ===")
     
 
