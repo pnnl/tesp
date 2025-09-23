@@ -156,7 +156,7 @@ def customer_bill_component_comparison(cases, data_paths, output_path, dso_num):
     file_path_fig = os.path.join(output_path, 'plots', plot_filename)
     plt.savefig(file_path_fig, bbox_inches='tight')
 
-def customer_monthly_stats(cases, data_paths, output_path, dso_num):
+def customer_monthly_stats(cases, data_paths, output_path, dso_num, cust_class=None):
     """ Will plot key variables by month and duration and save to file.
     Args:
         cases (List[str]): names of the cases
@@ -183,11 +183,28 @@ def customer_monthly_stats(cases, data_paths, output_path, dso_num):
 
         if case == cases[0]:
             customers = list(set(var_df.index.tolist()))
+
+            cust_cfs_file = data_path + '/Master_Customer_Dataframe.h5'
+            customer_cfs_df = pd.read_hdf(cust_cfs_file, key='customer_data', mode='r')
+            customer_cfs_df = customer_cfs_df[customer_cfs_df['Customer ID'].str.contains('DSO'+dso_num, case=False)]
+            customer_cfs_df = customer_cfs_df.set_index('meter ID')
+
             # Create empty DataFrame for all consumer bills
             meters = []
             case_list = []
             month_list = []
             for meter in customers:
+
+                # This is needed due to inconsistencies in customer sets between CFS and customer bill data.
+                # TODO: reconcile and make consistent customer representations.
+                try:
+                    if customer_cfs_df.loc[meter, 'tariff_class'] == cust_class:
+                        is_in_class = True
+                except Exception as e:
+                    is_in_class = False
+                    print(f"CFS is missing: {e}")
+
+                if cust_class == None or is_in_class:
                 for case2 in cases:
                     for month in months:
                         meters.append(meter)
