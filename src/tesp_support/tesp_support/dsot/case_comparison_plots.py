@@ -443,7 +443,7 @@ def retail_price_comparison_plot(dso, day_range, metadata_path, cases, data_path
     # plt.legend(loc='lower left', prop={'size': legend_font}, ncol=2)
     plt.xlabel('Time', size=label_font)
     plt.ylabel('Retail Price ($/kW-hr)', size=label_font)
-    plt.ylim(bottom=0)
+    plt.ylim(bottom=0, top=0.4)
     ax = plt.gca()
     ax.tick_params(axis='both', which='major', labelsize=tick_font)
     # plt.title('DSO load profile by end-load type (ALL DSOs)', size=20)
@@ -1472,32 +1472,48 @@ def plot_customer_pdf(attribute, variables, metric, pop_df, case, output_path):
     if metric in ['bill_savings_pct', 'net_energy_cost_savings_pct']:
         x_low = -30
         x_high = 60
-        # x_low = -0
-        # x_high = 30
+        y_low = 0
+        y_high = 0.5
     elif metric in ['net_energy_purchased_pct']:
         x_low = -20
         x_high = 20
+        y_low = 0
+        y_high = 0.5
     elif metric in ['peak_load_reduction_pct']:
         x_low = -25
         x_high = 25
+        y_low = 0
+        y_high = 0.5
     elif metric in ['Bills']:
         x_low = 0
         x_high = 5000
+        y_low = None
+        y_high = None
     elif metric in ['EnergyPurchased']:
         x_low = 0
         x_high = 50000
+        y_low = None
+        y_high = None
     elif metric in ['PeakLoad']:
         x_low = 0
         x_high = 50
+        y_low = None
+        y_high = None
     elif metric in ['sqft']:
         x_low = 0
         x_high = 5000
+        y_low = None
+        y_high = None
     elif metric in ['slider_setting']:
         x_low = 0
         x_high = 1
+        y_low = None
+        y_high = None
     else:
         x_low = -50
         x_high = 50
+        y_low = None
+        y_high = None
 
     plt.clf()
     for var in variables:
@@ -1517,6 +1533,7 @@ def plot_customer_pdf(attribute, variables, metric, pop_df, case, output_path):
     plt.title(case + ': ' + xlabel_dict[metric] + ' by ' + legend_dict[attribute])
     plt.xlabel(xlabel_dict[metric])
     plt.xlim(x_low, x_high)
+    plt.ylim(y_low, y_high)
     plt.ylabel('Population Fraction (-)')
     plot_filename = datetime.now().strftime('%Y%m%d') + 'Customer_PDF_' + attribute + '_' + metric + '.png'
     file_path_fig = os.path.join(output_path, 'plots', plot_filename)
@@ -1538,6 +1555,7 @@ def plot_customer_pdf(attribute, variables, metric, pop_df, case, output_path):
     plt.title(case + ': ' + xlabel_dict[metric] + ' by ' + legend_dict[attribute])
     plt.xlabel(xlabel_dict[metric])
     plt.xlim(x_low, x_high)
+    plt.ylim(y_low, y_high)
     plt.ylabel('Population Fraction (-)')
     plot_filename = datetime.now().strftime('%Y%m%d') + 'Customer_PDF_' + attribute + '_' + metric + 'dist.png'
     file_path_fig = os.path.join(output_path, 'plots', plot_filename)
