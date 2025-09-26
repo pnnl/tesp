@@ -121,10 +121,10 @@
     "copperplate_feeder_name": "commercial_copperplate_feeder",
     "copperplate_feeder_file": "../data/feeders/commercial_copperplate_feeder.glm",
     "backbone_files": {
-    "taxonomy": "", // taxonomy feeder file
-    "seed": 0, // random seed
-    "support_path": "../../../dsot/data/schedules/",
-    "weather_path": "../../../dsot/data/weather/"
+        "taxonomy": "", // taxonomy feeder file
+        "seed": 0, // random seed
+        "support_path": "../../../dsot/data/schedules/",
+        "weather_path": "../../../dsot/data/weather/"
     },
     "metrics": [
         "house",

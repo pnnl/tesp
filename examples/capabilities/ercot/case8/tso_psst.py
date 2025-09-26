@@ -783,7 +783,8 @@ def tso_psst_loop():
             t = np.append([0, 0, 0], t)
             t = np.append(t, [1, 1, 1])
             tck_load = [t, [x, y], 3]
-            
+
+            ames = ppc['ames']
             solver = ppc['solver']
             if pst.SOLVER is not None:
                 solver = pst.SOLVER
@@ -831,8 +832,6 @@ def tso_psst_loop():
             swing_bus = int(ppc['swing_bus'])
             noScale = ppc['noScale']
             curve = ppc['curve']
-            
-            ames = ppc['ames']
             
             priceCap = 2 * ppc['priceCap']
             reserveDown = ppc['reserveDown']

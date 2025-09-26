@@ -169,7 +169,6 @@ def glm_merge(target, sources, xfmva):
     op.close()
 
 def merge_glm_dict(target, sources, xfmva):
-
     """ Combines GridLAB-D metadata files into "target". The source files must already exist.
 
     The output JSON won't have a top-level base_feeder attribute. Instead,
@@ -238,20 +237,16 @@ def merge_agent_dict(target, sources):
                'ev': {},
                'pv': {},
                'site_agent': {},
-               'start_time': "",
-               'end_time': "",
+               'StartTime': "",
+               'EndTime': "",
                'rate': "",
                'LogLevel': ""}
     for fdr in sources:
         lp = open(path.dirname(target) + '/' + fdr + '_agent_dict.json').read()
         cfg = json.loads(lp)
         for key in cfg.keys():
-            if key in ["StartTime", "EndTime", "rate", "LogLevel", "solver", "num_core", "priceSensLoad", "serverPort",
-                       "metrics", "metrics_extension", "metrics_interval"]:
-                diction[key] = cfg[key]
-            # To retain compatability with archived dsot prepare_case:    
-            elif key in ["StartTime", "EndTime", "rate", "LogLevel", "solver", "numCore", "priceSensLoad", "serverPort",
-                       "Metrics", "metrics_extension", "metrics_interval"]:
+            if key in ["StartTime", "EndTime", "rate", "LogLevel", "solver", "numCore", "priceSensLoad", "serverPort",
+                       "Metrics", "MetricsType", "MetricsInterval"]:
                 diction[key] = cfg[key]
             else:
                 diction[key].update(cfg[key])

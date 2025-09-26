@@ -1,4 +1,3 @@
-
 # Copyright (C) 2023-2023 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: glm_modifier.py

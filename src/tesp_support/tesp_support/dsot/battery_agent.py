@@ -338,7 +338,6 @@ class BatteryDSOT:
         model.con5 = pyo.Constraint(self.TIME, rule=self.con_rule_eq3)
 
         # print('day_ahead_price_forecast...', self.f_DA)
-        print(model.pprint())
         results = get_run_solver("bt_" + self.name, pyo, model, self.solver)
         # print('*** optimization model ***:')
         # print(model.pprint())

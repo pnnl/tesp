@@ -701,7 +701,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                 'number_of_gld_homes': market_config['DSO']['number_of_gld_homes'],
                 'distribution_charge_rate': market_config['DSO']['distribution_charge_rate'],
                 'dso_retail_scaling': market_config['DSO']['dso_retail_scaling'],
-                'metrics_full_detail': simulation_config['metricsFullDetail'],
+                'metrics_full_detail': simulation_config['metrics_full_detail'],
                 'quadratic': simulation_config['quadratic']
             }
             if DSO_quadratic_curves:
@@ -743,7 +743,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                 'Wind_m': market_config['Retail']['Wind_m'],
                 'delta_T_TOR': market_config['Retail']['delta_T_TOR'],
                 'delta_T_ave_wind_R': market_config['Retail']['delta_T_ave_wind_R'],
-                'metrics_full_detail': simulation_config['metricsFullDetail']
+                'metrics_full_detail': simulation_config['metrics_full_detail']
             }
 
         else:
@@ -776,8 +776,8 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
             'priceSensLoad': simulation_config['priceSensLoad'],
             'serverPort': simulation_config['serverPort'],
             'Metrics': feeder_config['Metrics'],
-            'metrics_extension': feeder_config['MetricsType'],
-            'metrics_interval': feeder_config['MetricsInterval']}
+            'MetricsType': feeder_config['MetricsType'],
+            'MetricsInterval': feeder_config['MetricsInterval']}
     print(json.dumps(meta), file=dp)
     dp.close()
 

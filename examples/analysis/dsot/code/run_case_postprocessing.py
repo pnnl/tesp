@@ -14,26 +14,33 @@ It has the following elements:
     2. Postprocessing that is required across all DSOs and is desired for every run
     3. Postprocessing that is needed over the entire year (and will likely need be executed on Constance).
     4. Postprocessing that compares cases (and will likely need to be executed on Constance).
-'''
 
-# Supported backends are:
-# “loky” used by default, can induce some communication and memory overhead when exchanging input and
-#    output data with the worker Python processes.
-# “multiprocessing” previous process-based backend based on multiprocessing.Pool. Less robust than loky.
-# “threading” is a very low-overhead backend, but it suffers from the Python Global Interpreter Lock
-#    if the called function relies a lot on Python objects. “threading” is mostly useful when the execution
-#    bottleneck is a compiled extension that explicitly releases the GIL (for instance a Cython loop
-#    wrapped in a “with nogil” block or an expensive call to a library such as NumPy).
-# finally, you can register backends by calling register_parallel_backend.
-#   This will allow you to implement a backend of your liking.
+Supported backends are:
+    - “loky” used by default, can induce some communication and memory overhead 
+    when exchanging input and output data with the worker Python processes.
+    - “multiprocessing” previous process-based backend based on multiprocessing.
+    - Pool. Less robust than loky.
+    - “threading” is a very low-overhead backend, but it suffers from the Python
+     Global Interpreter Lock if the called function relies a lot on Python 
+     objects. “threading” is mostly useful when the execution bottleneck is a 
+     compiled extension that explicitly releases the GIL (for instance a Cython 
+     loop wrapped in a “with nogil” block or an expensive call to a library such
+     as NumPy).
+    - Finally, you can register backends by calling register_parallel_backend.
+    This will allow you to implement a backend of your liking.
+'''
 _NUM_CORE = -1
 _backend = 'loky'  # 'multiprocessing'  had some problems
 _verbose = 10
 
 
 def post_process():
-    # Document on joblib
-    # https://joblib.readthedocs.io/en/latest/generated/joblib.Parallel.html#joblib.Parallel
+    """Document on joblib (Helper class for readable parallel mapping):
+
+    https://joblib.readthedocs.io/en/latest/generated/joblib.Parallel.html#joblib.Parallel
+
+    """
+
     parallel = Parallel(n_jobs=_NUM_CORE, backend=_backend, verbose=_verbose)
 
     def worker(arg1, arg2):
@@ -254,7 +261,7 @@ def post_process():
         print('No  process list')
         results = []
 
-    # STEP 2 --------- Month Specific (all DSOs/TSO) Post-Processing -------------------------
+    # STEP 2 --------- Month Specific (all DSOs/TSO) Post-Processing -----------
 
     # ----------- CALCULATE POPULATION STATISTICS AND OUTPUT ---------------------------
     if pop_stats:

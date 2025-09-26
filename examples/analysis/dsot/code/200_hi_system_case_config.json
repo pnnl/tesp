@@ -10,7 +10,7 @@
     "flex_wh": 0,
     "flex_hvac": 0
   },
-  "metricsFullDetail": true,
+  "metrics_full_detail": true,
   "gldDebug": 0,
   "outages": true,
   "outagesUnplanned": true,

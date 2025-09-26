@@ -1879,6 +1879,7 @@ class Electric_Vehicle:
     def __init__(self, config):
         self.config = config
         self.glm = config.glm
+        self.taxonomy = config.taxonomy.replace(".glm","").replace(".","_").replace("-","_")
         self.ev_count = 0
 
     def add_ev(self, ev_prob: float, house_name: str) -> None:
@@ -1946,8 +1947,10 @@ class Electric_Vehicle:
                         "mileage_efficiency": ev_mileage,
                         "mileage_classification": ev_range,
                         "charging_efficiency": ev_charge_eff}
-            ev_name = f'{house_name}_{ev_name}_chgr'
+            ev_name = f'{self.taxonomy}_{ev_name}'
             ev_name = ev_name.replace(" ","_")
+            ev_name = ev_name.replace("(","_")
+            ev_name = ev_name.replace(")","_")
             self.glm.add_object("evcharger_det", f'{ev_name}_{self.ev_count}', params)
             self.glm.add_metrics_collector(f'{ev_name}_{self.ev_count}', "evcharger_det")
             # Additional recorders

@@ -1,5 +1,5 @@
 {
-  "metricsFullDetail": false,
+  "metrics_full_detail": false,
   "gldDebug": 0,
   "outages": true,
   "outagesUnplanned": true,

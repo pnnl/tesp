@@ -69,28 +69,28 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
             sys_config['caseName'] = sys_config['caseName'] + "_ev"
             sys_config['market'] = True
 
-    # loading default agent data
+    # load default agent data
     with open(os.path.join(data_path, sys_config['dso' + rcs + 'AgentFile']), 'r', encoding='utf-8') as json_file:
         case_config = json.load(json_file)
-    # loading building and DSO metadata
+    # load building and DSO metadata
     with open(os.path.join(data_path, sys_config['dso' + rcs + 'PopulationFile']), 'r', encoding='utf-8') as json_file:
         dso_config = json.load(json_file)
-    # loading residential metadata
+    # load residential metadata
     with open(os.path.join(data_path, sys_config['dso' + rcs + 'ResBldgFile']), 'r', encoding='utf-8') as json_file:
         res_config = json.load(json_file)
-    # loading commercial building metadata
+    # load commercial building metadata
     with open(os.path.join(data_path, sys_config['dsoCommBldgFile']), 'r', encoding='utf-8') as json_file:
         comm_config = json.load(json_file)
-    # loading battery metadata
+    # load battery metadata
     with open(os.path.join(data_path, sys_config['dsoBattFile']), 'r', encoding='utf-8') as json_file:
         batt_config = json.load(json_file)
-    # loading ev model metadata
+    # load ev model metadata
     with open(os.path.join(data_path, sys_config['dsoEvModelFile']), 'r', encoding='utf-8') as json_file:
         ev_model_config = json.load(json_file)
-    # loading hvac set point metadata
+    # load hvac set point metadata
     # record aggregated hvac_setpoint_data from survey:
     # In this implementation individual house set point schedule may not
-    # make sense but aggregated behavior will do.
+    # make sense but aggregated behavior will.
     with open(os.path.join(data_path, sys_config['hvac' + rcs + 'SetPoint']), 'r', encoding='utf-8') as json_file:
         hvac_setpt = json.load(json_file)
 
@@ -143,7 +143,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
     else:
         sim['Q_bid_forecast_correction'] = {"default": {"correct": False}}
     sim['agent_debug_mode'] = sys_config['agent_debug_mode']
-    sim['metricsFullDetail'] = sys_config['metricsFullDetail']
+    sim['metrics_full_detail'] = sys_config['metrics_full_detail']
     sim['simplifiedFeeders'] = sys_config['simplifiedFeeders']
     sim['OutputPath'] = sys_config['caseName']  # currently only used for the experiment management scripts
     sim['priceSensLoad'] = sys_config['priceSensLoad']
@@ -157,7 +157,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         sim['Q_bid_forecast_correction'] = {'default': sim['Q_bid_forecast_correction']['default']}
         print('NO 10 AM AMES bid correction')
 
-    # We need to create the experiment folder. If it already exists, we delete it and then create it
+    # Create the case folder. If it already exists, delete and create it
     if caseName != "" and caseName != ".." and caseName != ".":
         if os.path.isdir(caseName):
             print("experiment folder already exists, deleting and moving on...")
@@ -359,7 +359,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
             res_FG.populate_feeder(config=case_config)
 
             # Then we want to create a JSON dictionary with the Feeder information
-            gd.glm_dict(caseName + '/' + feed_key + '/' + feed_key, config=case_config,
+            gd.glm_dict_line(caseName + '/' + feed_key + '/' + feed_key, config=case_config,
                         ercot=sim['simplifiedFeeders'])
             shutil.move(caseName + '/' + feed_key + '/' + feed_key + '_glm_dict.json',
                         caseName + '/' + dso_key + '/' + feed_key + '_glm_dict.json')
@@ -390,7 +390,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
                 case_config['BackboneFiles']['CopperplateFeederFile'] = sim['CopperplateFeederFile']
                 cp_FG.populate_feeder(config=case_config)
 
-                gd.glm_dict(caseName + '/' + feed_key + '/' + feed_key, config=case_config,
+                gd.glm_dict_line(caseName + '/' + feed_key + '/' + feed_key, config=case_config,
                             ercot=sim['simplifiedFeeders'])
                 shutil.move(caseName + '/' + feed_key + '/' + feed_key + '_glm_dict.json',
                             caseName + '/' + dso_key + '/' + feed_key + '_glm_dict.json')

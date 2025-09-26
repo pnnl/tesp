@@ -794,9 +794,9 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
             'numCore': case_config['numCore'],
             'priceSensLoad': case_config['priceSensLoad'],
             'serverPort': case_config['serverPort'],
-            'metrics': case_config['metrics'],
-            'metrics_extension': case_config['metrics_extension'],
-            'metrics_interval': case_config['metrics_interval']}
+            'Metrics': case_config['metrics'],
+            'MetricsType': case_config['metrics_extension'],
+            'MetricsInterval': case_config['metrics_interval']}
     print(json.dumps(meta), file=dp)
     dp.close()
 

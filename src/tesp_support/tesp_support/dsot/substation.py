@@ -362,9 +362,9 @@ def inner_substation_loop(metrics_root, with_market):
     log.info('instantiated site meter name and participating status')
 
     # adding the metrics collector object
-    write_metrics = (config['metrics_interval'] > 0)
+    write_metrics = (config['MetricsInterval'] > 0)
     if write_metrics:
-        write_h5 = (config['metrics_extension'] == 'h5')
+        write_h5 = (config['MetricsType'] == 'h5')
         collector = MetricsCollector.factory(start_time=start_time, write_hdf5=write_h5)
 
         dso_86400 = MetricsStore(
@@ -1978,4 +1978,3 @@ def dso_loop(metrics_root, with_market):
         market = False
 
     inner_substation_loop(metrics_root, market)
-    

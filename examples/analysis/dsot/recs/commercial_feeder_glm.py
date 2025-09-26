@@ -495,7 +495,7 @@ def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percenta
             ev_charge_eff = ev_metadata['charging_efficiency']
             # check if level 1 charger is used or level 2
             if np.random.uniform(0, 1) <= ev_metadata['Level_1_usage']:
-                ev_max_charge = ev_metadata['Level_1_max power_kW']
+                ev_max_charge = ev_metadata['Level_1_max_power_kW']
                 volt_conf = 'IS110'  # for level 1 charger, 110 V is good
             else:
                 ev_max_charge = ev_metadata['Level_2_max_power_kW'][ev_name]
