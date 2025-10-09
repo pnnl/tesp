@@ -104,11 +104,16 @@ def merge_glm(target, sources, xfmva):
         inFirstFile = False
     op.close()
 
-def rename(glm: GLMModifier, glm_type: str, i_glm_obj, fdr: str):
+def rename(glm: GLMModifier, glm_type: str, i_glm_obj, prefix: str):
     keys = list(i_glm_obj.keys())
     for k in keys:
-        glm.rename_object(glm_type, k, fdr + "_" + k)
+        glm.rename_object(glm_type, k, prefix + "_" + k)
 
+def del_names(glm: GLMModifier, glm_type: str, i_glm_obj, find_str: str):
+    keys = list(i_glm_obj.keys())
+    for k in keys:
+        if find_str in k:
+            glm.del_object(glm_type, k)
 
 def glm_merge(target, sources, xfmva):
     """ Combines GridLAB-D input files into "target". The source files must 
@@ -127,6 +132,7 @@ def glm_merge(target, sources, xfmva):
     for fdr in sources:
         glm = GLMModifier()
         i_glm, success = glm.read_model(workdir + '/' + fdr + '/' + fdr + '.glm')
+        # Rename inherited taxonomy components based on feeder names
         rename(glm, 'line_configuration', i_glm.line_configuration, fdr)
         rename(glm, 'regulator_configuration', i_glm.regulator_configuration, fdr)
         rename(glm, 'transformer_configuration', i_glm.transformer_configuration, fdr)
@@ -135,25 +141,32 @@ def glm_merge(target, sources, xfmva):
         rename(glm, 'underground_line_conductor', i_glm.underground_line_conductor, fdr)
         rename(glm, 'triplex_line_conductor', i_glm.triplex_line_conductor, fdr)
         rename(glm, 'line_spacing', i_glm.line_spacing, fdr)
+        # Clean up excess feeder components
+        del_names(glm, 'triplex_line', i_glm.triplex_line, "_tl_")
+        del_names(glm, 'triplex_meter', i_glm.triplex_meter, "_tm_")
+
+        # Setup just one feeder's substation
         if inFirstFile:
             i_glm.transformer_configuration[fdr + "_substation_xfmr_config"]["power_rating"] = xfmva * 1e3
             i_glm.substation["network_node"]["base_power"] = xfmva * 1e6
             firstHeadNode = i_glm.transformer["substation_transformer"]["to"]
+            glm.del_object_attr("node", firstHeadNode, "bustype")
             print(glm.model.instancesToGLM(), file=op)
             inFirstFile = False
         else:
+            headNode = i_glm.transformer["substation_transformer"]["to"]
+            glm.del_object_attr("node", headNode, "bustype")
             params = {
                 "phases": 'ABCN',
                 "from": firstHeadNode,
-                "to": i_glm.transformer["substation_transformer"]["to"],
+                "to": headNode,
                 "status": "CLOSED"
             }
             glm.add_object("switch", "tie_" + fdr, params)
-
+            # Delete the duplicate components
             glm.del_object('voltdump', next(iter(i_glm.voltdump.instances)))
             glm.del_object('currdump', next(iter(i_glm.currdump.instances)))
             glm.del_object('climate', next(iter(i_glm.climate.instances)))
-            glm.del_object('metrics_collector_writer', next(iter(i_glm.metrics_collector_writer.instances)))
             glm.del_object('player', next(iter(i_glm.player.instances)))
             glm.del_object('recorder', next(iter(i_glm.recorder.instances)))
             try:
@@ -164,7 +177,8 @@ def glm_merge(target, sources, xfmva):
             glm.del_object('substation', 'network_node')
             glm.del_object('transformer', 'substation_transformer')
             glm.del_object('metrics_collector', 'mc_network_node')
-
+            glm.del_object('metrics_collector_writer', next(iter(i_glm.metrics_collector_writer.instances)))
+            # Print the rest of the feeder's glm to the same model file
             print(glm.model.glm_merge(), file=op)
     op.close()
 

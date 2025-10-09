@@ -465,23 +465,23 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
                 "relax_naming_rules": 1,
                 "warn": 0
                 }
-            config["defines"] = [{"INVERTER_MODE", "CONSTANT_PQ"},
-                {"INV_VBASE", 240.0},
-                {"INV_V1", 0.92},
-                {"INV_V2", 0.98},
-                {"INV_V3", 1.02},
-                {"INV_V4", 1.08},
-                {"INV_Q1", 0.44},
-                {"INV_Q2", 0.00},
-                {"INV_Q3", 0.00},
-                {"INV_Q4", 0.44},
-                {"INV_VIN", 200.0},
-                {"INV_IIN", 32.5},
-                {"INV_VVLOCKOUT", 300.0},
-                {"INV_VW_V1", 1.05},
-                {"INV_VW_V2", 1.10},
-                {"INV_VW_P1", 1.0},
-                {"INV_VW_P2", 0.0}]
+            config["defines"] = {"INVERTER_MODE": "CONSTANT_PQ",
+                "INV_VBASE": 240.0,
+                "INV_V1": 0.92,
+                "INV_V2": 0.98,
+                "INV_V3": 1.02,
+                "INV_V4": 1.08,
+                "INV_Q1": 0.44,
+                "INV_Q2": 0.0,
+                "INV_Q3": 0.0,
+                "INV_Q4": -0.44,
+                "INV_VIN": 200.0,
+                "INV_IIN": 32.5,
+                "INV_VVLOCKOUT": 300.0,
+                "INV_VW_V1": 1.05,
+                "INV_VW_V2": 1.1,
+                "INV_VW_P1": 1.0,
+                "INV_VW_P2": 0.0}
             config["use_solar_player"] = "True"
             config["rooftop_pv_rating_MW"] = dso_val['rooftop_pv_rating_MW']
             config["weather_name"] = 'weather_' + sub_key

@@ -412,28 +412,28 @@ class GLMModel:
             diction += "\n"
 
         # Write the objects
-        # for object_name in self.object_entities:
-        #     for name in self.object_entities[object_name].instances:
-        #         diction += self.get_diction(self.object_entities, object_name, self.instanceToObject, name)
+        for object_name in sorted(self.object_entities):
+            for name in sorted(self.object_entities[object_name].instances):
+                diction += self.get_diction(self.object_entities, object_name, self.instanceToObject, name)
 
-        # recorder, player, metrics_collector don't apply to the network, there are others
-        # this work for the network (powerflow)
-        G = self.draw_network()
-        power_entities = []
-        for node_name in G:
-            for object_name in self.object_entities:
-                for name in self.object_entities[object_name].instances:
-                    if node_name == name:
-                        if node_name in power_entities:
-                            continue
-                        diction += self.get_diction(self.object_entities, object_name, self.instanceToObject, name)
-                        power_entities.append(name)
-
-        # Write the objects
-        for object_name in self.object_entities:
-            for name in self.object_entities[object_name].instances:
-                if name not in power_entities:
-                    diction += self.get_diction(self.object_entities, object_name, self.instanceToObject, name)
+        # # recorder, player, metrics_collector don't apply to the network, there are others
+        # # this work for the network (powerflow)
+        # G = self.draw_network()
+        # power_entities = []
+        # for node_name in G:
+        #     for object_name in self.object_entities:
+        #         for name in self.object_entities[object_name].instances:
+        #             if node_name == name:
+        #                 if node_name in power_entities:
+        #                     continue
+        #                 diction += self.get_diction(self.object_entities, object_name, self.instanceToObject, name)
+        #                 power_entities.append(name)
+        #
+        # # Write the objects
+        # for object_name in sorted(self.object_entities):
+        #     for name in sorted(self.object_entities[object_name].instances):
+        #         if name not in power_entities:
+        #             diction += self.get_diction(self.object_entities, object_name, self.instanceToObject, name)
 
         # Write the schedules
         for name in self.schedule_types:
@@ -1137,6 +1137,7 @@ class GLMModel:
         for power_type in power:
             if power_type in data:
                 kva += parse_kva(data[power_type])
+                break
         return kva
 
     def identify_seg_loads(self):
@@ -1174,7 +1175,7 @@ class GLMModel:
                         swing_node = n1
                         break
 
-        # Finds the load on each segment (i.e. edge, line) by iterating over all 
+        # Finds the load on each segment (i.e. edge, line) by iterating over all
         # load definitions, identifying all affected lines and adding the load
         # to those lines.            
         seg_loads = {}  # [name][kva, phases]
@@ -1200,14 +1201,16 @@ class GLMModel:
                             seg_loads[ename][0] += kva
                             seg_loads[ename][1] = self.union_of_phases(seg_loads[ename][1], data['ndata']['phases'])
 
-                            # Band-aid for poor accumulation of phase information for parrallel curcuits
+                            # Band-aid for poor accumulation of phase information for parallel circuits
                             # "ABCS" is not a valid phase set and should be "ABCN".
                             # seg_phs = seg_phs.replace('ABCS', 'ABCN')
                             seg_loads[ename][1] = seg_loads[ename][1].replace('ABCS', 'ABCN')
                         else:
                             print(f"Unknown edge class: {eclass}")
-        # sub_graphs = nx.connected_components(G)
-        # print(f"  swing node {swing_node}, with {len(list(sub_graphs))}, sub graphs and {:.2f}.format(total_kva)} total kva")
+
+        sub_graphs = nx.connected_components(G)
+        # print(len(seg_loads),  sorted(seg_loads))
+        print(f"  swing node {swing_node}, with {len(list(sub_graphs))} subgraph(s) and {total_kva:.2f} total kva")
         
         to_delete = dict(zip(nodes_to_delete, class_to_delete))
         return seg_loads, to_delete

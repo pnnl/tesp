@@ -163,8 +163,8 @@ class Config:
 
         # Add defines
         if hasattr(self, 'defines'):
-            for key, value in self.defines:
-                self.glm.model.add_define(key, value)
+            for key in self.defines:
+                self.glm.model.add_define(key, self.defines[key])
         
         if hasattr(self, 'messager'):
             num = self.DSO.replace('DSO_', '')
@@ -434,20 +434,13 @@ class Residential_Build:
             "configuration": self.config.base.triplex_configurations[0][0] })
 
         params = {"phases": phs,
-                    "meter_power_consumption": "1+7j",
-                    "nominal_voltage": str(v_nom),
-                    "voltage_1": vstart,
-                    "voltage_2": vstart,
-                    "bill_mode": self.config.bill_mode,
-                    "monthly_fee": self.config.monthly_fee,
-                    "price": self.config.price,
-                    "first_tier_energy": self.config.tier_1_energy,
-                    "second_tier_energy": self.config.tier_2_energy,
-                    "first_tier_price": self.config.tier_1_price,
-                    "second_tier_price": self.config.tier_2_price
+                  "meter_power_consumption": "1+7j",
+                  "nominal_voltage": str(v_nom),
+                  "voltage_1": vstart,
+                  "voltage_2": vstart,
                   }
-        # Assume user-defined tariff from config. If default, use add_tariff
-        #self.glm.add_tariff(params)
+        # Assume user-defined tariff from config. If default, use None
+        self.glm.add_tariff(params, self.config)
         self.mdl.triplex_meter.add(mtrname, params)
         self.glm.add_metrics_collector(mtrname, "meter")
 
@@ -679,16 +672,9 @@ class Residential_Build:
                       "nominal_voltage": str(v_nom),
                       "voltage_1": vstart,
                       "voltage_2": vstart,
-                      "bill_mode": self.config.bill_mode,
-                      "monthly_fee": self.config.monthly_fee,
-                      "price": self.config.price,
-                      "first_tier_energy": self.config.tier_1_energy,
-                      "second_tier_energy": self.config.tier_2_energy,
-                      "first_tier_price": self.config.tier_1_price,
-                      "second_tier_price": self.config.tier_2_price
                       }
-            # Assume user-defined tariff from config. If default, use add_tariff
-            #self.glm.add_tariff(params)
+            # Assume user-defined tariff from config. If default, use None
+            self.glm.add_tariff(params, self.config)
             self.mdl.triplex_meter.add(mtrname1, params)
             self.glm.add_metrics_collector(mtrname1, "meter")
 
@@ -955,7 +941,7 @@ class Residential_Build:
             
             if wh_fuel_type == 'electric':  # if the water heater fuel type is electric, install wh
                 heat_element = 3.0 + 0.5 * rng.integers(1, 6)  # numpy integers (lo, hi) returns lo..(hi-1)
-                heat_element = heat_element * 1000 # heating element capacity should be in Watts
+                heat_element = heat_element  # * 1000 # heating element capacity should be in Watts
                 tank_set = 110 + 16 * rng.random()
                 therm_dead = 1  # 4 + 4 * rng.random()
                 tank_UA = 2 + 2 * rng.random()
@@ -1254,17 +1240,10 @@ class Commercial_Build:
             vln = float(120)
             loadnum = 0
             params = {"phases": phases,
-                        "nominal_voltage": 120.0,
-                        "bill_mode": self.config.bill_mode,
-                        "monthly_fee": self.config.monthly_fee,
-                        "price": self.config.price,
-                        "first_tier_energy": self.config.tier_1_energy,
-                        "second_tier_energy": self.config.tier_2_energy,
-                        "first_tier_price": self.config.tier_1_price,
-                        "second_tier_price": self.config.tier_2_price,
+                      "nominal_voltage": 120.0,
                       }
-            # Assume user-defined tariff from config. If default, use add_tariff
-            #self.glm.add_tariff(params)
+            # Assume user-defined tariff from config. If default, use None
+            self.glm.add_tariff(params, self.config)
             self.mdl.meter.add(mtr, params)
             xfmr_params = {"phases": phases,
                            "from": "feeder_head_meter",
@@ -1310,7 +1289,7 @@ class Commercial_Build:
                     params["impedance_pf_" + phs] = '{:f}'.format(self.config.base.c_z_pf)
                     params["current_pf_" + phs] = '{:f}'.format(self.config.base.c_i_pf)
                     params["power_pf_" + phs] = '{:f}'.format(self.config.base.c_p_pf)
-                    params["base_power_" + phs] = '{:.2f}'.format(self.config.base.light_scalar_comm * phsva)
+                    params["base_power_" + phs] = "street_lighting * " + '{:.2f}'.format(self.config.base.light_scalar_comm * phsva)
                     params["phases"] = phs
             self.mdl.load.add(name, params)
             # Add position data to commercial ZIPload, if available

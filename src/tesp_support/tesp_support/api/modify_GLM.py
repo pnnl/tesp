@@ -413,13 +413,10 @@ class GLMModifier:
         return sk
 
     # custom objects
-    def add_tariff(self, params: dict) -> None:
+    def add_tariff(self, params: dict, config: dict = None) -> None:
         """Writes tariff information to billing meters. Default values are
         defined in default_values.json and can be optionally provided by
         the caller.
-
-        Args:
-            params (dict): Parameters to define the tarriff, see GridLAB-D
             Power Flow User Guide for details:
 
             "bill_mode"
@@ -433,23 +430,29 @@ class GLMModifier:
             "third_tier_energy"
             "third_tier_price"
 
+        Args:
+            params (dict): Parameters to define the tarriff, see GridLAB-D
+            config (dict):
+
         Returns:
             None
         """
-        params["bill_mode"] = self.defaults.bill_mode
-        params["price"] = self.defaults.kwh_price
-        params["monthly_fee"] = self.defaults.monthly_fee
+        if config is None:
+            config = self.defaults
+        params["bill_mode"] = config.bill_mode
+        params["price"] = config.price
+        params["monthly_fee"] = config.monthly_fee
         params["bill_day"] = "1"
-        if 'TIERED' in self.defaults.bill_mode:
-            if self.defaults.tier1_energy > 0.0:
-                params["first_tier_energy"] = self.defaults.tier1_energy
-                params["first_tier_price"] = self.defaults.tier1_price
-            if self.defaults.tier2_energy > 0.0:
-                params["second_tier_energy"] = self.defaults.tier2_energy
-                params["second_tier_price"] = self.defaults.tier2_price
-            if self.defaults.tier3_energy > 0.0:
-                params["third_tier_energy"] = self.defaults.tier3_energy
-                params["third_tier_price"] = self.defaults.tier3_price
+        if 'TIERED' in config.bill_mode:
+            if config.tier_1_energy > 0.0:
+                params["first_tier_energy"] = config.tier_1_energy
+                params["first_tier_price"] = config.tier_1_price
+            if config.tier_2_energy > 0.0:
+                params["second_tier_energy"] = config.tier_2_energy
+                params["second_tier_price"] = config.tier_2_price
+            if config.tier_3_energy > 0.0:
+                params["third_tier_energy"] = config.tier_3_energy
+                params["third_tier_price"] = config.tier_3_price
 
     def add_voltage_dump(self, outname: str) -> None:
         """Adds voltage_dump and current_dump objects to the GLMModel object
@@ -906,22 +909,32 @@ class GLMModifier:
 def _test1():
     from .data import tesp_test
 
-    testMod = GLMModifier()
-    testMod.model.read(tesp_test + "api/dsot_in.glm")
-    testMod.write_model(tesp_test + "api/dsot_out.glm")
-    # Takes some time to draw the layout
+    # testMod = GLMModifier()
+    # testMod.model.read("/home/d3j331/grid/tesp/data/feeders/R4-12.47-1.glm")
     # testMod.model.plot_model()
 
     testMod = GLMModifier()
-    testMod.model.read(tesp_test + "api/testing.glm")
-    testMod.write_model(tesp_test + "api/testing_out.glm")
-    testMod.model.plot_model()
-
+    testMod.model.read("/home/d3j331/grid/tesp/examples/analysis/dsot/code/lean_aug_8_f_pv_bt_fl_ev/Substation_1/Substation_1.glm")
+    testMod.write_model(tesp_test + "api/dsot1_out.glm")
     testMod = GLMModifier()
-    f = "../../../../examples/capabilities/loadshed/loadshed.glm"
-    testMod.model.read(f)
-    testMod.write_model(tesp_test + "api/loadshed_out.glm")
-    testMod.model.plot_model()
+    testMod.model.read("/home/d3j331/grid/tesp/examples/analysis/glm_dsot/code/gld_feeder_test_f_pv_bt_fl_ev/Substation_1/Substation_1.glm")
+    testMod.write_model(tesp_test + "api/dsot2_out.glm")
+
+    # testMod.model.read(tesp_test + "api/dsot_in.glm")
+    # testMod.write_model(tesp_test + "api/dsot_out.glm")
+    # Takes some time to draw the layout
+    # testMod.model.plot_model()
+
+    # testMod = GLMModifier()
+    # testMod.model.read(tesp_test + "api/testing.glm")
+    # testMod.write_model(tesp_test + "api/testing_out.glm")
+    # testMod.model.plot_model()
+    #
+    # testMod = GLMModifier()
+    # f = "../../../../examples/capabilities/loadshed/loadshed.glm"
+    # testMod.model.read(f)
+    # testMod.write_model(tesp_test + "api/loadshed_out.glm")
+    # testMod.model.plot_model()
 
 
 def _test2():
@@ -966,4 +979,4 @@ def _test2():
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     _test1()
-    _test2()
+    # _test2()

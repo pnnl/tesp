@@ -223,8 +223,9 @@ class Entity:
         if type(object_name) == str:
             try:
                 del self.instances[object_name]
+                # print(f"Deleted {self.entity}:{object_name}")
             except:
-                # TODO: Need to add error message
+                print(f"Can't find {self.entity}:{object_name} for deletion")
                 pass
         else:
             print("object name is not a string in", self.entity)

@@ -1133,23 +1133,23 @@ object transformer_configuration {
 }
 
 object triplex_line_conductor {
-      name triplex_4/0 AA;
+      name triplex_4/0_aa;
       resistance 0.48;
       geometric_mean_radius 0.0158;
 }
 
 object triplex_line_configuration {
       name triplex_line_configuration_1;
-      conductor_1 triplex_4/0 AA;
-      conductor_2 triplex_4/0 AA;
-      conductor_N triplex_4/0 AA;
+      conductor_1 triplex_4/0_aa;
+      conductor_2 triplex_4/0_aa;
+      conductor_N triplex_4/0_aa;
       insulation_thickness 0.08;
       diameter 0.522;
 }
 
 object underground_line_conductor {
       name underground_line_conductor_2;
-      //name 1/0 AAC (Conc);
+      //name 1/0_aaC (Conc);
       rating.summer.continuous 142.0;
       outer_diameter 1.27;
       conductor_gmr 0.01142 ft;
@@ -1165,7 +1165,7 @@ object underground_line_conductor {
 
 object underground_line_conductor {
       name underground_line_conductor_7;
-      //name 4/0 AAC (Conc);
+      //name 4/0_aaC (Conc);
       rating.summer.continuous 214.0;
       outer_diameter 1.32;
       conductor_gmr 0.0177 ft;
