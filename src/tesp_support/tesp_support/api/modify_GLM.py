@@ -910,15 +910,19 @@ def _test1():
     from .data import tesp_test
 
     # testMod = GLMModifier()
-    # testMod.model.read("/home/d3j331/grid/tesp/data/feeders/R4-12.47-1.glm")
-    # testMod.model.plot_model()
+    # testMod.model.read("/home/d3j331/grid/tesp/data/feeders/R3-12.47-2.glm")
+    # testMod.model.plot_model(node_labels=True)
 
     testMod = GLMModifier()
-    testMod.model.read("/home/d3j331/grid/tesp/examples/analysis/dsot/code/lean_aug_8_f_pv_bt_fl_ev/Substation_1/Substation_1.glm")
+    # testMod.model.read("/home/d3j331/grid/tesp/examples/analysis/dsot/code/lean_aug_8_f_pv_bt_fl_ev/Substation_1/Substation_1.glm")
+    testMod.model.read("/home/d3j331/grid/tesp/examples/analysis/dsot/code/lean_aug_8_f_fl/Substation_1/Substation_1.glm")
     testMod.write_model(tesp_test + "api/dsot1_out.glm")
+    # # testMod.model.plot_model()
     testMod = GLMModifier()
-    testMod.model.read("/home/d3j331/grid/tesp/examples/analysis/glm_dsot/code/gld_feeder_test_f_pv_bt_fl_ev/Substation_1/Substation_1.glm")
+    # testMod.model.read("/home/d3j331/grid/tesp/examples/analysis/glm_dsot/code/gld_feeder_test_f_pv_bt_fl_ev/Substation_1/Substation_1.glm")
+    testMod.model.read("/home/d3j331/grid/tesp/examples/analysis/glm_dsot/code/gld_feeder_test_f_fl/Substation_1/Substation_1.glm")
     testMod.write_model(tesp_test + "api/dsot2_out.glm")
+    # testMod.model.plot_model()
 
     # testMod.model.read(tesp_test + "api/dsot_in.glm")
     # testMod.write_model(tesp_test + "api/dsot_out.glm")

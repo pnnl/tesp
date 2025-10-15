@@ -1017,10 +1017,10 @@ def write_link_class(model, h, t, seg_loads, op, want_metrics=False):
 
 
 # triplex_conductors dict:[name, r, gmr, ampacity]
-triplex_conductors = [['triplex_4/0_bb', 0.48, 0.0158, 1000.0]]
+triplex_conductors = [['triplex_4/0AA', 0.48, 0.0158, 1000.0]]
 
 # triplex_configurations dict:[name, hot, neutral, thickness, diameter]
-triplex_configurations = [['tpx_config', 'triplex_4/0_bb', 'triplex_4/0_bb', 0.08, 0.522]]
+triplex_configurations = [['tpx_config', 'triplex_4/0AA', 'triplex_4/0AA', 0.08, 0.522]]
 
 
 def write_local_triplex_configurations(op):
@@ -2592,7 +2592,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
                 else:
                     print(line, file=op)
 
-        # apply the nameing prefix if necessary
+        # apply the naming prefix if necessary
         if len(name_prefix) > 0:
             for t in model:
                 for o in model[t]:
@@ -2661,9 +2661,9 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
                             seg_loads[ename][0] += kva
                             seg_loads[ename][1] = union_of_phases(seg_loads[ename][1], data['ndata']['phases'])
 
-        print(len(seg_loads),  sorted(seg_loads))
-        print('  swing node', swing_node, ', with', len(list(sub_graphs)), 'subgraph(s) and',
-              '{:.2f}'.format(total_kva), 'total kva')
+        # print(len(seg_loads),  sorted(seg_loads))
+        # print('  swing node', swing_node, ', with', len(list(sub_graphs)), 'subgraph(s) and',
+        #       '{:.2f}'.format(total_kva), 'total kva')
 
         # preparatory items for TESP
         print('module climate;', file=op)
@@ -2757,6 +2757,10 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
         if t not in model:
             model[t] = {}
         for o in model[t]:
+            if o not in seg_loads:
+                print(f"WARNING: %s not in the seg loads", o)
+                continue
+
             seg_kva = seg_loads[o][0]
             seg_phs = seg_loads[o][1]
             nphs = 0

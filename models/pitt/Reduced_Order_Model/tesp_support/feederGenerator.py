@@ -847,10 +847,10 @@ def write_link_class(model, h, t, seg_loads, op):
 
 
 # name, r, gmr, ampacity
-triplex_conductors = [['triplex_4/0_bb', 0.48, 0.0158, 1000.0]]
+triplex_conductors = [['triplex_4/0AA', 0.48, 0.0158, 1000.0]]
 
 # name, hot, neutral, thickness, diameter
-triplex_configurations = [['tpx_config', 'triplex_4/0_bb', 'triplex_4/0_bb', 0.08, 0.522]]
+triplex_configurations = [['tpx_config', 'triplex_4/0AA', 'triplex_4/0_aa', 0.08, 0.522]]
 
 
 def write_local_triplex_configurations(op):

@@ -530,6 +530,7 @@ if __name__ == "__main__":
         # prepare_case(node, f"{node}_system_case_config", pv=0, bt=0, fl=0, ev=0)
         # prepare_case(node, f"{node}_system_case_config", pv=0, bt=1, fl=0, ev=0)
         # prepare_case(node, f"{node}_system_case_config", pv=0, bt=0, fl=1, ev=0)
+        # prepare_case(node, f"{node}_hi_system_case_config", pv=0, bt=0, fl=1, ev=0)
         # prepare_case(node, f"{node}_hi_system_case_config", pv=1, bt=0, fl=0, ev=0)
         # prepare_case(node, f"{node}_hi_system_case_config", pv=1, bt=1, fl=0, ev=1)
         # prepare_case(node, f"{node}_hi_system_case_config", pv=1, bt=0, fl=1, ev=1)

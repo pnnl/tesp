@@ -181,7 +181,6 @@ class GLMModel:
             datatype = "TEXT"
         elif m_type == "bool":
             datatype = "BOOLEAN"
-            unit = "|true|false|"
         elif m_type == "timestamp":
             datatype = "TEXT"
         elif m_type == "complex":
@@ -554,20 +553,25 @@ class GLMModel:
             raise TypeError("GRIDLABD object type and/or object name {obj_type} must be a string and is not.")
         return None
 
-    def is_edge_class(self, s):
+    def is_edge_class(self, s:str, exclude:list=None) -> bool:
         """ Edge class is networkx terminology. In GridLAB-D, we will represent those with
         the variable 'edge_classes' define in this model
 
         Args:
             s (str): the GridLAB-D class name
+            exclude (list):
+
         Returns:
             bool: True if an edge class, False otherwise
         """
+        if exclude is not None:
+            if s in exclude:
+                return False
         if s in self.edge_classes.keys():
             return True
         return False
 
-    def is_node_class(self, s):
+    def is_node_class(self, s:str) -> bool:
         """Node class is networkx terminology. In GridLAB-D, we will represent those nodes with
         the variable 'node_classes' define in this model
 
@@ -613,7 +617,10 @@ class GLMModel:
 
     def del_object(self, _type, name):
         # del name and set object entity instance to model type
-        del self.model[_type][name]
+        try:
+            del self.model[_type][name]
+        except:
+            pass
 
     def glm_schedule(self, line, itr):
         # This only grab the lines, real parsing of the schedule
@@ -941,7 +948,7 @@ class GLMModel:
         for t in self.model:
             # Grabs all nodes that have physical connections in the model
             # (e.g. line, transformer, switch, ...)
-            if self.is_edge_class(t):
+            if self.is_edge_class(t, exclude=['parent']):
                 for o in self.model[t]:
                     n1 = self.model[t][o]['from']
                     n2 = self.model[t][o]['to']
@@ -1137,7 +1144,6 @@ class GLMModel:
         for power_type in power:
             if power_type in data:
                 kva += parse_kva(data[power_type])
-                break
         return kva
 
     def identify_seg_loads(self):
@@ -1164,9 +1170,9 @@ class GLMModel:
                             - accumulated load
                             - all affected phases
         """
-        swing_node = ''
         G = self.draw_network()
 
+        swing_node = ''
         # Identify swing node in GridLAB-D model
         for n1, data in G.nodes(data=True):
             if 'nclass' in data:
@@ -1206,11 +1212,12 @@ class GLMModel:
                             # seg_phs = seg_phs.replace('ABCS', 'ABCN')
                             seg_loads[ename][1] = seg_loads[ename][1].replace('ABCS', 'ABCN')
                         else:
-                            print(f"Unknown edge class: {eclass}")
+                            # print(f"Unknown edge class: {eclass}")
+                            pass
 
-        sub_graphs = nx.connected_components(G)
-        # print(len(seg_loads),  sorted(seg_loads))
-        print(f"  swing node {swing_node}, with {len(list(sub_graphs))} subgraph(s) and {total_kva:.2f} total kva")
+        # sub_graphs = nx.connected_components(G)
+        # print(len(seg_loads),  seg_loads)
+        # print(f"  swing node {swing_node}, with {len(list(sub_graphs))} subgraph(s) and {total_kva:.2f} total kva")
         
         to_delete = dict(zip(nodes_to_delete, class_to_delete))
         return seg_loads, to_delete

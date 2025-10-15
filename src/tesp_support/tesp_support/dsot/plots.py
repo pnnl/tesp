@@ -2319,8 +2319,8 @@ def dso_forecast_stats(dso_range, day_range, case, dso_metadata_file, ercot_dir)
     ames_da_lmp_df = ames_da_lmp_df[cols]
 
     rt_q_error_df = rt_q_forecast.subtract(load).divide(load)
-    da_q_error_df = da_q_forecast.subtract(load.groupby(pd.Grouper(freq='H')).mean()).divide(
-        load.groupby(pd.Grouper(freq='H')).mean())
+    da_q_error_df = da_q_forecast.subtract(load.groupby(pd.Grouper(freq='h')).mean()).divide(
+        load.groupby(pd.Grouper(freq='h')).mean())
     rt_lmp_error_df = rt_lmp_forecast.subtract(ames_rt_df / 1000).divide(ames_rt_df / 1000)
     da_lmp_error_df = da_lmp_forecast.subtract(ames_da_lmp_df / 1000).divide(ames_da_lmp_df / 1000)
 
@@ -5857,13 +5857,13 @@ def run_plots():
                 prices_data = prices_data.rename(columns={'Settlement Point Price': place + ' $_mwh'})
 
                 if scenario == 'DA':
-                    date_rng = pd.date_range(start='1/1/2016', end='31/12/2016 23:00:00', freq='H')
+                    date_rng = pd.date_range(start='1/1/2016', end='31/12/2016 23:00:00', freq='h')
                 else:
                     date_rng = pd.date_range(start='1/1/2016-01-01 00:00:00', periods=len(prices_data), freq='15min')
                 prices_data['Date'] = pd.to_datetime(date_rng)
                 prices_data = prices_data.set_index('Date')
                 if scenario == 'RT':
-                    prices_data = prices_data.groupby(pd.Grouper(freq='H')).mean()
+                    prices_data = prices_data.groupby(pd.Grouper(freq='h')).mean()
                 prices_data['Year'] = prices_data.index.year
                 prices_data['Month'] = prices_data.index.month
                 prices_data['Week'] = prices_data.index.week

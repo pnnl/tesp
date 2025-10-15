@@ -84,7 +84,7 @@ class Forecasting:
         self.fristRun = True
         # data = pd.read_csv("C:\\Users\\sing492\\OneDrive - PNNL\\Documents\\Projects\\TESP_DSOT\\Hvac Debug Ahmad\\Qi_individual.csv",
         #                        index_col=0)
-        # date_rng = pd.date_range(start='7/1/2013', end='7/10/2013', freq='H')
+        # date_rng = pd.date_range(start='7/1/2013', end='7/10/2013', freq='h')
         # df = pd.DataFrame(date_rng, columns=['date'])
         # df['solar_gain'] = data['solar_gain'].tolist()
         # df['internal_gain'] = data['internal_gain'].tolist()

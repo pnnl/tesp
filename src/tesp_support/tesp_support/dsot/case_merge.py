@@ -115,6 +115,66 @@ def del_names(glm: GLMModifier, glm_type: str, i_glm_obj, find_str: str):
         if find_str in k:
             glm.del_object(glm_type, k)
 
+def del_danglers(glm: GLMModifier, glm_type: str, i_glm_obj):
+    keys = list(i_glm_obj.keys())
+    to_dangler = []
+    from_dangler = []
+    to_from_dangler = []
+    for k in keys:
+        from_found = ""
+        to_found = ""
+        from_name = i_glm_obj[k]["from"]
+        to_name = i_glm_obj[k]["to"]
+        for type_name, obj_type in glm.model.object_entities.items():
+            if glm_type != type_name:
+                if to_name in obj_type.instances:
+                    to_found = type_name
+                if from_name in obj_type.instances:
+                    from_found = type_name
+            if to_found != "" and from_found != "":
+                break
+        if to_found != "" and from_found != "":
+            continue
+
+        for type_name, obj_type in glm.model.object_entities.items():
+            if glm_type != type_name:
+                for obj_name, obj_int in obj_type.instances.items():
+                    if hasattr(obj_type, "from"):
+                        if to_found == "":
+                            if to_name == obj_int["from"]:
+                                to_found = type_name
+                                continue
+                        if from_found == "":
+                            if from_name == obj_int["to"]:
+                                from_found = type_name
+                                continue
+                    if to_found != "" and from_found != "":
+                        break
+            if to_found != "" and from_found != "":
+                break
+        if to_found != "" and from_found != "":
+            continue
+
+        if to_found == "":
+            if from_found != "":
+                # 'to' is not found, but 'from' is found
+                from_dangler.append([from_found, from_name])
+                # glm.del_object(glm_type, k)
+            else:
+                # 'to' or 'from' are not found
+                to_from_dangler.append([glm_type, k])
+                glm.del_object(glm_type, k)
+        if from_found == "":
+            if to_found != "":
+                # 'to' is found, but 'from' is not found
+                to_dangler.append([to_found, to_name, from_found, from_name])
+                # glm.del_object(glm_type, k)
+
+    print(f"'To' dangler objects: {to_dangler}" )
+    print(f"'From' dangler objects: {from_dangler}" )
+    print(f"'To' and 'From' objects: {to_from_dangler}" )
+
+
 def glm_merge(target, sources, xfmva):
     """ Combines GridLAB-D input files into "target". The source files must 
     already exist. This is an updated version of merge_glm() that utilizes 
@@ -149,16 +209,26 @@ def glm_merge(target, sources, xfmva):
         if inFirstFile:
             i_glm.transformer_configuration[fdr + "_substation_xfmr_config"]["power_rating"] = xfmva * 1e3
             i_glm.substation["network_node"]["base_power"] = xfmva * 1e6
-            firstHeadNode = i_glm.transformer["substation_transformer"]["to"]
-            glm.del_object_attr("node", firstHeadNode, "bustype")
+            headNode = i_glm.transformer["substation_transformer"]["to"]
+            glm.del_object_attr("node", headNode, "bustype")
+            glm.add_object("node", "substation_node", i_glm.node[headNode])
+            i_glm.transformer["substation_transformer"]["to"] = "substation_node"
+            params = {
+                "phases": 'ABCN',
+                "from": 'substation_node',
+                "to": headNode,
+                "status": "CLOSED"
+            }
+            glm.add_object("switch", "tie_" + fdr, params)
             print(glm.model.instancesToGLM(), file=op)
             inFirstFile = False
         else:
             headNode = i_glm.transformer["substation_transformer"]["to"]
+            i_glm.transformer["substation_transformer"]["to"] = "substation_node"
             glm.del_object_attr("node", headNode, "bustype")
             params = {
                 "phases": 'ABCN',
-                "from": firstHeadNode,
+                "from": 'substation_node',
                 "to": headNode,
                 "status": "CLOSED"
             }

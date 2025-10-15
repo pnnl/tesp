@@ -57,7 +57,7 @@
   "metrics_interim": 3600,
   "metrics_filename": "out_",
   "metrics_alternate": "yes",
-  "metrics_extension": "h5",
+  "metrics_extension": "json",
   "metrics_classes": [
       "house",
       "meter",
@@ -161,8 +161,8 @@
   "standard_fuses": [40, 65, 100, 200],
   "standard_reclosers": [280, 400, 560, 630, 800],
   "standard_breakers": [600, 1200, 2000],
-  "triplex_conductors": [["triplex_4/0_bb", 0.48, 0.0158, 1000.0]],
-  "triplex_configurations": [["tpx_config", "triplex_4/0_bb", "triplex_4/0_bb", 0.08, 0.522]],
+  "triplex_conductors": [["triplex_4/0AA", 0.48, 0.0158, 1000.0]],
+  "triplex_configurations": [["tpx_config", "triplex_4/0AA", "triplex_4/0_aa", 0.08, 0.522]],
 
   "techdata": [0.9, 1.0, 1.0, 1.0, 0.2, 0.4, 0.4],
   "tiName": ["VERY_LITTLE", "VERY_LITTLE", "LITTLE", "BELOW_NORMAL", "NORMAL", "ABOVE_NORMAL", "GOOD", "VERY_GOOD"],

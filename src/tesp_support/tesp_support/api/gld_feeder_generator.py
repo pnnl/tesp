@@ -797,10 +797,8 @@ class Residential_Build:
                 ecf = 1  # exterior ceiling fraction
                 eff = 1  # exterior floor fraction
 
-            oversize = random_norm_trunc(
-                self.hvac_oversize)  # hvac_oversize factor
-            wetc = random_norm_trunc(
-                self.window_shading)  # window_exterior_transmission_coefficient
+            oversize = random_norm_trunc(self.hvac_oversize)  # hvac_oversize factor
+            wetc = random_norm_trunc(self.window_shading)  # window_exterior_transmission_coefficient
 
             tiProps = Residential_Build.selectThermalProperties(self, bldg, ti)
             # Rceiling(roof), Rwall, Rfloor, WindowLayers, WindowGlass, Glazing,
@@ -852,7 +850,8 @@ class Residential_Build:
                     "exterior_ceiling_fraction": '{:.2f}'.format(ecf),
                     "window_exterior_transmission_coefficient": '{:.2f}'.format(wetc),
                     "window_wall_ratio": '{:.2f}'.format(wwr),
-                    "breaker_amps": "1000", "hvac_breaker_rating": "1000"}
+                    "breaker_amps": "1000",
+                    "hvac_breaker_rating": "1000"}
             heat_rand = rng.random()
             cool_rand = rng.random()
             house_fuel_type = 'electric'
@@ -941,7 +940,6 @@ class Residential_Build:
             
             if wh_fuel_type == 'electric':  # if the water heater fuel type is electric, install wh
                 heat_element = 3.0 + 0.5 * rng.integers(1, 6)  # numpy integers (lo, hi) returns lo..(hi-1)
-                heat_element = heat_element  # * 1000 # heating element capacity should be in Watts
                 tank_set = 110 + 16 * rng.random()
                 therm_dead = 1  # 4 + 4 * rng.random()
                 tank_UA = 2 + 2 * rng.random()
@@ -1206,7 +1204,6 @@ class Commercial_Build:
             self.config.pos[f'{mtr}_solmtr'] = self.config.pos_data[key]
             self.config.pos[f'{mtr}_batmtr'] = self.config.pos_data[key]
 
-
     def define_commercial_zones(self, rgn: int, key: str, kva: float, feed_type: str) -> None:
         """Define building parameters for commercial building zones and ZIP 
         loads, then add to model as house object (commercial_zone) or load 
@@ -1236,7 +1233,7 @@ class Commercial_Build:
             if comm_type == 'strip_mall':
                 self.config.com_bld.total_strip_mall += 1
             nphs = 3
-            phases = "ABC"
+            phases = "ABCN"
             vln = float(120)
             loadnum = 0
             params = {"phases": phases,
@@ -1289,7 +1286,8 @@ class Commercial_Build:
                     params["impedance_pf_" + phs] = '{:f}'.format(self.config.base.c_z_pf)
                     params["current_pf_" + phs] = '{:f}'.format(self.config.base.c_i_pf)
                     params["power_pf_" + phs] = '{:f}'.format(self.config.base.c_p_pf)
-                    params["base_power_" + phs] = "street_lighting * " + '{:.2f}'.format(self.config.base.light_scalar_comm * phsva)
+                    # params["base_power_" + phs] = "street_lighting*" + '{:.2f}'.format(self.config.base.light_scalar_comm * phsva)
+                    params["base_power_" + phs] = "street_lighting*0.0"
                     params["phases"] = phs
             self.mdl.load.add(name, params)
             # Add position data to commercial ZIPload, if available
@@ -2260,13 +2258,15 @@ class Feeder:
                 else: 
                     self.config.base.base_feeder_name = self.config.taxonomy
                 sec_v = float(i_glm.transformer_configuration[e_config]['secondary_voltage'])
-
-                if e_name not in self.seg_loads or sec_v > 500:
+                if sec_v > 500:
+                    log.warning(f"WARNING: %s id has a secondary voltage that is higher than 500 V", e_name)
+                    continue
+                if e_name not in self.seg_loads:
                     log.warning(f"WARNING: %s not in the seg loads", e_name)
                     continue
+
                 seg_kva = self.seg_loads[e_name][0]
                 seg_phs = self.seg_loads[e_name][1]
-
                 nphs = 0
                 if 'A' in seg_phs:
                     nphs += 1

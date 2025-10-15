@@ -75,7 +75,7 @@ class DataProxy(object):
 
         if cache[0] != time:
             cache[0] = time
-            cache[1] = sch_df_dict[name].loc[pd.date_range(time, periods=window_length, freq='H')]
+            cache[1] = sch_df_dict[name].loc[pd.date_range(time, periods=window_length, freq='h')]
         # print(name, " ", time)
         return cache[1][col_num]
 

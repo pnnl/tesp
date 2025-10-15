@@ -95,7 +95,7 @@ class Forecasting:
         self.firstRun = True
         # data = pd.read_csv("C:\\Users\\sing492\\OneDrive - PNNL\\Documents\\Projects\\TESP_DSOT\\Hvac Debug Ahmad\\Qi_individual.csv",
         #                        index_col=0)
-        # date_rng = pd.date_range(start='7/1/2013', end='7/10/2013', freq='H')
+        # date_rng = pd.date_range(start='7/1/2013', end='7/10/2013', freq='h')
         # df = pd.DataFrame(date_rng, columns=['date'])
         # df['solar_gain'] = data['solar_gain'].tolist()
         # df['internal_gain'] = data['internal_gain'].tolist()
@@ -466,7 +466,7 @@ class Forecasting:
     def get_solar_forecast(self, time, dso_num):
         time = time.replace(minute=0, second=0)
         print("***** time *****", time)
-        # temp = self.solar_df.loc[pd.date_range(time, periods=self.windowLength, freq='H')][dso_num]
+        # temp = self.solar_df.loc[pd.date_range(time, periods=self.windowLength, freq='h')][dso_num]
         temp = self.gProxy.forecasting_pv_schedules('pv_power', time, self.windowLength, dso_num)
         return temp.values.tolist()
 

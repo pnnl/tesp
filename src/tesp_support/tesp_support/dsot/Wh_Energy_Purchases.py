@@ -130,10 +130,10 @@ def load_price_data(dir_path, market_type, dso_num, simdata, place):
     else:
         if market_type == 'DA':
             prices_data = pd.read_excel('DAM_2016.xlsx', sheet_name=place)
-            date_rng = pd.date_range(start='1/1/2016 01:00:00', end='1/1/2017', freq='H')
+            date_rng = pd.date_range(start='1/1/2016 01:00:00', end='1/1/2017', freq='h')
         else:
             prices_data = pd.read_excel('RTM_2016.xlsx', sheet_name=place)
-            # prices_data = prices_data.groupby(pd.Grouper(freq='H')).mean()
+            # prices_data = prices_data.groupby(pd.Grouper(freq='h')).mean()
             date_rng = pd.date_range(start='1/1/2016 01:00:00', periods=len(prices_data), freq='15T')
         prices_data = prices_data.rename(columns={'Settlement Point Price': place + ' $_mwh'})
         prices_data['date_time'] = pd.to_datetime(date_rng)

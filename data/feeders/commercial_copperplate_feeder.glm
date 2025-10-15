@@ -81,18 +81,3 @@ object transformer_configuration {
   shunt_resistance 126.58;
   shunt_reactance 22.57;
 }
-
-object transformer {
-  name feeder_head_transformer;
-// downstream 12.67 kva on CS
-  phases ABCN;
-  from feeder_head_meter;
-  to bldg_meter;
-  configuration feeder_XF3_POLETOP_ABCN_30;
-}
-
-object meter { 
-     name bldg_meter; 
-     phases ABCN; 
-     nominal_voltage 120;  
-}

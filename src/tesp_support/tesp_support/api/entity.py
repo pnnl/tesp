@@ -185,6 +185,7 @@ class Entity:
                             continue
                 else:
                     # add to dictionary datatype, label, unit, item, value
+                    # todo This should not be in this call, or should be registered helper class to the look up
                     if self.find_item("parent") or self.find_item("configuration"):
                         # todo lookup attr in parent, configuration if it exists, for now add it
                         self.add_attr("TEXT", attr, "", attr, "")
