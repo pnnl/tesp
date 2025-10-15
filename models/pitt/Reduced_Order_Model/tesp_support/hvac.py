@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2023 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # file: hvac_agent.py
 """Class that controls the responsive thermostat for one house.
 

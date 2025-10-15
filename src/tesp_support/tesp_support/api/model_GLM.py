@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Battelle Memorial Institute
+# Copyright (c) 2023-2024 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: glm_model.py
 """GridLAB-D model I/O for TESP api
@@ -998,6 +998,9 @@ class GLMModel:
                 nc.append(self.node_classes[v['nclass']])
                 nlb[u] = u
             except:
+                # various gray/grey
+                nc.append('grey')
+                nlb[u] = u
                 continue
 
         # Edges colors and attributes
@@ -1042,7 +1045,8 @@ class GLMModel:
         clock['starttime'] = "'" + starttime + "'"
         clock['stoptime'] = "'" + stoptime + "'"
         clock['timezone'] = timezone
-        del clock['timestamp'] #remove timestamp, conflicts with starttime
+        if 'timestamp' in clock:
+            del clock['timestamp'] #remove timestamp, conflicts with starttime
 
     def add_include(self, file: str):
         self.include_lines.append(f"#include \"{file}\"")
@@ -1147,6 +1151,8 @@ class GLMModel:
         # to those lines.            
         seg_loads = {}  # [name][kva, phases]
         total_kva = 0.0
+        nodes_to_delete = []
+        class_to_delete = []
         for n1, data in G.nodes(data=True):
             if 'ndata' in data:
                 kva = self.accumulate_load_kva(data['ndata'])
@@ -1154,6 +1160,8 @@ class GLMModel:
                 if kva > 0:
                     total_kva += kva
                     nodes = nx.shortest_path(G, n1, swing_node)
+                    nodes_to_delete.append(nodes[0])
+                    class_to_delete.append(data['nclass'])
                     edges = zip(nodes[0:], nodes[1:])
                     for u, v in edges:
                         eclass = G[u][v]['eclass']
@@ -1173,8 +1181,8 @@ class GLMModel:
         # sub_graphs = nx.connected_components(G)
         # print(f"  swing node {swing_node}, with {len(list(sub_graphs))}, sub graphs and {:.2f}.format(total_kva)} total kva")
         
-        return seg_loads
-
+        to_delete = dict(zip(nodes_to_delete, class_to_delete))
+        return seg_loads, to_delete
 
 
 

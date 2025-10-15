@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2024 Battelle Memorial Institute
+# Copyright (c) 2022-2024 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: case_merge.py
 """Combines GridLAB-D and agent files to run a multi-feeder TESP simulation
@@ -14,7 +14,7 @@ Public Functions:
 import json
 from os import path
 
-from tesp_support.api.helpers import gld_strict_name
+from ..api.helpers import gld_strict_name
 
 def merge_glm(target, sources, xfmva):
     """ Combines GridLAB-D input files into "target". The source files must already exist.

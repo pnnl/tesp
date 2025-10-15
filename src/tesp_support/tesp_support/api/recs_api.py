@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2023 Battelle Memorial Institute
+# Copyright (c) 2022-2025 Battelle Memorial Institute
 # file: recs_api.py
 
 import pandas as pd

@@ -1,5 +1,5 @@
 ..
-    _ Copyright (C) 2023 Battelle Memorial Institute
+    _ Copyright (c) 2023 Battelle Memorial Institute
     _ file: gld_modifier.rst
 
 

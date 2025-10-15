@@ -1,7 +1,7 @@
 .. _Developing and Customizing TESP:
 
 ..
-    _ Copyright (c) 2021-2023 Battelle Memorial Institute
+    _ Copyright (c) 2021-2025 Battelle Memorial Institute
     _ file: Developing_Customizing_TESP.rst
 
 Developing and Customizing TESP

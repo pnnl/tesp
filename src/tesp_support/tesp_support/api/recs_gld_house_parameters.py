@@ -6,7 +6,7 @@ import warnings
 import numpy as np
 import pandas as pd
 
-from tesp_support.api.data import feeders_path
+from ..api.data import feeders_path
 
 
 def bin_size_check(sample_data, recs_data, state, housing_dens, inc_lev, binsize, climate_zone, income_str):

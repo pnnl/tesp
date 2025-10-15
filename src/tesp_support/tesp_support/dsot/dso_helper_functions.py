@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2024 Battelle Memorial Institute
+# Copyright (c) 2021-2024 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: dso_helper_functions.py
 """
@@ -8,10 +8,10 @@
 import itertools
 import math
 import pandas as pd
-import tesp_support.dsot.plots as pt
-import tesp_support.dsot.dso_rate_making as rm
-import tesp_support.dsot.customer_CFS as ccfs
-import tesp_support.dsot.dso_CFS as cfs
+from ..dsot import plots as pt
+from ..dsot import dso_rate_making as rm
+from ..dsot import customer_CFS as ccfs
+from ..dsot import dso_CFS as cfs
 
 # get rid of the burn-in days
 

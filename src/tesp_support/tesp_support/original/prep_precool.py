@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2023 Battelle Memorial Institute
+# Copyright (c) 2018-2025 Battelle Memorial Institute
 # file: prep_precool.py
 """Writes the precooling agent and GridLAB-D metadata for NIST TE Challenge 2 example
  
@@ -9,7 +9,7 @@ import json
 
 import numpy as np
 
-from tesp_support.api.helpers import HelicsMsg
+from ..api.helpers import HelicsMsg
 
 
 def prep_precool(name_root, time_step=15):

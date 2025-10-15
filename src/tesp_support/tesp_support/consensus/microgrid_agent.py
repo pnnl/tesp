@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2024 Battelle Memorial Institute
+# Copyright (c) 2022-2024 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: microgrid_agent.py
 """Manages the Transactive Control scheme for DSO+T implementation version 1
@@ -20,14 +20,14 @@ import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
 
-from tesp_support.api.helpers import enable_logging
-from tesp_support.api.metrics_collector import MetricsStore, MetricsCollector
+from ..api.helpers import enable_logging
+from ..api.metrics_collector import MetricsStore, MetricsCollector
 
-from tesp_support.dsot.hvac_agent import HVACDSOT
-from tesp_support.dsot.battery_agent import BatteryDSOT
-from tesp_support.dsot.water_heater_agent import WaterHeaterDSOT
+from ..dsot.hvac_agent import HVACDSOT
+from ..dsot.battery_agent import BatteryDSOT
+from ..dsot.water_heater_agent import WaterHeaterDSOT
 
-import tesp_support.consensus.microgrid as consensus
+from ..consensus import microgrid as consensus
 from .forecasting import Forecasting
 from .dso_market import DSOMarket
 from .retail_market import RetailMarket

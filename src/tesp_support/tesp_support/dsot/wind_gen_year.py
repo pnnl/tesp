@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2024 Battelle Memorial Institute
+# Copyright (c) 2021-2024 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: wind_gen_year.py
 
@@ -19,7 +19,7 @@ import math
 import numpy as np
 import pandas as pd
 
-from tesp_support.api.tso_helpers import load_json_case
+from ..api.tso_helpers import load_json_case
 
 
 def make_wind_plants(ppc):

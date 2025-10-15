@@ -1,4 +1,4 @@
-# Copyright (C) 2019-2023 Battelle Memorial Institute
+# Copyright (c) 2019-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: weatherAgent.py
 
@@ -15,7 +15,7 @@ from datetime import timedelta
 import pandas as pd
 
 import helics
-from tesp_support.weather.forecast import convertTimeToSeconds, weather_forecast
+from ..weather.forecast import convertTimeToSeconds, weather_forecast
 
 def startWeatherAgent(file):
     """ The weather agent publishes weather data as configured by the json file

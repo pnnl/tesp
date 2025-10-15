@@ -1,4 +1,4 @@
-# Copyright (C) 2019-2023 Battelle Memorial Institute
+# Copyright (c) 2019-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: TMY3toCSV.py
 # Created 8/14/2018
@@ -288,7 +288,7 @@ def weathercsv_cloudy_day(start_time, end_time, output_file):
 
 
 def _tests():
-    from tesp_support.api.data import weather_path
+    from ..api.data import weather_path
 
     # create a csv file contain the weather data for the input time period from the input tmy3 file
     weathercsv(weather_path + 'TX-Houston_Bush_Intercontinental.tmy3',

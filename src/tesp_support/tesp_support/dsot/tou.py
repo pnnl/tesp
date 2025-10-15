@@ -26,7 +26,7 @@ def time_of_use_price_profile(tou_params, step_size, dso_name, save_path=None):
         time-of-use price profile should be saved. If no price profile should be saved, 
         provide None. Defaults to not saving the created price profile.
 
-   Reutrns:
+   Returns:
        tou_profile (pandas.DataFrame): A DataFrame specifying the price profile for 
        each DSO in time steps of size `step_size`.
     """

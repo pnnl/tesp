@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2024 Battelle Memorial Institute
+# Copyright (c) 2021-2024 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: glm_dictionary.py
 # tuned to feederGenerator_TSP.m for sequencing of objects and attributes
@@ -67,7 +67,20 @@ def append_include_file(lines, fname):
 
 
 def glm_dict(name_root, config=None, ercot=False):  # , te30=False):
-    """ Writes the JSON metadata file from a GLM file
+    """ This version of glm_dict is deprecated as it does not utilize
+    GLMModifier() and instead relies on the .glm to be written with serialized
+    print statements that can be read and interpreted line-by-line. Modern .glm
+    files are no longer written this way and therefore this dictionary method
+    will be inaccurate if used with the new gld_feeder_generator.py or any
+    modern .glm-writing script.
+
+    This renamed glm_dict_line() was written to work with:
+        - prepare_case_dsot.py
+        - residential_feeder_glm.py
+        - commercial_feeder_glm.py
+        - copperplate_feeder_glm.py
+
+    Writes the JSON metadata file from a GLM file
 
     This function reads *name_root.glm* and writes *[name_root]_glm_dict.json*
     The GLM file should have some meters and triplex_meters with the
@@ -579,6 +592,322 @@ def glm_dict(name_root, config=None, ercot=False):  # , te30=False):
     json.dump(substation, op, ensure_ascii=False, indent=2)
     op.close()
 
+def glm_diction(case_name, feed_key):
+    """Writes the JSON metadata file with the feeder information.
+    Utilizes GLMModifier() to read and parse through the .glm
+
+    Args:
+        case_name (str): name of the test case
+        feed_key (str): feeder number
+    """
+    import math
+    from ..api.modify_GLM import GLMModifier
+
+    glmMod = GLMModifier()
+    glm, success = glmMod.read_model(case_name + '/' + feed_key + '/' + feed_key + '.glm')
+
+    billingmeters = {}
+    houses = {}
+    inverters = {}
+    ev = {}
+    regulators = {}
+    capacitors = {}
+    weather = {}
+    feeders = {}
+
+    for name, climate in glm.climate.items():
+        weather = {'name': str(name),
+                'interpolation': climate["interpolate"],
+                'latitude': float(climate["latitude"]),
+                'longitude': float(climate["longitude"])}
+
+    for hs_name, house in glm.house.items():
+        if 'Low' in hs_name:
+            inc_level = 'Low'
+        elif 'Middle' in hs_name:
+            inc_level = 'Middle'
+        elif 'Upper' in hs_name:
+            inc_level = 'Upper'
+        else:
+            inc_level = ""
+        building_type = house["groupid"]
+
+        if house['heating_system_type'] == 'GAS':
+            fuel_type = 'gas'
+        else:
+            fuel_type = 'electric'
+
+        try:
+            if "hse" in hs_name:
+                wh_name = hs_name.replace(inc_level + '_hse', 'wh')
+                wh_setpoint = float(glm.waterheater.instances[wh_name]["lower_tank_setpoint"])
+            else:
+                wh_name = hs_name.replace(inc_level + '_hs', 'wh')
+                wh_setpoint = float(glm.waterheater.instances[wh_name]["tank_setpoint"])
+            wh_gallons = float(glm.waterheater.instances[wh_name]["tank_volume"])
+            wh_skew = float(glm.waterheater.instances[wh_name]["schedule_skew"])
+            wh_schedule_name = glm.waterheater.instances[wh_name]["water_demand"]
+            wh_diameter = float(glm.waterheater.instances[wh_name]["tank_diameter"])
+            wh_model = glm.waterheater.instances[wh_name]["waterheater_model"]
+        except KeyError:
+            # If the house doesn't have an electric water heater
+            wh_name = ""
+            wh_gallons = 0
+            wh_skew = 0
+            wh_schedule_name = ""
+            wh_diameter = 0
+            wh_setpoint = 0
+            wh_model = ""
+
+        # Assign Residential vs C&I buildings parameters
+        if building_type in ['SINGLE_FAMILY', 'MOBILE_HOME', 'APARTMENTS', 'MULTI_FAMILY']:
+            tariff_class = 'residential'
+            number_of_doors = 0
+            number_of_stories = house["number_of_stories"]
+            ceiling_height = house["ceiling_height"]
+            window_exterior_transmission_coefficient = house["window_exterior_transmission_coefficient"]
+            billingmeters[glm.triplex_meter.instances[house['parent']]['parent']] = {'feeder_id': feed_key,
+                            'phases': glm.triplex_meter.instances[glm.triplex_meter.instances[house['parent']]['parent']]['phases'],
+                            'vll': math.sqrt(3.0)*float(glm.triplex_meter.instances[glm.triplex_meter.instances[house['parent']]['parent']]['nominal_voltage']),
+                            'vln': float(glm.triplex_meter.instances[glm.triplex_meter.instances[house['parent']]['parent']]['nominal_voltage']),
+                            'children': [],
+                            'building_type': building_type,
+                            'tariff_class': tariff_class}
+            # try:
+            houses[hs_name] = {'feeder_id': feed_key,
+                'billingmeter_id': glm.triplex_meter.instances[house['parent']]['parent'],
+                'income_level':inc_level,
+                'sqft': house["floor_area"],
+                'stories': int(number_of_stories),
+                'doors': int(number_of_doors),
+                'cooling': house['cooling_system_type'],
+                'heating': house['heating_system_type'],
+                'wh_gallons': wh_gallons,
+                'house_class': house['groupid'],
+                'Rroof': float(house["Rroof"]),
+                'Rwall': float(house["Rwall"]),
+                'Rfloor': float(house["Rfloor"]),
+                'Rdoors': float(house["Rdoors"]),
+                'airchange_per_hour': float(house["airchange_per_hour"]),
+                'ceiling_height': float(ceiling_height),
+                'thermal_mass_per_floor_area': float(house["total_thermal_mass_per_floor_area"]),
+                'aspect_ratio': float(house["aspect_ratio"]),
+                'exterior_wall_fraction': float(house["exterior_wall_fraction"]),
+                'exterior_floor_fraction': float(house["exterior_floor_fraction"]),
+                'exterior_ceiling_fraction': float(house["exterior_ceiling_fraction"]),
+                'window_exterior_transmission_coefficient': float(window_exterior_transmission_coefficient),
+                'glazing_layers': int(house["glazing_layers"]),
+                'glass_type': int(house["glass_type"]),
+                'window_frame': int(house["window_frame"]),
+                'glazing_treatment': int(house["glazing_treatment"]),
+                'cooling_COP': float(house["cooling_COP"]),
+                'over_sizing_factor': float(house["over_sizing_factor"]),
+                'fuel_type': fuel_type,
+                'wh_name': wh_name,
+                'wh_skew': wh_skew,
+                'wh_schedule_name': wh_schedule_name,
+                'wh_UA': wh_gallons,
+                'wh_diameter': wh_diameter,
+                'wh_setpoint': wh_setpoint,
+                'wh_model': wh_model
+                }
+            # except KeyError:
+            #     pass
+
+            billingmeters[glm.triplex_meter.instances[house['parent']]['parent']]['children'].append(hs_name)
+
+        elif building_type in ['office', 'warehouse_storage', 'big_box', 'strip_mall', 'education', 'food_service', 'food_sales', 'lodging', 'healthcare_inpatient', 'low_occupancy']:
+            tariff_class = 'commercial'
+            number_of_doors = house["number_of_doors"]
+            number_of_stories = 0
+            ceiling_height = 0
+            window_exterior_transmission_coefficient = 0
+            billingmeters[house['parent']] = {'feeder_id': feed_key,
+                            'phases': glm.meter.instances[house['parent']]['phases'],
+                            'vll': math.sqrt(3.0)*float(glm.meter.instances[house['parent']]['nominal_voltage']),
+                            'vln': float(glm.meter.instances[house['parent']]['nominal_voltage']),
+                            'children': [],
+                            'building_type': building_type,
+                            'tariff_class': tariff_class}
+            try:
+                houses[hs_name] = {'feeder_id': feed_key,
+                    'billingmeter_id': house['parent'],
+                    'income_level': inc_level,
+                    'sqft': house["floor_area"],
+                    'stories': int(number_of_stories),
+                    'doors': int(number_of_doors),
+                    'cooling': house['cooling_system_type'],
+                    'heating': house['heating_system_type'],
+                    'wh_gallons': wh_gallons,
+                    'house_class': house['groupid'],
+                    'Rroof': float(house["Rroof"]),
+                    'Rwall': float(house["Rwall"]),
+                    'Rfloor': float(house["Rfloor"]),
+                    'Rdoors': float(house["Rdoors"]),
+                    'airchange_per_hour': float(house["airchange_per_hour"]),
+                    'ceiling_height': float(ceiling_height),
+                    'thermal_mass_per_floor_area': float(house["total_thermal_mass_per_floor_area"]),
+                    'aspect_ratio': float(house["aspect_ratio"]),
+                    'exterior_wall_fraction': float(house["exterior_wall_fraction"]),
+                    'exterior_floor_fraction': float(house["exterior_floor_fraction"]),
+                    'exterior_ceiling_fraction': float(house["exterior_ceiling_fraction"]),
+                    'window_exterior_transmission_coefficient': float(window_exterior_transmission_coefficient),
+                    'glazing_layers': house["glazing_layers"],
+                    'glass_type': house["glass_type"],
+                    'window_frame': house["window_frame"],
+                    'glazing_treatment': house["glazing_treatment"],
+                    'cooling_COP': float(house["cooling_COP"]),
+                    'over_sizing_factor': float(house["over_sizing_factor"]),
+                    'fuel_type': fuel_type,
+                    }
+            except KeyError:
+                houses[hs_name] = {'feeder_id': feed_key,
+                    'billingmeter_id': house['parent'],
+                    'income_level': inc_level,
+                    'sqft': house["floor_area"],
+                    'stories': int(number_of_stories),
+                    'doors': int(number_of_doors),
+                    'cooling': house['cooling_system_type'],
+                    'heating': house['heating_system_type'],
+                    'wh_gallons': wh_gallons,
+                    'house_class': house['groupid'],
+                    'Rroof': float(house["Rroof"]),
+                    'Rwall': float(house["Rwall"]),
+                    'Rfloor': float(house["Rfloor"]),
+                    'Rdoors': float(house["Rdoors"]),
+                    'airchange_per_hour': float(house["airchange_per_hour"]),
+                    'ceiling_height': float(ceiling_height),
+                    'thermal_mass_per_floor_area': float(house["total_thermal_mass_per_floor_area"]),
+                    'aspect_ratio': float(house["aspect_ratio"]),
+                    'exterior_wall_fraction': float(house["exterior_wall_fraction"]),
+                    'exterior_floor_fraction': float(house["exterior_floor_fraction"]),
+                    'exterior_ceiling_fraction': float(house["exterior_ceiling_fraction"]),
+                    'window_exterior_transmission_coefficient': float(window_exterior_transmission_coefficient),
+                    'cooling_COP': float(house["cooling_COP"]),
+                    'over_sizing_factor': float(house["over_sizing_factor"]),
+                    'fuel_type': fuel_type,
+                    }
+
+            #billingmeters[glm.meter.instances[house['parent']]['children']].append(hs_name)
+
+            billingmeters[house['parent']]['children'].append(hs_name)
+
+
+        # else:
+        #     tariff_class = 'industrial'
+        #     number_of_doors = house["number_of_doors"]
+        #     number_of_stories = ''
+        #     ceiling_height = ''
+        #     window_exterior_transmission_coefficient = ''
+
+    for cp_name, capacitors in glm.capacitor.items():
+        capacitors[cp_name] = {'feeder_id': feed_key}
+
+    for rg_name, regulators in glm.regulator.items():
+        regulators[rg_name] = {'feeder_id': feed_key}
+
+    for bt_name, battery in glm.battery.items():
+        try:
+            inverters[glm.battery.instances[bt_name]['parent']] = {'feeder_id': feed_key,
+                            'billingmeter_id': glm.triplex_meter.instances[glm.inverter.instances[glm.battery.instances[bt_name]['parent']]['parent']]['parent'],
+                            'rated_W': float(glm.inverter.instances[glm.battery.instances[bt_name]['parent']]["rated_power"]),
+                            'resource': 'battery',
+                            'inv_eta': float(glm.inverter.instances[glm.battery.instances[bt_name]['parent']]["inverter_efficiency"]),
+                            'bat_eta': float(battery['round_trip_efficiency']),
+                            'bat_capacity': float(battery['battery_capacity']),
+                            'bat_soc': float(battery['state_of_charge'])}
+            if billingmeters[glm.triplex_meter.instances[glm.inverter.instances[glm.battery.instances[bt_name]['parent']]['parent']]['parent']]:
+                billingmeters[glm.triplex_meter.instances[glm.inverter.instances[glm.battery.instances[bt_name]['parent']]['parent']]['parent']]['children'].append(glm.battery.instances[bt_name]['parent'])
+        except KeyError:
+            inverters[glm.battery.instances[bt_name]['parent']] = {'feeder_id': feed_key,
+                            'billingmeter_id': glm.meter.instances[glm.inverter.instances[glm.battery.instances[bt_name]['parent']]['parent']]['parent'],
+                            'rated_W': float(glm.inverter.instances[glm.battery.instances[bt_name]['parent']]["rated_power"]),
+                            'resource': 'battery',
+                            'inv_eta': float(glm.inverter.instances[glm.battery.instances[bt_name]['parent']]["inverter_efficiency"]),
+                            'bat_eta': float(battery['round_trip_efficiency']),
+                            'bat_capacity': float(battery['battery_capacity']),
+                            'bat_soc': float(battery['state_of_charge'])}
+            if billingmeters[glm.meter.instances[glm.inverter.instances[glm.battery.instances[bt_name]['parent']]['parent']]['parent']]:
+                billingmeters[glm.meter.instances[glm.inverter.instances[glm.battery.instances[bt_name]['parent']]['parent']]['parent']]['children'].append(glm.battery.instances[bt_name]['parent'])
+
+    for inv_name, inverter in glm.inverter.items():
+        if 'sol' in inv_name:
+            try:
+                inverters[inv_name] = {'feeder_id': feed_key,
+                                'billingmeter_id': glm.triplex_meter.instances[inverter['parent']]['parent'],
+                                'rated_W': float(inverter["rated_power"]),
+                                'resource': 'solar',
+                                'inv_eta': float(inverter["inverter_efficiency"])}
+                if billingmeters[glm.triplex_meter.instances[inverter['parent']]['parent']]:
+                    billingmeters[glm.triplex_meter.instances[inverter['parent']]['parent']]['children'].append(inv_name)
+            except KeyError:
+                inverters[inv_name] = {'feeder_id': feed_key,
+                                'billingmeter_id': glm.meter.instances[inverter['parent']]['parent'],
+                                'rated_W': float(inverter["rated_power"]),
+                                'resource': 'solar',
+                                'inv_eta': float(inverter["inverter_efficiency"])}
+                if billingmeters[glm.meter.instances[inverter['parent']]['parent']]:
+                    billingmeters[glm.meter.instances[inverter['parent']]['parent']]['children'].append(inv_name)
+
+    for ev_name, evcharger_det in glm.evcharger_det.items():
+        try:
+            ev[ev_name] = {'name': str(ev_name),
+                        'feeder_id': feed_key,
+                        'billingmeter_id': glm.triplex_meter.instances[glm.house.instances[evcharger_det['parent']]['parent']]['parent'],
+                        'parent': evcharger_det["parent"],
+                        'work_charging': evcharger_det["work_charging_available"],
+                        'battery_SOC': float(evcharger_det["battery_SOC"]),
+                        'max_charge': float(evcharger_det["maximum_charge_rate"]),
+                        'daily_miles': float(evcharger_det["travel_distance"]),
+                        'arrival_work': float(evcharger_det["arrival_at_work"]),
+                        'arrival_home': float(evcharger_det["arrival_at_home"]),
+                        'work_duration': float(evcharger_det["duration_at_work"]),
+                        'home_duration': float(evcharger_det["duration_at_home"]),
+                        'miles_per_kwh': float(evcharger_det["mileage_efficiency"]),
+                        'range_miles': float(evcharger_det["mileage_classification"]),
+                        'efficiency': float(evcharger_det["charging_efficiency"])}
+            if billingmeters[glm.triplex_meter.instances[glm.house.instances[evcharger_det['parent']]['parent']]['parent']]:
+                billingmeters[glm.triplex_meter.instances[glm.house.instances[evcharger_det['parent']]['parent']]['parent']]['children'].append(ev_name)
+        except KeyError:
+            ev[ev_name] = {'name': str(ev_name),
+                        'feeder_id': feed_key,
+                        'billingmeter_id': glm.house.instances[evcharger_det['parent']]['parent'],
+                        'parent': evcharger_det["parent"],
+                        'work_charging': evcharger_det["work_charging_available"],
+                        'battery_SOC': float(evcharger_det["battery_SOC"]),
+                        'max_charge': float(evcharger_det["maximum_charge_rate"]),
+                        'daily_miles': float(evcharger_det["travel_distance"]),
+                        'arrival_work': float(evcharger_det["arrival_at_work"]),
+                        'arrival_home': float(evcharger_det["arrival_at_home"]),
+                        'work_duration': float(evcharger_det["duration_at_work"]),
+                        'home_duration': float(evcharger_det["duration_at_home"]),
+                        'miles_per_kwh': float(evcharger_det["mileage_efficiency"]),
+                        'range_miles': float(evcharger_det["mileage_classification"]),
+                        'efficiency': float(evcharger_det["charging_efficiency"])}
+            if billingmeters[glm.house.instances[evcharger_det['parent']]['parent']]:
+                billingmeters[glm.house.instances[evcharger_det['parent']]['parent']]['children'].append(ev_name)
+
+    feeders[feed_key] = {'house_count': len(houses), 'inverter_count': len(inverters), 'ev_count': len(ev)}
+
+    print(feeders[feed_key])
+
+    for sub_name, substations in glm.substation.items():
+        substation = {'bulkpower_bus': 1,
+                    'message_name': "fncs_msg",
+                    'transformer_MVA': float(substations["base_power"].strip('MVA')) * 1.0e-6,
+                    'base_feeder': substations["groupid"],
+                    'feeders': feeders,
+                    'billingmeters': billingmeters,
+                    'houses': houses,
+                    'inverters': inverters,
+                    'ev': ev,
+                    'capacitors': capacitors,
+                    'regulators': regulators,
+                    'climate': weather}
+
+    op = open(case_name + '/' + feed_key + '/' + feed_key + '_glm_dict.json', 'w')
+    json.dump(substation, op, ensure_ascii=False, indent=2)
+    op.close()
 
 if __name__ == "__main__":
     glm_dict("Test")

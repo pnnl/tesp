@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Battelle Memorial Institute
+# Copyright (c) 2023 Battelle Memorial Institute
 # file: te30_usestore.py
 """ 
 Takes existing datastore made by running the te30 example and processes the results. This

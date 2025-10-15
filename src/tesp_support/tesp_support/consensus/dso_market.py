@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2024 Battelle Memorial Institute
+# Copyright (c) 2022-2024 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: dso_market.py
 """Class that manages the operation of DSO agent
@@ -16,8 +16,8 @@ from copy import deepcopy
 
 import numpy as np
 
-from tesp_support.api.parse_helpers import parse_kw
-from tesp_support.dsot.helpers_dsot import Curve, get_intersect, MarketClearingType, resample_curve
+from ..api.parse_helpers import parse_kw
+from ..dsot.helpers_dsot import Curve, get_intersect, MarketClearingType, resample_curve
 
 
 class DSOMarket:

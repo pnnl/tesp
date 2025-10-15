@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2023 Battelle Memorial Institute
+# Copyright (c) 2018-2025 Battelle Memorial Institute
 # file: precool.py
 """Classes for NIST TE Challenge 2 example
 
@@ -22,14 +22,14 @@ try:
 except:
     pass
 try:
-    import tesp_support.original.fncs as fncs
+    from ..original import fncs as fncs
 except:
     pass
 
 import json
 import math
 
-from tesp_support.api.parse_helpers import parse_number, parse_magnitude_2
+from ..api.parse_helpers import parse_number, parse_magnitude_2
 
 thermalIntegrity = {
     'VERY_LITTLE':

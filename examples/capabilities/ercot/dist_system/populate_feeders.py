@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021-2023 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # file: populate_feeders.py
 
 from tesp_support.original.residential_feeder_glm import populate_feeder

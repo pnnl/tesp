@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2024 Battelle Memorial Institute
+# Copyright (c) 2021-2024 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: pv_dsot.py
 """Class that controls the Photovoltaic Solar agents
@@ -50,7 +50,7 @@ class PVDSOT:
 def _test():
     """ Makes a single pv agent and run DA
     """
-    from tesp_support.dsot.forecasting import Forecasting
+    from ..dsot.forecasting import Forecasting
 
     forecast_obj = Forecasting(5150,  { "correct": False })
 

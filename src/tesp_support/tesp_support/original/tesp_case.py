@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2023 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # file: tesp_case.py
 """Creates and fills a subdirectory with files to run a TESP simulation
 
@@ -18,10 +18,10 @@ import subprocess
 import sys
 from datetime import datetime
 
-from tesp_support.api.data import feeders_path, scheduled_path, weather_path, energyplus_path, pypower_path
-from tesp_support.api.helpers import HelicsMsg
-from tesp_support.api.make_ems import merge_idf
-from tesp_support.weather.TMYtoEPW import convert_tmy2_to_epw
+from ..api.data import feeders_path, scheduled_path, weather_path, energyplus_path, pypower_path
+from ..api.helpers import HelicsMsg
+from ..api.make_ems import merge_idf
+from ..weather.TMYtoEPW import convert_tmy2_to_epw
 from .glm_dictionary import glm_dict
 from .prep_substation import prep_substation
 from .residential_feeder_glm import populate_feeder

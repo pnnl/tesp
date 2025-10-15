@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2024 Battelle Memorial Institute
+# Copyright (c) 2021-2024 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: hvac_dsot.py
 """Class that ...
@@ -18,8 +18,8 @@ import pyomo.environ as pyo
 import pytz
 from scipy import linalg
 
-from tesp_support.api.helpers import get_run_solver
-from tesp_support.api.parse_helpers import parse_number, parse_magnitude
+from ..api.helpers import get_run_solver
+from ..api.parse_helpers import parse_number, parse_magnitude
 
 logger = log.getLogger()
 log.getLogger('pyomo.core').setLevel(log.ERROR)

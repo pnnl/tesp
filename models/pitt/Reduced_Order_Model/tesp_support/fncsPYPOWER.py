@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2023 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # file: fncsPYPOWER.py
 """ PYPOWER solutions under control of FNCS for te30 and sgip1 examples
 

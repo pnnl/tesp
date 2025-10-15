@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2021-2023 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # file: runcombinedh.sh
 
 (exec helics_broker -f 4 --loglevel=warning --name=mainbroker &> broker.log &)

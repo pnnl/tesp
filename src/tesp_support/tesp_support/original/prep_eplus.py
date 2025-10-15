@@ -1,4 +1,4 @@
-# Copyright (C) 2020-2023 Battelle Memorial Institute
+# Copyright (c) 2020-2025 Battelle Memorial Institute
 # file: prep_eplus.py
 
 import json
@@ -10,8 +10,8 @@ import copy
 import subprocess
 from datetime import datetime
 
-from tesp_support.api.make_ems import merge_idf
-from tesp_support.api.helpers import HelicsMsg
+from ..api.make_ems import merge_idf
+from ..api.helpers import HelicsMsg
 
 
 def configure_eplus(caseConfig, template_dir):

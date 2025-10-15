@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2024 Battelle Memorial Institute
+# Copyright (c) 2021-2024 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: substation_f.py
 """Manages the Transactive Control scheme for DSO+T implementation version 1
@@ -16,8 +16,8 @@ from datetime import datetime, timedelta
 from copy import deepcopy
 from joblib import Parallel, delayed
 
-import tesp_support.original.fncs as fncs
-from tesp_support.api.helpers import enable_logging
+from ..original import fncs as fncs
+from ..api.helpers import enable_logging
 from .hvac_agent import HVACDSOT
 from .water_heater_agent import WaterHeaterDSOT
 from .ev_agent import EVDSOT
@@ -26,8 +26,8 @@ from .battery_agent import BatteryDSOT
 from .dso_market import DSOMarket
 from .retail_market import RetailMarket
 from .forecasting import Forecasting
-from tesp_support.api.metrics_collector import MetricsStore, MetricsCollector
-from tesp_support.api.bench_profile import bench_profile
+from ..api.metrics_collector import MetricsStore, MetricsCollector
+from ..api.bench_profile import bench_profile
 
 @bench_profile
 def inner_substation_loop(configfile, metrics_root, with_market):

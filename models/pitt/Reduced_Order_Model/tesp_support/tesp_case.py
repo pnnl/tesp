@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2023 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # file: tesp_case.py
 """Creates and fills a subdirectory with files to run a TESP simulation
 

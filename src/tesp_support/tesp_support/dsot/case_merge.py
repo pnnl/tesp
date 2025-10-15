@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2024 Battelle Memorial Institute
+# Copyright (c) 2021-2024 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: case_merge.py
 """Combines GridLAB-D and agent files to run a multi-feeder TESP simulation
@@ -14,7 +14,7 @@ Public Functions:
 import json
 from os import path
 
-from tesp_support.api.helpers import gld_strict_name
+from ..api.helpers import gld_strict_name
 
 def merge_glm(target, sources, xfmva):
     """ Combines GridLAB-D input files into "target". The source files must already exist.
@@ -135,14 +135,24 @@ def merge_glm_dict(target, sources, xfmva):
             diction['bulkpower_bus'] = cfg['bulkpower_bus']
             diction['message_name'] = cfg['message_name']
             diction['climate'] = cfg['climate']
-        diction['feeders'][fdr_id] = {'house_count': cfg['feeders']['network_node']['house_count'],
+        if not cfg['base_feeder']:
+            pass
+        else:
+            fdr_id = gld_strict_name(cfg['base_feeder'])
+            try:
+                diction['feeders'][fdr_id] = {'house_count': cfg['feeders'][fdr]['house_count'],
+                                        'inverter_count': cfg['feeders'][fdr]['inverter_count'],
+                                        'ev_count': cfg['feeders'][fdr]['ev_count']}
+            # To retain compatability with archived dsot prepare_case
+            except KeyError:
+               diction['feeders'][fdr_id] = {'house_count': cfg['feeders']['network_node']['house_count'],
                                       'inverter_count': cfg['feeders']['network_node']['inverter_count'],
                                       'ev_count': cfg['feeders']['network_node']['ev_count']}
-        for key in ['billingmeters', 'houses', 'inverters', 'capacitors', 'regulators', 'ev']:
-            for obj in cfg[key]:
-                if 'feeder_id' in cfg[key][obj]:
-                    cfg[key][obj]['feeder_id'] = fdr_id
-            diction[key].update(cfg[key])
+            for key in ['billingmeters', 'houses', 'inverters', 'capacitors', 'regulators', 'ev']:
+                for obj in cfg[key]:
+                    if 'feeder_id' in cfg[key][obj]:
+                        cfg[key][obj]['feeder_id'] = fdr_id
+                diction[key].update(cfg[key])
     op = open(target, 'w')
     print(json.dumps(diction), file=op)
     op.close()

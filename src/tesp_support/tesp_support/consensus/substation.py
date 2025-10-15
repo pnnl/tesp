@@ -7,7 +7,7 @@ import numpy as np
 import numpy.matlib as npm
 from scipy.interpolate import interp1d
 
-from tesp_support.dsot.helpers_dsot import MarketClearingType
+from ..dsot.helpers_dsot import MarketClearingType
 
 P_price_DSO = np.array(([0.0247, 0.01974, 0.01889, 0.01797, 0.01724, 0.01713, 0.018, 0.01709, 0.0181,
                          0.02185, 0.02462, 0.03037, 0.04141, 0.04885, 0.06822, 0.09555, 0.14969, 0.11952,

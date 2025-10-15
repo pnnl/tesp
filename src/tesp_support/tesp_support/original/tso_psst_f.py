@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2024 Battelle Memorial Institute
+# Copyright (c) 2021-2024 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: tso_psst_f.py
 
@@ -13,14 +13,14 @@ import numpy as np
 import pandas as pd
 import pypower.api as pp
 import psst.cli as pst
-import tesp_support.original.fncs as fncs
+from ..original import fncs as fncs
 from copy import deepcopy
 from datetime import datetime
 
-from tesp_support.api.parse_helpers import parse_mva
-from tesp_support.api.tso_helpers import load_json_case, make_dictionary, dist_slack, print_m_case
-from tesp_support.api.metrics_collector import MetricsStore, MetricsCollector
-from tesp_support.api.bench_profile import bench_profile
+from ..api.parse_helpers import parse_mva
+from ..api.tso_helpers import load_json_case, make_dictionary, dist_slack, print_m_case
+from ..api.metrics_collector import MetricsStore, MetricsCollector
+from ..api.bench_profile import bench_profile
 
 def make_generator_plants(ppc, renewables):
     gen = ppc['gen']

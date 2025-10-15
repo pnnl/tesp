@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2023 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # file: simple_auction.py
 """Double-auction mechanism for the 5-minute markets in te30 and sgip1 examples
 
@@ -21,7 +21,7 @@ I think we should refactor this so that these assumptions are not so
 tightly integrated with the formulation.
 
 """
-from tesp_support.original.curve import ClearingType, curve, aggregate_bid
+from ..original.curve import ClearingType, curve, aggregate_bid
 
 
 # Class definition

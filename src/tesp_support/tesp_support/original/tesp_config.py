@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2023 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # file: tesp_config.py
 """Presents a GUI to configure and package TESP cases
 
@@ -19,7 +19,7 @@ from tkinter import messagebox
 
 import numpy as np
 
-from tesp_support.api.data import tesp_share, weather_path
+from ..api.data import tesp_share, weather_path
 
 config = {'BackboneFiles': {},
           'FeederGenerator': {},

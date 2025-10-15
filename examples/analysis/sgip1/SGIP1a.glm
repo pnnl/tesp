@@ -2,7 +2,7 @@
 //Started on 10/21/09. This version created 09-Mar-2017 16:45:05.
 // This version was created to perform FY11 Department of Energy
 // analysis on the benefits of the SGIG grant projects.
-// Copyright (C) 2017-2023 Battelle Memorial Institute
+// Copyright (c) 2017-2025 Battelle Memorial Institute
 // file: SGIP1a.glm
 
 clock {

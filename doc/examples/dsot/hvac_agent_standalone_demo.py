@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Battelle Memorial Institute
+# Copyright (c) 2024 Battelle Memorial Institute
 # file: hvac_agent_standalone_demo.py
 """
 This is a simplified version of the DSO+T HVAC agent intended to demonstrate

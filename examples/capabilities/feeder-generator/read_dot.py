@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2020 Battelle Memorial Institute
+# Copyright (c) 2018-2020 Battelle Memorial Institute
 # file: read_dot.py
 """ This script parses a .dot file containing the coordinates of each object in 
 the corresponding .glm and creates a .json file with just the object name and 
