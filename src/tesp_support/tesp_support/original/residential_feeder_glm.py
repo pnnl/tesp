@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2023 Battelle Memorial Institute
+# Copyright (c) 2018-2025 Battelle Memorial Institute
 # file: residential_feeder_glm.py
 """Replaces ZIP loads with houses, and optional storage and solar generation.
 
@@ -38,9 +38,9 @@ from math import sqrt
 import networkx as nx
 import numpy as np
 
-from tesp_support.api.data import feeders_path, weather_path
-from tesp_support.api.helpers import gld_strict_name, randomize_commercial_skew, randomize_residential_skew
-from tesp_support.api.parse_helpers import parse_kva
+from ..api.data import feeders_path, weather_path
+from ..api.helpers import gld_strict_name, randomize_commercial_skew, randomize_residential_skew
+from ..api.parse_helpers import parse_kva
 
 forERCOT = False
 port = 5570

@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2024 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: dso_CFS.py
 """
@@ -10,7 +10,7 @@
 import numpy as np
 import pandas as pd
 
-import tesp_support.dsot.dso_helper_functions as dso_helper
+from ..dsot import dso_helper_functions as dso_helper
 
 
 # This dso_CFS function calculates cash flow statement ...

@@ -1,4 +1,4 @@
-# Copyright (C) 2019-2023 Battelle Memorial Institute
+# Copyright (c) 2019-2025 Battelle Memorial Institute
 # file: generate_case.py
 """ Utility function to split a year run to monthly runs. This is DSO+T specific helper functions
 """

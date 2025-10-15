@@ -3,10 +3,12 @@
 
 {
     // Simulation
-    "starttime": "2023-01-01 07:00:00", // REQUIRED: format "YYYY-MM-DD HH:MM:SS"
-    "stoptime": "2023-01-01 17:00:00",  // REQUIRED: format "YYYY-MM-DD HH:MM:SS"
+    "start_time": "2023-01-01 07:00:00", // REQUIRED: format "YYYY-MM-DD HH:MM:SS"
+    "end_time": "2023-01-01 17:00:00",  // REQUIRED: format "YYYY-MM-DD HH:MM:SS"
     "timestep": 300,              // REQUIRED: simulation timestep, in seconds
-    "timezone": "EST+5EDT",       // REQUIRED: GridLAB-D supported time zone: Eastern. (CST+6CDT (Central), MST+7MDT (Mountain), PST+8PDT (Pacific))
+    "time_zone": "EST+5EDT",       // REQUIRED: GridLAB-D supported time zone: Eastern. (CST+6CDT (Central), MST+7MDT (Mountain), PST+8PDT (Pacific))
+    "metrics_interval": 300,      // DEFAULT: 300, update frequency of the metrics collector, in seconds
+    "metrics_interim": 300,      // DEFAULT: 300, update frequency of the metrics collector, in seconds
     "metrics_interval": 300,      // DEFAULT: 300, update frequency of the metrics collector, in seconds
 
     // Input and Output Files
@@ -19,15 +21,15 @@
     "substation_name": "MySub",   // REQUIRED: a name for the substation
     // Metadata Files
     "data_path": ".",
-    "file_residential_meta": "residential_metadata.json",
-    "file_commercial_meta": "commercial_metadata.json",
-    "file_battery_meta": "battery_metadata.json",
-    "file_ev_meta": "ev_model_metadata.json",
-    "file_ev_driving_meta": "ev_driving_metadata.csv",
+    "residential_meta_file": "residential_metadata.json",
+    "commercial_meta_file": "commercial_metadata.json",
+    "battery_meta_file": "battery_metadata.json",
+    "ev_meta_file": "ev_model_metadata.json",
+    "ev_driving_meta_file": "ev_driving_metadata.csv",
 
     // RECS (Residential Energy Consumption Survey) Data
-    "out_file_residential_meta": "RECS_residential_metadata.json", // If empty, will be generated using inputs below:
-    "out_file_hvac_set_point": "hvac_setpt_RECS.json",
+    "out_residential_meta_file": "RECS_residential_metadata.json", // If empty, will be generated using inputs below:
+    "out_hvac_set_point_file": "hvac_setpt_RECS.json",
     "sample": {
         "state": ["VT"],
         "housing_density": ["No_DSO_Type"],   //"No_DSO_Type", U, R, C possibly = S

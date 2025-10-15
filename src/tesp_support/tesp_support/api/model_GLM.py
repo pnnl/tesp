@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Battelle Memorial Institute
+# Copyright (c) 2023-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: glm_model.py
 """GridLAB-D model I/O for TESP api
@@ -1032,6 +1032,7 @@ class GLMModel:
                 nc.append(self.node_classes[v['nclass']])
                 nlb[u] = u
             except:
+                # various gray/grey
                 nc.append('grey')
                 nlb[u] = u
                 continue
@@ -1078,10 +1079,7 @@ class GLMModel:
         clock['starttime'] = "'" + starttime + "'"
         clock['stoptime'] = "'" + stoptime + "'"
         clock['timezone'] = timezone
-        try:
-            del clock['timestamp'] #remove timestamp, conflicts with starttime
-        except KeyError:
-            pass # do nothing if timestamp not present
+        del_module_attr('clock','timestamp')
 
     def add_include(self, file: str):
         self.include_lines.append(f"#include \"{file}\"")

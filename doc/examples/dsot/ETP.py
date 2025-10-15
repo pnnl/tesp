@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Battelle Memorial Institute
+# Copyright (c) 2024-2025 Battelle Memorial Institute
 # file: ETP.py
 """
 The Equivalent Thermal Parameters model is a single zone thermodynamic model

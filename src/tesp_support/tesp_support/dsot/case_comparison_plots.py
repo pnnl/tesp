@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2024 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: case_comparison_plots.py
 import os
@@ -12,7 +12,7 @@ import pandas as pd
 import seaborn as sns
 from datetime import datetime, date, timedelta
 
-import tesp_support.dsot.plots as pt
+from ..dsot import plots as pt
 
 
 def rec_diff(d1, d2):

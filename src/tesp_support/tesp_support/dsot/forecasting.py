@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2024 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: forecasting.py
 """Class responsible for forecasting 
@@ -23,7 +23,7 @@ import pandas as pd
 import pytz
 
 from .hvac_agent import HVACDSOT
-from tesp_support.api.schedule_client import *
+from ..api.schedule_client import *
 
 
 class Forecasting:

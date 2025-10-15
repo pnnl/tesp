@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2023 Battelle Memorial Institute
+# Copyright (c) 2018-2025 Battelle Memorial Institute
 # file: copperplate_feeder_glm.py
 """Replaces ZIP loads with houses, and optional storage and solar generation.
 
@@ -40,9 +40,9 @@ import numpy as np
 import pandas as pd
 from math import sqrt
 
-from tesp_support.api.data import feeders_path, weather_path
-from tesp_support.api.helpers import gld_strict_name
-from tesp_support.api.parse_helpers import parse_kva
+from ..api.data import feeders_path, weather_path
+from ..api.helpers import gld_strict_name
+from ..api.parse_helpers import parse_kva
 from .commercial_feeder_glm import define_comm_loads, create_comm_zones
 
 transmissionVoltage = 138000.0

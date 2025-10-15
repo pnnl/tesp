@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2024 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: substation.py
 """Manages the simple_auction and hvac agents for the te30 and sgip1 examples
@@ -18,8 +18,8 @@ import helics
 from datetime import datetime
 from datetime import timedelta
 
-from tesp_support.original.hvac_agent import hvac
-from tesp_support.original.simple_auction import simple_auction
+from ..original.hvac_agent import hvac
+from ..original.simple_auction import simple_auction
 from .bench_profile import bench_profile
 
 @bench_profile
@@ -123,16 +123,16 @@ def substation_loop(configfile, metrics_root, helicsConfig, hour_stop=48, flag='
         mtrPubTopic = ctl.name + '/' + ctl.meterName
         # print('{:s} hseSub={:s} mtrSub={:s}  mtrPub={:s}  ctlPub={:s}'
         #       .format(key, hseSubTopic, mtrSubTopic, mtrPubTopic, ctlPubTopic), flush=True)
-        subTemp[ctl] = helics.helicsFederateGetInputByTarget(hFed, hseSubTopic + '#air_temperature')
-        subState[ctl] = helics.helicsFederateGetInputByTarget(hFed, hseSubTopic + '#power_state')
-        subHVAC[ctl] = helics.helicsFederateGetInputByTarget(hFed, hseSubTopic + '#hvac_load')
+        subTemp[ctl] = helics.helicsFederateGetInputByTarget(hFed, hseSubTopic + '/air_temperature')
+        subState[ctl] = helics.helicsFederateGetInputByTarget(hFed, hseSubTopic + '/power_state')
+        subHVAC[ctl] = helics.helicsFederateGetInputByTarget(hFed, hseSubTopic + '/hvac_load')
 
         pubHeating[ctl] = helics.helicsFederateGetPublication(hFed, ctlPubTopic + '/heating_setpoint')
         pubCooling[ctl] = helics.helicsFederateGetPublication(hFed, ctlPubTopic + '/cooling_setpoint')
         pubDeadband[ctl] = helics.helicsFederateGetPublication(hFed, ctlPubTopic + '/thermostat_deadband')
         if ctl.meterName not in pubSubMeters:
             pubSubMeters.add(ctl.meterName)
-            subVolt[ctl] = helics.helicsFederateGetInputByTarget(hFed, mtrSubTopic + '#measured_voltage_1')
+            subVolt[ctl] = helics.helicsFederateGetInputByTarget(hFed, mtrSubTopic + '/measured_voltage_1')
             pubMtrMode[ctl] = helics.helicsFederateGetPublication(hFed, mtrPubTopic + '/bill_mode')
             pubMtrPrice[ctl] = helics.helicsFederateGetPublication(hFed, mtrPubTopic + '/price')
             pubMtrMonthly[ctl] = helics.helicsFederateGetPublication(hFed, mtrPubTopic + '/monthly_fee')

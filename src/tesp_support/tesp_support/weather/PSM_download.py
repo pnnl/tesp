@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2023 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: PSM_download.py
 # Created 4/28/2020
@@ -25,7 +25,7 @@ from pathlib import Path
 
 import openpyxl as xl
 
-import tesp_support.weather.PSMv3toDAT as PSM
+from ..weather import PSMv3toDAT as PSM
 
 # spec = importlib.util.spec_from_file_location("PSMv3toDAT", "../PSMv3toDAT.py")
 # PSM = importlib.util.module_from_spec(spec)

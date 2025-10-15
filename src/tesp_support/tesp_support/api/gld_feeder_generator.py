@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2020 Battelle Memorial Institute
+# Copyright (c) 2018-2020 Battelle Memorial Institute
 # file: gld_feeder_generator.py
 """ This gld_feeder_generator.py is an updated feeder generator that combines 
 the functionality of both residential_feeder_glm.py and commercial_feeder_glm.py.
@@ -101,12 +101,12 @@ import os
 import numpy as np
 import pandas as pd
 
-from tesp_support.api.helpers import gld_strict_name, random_norm_trunc, randomize_residential_skew
-from tesp_support.api.modify_GLM import GLMModifier
-from tesp_support.api.time_helpers import get_secs_from_hhmm, get_hhmm_from_secs, get_duration, get_dist
-from tesp_support.api.time_helpers import is_hhmm_valid, subtract_hhmm_secs, add_hhmm_secs
-from tesp_support.api.entity import assign_defaults
-from tesp_support.api.recs_gld_house_parameters import get_RECS_jsons
+from ..api.helpers import gld_strict_name, random_norm_trunc, randomize_residential_skew
+from ..api.modify_GLM import GLMModifier
+from ..api.time_helpers import get_secs_from_hhmm, get_hhmm_from_secs, get_duration, get_dist
+from ..api.time_helpers import is_hhmm_valid, subtract_hhmm_secs, add_hhmm_secs
+from ..api.entity import assign_defaults
+from ..api.recs_gld_house_parameters import get_RECS_jsons
 
 extra_billing_meters = set()
 
@@ -155,7 +155,7 @@ class Config:
         if hasattr(self, 'includes'):
             for item in self.includes:
                 self.glm.model.add_include(item)
-        
+
         # Add sets
         if hasattr(self, 'sets'):
             for key in self.sets:
@@ -165,7 +165,7 @@ class Config:
         if hasattr(self, 'defines'):
             for key in self.defines:
                 self.glm.model.add_define(key, self.defines[key])
-        
+
         if hasattr(self, 'messager'):
             num = self.DSO.replace('DSO_', '')
             if self.messager == 'HELICS':
@@ -258,7 +258,7 @@ class Config:
         else:
             print("\n!!!!! There are {0:d} commercial buildings left !!!!!".format(
             len(comm_bldgs_pop.keys())))
-        
+
         assign_defaults(self.res_bld, os.path.join(self.data_path, self.residential_meta_file_RECS))
         self.res_bld.checkResidentialBuildingTable()
         cop_mat = self.res_bld.COP_average
@@ -313,7 +313,7 @@ class Config:
                 pass
         else:
             pass
-        
+
 class Residential_Build:
     def __init__(self, config: Config):
         self.config = config
@@ -903,8 +903,8 @@ class Residential_Build:
             if hasattr(self.config, 'in_file_glm'):
                 params["cooling_setpoint"] = np.round(cooling_set)
                 params["heating_setpoint"] = np.round(heating_set)
-            else: 
-                # For transactive case, override defaults for larger separation 
+            else:
+                # For transactive case, override defaults for larger separation
                 # to assure no overlaps during transactive simulations
                 params["cooling_setpoint"] = "80.0"
                 params["heating_setpoint"] = "60.0"
@@ -937,7 +937,7 @@ class Residential_Build:
                 # percentage of homes with both electric space and water heating
                 if rng.random() <= properties['sh_electric']['electric']:
                     wh_fuel_type = 'electric'
-            
+
             if wh_fuel_type == 'electric':  # if the water heater fuel type is electric, install wh
                 heat_element = 3.0 + 0.5 * rng.integers(1, 6)  # numpy integers (lo, hi) returns lo..(hi-1)
                 tank_set = 110 + 16 * rng.random()
@@ -1047,17 +1047,17 @@ class Residential_Build:
                     prob_ev = (self.config.ev_deployment * self.ev[self.config.state][self.config.res_dso_type][income]["mobile_home"])/prob_mobile
 
             # User-defined income distribution of DER, no restrictions by housing type:
-            
+
             elif hasattr(self.config, 'user_dist') and self.config.user_dist == "True":
                 prob_solar = (self.config.solar_deployment*self.config.solar_percentage[income])/prob_inc
                 prob_batt = (self.config.storage_deployment*self.config.storage_percentage[income])/prob_inc
                 prob_ev = (self.config.ev_deployment*self.config.ev_percentage[income])/prob_inc
 
-            # This is a special case, implemented for the Rates Analysis work. Only single-family homes have solar or batteries. 
+            # This is a special case, implemented for the Rates Analysis work. Only single-family homes have solar or batteries.
             else:
                 # EVs are not restricted by house type. The probability a house has an EV by income:
                 prob_ev = (self.config.ev_deployment*self.config.ev_percentage[income])/prob_inc
-                if bldg == 0: 
+                if bldg == 0:
                     prob_solar = (self.config.solar_deployment * self.config.solar_percentage[income])/(prob_single * prob_inc)
                     prob_batt = (self.config.storage_deployment * self.config.storage_percentage[income])/(self.config.solar_deployment * self.config.solar_percentage[income])
                 else:
@@ -1217,7 +1217,7 @@ class Commercial_Build:
         Returns:
             None
         """
-        
+
         if feed_type == "full":
             mtr = self.config.base.comm_loads[key][0]
             comm_type = self.config.base.comm_loads[key][1]
@@ -1300,7 +1300,7 @@ class Commercial_Build:
             bldg['floor_area'] = floor_area
             bldg['aspect_ratio'] = bld_specs["aspect_ratio"] * rng.normal(1, 0.01)
             bldg['window_wall_ratio'] = bld_specs["window-wall_ratio"] * rng.normal(1, 0.2)
-            wall_area = (bld_specs['ceiling_height'] * 2 * math.sqrt(bldg['floor_area'] / bldg['number_of_stories'] / 
+            wall_area = (bld_specs['ceiling_height'] * 2 * math.sqrt(bldg['floor_area'] / bldg['number_of_stories'] /
                                                                     bldg['aspect_ratio']) * (bldg['aspect_ratio'] + 1))
             ratio = wall_area * (1 - bldg['window_wall_ratio']) / bldg['floor_area']
             age = Commercial_Build.normalize_dict_prob('vintage', bld_specs['vintage'])
@@ -1696,7 +1696,7 @@ class Battery:
 
     def add_batt(self, bat_prob: float, sol_prob: float, parent_mtr: str, bat_mtr: str, bat_name: str, inv_name: str, phs: float, v_nom: float) -> None:
         """Define and add battery and inverter objects to house, under the 
-        parentage of the parent_mtr. Assumes only houses that have solar will 
+        parentage of the parent_mtr. Assumes only houses that have solar will
         have batteries.
 
         Args:
@@ -1729,7 +1729,7 @@ class Battery:
             self.battery_count += 1
             self.battery_capacity_count += battery_capacity
 
-            if "mtr" in parent_mtr: 
+            if "mtr" in parent_mtr:
                 self.mdl.triplex_meter.add(bat_mtr, {"parent": parent_mtr,
                             "phases": phs,
                             "nominal_voltage": str(v_nom) })
@@ -1805,7 +1805,7 @@ class Solar:
             
             self.solar_count += 1
             self.solar_kw += 0.001 * inv_power
-            if "mtr" in parent_mtr: 
+            if "mtr" in parent_mtr:
                 self.mdl.triplex_meter.add(solar_mtr, {"parent": parent_mtr,
                             "phases": phs,
                             "nominal_voltage": str(v_nom) })
@@ -1826,6 +1826,7 @@ class Solar:
 
             if self.config.use_solar_player == "True": 
                 pv_scaling_factor = inv_power / self.config.rooftop_pv_rating_MW
+                #TODO player functionality
                 #params["P_Out"] = f"{self.config.solar_P_player['attr']}.value * #{pv_scaling_factor}"
                 #params["Q_Out"] = f"{self.config.solar_Q_player['attr']}.value * 0.0"
             else:
@@ -1907,7 +1908,7 @@ class Electric_Vehicle:
                 raise UserWarning('invalid home or work duration for ev!')
             if not Electric_Vehicle.is_drive_time_valid(drive_sch):
                 raise UserWarning('home and work arrival time are not consistent with durations!')
-        
+
             #print('random ' + str(num) + ', ev_prob ' + str(ev_prob) + 'Let`s add an ev!')
             self.ev_count += 1
             params = {"parent": house_name,
@@ -2016,7 +2017,7 @@ class Electric_Vehicle:
         # Estimate remaining time at work
         work_duration = max(24 * 3600 - (home_duration + commute_duration), 1)  
         # minimum work duration is 3600 sec or 1 hour to set reasonable schedule
-        # Note that minimum must be at least 1 to avoid errors in GridLAB-D 
+        # Note that minimum must be at least 1 to avoid errors in GridLAB-D
         work_arr_secs = get_secs_from_hhmm(home_leave_time) + int(commute_duration / 2)
         if work_arr_secs > 24 * 3600:  # if midnight crossing
             work_arr_secs = work_arr_secs - 24 * 3600
@@ -2092,11 +2093,11 @@ class Electric_Vehicle:
 
 class Feeder:
     def __init__(self, config: Config, feed_type: str):
-        """Replaces ZIP loads with houses, optional storage, electric vehicles, 
+        """Replaces ZIP loads with houses, optional storage, electric vehicles,
         and solar generation.
 
-        Populates the feeder backbone with houses and DER using the Networkx 
-        package to perform graph-based capacity analysis, upgrading fuses, 
+        Populates the feeder backbone with houses and DER using the Networkx
+        package to perform graph-based capacity analysis, upgrading fuses,
         transformers and lines to serve the expected load. Transformers have
         a margin of 20% to avoid overloads, while fuses have a margin of 150% to
         avoid overloads. These can be changed by editing tables and variables in
@@ -2129,7 +2130,7 @@ class Feeder:
             self.config.vln = 7200.0
             self.config.avg_house = 4000.0
             self.config.avg_commercial = 20000.0
-        
+
         # Generate RECS metadata, if it does not exist
         self.config.generate_recs()
         # Assign defaults based on RECS data
@@ -2151,14 +2152,14 @@ class Feeder:
         elif feed_type == "copp":
             self.base_feeder_id = ""
             pass
-        
+
         # Identify and add commercial loads
         if feed_type == "full":
             self.identify_commercial_loads('load', 0.001 * self.config.avg_commercial)
             for key in self.config.base.comm_loads:
                 self.config.com_bld.define_commercial_zones(config.region, key, self.config.com_bld.total_comm_kva, feed_type)
-        elif feed_type == "copp":      
-            self.config.com_bld.total_strip_mall = 0      
+        elif feed_type == "copp":
+            self.config.com_bld.total_strip_mall = 0
             for bldg in comm_bldgs_pop:
                 self.config.com_bld.define_commercial_zones(config.region, bldg, float(58), feed_type)
 
@@ -2178,7 +2179,7 @@ class Feeder:
               f"{self.config.batt.battery_capacity_count/1000:.1f} kWh; and "
               f"{self.config.ev.ev_count} EV chargers")
 
-        # Write the popoulated glm model to the output file
+        # Write the populated glm model to the output file
         if hasattr(config, 'out_file_glm'):
             self.glm.write_model(os.path.join(config.data_path, config.out_file_glm))
         else:
@@ -2191,11 +2192,11 @@ class Feeder:
             else:
                 i_glm, success = self.glm.read_model(self.config.outputPath)
             if self.config.gis_file:
-                # The substation (network_node) and substation transformer have no connections 
+                # The substation (network_node) and substation transformer have no connections
                 # to the rest of the feeder. For now, assign them position values that align
                 # with rest of the feeder. TODO: check if merge assigns connections.
-                self.config.pos["network_node"] = np.mean(list(self.config.pos.values()), axis=0)  
-                self.config.pos["substation_transformer"] = np.mean(list(self.config.pos.values()), axis=0)  
+                self.config.pos["network_node"] = np.mean(list(self.config.pos.values()), axis=0)
+                self.config.pos["substation_transformer"] = np.mean(list(self.config.pos.values()), axis=0)
                 print("\nUsing location data to plot image of model; this should just take a sec.")
                 # Merge house and meter position assignments with rest of GIS data
                 self.config.pos |= self.config.pos_data
@@ -2236,9 +2237,9 @@ class Feeder:
                 exit()
 
         # To plot an unpopulated version of the base feeder:
-        if self.config.make_plot == "True":
+        if self.config.make_plot:
             print("Plotting the unpopulated feeder as a reference. Close to proceed.")
-            if self.config.gis_file:    
+            if self.config.gis_file:
                 self.glm.model.plot_model(self.config.pos_data)
             else:
                 self.glm.model.plot_model()
@@ -2255,7 +2256,7 @@ class Feeder:
                 e_config = e_object['configuration']
                 if hasattr(self.config, 'in_file_glm'):
                     self.config.base.base_feeder_name = self.config.in_file_glm
-                else: 
+                else:
                     self.config.base.base_feeder_name = self.config.taxonomy
                 sec_v = float(i_glm.transformer_configuration[e_config]['secondary_voltage'])
                 if sec_v > 500:
@@ -2303,7 +2304,7 @@ class Feeder:
                 e_object['phases'] = seg_phs
                 if key not in xfused:
                     xfused[key] = [seg_phs, kvat, vnom, vsec, install_type]
-            
+
             for key in xfused:
                 self.glm.add_xfmr_config(key, xfused[key][0], xfused[key][1], xfused[key][2], xfused[key][3],
                                     xfused[key][4], self.config.vll, self.config.vln)

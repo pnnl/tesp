@@ -1,6 +1,6 @@
 ECHO off
 
-REM Copyright (C) 2021-2023 Battelle Memorial Institute
+REM Copyright (c) 2021-2025 Battelle Memorial Institute
 REM file: runtesp.bat
 
 IF NOT DEFINED TESPDIR GOTO no_tesp

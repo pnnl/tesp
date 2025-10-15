@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright (C) 2021-2023 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # file: run_fncsMATPOWER.sh
 # script for execution of deployed applications
 #

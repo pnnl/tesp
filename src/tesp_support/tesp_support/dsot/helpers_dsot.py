@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2024 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: helpers_dsot.py
 """ Utility functions for use within tesp_support, including new agents.
@@ -13,7 +13,7 @@ from enum import IntEnum
 
 import numpy as np
 
-from tesp_support.api.helpers import HelicsMsg
+from ..api.helpers import HelicsMsg
 
 
 def write_mircogrids_management_script(case_path, system_config=None, substation_config=None,
@@ -466,7 +466,7 @@ def write_dsot_management_script_f(master_file, case_path, config=None, system_c
                               % (config_file, str(5150 + ports[cnt]), out_path))
             outfile.write('# wait schedule server to populate\n')
             outfile.write('sleep 60\n')
-            
+
             try:
                 outfile.write('(export FNCS_BROKER="tcp://*:' + str(system_config['port'])
                             + '" && fncs_broker %s &> %s/broker.log &)\n'

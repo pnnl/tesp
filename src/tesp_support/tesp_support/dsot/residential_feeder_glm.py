@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2024 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: residential_feeder_glm.py
 """Replaces ZIP loads with houses, and optional storage and solar generation.
@@ -44,12 +44,12 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
-from tesp_support.api.data import feeders_path, weather_path
-from tesp_support.api.helpers import gld_strict_name, random_norm_trunc, randomize_residential_skew
-from tesp_support.api.parse_helpers import parse_kva
-from tesp_support.api.time_helpers import is_hhmm_valid, subtract_hhmm_secs, add_hhmm_secs
-from tesp_support.api.time_helpers import get_secs_from_hhmm, get_hhmm_from_secs, get_duration, get_dist
-import tesp_support.original.commercial_feeder_glm as comm_FG
+from ..api.data import feeders_path, weather_path
+from ..api.helpers import gld_strict_name, random_norm_trunc, randomize_residential_skew
+from ..api.parse_helpers import parse_kva
+from ..api.time_helpers import is_hhmm_valid, subtract_hhmm_secs, add_hhmm_secs
+from ..api.time_helpers import get_secs_from_hhmm, get_hhmm_from_secs, get_duration, get_dist
+from ..original import commercial_feeder_glm as comm_FG
 
 forERCOT = False
 port = 5570

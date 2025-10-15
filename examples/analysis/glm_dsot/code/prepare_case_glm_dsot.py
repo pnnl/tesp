@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2023 Battelle Memorial Institute
+# Copyright (c) 2018-2025 Battelle Memorial Institute
 # file: prepare_case_glm_dsot.py
 """ Sets up a case folder of required files to run DSO+T use-case by populating
  a test feeder using gld_feeder_generator.py. 

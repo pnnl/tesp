@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2023 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # file: tesp_monitor.py
 """Presents a GUI to launch a TESP simulation and monitor its progress
 
@@ -19,7 +19,7 @@ import tkinter.ttk as ttk
 from tkinter import filedialog
 from tkinter import messagebox
 
-from tesp_support.api.parse_helpers import parse_kw
+from ..api.parse_helpers import parse_kw
 
 import matplotlib
 

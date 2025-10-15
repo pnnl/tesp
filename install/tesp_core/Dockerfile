@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2023 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # file: Dockerfile
 
 FROM temcderm/tesp_foundation:1.0.2

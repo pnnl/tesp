@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2024 Battelle Memorial Institute
+# Copyright (c) 2022-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: dso_agent.py
 """Manages the Transactive Control scheme for DSO+T implementation version 1
@@ -17,11 +17,11 @@ import helics as h
 import numpy as np
 from joblib import Parallel
 
-import tesp_support.consensus.substation as consensus
+from ..consensus import substation as consensus
 from .dso_market import DSOMarket
 from .retail_market import RetailMarket
-from tesp_support.api.helpers import enable_logging
-from tesp_support.api.metrics_collector import MetricsStore, MetricsCollector
+from ..api.helpers import enable_logging
+from ..api.metrics_collector import MetricsStore, MetricsCollector
 
 # import multiprocessing as mp
 NUM_CORE = 1

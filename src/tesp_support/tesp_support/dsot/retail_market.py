@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2024 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: retail_market.py
 """Class that manages the operation of retail market at substation-level
@@ -32,8 +32,8 @@ from copy import deepcopy
 
 import numpy as np
 
-from tesp_support.dsot.helpers_dsot import Curve, get_intersect, MarketClearingType, resample_curve, resample_curve_for_price_only
-from tesp_support.api.schedule_client import *
+from ..dsot.helpers_dsot import Curve, get_intersect, MarketClearingType, resample_curve, resample_curve_for_price_only
+from ..api.schedule_client import *
 
 
 class RetailMarket:

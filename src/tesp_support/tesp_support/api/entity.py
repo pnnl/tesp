@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Battelle Memorial Institute
+# Copyright (c) 2023-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: entity.py
 """

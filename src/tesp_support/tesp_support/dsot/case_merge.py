@@ -1,5 +1,4 @@
-
-# Copyright (C) 2021-2024 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: case_merge.py
 """Combines GridLAB-D and agent files to run a multi-feeder TESP simulation
@@ -15,8 +14,7 @@ Public Functions:
 import json
 from os import path
 
-from tesp_support.api.helpers import gld_strict_name
-from tesp_support.api.modify_GLM import GLMModifier
+from ..api.helpers import gld_strict_name
 
 def merge_glm(target, sources, xfmva):
     """ Combines GridLAB-D input files into "target". The source files must already exist.
@@ -176,8 +174,8 @@ def del_danglers(glm: GLMModifier, glm_type: str, i_glm_obj):
 
 
 def glm_merge(target, sources, xfmva):
-    """ Combines GridLAB-D input files into "target". The source files must 
-    already exist. This is an updated version of merge_glm() that utilizes 
+    """ Combines GridLAB-D input files into "target". The source files must
+    already exist. This is an updated version of merge_glm() that utilizes
     GLMModifier and GLMModel to achieve the same goal for feeders generated with
     gld_feeder_generator, using the same.
 
@@ -296,7 +294,7 @@ def merge_glm_dict(target, sources, xfmva):
             except KeyError:
                diction['feeders'][fdr_id] = {'house_count': cfg['feeders']['network_node']['house_count'],
                                       'inverter_count': cfg['feeders']['network_node']['inverter_count'],
-                                      'ev_count': cfg['feeders']['network_node']['ev_count']} 
+                                      'ev_count': cfg['feeders']['network_node']['ev_count']}
             for key in ['billingmeters', 'houses', 'inverters', 'capacitors', 'regulators', 'ev']:
                 for obj in cfg[key]:
                     if 'feeder_id' in cfg[key][obj]:

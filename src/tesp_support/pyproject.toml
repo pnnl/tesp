@@ -19,18 +19,18 @@ license = {file = "LICENSE"}
 keywords = ["power system", "transactive", "energy"]
 requires-python = ">=3.10"
 dependencies = [
-    "importlib-resources~=6.4.5",
-    "h5py~=3.12.1",
-    "helics~=3.5.3",
-    "pandas~=2.2.3",
-    "numpy~=1.26.4",
-    "scipy~=1.14.1",
-    "matplotlib~=3.9.2",
-    "networkx~=3.4.2",
+    "importlib-resources~=6.5.2",
+    "h5py~=3.14.0",
+    "helics~=3.6.1",
+    "pandas~=2.3.1",
+    "numpy~=2.3.2",
+    "scipy~=1.16.1",
+    "matplotlib~=3.10.5",
+    "networkx~=3.5",
     "pyjson5~=1.6.7",
-    "PYPOWER==5.1.16",
+    "pypower==5.1.19",
     "pyutilib==6.0.0",
-    "Pyomo==6.5.0",
+    "pyomo==6.9.3",
     "psst~=0.1.1a0"
 ]
 classifiers = [

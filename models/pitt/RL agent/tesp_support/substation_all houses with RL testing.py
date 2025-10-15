@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2023 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # file: substation.py
 """Manages the simple_auction and hvac agents for the te30 and sgip1 examples
 

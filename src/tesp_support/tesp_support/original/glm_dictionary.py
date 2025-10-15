@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2023 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # file: glm_dictionary.py
 # tuned to feederGenerator_TSP.m for sequencing of objects and attributes
 """Functions to create metadata from a GridLAB-D input (GLM) file
@@ -16,7 +16,7 @@ import os
 import json
 from math import sqrt
 
-from tesp_support.api.helpers import zoneMeterName
+from ..api.helpers import zoneMeterName
 
 
 def ercotMeterName(objname):

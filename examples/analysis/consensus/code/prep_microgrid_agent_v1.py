@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2019 Battelle Memorial Institute
+# Copyright (c) 2018-2019 Battelle Memorial Institute
 # file: prep_microgrid_agent_v1.py
 """ Sets up the FNCS and agent configurations for DSOT ercot case 8 example
 

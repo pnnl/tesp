@@ -1,11 +1,11 @@
-# Copyright (C) 2019-2023 Battelle Memorial Institute
+# Copyright (c) 2019-2025 Battelle Memorial Institute
 # file: commercial_feeder_glm.py
 
 import math
 import numpy as np
 
-from tesp_support.api.helpers import gld_strict_name, randomize_commercial_skew
-import tesp_support.dsot.residential_feeder_glm as res_FG
+from ..api.helpers import gld_strict_name, randomize_commercial_skew
+from ..dsot import residential_feeder_glm as res_FG
 
 
 def define_comm_bldg(bldg_metadata, dso_type, num_bldgs):

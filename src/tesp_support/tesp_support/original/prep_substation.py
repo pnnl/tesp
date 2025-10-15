@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2023 Battelle Memorial Institute
+# Copyright (c) 2018-2025 Battelle Memorial Institute
 # file: prep_substation.py
 """ Sets up the FNCS and agent configurations for te30 and sgip1 examples
 
@@ -16,7 +16,7 @@ import json
 import numpy as np
 from datetime import datetime
 
-from tesp_support.api.helpers import zoneMeterName, HelicsMsg
+from ..api.helpers import zoneMeterName, HelicsMsg
 
 # write yaml for substation.py to subscribe meter voltages, house temperatures, hvac load and hvac state
 # write txt for gridlabd to subscribe house setpoints and meter price; publish meter voltages
@@ -227,7 +227,7 @@ def ProcessGLM(fileroot):
                         control_mode = 'CN_RAMP'
                     else:
                         control_mode = 'CN_NONE'  # still follows the time-of-day schedule
-                    controller_name = house_name + '_hvac'
+                    controller_name = house_name
                     wakeup_start = np.random.uniform(wakeup_start_lo, wakeup_start_hi)
                     daylight_start = np.random.uniform(daylight_start_lo, daylight_start_hi)
                     evening_start = np.random.uniform(evening_start_lo, evening_start_hi)
@@ -318,15 +318,15 @@ def ProcessGLM(fileroot):
     for key, val in controllers.items():
         house_name = val['houseName']
         meter_name = val['meterName']
-        dso.subs_n(gld_federate + "/" + house_name + "#air_temperature", "double")
-        dso.subs_n(gld_federate + "/" + house_name + "#hvac_load", "double")
-        dso.subs_n(gld_federate + "/" + house_name + "#power_state", "string")
+        dso.subs_n(gld_federate + "/" + house_name + "/air_temperature", "double")
+        dso.subs_n(gld_federate + "/" + house_name + "/hvac_load", "double")
+        dso.subs_n(gld_federate + "/" + house_name + "/power_state", "string")
         dso.pubs_n(False, key + "/cooling_setpoint", "double")
         dso.pubs_n(False, key + "/heating_setpoint", "double")
         dso.pubs_n(False, key + "/thermostat_deadband", "double")
         if meter_name not in pubSubMeters:
             pubSubMeters.add(meter_name)
-            dso.subs_n(gld_federate + "/" + meter_name + "#measured_voltage_1", "complex")  # V1
+            dso.subs_n(gld_federate + "/" + meter_name + "/measured_voltage_1", "complex")  # V1
             dso.pubs_n(False, key + "/" + meter_name + "/bill_mode", "string")
             dso.pubs_n(False, key + "/" + meter_name + "/price", "double")
             dso.pubs_n(False, key + "/" + meter_name + "/monthly_fee", "double")
@@ -428,9 +428,9 @@ def ProcessGLM(fileroot):
         house_name = val['houseName']
         house_class = val['houseClass']
         sub_key = sub_federate + "/" + key + "/"
-        gld.pubs(False, house_name + "#power_state", "string", house_name, "power_state")
-        gld.pubs(False, house_name + "#air_temperature", "double", house_name, "air_temperature")
-        gld.pubs(False, house_name + "#hvac_load", "double", house_name, "hvac_load")
+        gld.pubs(False, house_name + "/power_state", "string", house_name, "power_state")
+        gld.pubs(False, house_name + "/air_temperature", "double", house_name, "air_temperature")
+        gld.pubs(False, house_name + "/hvac_load", "double", house_name, "hvac_load")
         gld.subs(sub_key + "cooling_setpoint", "double", house_name, "cooling_setpoint")
         gld.subs(sub_key + "heating_setpoint", "double", house_name, "heating_setpoint")
         gld.subs(sub_key + "thermostat_deadband", "double", house_name, "thermostat_deadband")
@@ -439,7 +439,7 @@ def ProcessGLM(fileroot):
             prop = 'measured_voltage_1'
             if ('BIGBOX' in house_class) or ('OFFICE' in house_class) or ('STRIPMALL' in house_class):
                 prop = 'measured_voltage_A'  # TODO: the HELICS substation always expects measured_voltage_1
-            gld.pubs(False, meter_name + "#measured_voltage_1", "complex", meter_name, prop)
+            gld.pubs(False, meter_name + "/measured_voltage_1", "complex", meter_name, prop)
             gld.subs(sub_key + meter_name + "/bill_mode", "string", meter_name, "bill_mode")
             gld.subs(sub_key + meter_name + "/price", "double", meter_name, "price")
             gld.subs(sub_key + meter_name + "/monthly_fee", "double", meter_name, "monthly_fee")

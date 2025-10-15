@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2023 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # file: hvac_agent.py
 """Class that controls the responsive thermostat for one house.
 
@@ -7,7 +7,7 @@ bid quantity, and thermostat setting changes as the response
 mechanism.
 """
 
-from tesp_support.api.parse_helpers import parse_number, parse_magnitude
+from ..api.parse_helpers import parse_number, parse_magnitude
 
 
 class hvac:
@@ -81,7 +81,7 @@ class hvac:
         self.ramp = float(hvac_dict['ramp'])
         self.price_cap = float(hvac_dict['price_cap'])
         self.bid_delay = float(hvac_dict['bid_delay'])
-        self.use_pre_dictive_bidding = float(hvac_dict['use_predictive_bidding'])
+        self.use_predictive_bidding = float(hvac_dict['use_predictive_bidding'])
 
         self.std_dev = aucObj.std_dev
         self.mean = aucObj.clearing_price

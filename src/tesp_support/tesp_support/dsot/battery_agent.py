@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2023 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: battery_dsot.py
 """Class that controls the Battery DER
@@ -26,8 +26,8 @@ from math import isnan
 import numpy as np
 import pyomo.environ as pyo
 
-from tesp_support.api.helpers import get_run_solver
-from tesp_support.api.parse_helpers import parse_number
+from ..api.helpers import get_run_solver
+from ..api.parse_helpers import parse_number
 
 logger = log.getLogger()
 
