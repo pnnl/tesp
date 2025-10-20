@@ -81,24 +81,28 @@ def select_setpt_night(wakeup_set, daylight_set, mode):
         return 40
     else:
         night_set = wakeup_set
-        # clm = hdr.index('HOME AND GONE PAIR  ' + str(int(wakeup_set_cool)) + '&' + str(int(daylight_set_cool)) + '-%')
-        clm = [i for i in range(len(hdr)) if str(int(wakeup_set)) + '&' + str(int(daylight_set)) in hdr[i]]
-        prob2 = np.random.uniform(0, 1)
-        total = 0
-        for row in range(len(temp)):
-            total += temp[row][clm]
-            if total >= prob2 * 100:
-                night_set = temp[row][0]
-                break
-        # Need catch for cases where probability is very large (0.99999) and hvac_setpt probabilities add to less than unity
-        if total < prob2 * 100:
+        try:
+            clm = hdr.index('HOME AND GONE PAIR ' + str(int(wakeup_set)) + '&' + str(int(daylight_set)))
+            prob2 = np.random.uniform(0, 1)
+            total = 0
+            for row in range(len(temp)):
+                total += temp[row][clm]
+                if total >= prob2 * 100:
+                    night_set = temp[row][0]
+                    break
+            # Need catch for cases where probability is very large (0.99999) and hvac_setpt probabilities add to less than unity
+            if total < prob2 * 100:
+                night_set = wakeup_set
+            # Do not allow cooling setpt at unoccupied home less than at night
+            if mode == 'cool' and daylight_set < night_set:
+                night_set = wakeup_set
+            # Do not allow heating setpt at unoccupied home more than at night
+            if mode == 'heat' and daylight_set > night_set:
+                night_set = wakeup_set
+        except:
+            print("WARNING select setpt not found:", wakeup_set, daylight_set, mode, ", setting to ", wakeup_set)
             night_set = wakeup_set
-        # Do not allow cooling setpt at unoccupied home less than at night
-        if mode == 'cool' and daylight_set < night_set:
-            night_set = wakeup_set
-        # Do not allow heating setpt at unoccupied home more than at night
-        if mode == 'heat' and daylight_set > night_set:
-            night_set = wakeup_set
+            pass
         return night_set
 
 
@@ -858,7 +862,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
     for key, val in battery_agents.items():
         # key is the name of inverter resource
         battery_name = val['batteryName']
-        print('  ' + key + '#SOC:', file=yp)
+        print('  ' + battery_name + '#SOC:', file=yp)
         print('    topic: ' + gld_sim_name + '/' + battery_name + '/state_of_charge', file=yp)
         print('    default: 0.5', file=yp)
 
@@ -900,11 +904,11 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
 
     # write GridLAB-D FNCS message configuration
     op = open(gldfileroot + '_gridlabd.txt', 'w')
-    print('publish "commit:network_node.distribution_load -> distribution_load; 1000";', file=op)
-    # JH removed as we do not currently have the TSO in the federation
-    # print('subscribe "precommit:' + market_config['DSO']['NetworkName'] +
-    #       '.positive_sequence_voltage <- pypower/three_phase_voltage_' + gldfileroot + '";', file=op)  # TODO: this is very likely not correct
     if feedercnt == 1:
+        print('publish "commit:network_node.distribution_load -> distribution_load; 1000";', file=op)
+        # JH removed as we do not currently have the TSO in the federation
+        print('subscribe "precommit:network_node.positive_sequence_voltage'
+              '<- pypower/three_phase_voltage_' + bus + '";', file=op)
         if 'climate' in gd:
             for wTopic in ['temperature', 'humidity', 'solar_direct', 'solar_diffuse', 'pressure', 'wind_speed']:
                 print('subscribe "precommit:' + gd['climate']['name'] + '.' + wTopic + ' <- '

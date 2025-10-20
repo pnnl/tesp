@@ -200,8 +200,6 @@ class HVACDSOT:  # TODO: update class name
         self.sqft = float(house_properties['sqft'])
         self.stories = float(house_properties['stories'])
         self.doors = float(house_properties['doors'])
-        # thermal integrity is not set in the .glms, the R-values are
-        #self.thermal_integrity = house_properties['thermal_integrity']
         self.Rroof = float(house_properties['Rroof'])
         self.Rwall = float(house_properties['Rwall'])
         self.Rfloor = float(house_properties['Rfloor'])
@@ -1344,7 +1342,7 @@ class HVACDSOT:  # TODO: update class name
             fncs_str (str): FNCS message with load in kW
         """
         # debug
-        print(f'hvac name: {self.houseName}, hvac load: {fncs_str}')
+        # print(f'hvac name: {self.houseName}, hvac load: {fncs_str}')
         val = parse_number(fncs_str)
         if val > 0.0:
             self.hvac_kw = val

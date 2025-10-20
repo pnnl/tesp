@@ -839,20 +839,17 @@ class GLMModifier:
         # if this feeder will be combined with others, need USE_FNCS to appear first as a marker for the substation
         if len(self.defaults.case_name) > 0:
             if self.defaults.message_broker == "fncs_msg":
-                def_params = dict()
                 t_name = "gld" + self.defaults.substation_name
-                def_params["name"] = t_name
-                def_params["parent"] = "network_node"
-                def_params["configure"] = self.defaults.case_name + '_gridlabd.txt'
-                def_params["option"] = "transport:hostname localhost, port " + str(self.defaults.port)
-                def_params["aggregate_subscriptions"] = "true"
-                def_params["aggregate_publications"] = "true"
-                self.add_object("fncs_msg", t_name, def_params)
+                params = {"parent": "network_node",
+                              "configure": self.defaults.case_name + '_gridlabd.txt',
+                              "option": "transport:hostname localhost, port " + str(self.defaults.port),
+                              "aggregate_subscriptions": "true",
+                              "aggregate_publications": "true"}
+                self.add_object("fncs_msg", t_name, params)
             if self.defaults.message_broker == "helics_msg":
-                def_params = dict()
                 t_name = "gld" + self.defaults.substation_name
-                def_params["configure"] = self.defaults.case_name + '.json'
-                self.add_object("helics_msg", t_name, def_params)
+                params = {"configure": self.defaults.case_name + '.json'}
+                self.add_object("helics_msg", t_name, params)
 
         name = 'substation_xfmr_config'
         params = {"connect_type": 'WYE_WYE',
@@ -914,13 +911,13 @@ def _test1():
     # testMod.model.plot_model(node_labels=True)
 
     testMod = GLMModifier()
-    # testMod.model.read("/home/d3j331/grid/tesp/examples/analysis/dsot/code/lean_aug_8_f_pv_bt_fl_ev/Substation_1/Substation_1.glm")
-    testMod.model.read("/home/d3j331/grid/tesp/examples/analysis/dsot/code/lean_aug_8_f_fl/Substation_1/Substation_1.glm")
+    testMod.model.read("/home/d3j331/grid/tesp/examples/analysis/dsot/code/lean_aug_8_f_pv_bt_fl_ev/Substation_1/Substation_1.glm")
+    # testMod.model.read("/home/d3j331/grid/tesp/examples/analysis/dsot/code/lean_aug_8_f_fl/Substation_1/Substation_1.glm")
     testMod.write_model(tesp_test + "api/dsot1_out.glm")
     # # testMod.model.plot_model()
     testMod = GLMModifier()
-    # testMod.model.read("/home/d3j331/grid/tesp/examples/analysis/glm_dsot/code/gld_feeder_test_f_pv_bt_fl_ev/Substation_1/Substation_1.glm")
-    testMod.model.read("/home/d3j331/grid/tesp/examples/analysis/glm_dsot/code/gld_feeder_test_f_fl/Substation_1/Substation_1.glm")
+    testMod.model.read("/home/d3j331/grid/tesp/examples/analysis/glm_dsot/code/gld_feeder_test_f_pv_bt_fl_ev/Substation_1/Substation_1.glm")
+    # testMod.model.read("/home/d3j331/grid/tesp/examples/analysis/glm_dsot/code/gld_feeder_test_f_fl/Substation_1/Substation_1.glm")
     testMod.write_model(tesp_test + "api/dsot2_out.glm")
     # testMod.model.plot_model()
 

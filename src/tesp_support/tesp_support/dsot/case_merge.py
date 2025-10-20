@@ -15,6 +15,7 @@ import json
 from os import path
 
 from ..api.helpers import gld_strict_name
+from ..api.modify_GLM import GLMModifier
 
 def merge_glm(target, sources, xfmva):
     """ Combines GridLAB-D input files into "target". The source files must already exist.
@@ -171,7 +172,6 @@ def del_danglers(glm: GLMModifier, glm_type: str, i_glm_obj):
     print(f"'To' dangler objects: {to_dangler}" )
     print(f"'From' dangler objects: {from_dangler}" )
     print(f"'To' and 'From' objects: {to_from_dangler}" )
-
 
 def glm_merge(target, sources, xfmva):
     """ Combines GridLAB-D input files into "target". The source files must

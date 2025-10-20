@@ -138,7 +138,7 @@ def process_nhts_data(data_file):
     df_data_miles = df_data.groupby(level=['HOUSEID', 'VEHID']).sum()['TRPMILES']
     # limit daily miles to maximum possible range of EV from the ev model data as EVs cant travel more
     # than the range in a day if we don't consider the highway charging
-    max_ev_range = max(ev_metadata['Range (miles)'].values())
+    max_ev_range = max(ev_metadata['Range_miles'].values())
     df_data_miles = df_data_miles[df_data_miles < max_ev_range]
     df_data_miles = df_data_miles[df_data_miles > 0]
 
@@ -855,10 +855,10 @@ def obj(parent, model, line, itr, oidh, octr):
     """
     octr += 1
     # Identify the object type
-    m = re.search('object ([^:{\s]+)[:{\s]', line, re.IGNORECASE)
+    m = re.search(r'object ([^:{\s]+)[:{\s]', line, re.IGNORECASE)
     _type = m.group(1)
     # If the object has an id number, store it
-    n = re.search('object ([^:]+:[^{\s]+)', line, re.IGNORECASE)
+    n = re.search(r'object ([^:]+:[^{\s]+)', line, re.IGNORECASE)
     if n:
         oid = n.group(1)
     line = next(itr)
@@ -869,7 +869,7 @@ def obj(parent, model, line, itr, oidh, octr):
     if parent is not None:
         params['parent'] = parent
     while not oend:
-        m = re.match('\s*(\S+) ([^;{]+)[;{]', line)
+        m = re.match(r'\s*(\S+) ([^;{]+)[;{]', line)
         if m:
             # found a parameter
             param = m.group(1)
@@ -2013,14 +2013,14 @@ def write_houses(basenode, op, vnom):
                     print('  };', file=op)
                     print('}', file=op)
         if np.random.uniform(0, 1) <= storage_percentage:
-            battery_capacity = get_dist(batt_metadata['capacity(kWh)']['mean'],
-                                        batt_metadata['capacity(kWh)']['deviation_range_per']) * 1000
-            max_charge_rate = get_dist(batt_metadata['rated_charging_power(kW)']['mean'],
-                                       batt_metadata['rated_charging_power(kW)']['deviation_range_per']) * 1000
+            battery_capacity = get_dist(batt_metadata['capacity']['mean'],
+                                        batt_metadata['capacity']['deviation_range_per']) * 1000
+            max_charge_rate = get_dist(batt_metadata['rated_charging_power']['mean'],
+                                       batt_metadata['rated_charging_power']['deviation_range_per']) * 1000
             max_discharge_rate = max_charge_rate
-            inverter_efficiency = batt_metadata['inv_efficiency(per)'] / 100
-            charging_loss = get_dist(batt_metadata['rated_charging_loss(per)']['mean'],
-                                     batt_metadata['rated_charging_loss(per)']['deviation_range_per']) / 100
+            inverter_efficiency = batt_metadata['inv_efficiency'] / 100
+            charging_loss = get_dist(batt_metadata['rated_charging_loss']['mean'],
+                                     batt_metadata['rated_charging_loss']['deviation_range_per']) / 100
             discharging_loss = charging_loss
             round_trip_efficiency = charging_loss * discharging_loss
             rated_power = max(max_charge_rate, max_discharge_rate)
@@ -2071,15 +2071,15 @@ def write_houses(basenode, op, vnom):
         if np.random.uniform(0, 1) <= ev_percentage:
             # first lets select an ev model:
             ev_name = selectEVmodel(ev_metadata['sale_probability'], np.random.uniform(0, 1))
-            ev_range = ev_metadata['Range (miles)'][ev_name]
-            ev_mileage = ev_metadata['Miles per kWh'][ev_name]
-            ev_charge_eff = ev_metadata['charging efficiency']
+            ev_range = ev_metadata['Range_miles'][ev_name]
+            ev_mileage = ev_metadata['Miles_per_kWh'][ev_name]
+            ev_charge_eff = ev_metadata['charging_efficiency']
             # check if level 1 charger is used or level 2
             if np.random.uniform(0, 1) <= ev_metadata['Level_1_usage']:
-                ev_max_charge = ev_metadata['Level_1 max power (kW)']
+                ev_max_charge = ev_metadata['Level_1_max_power_kW']
                 volt_conf = 'IS110'  # for level 1 charger, 110 V is good
             else:
-                ev_max_charge = ev_metadata['Level_2 max power (kW)'][ev_name]
+                ev_max_charge = ev_metadata['Level_2_max_power_kW'][ev_name]
                 volt_conf = 'IS220'  # for level 2 charger, 220 V is must
 
             # now, let's map a random driving schedule with this vehicle ensuring daily miles
@@ -2516,7 +2516,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
         lines = []
         line = ip.readline()
         while line != '':
-            while re.match('\s*//', line) or re.match('\s+$', line):
+            while re.match(r'\s*//', line) or re.match(r'\s+$', line):
                 # skip comments and white space
                 line = ip.readline()
             lines.append(line.rstrip())
@@ -2614,7 +2614,8 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
                             seg_loads[ename][0] += kva
                             seg_loads[ename][1] = union_of_phases(seg_loads[ename][1], data['ndata']['phases'])
                         else:
-                            print(f"Unknown edge class: {eclass}")
+                            # print(f"Unknown edge class: {eclass}")
+                            pass
 
         print('  swing node', swing_node, ', with', len(list(sub_graphs)), 'subgraph(s) and',
               '{:.2f}'.format(total_kva), 'total kva')

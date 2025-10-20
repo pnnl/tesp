@@ -682,10 +682,10 @@ def obj(parent, model, line, itr, oidh, octr):
     """
     octr += 1
     # Identify the object type
-    m = re.search('object ([^:{\s]+)[:{\s]', line, re.IGNORECASE)
+    m = re.search(r'object ([^:{\s]+)[:{\s]', line, re.IGNORECASE)
     _type = m.group(1)
     # If the object has an id number, store it
-    n = re.search('object ([^:]+:[^{\s]+)', line, re.IGNORECASE)
+    n = re.search(r'object ([^:]+:[^{\s]+)', line, re.IGNORECASE)
     if n:
         oid = n.group(1)
     line = next(itr)
@@ -696,7 +696,7 @@ def obj(parent, model, line, itr, oidh, octr):
     if parent is not None:
         params['parent'] = parent
     while not oend:
-        m = re.match('\s*(\S+) ([^;{]+)[;{]', line)
+        m = re.match(r'\s*(\S+) ([^;{]+)[;{]', line)
         if m:
             # found a parameter
             param = m.group(1)
@@ -1694,7 +1694,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
         lines = []
         line = ip.readline()
         while line != '':
-            while re.match('\s*//', line) or re.match('\s+$', line):
+            while re.match(r'\s*//', line) or re.match(r'\s+$', line):
                 # skip comments and white space
                 line = ip.readline()
             lines.append(line.rstrip())

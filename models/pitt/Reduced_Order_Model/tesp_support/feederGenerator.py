@@ -752,7 +752,7 @@ def obj(parent, model, line, itr, oidh, octr):
     if parent is not None:
         params['parent'] = parent
     while not oend:
-        m = re.match('\s*(\S+) ([^;{]+)[;{]', line)
+        m = re.match(r'\s*(\S+) ([^;{]+)[;{]', line)
         if m:
             # found a parameter
             param = m.group(1)
@@ -850,7 +850,7 @@ def write_link_class(model, h, t, seg_loads, op):
 triplex_conductors = [['triplex_4/0AA', 0.48, 0.0158, 1000.0]]
 
 # name, hot, neutral, thickness, diameter
-triplex_configurations = [['tpx_config', 'triplex_4/0AA', 'triplex_4/0_aa', 0.08, 0.522]]
+triplex_configurations = [['tpx_config', 'triplex_4/0AA', 'triplex_4/0AA', 0.08, 0.522]]
 
 
 def write_local_triplex_configurations(op):
@@ -2020,7 +2020,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
         lines = []
         line = ip.readline()
         while line is not '':
-            while re.match('\s*//', line) or re.match('\s+$', line):
+            while re.match(r'\s*//', line) or re.match(r'\s+$', line):
                 # skip comments and white space
                 line = ip.readline()
             lines.append(line.rstrip())

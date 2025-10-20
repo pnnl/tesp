@@ -82,24 +82,28 @@ def select_setpt_night(wakeup_set, daylight_set, mode):
         return 40
     else:
         night_set = wakeup_set
-        # clm = hdr.index('HOME AND GONE PAIR  ' + str(int(wakeup_set_cool)) + '&' + str(int(daylight_set_cool)) + '-%')
-        clm = [i for i in range(len(hdr)) if str(int(wakeup_set)) + '&' + str(int(daylight_set)) in hdr[i]]
-        prob2 = np.random.uniform(0, 1)
-        total = 0
-        for row in range(len(temp)):
-            total += temp[row][clm]
-            if total >= prob2 * 100:
-                night_set = temp[row][0]
-                break
-        # Need catch for cases where probability is very large (0.99999) and hvac_setpt probabilities add to less than unity
-        if total < prob2 * 100:
+        try:
+            clm = hdr.index('HOME AND GONE PAIR ' + str(int(wakeup_set)) + '&' + str(int(daylight_set)))
+            prob2 = np.random.uniform(0, 1)
+            total = 0
+            for row in range(len(temp)):
+                total += temp[row][clm]
+                if total >= prob2 * 100:
+                    night_set = temp[row][0]
+                    break
+            # Need catch for cases where probability is very large (0.99999) and hvac_setpt probabilities add to less than unity
+            if total < prob2 * 100:
+                night_set = wakeup_set
+            # Do not allow cooling setpt at unoccupied home less than at night
+            if mode == 'cool' and daylight_set < night_set:
+                night_set = wakeup_set
+            # Do not allow heating setpt at unoccupied home more than at night
+            if mode == 'heat' and daylight_set > night_set:
+                night_set = wakeup_set
+        except:
+            print("WARNING select setpt not found:", wakeup_set, daylight_set, mode, ", setting to ", wakeup_set)
             night_set = wakeup_set
-        # Do not allow cooling setpt at unoccupied home less than at night
-        if mode == 'cool' and daylight_set < night_set:
-            night_set = wakeup_set
-        # Do not allow heating setpt at unoccupied home more than at night
-        if mode == 'heat' and daylight_set > night_set:
-            night_set = wakeup_set
+            pass
         return night_set
 
 
@@ -362,7 +366,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                         # when home is occupied during evening
                         evening_set_cool = wakeup_set_cool
                         # during night
-                        night_set_cool = select_setpt_night(wakeup_set_cool, daylight_set_cool, 'cool')
+                        night_set_cool = select_setpt_night(wakeup_set_cool, daylight_set_cool, 'cool', )
                         # heating - CBEC's data individual behavior
                         wakeup_set_heat = select_setpt_occ(prob, 'heat')
                         daylight_set_heat = select_setpt_unocc(wakeup_set_heat, 'heat')

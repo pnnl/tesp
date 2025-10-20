@@ -306,7 +306,12 @@ def inner_substation_loop(configfile, metrics_root, with_market):
         gld_row = config_glm['inverters'][key]
         battery_agent_objs[key] = BatteryDSOT(row, gld_row, key, 11, current_time, solver)
         # map topics
-        topic_map[key + '#SOC'] = [battery_agent_objs[key].set_SOC]
+        # key is the name of inverter resource,
+        # but we need battery name, thus the replacement
+        if 'ibat' in key:
+            topic_map[key.replace('ibat', 'bat') + '#SOC'] = [battery_agent_objs[key].set_SOC]
+        elif 'batinv' in key:
+            topic_map[key.replace('batinv', 'bat') + '#SOC'] = [battery_agent_objs[key].set_SOC]
     log.info('instantiated %s battery control agents' % (len(battery_keys)))
 
     # instantiate the ev controller objects and map their message inputs

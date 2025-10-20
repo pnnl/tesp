@@ -274,20 +274,20 @@ def ProcessGLM(fileroot):
         print('  ' + key + '#V1:', file=yp)
         print('    topic: gridlabdSimulator1/' + meterName + '/measured_voltage_1', file=yp)
         print('    default: 120', file=yp)
-        print('  ' + key + '#Tair:', file=yp)
+        print('  ' + key + '/Tair:', file=yp)
         print('    topic: gridlabdSimulator1/' + houseName + '/air_temperature', file=yp)
         print('    default: 80', file=yp)
-        print('  ' + key + '#Load:', file=yp)
+        print('  ' + key + '/Load:', file=yp)
         print('    topic: gridlabdSimulator1/' + houseName + '/hvac_load', file=yp)
         print('    default: 0', file=yp)
-        print('  ' + key + '#On:', file=yp)
+        print('  ' + key + '/On:', file=yp)
         print('    topic: gridlabdSimulator1/' + houseName + '/power_state', file=yp)
         print('    default: 0', file=yp)
     yp.close()
 
     op = open(fileroot + '_gridlabd.txt', 'w')
     print('publish "commit:network_node.distribution_load -> distribution_load; 1000";', file=op)
-    print('subscribe "precommit:' + network_node + '.positive_sequence_voltage <- pypower/three_phase_voltage_B7";',
+    print('subscribe "precommit:network_node.positive_sequence_voltage <- pypower/three_phase_voltage_B7";',
           file=op)
     if len(Eplus_Bus) > 0:  # hard-wired names for a single building
         print('subscribe "precommit:Eplus_load.constant_power_A <- eplus_json/power_A";', file=op)

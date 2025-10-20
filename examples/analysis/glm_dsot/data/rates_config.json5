@@ -1,16 +1,16 @@
 {
-    "ocaseName": "gld_feeder_test",
-    "caseName": "gld_feeder_test_f",
+    "caseName": "gld_feeder_test",
+    "ocaseName": "gld_feeder_test_f",
     "StartTime": "2016-08-05 00:00:00", // simulation start time, YYYY-MM-DD HH:MM:SS
     "EndTime": "2016-08-12 00:00:00", // simulation end time, YYYY-MM-DD HH:MM:SS
     "nodes": 8, // 8 or 200 bus case
-    "scenario": "hi", // Renewables scenario, High: "hi", Moderate: ""
+    "scenario": "hi", // Renewables scenario, High: "hi", Moderate: "" (no solar)
     "renewables": [
         "wind",
         "solar"
     ],
-    'omessager': "HELICS", // "HELICS" or "FNCS"
-    'messager': "FNCS", // "HELICS" or "FNCS"
+    'messenger': "HELICS", // "HELICS" or "FNCS"
+    'omessenger': "FNCS", // "HELICS" or "FNCS"
     "RECS": true, // If using RECS population data
     "time_zone": "CST+6CDT",
     "case_type": {    
@@ -72,13 +72,13 @@
     "gld_debug": 0,
     "DSOT_case": true,
     "outputPath": "", // Default: blank, ~/grid/tesp/examples/dsot/output
-    "make_plot": "False",
+    "make_plot": false,
     "archivePath": "/mnt/simdata/done",
     "source_directory": "",
     "version": "2",
     "bulkpower_bus": 1,
     "ames": true, // false = pypower running opf
-    "solver": "cbc", // ipopt
+    "solver": "ipopt", // ipopt
     "numCore": 12,
     "method": "FBS",
     "other_method": "NR",
@@ -139,10 +139,10 @@
     "copperplate_feeder_name": "commercial_copperplate_feeder",
     "copperplate_feeder_file": "../data/feeders/commercial_copperplate_feeder.glm",
     "backbone_files": {
-    "taxonomy": "", // taxonomy feeder file
-    "seed": 0, // random seed
-    "support_path": "../../../dsot/data/schedules/",
-    "weather_path": "../../../dsot/data/weather/"
+        "taxonomy": "", // taxonomy feeder file
+        "seed": 0, // random seed
+        "support_path": "../../../dsot/data/schedules/",
+        "weather_path": "../../../dsot/data/weather/"
     },
     "metrics": [
         "house",

@@ -300,7 +300,11 @@ class Entity:
         if self.find_item(item):
             _item = self.__getattribute__(item)
             if type(_item) == Item:
-                del self.instances[object_name][item]
+                try:
+                    del self.instances[object_name][item]
+                except:
+                    print(f"Can't find {object_name}:{item} for deletion")
+                    pass
 
     def toList(self):
         """ List the Item(s) in the Entity

@@ -625,7 +625,7 @@ class GLMModel:
     def glm_schedule(self, line, itr):
         # This only grab the lines, real parsing of the schedule
 
-        m_sched = re.search('schedule\W+(\w+)\s*([;{])', line, re.IGNORECASE)
+        m_sched = re.search(r'schedule\W+(\w+)\s*([;{])', line, re.IGNORECASE)
         if m_sched:
             # schedule found
             self.schedule_types[m_sched.group(1)] = []
@@ -672,13 +672,13 @@ class GLMModel:
 
         # Identify the object type
         if line.find(";") > 0:
-            m = re.search(mod + ' ([^;\s]+)[;\s]', line, re.IGNORECASE)
+            m = re.search(mod + r' ([^;\s]+)[;\s]', line, re.IGNORECASE)
             _type = m.group(1)
             self.set_module_instance(_type, params)
             return _type
 
         if line.find("{") > 0:
-            m = re.search(mod + ' ([^{\s]+)[{\s]', line, re.IGNORECASE)
+            m = re.search(mod + r' ([^{\s]+)[{\s]', line, re.IGNORECASE)
             _type = m.group(1)
 
         pos = line.find("//")
@@ -701,7 +701,7 @@ class GLMModel:
                 inline_comments[tokens[0]] = substring
 
             # find a parameter
-            m = re.match('\s*(\S+) ([^;]+);', line)
+            m = re.match(r'\s*(\S+) ([^;]+);', line)
             if m:
                 params[m.group(1)] = m.group(2)
                 if len(comments) > 0:
@@ -736,10 +736,10 @@ class GLMModel:
         """
         # Identify the object type
         oid = ""
-        m = re.search('object ([^:{\s]+)[:{\s]', line, re.IGNORECASE)
+        m = re.search(r'object ([^:{\s]+)[:{\s]', line, re.IGNORECASE)
         _type = m.group(1)
         # If the object has an id number, store it
-        n = re.search('object ([^:]+:[^{\s]+)', line, re.IGNORECASE)
+        n = re.search(r'object ([^:]+:[^{\s]+)', line, re.IGNORECASE)
         if n:
             oid = n.group(1)
         # else:
@@ -779,7 +779,7 @@ class GLMModel:
                     inline_comments[tokens[0]] = substring
 
             intobj = 0
-            m = re.match('\s*(\S+) ([^;{]+)[;{]', line)
+            m = re.match(r'\s*(\S+) ([^;{]+)[;{]', line)
             if m:
                 param = m.group(1)
                 val = m.group(2)
@@ -863,7 +863,7 @@ class GLMModel:
             while line != '':
                 line = line.replace("\t", " ")
                 # skip white space lines
-                while re.match('\s+$', line):
+                while re.match(r'\s+$', line):
                     line = ip.readline()
                 line = line.strip()
                 if len(line) > 0:
@@ -1075,11 +1075,12 @@ class GLMModel:
         plt.show()
 
     def set_clock(self, starttime: str, stoptime: str, timezone: str):
-        clock = self.module_entities['clock'].instances['clock']
+        gld_type = name = 'clock'
+        clock = self.module_entities[gld_type].instances[name]
         clock['starttime'] = "'" + starttime + "'"
         clock['stoptime'] = "'" + stoptime + "'"
         clock['timezone'] = timezone
-        del_module_attr('clock','timestamp')
+        self.module_entities[gld_type].del_item(name, 'timestamp')
 
     def add_include(self, file: str):
         self.include_lines.append(f"#include \"{file}\"")

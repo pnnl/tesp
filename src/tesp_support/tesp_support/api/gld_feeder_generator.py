@@ -166,14 +166,14 @@ class Config:
             for key in self.defines:
                 self.glm.model.add_define(key, self.defines[key])
 
-        if hasattr(self, 'messager'):
+        if hasattr(self, 'messenger'):
             num = self.DSO.replace('DSO_', '')
-            if self.messager == 'HELICS':
+            if self.messenger == 'HELICS':
                 params = {
                     "configure": f'Substation_{num}.json'
                 }
                 self.mdl.helics_msg.add(f'gldSubstation_{num}', params)
-            if self.messager == 'FNCS':
+            if self.messenger == 'FNCS':
                 params = {
                     "parent": "network_node",
                     "configure": f'Substation_{num}_gridlabd.txt',
@@ -246,8 +246,8 @@ class Config:
         # generate the total population of commercial buildings by type and size
         # TODO: These are designated in the config file, not calculated. Keep?
         num_comm_customers = round(self.number_of_gld_homes *
-                                self.RCI_customer_count_mix["commercial"] /
-                                self.RCI_customer_count_mix["residential"])
+                                   self.RCI_customer_count_mix["commercial"] /
+                                   self.RCI_customer_count_mix["residential"])
         num_comm_bldgs = num_comm_customers / self.comm_customers_per_bldg
         global comm_bldgs_pop
         if self.comm_count == 1:
@@ -437,8 +437,7 @@ class Residential_Build:
                   "meter_power_consumption": "1+7j",
                   "nominal_voltage": str(v_nom),
                   "voltage_1": vstart,
-                  "voltage_2": vstart,
-                  }
+                  "voltage_2": vstart}
         # Assume user-defined tariff from config. If default, use None
         self.glm.add_tariff(params, self.config)
         self.mdl.triplex_meter.add(mtrname, params)
@@ -671,8 +670,7 @@ class Residential_Build:
                       "meter_power_consumption": "1+7j",
                       "nominal_voltage": str(v_nom),
                       "voltage_1": vstart,
-                      "voltage_2": vstart,
-                      }
+                      "voltage_2": vstart}
             # Assume user-defined tariff from config. If default, use None
             self.glm.add_tariff(params, self.config)
             self.mdl.triplex_meter.add(mtrname1, params)
@@ -1273,7 +1271,7 @@ class Commercial_Build:
                 }
         
         if comm_type == 'ZIPload':
-            phsva = 1000.0 * kva / nphs
+            phsva = kva / nphs
             name = '{:s}'.format(key + '_streetlights')
             params = {"parent": '{:s}'.format(mtr),
                       "groupid": "STREETLIGHTS",
@@ -1317,7 +1315,7 @@ class Commercial_Build:
                 bldg['Rfloor'] = 46.0
                 bldg['Rdoors'] = 3.0
                 bldg['int_gains'] = 3.24  # W/sf
-                bldg['base_schedule'] = 'office'
+                bldg['base_schedule'] = 'retail'
                 floor_area_choose = 40000. * (0.5 * rng.random() + 0.5)
                 for floor in range(1, 4):
                     bldg['skew_value'] = self.glm.randomize_commercial_skew()
@@ -1381,7 +1379,7 @@ class Commercial_Build:
                 bldg['Rfloor'] = 46.
                 bldg['Rdoors'] = 3.
                 bldg['int_gains'] = 3.6  # W/sf
-                bldg['base_schedule'] = 'bigbox'
+                bldg['base_schedule'] = 'retail'
                 bldg['skew_value'] = self.glm.randomize_commercial_skew()
                 floor_area_choose = 20000. * (0.5 + 1. * rng.random())
                 floor_area = floor_area_choose / 6.
@@ -2186,7 +2184,7 @@ class Feeder:
             self.glm.write_model(config.outputPath)
 
         # Plot the model using the networkx package:
-        if self.config.make_plot == "True":
+        if self.config.make_plot:
             if hasattr(config, 'out_file_glm'):
                 i_glm, success = self.glm.read_model(os.path.join(self.config.data_path, self.config.out_file_glm))
             else:
@@ -2364,8 +2362,7 @@ class Feeder:
 
         Args:
             gld_class (str): the GridLAB-D class name to scan
-            seg_loads (dict): dictionary of downstream load (kva) served by
-              each GridLAB-D link
+            seg_loads (dict): dictionary of downstream load (kva) served by each GridLAB-D link
             avg_house (float): the average house load in kva
             rgn (int): the region number, 1..5
 

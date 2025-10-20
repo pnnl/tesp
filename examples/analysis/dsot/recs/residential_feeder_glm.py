@@ -915,7 +915,7 @@ def obj(parent, model, line, itr, oidh, octr):
     if parent is not None:
         params['parent'] = parent
     while not oend:
-        m = re.match('\s*(\S+) ([^;{]+)[;{]', line)
+        m = re.match(r'\s*(\S+) ([^;{]+)[;{]', line)
         if m:
             # found a parameter
             param = m.group(1)
@@ -2563,7 +2563,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
         lines = []
         line = ip.readline()
         while line != '':
-            while re.match('\s*//', line) or re.match('\s+$', line):
+            while re.match(r'\s*//', line) or re.match(r'\s+$', line):
                 # skip comments and white space
                 line = ip.readline()
             lines.append(line.rstrip())

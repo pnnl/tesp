@@ -3,7 +3,7 @@
 """ Sets up a case folder of required files to run DSO+T use-case by populating
  a test feeder using gld_feeder_generator.py. 
  
- This prepare case updates the original prepare_case_dsot.py by:
+ This 'prepare case' updates the original prepare_case_dsot.py by:
     - Utilizing the new gld_feeder_generator.py (feeder generator) that combines
       the functionality of the separate residential and commercial feeder gens. 
     - Updates the required configuration files, separating the monolithic 
@@ -65,7 +65,7 @@ import tesp_support.api.gld_feeder_generator as gld_feeder
 
 
 # Configuration settings for the experimental case
-def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
+def prepare_case(case, pv=None, bt=None, fl=None, ev=None):
     # We need to load in the case metadata (*config.json5)
     config_file = str('../data/' + case + '.json5')
     with open(config_file, 'r', encoding='utf-8') as json5_file:
@@ -107,12 +107,9 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
 
     # Define scenario and import required config files
     nodes = str(config["nodes"])
-    if config["scenario"] == "":
-        scenario = ""
-    elif config["scenario"] == "hi":
+    scenario = ""
+    if config["scenario"] == "hi":
         scenario = "_hi"
-
-    config["make_plot"] = "False"
 
     system_config_file = os.path.join("../data/", config['system_file_' + nodes + scenario])
     if config["RECS"]:
@@ -213,17 +210,17 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
     dt = config["dt"]
     sys_config["renewables"] = config["renewables"]
 
-    if config["messager"] == 'HELICS':
+    if config["messenger"] == 'HELICS':
         helpers.write_players_msg(caseName, sys_config, dt)
         tso = HelicsMsg("pypower", dt)
 
-    elif config["messager"] == 'FNCS':
+    elif config["messenger"] == 'FNCS':
         # write player yaml(s) for load and generator players
         players = sys_config["players"]
         for idx in range(len(players)):
             player = sys_config[players[idx]]
-            yamlfile = caseName + '/' + player[0] + '_player.yaml'
-            yp = open(yamlfile, 'w')
+            yaml_file = caseName + '/' + player[0] + '_player.yaml'
+            yp = open(yaml_file, 'w')
             print('name: ' + player[0] + 'player', file=yp)
             print('time_delta: ' + str(dt) + 's', file=yp)
             print('broker: tcp://localhost:' + str(config["port"]), file=yp)
@@ -232,8 +229,8 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
             yp.close()
 
         # write tso yaml beginning
-        yamlfile = caseName + '/tso.yaml'
-        yp = open(yamlfile, 'w')
+        yaml_file = caseName + '/tso.yaml'
+        yp = open(yaml_file, 'w')
         print('name: pypower', file=yp)
         print('time_delta: ' + str(dt) + 's', file=yp)
         print('broker: tcp://localhost:' + str(config["port"]), file=yp)
@@ -247,16 +244,16 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
                 for plyr in ["genMn", "genForecastHr"]:
                     player = sys_config[plyr]
                     if player[6] and not player[8]:
-                        if config["messager"] == 'HELICS':
+                        if config["messenger"] == 'HELICS':
                             tso.subs_n(player[0] + "player/" + player[0] + "_power_" + idx, "string")
-                        elif config["messager"] == 'FNCS':
+                        elif config["messenger"] == 'FNCS':
                             print('  ' + player[0].upper() + '_POWER_' + idx + ':', file=yp)
                             print('    topic: ' + player[0] + 'player/' + player[0] + '_power_' + idx, file=yp)
                             print('    default: 0', file=yp)
                     if player[7] and not player[8]:
-                        if config["messager"] == 'HELICS':
+                        if config["messenger"] == 'HELICS':
                             tso.subs_n(player[0] + "player/" + player[0] + "_pwr_hist_" + idx, "string")
-                        elif config["messager"] == 'FNCS':
+                        elif config["messenger"] == 'FNCS':
                             print('  ' + player[0].upper() + '_PWR_HIST_' + idx + ':', file=yp)
                             print('    topic: ' + player[0] + 'player/' + player[0] + '_power_history_' + idx, file=yp)
                             print('    default: 0', file=yp)
@@ -273,7 +270,7 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
         sub_key = dso_val['substation']
         bus = str(dso_val['bus_number'])
 
-        if config["messager"] == 'HELICS':
+        if config["messenger"] == 'HELICS':
             # Write the tso published connections for this substation
             tso.pubs_n(False, "cleared_q_rt_" + bus, "string")
             tso.pubs_n(False, "cleared_q_da_" + bus, "string")
@@ -285,7 +282,7 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
             tso.subs_n("dso" + sub_key + "/rt_bid_" + bus, "string")
             tso.subs_n("dso" + sub_key + "/da_bid_" + bus, "string")
 
-        elif config["messager"] == 'FNCS':
+        elif config["messenger"] == 'FNCS':
             # Write the tso published connections for this substation
             print('  RT_BID_' + bus + ':', file=yp)
             print('    topic: ' + sub_key + '/rt_bid', file=yp)
@@ -298,16 +295,16 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
             # Running reference load, using a player for the load reference for comparison
             player = sys_config['refLoadMn']
             if player[6] and player[8]:
-                if config["messager"] == 'HELICS':
+                if config["messenger"] == 'HELICS':
                     tso.subs_n(player[0] + "player/" + player[0] + "_load_" + bus, "string")
-                elif config["messager"] == 'FNCS':
+                elif config["messenger"] == 'FNCS':
                     print('  ' + player[0].upper() + '_LOAD_' + bus + ':', file=yp)
                     print('    topic: ' + player[0] + 'player/' + player[0] + '_load_' + bus, file=yp)
                     print('    default: 0', file=yp)
             if player[7] and player[8]:
-                if config["messager"] == 'HELICS':
+                if config["messenger"] == 'HELICS':
                     tso.subs_n(player[0] + "player/" + player[0] + "_ld_hist_" + bus, "string")
-                elif config["messager"] == 'FNCS':
+                elif config["messenger"] == 'FNCS':
                     print('  ' + player[0].upper() + '_LD_HIST_' + bus + ':', file=yp)
                     print('    topic: ' + player[0] + 'player/' + player[0] + '_load_history_' + bus, file=yp)
                     print('    default: 0', file=yp)
@@ -315,16 +312,16 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
                 # Running reference load res and ind, (no gridlabd instance, using a player for the load)
                 player = sys_config['gldLoad']
                 if player[6] and player[8]:
-                    if config["messager"] == 'HELICS':
+                    if config["messenger"] == 'HELICS':
                         tso.subs_n(player[0] + "player/" + player[0] + "_load_" + bus, "string")
-                    elif config["messager"] == 'FNCS':
+                    elif config["messenger"] == 'FNCS':
                         print('  ' + player[0].upper() + '_LOAD_' + bus + ':', file=yp)
                         print('    topic: ' + player[0] + 'player/' + player[0] + '_load_' + bus, file=yp)
                         print('    default: 0', file=yp)
                 if player[7] and player[8]:
-                    if config["messager"] == 'HELICS':
+                    if config["messenger"] == 'HELICS':
                         tso.subs_n(player[0] + "player/" + player[0] + "_ld_hist_" + bus, "string")
-                    elif config["messager"] == 'FNCS':
+                    elif config["messenger"] == 'FNCS':
                         print('  ' + player[0].upper() + '_LD_HIST_' + bus + ':', file=yp)
                         print('    topic: ' + player[0] + 'player/' + player[0] + '_load_history_' + bus, file=yp)
                         print('    default: 0', file=yp)
@@ -415,7 +412,7 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
         # Copy the case configs for each DSO
         def convert_sets_to_lists(obj):
             if isinstance(obj, dict):
-                return {k: convert_sets_to_lists(v) for k, v in obj.items()}
+                return {_k: convert_sets_to_lists(_v) for _k, _v in obj.items()}
             elif isinstance(obj, list):
                 return [convert_sets_to_lists(element) for element in obj]
             elif isinstance(obj, set):
@@ -427,7 +424,7 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
         with open(caseName + '/case_config_' + str(dso_val['bus_number']) + '.json', 'w') as outfile:
             json.dump(case_config_dump, outfile, ensure_ascii=False, indent=2)
 
-        if config["messager"] == 'HELICS':
+        if config["messenger"] == 'HELICS':
             HelicsMsg.gld = HelicsMsg("gld" + config["substation"], 30)
             HelicsMsg.dso = HelicsMsg("dso" + config["substation"], dt)
             HelicsMsg.dso.config("uninterruptible", True)
@@ -511,7 +508,7 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
             os.remove(os.path.join("../data/", output_file))
            
             # Write the glm_dictionary for each substation
-            gd.glm_dict(caseName, feed_key)        
+            gd.glm_diction(caseName, feed_key)
             shutil.move(caseName + '/' + feed_key + '/' + feed_key + '_glm_dict.json',
                         caseName + '/' + dso_key + '/' + feed_key + '_glm_dict.json')
 
@@ -549,7 +546,7 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
                 gld_feeder.Feeder(config_dump, "copp")
                 os.remove(os.path.join("../data/", output_file))
 
-                gd.glm_dict(caseName, feed_key)   
+                gd.glm_diction(caseName, feed_key)
                 shutil.move(caseName + '/' + feed_key + '/' + feed_key + '_glm_dict.json',
                             caseName + '/' + dso_key + '/' + feed_key + '_glm_dict.json')
 
@@ -569,9 +566,9 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
         cm.glm_merge(os.path.abspath(caseName + '/' + sub_key + '/' + sub_key + '.glm'), list(dso_val['feeders'].keys()), 20)
 
         print("\n=== MERGING/WRITING THE SUBSTATION(GRIDLABD) MESSAGE FILE =====")
-        if config["messager"] == 'HELICS':
+        if config["messenger"] == 'HELICS':
             HelicsMsg.gld.write_file(os.path.abspath(caseName + '/' + sub_key + '/' + sub_key + '.json'))
-        elif config["messager"] == 'FNCS':
+        elif config["messenger"] == 'FNCS':
             cm.merge_fncs_config(os.path.abspath(caseName + '/' + sub_key + '/' + sub_key + '_gridlabd.txt'), list(dso_val['feeders'].keys()))
 
         print("\n=== MERGING/WRITING THE FEEDERS GLM DICTIONARIES =====")
@@ -585,9 +582,9 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
             agent_dict_list[dso_key] = os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '_agent_dict.json')
 
         print("\n=== MERGING/WRITING THE DSO MESSAGE FILE =====")
-        if config["messager"] == 'HELICS':
+        if config["messenger"] == 'HELICS':
             HelicsMsg.dso.write_file(os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '.json'))
-        elif config["messager"] == 'FNCS':
+        elif config["messenger"] == 'FNCS':
             cm.merge_substation_yaml(os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '.yaml'), list(dso_val['feeders'].keys()))
 
         # Cleanup after feeders had been merged
@@ -602,14 +599,14 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
         [os.remove(os.path.join(os.path.abspath(caseName + '/' + dso_key), fileName)) for fileName in filesToDelete]
 
         # Create the launch, kill and clean scripts for this case
-        if config["messager"] == 'HELICS':
+        if config["messenger"] == 'HELICS':
             helpers.write_dsot_management_script(master_file="generate_case_config",
                                                 case_path=caseName,
                                                 config=config,
                                                 system_config=sys_config,
                                                 substation_config=dso_config,
                                                 weather_config=weather_config)
-        elif config["messager"] == 'FNCS':
+        elif config["messenger"] == 'FNCS':
             helpers.write_dsot_management_script_f(master_file="generate_case_config",
                                     case_path=caseName,
                                     config=config,
@@ -617,16 +614,10 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
                                     substation_config=dso_config,
                                     weather_config=weather_config)
         
-        if config["messager"] == 'HELICS':
-            # os.remove(output_file)
-            tso.write_file(caseName + '/tso_h.json')
-        else:
-            pass
-
-        # if config["messager"] == 'FNCS':
-        #     yp.close()
-        # else:
-        #     pass
+    if config["messenger"] == 'HELICS':
+        tso.write_file(caseName + '/tso_h.json')
+    elif config["messenger"] == 'FNCS':
+        yp.close()
 
     # --------------------------------------------------------------------------
     # Provide user with relevant summary statistics to verify case preparation.
@@ -726,16 +717,13 @@ def prepare_case(node, case, pv=None, bt=None, fl=None, ev=None):
 
 if __name__ == "__main__":
     if len(sys.argv) > 6:
-        prepare_case(int(sys.argv[1]), sys.argv[2], pv=int(sys.argv[3]), bt=int(sys.argv[4]), fl=int(sys.argv[5]), ev=int(sys.argv[6]))
+        prepare_case(sys.argv[1], pv=int(sys.argv[2]), bt=int(sys.argv[3]), fl=int(sys.argv[4]), ev=int(sys.argv[5]))
     else:
-        node = 8
-        # node = 200
-
-        # prepare_case(node, "default_config", pv=0, bt=0, fl=0, ev=0)
-        # prepare_case(node, "rates_config", pv=0, bt=1, fl=0, ev=0)
-        # prepare_case(node, "rates_config", pv=0, bt=0, fl=1, ev=0)
-        # prepare_case(node, "rates_config", pv=1, bt=0, fl=0, ev=0)
-        # prepare_case(node, "rates_config", pv=1, bt=1, fl=0, ev=1)
-        # prepare_case(node, "rates_config", pv=1, bt=0, fl=1, ev=1)
-        # prepare_case(node, "rates_config", pv=0, bt=0, fl=0, ev=0)
-        prepare_case(node, "rates_config", pv=1, bt=1, fl=1, ev=1)
+        # prepare_case("default_config", pv=0, bt=0, fl=0, ev=0)
+        # prepare_case("rates_config", pv=0, bt=1, fl=0, ev=0)
+        # prepare_case("rates_config", pv=0, bt=0, fl=1, ev=0)
+        # prepare_case("rates_config", pv=1, bt=0, fl=0, ev=0)
+        # prepare_case("rates_config", pv=1, bt=1, fl=0, ev=1)
+        # prepare_case("rates_config", pv=1, bt=0, fl=1, ev=1)
+        prepare_case("rates_config", pv=0, bt=0, fl=0, ev=0)
+        #prepare_case("rates_config", pv=1, bt=1, fl=1, ev=1)
