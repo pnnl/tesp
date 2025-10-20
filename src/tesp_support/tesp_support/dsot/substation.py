@@ -1849,7 +1849,10 @@ def inner_substation_loop(metrics_root, with_market):
                 for key, obj in water_heater_agent_objs.items():
                     if obj.participating and obj.bid_accepted(11, current_time):
                         # if Water heater real-time bid is accepted adjust the thermostat setpoint in GridLAB-D
-                        water_heater_name = obj.name.replace("hse", "wh")
+                        if "hse" in obj.name:
+                            water_heater_name = obj.name.replace("hse", "wh")
+                        else:
+                            water_heater_name = obj.name.append("_wh")
                         # print("Water_heater name",water_heater_name)
                         try:
                             publish(water_heater_name + '/lower_tank_setpoint', obj.Setpoint_bottom)

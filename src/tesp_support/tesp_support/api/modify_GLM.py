@@ -417,7 +417,7 @@ class GLMModifier:
         """Writes tariff information to billing meters. Default values are
         defined in default_values.json and can be optionally provided by
         the caller.
-            Power Flow User Guide for details:
+            Power Flow User Guide for config details:
 
             "bill_mode"
             "price"
@@ -431,7 +431,7 @@ class GLMModifier:
             "third_tier_price"
 
         Args:
-            params (dict): Parameters to define the tarriff, see GridLAB-D
+            params (dict): Parameters to define the tariff, see GridLAB-D
             config (dict):
 
         Returns:
@@ -871,7 +871,7 @@ class GLMModifier:
 
         vsrcln = self.defaults.transmissionVoltage / math.sqrt(3.0)
         name = "network_node"
-        params = {"groupid": self.defaults.base_feeder_name,
+        params = {"groupid": self.defaults.base_feeder_name.replace(".glm", ""),
                   "bustype": 'SWING',
                   "nominal_voltage": '{:.2f}'.format(vsrcln),
                   "positive_sequence_voltage": '{:.2f}'.format(vsrcln),
@@ -906,36 +906,22 @@ class GLMModifier:
 def _test1():
     from .data import tesp_test
 
-    # testMod = GLMModifier()
-    # testMod.model.read("/home/d3j331/grid/tesp/data/feeders/R3-12.47-2.glm")
-    # testMod.model.plot_model(node_labels=True)
-
     testMod = GLMModifier()
-    testMod.model.read("/home/d3j331/grid/tesp/examples/analysis/dsot/code/lean_aug_8_f_pv_bt_fl_ev/Substation_1/Substation_1.glm")
-    # testMod.model.read("/home/d3j331/grid/tesp/examples/analysis/dsot/code/lean_aug_8_f_fl/Substation_1/Substation_1.glm")
-    testMod.write_model(tesp_test + "api/dsot1_out.glm")
-    # # testMod.model.plot_model()
-    testMod = GLMModifier()
-    testMod.model.read("/home/d3j331/grid/tesp/examples/analysis/glm_dsot/code/gld_feeder_test_f_pv_bt_fl_ev/Substation_1/Substation_1.glm")
-    # testMod.model.read("/home/d3j331/grid/tesp/examples/analysis/glm_dsot/code/gld_feeder_test_f_fl/Substation_1/Substation_1.glm")
-    testMod.write_model(tesp_test + "api/dsot2_out.glm")
-    # testMod.model.plot_model()
-
-    # testMod.model.read(tesp_test + "api/dsot_in.glm")
-    # testMod.write_model(tesp_test + "api/dsot_out.glm")
+    testMod.model.read(tesp_test + "api/dsot_in.glm")
+    testMod.write_model(tesp_test + "api/dsot_out.glm")
     # Takes some time to draw the layout
     # testMod.model.plot_model()
 
-    # testMod = GLMModifier()
-    # testMod.model.read(tesp_test + "api/testing.glm")
-    # testMod.write_model(tesp_test + "api/testing_out.glm")
-    # testMod.model.plot_model()
-    #
-    # testMod = GLMModifier()
-    # f = "../../../../examples/capabilities/loadshed/loadshed.glm"
-    # testMod.model.read(f)
-    # testMod.write_model(tesp_test + "api/loadshed_out.glm")
-    # testMod.model.plot_model()
+    testMod = GLMModifier()
+    testMod.model.read(tesp_test + "api/testing.glm")
+    testMod.write_model(tesp_test + "api/testing_out.glm")
+    testMod.model.plot_model()
+
+    testMod = GLMModifier()
+    f = "../../../../examples/capabilities/loadshed/loadshed.glm"
+    testMod.model.read(f)
+    testMod.write_model(tesp_test + "api/loadshed_out.glm")
+    testMod.model.plot_model()
 
 
 def _test2():
@@ -980,4 +966,4 @@ def _test2():
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     _test1()
-    # _test2()
+    _test2()

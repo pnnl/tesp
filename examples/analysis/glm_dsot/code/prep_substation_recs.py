@@ -89,6 +89,7 @@ def select_setpt_night(wakeup_set, daylight_set, mode, st, hd, inc_lev):
     else:
         night_set = wakeup_set
         try:
+            # The Home and Gone did not have the pairing
             clm = hdr.index('HOME AND GONE PAIR ' + str(int(wakeup_set)) + '&' + str(int(daylight_set)))
             prob2 = np.random.uniform(0, 1)
             total = 0
@@ -938,7 +939,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
         op = open(gldfileroot + '_gridlabd.txt', 'w')
         if feedercnt == 1:
             print('publish "commit:network_node.distribution_load -> distribution_load; 1000";', file=op)
-            # JH removed as we do not currently have the TSO in the federation
+            # Remove if we do not currently have the TSO in the federation
             print('subscribe "precommit:network_node.positive_sequence_voltage'
                   ' <- pypower/three_phase_voltage_' + bus + '";', file=op)
             if 'climate' in gd:

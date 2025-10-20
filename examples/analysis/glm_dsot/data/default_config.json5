@@ -3,7 +3,7 @@
     "StartTime": "2016-08-05 00:00:00", // simulation start time, YYYY-MM-DD HH:MM:SS
     "EndTime": "2016-08-12 00:00:00", // simulation end time, YYYY-MM-DD HH:MM:SS
     "nodes": 8, // 8 or 200 bus case
-    "scenario": "hi", // Renewables scenario, High: "hi", Moderate: "" (no solar) 
+    "scenario": "hi", // Renewables scenario, High: "hi", Moderate: "" (no solar)
     "renewables": [
         "wind",
         "solar"
@@ -34,7 +34,7 @@
     "curtail": true, // true = curtail renewables when needed, false = no curtailment
     "reserveDown": 0.15, // Reserve down system percent
     "reserveUp": 0.15, // Reserve up system percent
-    "quadratic": true,
+    "quadratic": true, // Must be false if using solver = cbc
     "priceCap": 1000.0,
     "zonalReserves": false,
     "simplifiedFeeders": false,
@@ -60,7 +60,7 @@
     "version": "2",
     "bulkpower_bus": 1,
     "ames": true, // false = pypower running opf
-    "solver": "ipopt", // ipopt
+    "solver": "ipopt", // ipopt, If "quadratic" is false, use solver = cbc
     "numCore": 12,
     "method": "FBS",
     "other_method": "NR",
@@ -90,7 +90,7 @@
     "solar_Q_player_file": "no_file", // solar reactive power data to be injected in gridlabd; if 'no_file' means 0 reactive power
     "solar_agent_forecast_file_8": "8-node_dist_hourly_forecast_power.csv", // 1 hour tape of rooftop ground truth with uncertainty (forecast error) added.  This is what will be read into the PV (unresponsive) agent with a scaling factor
     "solar_agent_forecast_file_200": "200-node_dist_hourly_forecast_power.csv",
-    "data_path": "../data",
+    "data_path": "../../dsot/data/",
     "system_file_8": "8_system_config.json5",
     "system_file_8_hi": "8_hi_system_config.json5",
     "system_file_200": "200_system_config.json5",
@@ -100,8 +100,8 @@
     "population_file_200": "200-metadata-lean.json",
     "population_file_200_hi": "200-hi-metadata-lean.json",
     "population_file_RECS": "8-hi-metadata-recs.json",
-    "weather_data_source_path_8": "../data/8-node data/DAT formatted files/",
-    "weather_data_source_path_200": "../data/200-node data/DAT formatted files/",
+    "weather_data_source_path_8": "/8-node data/DAT formatted files/",
+    "weather_data_source_path_200": "/200-node data/DAT formatted files/",
     "hvac_set_point": "hvac_setpt.json",
     "hvac_RECS_set_point": "hvac_setpt_RECS.json",
     "quadratic_file_8": "8_quadratic_curves.json",

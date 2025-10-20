@@ -1035,6 +1035,7 @@ def tso_psst_loop(casename):
         solver = pst.SOLVER
     if solver == 'cbc':
         ppc['gencost'][:, 4] = 0.0  # can't use quadratic costs with CBC solver
+    log.info(f'solver choice: {solver}')
 
     # these have been aliased from case name .json file
     bus = ppc['bus']

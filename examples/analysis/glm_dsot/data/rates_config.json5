@@ -52,7 +52,7 @@
     "curtail": true, // true = curtail renewables when needed, false = no curtailment
     "reserveDown": 0.15, // Reserve down system percent
     "reserveUp": 0.15, // Reserve up system percent
-    "quadratic": true,
+    "quadratic": true, // Must be false if using solver = cbc
     "priceCap": 1000.0,
     "zonalReserves": false,
     "simplifiedFeeders": false,
@@ -78,7 +78,7 @@
     "version": "2",
     "bulkpower_bus": 1,
     "ames": true, // false = pypower running opf
-    "solver": "ipopt", // ipopt
+    "solver": "ipopt", // ipopt, If "quadratic" is false, use solver = cbc
     "numCore": 12,
     "method": "FBS",
     "other_method": "NR",

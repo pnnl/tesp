@@ -65,7 +65,7 @@ import tesp_support.api.gld_feeder_generator as gld_feeder
 
 
 # Configuration settings for the experimental case
-def prepare_case(case, pv=None, bt=None, fl=None, ev=None):
+def prepare_case(node:int, scenario:str, case:str, pv=None, bt=None, fl=None, ev=None):
     # We need to load in the case metadata (*config.json5)
     config_file = str('../data/' + case + '.json5')
     with open(config_file, 'r', encoding='utf-8') as json5_file:
@@ -519,6 +519,17 @@ def prepare_case(case, pv=None, bt=None, fl=None, ev=None):
                                  feedercnt,
                                  config=config,
                                  hvacSetpt=hvac_setpt)
+
+            # Save the position data for plotting
+            if config["make_plot"]:
+                if feedercnt == 1:
+                    position = gld_feeder.position
+                else:
+                    pos = gld_feeder.position
+                    position.update(pos)
+            else:
+                position = {}
+
             feedercnt += 1
             config["comm_count"] += 1
             print("====== DONE WITH FEEDER {0:s} for {1:s}. ======\n".format(feed_key, dso_key))
@@ -557,13 +568,25 @@ def prepare_case(case, pv=None, bt=None, fl=None, ev=None):
                                      feedercnt,
                                      config=config,
                                      hvacSetpt=hvac_setpt)
+
+                # Save the position data for plotting
+                if config["make_plot"]:
+                    if feedercnt == 1:
+                        position = gld_feeder.position
+                    else:
+                        pos = gld_feeder.position
+                        # Manually scale and translate feeder position data to fit w/ taxonomy
+                        pos = {key: [value[0]*1000, value[1]*1000] for key, value in pos.items()}
+                        position.update(pos)
+                else:
+                    position = {}
                 feedercnt += 1
                 print("=== DONE WITH COPPERPLATE FEEDER {0:s} for {1:s}. ======\n".format(feed_key, dso_key))
 
         # ======================================================================
         print("\n=== MERGING THE FEEDERS UNDER ONE SUBSTATION =====")
         os.makedirs(caseName + "/" + sub_key)
-        cm.glm_merge(os.path.abspath(caseName + '/' + sub_key + '/' + sub_key + '.glm'), list(dso_val['feeders'].keys()), 20)
+        cm.glm_merge(os.path.abspath(caseName + '/' + sub_key + '/' + sub_key + '.glm'), list(dso_val['feeders'].keys()), 20, config["make_plot"], position)
 
         print("\n=== MERGING/WRITING THE SUBSTATION(GRIDLABD) MESSAGE FILE =====")
         if config["messenger"] == 'HELICS':
@@ -634,9 +657,6 @@ def prepare_case(case, pv=None, bt=None, fl=None, ev=None):
             res_df = pd.DataFrame.from_dict(glm_dict['houses'], orient='index')
             res_df = res_df.reset_index()
             res_df['DSO'] = dso_k # add a column for DSO number
-            #com_df = pd.DataFrame.from_dict(glm_dict['houses'], orient='index')
-            #com_df = com_df.reset_index()
-            #com_df['DSO'] = dso_k # add a column for DSO number
             # Add columns to distinguish houses and each DER
             for inc in ['Low', 'Middle', 'Upper', '']:
                 for k, v in {'house':inc, 'battery':'bat', 'solar':'sol', 'ev':'chgr'}.items():
@@ -647,18 +667,8 @@ def prepare_case(case, pv=None, bt=None, fl=None, ev=None):
                                 res_df.loc[res_df['index']==[s for s in children if inc in s][0],k] = 'Yes'
                             else:
                                 res_df.loc[res_df['index']==[s for s in children if inc in s][0],k] = 'No'
-            # for building_type in ['office', 'warehouse_storage', 'big_box', 'strip_mall', 'education', 'food_service', 'food_sales', 'lodging', 'healthcare_inpatient', 'low_occupancy']:
-            #     for k, v in {'house':building_type, 'battery':'bat', 'solar':'sol', 'ev':'ev'}.items():
-            #         for val in glm_dict['billingmeters'].values():
-            #             children = val['children']
-            #             if len([s for s in children if building_type in s]) > 0:
-            #                 if len([s for s in children if v in s]) > 0:
-            #                     com_df.loc[com_df['index']==[s for s in children if building_type in s][0],k] = 'Yes'
-            #                 else:
-            #                     com_df.loc[com_df['index']==[s for s in children if building_type in s][0],k] = 'No'
             # Merge all DSO house parameters into one dataframe
             hse_df = pd.concat([hse_df,res_df],ignore_index=True)
-            #bldg_df = pd.concat([bldg_df,com_df],ignore_index=True)
             bldg_df = hse_df
         # Get HVAC agent data
         for dso_k, f_str in agent_dict_list.items():
@@ -670,7 +680,6 @@ def prepare_case(case, pv=None, bt=None, fl=None, ev=None):
             hvac_agent_df = pd.concat([hvac_agent_df,temp_df2],ignore_index=True)
         # Save for later analysis
         hse_df.to_csv(os.path.abspath(caseName + '/' + 'house_parameters.csv'))
-        #bldg_df.to_csv(os.path.abspath(caseName + '/' + 'bldg_parameters.csv'))
         hvac_agent_df.to_csv(os.path.abspath(caseName + '/' + 'hvac_agents.csv'))
         # Get totals
         low_hses = len(hse_df.loc[(hse_df['income_level']=='Low')])
@@ -725,5 +734,5 @@ if __name__ == "__main__":
         # prepare_case("rates_config", pv=1, bt=0, fl=0, ev=0)
         # prepare_case("rates_config", pv=1, bt=1, fl=0, ev=1)
         # prepare_case("rates_config", pv=1, bt=0, fl=1, ev=1)
-        prepare_case("rates_config", pv=0, bt=0, fl=0, ev=0)
-        #prepare_case("rates_config", pv=1, bt=1, fl=1, ev=1)
+        # prepare_case("rates_config", pv=0, bt=0, fl=0, ev=0)
+        prepare_case("rates_config", pv=1, bt=1, fl=1, ev=1)

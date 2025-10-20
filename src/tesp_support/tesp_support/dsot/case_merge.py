@@ -23,7 +23,7 @@ def merge_glm(target, sources, xfmva):
     Args:
         target (str): the path to the target GLM file, including the name of the file
         sources (list): list of feeder names in the target directory to merge
-        xfmva (int):
+        xfmva (int): transformer MVA
     """
     print('combining', sources, 'glm files into', target)
     workdir = path.split(path.dirname(target))[0]
@@ -115,6 +115,13 @@ def del_names(glm: GLMModifier, glm_type: str, i_glm_obj, find_str: str):
             glm.del_object(glm_type, k)
 
 def del_danglers(glm: GLMModifier, glm_type: str, i_glm_obj):
+    """_summary_
+
+    Args:
+        glm (GLMModifier): _description_
+        glm_type (str): _description_
+        i_glm_obj (_type_): _description_
+    """
     keys = list(i_glm_obj.keys())
     to_dangler = []
     from_dangler = []
@@ -173,7 +180,7 @@ def del_danglers(glm: GLMModifier, glm_type: str, i_glm_obj):
     print(f"'From' dangler objects: {from_dangler}" )
     print(f"'To' and 'From' objects: {to_from_dangler}" )
 
-def glm_merge(target, sources, xfmva):
+def glm_merge(target, sources, xfmva, plot: bool, pos_data: dict):
     """ Combines GridLAB-D input files into "target". The source files must
     already exist. This is an updated version of merge_glm() that utilizes
     GLMModifier and GLMModel to achieve the same goal for feeders generated with
@@ -182,6 +189,9 @@ def glm_merge(target, sources, xfmva):
     Args:
         target (str): the path to the target GLM file, including the name of the file
         sources (list): list of feeder names in the target directory to merge
+        xfmva (int): transformer MVA
+        plot (bool): whether to plot the merged glm
+        pos_data (dict): dictionary of position data for the feeders
     """
     print('combining', sources, 'glm files into', target)
     workdir = path.split(path.dirname(target))[0]
@@ -249,6 +259,18 @@ def glm_merge(target, sources, xfmva):
             # Print the rest of the feeder's glm to the same model file
             print(glm.model.glm_merge(), file=op)
     op.close()
+    # Now re-read the merged .glm and re-write it all in the proper order
+    i_glm, success = glm.read_model(target)
+    import os
+    os.remove(target)
+    glm.write_model(target)
+    if plot:
+        print('Plotting the merged substation model.')
+        head_pos = pos_data[headNode]
+        pos_data['substation_node'] = [head_pos[0] + 8, head_pos[1] + 8]
+        glm.model.plot_model(pos_data)
+    else:
+        pass
 
 def merge_glm_dict(target, sources, xfmva):
     """ Combines GridLAB-D metadata files into "target". The source files must already exist.
@@ -261,7 +283,7 @@ def merge_glm_dict(target, sources, xfmva):
     Args:
         target (str): the path to the target JSON file, including the name of the file
         sources (list): list of feeder names in the target directory to merge
-        xfmva (int):
+        xfmva (int): transformer MVA
     """
     print('combining', sources, 'GridLAB-D json files into', target)
     diction = {'bulkpower_bus': 'TBD',

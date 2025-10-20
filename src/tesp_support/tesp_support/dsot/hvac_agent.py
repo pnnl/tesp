@@ -1329,8 +1329,7 @@ class HVACDSOT:  # TODO: update class name
         Args:
             fncs_str (str): FNCS message with load in kW
         """
-        # debug
-        # print(f'hvac name: {self.houseName}, house load: {fncs_str}')
+        log.debug(f'hvac name: {self.houseName}, house load: {fncs_str}')
         val = parse_number(fncs_str)
         if val > 0.0:
             self.house_kw = val
@@ -1341,8 +1340,7 @@ class HVACDSOT:  # TODO: update class name
         Args:
             fncs_str (str): FNCS message with load in kW
         """
-        # debug
-        # print(f'hvac name: {self.houseName}, hvac load: {fncs_str}')
+        log.debug(f'hvac name: {self.houseName}, hvac load: {fncs_str}')
         val = parse_number(fncs_str)
         if val > 0.0:
             self.hvac_kw = val
@@ -1353,8 +1351,7 @@ class HVACDSOT:  # TODO: update class name
         Args:
             fncs_str (str): FNCS message with load in kW
         """
-        # debug
-        # print(f'hvac name: {self.houseName}, wh load: {fncs_str}')
+        log.debug(f'hvac name: {self.houseName}, wh load: {fncs_str}')
         val = parse_number(fncs_str)
         if val >= 0.0:
             self.wh_kw = val
@@ -1365,8 +1362,7 @@ class HVACDSOT:  # TODO: update class name
         Args:
             fncs_str (str): FNCS message with state, ON or OFF
         """
-        # debug
-        # print(f'hvac name: {self.houseName}, state: {fncs_str}')
+        log.debug(f'hvac name: {self.houseName}, state: {fncs_str}')
         if fncs_str == 'OFF':
             self.hvac_on = False
         else:
@@ -1380,8 +1376,7 @@ class HVACDSOT:  # TODO: update class name
             model_diag_level (int): Specific level for logging errors; set to 11
             sim_time (str): Current time in the simulation; should be human-readable
         """
-        # debug
-        # print(f'hvac load name: {self.houseName}, string: {fncs_str}')
+        log.debug(f'hvac load name: {self.houseName}, string: {fncs_str}')
         T_air = parse_number(fncs_str)
         if self.T_lower_limit < T_air < self.T_upper_limit:
             pass
@@ -1410,8 +1405,7 @@ class HVACDSOT:  # TODO: update class name
         Args:
             fncs_str (str): FNCS message with meter line-neutral voltage
         """
-        # debug
-        # print(f'hvac load name: {self.houseName}, string: {fncs_str}')
+        log.debug(f'hvac load name: {self.houseName}, string: {fncs_str}')
         self.mtr_v = parse_magnitude(fncs_str)
 
     def formulate_bid_rt(self, model_diag_level, sim_time):

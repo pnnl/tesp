@@ -108,6 +108,7 @@ from ..api.time_helpers import is_hhmm_valid, subtract_hhmm_secs, add_hhmm_secs
 from ..api.entity import assign_defaults
 from ..api.recs_gld_house_parameters import get_RECS_jsons
 
+position = None
 extra_billing_meters = set()
 
 log.basicConfig(level=log.WARNING)
@@ -314,6 +315,13 @@ class Config:
         else:
             pass
 
+    def add_position(self, basenode:str, newnode:str):
+        try:
+            base = self.pos_data[basenode]
+        except KeyError:
+            base = self.pos[basenode]
+        self.pos[newnode] = [base[0] + rng.uniform(2,7), base[1] + rng.uniform(2,7)]
+
 class Residential_Build:
     def __init__(self, config: Config):
         self.config = config
@@ -452,7 +460,7 @@ class Residential_Build:
             "constant_power_12_real": "10.0",
             "constant_power_12_reac": "8.0" })
         if hasattr(self.config, 'gis_file') and self.config.gis_file:
-            self.config.pos[mtrname] = self.config.pos_data[basenode]
+            self.config.add_position(basenode, mtrname)
 
     def getDsoIncomeLevelTable(self) -> list:
         """Retrieve the DSO Income Level Fraction of income level in a given 
@@ -653,13 +661,7 @@ class Residential_Build:
             sol_name = f'{hsename}_sol'
             bat_m_name = f'{hsename}_batmtr'
             bat_name = f'{hsename}_bat'
-            # Add position data to house and meter objects, if available
-            if hasattr(self.config, 'gis_file'):
-                self.config.pos[mtrname1] = self.config.pos_data[basenode]
-                self.config.pos[hsename] = self.config.pos_data[basenode]
-                self.config.pos[hse_m_name] = self.config.pos_data[basenode]
-                self.config.pos[bat_m_name] = self.config.pos_data[basenode]
-                self.config.pos[sol_m_name] = self.config.pos_data[basenode]
+
             self.mdl.triplex_line.add(tpxname1, {"from": basenode,
                       "to": mtrname1,
                       "phases": phs,
@@ -674,12 +676,16 @@ class Residential_Build:
             # Assume user-defined tariff from config. If default, use None
             self.glm.add_tariff(params, self.config)
             self.mdl.triplex_meter.add(mtrname1, params)
+            if self.config.gis_file:
+                self.config.add_position(basenode, mtrname1)
             self.glm.add_metrics_collector(mtrname1, "meter")
 
             self.mdl.triplex_meter.add(hse_m_name, {
                 "parent": mtrname1,
                 "phases": phs,
                 "nominal_voltage": str(v_nom) })
+            if self.config.gis_file:
+                self.config.add_position(mtrname1, hse_m_name)
 
             # Assign floor area, ceiling height, and stories of houses
             fa_array = {}  # distribution array for floor area min, max, mean, standard deviation
@@ -907,6 +913,8 @@ class Residential_Build:
                 params["cooling_setpoint"] = "80.0"
                 params["heating_setpoint"] = "60.0"
             self.mdl.house.add(hsename, params)
+            if self.config.gis_file:
+                self.config.add_position(hse_m_name, hsename)
 
             # heatgain fraction, Zpf, Ipf, Ppf, Z, I, P
             params = {"parent": hsename,
@@ -968,7 +976,7 @@ class Residential_Build:
                 if self.config.water_heater_model == "MULTILAYER":
                     params = {"parent": hsename,
                             "schedule_skew": '{:.0f}'.format(wh_skew_value),
-                            "heating_element_capacity": '{:.1f}'.format(heat_element),
+                            "heating_element_capacity": f'{heat_element:.1f} kW',
                             "thermostat_deadband": '{:.1f}'.format(therm_dead),
                             "location": "INSIDE",
                             "heat_mode": "ELECTRIC",
@@ -984,7 +992,7 @@ class Residential_Build:
                 else: # Traditional single-node model
                     params = {"parent": hsename,
                             "schedule_skew": '{:.0f}'.format(wh_skew_value),
-                            "heating_element_capacity": '{:.1f}'.format(heat_element),
+                            "heating_element_capacity": f'{heat_element:.1f} kW',
                             "thermostat_deadband": '{:.1f}'.format(therm_dead),
                             "location": "INSIDE",
                             "heat_mode": "ELECTRIC",
@@ -1046,7 +1054,7 @@ class Residential_Build:
 
             # User-defined income distribution of DER, no restrictions by housing type:
 
-            elif hasattr(self.config, 'user_dist') and self.config.user_dist == "True":
+            elif hasattr(self.config, 'user_dist') and self.config.user_dist:
                 prob_solar = (self.config.solar_deployment*self.config.solar_percentage[income])/prob_inc
                 prob_batt = (self.config.storage_deployment*self.config.storage_percentage[income])/prob_inc
                 prob_ev = (self.config.ev_deployment*self.config.ev_percentage[income])/prob_inc
@@ -1198,9 +1206,10 @@ class Commercial_Build:
 
         # Add position data to commercial building, if available
         if self.config.gis_file:
-            self.config.pos[name] = self.config.pos_data[key]
-            self.config.pos[f'{mtr}_solmtr'] = self.config.pos_data[key]
-            self.config.pos[f'{mtr}_batmtr'] = self.config.pos_data[key]
+            self.config.add_position(key, name)
+            self.config.add_position(key, f'{mtr}_solmtr')
+            self.config.add_position(key, f'{mtr}_batmtr')
+
 
     def define_commercial_zones(self, rgn: int, key: str, kva: float, feed_type: str) -> None:
         """Define building parameters for commercial building zones and ZIP 
@@ -1231,11 +1240,11 @@ class Commercial_Build:
             if comm_type == 'strip_mall':
                 self.config.com_bld.total_strip_mall += 1
             nphs = 3
-            phases = "ABCN"
-            vln = float(120)
+            phases = "ABC"
+            vln = float(277.0)
             loadnum = 0
             params = {"phases": phases,
-                      "nominal_voltage": 120.0,
+                      "nominal_voltage": 277.0,
                       }
             # Assume user-defined tariff from config. If default, use None
             self.glm.add_tariff(params, self.config)
@@ -1284,13 +1293,12 @@ class Commercial_Build:
                     params["impedance_pf_" + phs] = '{:f}'.format(self.config.base.c_z_pf)
                     params["current_pf_" + phs] = '{:f}'.format(self.config.base.c_i_pf)
                     params["power_pf_" + phs] = '{:f}'.format(self.config.base.c_p_pf)
-                    # params["base_power_" + phs] = "street_lighting*" + '{:.2f}'.format(self.config.base.light_scalar_comm * phsva)
-                    params["base_power_" + phs] = "street_lighting*0.0"
+                    params["base_power_" + phs] = "street_lighting*" + '{:.2f}'.format(self.config.base.light_scalar_comm * phsva)
                     params["phases"] = phs
             self.mdl.load.add(name, params)
             # Add position data to commercial ZIPload, if available
             if self.config.gis_file:
-                self.config.pos[name] = self.config.pos_data[key]
+                self.config.add_position(key, name)
 
         else:
             bld_specs = self.building_model_specifics[comm_type] 
@@ -1298,8 +1306,9 @@ class Commercial_Build:
             bldg['floor_area'] = floor_area
             bldg['aspect_ratio'] = bld_specs["aspect_ratio"] * rng.normal(1, 0.01)
             bldg['window_wall_ratio'] = bld_specs["window-wall_ratio"] * rng.normal(1, 0.2)
-            wall_area = (bld_specs['ceiling_height'] * 2 * math.sqrt(bldg['floor_area'] / bldg['number_of_stories'] /
-                                                                    bldg['aspect_ratio']) * (bldg['aspect_ratio'] + 1))
+            wall_area = (bld_specs['ceiling_height'] * 2 *
+                         math.sqrt(bldg['floor_area'] / bldg['number_of_stories'] /
+                                   bldg['aspect_ratio']) * (bldg['aspect_ratio'] + 1))
             ratio = wall_area * (1 - bldg['window_wall_ratio']) / bldg['floor_area']
             age = Commercial_Build.normalize_dict_prob('vintage', bld_specs['vintage'])
             age_bin = Commercial_Build.rand_bin_select(age, rng.random())
@@ -1315,7 +1324,7 @@ class Commercial_Build:
                 bldg['Rfloor'] = 46.0
                 bldg['Rdoors'] = 3.0
                 bldg['int_gains'] = 3.24  # W/sf
-                bldg['base_schedule'] = 'retail'
+                bldg['base_schedule'] = 'office'
                 floor_area_choose = 40000. * (0.5 * rng.random() + 0.5)
                 for floor in range(1, 4):
                     bldg['skew_value'] = self.glm.randomize_commercial_skew()
@@ -1368,7 +1377,7 @@ class Commercial_Build:
                         bldg['adj_ext'] = (0.9 + 0.1 * rng.random()) * floor_area / 1000.
                         bldg['adj_occ'] = (0.9 + 0.1 * rng.random()) * floor_area / 1000.
 
-                        bldg['zonename'] = gld_strict_name(f'{key}_floor_{floor}_zone_{zone}_{comm_type}')
+                        bldg['zonename'] = gld_strict_name(f'{key}_fl_{floor}_zn_{zone}_{comm_type}')
                         Commercial_Build.add_one_commercial_zone(self, bldg, key, phases)
 
             elif comm_type == 'big_box':
@@ -1427,7 +1436,7 @@ class Commercial_Build:
                     bldg['adj_ext'] = (0.9 + 0.1 * rng.random()) * floor_area / 1000.
                     bldg['adj_occ'] = (0.9 + 0.1 * rng.random()) * floor_area / 1000.
 
-                    bldg['zonename'] = gld_strict_name(f'{key}_zone_{zone}_{comm_type}')
+                    bldg['zonename'] = gld_strict_name(f'{key}_zn_{zone}_{comm_type}')
                     Commercial_Build.add_one_commercial_zone(self, bldg, key, phases)
 
             elif comm_type == 'strip_mall':
@@ -1439,7 +1448,7 @@ class Commercial_Build:
                 bldg['Rdoors'] = 3.0
                 bldg['int_gains'] = 3.6  # W/sf
                 bldg['exterior_ceiling_fraction'] = 1.
-                bldg['base_schedule'] = 'stripmall'
+                bldg['base_schedule'] = 'retail'
                 midzone = int(math.floor(self.total_strip_mall / 2.0) + 1.)
                 for zone in range(1, self.total_strip_mall + 1):
                     bldg['skew_value'] = self.glm.randomize_commercial_skew()
@@ -1473,7 +1482,7 @@ class Commercial_Build:
                     bldg['adj_gas'] = (0.8 + 0.4 * rng.random()) * floor_area / 1000.0
                     bldg['adj_ext'] = (0.8 + 0.4 * rng.random()) * floor_area / 1000.0
                     bldg['adj_occ'] = (0.8 + 0.4 * rng.random()) * floor_area / 1000.0
-                    bldg['zonename'] = gld_strict_name(f'{key}_zone_{zone}_{comm_type}')
+                    bldg['zonename'] = gld_strict_name(f'{key}_zn_{zone}_{comm_type}')
                     Commercial_Build.add_one_commercial_zone(self, bldg, key, phases)
 
             else: # For all other building types
@@ -1735,6 +1744,8 @@ class Battery:
                 self.mdl.meter.add(bat_mtr, {"parent": parent_mtr,
                             "phases": phs,
                             "nominal_voltage": str(v_nom) })
+            if self.config.gis_file:
+                self.config.add_position(parent_mtr, bat_mtr)
 
             self.mdl.inverter.add(inv_name, {
                 "parent": bat_mtr,
@@ -1811,6 +1822,8 @@ class Solar:
                 self.mdl.meter.add(solar_mtr, {"parent": parent_mtr,
                             "phases": phs,
                             "nominal_voltage": str(v_nom) })
+            if self.config.gis_file:
+                self.config.add_position(parent_mtr, solar_mtr)
 
             params = {"parent": solar_mtr,
                         "phases": phs,
@@ -1822,11 +1835,10 @@ class Solar:
                         "generator_mode": self.config.base.solar_inv_mode,
                         "four_quadrant_control_mode": self.config.base.solar_inv_mode}
 
-            if self.config.use_solar_player == "True": 
+            if self.config.use_solar_player:
                 pv_scaling_factor = inv_power / self.config.rooftop_pv_rating_MW
-                #TODO player functionality
-                #params["P_Out"] = f"{self.config.solar_P_player['attr']}.value * #{pv_scaling_factor}"
-                #params["Q_Out"] = f"{self.config.solar_Q_player['attr']}.value * 0.0"
+                params["P_Out"] = f"{self.config.solar_P_player['attr']}.value * #{pv_scaling_factor}"
+                params["Q_Out"] = f"{self.config.solar_Q_player['attr']}.value * 0.0"
             else:
                 params["Q_Out"] = "0"
                 # Instead of solar object, write a fake V_in and I_in 
@@ -1923,12 +1935,11 @@ class Electric_Vehicle:
                         "mileage_efficiency": ev_mileage,
                         "mileage_classification": ev_range,
                         "charging_efficiency": ev_charge_eff}
-            ev_name = f'{self.taxonomy}_{ev_name}'
-            ev_name = ev_name.replace(" ","_")
-            ev_name = ev_name.replace("(","_")
-            ev_name = ev_name.replace(")","_")
-            self.glm.add_object("evcharger_det", f'{ev_name}_{self.ev_count}', params)
-            self.glm.add_metrics_collector(f'{ev_name}_{self.ev_count}', "evcharger_det")
+            ev_name = f'{house_name}_{ev_name}_chgr' #Required for summary stats
+            ev_name = ev_name.replace(" ","") # Remove any spaces
+            ev_name = f'{ev_name}_{self.ev_count}'
+            self.glm.add_object("evcharger_det", ev_name, params)
+            self.glm.add_metrics_collector(ev_name, "evcharger_det")
             # Additional recorders
             # self.glm.add_collector("class=evcharger_det", "sum(actual_charge_rate)", "EV_charging_total.csv")
             # self.glm.add_group_recorder("class=evcharger_det", "actual_charge_rate", "EV_charging_power.csv")
@@ -2190,19 +2201,18 @@ class Feeder:
             else:
                 i_glm, success = self.glm.read_model(self.config.outputPath)
             if self.config.gis_file:
-                # The substation (network_node) and substation transformer have no connections
-                # to the rest of the feeder. For now, assign them position values that align
-                # with rest of the feeder. TODO: check if merge assigns connections.
-                self.config.pos["network_node"] = np.mean(list(self.config.pos.values()), axis=0)
-                self.config.pos["substation_transformer"] = np.mean(list(self.config.pos.values()), axis=0)
-                print("\nUsing location data to plot image of model; this should just take a sec.")
-                # Merge house and meter position assignments with rest of GIS data
-                self.config.pos |= self.config.pos_data
-                self.glm.model.plot_model(self.config.pos)
+                # Before the feeders are merged via case_merge, the substation
+                # (network_node) and substation transformer have no connections
+                # to the rest of the feeder. For now, assign them position values
+                # that align with rest of the feeder.
+                self.config.pos["network_node"] =  np.round(np.mean(list(self.config.pos.values()), axis=0),2)
+                self.config.pos["substation_transformer"] = np.round(np.mean(list(self.config.pos.values()), axis=0),2)
+                self.config.pos_data |= self.config.pos
+                position = self.glm.model.plot_model(self.config.pos_data)
                 print("Plotting complete.")
             else:
                 print("\nPlotting image of model; this may take several minutes.")
-                self.glm.model.plot_model()
+                position = self.glm.model.plot_model()
         else:
             pass
 
@@ -2386,7 +2396,7 @@ class Feeder:
             if e_name in seg_loads:
                 tkva = seg_loads[e_name][0]
                 phs = seg_loads[e_name][1]
-                if 'S' in phs:
+                if 'S' in phs: # Split phase lines run to houses
                     self.config.res_bld.nhouse = int((tkva / avg_house) + 0.5)  # round to nearest int
                     node = gld_strict_name(e_object['to'])
                     if self.config.res_bld.nhouse <= 0:
@@ -2445,7 +2455,6 @@ class Feeder:
             entity = self.mdl.__getattribute__(gld_class)
         except:
             return
-        removenames = []
         for e_name, e_object in entity.items():
             if 'load_class' not in e_object:
                 log.warning("load_class not defined! Cannot add commercial loads")
@@ -2515,10 +2524,7 @@ class Feeder:
                     mtr = gld_strict_name(e_object['parent'])
                     extra_billing_meters.add(mtr)
                     self.config.base.comm_loads[e_name] = [mtr, comm_type, comm_size, kva, nphs, phases, vln, total_commercial, comm_name]
-                    removenames.append(e_name)
-        for e_name in removenames:
-            self.glm.del_object(gld_class, e_name)
-        
+
         if e_object['load_class'] != 'C':
             return None
         

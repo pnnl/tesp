@@ -576,12 +576,13 @@ docker images -q ${IMAGE} > docker_version
 hostname > hostname
 
 CASE="%s"
-SRCWORK_DIR="$TESPDIR/examples/analysis/dsot/code/$CASE"
-WORKING_DIR="$SIM_HOME/tesp/examples/analysis/dsot/code/$CASE"
+CASEDIR="%s"
+SRCWORK_DIR="$CASEDIR/$CASE"
+WORKING_DIR="$SIM_HOME/tesp/examples/analysis/$CASEDIR/code/$CASE"
 ARCHIVE_DIR="%s"
 
-chown -fR ${UID}:${SIM_GID} "$SRCWORK_DIR"
-chmod -fR 774 "$SRCWORK_DIR"
+chown -fR ${UID}:${SIM_GID} "$TESPDIR"
+chmod -fR 774 "$TESPDIR"
 
 docker run \\
        -e LOCAL_UID=$UID \\
@@ -593,7 +594,7 @@ docker run \\
        ${IMAGE} \\
        /bin/bash -c "./run.sh; ./monitor.sh"
 
-        """ % (path.basename(out_folder), archive_folder, gdb_extra))
+        """ % (path.basename(out_folder), path ,archive_folder, gdb_extra))
 
     with open(out_folder + '/postprocess.sh', 'w') as outfile:
         if run_post == 1:

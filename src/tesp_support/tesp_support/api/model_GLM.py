@@ -411,28 +411,28 @@ class GLMModel:
             diction += "\n"
 
         # Write the objects
-        for object_name in sorted(self.object_entities):
-            for name in sorted(self.object_entities[object_name].instances):
-                diction += self.get_diction(self.object_entities, object_name, self.instanceToObject, name)
+        # for object_name in self.object_entities:
+        #     for name in self.object_entities[object_name].instances:
+        #         diction += self.get_diction(self.object_entities, object_name, self.instanceToObject, name)
 
-        # # recorder, player, metrics_collector don't apply to the network, there are others
-        # # this work for the network (powerflow)
-        # G = self.draw_network()
-        # power_entities = []
-        # for node_name in G:
-        #     for object_name in self.object_entities:
-        #         for name in self.object_entities[object_name].instances:
-        #             if node_name == name:
-        #                 if node_name in power_entities:
-        #                     continue
-        #                 diction += self.get_diction(self.object_entities, object_name, self.instanceToObject, name)
-        #                 power_entities.append(name)
-        #
-        # # Write the objects
-        # for object_name in sorted(self.object_entities):
-        #     for name in sorted(self.object_entities[object_name].instances):
-        #         if name not in power_entities:
-        #             diction += self.get_diction(self.object_entities, object_name, self.instanceToObject, name)
+        # recorder, player, metrics_collector don't apply to the network, there are others
+        # this work for the network (powerflow)
+        G = self.draw_network()
+        power_entities = []
+        for node_name in G:
+            for object_name in self.object_entities:
+                for name in self.object_entities[object_name].instances:
+                    if node_name == name:
+                        if node_name in power_entities:
+                            continue
+                        diction += self.get_diction(self.object_entities, object_name, self.instanceToObject, name)
+                        power_entities.append(name)
+
+        # Write the objects
+        for object_name in self.object_entities:
+            for name in self.object_entities[object_name].instances:
+                if name not in power_entities:
+                    diction += self.get_diction(self.object_entities, object_name, self.instanceToObject, name)
 
         # Write the schedules
         for name in self.schedule_types:
@@ -965,6 +965,8 @@ class GLMModel:
                         G.add_edge(o, p, eclass='parent', ename=o, edata={})
 
         # now we back-fill the node attributes because 'add_edge' adds the nodes
+        class_to_delete = []
+        node_to_delete = []
         for t in self.model:
             if self.is_node_class(t):
                 for o in self.model[t]:
@@ -972,10 +974,16 @@ class GLMModel:
                         G.nodes()[o]['nclass'] = t
                         G.nodes()[o]['ndata'] = self.model[t][o]
                     else:
-                        print('orphaned node', t, o)
+                        print('Removing orphaned nodes', t, o)
+                        class_to_delete.append(t)
+                        node_to_delete.append(o)
+
+        for idk in range(len(class_to_delete)):
+            self.del_object(class_to_delete[idk], node_to_delete[idk])
+
         return G
 
-    def plot_model(self, pos=None, node_labels=False, edge_labels=False, node_legend=True, edge_legend=True):
+    def plot_model(self, pos=None, node_labels=False, edge_labels=False, node_legend=True, edge_legend=True) -> dict:
 
         def update_annot(ind):
             _node_idx = ind["ind"][0]
@@ -1074,6 +1082,8 @@ class GLMModel:
         plt.subplots_adjust(left=0.01, bottom=0.01, right=0.99, top=0.99)
         plt.show()
 
+        return pos
+
     def set_clock(self, starttime: str, stoptime: str, timezone: str):
         gld_type = name = 'clock'
         clock = self.module_entities[gld_type].instances[name]
@@ -1108,7 +1118,8 @@ class GLMModel:
 
     @staticmethod
     def union_of_phases(phs1, phs2):
-        """Collect all phases on both sides of a connection
+        """Collect all phases on both sides of a connection.
+        Load on 'N' phase lines are trivial and therefore neglected.
 
         Args:
             phs1 (str): first phasing
