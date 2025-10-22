@@ -64,8 +64,22 @@
 
     // Distributed Energy Resources
     "RECS": true, // populates solar, battery, and ev based on RECS income distributions
-    // if "False", uses the rates analysis pre-defined population values by income and housing type, ignoring the below deployment level configs. 
-    
+    // if false, use the income-distributions below
+    solar_percentage: {
+        "Low": 0.12,
+        "Middle": 0.30,
+        "Upper": 0.58
+        },
+    storage_percentage: {
+        "Low": 0.12,
+        "Middle": 0.30,
+        "Upper": 0.58
+        },
+    ev_percentage: {
+        "Low": 0.10,
+        "Middle": 0.30,
+        "Upper": 0.60
+        },
     // DER market participation and deployment levels 
     "case_type": {
     // bt = battery participates

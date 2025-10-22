@@ -592,10 +592,10 @@ def get_RECS_jsons(bldg_in, bldg_out, hvac_out,
     res_metadata['solar_percentage']['Low'] = 0.12
     res_metadata['solar_percentage']['Middle'] = 0.30
     res_metadata['solar_percentage']['Upper'] = 0.58
-    res_metadata['battery_percentage'] = {}
-    res_metadata['battery_percentage']['Low'] = 0.12
-    res_metadata['battery_percentage']['Middle'] = 0.3
-    res_metadata['battery_percentage']['Upper'] = 0.58
+    res_metadata['storage_percentage'] = {}
+    res_metadata['storage_percentage']['Low'] = 0.12
+    res_metadata['storage_percentage']['Middle'] = 0.3
+    res_metadata['storage_percentage']['Upper'] = 0.58
     res_metadata['ev_percentage'] = {}
     res_metadata['ev_percentage']['Low'] = 0.1
     res_metadata['ev_percentage']['Middle'] = 0.3

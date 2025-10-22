@@ -1,7 +1,7 @@
 # Copyright (c) 2018-2020 Battelle Memorial Institute
 # file: gld_feeder_generator.py
 """ This gld_feeder_generator.py is an updated feeder generator that combines 
-the functionality of both residential_feeder_glm.py and commercial_feeder_glm.py.
+the functionality of the residential_feeder_glm.py, the commercial_feeder_glm.py, and the copperplate_feeder_glm.py.
 
 Replaces ZIP loads with houses, optional storage, electric vehicles, and solar
 generation.
@@ -26,6 +26,7 @@ Public Functions:
         batteries, and electric vehicles, based on imported metadata for each.
     :load_position: Read in positional data from feeder, if specified in config,
         to aid plotting function of populated feeder model.
+    :add_position: Create a coordinate pair posiiton for a new node added to the feeder based off the position of its basenode.
 
     Residential_Build
     :buildingTypeLabel: Assign formatted name of region, building type name, 
@@ -319,6 +320,12 @@ class Config:
             pass
 
     def add_position(self, basenode:str, newnode:str):
+        """Create a coordinate pair posiiton for a new node, meter, or object added to the feeder, slightly offset from the basenode that it is added to.
+
+        Args:
+            basenode (str): name of base node newnode is added to (parent)
+            newnode (str): name of the new node (child)
+        """
         try:
             base = self.pos_data[basenode]
         except KeyError:
@@ -1056,7 +1063,7 @@ class Residential_Build:
                     prob_ev = (self.config.ev_deployment * self.ev[self.config.state][self.config.res_dso_type][income]["mobile_home"])/prob_mobile
 
             # User-defined income distribution of DER, no restrictions by housing type:
-            elif hasattr(self.config, 'user_dist') and self.config.user_dist:
+            elif hasattr(self.config, 'in_file_glm') and not self.config.RECS:
                 prob_solar = (self.config.solar_deployment*self.config.solar_percentage[income])/prob_inc
                 prob_batt = (self.config.storage_deployment*self.config.storage_percentage[income])/prob_inc
                 prob_ev = (self.config.ev_deployment*self.config.ev_percentage[income])/prob_inc

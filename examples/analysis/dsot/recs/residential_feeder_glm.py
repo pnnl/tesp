@@ -1996,7 +1996,7 @@ def write_houses(basenode, op, vnom):
         # P(solar|income and SF)
         sol_g_inc_sf = p_sol_inc_sf / (p_sf_g_inc * il_percentage)
         # P(battery and solar and SF and income)
-        p_bat_sol_sf_inc = storage_percentage * res_bldg_metadata['battery_percentage'][income]
+        p_bat_sol_sf_inc = storage_percentage * res_bldg_metadata['storage_percentage'][income]
         # P(battery|solar and SF and income)
         bat_g_sol_sf_inc = p_bat_sol_sf_inc / (sol_g_inc_sf * p_sf_g_inc * il_percentage)
         # P(ev|income)
