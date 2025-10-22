@@ -1852,7 +1852,7 @@ def inner_substation_loop(metrics_root, with_market):
                         if "hse" in obj.name:
                             water_heater_name = obj.name.replace("hse", "wh")
                         else:
-                            water_heater_name = obj.name.append("_wh")
+                            water_heater_name = obj.name + "_wh"
                         # print("Water_heater name",water_heater_name)
                         try:
                             publish(water_heater_name + '/lower_tank_setpoint', obj.Setpoint_bottom)

@@ -2118,7 +2118,7 @@ def write_houses(basenode, op, vnom):
                 print('    mileage_efficiency', '{:.3f}; // miles per kWh'.format(ev_mileage), file=op)
                 print('    mileage_classification', '{:.3f}; // range in miles'.format(ev_range), file=op)
                 print('    charging_efficiency', '{:.3f};'.format(ev_charge_eff), file=op)
-                if metrics_interval > 0:
+                if metrics_interval > 0 and "evchargerdet" in metrics:
                     print('    object metrics_collector {', file=op)
                     print('      interval', str(metrics_interval) + ';', file=op)
                     print('    };', file=op)

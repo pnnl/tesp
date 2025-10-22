@@ -57,19 +57,28 @@ import pandas as pd
 
 from tesp_support.api.helpers import HelicsMsg
 
+from tesp_support.api.data import feeder_entities_path as feeder_defaults
 import tesp_support.dsot.helpers_dsot as helpers
 import tesp_support.dsot.case_merge as cm
 import tesp_support.dsot.glm_dictionary as gd
-
 import tesp_support.api.gld_feeder_generator as gld_feeder
 
 
 # Configuration settings for the experimental case
-def prepare_case(node:int, scenario:str, case:str, pv=None, bt=None, fl=None, ev=None):
+def prepare_case(renewables:str, case:str, pv=None, bt=None, fl=None, ev=None):
+
     # We need to load in the case metadata (*config.json5)
     config_file = str('../data/' + case + '.json5')
     with open(config_file, 'r', encoding='utf-8') as json5_file:
         config = pyjson5.load(json5_file)
+
+    # Define nodes, scenario and import required config files
+    nodes = str(config["nodes"])
+    scenario = ""
+    config["renewables"] = ["wind"]
+    if renewables == "hi":
+        scenario = "_hi"
+        config["renewables"] = ["wind", "solar"]
 
     # Use RECS metadata by default. [tesp_support/api/recs_gld_house_parameters.py]
     rcs = "RECS"
@@ -105,12 +114,6 @@ def prepare_case(node:int, scenario:str, case:str, pv=None, bt=None, fl=None, ev
             config["caseName"] = config["caseName"] + "_ev"
             config["market"] = True
 
-    # Define scenario and import required config files
-    nodes = str(config["nodes"])
-    scenario = ""
-    if config["scenario"] == "hi":
-        scenario = "_hi"
-
     system_config_file = os.path.join("../data/", config['system_file_' + nodes + scenario])
     if config["RECS"]:
         dso_config_file = os.path.join(data_path, config['population_file_' + rcs])
@@ -123,7 +126,6 @@ def prepare_case(node:int, scenario:str, case:str, pv=None, bt=None, fl=None, ev
     ev_model_config_file = os.path.join(data_path, config["ev_meta_file"])
     ev_driving_config_file = os.path.join(data_path, config["ev_driving_meta_file"])
     hvac_setpt_file = os.path.join(data_path, config['hvac_' + rcs + '_set_point'])
-    feeder_defaults = os.path.expandvars("$TESPDIR/src/tesp_support/tesp_support/api/datafiles/feeder_defaults.json")
 
     # load system config
     with open(system_config_file, 'r', encoding='utf-8') as json5_file:
@@ -479,7 +481,7 @@ def prepare_case(node:int, scenario:str, case:str, pv=None, bt=None, fl=None, ev
                 "INV_VW_V2": 1.1,
                 "INV_VW_P1": 1.0,
                 "INV_VW_P2": 0.0}
-            config["use_solar_player"] = "True"
+            config["use_solar_player"] = True
             config["rooftop_pv_rating_MW"] = dso_val['rooftop_pv_rating_MW']
             config["weather_name"] = 'weather_' + sub_key
             config["latitude"] = weaPrep['Latitude']
@@ -726,13 +728,14 @@ def prepare_case(node:int, scenario:str, case:str, pv=None, bt=None, fl=None, ev
 
 if __name__ == "__main__":
     if len(sys.argv) > 6:
-        prepare_case(sys.argv[1], pv=int(sys.argv[2]), bt=int(sys.argv[3]), fl=int(sys.argv[4]), ev=int(sys.argv[5]))
+        prepare_case(sys.argv[1], sys.argv[2], pv=int(sys.argv[3]), bt=int(sys.argv[4]), fl=int(sys.argv[5]), ev=int(sys.argv[6]))
     else:
-        # prepare_case("default_config", pv=0, bt=0, fl=0, ev=0)
-        # prepare_case("rates_config", pv=0, bt=1, fl=0, ev=0)
-        # prepare_case("rates_config", pv=0, bt=0, fl=1, ev=0)
-        # prepare_case("rates_config", pv=1, bt=0, fl=0, ev=0)
-        # prepare_case("rates_config", pv=1, bt=1, fl=0, ev=1)
-        # prepare_case("rates_config", pv=1, bt=0, fl=1, ev=1)
-        # prepare_case("rates_config", pv=0, bt=0, fl=0, ev=0)
-        prepare_case("rates_config", pv=1, bt=1, fl=1, ev=1)
+        # Renewables scenario, High: "hi", Moderate: "" (no solar)
+        # prepare_case('', default_config", pv=0, bt=0, fl=0, ev=0)
+        # prepare_case('', "rates_config", pv=0, bt=1, fl=0, ev=0)
+        # prepare_case('', "rates_config", pv=0, bt=0, fl=1, ev=0)
+        # prepare_case('hi', "rates_config", pv=0, bt=0, fl=0, ev=0)
+        # prepare_case('hi', "rates_config", pv=1, bt=0, fl=0, ev=0)
+        # prepare_case('hi', "rates_config", pv=1, bt=1, fl=0, ev=1)
+        # prepare_case('hi', "rates_config", pv=1, bt=0, fl=1, ev=1)
+        prepare_case('hi', "rates_config", pv=1, bt=1, fl=1, ev=1)

@@ -146,7 +146,7 @@ class Config:
         #TODO: max voltage error was set to 0.01 in original copperplate. Keep?
 
         # Add player files if pre-defining solar generation
-        if self.use_solar_player == "True":
+        if self.use_solar_player:
             player_file = str(os.path.join(self.solar_data_path, self.BuildingPrep['solar_P_player_file']))
             self.glm.model.add_class("player", "double", "P_out_inj", False, f'"{player_file}"')
 
@@ -1022,7 +1022,7 @@ class Residential_Build:
 
             prob_inc = self.income_level[self.config.state][self.config.res_dso_type][income]
 
-            if hasattr(self.config, 'in_file_glm') and self.config.use_recs == "True":
+            if hasattr(self.config, 'in_file_glm') and self.config.RECS:
                 if bldg == 0:
                     prob_solar = self.config.solar_deployment * (self.solar_pv[self.config.state][self.config.res_dso_type]
                                                                 [income]["single_family_detached"] +
@@ -1053,7 +1053,6 @@ class Residential_Build:
                     prob_ev = (self.config.ev_deployment * self.ev[self.config.state][self.config.res_dso_type][income]["mobile_home"])/prob_mobile
 
             # User-defined income distribution of DER, no restrictions by housing type:
-
             elif hasattr(self.config, 'user_dist') and self.config.user_dist:
                 prob_solar = (self.config.solar_deployment*self.config.solar_percentage[income])/prob_inc
                 prob_batt = (self.config.storage_deployment*self.config.storage_percentage[income])/prob_inc
@@ -1448,7 +1447,7 @@ class Commercial_Build:
                 bldg['Rdoors'] = 3.0
                 bldg['int_gains'] = 3.6  # W/sf
                 bldg['exterior_ceiling_fraction'] = 1.
-                bldg['base_schedule'] = 'retail'
+                bldg['base_schedule'] = 'stripmall'
                 midzone = int(math.floor(self.total_strip_mall / 2.0) + 1.)
                 for zone in range(1, self.total_strip_mall + 1):
                     bldg['skew_value'] = self.glm.randomize_commercial_skew()
@@ -1837,19 +1836,21 @@ class Solar:
 
             if self.config.use_solar_player:
                 pv_scaling_factor = inv_power / self.config.rooftop_pv_rating_MW
-                params["P_Out"] = f"{self.config.solar_P_player['attr']}.value * #{pv_scaling_factor}"
-                params["Q_Out"] = f"{self.config.solar_Q_player['attr']}.value * 0.0"
+                params["P_Out"] = f"P_out_inj.value * {pv_scaling_factor}"
+                if 'no_file' not in self.config.solar_Q_player_file:
+                    params["Q_Out"] = "Q_out_inj.value * 0.0"
+                else:
+                    params["Q_Out"] = 0
             else:
                 params["Q_Out"] = "0"
                 # Instead of solar object, write a fake V_in and I_in 
                 # sufficiently high so that it doesn't limit the player output
                 params["V_In"] = "10000000"
                 params["I_In"] = "10000000"
-
             self.mdl.inverter.add(inv_name, params)
             self.glm.add_metrics_collector(inv_name, "inverter")
 
-            if self.config.use_solar_player == "False":
+            if not self.config.use_solar_player:
                 self.mdl.solar.add(solar_name, {
                     "parent": inv_name,
                     "panel_type": self.config.solar["panel_type"],
