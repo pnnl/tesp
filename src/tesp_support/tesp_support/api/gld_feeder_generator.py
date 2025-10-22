@@ -147,7 +147,10 @@ class Config:
 
         # Add player files if pre-defining solar generation
         if self.use_solar_player:
-            player_file = str(os.path.join(self.solar_data_path, self.BuildingPrep['solar_P_player_file']))
+            try:
+                player_file = self.player_file
+            except AttributeError:
+                player_file = str(os.path.join(self.solar_data_path, self.BuildingPrep['solar_P_player_file']))
             self.glm.model.add_class("player", "double", "P_out_inj", False, f'"{player_file}"')
 
         self.glm.model.set_clock(self.StartTime, self.EndTime, self.time_zone)
@@ -167,7 +170,7 @@ class Config:
             for key in self.defines:
                 self.glm.model.add_define(key, self.defines[key])
 
-        if hasattr(self, 'messenger'):
+        if self.messenger:
             num = self.DSO.replace('DSO_', '')
             if self.messenger == 'HELICS':
                 params = {
@@ -254,10 +257,10 @@ class Config:
         if self.comm_count == 1:
             comm_bldgs_pop = self.com_bld.define_comm_bldg(self.utility_type, num_comm_bldgs)
             self.BuildingPrep['CommBldgPopulation'] = comm_bldgs_pop
-            print("\n!!!!! Initially, there are {0:d} commercial buildings !!!!!".format(
+            print("\n------Commercial building population has identified {0:d} potential commercial buildings------".format(
             len(comm_bldgs_pop.keys())))
         else:
-            print("\n!!!!! There are {0:d} commercial buildings left !!!!!".format(
+            print("\n------There are {0:d} commercial buildings left------".format(
             len(comm_bldgs_pop.keys())))
 
         assign_defaults(self.res_bld, os.path.join(self.data_path, self.residential_meta_file_RECS))

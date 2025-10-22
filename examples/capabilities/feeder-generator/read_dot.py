@@ -11,9 +11,12 @@ coordinates, as follows:
 
 The resulting .json file is to be read by gld_feeder_generator.py to aid in 
 plotting the populated feeder. For taxonomy feeders, the "gis_file" does not 
-need to be specified in feeder_config.json5, as it is read automatically. For
-any non-taxonomy, user-defined feeder, "gis_file" should point to the pos.json 
+need to be specified in feeder_config.json5, as it is read automatically. Any non-taxonomy, user-defined feeder, "gis_file" should point to the pos.json 
 file, if available.
+
+Note that it is not a requirement to have position data for a user-defined base 
+feeder--however, if the feeder model is large, having position data will greatly
+speed up the plotting function.
 
 Credit: .dot files were obtained from 
 https://emac.berkeley.edu/gridlabd/taxonomy_graphs/ courtesy of Michael A. Cohen,

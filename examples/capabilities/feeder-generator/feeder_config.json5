@@ -2,7 +2,7 @@
 // configure the process of populating a feeder.
 
 {
-    // Simulation
+    // Simulation Config
     "StartTime": "2023-01-01 07:00:00", // REQUIRED: format "YYYY-MM-DD HH:MM:SS"
     "EndTime": "2023-01-01 17:00:00",  // REQUIRED: format "YYYY-MM-DD HH:MM:SS"
     "timestep": 300,              // REQUIRED: simulation timestep, in seconds
@@ -16,9 +16,9 @@
 
     // Input and Output Files
     "in_file_glm": "",            // input feeder model ("myfeeder.glm"). If empty, taxonomy feeder used
-    "make_plot": false,           // specify whether to plot populated feeder
+    "make_plot": true,           // specify whether to plot populated feeder
     "gis_file": "",               // optional positional data for feeder (.json)
-    "taxonomy": "R1-12.47-2.glm", // taxonomy feeder model
+    "taxonomy": "R1-12.47-2.glm", // base taxonomy feeder model
     "out_file_glm": "test.glm",   // REQUIRED: output populated feeder ("myfeeder_populated.glm").
     "caseName": "MyCase",        // REQUIRED: a name for your case
     "substation_name": "MySub",   // REQUIRED: a name for the substation
@@ -39,7 +39,7 @@
         "income_level": ["Low", "Middle", "Upper"]
     },
     "bin_size_threshold": 100,
-    "climate": "2A", 
+    "climate": "2A", // ASHRAE Climate Region
     "wh_shift": 0,
 
     // Climate/Location (Note: check that all location data is consistent!)
@@ -50,8 +50,8 @@
     "tmyfile": "VT-Burlington_International_Ap.tmy3", // TMY3 weather file, DEFAULT: AZ-Tucson_International_Ap.tmy3.
 
     // Residential & Commercial Population
-    "comm_count": 1,
-    "utility_type": "Urban",
+    "comm_count": 1, // Whether to add commercial buildings
+    "utility_type": "Urban", // Urban, Suburban, or Rural
     "number_of_gld_homes": 1308,
     "comm_customers_per_bldg": 2.09,
     "avg_house": 4500.0, // Average house size, in VA
@@ -63,13 +63,23 @@
     },
 
     // Distributed Energy Resources
-    "use_recs": "True", // populates solar, battery, and ev based on RECS income distributions
+    "RECS": true, // populates solar, battery, and ev based on RECS income distributions
     // if "False", uses the rates analysis pre-defined population values by income and housing type, ignoring the below deployment level configs. 
     
-    // DER deployment levels 
-    "solar_deployment": 0.20,
-    "battery_deployment": 0.10,
-    "ev_deployment": 0.15,
+    // DER market participation and deployment levels 
+    "case_type": {
+    // bt = battery participates
+    "bt": 1,
+    // fl = flexible loads (houses) participate
+    "fl": 1,
+    // ev = electric vehicles participate
+    "ev": 1,
+    // pv = photovoltaics
+    "pv": 1
+    },
+    "solar_deployment": 0.20, // deployment level of solar
+    "storage_deployment": 0.10, // deployment level of BESS
+    "ev_deployment": 0.15, // deployment level of EVs
 
     "ev_reserved_soc": 20, // Reserve state of charge of EVs
 
@@ -88,7 +98,7 @@
 
     // Simulation (continued)
     "seed": 13, // random seed
-    "message_broker": "helics_msg", // HELICS ("helics_msg") or FNCS ("fncs_msg") for cosimulation
+    "messenger": false, // HELICS  or FNCS for cosimulation. false otherwise
 
     // add schedules
     "includes": [
@@ -115,12 +125,13 @@
     "income_level": ["Low", "Middle", "Upper"],
     "res_dso_type": "No_DSO_Type",
     "region": 2,
-    "vll": 12470.0,
-    "vln": 7200.0,
+    "vll": 12470.0, // line voltage
+    "vln": 7200.0, // nominal voltage
     "water_heater_model": "TWONODE", // MULTILAYER, TWONODE
 
     // Solar player diction
-    "use_solar_player": "False", // True if pre-defining solar generation
+    "use_solar_player": false, // True if pre-defining solar generation
+    "player_file": "", // if use_solar_player, path to solar player file
     "rooftop_pv_rating_MW": 7481.90, // Used to calculate scaling factor
     "solar_P_player": {
         "name": "player",      // class name

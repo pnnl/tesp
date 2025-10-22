@@ -540,7 +540,7 @@ def prepare_case(renewables:str, case:str, pv=None, bt=None, fl=None, ev=None):
         #bldPrep['CommBldgPopulation'] = gld_feeder.comm_bldgs_pop
         if config["copperplate_feeder"]:
             if len(bldPrep['CommBldgPopulation'].keys()) > 0:
-                print("!!!!! We are going with the copperplate feeder now. !!!!!")
+                print("------We are going with the copperplate feeder now------")
                 feed_key = "copperplate_feeder"
                 feed_val['name'] = feed_key
                 dso_val['feeders'][feed_key] = feed_val
