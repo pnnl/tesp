@@ -11,6 +11,7 @@ on:
         options:
         - staging
         - production
+  push:
 
 jobs:
   test:
