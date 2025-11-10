@@ -75,8 +75,8 @@ def load_json(dir_path, file_name, use_cache=True):
 def get_date(dir_path, dso, day):
     """ Utility to return start time (datetime format) of simulation day (str) in question"""
     # Determine first day of simulation and the date of the day requested
-    case_config = load_json(dir_path, 'case_config_' + dso + '.json')
-    sim_start = datetime.strptime(case_config['SimulationConfig']['StartTime'], '%Y-%m-%d %H:%M:%S')
+    config = load_json(dir_path, 'case_config_' + dso + '.json')
+    sim_start = datetime.strptime(config['StartTime'], '%Y-%m-%d %H:%M:%S')
     date = sim_start + timedelta(days=int(day) - 1)
     return date
 
@@ -151,13 +151,17 @@ def customer_meta_data(glm_meta, agent_meta, dso_metadata_path):
         glm_meta['billingmeters'][meter]['hvac_participating'] = agent_meta['hvacs'][hvac]['cooling_participating'] or \
                                                                  agent_meta['hvacs'][hvac]['heating_participating']
         glm_meta['billingmeters'][meter]['num_zones'] += 1
-        glm_meta['billingmeters'][meter]['sqft'] += glm_meta['houses'][hvac]['sqft']
+        glm_meta['billingmeters'][meter]['sqft'] += int(glm_meta['houses'][hvac]['sqft'])
 
     for house in glm_meta['houses']:
         meter = glm_meta['houses'][house]['billingmeter_id']
         glm_meta['billingmeters'][meter]['cooling'] = glm_meta['houses'][house]['cooling']
         glm_meta['billingmeters'][meter]['heating'] = glm_meta['houses'][house]['heating']
-        glm_meta['billingmeters'][meter]['wh_gallons'] = glm_meta['houses'][house]['wh_gallons']
+        try:
+            glm_meta['billingmeters'][meter]['wh_gallons'] = glm_meta['houses'][house]['wh_gallons']
+        except KeyError:
+            print(f'{house} has no water heater')
+            pass
         glm_meta['billingmeters'][meter]['income_level'] = glm_meta['houses'][house]['income_level']
 
     for wh in agent_meta['water_heaters']:
@@ -196,8 +200,8 @@ def load_gen_data(dir_path, gen_name, day_range):
 
         # Determine first day of simulation and resulting slice to take
 
-        case_config = load_json(dir_path, 'generate_case_config.json')
-        sim_start = datetime.strptime(case_config['StartTime'], '%Y-%m-%d %H:%M:%S')
+        config = load_json(dir_path, 'generate_case_config.json')
+        sim_start = datetime.strptime(config['StartTime'], '%Y-%m-%d %H:%M:%S')
         start_time = sim_start + timedelta(days=int(day_range[0]) - 1)
         stop_time = start_time + (day_range[-1] - day_range[0] + 1) * timedelta(days=1) - timedelta(minutes=5)
 
@@ -319,8 +323,8 @@ def load_ames_data(dir_path, day_range):
     elif isinstance(data_df.index[0], date):
         pass
     else:
-        case_config = load_json(dir_path, 'generate_case_config.json')
-        sim_start = datetime.strptime(case_config['StartTime'], '%Y-%m-%d %H:%M:%S')
+        config = load_json(dir_path, 'generate_case_config.json')
+        sim_start = datetime.strptime(config['StartTime'], '%Y-%m-%d %H:%M:%S')
 
         # Add additional calculations to the dataframe
         sim_end = sim_start + timedelta(seconds=data_df.index.to_list()[-1])
@@ -405,9 +409,9 @@ def load_ercot_fuel_mix(metadata_path, dir_path, day_range):
     Returns:
         data_df : dataframe of AMES data
     """
-    case_config = load_json(dir_path, 'generate_case_config.json')
+    config = load_json(dir_path, 'generate_case_config.json')
 
-    sim_start = datetime.strptime(case_config['StartTime'], '%Y-%m-%d %H:%M:%S')
+    sim_start = datetime.strptime(config['StartTime'], '%Y-%m-%d %H:%M:%S')
 
     ercot_fuel_df = pd.read_excel(metadata_path + '/ERCOTGenByFuel2016.xls', sheet_name='AllMonths')
     # ercot_fuel_df = pd.read_excel('ERCOTGenByFuel2016.xlsx', sheet_name='AllMonths')
@@ -607,10 +611,18 @@ def load_system_data(dir_path, folder_prefix, dso_num, day_num, system_name):
     list(store.keys())
     system_meta_df = pd.read_hdf(filename, key='/Metadata', mode='r')
     if daily_index:
-        system_df = pd.read_hdf(hdf5filenames[0], key='/index' + day_num, mode='r')
+        try:
+            system_df = pd.read_hdf(hdf5filenames[0], key='/index' + day_num, mode='r')
+        except KeyError:
+            print(f'file name {hdf5filenames[0]} key index{day_num} not found')
+            pass
     # ----- The code below was used for when there was one index with multiple days
     else:
-        system_df = pd.read_hdf(hdf5filenames[0], key='/index1', mode='r')
+        try:
+            system_df = pd.read_hdf(hdf5filenames[0], key='/index1', mode='r')
+        except KeyError:
+            print(f'file name {hdf5filenames[0]} key index{day_num} not found')
+            pass
         start_time = (int(day_num) - 1) * 300 * 288
         end_time = start_time + 300 * (288 - 1)
         system_df = system_df[system_df['time'] >= start_time]
@@ -623,8 +635,10 @@ def load_system_data(dir_path, folder_prefix, dso_num, day_num, system_name):
         # system_df['date'] = system_df['date'].apply(pd.to_datetime)
         # system_df = system_df.set_index(['date'])
         # system_df = system_df.loc[start_time:stop_time]
-    return system_meta_df, system_df
-
+    try:
+        return system_meta_df, system_df
+    except UnboundLocalError:
+        print(print(f'file name {hdf5filenames[0]} key index{day_num} not found'))
 
 def load_surcharge_data(dir_path, gen_name, day_range):
 
@@ -650,8 +664,8 @@ def load_surcharge_data(dir_path, gen_name, day_range):
             all_surcharges += values
 
     # Determine first day of simulation and resulting slice to take
-    case_config = load_json(dir_path, 'generate_case_config.json')
-    sim_start = datetime.strptime(case_config['StartTime'], '%Y-%m-%d %H:%M:%S')
+    config = load_json(dir_path, 'generate_case_config.json')
+    sim_start = datetime.strptime(config['StartTime'], '%Y-%m-%d %H:%M:%S')
     start_time = sim_start + timedelta(days=int(day_range[0]) - 1)
     stop_time = start_time + (day_range[-1] - day_range[0] + 1) * timedelta(days=1) - timedelta(minutes=5)
 
@@ -758,8 +772,8 @@ def load_weather_data(dir_path, folder_prefix, dso_num, day_num):
     data['datetime'] = data['datetime'].apply(pd.to_datetime)
     data = data.set_index(['datetime'])
     # Determine first day of simulation and resulting slice to take
-    case_config = load_json(dir_path, 'case_config_' + dso_num + '.json')
-    sim_start = datetime.strptime(case_config['SimulationConfig']['StartTime'], '%Y-%m-%d %H:%M:%S')
+    config = load_json(dir_path, 'case_config_' + dso_num + '.json')
+    sim_start = datetime.strptime(config['StartTime'], '%Y-%m-%d %H:%M:%S')
     start_time = sim_start + timedelta(days=int(day_num) - 1)
     stop_time = start_time + timedelta(days=1) - timedelta(minutes=5)
     weather_df = data.loc[start_time:stop_time, :]
@@ -1064,14 +1078,14 @@ def DSO_loadprofiles(dso_num, dso_range, day_range, case, dso_metadata_file, met
         dataframe with analysis values
         saves values to file
         """
-    case_config = load_json(case, 'generate_case_config.json')
+    config = load_json(case, 'generate_case_config.json')
     # Load ERCOT load profile data
-    metadata_file = os.path.join(metadata_path, case_config['refLoadMn'][5].split('/')[-1])
-    sim_start = datetime.strptime(case_config['StartTime'], '%Y-%m-%d %H:%M:%S')
+    metadata_file = os.path.join(metadata_path, config['refLoadMn'][5].split('/')[-1])
+    sim_start = datetime.strptime(config['StartTime'], '%Y-%m-%d %H:%M:%S')
     ercot_df = load_ercot_data(metadata_file, sim_start, day_range)
 
-    case_config = load_json(case, 'case_config_' + dso_num + '.json')
-    sim_start = datetime.strptime(case_config['SimulationConfig']['StartTime'], '%Y-%m-%d %H:%M:%S')
+    config = load_json(case, 'case_config_' + dso_num + '.json')
+    sim_start = datetime.strptime(config['StartTime'], '%Y-%m-%d %H:%M:%S')
 
     # Load DSO MetaData
     with open(dso_metadata_file) as json_file:
@@ -1286,19 +1300,19 @@ def bldg_load_stack(dso, day_range, case, agent_prefix, gld_prefix, metadata_pat
         saves daily profile plot to file
     """
 
-    case_config = load_json(case, 'generate_case_config.json')
+    config = load_json(case, 'generate_case_config.json')
     # Load ERCOT load profile data
-    metadata_file = os.path.join(metadata_path, case_config['refLoadMn'][5].split('/')[-1])
-    sim_start = datetime.strptime(case_config['StartTime'], '%Y-%m-%d %H:%M:%S')
+    metadata_file = os.path.join(metadata_path, config['refLoadMn'][5].split('/')[-1])
+    sim_start = datetime.strptime(config['StartTime'], '%Y-%m-%d %H:%M:%S')
     ercot_df = load_ercot_data(metadata_file, sim_start, day_range)
 
-    industrial_file = os.path.join(metadata_path, case_config['indLoad'][5].split('/')[-1])
+    industrial_file = os.path.join(metadata_path, config['indLoad'][5].split('/')[-1])
     indust_df = load_indust_data(industrial_file, day_range)
     indust_df = indust_df.set_index(ercot_df.index)
 
-    dso_metadata_file = case_config["dsoPopulationFile"]
-    if "rate" in case_config:
-        dso_metadata_file = case_config["dsoRECSPopulationFile"]
+    dso_metadata_file = config["dsoPopulationFile"]
+    if "rate" in config:
+        dso_metadata_file = config["dsoRECSPopulationFile"]
 
     # Load DSO MetaData
     DSOmetadata = load_json(metadata_path, dso_metadata_file)
@@ -1398,10 +1412,10 @@ def bldg_stack_plot(dso_range, day_range, case, metadata_path):
         saves daily profile plot to file
     """
 
-    case_config = load_json(case, 'generate_case_config.json')
+    config = load_json(case, 'generate_case_config.json')
     # Load ERCOT load profile data
-    metadata_file = os.path.join(metadata_path, case_config['refLoadMn'][5].split('/')[-1])
-    sim_start = datetime.strptime(case_config['StartTime'], '%Y-%m-%d %H:%M:%S')
+    metadata_file = os.path.join(metadata_path, config['refLoadMn'][5].split('/')[-1])
+    sim_start = datetime.strptime(config['StartTime'], '%Y-%m-%d %H:%M:%S')
     ercot_df = load_ercot_data(metadata_file, sim_start, day_range)
 
     # Need to load data for each DSO and concatenate into one master dataframe
@@ -1475,28 +1489,28 @@ def der_load_stack(dso, day_range, case, gld_prefix, metadata_path):
         saves dso DER loads data to file
         """
 
-    case_config = load_json(case, 'generate_case_config.json')
+    config = load_json(case, 'generate_case_config.json')
     # Load ERCOT load profile data
-    metadata_file = os.path.join(metadata_path, case_config['refLoadMn'][5].split('/')[-1])
-    sim_start = datetime.strptime(case_config['StartTime'], '%Y-%m-%d %H:%M:%S')
+    metadata_file = os.path.join(metadata_path, config['refLoadMn'][5].split('/')[-1])
+    sim_start = datetime.strptime(config['StartTime'], '%Y-%m-%d %H:%M:%S')
     ercot_df = load_ercot_data(metadata_file, sim_start, day_range)
 
-    if case_config['caseType']['bt'] == 1:
+    if config['caseType']['bt'] == 1:
         battery_case = True
     else:
         battery_case = False
-    if case_config['caseType']['fl'] == 1:
+    if config['caseType']['fl'] == 1:
         flexload_case = True
     else:
         flexload_case = False
-    if case_config['caseType']['pv'] == 1:
+    if config['caseType']['pv'] == 1:
         pv_case = True
     else:
         pv_case = False
 
-    dso_metadata_file = case_config["dsoPopulationFile"]
-    if "rate" in case_config:
-        dso_metadata_file = case_config["dsoRECSPopulationFile"]
+    dso_metadata_file = config["dsoPopulationFile"]
+    if "rate" in config:
+        dso_metadata_file = config["dsoRECSPopulationFile"]
 
     # Load DSO MetaData
     DSOmetadata = load_json(metadata_path, dso_metadata_file)
@@ -1511,7 +1525,7 @@ def der_load_stack(dso, day_range, case, gld_prefix, metadata_path):
                                 index=der_index,
                                 columns=variables)
 
-    industrial_file = os.path.join(metadata_path, case_config['indLoad'][5].split('/')[-1])
+    industrial_file = os.path.join(metadata_path, config['indLoad'][5].split('/')[-1])
     indust_df = load_indust_data(industrial_file, day_range)
     indust_df = indust_df.set_index(ercot_df.index)
 
@@ -1590,23 +1604,23 @@ def der_stack_plot(dso_range, day_range, metadata_path, case, comp=None, plot_re
         """
 
     # Load generate_case_config
-    case_config = load_json(case, 'generate_case_config.json')
+    config = load_json(case, 'generate_case_config.json')
     # Load ERCOT load profile data
-    metadata_file = os.path.join(metadata_path, case_config['refLoadMn'][5].split('/')[-1])
-    sim_start = datetime.strptime(case_config['StartTime'], '%Y-%m-%d %H:%M:%S')
+    metadata_file = os.path.join(metadata_path, config['refLoadMn'][5].split('/')[-1])
+    sim_start = datetime.strptime(config['StartTime'], '%Y-%m-%d %H:%M:%S')
     ercot_df = load_ercot_data(metadata_file, sim_start, day_range)
     ames_rt_df = load_ames_data(case, day_range)
     ames_rt_df = ames_rt_df.set_index(ercot_df.index)
 
-    if case_config['caseType']['bt'] == 1:
+    if config['caseType']['bt'] == 1:
         battery_case = True
     else:
         battery_case = False
-    if case_config['caseType']['fl'] == 1:
+    if config['caseType']['fl'] == 1:
         flexload_case = True
     else:
         flexload_case = False
-    if case_config['caseType']['pv'] == 1:
+    if config['caseType']['pv'] == 1:
         pv_case = True
     else:
         pv_case = False
@@ -1727,10 +1741,10 @@ def subscription_plot(dso, day_range, metadata_path, case, demand_case):
         saves DER stack plot to file
         """
     # Load generate_case_config
-    case_config = load_json(case, 'generate_case_config.json')
+    config = load_json(case, 'generate_case_config.json')
     # Load ERCOT load profile data
-    metadata_file = os.path.join(metadata_path, case_config['refLoadMn'][5].split('/')[-1])
-    sim_start = datetime.strptime(case_config['StartTime'], '%Y-%m-%d %H:%M:%S')
+    metadata_file = os.path.join(metadata_path, config['refLoadMn'][5].split('/')[-1])
+    sim_start = datetime.strptime(config['StartTime'], '%Y-%m-%d %H:%M:%S')
     ercot_df = load_ercot_data(metadata_file, sim_start, day_range)
 
     demand_df = pd.read_hdf(case + '/Substation_' + str(dso) + '/Substation_'
@@ -1748,8 +1762,8 @@ def subscription_plot(dso, day_range, metadata_path, case, demand_case):
     #     raise Exception('DER stack plot data not available for ' + str(stop_time) + ".")
 
     # Determine total customer base demand (subscription value) ensuring to use scaling factor and correct for kW-to-MW
-    demand_df['sum'] = demand_df.sum(axis=1)*case_config['DSO'][int(dso)-1][2]/1000
-    basedemand_df['sum'] = basedemand_df.sum(axis=1)*case_config['DSO'][int(dso)-1][2]/1000
+    demand_df['sum'] = demand_df.sum(axis=1)*config['DSO'][int(dso)-1][2]/1000
+    basedemand_df['sum'] = basedemand_df.sum(axis=1)*config['DSO'][int(dso)-1][2]/1000
     basedemand_df = basedemand_df.loc[start_time:stop_time, :]
 
     output_df = demand_df[['sum']]
@@ -1980,16 +1994,16 @@ def dso_market_plot(dso_range, day, case, dso_metadata_file, ercot_dir, comp_cas
 
     date = get_date(case, str(dso_range[0]), day)
     # Load generate_case_config
-    case_config = load_json(case, 'generate_case_config.json')
+    config = load_json(case, 'generate_case_config.json')
     # Load ERCOT load profile data
-    metadata_file = os.path.join(ercot_dir, case_config['refLoadMn'][5].split('/')[-1])
-    sim_start = datetime.strptime(case_config['StartTime'], '%Y-%m-%d %H:%M:%S')
+    metadata_file = os.path.join(ercot_dir, config['refLoadMn'][5].split('/')[-1])
+    sim_start = datetime.strptime(config['StartTime'], '%Y-%m-%d %H:%M:%S')
     ercot_df = load_ercot_data(metadata_file, sim_start, [int(day)])
     ames_rt_df = load_ames_data(case, range(int(day), int(day) + 1))
-    industrial_file = os.path.join(ercot_dir, case_config['indLoad'][5].split('/')[-1])
+    industrial_file = os.path.join(ercot_dir, config['indLoad'][5].split('/')[-1])
     indust_df = load_indust_data(industrial_file, range(int(day), int(day) + 1))
 
-    FNCS = case_config['DSO']
+    FNCS = config['DSO']
 
     # Load DSO MetaData
     DSOmetadata = load_json(ercot_dir, dso_metadata_file)
@@ -2233,11 +2247,11 @@ def dso_forecast_stats(dso_range, day_range, case, dso_metadata_file, ercot_dir)
     DSOmetadata = load_json(ercot_dir, dso_metadata_file)
 
     # Load generate_case_config
-    case_config = load_json(case, 'generate_case_config.json')
+    config = load_json(case, 'generate_case_config.json')
     # Load ERCOT load profile data
-    metadata_file = os.path.join(ercot_dir, case_config['refLoadMn'][5].split('/')[-1])
-    sim_start = datetime.strptime(case_config['StartTime'], '%Y-%m-%d %H:%M:%S')
-    industrial_file = os.path.join(ercot_dir, case_config['indLoad'][5].split('/')[-1])
+    metadata_file = os.path.join(ercot_dir, config['refLoadMn'][5].split('/')[-1])
+    sim_start = datetime.strptime(config['StartTime'], '%Y-%m-%d %H:%M:%S')
+    industrial_file = os.path.join(ercot_dir, config['indLoad'][5].split('/')[-1])
     for day in day_range:
 
         ercot_df = load_ercot_data(metadata_file, sim_start, range(int(day), int(day) + 1))
@@ -2534,10 +2548,10 @@ def dso_load_stats(dso_range, month_list, data_path, metadata_path, plot=False):
         building_loads_df['total_res'] = building_loads_df[res_bldgs].sum(axis=1)
         der_loads_df = pd.merge(der_loads_df, building_loads_df, left_index=True, right_index=True)
         # Load generate_case_config
-        case_config = load_json(month_list[i][1], 'generate_case_config.json')
+        config = load_json(month_list[i][1], 'generate_case_config.json')
         # Load ERCOT load profile data
-        metadata_file = os.path.join(metadata_path, case_config['refLoadMn'][5].split('/')[-1])
-        sim_start = datetime.strptime(case_config['StartTime'], '%Y-%m-%d %H:%M:%S')
+        metadata_file = os.path.join(metadata_path, config['refLoadMn'][5].split('/')[-1])
+        sim_start = datetime.strptime(config['StartTime'], '%Y-%m-%d %H:%M:%S')
         ercot_df = load_ercot_data(metadata_file, sim_start, range(month_list[i][2], month_list[i][3]))
         ercot_sum = ercot_df.loc[:, ercot_df.columns[ercot_df.columns.str.contains('Bus')]].sum(
             axis=1)
@@ -2721,18 +2735,18 @@ def non_participating_dso_loads(dso_range, case, metadata_path):
         saves dso load comparison plots to file
         """
 
-    case_config = load_json(case, 'generate_case_config.json')
+    config = load_json(case, 'generate_case_config.json')
     # Load ERCOT load profile data
-    dso_load_file = os.path.join(metadata_path, case_config['refLoadMn'][5].split('/')[-1])
+    dso_load_file = os.path.join(metadata_path, config['refLoadMn'][5].split('/')[-1])
     dso_load_profiles = pd.read_csv(dso_load_file, index_col='Seconds', parse_dates=True, date_format='%Y-%m-%d %H:%M:%S')
 
     start_time = datetime.strptime("2015-12-29 00:00:00", '%Y-%m-%d %H:%M:%S')
     arr = np.array([start_time + timedelta(seconds=float(i)) for i in dso_load_profiles.index.values])
     dso_load_profiles.set_index(arr, inplace=True)
 
-    dso_metadata_file = case_config["dsoPopulationFile"]
-    if "rate" in case_config:
-        dso_metadata_file = case_config["dsoRECSPopulationFile"]
+    dso_metadata_file = config["dsoPopulationFile"]
+    if "rate" in config:
+        dso_metadata_file = config["dsoRECSPopulationFile"]
 
     # Load DSO MetaData
     DSOmetadata = load_json(metadata_path, dso_metadata_file)
@@ -3787,10 +3801,10 @@ def generation_load_profiles(dir_path, metadata_path, data_path, day_range, use_
         saves plots to file
         """
     # Load generate_case_config
-    case_config = load_json(dir_path, 'generate_case_config.json')
+    config = load_json(dir_path, 'generate_case_config.json')
     # Load ERCOT load profile data
-    metadata_file = os.path.join(metadata_path, case_config['refLoadMn'][5].split('/')[-1])
-    sim_start = datetime.strptime(case_config['StartTime'], '%Y-%m-%d %H:%M:%S')
+    metadata_file = os.path.join(metadata_path, config['refLoadMn'][5].split('/')[-1])
+    sim_start = datetime.strptime(config['StartTime'], '%Y-%m-%d %H:%M:%S')
     ercot_df = load_ercot_data(metadata_file, sim_start, day_range)
 
     ercot_sum = ercot_df.loc[:, ercot_df.columns[ercot_df.columns.str.contains('Bus')]].sum(axis=1)
@@ -3810,7 +3824,7 @@ def generation_load_profiles(dir_path, metadata_path, data_path, day_range, use_
         fuel_df = load_ames_data(dir_path, day_range)
         ercot_sum_df['AMES Load'] = fuel_df[' TotalLoad']
 
-        config_data = case_config
+        config_data = config
 
         fuel_key = {'nuc': 'Nuclear',
                     'coal': 'Coal',
@@ -4232,7 +4246,7 @@ def transmission_statistics(metadata_file_path, case_config_path, data_path, day
 #     # transmission_loss = (gen_sum - ercot_sum) / gen_sum
 #     # transmission_loss.plot()
 #     # Load Transmission Line Data
-#     # case_config = load_json(config_path, 'system_case_config.json')
+#     # config = load_json(config_path, 'system_case_config.json')
 #
 #     rt_line_data_df = load_gen_data(data_path, 'rt_line', day_range)
 #     test_data_df = rt_line_data_df.unstack(level=1)
@@ -4249,7 +4263,7 @@ def transmission_statistics(metadata_file_path, case_config_path, data_path, day
 #         linecap_count = 0
 #         test_data_df['nodeabs' + str(node)] = np.zeros_like(test_data_df[line_cols[0]])
 #         test_data_df['nodeabnorm' + str(node)] = np.zeros_like(test_data_df[line_cols[0]])
-#         for branch in case_config['branch']:
+#         for branch in config['branch']:
 #             id += 1
 #             if branch[0] == node:
 #                 test_data_df['nodeabs' + str(node)] += -test_data_df['rt_line' + str(id)] * branch[5]
@@ -5025,17 +5039,17 @@ def run_plots():
     config_path = os.getcwd()
     # you should always use 'generate_case_config.json' as it is copied when case is created
     system_case = 'generate_case_config.json'
-    case_config = load_json(config_path, system_case)
+    config = load_json(config_path, system_case)
     case_config_file = config_path + '/' + system_case
 
     agent_prefix = '/DSO_'
     GLD_prefix = '/Substation_'
 
-    metadata_path = "../" + case_config['dataPath']
+    metadata_path = "../" + config['dataPath']
 
-    metadata_file = case_config["dsoPopulationFile"]
-    if "rate" in case_config:
-        metadata_file = case_config["dsoRECSPopulationFile"]
+    metadata_file = config["dsoPopulationFile"]
+    if "rate" in config:
+        metadata_file = config["dsoRECSPopulationFile"]
     dso_meta_file = metadata_path + '/' + metadata_file
 
     base_case = os.getcwd()
@@ -5135,8 +5149,8 @@ def run_plots():
         inverter_meta_df, inverter_df = load_system_data(base_case, GLD_prefix, dso_num, day_num, 'inverter')
         # ev_meta_df, ev_df = load_system_data(base_case, GLD_prefix, dso_num, day_num, 'evchargerdet')
 
-        case_config = load_json(data_path, 'case_config_' + dso_num + '.json')
-        sim_start = datetime.strptime(case_config['SimulationConfig']['StartTime'], '%Y-%m-%d %H:%M:%S')
+        config = load_json(data_path, 'case_config_' + dso_num + '.json')
+        sim_start = datetime.strptime(config['StartTime'], '%Y-%m-%d %H:%M:%S')
         curve_time = sim_start + timedelta(days=int(day_num) - 1, hours=14, seconds=0)
         forecast_hour = 3
         real_time = curve_time + timedelta(hours=forecast_hour - 3, minutes=30)
@@ -5621,7 +5635,7 @@ def run_plots():
         # transmission_loss.plot()
 
         # Load Transmission Line Data
-        case_config = load_json(config_path, case_config_file)
+        config = load_json(config_path, case_config_file)
         realtime = False
         if realtime:
             rt_line_data_df = load_gen_data(base_case, 'rt_line', day_range)
@@ -5645,7 +5659,7 @@ def run_plots():
         # file_path_fig = os.path.join(data_path, 'plots', plot_filename)
         # fig.savefig(file_path_fig, bbox_inches='tight')
 
-        if len(case_config['bus']) > 200:
+        if len(config['bus']) > 200:
             bus_num = 200
         else:
             bus_num = 8
@@ -5659,7 +5673,7 @@ def run_plots():
             linecap_count = 0
             test_data_df['nodeabs' + str(node)] = np.zeros_like(test_data_df[line_cols[0]])
             test_data_df['nodeabnorm' + str(node)] = np.zeros_like(test_data_df[line_cols[0]])
-            for branch in case_config['branch']:
+            for branch in config['branch']:
                 id += 1
                 if branch[0] == node:
                     test_data_df['nodeabs' + str(node)] += -test_data_df['line' + str(id - 1)] * branch[5]

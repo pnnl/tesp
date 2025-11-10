@@ -1,7 +1,8 @@
 # Copyright (c) 2018-2020 Battelle Memorial Institute
 # file: gld_feeder_generator.py
 """ This gld_feeder_generator.py is an updated feeder generator that combines 
-the functionality of the residential_feeder_glm.py, the commercial_feeder_glm.py, and the copperplate_feeder_glm.py.
+the functionality of the residential_feeder_glm.py, the commercial_feeder_glm.py, 
+and the copperplate_feeder_glm.py.
 
 Replaces ZIP loads with houses, optional storage, electric vehicles, and solar
 generation.
@@ -26,7 +27,8 @@ Public Functions:
         batteries, and electric vehicles, based on imported metadata for each.
     :load_position: Read in positional data from feeder, if specified in config,
         to aid plotting function of populated feeder model.
-    :add_position: Create a coordinate pair posiiton for a new node added to the feeder based off the position of its basenode.
+    :add_position: Create a coordinate pair posiiton for a new node added to the 
+    feeder based off the position of its basenode.
 
     Residential_Build
     :buildingTypeLabel: Assign formatted name of region, building type name, 
@@ -76,11 +78,15 @@ Public Functions:
         parentage of the parent_mtr.
 
     Electric_Vehicle
-    :add_ev: Define and add electric vehicle charging object to the house, under the parentage of the house object
+    :add_ev: Define and add electric vehicle charging object to the house, under 
+        the parentage of the house object
     :selectEVmodel: Select the EV model based on available sale distribution data
-    :match_driving_schedule: Method to match the schedule of each vehicle from NHTS data based on vehicle ev_range
-    :is_drive_time_valid: Check if work arrival time and home arrival time add up properly
-    :process_nhts_data: Read the large NHTS survey data file containing driving data, process it, and return a dataframe
+    :match_driving_schedule: Method to match the schedule of each vehicle from 
+        NHTS data based on vehicle ev_range
+    :is_drive_time_valid: Check if work arrival time and home arrival time add up
+        properly
+    :process_nhts_data: Read the large NHTS survey data file containing driving 
+        data, process it, and return a dataframe
 
     Feeder
     :feeder_gen: Read in the backbone feeder, then loop through transformer
