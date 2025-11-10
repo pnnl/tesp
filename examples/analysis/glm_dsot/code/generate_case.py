@@ -18,13 +18,18 @@ def generate_case(caseName, port, pv=None, bt=None, fl=None, ev=None):
     split_case = ppc['split_case']
     caseStartYear = ppc['caseStartYear']
     caseEndYear = ppc['caseEndYear']
+    case_rate = ppc['rate']
+    if len(case_rate) > 0:
+        case_rate_and_node = node + "_" + case_rate + "_"
+    else:
+        case_rate_and_node = node + "_"
 
     if split_case:
         while True:
             for i in range(4, 5):
                 # (exclusive, inclusive)
                 directory_name = str(caseStartYear) + "_" + '{0:0>2}'.format(i+1)
-                ppc['caseName'] = node + "_" + directory_name
+                ppc['caseName'] = case_rate_and_node + directory_name
                 ppc['port'] = int(port + i)
 
                 year = caseStartYear

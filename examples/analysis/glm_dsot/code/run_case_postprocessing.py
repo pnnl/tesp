@@ -7,19 +7,19 @@ from joblib import Parallel, delayed
 import tesp_support.dsot.plots as pt
 import tesp_support.dsot.dso_rate_making as rm
 
-''' This script runs key postprocessing functions that warrant execution after every simulation run.  
+""" This script runs key postprocessing functions that warrant execution after every simulation run.  
 It has the following elements:
     0. Setup - establish locations and meta data files etc.
     1. Postprocessing that is required per DSO (and can be parallelized)
     2. Postprocessing that is required across all DSOs and is desired for every run
-    3. Postprocessing that is needed over the entire year (and will likely need be executed on Constance).
-    4. Postprocessing that compares cases (and will likely need to be executed on Constance).
+    3. Postprocessing that is needed over the entire year (and will likely need be executed on a large computing resource).
+    4. Postprocessing that compares cases (and will likely need to be executed on a large computing resource).
 
 Supported backends are:
     - “loky” used by default, can induce some communication and memory overhead 
     when exchanging input and output data with the worker Python processes.
     - “multiprocessing” previous process-based backend based on multiprocessing.
-    - Pool. Less robust than loky.
+    - "pool" which is less robust than loky.
     - “threading” is a very low-overhead backend, but it suffers from the Python
      Global Interpreter Lock if the called function relies a lot on Python 
      objects. “threading” is mostly useful when the execution bottleneck is a 
@@ -28,7 +28,7 @@ Supported backends are:
      as NumPy).
     - Finally, you can register backends by calling register_parallel_backend.
     This will allow you to implement a backend of your liking.
-'''
+"""
 _NUM_CORE = -1
 _backend = 'loky'  # 'multiprocessing'  had some problems
 _verbose = 10
@@ -194,7 +194,7 @@ def post_process():
     if rate_scenario is None:
         dso_metadata_file = case_config["population_file"]
     else:
-        dso_metadata_file = case_config["RECS_population_file"]
+        dso_metadata_file = case_config["population_file_RECS"]
 
     agent_prefix = '/DSO_'
     GLD_prefix = '/Substation_'
