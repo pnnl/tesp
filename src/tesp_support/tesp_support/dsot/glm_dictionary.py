@@ -315,7 +315,7 @@ def glm_dict(name_root, config=None, ercot=False):  # , te30=False):
                                      'arrival_home': ev_arr_home,
                                      'work_duration': ev_dur_work,
                                      'home_duration': ev_dur_home,
-                                     'miles_per_kwh': ev_mileage,
+                                     'miles_per_kWh': ev_mileage,
                                      'range_miles': ev_range,
                                      'efficiency': ev_charg_eff}
             if inHouses:
@@ -1009,7 +1009,7 @@ def glm_diction(case_name, feed_key):
                         'arrival_home': float(evcharger_det["arrival_at_home"]),
                         'work_duration': float(evcharger_det["duration_at_work"]),
                         'home_duration': float(evcharger_det["duration_at_home"]),
-                        'miles_per_kwh': float(evcharger_det["mileage_efficiency"]),
+                        'miles_per_kWh': float(evcharger_det["mileage_efficiency"]),
                         'range_miles': float(evcharger_det["mileage_classification"]),
                         'efficiency': float(evcharger_det["charging_efficiency"])}
             if billingmeters[glm.triplex_meter.instances[glm.house.instances[evcharger_det['parent']]['parent']]['parent']]:
@@ -1027,7 +1027,7 @@ def glm_diction(case_name, feed_key):
                         'arrival_home': float(evcharger_det["arrival_at_home"]),
                         'work_duration': float(evcharger_det["duration_at_work"]),
                         'home_duration': float(evcharger_det["duration_at_home"]),
-                        'miles_per_kwh': float(evcharger_det["mileage_efficiency"]),
+                        'miles_per_kWh': float(evcharger_det["mileage_efficiency"]),
                         'range_miles': float(evcharger_det["mileage_classification"]),
                         'efficiency': float(evcharger_det["charging_efficiency"])}
             if billingmeters[glm.house.instances[evcharger_det['parent']]['parent']]:

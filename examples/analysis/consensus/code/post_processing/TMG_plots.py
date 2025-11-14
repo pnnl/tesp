@@ -704,7 +704,7 @@ def RCI_analysis(dso_range, case, data_path, metadata_path, dso_metadata_file, e
             for ev in metadata['ev']:
                 EVcount += 1
                 EVrating += metadata['ev'][ev]['max_charge'] / 1000
-                EVcapacity += metadata['ev'][ev]['range_miles'] / metadata['ev'][ev]['miles_per_kwh']
+                EVcapacity += metadata['ev'][ev]['range_miles'] / metadata['ev'][ev]['miles_per_kWh']
         EVtot.append(EVcount)
         EVratingtot.append(EVrating)
         EVcapacitytot.append(EVcapacity)

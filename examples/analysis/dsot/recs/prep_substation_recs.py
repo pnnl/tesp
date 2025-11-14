@@ -108,7 +108,6 @@ def select_setpt_night(wakeup_set, daylight_set, mode, st, hd, inc_lev):
                 night_set = wakeup_set
         except:
             print("WARNING select setpt not found:", wakeup_set, daylight_set, mode, st, hd, inc_lev, ", setting to ", wakeup_set)
-            night_set = wakeup_set
             pass
         return night_set
 
@@ -629,7 +628,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                               'arrival_home': val['arrival_home'],
                               'work_duration': val['work_duration'],
                               'home_duration': val['home_duration'],
-                              'miles_per_kwh': val['miles_per_kwh'],
+                              'miles_per_kWh': val['miles_per_kWh'],
                               'range_miles': val['range_miles'],
                               'efficiency': val['efficiency'],
                               'slider_setting': float('{:.4f}'.format(slider)),

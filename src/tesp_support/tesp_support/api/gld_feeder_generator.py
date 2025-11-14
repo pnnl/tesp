@@ -149,7 +149,7 @@ class Config:
         self.glm.add_module("generators", {})
         self.glm.add_module("connection", {})
         self.glm.add_module("residential", {"implicit_enduses": "NONE"})
-        self.glm.add_module("powerflow", {"lu_solver": "KLU", "solver_method": "NR", "default_maximum_voltage_error": 1e-6, 'NR_iteration_limit': 100})
+        self.glm.add_module("powerflow", {"lu_solver": "KLU", "solver_method": "NR", "default_maximum_voltage_error": 1e-6})
         #TODO: max voltage error was set to 0.01 in original copperplate. Keep?
 
         # Add player files if pre-defining solar generation
@@ -1403,7 +1403,7 @@ class Commercial_Build:
                 bldg['Rfloor'] = 46.
                 bldg['Rdoors'] = 3.
                 bldg['int_gains'] = 3.6  # W/sf
-                bldg['base_schedule'] = 'retail'
+                bldg['base_schedule'] = 'bigbox'
                 bldg['skew_value'] = self.glm.randomize_commercial_skew()
                 floor_area_choose = 20000. * (0.5 + 1. * rng.random())
                 floor_area = floor_area_choose / 6.
@@ -1911,15 +1911,15 @@ class Electric_Vehicle:
         if rng.random() <= ev_prob:
             # Select an ev model:
             ev_name = Electric_Vehicle.selectEVmodel(self.config.ev.sale_probability, rng.random())
-            ev_range = self.config.ev.Range_miles[ev_name]
-            ev_mileage = self.config.ev.Miles_per_kWh[ev_name]
+            ev_range = self.config.ev.range_miles[ev_name]
+            ev_mileage = self.config.ev.miles_per_kWh[ev_name]
             ev_charge_eff = self.config.ev.charging_efficiency
             # Check if level 1 charger is used or level 2
-            if rng.random() <= self.config.ev.Level_1_usage:
-                ev_max_charge = self.config.ev.Level_1_max_power_kW
+            if rng.random() <= self.config.ev.level_1_usage:
+                ev_max_charge = self.config.ev.level_1_max_power_kW
                 volt_conf = 'IS110'  # for level 1 charger, 110 V is good
             else:
-                ev_max_charge = self.config.ev.Level_2_max_power_kW[ev_name]
+                ev_max_charge = self.config.ev.level_2_max_power_kW[ev_name]
                 volt_conf = 'IS220'  # for level 2 charger, must be 220 V
             # Map a random driving schedule with this vehicle ensuring daily miles
             # doesn't exceed the vehicle range and home duration is enough to charge the vehicle
@@ -2107,7 +2107,7 @@ class Electric_Vehicle:
         # Limit daily miles to maximum possible range of EV from the EV model
         # data, as EVs can't travel more than their range in a day if we don't
         # consider highway charging.
-        max_ev_range = max(self.Range_miles.values())
+        max_ev_range = max(self.range_miles.values())
         df_data_miles = df_data_miles[df_data_miles < max_ev_range]
         df_data_miles = df_data_miles[df_data_miles > 0]
 
@@ -2577,7 +2577,7 @@ def _test2():
     out_file = 'R1-12.47-2_populated.glm'
     out = os.path.join(data_path, out_file)
 
-    config_file = 'test_feeder_config.json5'
+    config_file = 'feeder_config.json5'
     config = Config(os.path.join(data_path, config_file))
     config.data_path = data_path
     feeder = Feeder(config, "full")

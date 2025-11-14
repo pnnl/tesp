@@ -191,17 +191,24 @@ def gld_modifier_test():
 
 
 def feeder_generator_test():
-    tr.start_test('Feeder Generator example')
+    import filecmp
+
+    tr.start_test('Feeder Generator examples')
     os.chdir('capabilities/feeder-generator')
     subprocess.Popen('./clean.sh', shell=True).wait()
     tr.run_test('run.sh', 'Feeder generator')
+    compare = filecmp.cmp('R1-12.47-2_populated.log', 'test_feeder.log')
+    print(f'======  Did the test.glm match R1-12.47-2_populated.glm -> {compare}')
     os.chdir(tesp_path)
 
 
 def feeder_generator_comp_test():
+    tr.start_test('Feeder Generator Compare example')
     os.chdir(tesp_path)
+    tr.run_test('', 'Feeder generator')
     from tesp_support.api.gld_feeder_generator import _test2
     _test2()
+    os.chdir(tesp_path)
 
 
 if __name__ == '__main__':
@@ -216,20 +223,20 @@ if __name__ == '__main__':
     tesp_path = os.path.expandvars('$TESPDIR/examples')
     os.chdir(tesp_path)
 
-    # tr.block_test(gld_player_test)
-    # tr.block_test(loadshed_test)
-    # tr.block_test(loadshed_cli_test)
+    tr.block_test(gld_player_test)
+    tr.block_test(loadshed_test)
+    tr.block_test(loadshed_cli_test)
     tr.block_test(loadshed_proto_test)
-    # tr.block_test(pypower_test)
-    # tr.block_test(energyplus_test)
-    # tr.block_test(weather_agent_test)
-    # tr.block_test(houses_test)
-    # tr.block_test(gld_modifier_test)
-    # # tr.block_test(feeder_generator_test)
-    # # tr.block_test(feeder_generator_comp_test)
-    # tr.block_test(te30_test)
-    # tr.block_test(combine_feeders_test)
-    # tr.block_test(make_comm_eplus_test)
-    # tr.block_test(make_comm_base_test)  # there are 3 different runs, takes ~5min each
+    tr.block_test(pypower_test)
+    tr.block_test(energyplus_test)
+    tr.block_test(weather_agent_test)
+    tr.block_test(houses_test)
+    tr.block_test(gld_modifier_test)
+    tr.block_test(feeder_generator_test)
+    ## tr.block_test(feeder_generator_comp_test)
+    tr.block_test(te30_test)
+    tr.block_test(combine_feeders_test)
+    tr.block_test(make_comm_eplus_test)
+    tr.block_test(make_comm_base_test)  # there are 3 different runs, takes ~5min each
 
     print(tr.report_tests())

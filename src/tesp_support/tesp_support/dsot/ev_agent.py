@@ -97,7 +97,7 @@ class EVDSOT:
         self.Lout = 1.0  # discharging has no efficiency factor
         self.reserved_soc = 0.2  # float(diction['reserved_soc'])
         self.range = float(diction['range_miles'])
-        self.mileage = float(diction['miles_per_kwh'])
+        self.mileage = float(diction['miles_per_kWh'])
         self.capacity = self.range / self.mileage
         self.Cmin = self.capacity * self.reserved_soc
         self.Cmax = self.capacity * self.soc_upper_res
@@ -856,7 +856,7 @@ def test():
         "arrival_home": 1840,
         "work_duration": 15000.0,
         "home_duration": 67800.0,
-        "miles_per_kwh": 3.333,
+        "miles_per_kWh": 3.333,
         "range_miles": 151.0,
         "efficiency": 0.9
     }
@@ -871,7 +871,7 @@ def test():
              "arrival_home": 1840,
              "work_duration": 15000.0,
              "home_duration": 67800.0,
-             "miles_per_kwh": 3.333,
+             "miles_per_kWh": 3.333,
              "range_miles": 151.0,
              "efficiency": 0.9,
              "slider_setting": 0.5119,
@@ -890,7 +890,7 @@ def test():
         "arrival_home": 800,
         "work_duration": 1.0,
         "home_duration": 82799.0,
-        "miles_per_kwh": 3.333,
+        "miles_per_kWh": 3.333,
         "range_miles": 285.0,
         "efficiency": 0.9,
         "slider_setting": 0.5395,
@@ -902,7 +902,7 @@ def test():
     agent = {"evName": "R5_12_47_2_tn_67_ev_1", "meterName": "R5_12_47_2_tn_67_mtr_1", "work_charging": "FALSE",
              "boundary_cond": "full", "ev_mode": "V1G", "initial_soc": 99.0, "max_charge": 11500.0,
              "daily_miles": 212.444, "arrival_work": 1303, "arrival_home": 1936, "work_duration": 21780.0,
-             "home_duration": 61020.0, "miles_per_kwh": 3.846, "range_miles": 220.0, "efficiency": 0.9,
+             "home_duration": 61020.0, "miles_per_kWh": 3.846, "range_miles": 220.0, "efficiency": 0.9,
              "slider_setting": 0.6271, "profit_margin": 10.5928, "degrad_factor": 0.0227, "participating": True}
 
     # checking uncontrollable load forecast for EV

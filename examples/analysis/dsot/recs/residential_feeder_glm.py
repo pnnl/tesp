@@ -143,7 +143,7 @@ def process_nhts_data(data_file):
     df_data_miles = df_data.groupby(level=['HOUSEID', 'VEHID']).sum()['TRPMILES']
     # limit daily miles to maximum possible range of EV from the ev model data as EVs cant travel more
     # than the range in a day if we don't consider the highway charging
-    max_ev_range = max(ev_metadata['Range_miles'].values())
+    max_ev_range = max(ev_metadata['range_miles'].values())
     df_data_miles = df_data_miles[df_data_miles < max_ev_range]
     df_data_miles = df_data_miles[df_data_miles > 0]
 
@@ -2128,15 +2128,15 @@ def write_houses(basenode, op, vnom):
         if np.random.uniform(0, 1) <= ev_percentage_il:
             # first lets select an ev model:
             ev_name = selectEVmodel(ev_metadata['sale_probability'], np.random.uniform(0, 1))
-            ev_range = ev_metadata['Range_miles'][ev_name]
-            ev_mileage = ev_metadata['Miles_per_kWh'][ev_name]
+            ev_range = ev_metadata['range_miles'][ev_name]
+            ev_mileage = ev_metadata['miles_per_kWh'][ev_name]
             ev_charge_eff = ev_metadata['charging_efficiency']
             # check if level 1 charger is used or level 2
-            if np.random.uniform(0, 1) <= ev_metadata['Level_1_usage']:
-                ev_max_charge = ev_metadata['Level_1_max_power_kW']
+            if np.random.uniform(0, 1) <= ev_metadata['level_1_usage']:
+                ev_max_charge = ev_metadata['level_1_max_power_kW']
                 volt_conf = 'IS110'  # for level 1 charger, 110 V is good
             else:
-                ev_max_charge = ev_metadata['Level_2_max_power_kW'][ev_name]
+                ev_max_charge = ev_metadata['level_2_max_power_kW'][ev_name]
                 volt_conf = 'IS220'  # for level 2 charger, 220 V is must
 
             # now, let's map a random driving schedule with this vehicle ensuring daily miles

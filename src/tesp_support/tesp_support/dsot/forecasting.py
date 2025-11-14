@@ -429,12 +429,12 @@ class Forecasting:
         Args:
             skew_scalar: dictionary containing 'zip_skew', 'zip_scalar' and 'zip_heatgain_fraction' for each zip load
             'zip_skew' is a scalar and same for all type of zip loads for the given house. 'zip_scalar' and 'zip_heatgain_fraction'
-            are dictionary containing different values for each tyoe of zip load
+            are dictionary containing different values for each type of zip load
             time: Datetime format: forecast start time
             extra_forecast_hours: (int) number of hours for which forecast needs to be stored. For example if it is 24, then
             we need to get forecast for 48+24=72 hours so that there is no need to come back to this function for next 24-hours.
         Returns:
-            list of (48+extra_forecast_hours) values of total zipl loads and total internal gain due to zip loads
+            list of (48+extra_forecast_hours) values of total zip loads and total internal gain due to zip loads
         """
         len_forecast = self.windowLength + extra_forecast_hours
         zip_load = [0.0] * len_forecast

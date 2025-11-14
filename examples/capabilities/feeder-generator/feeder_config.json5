@@ -9,14 +9,14 @@
     "time_zone": "EST+5EDT",       // REQUIRED: GridLAB-D supported time zone: Eastern. (CST+6CDT (Central), MST+7MDT (Mountain), PST+8PDT (Pacific))
     "metrics_extension": "json",
     "metrics_interval": 300,      // DEFAULT: 300, update frequency of the metrics collector, in seconds
-    "metrics_interim": 300,      // DEFAULT: 300, update frequency of the metrics collector, in seconds
+    "metrics_interim": 3600,      // DEFAULT: 300, update frequency of the metrics collector, in seconds
     "metrics_filename": "${METRICS_FILE}",
     "metrics_alternate": "yes",
     "metrics_full_detail": true, // Level of reporting detail. False = limited, true = full
 
     // Input and Output Files
     "in_file_glm": "",            // input feeder model ("myfeeder.glm"). If empty, taxonomy feeder used
-    "make_plot": true,           // specify whether to plot populated feeder
+    "make_plot": false,           // specify whether to plot populated feeder
     "gis_file": "",               // optional positional data for feeder (.json)
     "taxonomy": "R1-12.47-2.glm", // base taxonomy feeder model
     "out_file_glm": "test.glm",   // REQUIRED: output populated feeder ("myfeeder_populated.glm").

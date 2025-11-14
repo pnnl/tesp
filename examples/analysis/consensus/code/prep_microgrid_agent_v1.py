@@ -103,7 +103,6 @@ def select_setpt_night(wakeup_set, daylight_set, mode):
                 night_set = wakeup_set
         except:
             print("WARNING select setpt not found:", wakeup_set, daylight_set, mode, ", setting to ", wakeup_set)
-            night_set = wakeup_set
             pass
         return night_set
 

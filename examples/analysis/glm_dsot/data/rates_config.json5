@@ -1,33 +1,30 @@
 {
-  "ocaseName": "gld_feeder_test",
-  "caseName": "gld_feeder_test_f",
-  // simulation start time, YYYY-MM-DD HH:MM:SS
+  // Set to "HELICS" or "FNCS"
+  'messenger': "HELICS",
+  'omessenger': "FNCS",
+  // Case name root, case_type will be added as a suffix when needed
+  "caseName": "gld_feeder_test",
+  "ocaseName": "gld_feeder_test_f",
+  // Simulation start time, YYYY-MM-DD HH:MM:SS
   "StartTime": "2016-08-05 00:00:00",
-  // simulation end time, YYYY-MM-DD HH:MM:SS
+  // Simulation end time, YYYY-MM-DD HH:MM:SS
   "EndTime": "2016-08-12 00:00:00",
   // 8 or 200 bus case
   "nodes": 8,
-  // "HELICS" or "FNCS"
-  'omessenger': "HELICS",
-  'messenger': "FNCS",
-  // If using RECS population data
+  // Set to true if using RECS population data, set to false for default settings
   "RECS": true,
   "time_zone": "CST+6CDT",
   "case_type": {
-    // bt = battery participates
-    "bt": 0,
-    // fl = flexible loads (houses) participate
-    "fl": 0,
-    // ev = electric vehicles participate
-    "ev": 0,
-    // pv = photovoltaics
-    "pv": 0
+    "bt": 0, // bt = battery participates
+    "fl": 0, // fl = flexible loads (houses) participate
+    "ev": 0, // ev = electric vehicles participate
+    "pv": 0  // pv = photovoltaics
   },
-  "transactive_house_percentage": 0.80,
   // Participation rate. Default: 0.80
+  "transactive_house_percentage": 0.80,
   // Percent of homes with electric water heaters
   "water_heater_percentage": 0.80,
-  // Participation rate of elec water heaters [NOT USED]
+  // Participation rate of electric water heaters [NOT USED]
   "water_heater_participation": 0.50,
   // Percentage of homes with electric cooling
   "electric_cooling_percentage": 0.90,
@@ -59,26 +56,25 @@
     "Middle": 0.3,
     "Upper": 0.6
   },
-  // rate tariff name for post-processing. "" = DSOT ['', 'Flat', 'EandC', 'TOU']
+  // Rate tariff name for post-processing. "" = DSOT ['', 'Flat', 'EandC', 'TOU']
   "rate": "",
-  // True if running Dynamic Energy and Capacity rate (EandC)
+  // Set to true if running Dynamic Energy and Capacity rate (EandC)
   "EandC": false,
   // case_type sets whether the market is true (bt, fl, or ev = true)
   "market": false,
   // true = Substation load is flexible, false = inflexible
   "priceSensLoad": false,
-  // FNCS gld_scale set to 1 if false
+  // gld_scale set to 1 if false
   "noScale": true,
-  // FNCS no curve if set to false
+  // no curve if set to false
   "curve": false,
   // true = curtail renewables when needed, false = no curtailment
   "curtail": true,
-  "reserveDown": 0.15,
   // Reserve down system percent
   "reserveDown": 0.15,
   // Reserve up system percent
   "reserveUp": 0.15,
-  // quatric must be false if using solver = cbc
+  // Quadratic must be false if using solver = cbc
   "quadratic": true,
   "priceCap": 1000.0,
   "zonalReserves": false,
@@ -91,14 +87,15 @@
   "genLowerLimit": 150.0,
   // percent generation power level at start up (0.6-0.7 typical, try 0.85 for high demand months)
   "genPowerLevel": 0.5,
-  // true= renewables are turned on, false = renewables off
+  // Set to true if renewables are turned on, set to false if renewables are turned off
   "genPower": true,
   // Random number seed
   "seed": 1,
   // The duration for the simulation in seconds
   "Tmax": 604800,
+  // Write time interval for the simulation in seconds for opf/ames
   "Interval": 86400,
-  // Time interval for the simulation in seconds for opf/ames
+  // Time period for the simulation in seconds for opf/ames
   "Period": 300,
   // The delta time for the simulation in seconds for pf
   "dt": 15,
@@ -107,14 +104,14 @@
   "LogLevel": "DEBUG",
   "gld_debug": 0,
   "DSOT_case": true,
-  // Default: blank, ~/grid/tesp/examples/dsot/output
+  // Default: blank, otherwise set a path for all outputs
   "outputPath": "",
   "make_plot": false,
   "archivePath": "/mnt/simdata/done",
   "source_directory": "",
   "version": "2",
   "bulkpower_bus": 1,
-  // false = pypower running opf
+  // set to true for running ames opf, set to false for running pypower opf
   "ames": true,
   // ipopt, If "quadratic" is false, use solver = cbc
   "solver": "ipopt",
@@ -138,26 +135,11 @@
   "swing_bus": 1,
   "thermostat_schedule_version": 2,
   "slider_ranges": {
-    "bt": {
-      "_UP": 1,
-      "_DOWN": 0.001
-    },
-    "ev": {
-      "_UP": 1,
-      "_DOWN": 0.001
-    },
-    "hv": {
-      "_UP": 1,
-      "_DOWN": 0.4
-    },
-    "pv": {
-      "_UP": 1,
-      "_DOWN": 0.001
-    },
-    "wh": {
-      "_UP": 1,
-      "_DOWN": 0.001
-    }
+    "bt": {"_UP": 1, "_DOWN": 0.001 },
+    "ev": {"_UP": 1, "_DOWN": 0.001 },
+    "hv": {"_UP": 1, "_DOWN": 0.4 },
+    "pv": {"_UP": 1, "_DOWN": 0.001 },
+    "wh": {"_UP": 1, "_DOWN": 0.001 }
   },
   "use_solar_player": true,
   "solar_data_path": "../../../../dsot/data/solar_data/solar_pv_power_profiles/",
@@ -226,7 +208,6 @@
   "metrics_extension": "h5",
   // Level of reporting detail. False = limited, true = full
   "metrics_full_detail": true,
-  // Level of reporting detail. False = limited, true = full
   "minimum_step": 30,
   "solar_inverter_mode": "CONSTANT_PQ",
   "interpolate": "QUADRATIC",

@@ -20,7 +20,7 @@ import numpy as np
 import pandas as pd
 from multiprocessing.managers import SyncManager
 
-from .data import arguments
+from tesp_support.api.data import arguments
 
 # Global for storing the data to be served
 sch_df_dict = {}
@@ -88,9 +88,13 @@ class DataProxy(object):
             time (any): current time at which DA optimization occurs
             len_forecast (int): length of forecast in hours
         """
-        cache = cache_output[name]
+        # Alais 'bigbox' and 'stripmall' to 'retail', schedule
+        _name = name.replace('bigbox', 'retail')
+        _name = _name.replace('stripmall', 'retail')
+
+        cache = cache_output[_name]
         if cache[0] != time:
-            dataframe = sch_df_dict[name]
+            dataframe = sch_df_dict[_name]
             # First let's make sure that the year of time_begin is same as data frame and ignore seconds
             time_begin = time.replace(year=dataframe.index[0].year, second=0)
             time_stop = time_begin + pd.Timedelta(hours=len_forecast)

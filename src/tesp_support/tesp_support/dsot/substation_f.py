@@ -626,7 +626,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
 
     # specific timing tasks to do
     tnext_historic_load_da = 1
-    tnext_water_heater_update = 65
+    tnext_water_heater_update = 75
     tnext_retail_bid_rt = retail_period_rt - 30 + retail_period_da * 1
     tnext_retail_bid_da = retail_period_da - 60
     tnext_dso_bid_rt = retail_period_rt - 30 + retail_period_da * 1
