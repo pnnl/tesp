@@ -2,7 +2,7 @@ name: Deploy PYPI Project CI
 
 on:
   push:
-    branches: [ "main", "test-workflows"]
+    branches: [ "main"]
     tags:
       - 'v*'  # Triggers on version tags
       
@@ -32,8 +32,9 @@ jobs:
       - name: Publish to PyPI
         env:
           TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}  # Use your PyPI username
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD_TEST }}  # Store your token in GitHub secrets
+          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}  # Store your token in GitHub secrets
+        #   TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD_TEST }}  # Store your token in GitHub secrets
         run: |
           printf "Deploying PYPI project"
-          twine upload --repository testpypi src/tesp_support/dist/*
-        #   twine upload dist/*
+          twine upload src/tesp_support/dist/*
+        #   twine upload --repository testpypi src/tesp_support/dist/*
