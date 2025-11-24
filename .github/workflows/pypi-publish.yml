@@ -2,8 +2,10 @@ name: Deploy PYPI Project CI
 
 on:
   push:
+    branches: [ "main", "test-workflows"]
     tags:
       - 'v*'  # Triggers on version tags
+      
 
 jobs:
   publish:
