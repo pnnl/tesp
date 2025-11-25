@@ -279,13 +279,11 @@ def inner_substation_loop(metrics_root, with_market):
             topic_map['#solar_diffuse'].append(hvac_agent_objs[key].set_solar_diffuse)
 
         # map topics
-        topic_map[key + '#Tair'] = [hvac_agent_objs[key].set_air_temp]
-        topic_map[key + '#V1'] = [hvac_agent_objs[key].set_voltage]
-        topic_map[key + '#HvacLoad'] = [hvac_agent_objs[key].set_hvac_load]
-        topic_map[key + '#TotalLoad'] = [hvac_agent_objs[key].set_house_load]
-        topic_map[key + '#On'] = [hvac_agent_objs[key].set_hvac_state]
-        # topic_map[key + '#Demand'] = [hvac_agent_objs[key].set_hvac_demand]
-        # topic_map[key + '#whLoad'] = [hvac_agent_objs[key].set_wh_load]
+        topic_map[key + '/air_temperature'] = [hvac_agent_objs[key].set_air_temp]
+        topic_map[key + '/measured_voltage'] = [hvac_agent_objs[key].set_voltage]
+        topic_map[key + '/hvac_load'] = [hvac_agent_objs[key].set_hvac_load]
+        topic_map[key + '/total_load'] = [hvac_agent_objs[key].set_house_load]
+        topic_map[key + '/power_state'] = [hvac_agent_objs[key].set_hvac_state]
     log.info('instantiated %s HVAC control agents' % (len(hvac_keys)))
 
     # instantiate the water heater controller objects and map their message inputs
@@ -302,12 +300,12 @@ def inner_substation_loop(metrics_root, with_market):
                 water_heater_agent_objs[key] = WaterHeaterDSOT(row, gld_row, key, 11, current_time, solver)
 
                 # map topics
-                topic_map[wh_key + '#LTTemp'] = [water_heater_agent_objs[key].set_wh_lower_temperature]
-                topic_map[wh_key + '#UTTemp'] = [water_heater_agent_objs[key].set_wh_upper_temperature]
-                topic_map[wh_key + '#LTState'] = [water_heater_agent_objs[key].set_wh_lower_state]
-                topic_map[wh_key + '#UTState'] = [water_heater_agent_objs[key].set_wh_upper_state]
-                topic_map[wh_key + '#WHLoad'] = [water_heater_agent_objs[key].set_wh_load]
-                topic_map[wh_key + '#WDRate'] = [water_heater_agent_objs[key].set_wh_wd_rate_val]
+                topic_map[wh_key + '/lower_tank_temperature'] = [water_heater_agent_objs[key].set_wh_lower_temperature]
+                topic_map[wh_key + '/upper_tank_temperature'] = [water_heater_agent_objs[key].set_wh_upper_temperature]
+                topic_map[wh_key + '/lower_heating_element_state'] = [water_heater_agent_objs[key].set_wh_lower_state]
+                topic_map[wh_key + '/upper_heating_element_state'] = [water_heater_agent_objs[key].set_wh_upper_state]
+                topic_map[wh_key + '/heating_element_capacity'] = [water_heater_agent_objs[key].set_wh_load]
+                topic_map[wh_key + '/water_demand'] = [water_heater_agent_objs[key].set_wh_wd_rate_val]
             except KeyError as e:
                 log.info('Error {}, wh_name in key={}'.format(e, key))
     log.info('instantiated %s water heater control agents' % (len(water_heater_keys)))
@@ -320,12 +318,7 @@ def inner_substation_loop(metrics_root, with_market):
         gld_row = config_glm['inverters'][key]
         battery_agent_objs[key] = BatteryDSOT(row, gld_row, key, 11, current_time, solver)
         # map topics
-        # key is the name of inverter resource,
-        # but we need battery name, thus the replacement
-        if 'ibat' in key:
-            topic_map[key.replace('ibat', 'bat') + '#SOC'] = [battery_agent_objs[key].set_SOC]
-        elif 'batinv' in key:
-            topic_map[key.replace('batinv', 'bat') + '#SOC'] = [battery_agent_objs[key].set_SOC]
+        topic_map[key + '/state_of_charge'] = [battery_agent_objs[key].set_SOC]
     log.info('instantiated %s battery control agents' % (len(battery_keys)))
 
     # instantiate the ev controller objects and map their message inputs
@@ -336,7 +329,7 @@ def inner_substation_loop(metrics_root, with_market):
         gld_row = config_glm['ev'][row['houseName']]
         ev_agent_objs[key] = EVDSOT(row, gld_row, key, 11, current_time, solver)
         # map topics
-        topic_map[key + '#SOC'] = [ev_agent_objs[key].set_SOC]
+        topic_map[key + '/battery_SOC'] = [ev_agent_objs[key].set_SOC]
     log.info('instantiated %s electric vehicle control agents' % (len(ev_keys)))
 
     # instantiate the pv objects and map their message inputs
@@ -749,16 +742,14 @@ def inner_substation_loop(metrics_root, with_market):
             except:
                 cache_sub[t] = helics.helicsFederateGetInputByIndex(hFed, t)
                 sub = cache_sub[t]
-            # sub = helics.helicsFederateGetInputByIndex(hFed, t)
             key = helics.helicsInputGetTarget(sub)
-            topic = key.split('/')[1]
-            # log.info("HELICS subscription index: " + str(t) + ", key: " + key)
+            topic = "/".join(key.split('/')[1:])
             if helics.helicsInputIsUpdated(sub):
                 value = helics.helicsInputGetString(sub)
                 log.debug(topic + ' -> ' + value)
                 if topic in topic_map:
                     for itopic in range(len(topic_map[topic])):
-                        if any(x in topic for x in ['#Tair', '#SOC', '#LTTemp', '#UTTemp']):
+                        if any(x in topic for x in ['/air_temperature', '/state_of_charge', '/battery_SOC', '/lower_tank_temperature', '/upper_tank_temperature']):
                             # these function has 2 additional inputs for logging
                             topic_map[topic][itopic](value, 11, current_time)
                         else:

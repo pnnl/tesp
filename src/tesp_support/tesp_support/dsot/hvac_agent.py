@@ -1351,7 +1351,7 @@ class HVACDSOT:  # TODO: update class name
         Args:
             fncs_str (str): FNCS message with load in kW
         """
-        log.debug(f'hvac name: {self.houseName}, wh load: {fncs_str}')
+        log.debug(f'hvac name: {self.houseName}, water heater load: {fncs_str}')
         val = parse_number(fncs_str)
         if val >= 0.0:
             self.wh_kw = val
@@ -1362,7 +1362,7 @@ class HVACDSOT:  # TODO: update class name
         Args:
             fncs_str (str): FNCS message with state, ON or OFF
         """
-        log.debug(f'hvac name: {self.houseName}, state: {fncs_str}')
+        log.debug(f'hvac name: {self.houseName}, hvac state: {fncs_str}')
         if fncs_str == 'OFF':
             self.hvac_on = False
         else:

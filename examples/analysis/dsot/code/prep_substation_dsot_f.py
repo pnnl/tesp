@@ -821,53 +821,53 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
     for key, val in hvac_agents.items():
         house_name = val['houseName']
         meter_name = val['meterName']
-        print('  ' + key + '#V1:', file=yp)
+        print('  ' + key + '/measured_voltage:', file=yp)
         print('    topic: ' + gld_sim_name + '/' + meter_name + '/measured_voltage_1', file=yp)
         print('    default: 120', file=yp)
-        print('  ' + key + '#Tair:', file=yp)
+        print('  ' + key + '/air_temperature:', file=yp)
         print('    topic: ' + gld_sim_name + '/' + house_name + '/air_temperature', file=yp)
         print('    default: 80', file=yp)
-        print('  ' + key + '#HvacLoad:', file=yp)
+        print('  ' + key + '/hvac_load:', file=yp)
         print('    topic: ' + gld_sim_name + '/' + house_name + '/hvac_load', file=yp)
         print('    default: 0', file=yp)
-        print('  ' + key + '#TotalLoad:', file=yp)
+        print('  ' + key + '/total_load:', file=yp)
         print('    topic: ' + gld_sim_name + '/' + house_name + '/total_load', file=yp)
         print('    default: 0', file=yp)
-        print('  ' + key + '#On:', file=yp)
+        print('  ' + key + '/power_state:', file=yp)
         print('    topic: ' + gld_sim_name + '/' + house_name + '/power_state', file=yp)
         print('    default: 0', file=yp)
 
     for key, val in water_heater_agents.items():
         wh_name = val['waterheaterName']
-        print('  ' + key + '#LTTEMP:', file=yp)
+        print('  ' + key + '/lower_tank_temperature:', file=yp)
         print('    topic: ' + gld_sim_name + '/' + wh_name + '/lower_tank_temperature', file=yp)
         print('    default: 80', file=yp)
-        print('  ' + key + '#UTTEMP:', file=yp)
+        print('  ' + key + '/upper_tank_temperature:', file=yp)
         print('    topic: ' + gld_sim_name + '/' + wh_name + '/upper_tank_temperature', file=yp)
         print('    default: 120', file=yp)
-        print('  ' + key + '#LTState:', file=yp)
+        print('  ' + key + '/lower_heating_element_state:', file=yp)
         print('    topic: ' + gld_sim_name + '/' + wh_name + '/lower_heating_element_state', file=yp)
         print('    default: 0', file=yp)
-        print('  ' + key + '#UTState:', file=yp)
+        print('  ' + key + '/upper_heating_element_state:', file=yp)
         print('    topic: ' + gld_sim_name + '/' + wh_name + '/upper_heating_element_state', file=yp)
         print('    default: 0', file=yp)
-        print('  ' + key + '#WHLoad:', file=yp)
+        print('  ' + key + '/heating_element_capacity:', file=yp)
         print('    topic: ' + gld_sim_name + '/' + wh_name + '/heating_element_capacity', file=yp)
         print('    default: 0', file=yp)
-        print('  ' + key + '#WDRATE:', file=yp)
+        print('  ' + key + '/water_demand:', file=yp)
         print('    topic: ' + gld_sim_name + '/' + wh_name + '/water_demand', file=yp)
         print('    default: 0', file=yp)
 
     for key, val in battery_agents.items():
         # key is the name of inverter resource
         battery_name = val['batteryName']
-        print('  ' + battery_name + '#SOC:', file=yp)
+        print('  ' + key + '/state_of_charge:', file=yp)
         print('    topic: ' + gld_sim_name + '/' + battery_name + '/state_of_charge', file=yp)
         print('    default: 0.5', file=yp)
 
     for key, val in ev_agents.items():
         ev_name = val['evName']
-        print('  ' + key + '#SOC:', file=yp)
+        print('  ' + key + '/battery_SOC:', file=yp)
         print('    topic: ' + gld_sim_name + '/' + ev_name + '/battery_SOC', file=yp)
         print('    default: 0.5', file=yp)
 
@@ -905,7 +905,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
     op = open(gldfileroot + '_gridlabd.txt', 'w')
     if feedercnt == 1:
         print('publish "commit:network_node.distribution_load -> distribution_load; 1000";', file=op)
-        # JH removed as we do not currently have the TSO in the federation
+        # JH says removed this line below when we do not have the TSO in the federation
         print('subscribe "precommit:network_node.positive_sequence_voltage'
               '<- pypower/three_phase_voltage_' + bus + '";', file=op)
         if 'climate' in gd:
@@ -928,10 +928,10 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
         # Identify commercial buildings and map measured voltage correctly
         if val['houseClass'] in comm_bldg_list:
             print('publish "commit:' + meter_name + '.measured_voltage_A -> '
-                  + meter_name + '/measured_voltage_1; 0.01";', file=op)
+                  + meter_name + '/measured_voltage; 0.01";', file=op)
         else:
             print('publish "commit:' + meter_name + '.measured_voltage_1 -> '
-                  + meter_name + '/measured_voltage_1; 0.01";', file=op)
+                  + meter_name + '/measured_voltage; 0.01";', file=op)
         print('subscribe "precommit:' + house_name + '.cooling_setpoint <- '
               + substation_sim_key + '/cooling_setpoint";', file=op)
         print('subscribe "precommit:' + house_name + '.heating_setpoint <- '
@@ -971,7 +971,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
         battery_name = val['batteryName']
         substation_sim_key = substation_name + '/' + key
         print('publish "commit:' + battery_name + '.state_of_charge -> '
-              + battery_name + '/state_of_charge; 0.01";', file=op)
+              + key + '/state_of_charge; 0.01";', file=op)
         print('subscribe "precommit:' + key + '.P_Out <- '
               + substation_sim_key + '/p_out";', file=op)
         print('subscribe "precommit:' + key + '.Q_Out <- '
