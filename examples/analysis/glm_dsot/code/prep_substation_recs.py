@@ -853,54 +853,54 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
         for key, val in hvac_agents.items():
             house_name = val['houseName']
             meter_name = val['meterName']
-            print('  ' + key + '#V1:', file=yp)
+            print('  ' + key + '/measured_voltage:', file=yp)
             print('    topic: ' + gld_sim_name + '/' + meter_name + '/measured_voltage_1', file=yp)
             print('    default: 120', file=yp)
-            print('  ' + key + '#Tair:', file=yp)
+            print('  ' + key + '/air_temperature:', file=yp)
             print('    topic: ' + gld_sim_name + '/' + house_name + '/air_temperature', file=yp)
             print('    default: 80', file=yp)
-            print('  ' + key + '#HvacLoad:', file=yp)
+            print('  ' + key + '/hvac_load:', file=yp)
             print('    topic: ' + gld_sim_name + '/' + house_name + '/hvac_load', file=yp)
             print('    default: 0', file=yp)
-            print('  ' + key + '#TotalLoad:', file=yp)
+            print('  ' + key + '/total_load:', file=yp)
             print('    topic: ' + gld_sim_name + '/' + house_name + '/total_load', file=yp)
             print('    default: 0', file=yp)
-            print('  ' + key + '#On:', file=yp)
+            print('  ' + key + '/power_state:', file=yp)
             print('    topic: ' + gld_sim_name + '/' + house_name + '/power_state', file=yp)
             print('    default: 0', file=yp)
 
         for key, val in water_heater_agents.items():
             wh_name = val['waterheaterName']
             if len(wh_name) > 0:
-                print('  ' + key + '#LTTEMP:', file=yp)
+                print('  ' + key + '/lower_tank_temperature:', file=yp)
                 print('    topic: ' + gld_sim_name + '/' + wh_name + '/lower_tank_temperature', file=yp)
                 print('    default: 80', file=yp)
-                print('  ' + key + '#UTTEMP:', file=yp)
+                print('  ' + key + '/upper_tank_temperature:', file=yp)
                 print('    topic: ' + gld_sim_name + '/' + wh_name + '/upper_tank_temperature', file=yp)
                 print('    default: 120', file=yp)
-                print('  ' + key + '#LTState:', file=yp)
+                print('  ' + key + '/lower_heating_element_state:', file=yp)
                 print('    topic: ' + gld_sim_name + '/' + wh_name + '/lower_heating_element_state', file=yp)
                 print('    default: 0', file=yp)
-                print('  ' + key + '#UTState:', file=yp)
+                print('  ' + key + '/upper_heating_element_state:', file=yp)
                 print('    topic: ' + gld_sim_name + '/' + wh_name + '/upper_heating_element_state', file=yp)
                 print('    default: 0', file=yp)
-                print('  ' + key + '#WHLoad:', file=yp)
+                print('  ' + key + '/heating_element_capacity:', file=yp)
                 print('    topic: ' + gld_sim_name + '/' + wh_name + '/heating_element_capacity', file=yp)
                 print('    default: 0', file=yp)
-                print('  ' + key + '#WDRATE:', file=yp)
+                print('  ' + key + '/water_demand:', file=yp)
                 print('    topic: ' + gld_sim_name + '/' + wh_name + '/water_demand', file=yp)
                 print('    default: 0', file=yp)
 
         for key, val in battery_agents.items():
             # key is the name of inverter resource
             battery_name = val['batteryName']
-            print('  ' + key + '#SOC:', file=yp)
+            print('  ' + key + '/state_of_charge:', file=yp)
             print('    topic: ' + gld_sim_name + '/' + battery_name + '/state_of_charge', file=yp)
             print('    default: 0.5', file=yp)
 
         for key, val in ev_agents.items():
             ev_name = val['evName']
-            print('  ' + key + '#SOC:', file=yp)
+            print('  ' + key + '/battery_SOC:', file=yp)
             print('    topic: ' + gld_sim_name + '/' + ev_name + '/battery_SOC', file=yp)
             print('    default: 0.5', file=yp)
 
@@ -1010,7 +1010,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
             battery_name = val['batteryName']
             substation_sim_key = substation_name + '/' + key
             print('publish "commit:' + battery_name + '.state_of_charge -> '
-                + battery_name + '/state_of_charge; 0.01";', file=op)
+                + key + '/state_of_charge; 0.01";', file=op)
             print('subscribe "precommit:' + key + '.P_Out <- '
                 + substation_sim_key + '/p_out";', file=op)
             print('subscribe "precommit:' + key + '.Q_Out <- '
@@ -1053,11 +1053,11 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
             dso.pubs_n(False, key + "/bill_mode", "string")
             dso.pubs_n(False, key + "/price", "double")
             dso.pubs_n(False, key + "/monthly_fee", "double")
-            dso.subs_n(gld_sim_name + "/" + house_name + "#V1", "complex")
-            dso.subs_n(gld_sim_name + "/" + house_name + "#Tair", "double")
-            dso.subs_n(gld_sim_name + "/" + house_name + "#HvacLoad", "double")
-            dso.subs_n(gld_sim_name + "/" + house_name + "#TotalLoad", "double")
-            dso.subs_n(gld_sim_name + "/" + house_name + "#On", "string")
+            dso.subs_n(gld_sim_name + "/" + house_name + "/measured_voltage", "complex")
+            dso.subs_n(gld_sim_name + "/" + house_name + "/air_temperature", "double")
+            dso.subs_n(gld_sim_name + "/" + house_name + "/hvac_load", "double")
+            dso.subs_n(gld_sim_name + "/" + house_name + "/total_load", "double")
+            dso.subs_n(gld_sim_name + "/" + house_name + "/power_state", "string")
 
         for key, val in water_heater_agents.items():
             wh_name = val["waterheaterName"]
@@ -1065,12 +1065,12 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                 if case_config['water_heater_model'] == "MULTILAYER":
                     dso.pubs_n(False, key + "/lower_tank_setpoint", "double")
                     dso.pubs_n(False, key + "/upper_tank_setpoint", "double")
-                    dso.subs_n(gld_sim_name + "/" + wh_name + "#LTTemp", "string")
-                    dso.subs_n(gld_sim_name + "/" + wh_name + "#UTTemp", "string")
-                    dso.subs_n(gld_sim_name + "/" + wh_name + "#LTState", "string")
-                    dso.subs_n(gld_sim_name + "/" + wh_name + "#UTState", "string")
-                    dso.subs_n(gld_sim_name + "/" + wh_name + "#WHLoad", "string")
-                    dso.subs_n(gld_sim_name + "/" + wh_name + "#WDRate", "string")
+                    dso.subs_n(gld_sim_name + "/" + wh_name + "/lower_tank_temperature", "string")
+                    dso.subs_n(gld_sim_name + "/" + wh_name + "/upper_tank_temperature", "string")
+                    dso.subs_n(gld_sim_name + "/" + wh_name + "/lower_heating_element_state", "string")
+                    dso.subs_n(gld_sim_name + "/" + wh_name + "/upper_heating_element_state", "string")
+                    dso.subs_n(gld_sim_name + "/" + wh_name + "/heating_element_capacity", "string")
+                    dso.subs_n(gld_sim_name + "/" + wh_name + "/water_demand", "string")
                 elif case_config['water_heater_model'] == "TWONODE":
                     dso.pubs_n(False, key + "/tank_setpoint", "double")
 
@@ -1079,12 +1079,12 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
             battery_name = val["batteryName"]
             dso.pubs_n(False, key + "/p_out", "double")
             dso.pubs_n(False, key + "/q_out", "double")
-            dso.subs_n(gld_sim_name + "/" + battery_name + "#SOC", "double")
+            dso.subs_n(gld_sim_name + "/" + key + "/state_of_charge", "double")
 
         for key, val in ev_agents.items():
             ev_name = val["evName"]
             dso.pubs_n(False, key + "/ev_out", "double")
-            dso.subs_n(gld_sim_name + "/" + ev_name + "#SOC", "double")
+            dso.subs_n(gld_sim_name + "/" + ev_name + "/battery_SOC", "double")
 
         # these messages are for weather agent used in DSOT agents
         if feedercnt == 1:
@@ -1112,15 +1112,15 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
             house_name = val['houseName']
             meter_name = val['meterName']
             substation_sim_key = "dso" + substation_name + '/' + key
-            gld.pubs(False, house_name + "#Tair", "double", house_name, "air_temperature")
-            gld.pubs(False, house_name + "#On", "string", house_name, "power_state")
-            gld.pubs(False, house_name + "#HvacLoad", "double", house_name, "hvac_load")
-            gld.pubs(False, house_name + "#TotalLoad", "double", house_name, "total_load")
+            gld.pubs(False, house_name + "/air_temperature", "double", house_name, "air_temperature")
+            gld.pubs(False, house_name + "/power_state", "string", house_name, "power_state")
+            gld.pubs(False, house_name + "/hvac_load", "double", house_name, "hvac_load")
+            gld.pubs(False, house_name + "/total_load", "double", house_name, "total_load")
             # Identify commercial buildings and map measured voltage correctly
             if val['houseClass'] in comm_bldg_list:
-                gld.pubs(False, house_name + "#V1", "complex", meter_name, "measured_voltage_A")
+                gld.pubs(False, house_name + "/measured_voltage", "complex", meter_name, "measured_voltage_A")
             else:
-                gld.pubs(False, house_name + "#V1", "complex", meter_name, "measured_voltage_1")
+                gld.pubs(False, house_name + "/measured_voltage", "complex", meter_name, "measured_voltage_1")
             gld.subs(substation_sim_key + "/cooling_setpoint", "double", house_name, "cooling_setpoint")
             gld.subs(substation_sim_key + "/heating_setpoint", "double", house_name, "heating_setpoint")
             gld.subs(substation_sim_key + "/thermostat_deadband", "double", house_name, "thermostat_deadband")
@@ -1133,12 +1133,12 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
             substation_sim_key = "dso" + substation_name + '/' + key
             if len(wh_name) > 0:
                 if case_config['water_heater_model'] == "MULTILAYER":
-                    gld.pubs(False, wh_name + "#LTTemp", "double", wh_name, "lower_tank_temperature")
-                    gld.pubs(False, wh_name + "#UTTemp", "double", wh_name, "upper_tank_temperature")
-                    gld.pubs(False, wh_name + "#LTState", "string", wh_name, "lower_heating_element_state")
-                    gld.pubs(False, wh_name + "#UTState", "string", wh_name, "upper_heating_element_state")
-                    gld.pubs(False, wh_name + "#WHLoad", "double", wh_name, "heating_element_capacity")
-                    gld.pubs(False, wh_name + "#WDRate", "double", wh_name, "water_demand")
+                    gld.pubs(False, wh_name + "/lower_tank_temperature", "double", wh_name, "lower_tank_temperature")
+                    gld.pubs(False, wh_name + "/upper_tank_temperature", "double", wh_name, "upper_tank_temperature")
+                    gld.pubs(False, wh_name + "/lower_heating_element_state", "string", wh_name, "lower_heating_element_state")
+                    gld.pubs(False, wh_name + "/upper_heating_element_state", "string", wh_name, "upper_heating_element_state")
+                    gld.pubs(False, wh_name + "/heating_element_capacity", "double", wh_name, "heating_element_capacity")
+                    gld.pubs(False, wh_name + "/water_demand", "double", wh_name, "water_demand")
                     gld.subs(substation_sim_key + "/lower_tank_setpoint", "double", wh_name, "lower_tank_setpoint")
                     gld.subs(substation_sim_key + "/upper_tank_setpoint", "double", wh_name, "upper_tank_setpoint")
                 elif case_config['water_heater_model'] == 'TWONODE':
@@ -1148,14 +1148,14 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
             # key is the name of inverter resource
             battery_name = val['batteryName']
             substation_sim_key = "dso" + substation_name + '/' + key
-            gld.pubs(False, battery_name + "#SOC", "double", battery_name, "state_of_charge")
+            gld.pubs(False, key + "/state_of_charge", "double", battery_name, "state_of_charge")
             gld.subs(substation_sim_key + "/p_out", "double", key, "P_Out")
             gld.subs(substation_sim_key + "/q_out", "double", key, "Q_Out")
 
         for key, val in ev_agents.items():
             ev_name = val['evName']
             substation_sim_key = "dso" + substation_name + '/' + key
-            gld.pubs(False, ev_name + "#SOC", "double", ev_name, "battery_SOC")
+            gld.pubs(False, ev_name + "/battery_SOC", "double", ev_name, "battery_SOC")
             gld.subs(substation_sim_key + "/ev_out", "double", ev_name, "maximum_charge_rate")
 
 

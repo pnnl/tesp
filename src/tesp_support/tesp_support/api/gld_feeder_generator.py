@@ -1151,61 +1151,100 @@ class Commercial_Build:
             "cooling_setpoint": '80.0',
             "heating_setpoint": '60.0' })
 
-        self.mdl.ZIPload.add(f"{name}_lights", {
+        params = {
             "parent": name,
             "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
-            "heatgain_fraction": "0.8",
             "power_fraction": '{:.2f}'.format(bldg['c_p_frac']),
             "impedance_fraction": '{:.2f}'.format(bldg['c_z_frac']),
             "current_fraction": '{:.2f}'.format(bldg['c_i_frac']),
             "power_pf": '{:.2f}'.format(bldg['c_p_pf']),
             "current_pf": '{:.2f}'.format(bldg['c_i_pf']),
-            "impedance_pf": '{:.2f}'.format(bldg['c_z_pf']),
-            "base_power":  '{:s}_lights*{:.2f}'.format(bldg['base_schedule'], bldg['adj_lights']) })
+            "impedance_pf": '{:.2f}'.format(bldg['c_z_pf'])
+        }
+        base_power = '{:s}_lights*{:.2f}'.format(bldg['base_schedule'], bldg['adj_lights'])
+        params["base_power"] = base_power
+        params["heatgain_fraction"] = 0.8
+        self.mdl.ZIPload.add(f"{name}_lights", params)
 
-        self.mdl.ZIPload.add(f"{name}_plug_loads", {
+        params["base_power"] = '{:s}_plugs*{:.2f}'.format(bldg['base_schedule'], bldg['adj_plugs'])
+        params["heatgain_fraction"] = 0.9
+        self.mdl.ZIPload.add(f"{name}_plug_loads", params)
+
+        params["base_power"] = '{:s}_exterior*{:.2f}'.format(bldg['base_schedule'], bldg['adj_ext'])
+        params["heatgain_fraction"] = 0.0
+        self.mdl.ZIPload.add(f"{name}_exterior_lights", params)
+
+        params = {
             "parent": name,
             "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
-            "heatgain_fraction": "0.9",
-            "power_fraction": '{:.2f}'.format(bldg['c_p_frac']),
-            "impedance_fraction": '{:.2f}'.format(bldg['c_z_frac']),
-            "current_fraction": '{:.2f}'.format(bldg['c_i_frac']),
-            "power_pf": '{:.2f}'.format(bldg['c_p_pf']),
-            "current_pf": '{:.2f}'.format(bldg['c_i_pf']),
-            "impedance_pf": '{:.2f}'.format(bldg['c_z_pf']),
-            "base_power":  '{:s}_plugs*{:.2f}'.format(bldg['base_schedule'], bldg['adj_plugs']) })
+            "heatgain_fraction": 1.0,
+            "power_fraction": 0,
+            "impedance_fraction": 0,
+            "current_fraction": 0,
+            "power_pf": 1
+        }
+        base_power = '{:s}_gas*{:.2f}'.format(bldg['base_schedule'], bldg['adj_gas'])
+        params["base_power"] = base_power
+        self.mdl.ZIPload.add(f"{name}_gas_waterheater", params)
 
-        self.mdl.ZIPload.add(f"{name}_gas_waterheater", {
-            "parent": name,
-            "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
-            "heatgain_fraction": "1.0",
-            "power_fraction": "0",
-            "impedance_fraction": "0",
-            "current_fraction": "0",
-            "power_pf": "1",
-            "base_power": '{:s}_gas*{:.2f}'.format(bldg['base_schedule'], bldg['adj_gas']) })
+        params["base_power"] = '{:s}_occupancy*{:.2f}'.format(bldg['base_schedule'], bldg['adj_occ'])
+        self.mdl.ZIPload.add(f"{name}_occupancy", params)
 
-        self.mdl.ZIPload.add(f"{name}_exterior_lights", {
-            "parent": name,
-            "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
-            "heatgain_fraction": "0.0",
-            "power_fraction": '{:.2f}'.format(bldg['c_p_frac']),
-            "impedance_fraction": '{:.2f}'.format(bldg['c_z_frac']),
-            "current_fraction": '{:.2f}'.format(bldg['c_i_frac']),
-            "power_pf": '{:.2f}'.format(bldg['c_p_pf']),
-            "current_pf": '{:.2f}'.format(bldg['c_i_pf']),
-            "impedance_pf": '{:.2f}'.format(bldg['c_z_pf']),
-            "base_power": '{:s}_exterior*{:.2f}'.format(bldg['base_schedule'], bldg['adj_ext']) })
-
-        self.mdl.ZIPload.add(f"{name}_occupancy", {
-            "parent": name,
-            "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
-            "heatgain_fraction": "1.0",
-            "power_fraction": "0",
-            "impedance_fraction": "0",
-            "current_fraction": "0",
-            "power_pf": "1",
-            "base_power": '{:s}_occupancy*{:.2f}'.format(bldg['base_schedule'], bldg['adj_occ']) })
+        # self.mdl.ZIPload.add(f"{name}_lights", {
+        #     "parent": name,
+        #     "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
+        #     "heatgain_fraction": "0.8",
+        #     "power_fraction": '{:.2f}'.format(bldg['c_p_frac']),
+        #     "impedance_fraction": '{:.2f}'.format(bldg['c_z_frac']),
+        #     "current_fraction": '{:.2f}'.format(bldg['c_i_frac']),
+        #     "power_pf": '{:.2f}'.format(bldg['c_p_pf']),
+        #     "current_pf": '{:.2f}'.format(bldg['c_i_pf']),
+        #     "impedance_pf": '{:.2f}'.format(bldg['c_z_pf']),
+        #     "base_power":  '{:s}_lights*{:.2f}'.format(bldg['base_schedule'], bldg['adj_lights']) })
+        #
+        # self.mdl.ZIPload.add(f"{name}_plug_loads", {
+        #     "parent": name,
+        #     "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
+        #     "heatgain_fraction": "0.9",
+        #     "power_fraction": '{:.2f}'.format(bldg['c_p_frac']),
+        #     "impedance_fraction": '{:.2f}'.format(bldg['c_z_frac']),
+        #     "current_fraction": '{:.2f}'.format(bldg['c_i_frac']),
+        #     "power_pf": '{:.2f}'.format(bldg['c_p_pf']),
+        #     "current_pf": '{:.2f}'.format(bldg['c_i_pf']),
+        #     "impedance_pf": '{:.2f}'.format(bldg['c_z_pf']),
+        #     "base_power":  '{:s}_plugs*{:.2f}'.format(bldg['base_schedule'], bldg['adj_plugs']) })
+        #
+        # self.mdl.ZIPload.add(f"{name}_exterior_lights", {
+        #     "parent": name,
+        #     "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
+        #     "heatgain_fraction": "0.0",
+        #     "power_fraction": '{:.2f}'.format(bldg['c_p_frac']),
+        #     "impedance_fraction": '{:.2f}'.format(bldg['c_z_frac']),
+        #     "current_fraction": '{:.2f}'.format(bldg['c_i_frac']),
+        #     "power_pf": '{:.2f}'.format(bldg['c_p_pf']),
+        #     "current_pf": '{:.2f}'.format(bldg['c_i_pf']),
+        #     "impedance_pf": '{:.2f}'.format(bldg['c_z_pf']),
+        #     "base_power": '{:s}_exterior*{:.2f}'.format(bldg['base_schedule'], bldg['adj_ext']) })
+        #
+        # self.mdl.ZIPload.add(f"{name}_gas_waterheater", {
+        #     "parent": name,
+        #     "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
+        #     "heatgain_fraction": "1.0",
+        #     "power_fraction": "0",
+        #     "impedance_fraction": "0",
+        #     "current_fraction": "0",
+        #     "power_pf": "1",
+        #     "base_power": '{:s}_gas*{:.2f}'.format(bldg['base_schedule'], bldg['adj_gas']) })
+        #
+        # self.mdl.ZIPload.add(f"{name}_occupancy", {
+        #     "parent": name,
+        #     "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
+        #     "heatgain_fraction": "1.0",
+        #     "power_fraction": "0",
+        #     "impedance_fraction": "0",
+        #     "current_fraction": "0",
+        #     "power_pf": "1",
+        #     "base_power": '{:s}_occupancy*{:.2f}'.format(bldg['base_schedule'], bldg['adj_occ']) })
 
         self.glm.add_metrics_collector(name, "house")
 
@@ -1239,7 +1278,13 @@ class Commercial_Build:
         Returns:
             None
         """
+        vln = None
+        nphs = None
+        comm_type = None
+        floor_area = None
 
+        # base power knob
+        nob = 0.5
         if feed_type == "full":
             mtr = self.config.base.comm_loads[key][0]
             comm_type = self.config.base.comm_loads[key][1]
@@ -1247,7 +1292,6 @@ class Commercial_Build:
             nphs = int(self.config.base.comm_loads[key][4])
             phases = self.config.base.comm_loads[key][5]
             vln = float(self.config.base.comm_loads[key][6])
-            loadnum = int(self.config.base.comm_loads[key][7])
         elif feed_type == 'copp':
             mtr = "meter_" + key
             comm_type = comm_bldgs_pop[key][0]
@@ -1257,7 +1301,6 @@ class Commercial_Build:
             nphs = 3
             phases = "ABC"
             vln = float(277.0)
-            loadnum = 0
             params = {"phases": phases,
                       "nominal_voltage": 277.0,
                       }
@@ -1274,7 +1317,7 @@ class Commercial_Build:
         log.info('load: %s, mtr: %s, type: %s, kVA: %.4f, nphs: %s, phases: %s, vln: %.3f', key, mtr, comm_type, kva, nphs, phases, vln)
 
         bldg = {'parent': mtr,
-                'groupid': comm_type, # + '_' + str(loadnum),
+                'groupid': comm_type,
                 'fan_type': 'ONE_SPEED',
                 'heat_type': 'GAS',
                 'cool_type': 'ELECTRIC',
@@ -1308,7 +1351,7 @@ class Commercial_Build:
                     params["impedance_pf_" + phs] = '{:f}'.format(self.config.base.c_z_pf)
                     params["current_pf_" + phs] = '{:f}'.format(self.config.base.c_i_pf)
                     params["power_pf_" + phs] = '{:f}'.format(self.config.base.c_p_pf)
-                    params["base_power_" + phs] = "street_lighting*" + '{:.2f}'.format(self.config.base.light_scalar_comm * phsva)
+                    params["base_power_" + phs] = "street_lighting*" + '{:.2f}'.format(self.config.base.light_scalar_comm * phsva * nob)
                     params["phases"] = phs
             self.mdl.load.add(name, params)
             # Add position data to commercial ZIPload, if available
@@ -1386,11 +1429,11 @@ class Commercial_Build:
                         bldg['COP_A'] = self.config.base.cooling_COP * (0.8 + 0.4 * rng.random())
 
                         # Randomize 10# then convert W/sf -> kW
-                        bldg['adj_lights'] = (0.9 + 0.1 * rng.random()) * floor_area / 1000.
-                        bldg['adj_plugs'] = (0.9 + 0.2 * rng.random()) * floor_area / 1000.
-                        bldg['adj_gas'] = (0.9 + 0.2 * rng.random()) * floor_area / 1000.
-                        bldg['adj_ext'] = (0.9 + 0.1 * rng.random()) * floor_area / 1000.
-                        bldg['adj_occ'] = (0.9 + 0.1 * rng.random()) * floor_area / 1000.
+                        bldg['adj_lights'] = (0.9 + 0.1 * rng.random()) * floor_area / 1000. * nob
+                        bldg['adj_plugs'] = (0.9 + 0.2 * rng.random()) * floor_area / 1000. * nob
+                        bldg['adj_gas'] = (0.9 + 0.2 * rng.random()) * floor_area / 1000. * nob
+                        bldg['adj_ext'] = (0.9 + 0.1 * rng.random()) * floor_area / 1000. * nob
+                        bldg['adj_occ'] = (0.9 + 0.1 * rng.random()) * floor_area / 1000. * nob
 
                         bldg['zonename'] = gld_strict_name(f'{key}_fl_{floor}_zn_{zone}_{comm_type}')
                         Commercial_Build.add_one_commercial_zone(self, bldg, key, phases)
@@ -1444,12 +1487,12 @@ class Commercial_Build:
                     bldg['os_rand'] = bldg['oversize'] * (0.8 + 0.4 * rng.random())
                     bldg['COP_A'] = self.config.base.cooling_COP * (0.8 + 0.4 * rng.random())
 
-                    bldg['adj_lights'] = 1.2 * (
-                            0.9 + 0.1 * rng.random()) * floor_area / 1000.  # Randomize 10# then convert W/sf -> kW
-                    bldg['adj_plugs'] = (0.9 + 0.2 * rng.random()) * floor_area / 1000.
-                    bldg['adj_gas'] = (0.9 + 0.2 * rng.random()) * floor_area / 1000.
-                    bldg['adj_ext'] = (0.9 + 0.1 * rng.random()) * floor_area / 1000.
-                    bldg['adj_occ'] = (0.9 + 0.1 * rng.random()) * floor_area / 1000.
+                    # Randomize 10# then convert W/sf -> kW
+                    bldg['adj_lights'] = 1.2 * (0.9 + 0.1 * rng.random()) * floor_area / 1000. * nob
+                    bldg['adj_plugs'] = (0.9 + 0.2 * rng.random()) * floor_area / 1000. * nob
+                    bldg['adj_gas'] = (0.9 + 0.2 * rng.random()) * floor_area / 1000. * nob
+                    bldg['adj_ext'] = (0.9 + 0.1 * rng.random()) * floor_area / 1000. * nob
+                    bldg['adj_occ'] = (0.9 + 0.1 * rng.random()) * floor_area / 1000. * nob
 
                     bldg['zonename'] = gld_strict_name(f'{key}_zn_{zone}_{comm_type}')
                     Commercial_Build.add_one_commercial_zone(self, bldg, key, phases)
@@ -1464,8 +1507,12 @@ class Commercial_Build:
                 bldg['int_gains'] = 3.6  # W/sf
                 bldg['exterior_ceiling_fraction'] = 1.
                 bldg['base_schedule'] = 'stripmall'
-                midzone = int(math.floor(self.total_strip_mall / 2.0) + 1.)
-                for zone in range(1, self.total_strip_mall + 1):
+                num_of_zone = int(6 * rng.random() + 1.)
+                num_of_zone = 1
+                midzone = int(math.floor(num_of_zone / 2.0) + 1.)
+                for zone in range(1, num_of_zone + 1):
+                # midzone = int(math.floor(self.total_strip_mall / 2.0) + 1.)
+                # for zone in range(1, self.total_strip_mall + 1):
                     bldg['skew_value'] = self.glm.randomize_commercial_skew()
                     floor_area_choose = 2400.0 * (0.7 + 0.6 * rng.random())
                     bldg['thermal_mass_per_floor_area'] = 3.9 * (0.5 + 1. * rng.random())
@@ -1481,7 +1528,8 @@ class Commercial_Build:
                         floor_area = floor_area_choose / 2.0
                         bldg['aspect_ratio'] = 3.0
                         bldg['window_wall_ratio'] = 0.03
-                        if zone == self.total_strip_mall:
+                        if zone == num_of_zone:
+                        # if zone == self.total_strip_mall:
                             bldg['exterior_wall_fraction'] = 0.63
                             bldg['exterior_floor_fraction'] = 2.0
                         else:
@@ -1492,23 +1540,24 @@ class Commercial_Build:
                     bldg['init_temp'] = 68.0 + 4.0 * rng.random()
                     bldg['os_rand'] = bldg['oversize'] * (0.8 + 0.4 * rng.random())
                     bldg['COP_A'] = self.config.base.cooling_COP * (0.8 + 0.4 * rng.random())
-                    bldg['adj_lights'] = (0.8 + 0.4 * rng.random()) * floor_area / 1000.0
-                    bldg['adj_plugs'] = (0.8 + 0.4 * rng.random()) * floor_area / 1000.0
-                    bldg['adj_gas'] = (0.8 + 0.4 * rng.random()) * floor_area / 1000.0
-                    bldg['adj_ext'] = (0.8 + 0.4 * rng.random()) * floor_area / 1000.0
-                    bldg['adj_occ'] = (0.8 + 0.4 * rng.random()) * floor_area / 1000.0
+                    bldg['adj_lights'] = (0.8 + 0.4 * rng.random()) * floor_area / 1000. * nob
+                    bldg['adj_plugs'] = (0.8 + 0.4 * rng.random()) * floor_area / 1000. * nob
+                    bldg['adj_gas'] = (0.8 + 0.4 * rng.random()) * floor_area / 1000. * nob
+                    bldg['adj_ext'] = (0.8 + 0.4 * rng.random()) * floor_area / 1000. * nob
+                    bldg['adj_occ'] = (0.8 + 0.4 * rng.random()) * floor_area / 1000. * nob
                     bldg['zonename'] = gld_strict_name(f'{key}_zn_{zone}_{comm_type}')
                     Commercial_Build.add_one_commercial_zone(self, bldg, key, phases)
 
             else: # For all other building types
                 self.bldg_area = floor_area
                 bldg['skew_value'] = self.glm.randomize_commercial_skew()
-                bldg['adj_lights'] = (bld_specs['internal_heat_gains']['lighting'] * (0.9 + 0.1 * rng.random()) 
-                                    * self.bldg_area / 1000.0)
-                bldg['adj_plugs'] = bld_specs['internal_heat_gains']['MEL'] * (0.9 + 0.2 * rng.random()) * self.bldg_area / 1000.
+                bldg['adj_lights'] = (bld_specs['internal_heat_gains']['lighting'] * (0.9 + 0.1 * rng.random())
+                                    * self.bldg_area / 1000.0) * nob
+                bldg['adj_plugs'] = (bld_specs['internal_heat_gains']['MEL'] * (0.9 + 0.2 * rng.random())
+                                     * self.bldg_area / 1000.) * nob
                 occ_load = 73  # Assumes 73 watts / occupant from Caney Fork study
                 bldg['adj_occ'] = (bld_specs['internal_heat_gains']['occupancy'] * occ_load * (0.9 + 0.1 * rng.random()) 
-                                * self.bldg_area / 1000.0)
+                                * self.bldg_area / 1000.0) * nob
                 bldg['adj_gas'] = 0
                 bldg['adj_ext'] = 0 # Plug and light parameters capture all of CBECS loads.
                 bldg['int_gains'] = bldg['adj_lights'] + bldg['adj_plugs'] + bldg['adj_occ'] + bldg['adj_gas']

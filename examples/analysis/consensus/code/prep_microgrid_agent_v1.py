@@ -1002,31 +1002,31 @@ def process_glm_with_microgrids(gldfileroot, substationfileroot, weatherfileroot
             meter_name = val['meterName']
 
             config_MG['subscriptions'].append({'required': bool(True),
-                                            'info': str(key + '#V1'),
+                                            'info': str(key + '/measured_voltage'),
                                             'key': str(gld_sim_name + '/' + meter_name + '/measured_voltage_1'),
                                             'type': str('string'),
                                             'default': str(120)
                                             })
             config_MG['subscriptions'].append({'required': bool(True),
-                                            'info': str(key + '#Tair'),
+                                            'info': str(key + '/air_temperature'),
                                             'key': str(gld_sim_name + '/' + house_name + '/air_temperature'),
                                             'type': str('string'),
                                             'default': str(80)
                                             })
             config_MG['subscriptions'].append({'required': bool(True),
-                                            'info': str(key + '#HvacLoad'),
+                                            'info': str(key + '/hvac_load'),
                                             'key': str(gld_sim_name + '/' + house_name + '/hvac_load'),
                                             'type': str('string'),
                                             'default': str(0)
                                             })
             config_MG['subscriptions'].append({'required': bool(True),
-                                            'info': str(key + '#TotalLoad'),
+                                            'info': str(key + '/total_load'),
                                             'key': str(gld_sim_name + '/' + house_name + '/total_load'),
                                             'type': str('string'),
                                             'default': str(0)
                                             })
             config_MG['subscriptions'].append({'required': bool(True),
-                                            'info': str(key + '#On'),
+                                            'info': str(key + '/power_state'),
                                             'key': str(gld_sim_name + '/' + house_name + '/power_state'),
                                             'type': str('string'),
                                             'default': str(0)
@@ -1034,37 +1034,37 @@ def process_glm_with_microgrids(gldfileroot, substationfileroot, weatherfileroot
         for key, val in water_heater_agents.items():
             wh_name = val['waterheaterName']
             config_MG['subscriptions'].append({'required': bool(True),
-                                        'info': str(key + '#LTTEMP'),
+                                        'info': str(key + '/lower_tank_temperature'),
                                         'key': str(gld_sim_name + '/' + wh_name + '/lower_tank_temperature'),
                                         'type': str('string'),
                                         'default': str(80)
                                         })
             config_MG['subscriptions'].append({'required': bool(True),
-                                        'info': str(key + '#UTTEMP'),
+                                        'info': str(key + '/upper_tank_temperature'),
                                         'key': str(gld_sim_name + '/' + wh_name + '/upper_tank_temperature'),
                                         'type': str('string'),
                                         'default': str(120)
                                         })
             config_MG['subscriptions'].append({'required': bool(True),
-                                        'info': str(key + '#LTState'),
+                                        'info': str(key + '/lower_heating_element_state'),
                                         'key': str(gld_sim_name + '/' + wh_name + '/lower_heating_element_state'),
                                         'type': str('string'),
                                         'default': str(0)
                                         })
             config_MG['subscriptions'].append({'required': bool(True),
-                                        'info': str(key + '#UTState'),
+                                        'info': str(key + '/upper_heating_element_state'),
                                         'key': str(gld_sim_name + '/' + wh_name + '/upper_heating_element_state'),
                                         'type': str('string'),
                                         'default': str(0)
                                         })
             config_MG['subscriptions'].append({'required': bool(True),
-                                        'info': str(key + '#WHLoad'),
+                                        'info': str(key + '/heating_element_capacity'),
                                         'key': str(gld_sim_name + '/' + wh_name + '/heating_element_capacity'),
                                         'type': str('string'),
                                         'default': str(0)
                                         })
             config_MG['subscriptions'].append({'required': bool(True),
-                                           'info': str(key + '#WDRATE'),
+                                           'info': str(key + '/water_demand'),
                                            'key': str(gld_sim_name + '/' + wh_name + '/water_demand'),
                                            'type': str('string'),
                                            'default': str(0)
@@ -1072,7 +1072,7 @@ def process_glm_with_microgrids(gldfileroot, substationfileroot, weatherfileroot
         for key, val in battery_agents.items():
             battery_name = val['batteryName']
             config_MG['subscriptions'].append({'required': bool(True),
-                                           'info': str(key + '#SOC'),
+                                           'info': str(key + '/state_of_charge'),
                                            'key': str(gld_sim_name + '/' + battery_name + '/state_of_charge'),
                                            'type': str('string'),
                                            'default': str(0.5)
@@ -1310,7 +1310,7 @@ def process_glm_with_microgrids(gldfileroot, substationfileroot, weatherfileroot
             #substation_sim_key = substation_name + '/' + key
             substation_sim_key = microgrid_name + '/' + key
             config_gld['publications'].append({'global': bool(True),
-                                               'key': str(gld_sim_name + '/'+ battery_name + '/state_of_charge'),
+                                               'key': str(gld_sim_name + '/'+ inverter_name + '/state_of_charge'),
                                                'type': str('double'),
                                                'info': str('{\"object\" : \"' + battery_name + '\",' +
                                                            '\"property\" : \"' + 'state_of_charge' + '\"}')
