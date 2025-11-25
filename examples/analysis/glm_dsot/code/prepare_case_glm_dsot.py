@@ -65,7 +65,7 @@ import tesp_support.api.gld_feeder_generator as gld_feeder
 
 
 # Configuration settings for the experimental case
-def prepare_case(renewables:str, case:str, pv=None, bt=None, fl=None, ev=None):
+def prepare_case(case:str):
 
     # We need to load in the case metadata (*config.json5)
     config_file = str('../data/' + case + '.json5')
@@ -74,12 +74,13 @@ def prepare_case(renewables:str, case:str, pv=None, bt=None, fl=None, ev=None):
 
     # Define nodes, scenario and import required config files
     nodes = str(config["nodes"])
-    scenario = ""
-    config["renewables"] = ["wind"]
-    if renewables == "hi":
+    if config["scenario"] == "hi":
         scenario = "_hi"
         config["renewables"] = ["wind", "solar"]
-
+    else:
+        scenario = ""
+        config["renewables"] = ["wind"]
+    
     # Use RECS metadata by default. [tesp_support/api/recs_gld_house_parameters.py]
     rcs = "RECS"
     sys.path.append('../')
@@ -92,6 +93,11 @@ def prepare_case(renewables:str, case:str, pv=None, bt=None, fl=None, ev=None):
     # Get path for other data
     data_path = config["data_path"]
     case_type = config["case_type"]
+
+    pv = case_type["pv"]
+    bt = case_type["bt"]
+    ev = case_type["ev"]
+    fl = case_type["fl"]
 
     config["market"] = False
     if pv is not None:
@@ -727,15 +733,8 @@ def prepare_case(renewables:str, case:str, pv=None, bt=None, fl=None, ev=None):
     
 
 if __name__ == "__main__":
-    if len(sys.argv) > 6:
-        prepare_case(sys.argv[1], sys.argv[2], pv=int(sys.argv[3]), bt=int(sys.argv[4]), fl=int(sys.argv[5]), ev=int(sys.argv[6]))
+    if len(sys.argv) > 1:
+        prepare_case(sys.argv[1])
     else:
-        # Renewables scenario, High: "hi", Moderate: "" (no solar)
-        # prepare_case('', default_config", pv=0, bt=0, fl=0, ev=0)
-        # prepare_case('', "rates_config", pv=0, bt=1, fl=0, ev=0)
-        prepare_case('', "rates_config", pv=0, bt=0, fl=1, ev=0)
-        # prepare_case('hi', "rates_config", pv=0, bt=0, fl=0, ev=0)
-        # prepare_case('hi', "rates_config", pv=1, bt=0, fl=0, ev=0)
-        # prepare_case('hi', "rates_config", pv=1, bt=1, fl=0, ev=1)
-        # prepare_case('hi', "rates_config", pv=1, bt=0, fl=1, ev=1)
-        # prepare_case('hi', "rates_config", pv=1, bt=1, fl=1, ev=1)
+        #prepare_case('default_config')
+        prepare_case('rates_config')

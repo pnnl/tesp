@@ -11,14 +11,16 @@
   "EndTime": "2016-08-12 00:00:00",
   // 8 or 200 bus case
   "nodes": 8,
+  // Renewable scenario, "hi" or "" for base (no solar)
+  "scenario": "hi",
   // Set to true if using RECS population data, set to false for default settings
   "RECS": true,
   "time_zone": "CST+6CDT",
   "case_type": {
-    "bt": 0, // bt = battery participates
-    "fl": 0, // fl = flexible loads (houses) participate
-    "ev": 0, // ev = electric vehicles participate
-    "pv": 0  // pv = photovoltaics
+    "bt": 1, // bt = battery participates
+    "fl": 1, // fl = flexible loads (houses) participate
+    "ev": 1, // ev = electric vehicles participate
+    "pv": 1  // pv = photovoltaics
   },
   // Participation rate. Default: 0.80
   "transactive_house_percentage": 0.80,
@@ -60,8 +62,6 @@
   "rate": "",
   // Set to true if running Dynamic Energy and Capacity rate (EandC)
   "EandC": false,
-  // case_type sets whether the market is true (bt, fl, or ev = true)
-  "market": false,
   // true = Substation load is flexible, false = inflexible
   "priceSensLoad": false,
   // gld_scale set to 1 if false

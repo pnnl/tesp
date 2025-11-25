@@ -85,6 +85,10 @@ examples/analysis/glm_dsot/code/*/
 # Ignore data download
 examples/analysis/dsot/data/
 
+# Ignore dump files
+examples/analysis/glm_dsot/data/generate_config_dump.json5
+examples/analysis/glm_dsot/data/config_dump.json5
+
 # Ignore installation files
 repository/
 tenv/
