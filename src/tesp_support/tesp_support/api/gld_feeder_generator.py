@@ -1201,7 +1201,7 @@ class Commercial_Build:
         # TODO: schedule skew: set to 0.01 to avoid a divide by zero issue
         # in the agent code. Should be set to zero after that is fixed.
         params["schedule_skew"] = '{:.0f}'.format(bldg['skew_value']*0.01)
-        self.mdl.ZIPload.add(f"{name}_lrg_refrig")
+        self.mdl.ZIPload.add(f"{name}_lrg_refrig", params)
 
         self.glm.add_metrics_collector(name, "house")
 
