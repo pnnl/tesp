@@ -65,6 +65,7 @@
     // Distributed Energy Resources
     "RECS": true, // populates solar, battery, and ev based on RECS income distributions
     // if false, use the income-distributions below
+    "DSOT_case": false, // To run a DSOT case, navigate to examples/analysis/glm_dsot/code
     solar_percentage: {
         "Low": 0.12,
         "Middle": 0.30,

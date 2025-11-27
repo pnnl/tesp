@@ -10,8 +10,7 @@ import os
 import prepare_case_glm_dsot as prep_case
 
 
-def generate_case(caseName, port):
-
+def generate_case(caseName, start, finish):
     config_file = str('../data/' + caseName + '.json5')
     with open(config_file, 'r', encoding='utf-8') as json5_file:
         ppc = pyjson5.load(json5_file)
@@ -19,6 +18,7 @@ def generate_case(caseName, port):
     caseStartYear = ppc['caseStartYear']
     caseEndYear = ppc['caseEndYear']
     case_rate = ppc['rate']
+    port = ppc['port']
     if len(case_rate) > 0:
         case_rate_and_node = str(ppc['nodes']) + "_" + case_rate + "_"
     else:
@@ -26,7 +26,7 @@ def generate_case(caseName, port):
 
     if split_case:
         while True:
-            for i in range(4, 5):
+            for i in range(start, finish):
                 # (exclusive, inclusive)
                 directory_name = str(caseStartYear) + "_" + '{0:0>2}'.format(i+1)
                 ppc['caseName'] = case_rate_and_node + directory_name
@@ -59,7 +59,12 @@ def generate_case(caseName, port):
             caseStartYear += 1
 
 if __name__ == "__main__":
+    # Either define your simulation time here or from the console, ex:
+    # `python3 generate_case.py 3 5`
+    start = 3 # Month to start (Exclusive)
+    finish = 4 # Month to end (Inclusive)
+
     if len(sys.argv) > 1:
-        generate_case(sys.argv[1], int(sys.argv[2]))
+        generate_case("rates_config", int(sys.argv[1]), int(sys.argv[2]))
     else:
-        generate_case("rates_config", 5570)
+        generate_case("rates_config", start, finish)

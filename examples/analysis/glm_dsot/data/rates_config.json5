@@ -1,10 +1,8 @@
 {
   // Set to "HELICS" or "FNCS"
-  'omessenger': "HELICS",
   'messenger': "FNCS",
   // Case name root, case_type will be added as a suffix when needed
-  "ocaseName": "gld_feeder_test",
-  "caseName": "gld_feeder_test_f",
+  "caseName": "gld_feeder_test",
   // Simulation start time, YYYY-MM-DD HH:MM:SS
   "StartTime": "2016-08-05 00:00:00",
   // Simulation end time, YYYY-MM-DD HH:MM:SS
@@ -113,8 +111,8 @@
   "bulkpower_bus": 1,
   // set to true for running ames opf, set to false for running pypower opf
   "ames": true,
-  // ipopt, If "quadratic" is false, use solver = cbc
-  "solver": "ipopt",
+  // cbc, ipopt, or cplex. If solver = cbc, "quadratic" is set to false
+  "solver": "cplex", // ONLY USED if no solver specified in tesp.env
   "numCore": 12,
   "method": "FBS",
   "other_method": "NR",

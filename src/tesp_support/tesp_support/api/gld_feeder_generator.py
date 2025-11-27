@@ -920,15 +920,17 @@ class Residential_Build:
             # Adjust separation to account for deadband
             cooling_set = cooling_bin[3] + rng.random() * (cooling_bin[2] - cooling_bin[3])
             heating_set = heating_bin[3] + rng.random() * (heating_bin[2] - heating_bin[3])
-            if hasattr(self.config, 'in_file_glm'):
-                params["cooling_setpoint"] = np.round(cooling_set)
-                params["heating_setpoint"] = np.round(heating_set)
-            else:
+            if self.config.DSOT_case: 
                 # For transactive case, override defaults for larger separation
                 # to assure no overlaps during transactive simulations
                 params["cooling_setpoint"] = "80.0"
                 params["heating_setpoint"] = "60.0"
+            else: 
+                params["cooling_setpoint"] = np.round(cooling_set)
+                params["heating_setpoint"] = np.round(heating_set)
+
             self.mdl.house.add(hsename, params)
+
             if self.config.gis_file:
                 self.config.add_position(hse_m_name, hsename)
 
@@ -1038,7 +1040,7 @@ class Residential_Build:
 
             prob_inc = self.income_level[self.config.state][self.config.res_dso_type][income]
 
-            if hasattr(self.config, 'in_file_glm') and self.config.RECS:
+            if self.config.RECS and not self.config.DSOT_case:
                 if bldg == 0:
                     prob_solar = self.config.solar_deployment * (self.solar_pv[self.config.state][self.config.res_dso_type]
                                                                 [income]["single_family_detached"] +
@@ -1069,12 +1071,13 @@ class Residential_Build:
                     prob_ev = (self.config.ev_deployment * self.ev[self.config.state][self.config.res_dso_type][income]["mobile_home"])/prob_mobile
 
             # User-defined income distribution of DER, no restrictions by housing type:
-            elif hasattr(self.config, 'in_file_glm') and not self.config.RECS:
+            elif not self.config.RECS and not self.config.DSOT_case:
                 prob_solar = (self.config.solar_deployment*self.config.solar_percentage[income])/prob_inc
                 prob_batt = (self.config.storage_deployment*self.config.storage_percentage[income])/prob_inc
                 prob_ev = (self.config.ev_deployment*self.config.ev_percentage[income])/prob_inc
 
-            # This is a special case, implemented for the Rates Analysis work. Only single-family homes have solar or batteries.
+            # This is a special case, implemented for the transactive work.
+            # Only single-family homes have solar or batteries.
             else:
                 # EVs are not restricted by house type. The probability a house has an EV by income:
                 prob_ev = (self.config.ev_deployment*self.config.ev_percentage[income])/prob_inc
