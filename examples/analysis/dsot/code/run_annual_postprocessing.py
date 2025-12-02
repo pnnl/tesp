@@ -70,7 +70,7 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
 
     Args:
         case_list (list): a list of the paths to each case that is NOT the base
-            case being post processesed
+            case being post processed
         base_case_path (str): the path to the base case folder (Flat)
         demand_case_path (str): the path to the demand case folder (TOU)
         run_base (bool): whether to run the base case first. Set to true for
@@ -299,7 +299,9 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
         if annual_lmps:
             for dso_num in dso_range:
                 pt.dso_lmp_stats(month_def, case_path, renew_forecast_file, dso_range)
-                pt.plot_lmp_stats(case_path, case_path, dso_num, 7)
+
+                # Plot comparison of simulation wholesale prices to actual market data
+                # pt.plot_lmp_stats(case_path, case_path, dso_num, 7)
 
         if gen_stats:
             # Annual LMP needs to be run once to ensure that the annual opf file is created
@@ -325,6 +327,7 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
                 os.chdir(case_path)
                 with open('DSO' + str(dso_num) + '_Market_Purchases.json', 'w') as f:
                     json.dump(Market_Purchases, f, indent=2)
+
         # TODO: Make month usage consistent 'Mar' versus 'March'
         # --------------- DETERMINE RETAIL BILLING  ----------------------------
         # Run Customer billing code to determine revenues
@@ -497,7 +500,7 @@ def batch_process():
 
 def one_process():
     # Select case to post-process
-    case = transactive_path
+    case = flat_path
 
     base_case_path = flat_path
     demand_case_path = flat_path
