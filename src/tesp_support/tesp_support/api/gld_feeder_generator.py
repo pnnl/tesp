@@ -1171,8 +1171,8 @@ class Commercial_Build:
             "power_pf": '{:.2f}'.format(bldg['power_pf_C']),
             "current_pf": '{:.2f}'.format(bldg['current_pf_C']),
             "impedance_pf": '{:.2f}'.format(bldg['impedance_pf_C']),
-            "base_power":  '{:s}_lights*{:.2f}'.format(bldg['base_schedule'], bldg['adj_lights']) }
-        
+        }
+
         base_power = '{:s}_lights*{:.2f}'.format(bldg['base_schedule'], bldg['adj_lights'])
         params["base_power"] = base_power
         params["heatgain_fraction"] = 0.8
@@ -1246,12 +1246,11 @@ class Commercial_Build:
         vln = None
         nphs = None
         comm_type = None
-        floor_area = None
 
         if feed_type == "full":
             mtr = self.config.base.comm_loads[key][0]
             comm_type = self.config.base.comm_loads[key][1]
-            floor_area = self.config.base.comm_loads[key][3]
+            floor_area = self.config.base.comm_loads[key][2]
             nphs = int(self.config.base.comm_loads[key][4])
             phases = self.config.base.comm_loads[key][5]
             vln = float(self.config.base.comm_loads[key][6])
@@ -1279,6 +1278,7 @@ class Commercial_Build:
 
         bldg = {'parent': mtr,
                 'groupid': comm_type,
+                'floor_area': floor_area,
                 'fan_type': 'ONE_SPEED',
                 'cool_type': 'ELECTRIC',
                 'aux_type': 'NONE',
@@ -1294,7 +1294,7 @@ class Commercial_Build:
                 'power_fraction_C': 1.0 - self.config.base.c_z_frac - self.config.base.c_i_frac,
                 'impedance_pf_C': self.config.base.c_z_pf,
                 'current_pf_C': self.config.base.c_i_pf,
-                'power_pf_C': self.config.base.c_p_pf
+                'power_pf_C': self.config.base.c_p_pf,
                 }
         
         if comm_type == 'ZIPload':
@@ -1321,7 +1321,6 @@ class Commercial_Build:
         # Define default commercial building parameters
         else:
             bldg_specs = self.building_model_specifics[comm_type] 
-            bldg['floor_area'] = floor_area
             # Randomly determine the age (year of construction) of the building
             bldg['aspect_ratio'] = bldg_specs["aspect_ratio"] * rng.normal(1, 0.01)
             bldg['window_wall_ratio'] = bldg_specs["window-wall_ratio"] * rng.normal(1, 0.2)
@@ -1378,26 +1377,30 @@ class Commercial_Build:
             else:
                 bldg['heat_type'] = 'GAS'
             #  HVAC oversizing factor
-            bldg['os_rand'] = np.random.normal(self.general['HVAC']['oversizing_factor']['mean'],
+            bldg['os_rand'] = rng.normal(self.general['HVAC']['oversizing_factor']['mean'],
                                             self.general['HVAC']['oversizing_factor']['std_dev'])
             bldg['os_rand'] = min(self.general['HVAC']['oversizing_factor']['upper_bound'], max(bldg['os_rand'],
                                 self.general['HVAC']['oversizing_factor']['lower_bound']))
             
-            bldg['adj_lights'] = (bldg_specs['internal_heat_gains']['lighting'] * (0.9 + 0.1 * rng.random()) 
-                            * floor_area / 1000.0)
-            bldg['adj_plugs'] = (bldg_specs['internal_heat_gains']['MEL'] * (0.9 + 0.2 * rng.random())
-                                    * floor_area / 1000.)
-            bldg['adj_refrig'] = (bldg_specs['internal_heat_gains']['large_refrigeration'] *
-                            (0.9 + 0.2 * rng.random()) * floor_area / 1000.0)
+            # Multi-zone buildings will adjust these adj_ values according to their
+            # number of zones. Single-zone buildings will keep the base power
+            # ZIPload schedule adjustments below. 
+            # randomize 10# then convert W/sf -> kW
+            adj_lights = (bldg_specs['internal_heat_gains']['lighting'] * (0.9 + 0.1 * rng.random()) 
+                            * bldg['floor_area'] / 1000.0)
+            adj_plugs = (bldg_specs['internal_heat_gains']['MEL'] * (0.9 + 0.2 * rng.random())
+                                    * bldg['floor_area'] / 1000.)
+            adj_refrig = (bldg_specs['internal_heat_gains']['large_refrigeration'] *
+                            (0.9 + 0.2 * rng.random()) * bldg['floor_area'] / 1000.0)
             occ_load = 73  # Assumes 73 watts / occupant from Caney Fork study
-            bldg['adj_occ'] = (bldg_specs['internal_heat_gains']['occupancy'] * occ_load * (0.9 + 0.1 * rng.random()) 
-                            * floor_area / 1000.0)
+            adj_occ = (bldg_specs['internal_heat_gains']['occupancy'] * occ_load * (0.9 + 0.1 * rng.random()) 
+                            * bldg['floor_area'] / 1000.0)
             # Set gas water heating to zero
-            bldg['adj_gas'] = 0 # (0.9 + 0.2 * rng.random())
+            adj_gas = 0 # (0.9 + 0.2 * rng.random())
             # Set exterior lighting to zero as plug and light parameters capture all of CBECS loads.
-            bldg['adj_ext'] = 0 # (0.9 + 0.1 * rng.random()) * floor_area / 1000.
-            bldg['int_gains'] = bldg['adj_lights'] + bldg['adj_plugs'] + bldg['adj_occ'] + bldg['adj_gas']
-            
+            adj_ext = 0 # (0.9 + 0.1 * rng.random()) * bldg['floor_area'] / 1000.
+            int_gains = adj_lights + adj_plugs + adj_occ + adj_gas
+           
             if comm_type == 'lodging':
                 bldg['skew_value'] = 0
             else: 
@@ -1423,10 +1426,10 @@ class Commercial_Build:
                 bldg['int_gains'] = 3.24  # W/sf
                 bldg['base_schedule'] = 'office'
                 bldg['no_of_stories'] = 1
-                floor_area_choose = 40000. * (0.5 * rng.random() + 0.5) # TODO where did this come from?
+                tot_bldg_area = 40000. * (0.5 * rng.random() + 0.5) # TODO where did this come from?
                 for floor in range(1, 4):
                     bldg['aspect_ratio'] = 1.5  # Moving aspect ratio here so it is not overwritten below
-                    total_depth = math.sqrt(floor_area_choose / (3. * bldg['aspect_ratio']))
+                    total_depth = math.sqrt(tot_bldg_area / (3. * bldg['aspect_ratio']))
                     total_width = bldg['aspect_ratio'] * total_depth
                     if floor == 3:
                         bldg['exterior_ceiling_fraction'] = 1
@@ -1439,41 +1442,41 @@ class Commercial_Build:
                             w = total_depth - 60.  # Increased from 30 to avoid zone 5 being over 10k sq ft
                             d = total_width - 60.  # Increased from 30 to avoid zone 5 being over 10k sq ft
                         else:
-                            bldg['window_wall_ratio'] = 0.33
+                            bldg['window_wall_ratio'] = 0.33 #TODO Not in DSOT version
                             d = 30.  # Increased from 15 to avoid zone 5 being over 10k sq ft when building over 50k sqft
                             if zone == 1 or zone == 3:
-                                w = total_width - 15.
+                                w = total_width - 30.
                             else:
-                                w = total_depth - 15.
+                                w = total_depth - 30.
                             bldg['exterior_wall_fraction'] = w / (2. * (w + d))
 
-                        floor_area = w * d
-                        bldg['floor_area'] = floor_area
+                        bldg['floor_area'] = w * d
                         bldg['aspect_ratio'] = w / d
 
                         if floor > 1:
                             bldg['exterior_floor_fraction'] = 0
                         else:
                             bldg['exterior_floor_fraction'] = w / (2. * (w + d)) / (
-                                        floor_area / (floor_area_choose / 3.))
+                                        bldg['floor_area'] / (tot_bldg_area / 3.))
 
                         # bldg['thermal_mass_per_floor_area'] = 3.9 * (0.5 + 1. * rng.random()) # Unused in DSOT
-                        #bldg['interior_exterior_wall_ratio'] = floor_area / (bldg['ceiling_height'] * 2. * (w + d)) - 1. \
+                        #bldg['interior_exterior_wall_ratio'] = bldg['floor_area'] / (bldg['ceiling_height'] * 2. * (w + d)) - 1. \
                         #                                        + bldg['window_wall_ratio'] * bldg[
                         #                                            'exterior_wall_fraction'] # Unused in DSOT
                         bldg['interior_exterior_wall_ratio'] = 1
 
                         # Round to zero, presumably the exterior doors are treated like windows
+                        # TODO: why? no_of_doors ends up being zero (same for DSOT, but why?)
                         bldg['no_of_doors'] = 0.1
                         bldg['init_temp'] = 68. + 4. * rng.random()
 
-                        bldg['adj_lights'] = bldg['adj_lights'] * floor_area / floor_area_choose
-                        bldg['adj_plugs'] = bldg['adj_plugs'] * floor_area / floor_area_choose
-                        bldg['adj_refrig'] = bldg['adj_refrig'] * floor_area / floor_area_choose
-                        bldg['adj_gas'] = bldg['adj_gas'] * floor_area / floor_area_choose
-                        bldg['adj_ext'] = bldg['adj_ext'] * floor_area / floor_area_choose
-                        bldg['adj_occ'] = bldg['adj_occ'] * floor_area / floor_area_choose
-                        bldg['int_gains'] = bldg['int_gains'] * floor_area / floor_area_choose
+                        bldg['adj_lights'] = adj_lights * bldg['floor_area'] / tot_bldg_area
+                        bldg['adj_plugs'] = adj_plugs * bldg['floor_area'] / tot_bldg_area
+                        bldg['adj_refrig'] = adj_refrig * bldg['floor_area'] / tot_bldg_area
+                        bldg['adj_gas'] = adj_gas * bldg['floor_area'] / tot_bldg_area
+                        bldg['adj_ext'] = adj_ext * bldg['floor_area'] / tot_bldg_area
+                        bldg['adj_occ'] = adj_occ * bldg['floor_area'] / tot_bldg_area
+                        bldg['int_gains'] = int_gains * bldg['floor_area'] / tot_bldg_area
 
                         bldg['zonename'] = gld_strict_name(f'{key}_fl_{floor}_zn_{zone}_{comm_type}')
                         Commercial_Build.add_one_commercial_zone(self, bldg, key, phases)
@@ -1488,13 +1491,12 @@ class Commercial_Build:
                 bldg['Rdoors'] = 3.
                 bldg['int_gains'] = 3.6  # W/sf
                 bldg['base_schedule'] = 'bigbox'
-                floor_area_choose = 20000. * (0.5 + 1. * rng.random())
-                floor_area = floor_area_choose / 6.
-                bldg['floor_area'] = floor_area
+                tot_bldg_area = 20000. * (0.5 + 1. * rng.random())
+                bldg['floor_area'] = tot_bldg_area / 6.
                 bldg['thermal_mass_per_floor_area'] = 3.9 * (0.8 + 0.4 * rng.random())  # +/- 20#
                 bldg['exterior_ceiling_fraction'] = 1.
                 bldg['aspect_ratio'] = 1.28301275561855
-                total_depth = math.sqrt(floor_area_choose / bldg['aspect_ratio'])
+                total_depth = math.sqrt(tot_bldg_area / bldg['aspect_ratio'])
                 total_width = bldg['aspect_ratio'] * total_depth
                 d = total_width / 3.
                 w = total_depth / 2.
@@ -1503,11 +1505,11 @@ class Commercial_Build:
                     if zone == 2 or zone == 5:
                         bldg['exterior_wall_fraction'] = d / (2. * (d + w))
                         bldg['exterior_floor_fraction'] = (0. + d) / (2. * (total_width + total_depth)) / (
-                                floor_area / floor_area_choose)
+                                bldg['floor_area'] / tot_bldg_area)
                     else:
                         bldg['exterior_wall_fraction'] = 0.5
                         bldg['exterior_floor_fraction'] = (w + d) / (2. * (total_width + total_depth)) / (
-                                floor_area / floor_area_choose)
+                                bldg['floor_area'] / tot_bldg_area)
                     if zone == 2:
                         bldg['window_wall_ratio'] = 0.76
                     else:
@@ -1521,18 +1523,18 @@ class Commercial_Build:
                         bldg['no_of_doors'] = 1.
 
                     bldg['interior_exterior_wall_ratio'] = 1 # DSOT version does not use below calculation
-                    #bldg['interior_exterior_wall_ratio'] = (floor_area + bldg['no_of_doors'] * 20.) \
+                    #bldg['interior_exterior_wall_ratio'] = (bldg['floor_area'] + bldg['no_of_doors'] * 20.) \
                     #                                        / (bldg['ceiling_height'] * 2. * (w + d)) - 1. + bldg[
                     #                                            'window_wall_ratio'] * bldg['exterior_wall_fraction']
                     bldg['init_temp'] = 68. + 4. * rng.random()
 
-                    bldg['adj_lights'] = bldg['adj_lights'] * floor_area / floor_area_choose
-                    bldg['adj_plugs'] = bldg['adj_plugs'] * floor_area / floor_area_choose
-                    bldg['adj_refrig'] = bldg['adj_refrig'] * floor_area / floor_area_choose
-                    bldg['adj_gas'] = bldg['adj_gas'] * floor_area / floor_area_choose
-                    bldg['adj_ext'] = bldg['adj_ext'] * floor_area / floor_area_choose
-                    bldg['adj_occ'] = bldg['adj_occ'] * floor_area / floor_area_choose
-                    bldg['int_gains'] = bldg['int_gains'] * floor_area / floor_area_choose
+                    bldg['adj_lights'] = adj_lights * bldg['floor_area'] / tot_bldg_area
+                    bldg['adj_plugs'] = adj_plugs * bldg['floor_area'] / tot_bldg_area
+                    bldg['adj_refrig'] = adj_refrig * bldg['floor_area'] / tot_bldg_area
+                    bldg['adj_gas'] = adj_gas * bldg['floor_area'] / tot_bldg_area
+                    bldg['adj_ext'] = adj_ext * bldg['floor_area'] / tot_bldg_area
+                    bldg['adj_occ'] = adj_occ * bldg['floor_area'] / tot_bldg_area
+                    bldg['int_gains'] = int_gains * bldg['floor_area'] / tot_bldg_area
 
                     bldg['zonename'] = gld_strict_name(f'{key}_zn_{zone}_{comm_type}')
                     Commercial_Build.add_one_commercial_zone(self, bldg, key, phases)
@@ -1551,18 +1553,18 @@ class Commercial_Build:
                 num_of_zone = 1
                 midzone = int(math.floor(num_of_zone / 2.0) + 1.)
                 for zone in range(1, num_of_zone + 1):
-                    floor_area_choose = 2400.0 * (0.7 + 0.6 * rng.random())
+                    tot_bldg_area = 2400.0 * (0.7 + 0.6 * rng.random())
                     bldg['thermal_mass_per_floor_area'] = 3.9 * (0.5 + 1. * rng.random())
                     bldg['no_of_doors'] = 1
                     if zone == 1 or zone == midzone:
-                        floor_area = floor_area_choose
+                        bldg['floor_area'] = tot_bldg_area
                         bldg['aspect_ratio'] = 1.5
                         bldg['window_wall_ratio'] = 0.05
                         bldg['exterior_wall_fraction'] = 0.4
                         bldg['exterior_floor_fraction'] = 0.8
                         bldg['interior_exterior_wall_ratio'] = -0.05
                     else:
-                        floor_area = floor_area_choose / 2.0
+                        bldg['floor_area'] = tot_bldg_area / 2.0
                         bldg['aspect_ratio'] = 3.0
                         bldg['window_wall_ratio'] = 0.03
                         if zone == num_of_zone:
@@ -1572,21 +1574,27 @@ class Commercial_Build:
                             bldg['exterior_wall_fraction'] = 0.25
                             bldg['exterior_floor_fraction'] = 0.8
                         bldg['interior_exterior_wall_ratio'] = -0.40
-                    bldg['floor_area'] = floor_area
                     bldg['init_temp'] = 68.0 + 4.0 * rng.random()
 
-                    bldg['adj_lights'] = bldg['adj_lights'] * floor_area / floor_area_choose
-                    bldg['adj_plugs'] = bldg['adj_plugs'] * floor_area / floor_area_choose
-                    bldg['adj_refrig'] = bldg['adj_refrig'] * floor_area / floor_area_choose
-                    bldg['adj_gas'] = bldg['adj_gas'] * floor_area / floor_area_choose
-                    bldg['adj_ext'] = bldg['adj_ext'] * floor_area / floor_area_choose
-                    bldg['adj_occ'] = bldg['adj_occ'] * floor_area / floor_area_choose
-                    bldg['int_gains'] = bldg['int_gains'] * floor_area / floor_area_choose
+                    bldg['adj_lights'] = adj_lights * bldg['floor_area'] / tot_bldg_area
+                    bldg['adj_plugs'] = adj_plugs * bldg['floor_area'] / tot_bldg_area
+                    bldg['adj_refrig'] = adj_refrig * bldg['floor_area'] / tot_bldg_area
+                    bldg['adj_gas'] = adj_gas * bldg['floor_area'] / tot_bldg_area
+                    bldg['adj_ext'] = adj_ext * bldg['floor_area'] / tot_bldg_area
+                    bldg['adj_occ'] = adj_occ * bldg['floor_area'] / tot_bldg_area
+                    bldg['int_gains'] = int_gains * bldg['floor_area'] / tot_bldg_area
 
                     bldg['zonename'] = gld_strict_name(f'{key}_zn_{zone}_{comm_type}')
                     Commercial_Build.add_one_commercial_zone(self, bldg, key, phases)
 
             else: # For all other building types
+                bldg['adj_lights'] = adj_lights
+                bldg['adj_plugs'] = adj_plugs
+                bldg['adj_refrig'] = adj_refrig
+                bldg['adj_gas'] = adj_gas
+                bldg['adj_ext'] = adj_ext
+                bldg['adj_occ'] = adj_occ
+                bldg['int_gains'] = int_gains
                 bldg['zonename'] = gld_strict_name(f'{key}_{comm_type}')
                 Commercial_Build.add_one_commercial_zone(self, bldg, key, phases)
 
