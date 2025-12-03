@@ -1126,8 +1126,7 @@ class Commercial_Build:
             "schedule_skew": '{:.0f}'.format(bldg['skew_value']),
             "floor_area": '{:.0f}'.format(bldg['floor_area']),
             # Internal gains need to be converted from kW to BTU-hr.
-            # TODO: Check that factor of 1000 should be there
-            "design_internal_gains": '{:.0f}'.format(bldg['int_gains'] * bldg['floor_area'] * 1000 * 3.413),
+            "design_internal_gains": '{:.0f}'.format(bldg['int_gains'] * 1000 * 3.412),
             "number_of_doors": '{:.0f}'.format(bldg['no_of_doors']),
             "aspect_ratio": '{:.2f}'.format(bldg['aspect_ratio']),
             "total_thermal_mass_per_floor_area": '{:1.2f}'.format(bldg['thermal_mass_per_floor_area']),
@@ -1135,16 +1134,16 @@ class Commercial_Build:
             #"interior_exterior_wall_ratio": '{:.2f}'.format(bldg['interior_exterior_wall_ratio']), # Unused in DSOT
             "exterior_floor_fraction": '{:.3f}'.format(bldg['exterior_floor_fraction']),
             "exterior_ceiling_fraction": '{:.3f}'.format(bldg['exterior_ceiling_fraction']),
-            "Rwall": str(bldg['Rwall']),
-            "Rroof": str(bldg['Rroof']),
-            "Rfloor": str(bldg['Rfloor']),
-            "Rdoors": str(bldg['Rdoors']),
+            "Rwall": '{:.3f}'.format(bldg['Rwall']),
+            "Rroof": '{:.3f}'.format(bldg['Rroof']),
+            "Rfloor": '{:.3f}'.format(bldg['Rfloor']),
+            "Rdoors": '{:.3f}'.format(bldg['Rdoors']),
             "exterior_wall_fraction": '{:.2f}'.format(bldg['exterior_wall_fraction']),
             #"glazing_layers": str(bldg['glazing_layers']), # Unused in DSOT
             #"glass_type": str(bldg['glass_type']), # Unused in DSOT
             #"glazing_treatment": str(bldg['glazing_treatment']), # Unused in DSOT
             #"window_frame": str(bldg['window_frame']), # Unused in DSOT
-            "Rwindows": str(bldg['Rwindows']), 
+            "Rwindows": '{:.3f}'.format(bldg['Rwindows']), 
             "window_shading": str(bldg['glazing_shgc']), 
             "airchange_per_hour": '{:.2f}'.format(bldg['airchange_per_hour']),
             "window_wall_ratio": '{:0.3f}'.format(bldg['window_wall_ratio']),
@@ -1247,6 +1246,8 @@ class Commercial_Build:
         nphs = None
         comm_type = None
 
+        # Read in commercial buildings data for full-order feeders ("full") and 
+        # the copperplate feeder ("copp")
         if feed_type == "full":
             mtr = self.config.base.comm_loads[key][0]
             comm_type = self.config.base.comm_loads[key][1]
@@ -1276,6 +1277,8 @@ class Commercial_Build:
 
         log.info('load: %s, mtr: %s, type: %s, kVA: %.4f, nphs: %s, phases: %s, vln: %.3f', key, mtr, comm_type, kva, nphs, phases, vln)
 
+        # Setup default commercial building parameter dictionary, to be modified
+        # depending on commercial building type ("comm_type")
         bldg = {'parent': mtr,
                 'groupid': comm_type,
                 'floor_area': floor_area,
@@ -1313,6 +1316,7 @@ class Commercial_Build:
                     params["power_pf_" + phs] = '{:f}'.format(bldg['power_pf_C'])
                     params["base_power_" + phs] = "street_lighting*" + '{:.2f}'.format(self.config.base.light_scalar_comm * phsva)
                     params["phases"] = phs
+                    # Note that self.config.base.light_scalar_comm = 0 as per DSOT
             self.mdl.load.add(name, params)
             # Add position data to commercial ZIPload, if available
             if self.config.gis_file:
@@ -1340,6 +1344,8 @@ class Commercial_Build:
             bldg['roof_type'] = Commercial_Build.rand_bin_select(roof_construction_insulation, rng.random())
             wall_construction = Commercial_Build.normalize_dict_prob('wall_construction', bldg_specs['wall_construction'])
             bldg['wall_type'] = Commercial_Build.rand_bin_select(wall_construction, rng.random())
+            # TODO: Confirm whether we should be using these calculated values 
+            # or the building specific overwrites
             bldg['Rroof'] = 1 / Commercial_Build.find_envelope_prop(bldg['roof_type'], bldg['age'],
                                                                     self.general['thermal_integrity'],
                                                                     self.config.climate) * 1.3 * rng.normal(1, 0.1)
@@ -1423,7 +1429,7 @@ class Commercial_Build:
                 bldg['Rwall'] = 18.3
                 bldg['Rfloor'] = 46.0
                 bldg['Rdoors'] = 3.0
-                bldg['int_gains'] = 3.24  # W/sf
+                #int_gains = 3.24  # W/sf #TODO: where did this come from?
                 bldg['base_schedule'] = 'office'
                 bldg['no_of_stories'] = 1
                 tot_bldg_area = 40000. * (0.5 * rng.random() + 0.5) # TODO where did this come from?
@@ -1489,7 +1495,7 @@ class Commercial_Build:
                 bldg['Rwall'] = 18.3
                 bldg['Rfloor'] = 46.
                 bldg['Rdoors'] = 3.
-                bldg['int_gains'] = 3.6  # W/sf
+                #int_gains = 3.6  # W/sf #TODO: where did this come from?
                 bldg['base_schedule'] = 'bigbox'
                 tot_bldg_area = 20000. * (0.5 + 1. * rng.random())
                 bldg['floor_area'] = tot_bldg_area / 6.
@@ -1534,7 +1540,7 @@ class Commercial_Build:
                     bldg['adj_gas'] = adj_gas * bldg['floor_area'] / tot_bldg_area
                     bldg['adj_ext'] = adj_ext * bldg['floor_area'] / tot_bldg_area
                     bldg['adj_occ'] = adj_occ * bldg['floor_area'] / tot_bldg_area
-                    bldg['int_gains'] = int_gains * bldg['floor_area'] / tot_bldg_area
+                    bldg['int_gains'] = int_gains  * bldg['floor_area'] / tot_bldg_area
 
                     bldg['zonename'] = gld_strict_name(f'{key}_zn_{zone}_{comm_type}')
                     Commercial_Build.add_one_commercial_zone(self, bldg, key, phases)
@@ -1546,7 +1552,7 @@ class Commercial_Build:
                 bldg['Rwall'] = 18.3
                 bldg['Rfloor'] = 40.0
                 bldg['Rdoors'] = 3.0
-                bldg['int_gains'] = 3.6  # W/sf
+                #int_gains = 3.6  # W/sf #TODO: where did this come from?
                 bldg['exterior_ceiling_fraction'] = 1.
                 bldg['base_schedule'] = 'stripmall'
                 num_of_zone = int(6 * rng.random() + 1.)
