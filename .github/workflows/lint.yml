@@ -33,8 +33,8 @@ jobs:
         # Test code with ruff. This will check for syntax and runtime errors.
         # We will want to expand the scope as code is improved.
         # stop the build if there are Python syntax errors or undefined names
-        # values after `--select` match with all codes that start with the characters
-        # E9: Runtime (https://pycodestyle.pycqa.org/en/latest/intro.html#error-codes)
+        # The values after --select are prefixes that match all error codes starting with those characters.
+        # E9xx: Runtime (https://pycodestyle.pycqa.org/en/latest/intro.html#error-codes)
         # F codes found at https://flake8.pycqa.org/en/latest/user/error-codes.html
         # F821: undefined name name
         # F822: undefined name name in __all__
@@ -44,9 +44,9 @@ jobs:
         # exit-zero treats all errors as warnings.
         ruff check ./src --exit-zero --statistics
     # # Uncomment testing when tests are ready
-    # - name: Test with pytest
-    #   run: |
-    #     pytest ./src/tesp_support/test
+    - name: Test with pytest
+      run: |
+        pytest ./src/tesp_support/test/api  # only api tests for now
     # # Uncomment type checking when code is ready
     # - name: Check types with mypy
     #   run: |
