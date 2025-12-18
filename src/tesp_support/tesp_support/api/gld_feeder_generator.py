@@ -1277,6 +1277,12 @@ class Commercial_Build:
 
         log.info('load: %s, mtr: %s, type: %s, kVA: %.4f, nphs: %s, phases: %s, vln: %.3f', key, mtr, comm_type, kva, nphs, phases, vln)
 
+        # Check floor area is sensible for building type
+        # TODO: This is a band-aid. Floor area is as it was defined in DSOT, 
+        # but those buildings not specifically defined below are way too small.
+        if floor_area < 1000:
+            floor_area = 10000. * (0.5 + 1. * rng.random())
+
         # Setup default commercial building parameter dictionary, to be modified
         # depending on commercial building type ("comm_type")
         bldg = {'parent': mtr,
