@@ -1190,11 +1190,15 @@ class HVACDSOT:  # TODO: update class name
             self.cooling_setpoint = setpoint_tmp
             if self.cooling_setpoint_lower < self.cooling_setpoint < self.cooling_setpoint_upper:
                 pass
-            else:
+            else: # Correct unallowed setpoints to the closest allowed value
                 log.log(model_diag_level,
                         '{} {} -- cooling_setpoint ({}), outside of nominal range {} to {}'
                         .format(self.name, sim_time, self.cooling_setpoint, self.cooling_setpoint_lower,
                                 self.cooling_setpoint_upper))
+                if self.cooling_setpoint < self.cooling_setpoint_lower:
+                    self.cooling_setpoint == self.cooling_setpoint_lower
+                elif self.cooling_setpoint > self.cooling_setpoint_upper:
+                    self.cooling_setpoint == self.cooling_setpoint_upper
         else:
             self.heating_setpoint = setpoint_tmp
             if self.heating_setpoint_lower < self.heating_setpoint < self.heating_setpoint_upper:
@@ -1204,6 +1208,10 @@ class HVACDSOT:  # TODO: update class name
                         '{} {} -- heating_setpoint ({}), outside of nominal range of {} to {}'
                         .format(self.name, sim_time, self.heating_setpoint, self.heating_setpoint_lower,
                                 self.heating_setpoint_upper))
+                if self.heating_setpoint < self.heating_setpoint_lower:
+                    self.heating_setpoint == self.heating_setpoint_lower
+                elif self.heating_setpoint > self.heating_setpoint_upper:
+                    self.heating_setpoint == self.heating_setpoint_upper
 
         if self.heating_setpoint + self.deadband / 2.0 >= self.cooling_setpoint - self.deadband / 2.0:
             if self.thermostat_mode == 'Heating':
@@ -1961,36 +1969,22 @@ class HVACDSOT:  # TODO: update class name
 
     def con_rule_eq1(self, m, t):  # initialize SOHC state
         if self.thermostat_mode == 'Cooling':
-            if t == 0:
-                # Initial SOHC state
-                return m.temp_room[0] == (self.eps * self.temp_room_init + (1 - self.eps) *
-                                          (self.temperature_forecast[0] +
-                                           ((-self.cooling_cop_adj[0] * 0.98 * m.quan_hvac[0] *
-                                             3412.1416331279 / self.latent_factor[0] + self.internalgain_forecast[0] +
-                                             self.solargain_forecast[0] * self.solar_heatgain_factor) / self.UA)))
-            else:
-                # update SOHC
-                return m.temp_room[t] == (self.eps * m.temp_room[t - 1] + (1 - self.eps) *
-                                          (self.temperature_forecast[t] +
-                                           ((-self.cooling_cop_adj[t] * 0.98 * m.quan_hvac[t] *
-                                             3412.1416331279 / self.latent_factor[t] + self.internalgain_forecast[t] +
-                                             self.solargain_forecast[t] * self.solar_heatgain_factor) / self.UA)))
+            factor = (1 - self.eps) * (self.temperature_forecast[t] +
+                      ((-self.cooling_cop_adj[t] * 0.98 * m.quan_hvac[t] *
+                        3412.1416331279 / self.latent_factor[t] + self.internalgain_forecast[t] +
+                        self.solargain_forecast[t] * self.solar_heatgain_factor) / self.UA))
         else:
-            if t == 0:
-                # Initial SOHC state
-                return m.temp_room[0] == (self.eps * self.temp_room_init + (1 - self.eps) *
-                                          (self.temperature_forecast[0] +
-                                           ((self.heating_cop_adj[0] * 1.02 * m.quan_hvac[0] *
-                                             3412.1416331279 / self.latent_factor[0] + self.internalgain_forecast[0] +
-                                             self.solargain_forecast[0] * self.solar_heatgain_factor) / self.UA)))
-            else:
-                # update SOHC
-                return m.temp_room[t] == (self.eps * m.temp_room[t - 1] + (1 - self.eps) *
-                                          (self.temperature_forecast[t] +
-                                           ((self.heating_cop_adj[t] * 1.02 * m.quan_hvac[t] *
-                                             3412.1416331279 / self.latent_factor[t] + self.internalgain_forecast[t] +
-                                             self.solargain_forecast[t] * self.solar_heatgain_factor) / self.UA)))
-
+            factor = (1 - self.eps) * (self.temperature_forecast[t] +
+                      ((self.heating_cop_adj[t] * 1.02 * m.quan_hvac[t] *
+                        3412.1416331279 / self.latent_factor[t] + self.internalgain_forecast[t] +
+                        self.solargain_forecast[t] * self.solar_heatgain_factor) / self.UA))
+        if t == 0:
+            # Initial SOHC state
+            return m.temp_room[0] == (self.eps * self.temp_room_init + factor)
+        else:
+            # update SOHC
+            return m.temp_room[t] == (self.eps * m.temp_room[t - 1] + factor)
+        
     def temp_bound_rule(self, m, t):
         if self.thermostat_mode == 'Cooling':
             return (self.temp_desired_48hour_cool[t] - self.range_low_cool,

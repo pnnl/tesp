@@ -17,6 +17,8 @@ def parse_number(arg):
     try:
         return float(arg)
     except:
+        if 'inf' in arg:
+            raise ValueError(f"Expected float: {arg}")
         return float(''.join(ele for ele in arg if ele.isdigit() or ele == '.'))
 
 
