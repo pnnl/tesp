@@ -103,6 +103,7 @@ To run the feeder generator, the ``Config`` class must first be initialized with
 The ``Feeder`` has two optoins, "full", or "copperplate", specifying whether to populate a full-order feeder with both residential and commercial buildings, or a simplified copperplate feeder model that has limited commercial buildings.
 
 Sample output to console.::
+
     User feeder not defined, using taxonomy feeder R1-12.47-2.glm
     Average House size: 4.5 kVA
     Results in a populated feeder with:

@@ -6,9 +6,11 @@ for now, it only provides day ahead forecast for each agent.
 It does not participate in bidding
 """
 import numpy as np
+from datetime import datetime
 
-from datetime import datetime, timedelta
+from ..api.helpers import logging, log
 
+logging.getLogger('pyomo.core').setLevel(logging.ERROR)
 
 class PVDSOT:
     """ This agent manages the PV solar
@@ -19,6 +21,7 @@ class PVDSOT:
         key (str): name of this agent
         model_diag_level (int): Specific level for logging errors; set it to 11
         sim_time (str): Current time in the simulation; should be human-readable
+        solver (str):
 
     Attributes:
         Initialize from Args
@@ -31,7 +34,7 @@ class PVDSOT:
         TIME (list): range(0, self.windowLength)
     """
 
-    def __init__(self, pv_dict, inv_properties, key, model_diag_level, sim_time):
+    def __init__(self, pv_dict, inv_properties, key, model_diag_level, sim_time, solver):
         # Initializes the class
         self.name = key
         self.participating = pv_dict['participating']

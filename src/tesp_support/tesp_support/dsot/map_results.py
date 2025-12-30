@@ -19,14 +19,9 @@ from .plots import load_json, load_ames_data, load_gen_data
 
 def bulk_system_map_plot(dataPath, configPath, shapePath, case_config_path, case_config_name, day_range, hour,
                          contour_index, ercot200, realtime, showplot=False, plotdata=True, dispatchgenonly=True):
-    """ Creates a comparison of change in energy consumption and anemities for all customers:
-        case_data (str): path location for reference case with annual energy and amenity data
-        comp_data (str): path location for comparison case with annual energy and amenity data
-        case_path (str): path location for reference case with simulation metadata for agents/GLD etc.
-        comp_path (str): path location for comparison case with simulation metadata for agents/GLD etc.
-        dso_num (str): dso to be plotted
-        month (str): month of annual analysis to be plotted.  set to 'sum' to plot aggregate of all data.
-        slice (str): sub set of data to be plotted (e.g. 'residential', 'office', 'HVAC'
+    """ Creates a comparison of change in energy consumption and amenities for all customers
+
+
     Returns:
         saves plot to file.
         """
@@ -439,7 +434,7 @@ if __name__ == '__main__':
     # keeping to integer hours allows RT and DA to be compared at same time
     hr = 14
 
-    data_path = 'C:/Users/reev057\PycharmProjects/DSO+T/Data/Simdata/DER2/v1.1-1557-gc2432db4/2016_08_pv'
+    data_path = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/v1.1-1557-gc2432db4/2016_08_pv'
     config_path = 'C:/Users/reev057/PycharmProjects/TESP/src/ercot/bulk_system/'
     shape_path = 'C:/Users/reev057/PycharmProjects/DSO+T/Texas_County_Boundaries/GOVTUNIT_Texas_State_Shape/Shape/'
     case_config_path = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/dsot_v3'

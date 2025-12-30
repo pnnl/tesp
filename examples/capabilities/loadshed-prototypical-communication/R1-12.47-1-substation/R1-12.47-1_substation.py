@@ -13,10 +13,12 @@ import helics as h
 
 helicsversion = h.helicsGetVersion()
 
-logger = logging.getLogger(__name__)
-logger.addHandler(logging.StreamHandler())
-logger.setLevel(logging.DEBUG)
-logger.info('Federated Learning Federate - Test. HELICS version = {}'.format(helicsversion))
+log = logging.getLogger(__name__)
+log.addHandler(logging.StreamHandler())
+log.setLevel(logging.INFO)
+# log.setLevel(logging.DEBUG)
+
+log.info('Federated Learning Federate - Test. HELICS version = {}'.format(helicsversion))
 
 
 def start_loadshed(argv):
@@ -28,15 +30,15 @@ def start_loadshed(argv):
     try:
         opts, args = getopt.getopt(argv, 'hc:t:', ['help', 'config=', 'simTime='])
         if not opts:
-            logger.info('ERROR: need options and arguments to run.')
-            logger.info('Usage: python FedLearning.py -c <HELICS configuration file in JSON format> -t <simulation duration in seconds>')
+            log.info('ERROR: need options and arguments to run.')
+            log.info('Usage: python FedLearning.py -c <HELICS configuration file in JSON format> -t <simulation duration in seconds>')
             sys.exit()
     except getopt.GetoptError:
-        logger.info('Wrong option or no input argument! Usage: python FedLearning.py -c <HELICS configuration file in JSON format> -t <simulation duration in seconds>')
+        log.info('Wrong option or no input argument! Usage: python FedLearning.py -c <HELICS configuration file in JSON format> -t <simulation duration in seconds>')
         sys.exit(2)
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            logger.info('Help prompt. Usage: python FedLearning.py -c <HELICS configuration file in JSON format> -t <simulation duration in seconds>')
+            log.info('Help prompt. Usage: python FedLearning.py -c <HELICS configuration file in JSON format> -t <simulation duration in seconds>')
             sys.exit()
         # Set HELICS configuration file for the Python federate
         elif opt in ('-c', '--config'):
@@ -47,20 +49,20 @@ def start_loadshed(argv):
     #  Registering  federate info from json
     fed = h.helicsCreateCombinationFederateFromConfig(configFileName)
     fedName = h.helicsFederateGetName(fed)
-    logger.info('Federate name: {}'.format(fedName))
+    log.info('Federate name: {}'.format(fedName))
     endpoint_count = h.helicsFederateGetEndpointCount(fed)
-    logger.info('Number of endpoints: {}'.format(endpoint_count))
-    logger.info('######################## Entering Execution Mode ########################')
+    log.info('Number of endpoints: {}'.format(endpoint_count))
+    log.info('######################## Entering Execution Mode ########################')
     #   Entering Execution Mode
     execStartTime = tm.time()
     h.helicsFederateEnterExecutingMode(fed)
     currTime = h.helicsFederateGetCurrentTime(fed)
     deltaTime = h.helicsFederateGetTimeProperty(fed, 140)  # helics_property_time_period = 140, in the C API
-    logger.info('START: Current time: {0}. Delta time: {1}. Granted time: {2}.'.format(currTime, deltaTime, grantedTime))
+    log.info('START: Current time: {0}. Delta time: {1}. Granted time: {2}.'.format(currTime, deltaTime, grantedTime))
 
     with open('loadshedScenario.json', 'r') as loadshedFile:
         loadshedScenario = json.load(loadshedFile)
-    logger.info(loadshedScenario)
+    log.info(loadshedScenario)
     # {
     #   45:
     #   {
@@ -101,15 +103,15 @@ def start_loadshed(argv):
     while grantedTime <= simTime:
         totalBillMtrLoad = 0
         currTime = h.helicsFederateGetCurrentTime(fed)
-        logger.info('\n========================================================')
-        logger.info('Current time: {0}. Delta time: {1}. Granted time: {2}.'.format(currTime, deltaTime, grantedTime))
+        log.info('\n========================================================')
+        log.info('Current time: {0}. Delta time: {1}. Granted time: {2}.'.format(currTime, deltaTime, grantedTime))
         iterStartTime = tm.time()
         for ind in range(0, endpoint_count):
             fedEP = h.helicsFederateGetEndpointByIndex(fed, ind)
             epName = h.helicsEndpointGetName(fedEP)
             # Checking for new messages destined to the particular monitor EP in this federate
             if epName.split('/')[0] == fedName and 'substation' in epName.split('/')[1]:
-                logger.info(
+                log.info(
                     '<<<<< time: {0}; federate: {1}; endpoint: {2}; message? {3}  >>>>>'.
                     format(grantedTime, fedName, epName,
                            h.helicsEndpointHasMessage(fedEP) and 'YES' or 'NO'))
@@ -124,13 +126,13 @@ def start_loadshed(argv):
                         'original destination': h.helicsMessageGetOriginalDestination(message),
                         'destination': h.helicsMessageGetDestination(message)
                     }
-                    # logger.info(messageDetails)
+                    # log.info(messageDetails)
                     # If there are multiple messages from different previous time instances
                     # the following line would overwrite them
                     # allowing access to the latest ones through epMessages structure
                     epMessages[messageDetails['source']] = messageDetails
                 for epKey in epMessages.keys():
-                    logger.info(
+                    log.info(
                         f'\toriginal source: {epMessages[epKey]["original source"]}, source: {epMessages[epKey]["source"]}, data: {epMessages[epKey]["data"]}, time received: {epMessages[epKey]["time received"]}')
                     # if 'mhse' in epMessages[epKey]['source']:
                     totalBillMtrLoad += float(epMessages[epKey]["data"].split(" ")[0])
@@ -143,20 +145,20 @@ def start_loadshed(argv):
                         h.helicsEndpointSendBytesTo(fedEP, "0", destination)
                     elif messg == 'IN_SERVICE':
                         h.helicsEndpointSendBytesTo(fedEP, "1", destination)
-                    logger.info(f'\tPutting {key} {messg} ({destination})')
+                    log.info(f'\tPutting {key} {messg} ({destination})')
 
         iterStopTime = tm.time()
-        logger.info(f'Processing data at time {currTime} took {iterStopTime - iterStartTime} sec.')
-        logger.info(f'\tCurrent total house load: {totalBillMtrLoad} W')
+        log.info(f'Processing data at time {currTime} took {iterStopTime - iterStartTime} sec.')
+        log.info(f'\tCurrent total house load: {totalBillMtrLoad} W')
         nextTime = currTime + deltaTime
         if nextTime > simTime:
             break
         grantedTime = h.helicsFederateRequestTime(fed, nextTime)
     # Destroying federate
-    # logger.info(f'It took {ccTime - eventAckTime} sec from when the event has been acknowledged for ADMS and the co-sim is done. Deltatime for CC is {deltaTime} sec.')
+    # log.info(f'It took {ccTime - eventAckTime} sec from when the event has been acknowledged for ADMS and the co-sim is done. Deltatime for CC is {deltaTime} sec.')
     h.helicsFederateDisconnect(fed)
     execStopTime = tm.time()
-    logger.info(f'It took {execStopTime - execStartTime} sec from entering execution mode until exit.')
+    log.info(f'It took {execStopTime - execStartTime} sec from entering execution mode until exit.')
 
 
 if __name__ == "__main__":

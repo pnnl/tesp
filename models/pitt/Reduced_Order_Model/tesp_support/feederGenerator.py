@@ -529,7 +529,7 @@ def parse_kva(cplx):  # this drops the sign of p and q
     Returns:
         float: the parsed kva value
     """
-    toks = list(filter(None, re.split('[\+j-]', cplx)))
+    toks = list(filter(None, re.split(r'[\+j-]', cplx)))
     p = float(toks[0])
     q = float(toks[1])
     return 0.001 * sqrt(p * p + q * q)

@@ -11,12 +11,12 @@ Generate substation supply curves with and without consideration of the transfor
 
 """
 import json
-import logging as log
 import math
 from copy import deepcopy
 
 import numpy as np
 
+from ..api.helpers import log
 from ..api.parse_helpers import parse_kw
 from ..dsot.helpers_dsot import Curve, get_intersect, MarketClearingType
 from ..api.schedule_client import *

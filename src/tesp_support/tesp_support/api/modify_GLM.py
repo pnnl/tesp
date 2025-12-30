@@ -417,7 +417,8 @@ class GLMModifier:
         """Writes tariff information to billing meters. Default values are
         defined in default_values.json and can be optionally provided by
         the caller.
-            Power Flow User Guide for config details:
+
+        Power Flow User Guide for config details:
 
             "bill_mode"
             "price"

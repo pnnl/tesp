@@ -27,12 +27,12 @@ def bench_profile(func):
                     ('ru_isrss', 'Stack Size'),
                     ('ru_inblock', 'Block inputs'),
                     ('ru_oublock', 'Block outputs')]
-                logger.critical('Resource usage:')
+                log.critical('Resource usage:')
                 for name, desc in RESOURCES:
-                    logger.critical('  {:<25} ({:<10}) = {}'.format(desc, name, getattr(usage, name)))
+                    log.critical('  {:<25} ({:<10}) = {}'.format(desc, name, getattr(usage, name)))
 
-        logger = logging.getLogger(__name__)
-        logger.addHandler(logging.StreamHandler())
+        log = logging.getLogger(__name__)
+        log.addHandler(logging.StreamHandler())
 
         pr = cProfile.Profile()
         pr.enable()
@@ -45,7 +45,7 @@ def bench_profile(func):
         sortby = pstats.SortKey.CUMULATIVE
         ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
         ps.print_stats()
-        logger.critical(s.getvalue())
+        log.critical(s.getvalue())
         report_resource()
         return response
 
@@ -54,7 +54,7 @@ def bench_profile(func):
         return response
 
     bench = environ.get('BENCH_PROFILE')
-    print("bench profile->", bench)
+    # print("bench profile ->", bench)
     if bench:
         return exec_profiler
     else:

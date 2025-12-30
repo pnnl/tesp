@@ -301,29 +301,29 @@ class Forecasting:
             print(f'Did not expect name:{name} time:{time} in zipload')
         return self.DA_output
 
-    def set_solar_diffuse_forecast(self, fncs_str):
+    def set_solar_diffuse_forecast(self, message: str):
         """ Set the 48-hour solar diffuse forecast
         Args:
-            param fncs_str: solar_diffuse_forecast ([float x 48]):
+            param message: solar_diffuse_forecast ([float x 48]):
         """
-        solar_diffuse_forecast = eval(fncs_str)
+        solar_diffuse_forecast = eval(message)
         self.solar_diffuse_forecast = [float(solar_diffuse_forecast[key]) for key in solar_diffuse_forecast.keys()]
 
-    def set_solar_direct_forecast(self, fncs_str):
+    def set_solar_direct_forecast(self, message: str):
         """ Set the 48-hour solar direct forecast
         Args:
-            param fncs_str: solar_direct_forecast ([float x 48]):
+            param message: solar_direct_forecast ([float x 48]):
         """
-        solar_direct_forecast = eval(fncs_str)
+        solar_direct_forecast = eval(message)
         self.solar_direct_forecast = [float(solar_direct_forecast[key]) for key in solar_direct_forecast.keys()]
 
-    def set_temperature_forecast(self, fncs_str):
+    def set_temperature_forecast(self, message: str):
         """ Set the 48-hour temperature forecast
 
         Args:
-            fncs_str: temperature_forecast ([float x 48]): predicted temperature in F
+            message: temperature_forecast ([float x 48]): predicted temperature in F
         """
-        temperature_forecast = eval(fncs_str)
+        temperature_forecast = eval(message)
         self.temperature_forecast = [float(temperature_forecast[key]) for key in temperature_forecast.keys()]
         # log.info('FORECAST AGENT ' + str(self.temperature_forecast) )
 

@@ -310,20 +310,20 @@ class Forecasting:
         # self.DA_output = np.array(mean_sch)
         return self.DA_output
 
-    def set_solar_diffuse_forecast(self, fncs_str):
+    def set_solar_diffuse_forecast(self, message: str):
         """ Set the 48 hour solar diffuse forecast
         Args:
             solar_diffuse_forecast ([float x 48]):
         """
-        solar_diffuse_forecast = eval(fncs_str)
+        solar_diffuse_forecast = eval(message)
         self.solar_diffuse_forecast = [float(solar_diffuse_forecast[key]) for key in solar_diffuse_forecast.keys()]
 
-    def set_solar_direct_forecast(self, fncs_str):
+    def set_solar_direct_forecast(self, message: str):
         """ Set the 48 hour solar direct forecast
         Args:
             solar_direct_forecast ([float x 48]):
         """
-        solar_direct_forecast = eval(fncs_str)
+        solar_direct_forecast = eval(message)
         self.solar_direct_forecast = [float(solar_direct_forecast[key]) for key in solar_direct_forecast.keys()]
 
     def get_substation_unresponsive_load_forecast(self, peak_load=7500.0):

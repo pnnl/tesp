@@ -6,7 +6,6 @@
 TODO: update the purpose of this Agent
 
 """
-import logging as log
 import math
 from datetime import datetime, timedelta
 from math import cos as cos
@@ -18,12 +17,10 @@ import pyomo.environ as pyo
 import pytz
 from scipy import linalg
 
-from ..api.helpers import get_run_solver
+from ..api.helpers import get_run_solver, logging, log
 from ..api.parse_helpers import parse_number, parse_magnitude
 
-logger = log.getLogger()
-log.getLogger('pyomo.core').setLevel(log.ERROR)
-
+logging.getLogger('pyomo.core').setLevel(logging.ERROR)
 
 class HVACDSOT:  # TODO: update class name
     """
@@ -50,6 +47,7 @@ class HVACDSOT:  # TODO: update class name
         """
         # TODO: update attributes of class
         self.name = key
+        self.model_diag_level = model_diag_level
         self.solver = solver
         self.houseName = hvac_dict['houseName']
         self.meterName = hvac_dict['meterName']
@@ -162,9 +160,6 @@ class HVACDSOT:  # TODO: update class name
         self.minute = 0
         self.hour = 0
         self.day = 0
-        self.Qopt_da_prev = 0
-        self.temp_da_prev = 75.0
-        self.DA_once_flag = False
         self.air_temp_agent = 72.0
         self.bid_rt_price = 0.0
         self.Qi = 0.0
@@ -291,7 +286,7 @@ class HVACDSOT:  # TODO: update class name
         self.solar_heatgain_factor = 0.
         self.solar_gain = 0.0
 
-        self.calc_thermostat_settings(model_diag_level, sim_time)
+        self.calc_thermostat_settings(sim_time)
         self.calc_etp_model()
 
         self.temp_room = [78.0 for _ in range(self.windowLength)]
@@ -320,77 +315,79 @@ class HVACDSOT:  # TODO: update class name
         else:
             self.ProfitMargin_slope = 9999  # just a large value to prevent errors when slider=0
 
-        # Sanity checks:
+        self.sanity_checks()
+
+    def sanity_checks(self):
         if self.wakeup_start <= self.daylight_start:
             pass
         else:
-            log.log(model_diag_level, '{} {} -- wakeup_start ({}) is not < daylight_start ({}).'
+            log.log(self.model_diag_level, '{} {} -- wakeup_start ({}) is not < daylight_start ({}).'
                     .format(self.name, 'init', self.wakeup_start, self.daylight_start))
         if self.daylight_start <= self.evening_start:
             pass
         else:
-            log.log(model_diag_level, '{} {} -- daylight_start ({}) is not < evening_start ({}).'
+            log.log(self.model_diag_level, '{} {} -- daylight_start ({}) is not < evening_start ({}).'
                     .format(self.name, 'init', self.daylight_start, self.evening_start))
         if self.evening_start <= self.night_start:
             pass
         else:
-            log.log(model_diag_level, '{} {} -- evening_start ({}) is not < night_start ({}).'
+            log.log(self.model_diag_level, '{} {} -- evening_start ({}) is not < night_start ({}).'
                     .format(self.name, 'init', self.evening_start, self.night_start))
         if self.weekend_day_start <= self.weekend_night_start:
             pass
         else:
-            log.log(model_diag_level, '{} {} -- weekend_day_start ({}) is not < weekend_night_start ({}).'
+            log.log(self.model_diag_level, '{} {} -- weekend_day_start ({}) is not < weekend_night_start ({}).'
                     .format(self.name, 'init', self.weekend_day_start, self.weekend_night_start))
         # if self.wakeup_set_heat >= self.night_set_heat:
         #     pass
         # else:
-        #     log.log(model_diag_level, '{} {} -- wakeup_set_heat ({}) is not >= night_set_heat ({}) .'
+        #     log.log(self.model_diag_level, '{} {} -- wakeup_set_heat ({}) is not >= night_set_heat ({}) .'
         #             .format(self.name, 'init', self.wakeup_set_heat, self.night_set_heat))
         if self.daylight_set_heat <= self.night_set_heat:
             pass
         else:
-            log.log(model_diag_level, '{} {} -- daylight_set_heat ({}) is not <= night_set_heat ({}).'
+            log.log(self.model_diag_level, '{} {} -- daylight_set_heat ({}) is not <= night_set_heat ({}).'
                     .format(self.name, 'init', self.daylight_set_heat, self.night_set_heat))
         if self.daylight_set_heat <= self.wakeup_set_heat:
             pass
         else:
-            log.log(model_diag_level, '{} {} -- daylight_set_heat ({}) is not <= wakeup_set_heat ({}).'
+            log.log(self.model_diag_level, '{} {} -- daylight_set_heat ({}) is not <= wakeup_set_heat ({}).'
                     .format(self.name, 'init', self.daylight_set_heat, self.wakeup_set_heat))
         if "zone" not in self.name:
             if self.daylight_set_cool >= self.night_set_cool:
                 pass
             else:
-                log.log(model_diag_level, '{} {} -- daylight_set_cool ({}) is not >= night_set_cool ({}).'
+                log.log(self.model_diag_level, '{} {} -- daylight_set_cool ({}) is not >= night_set_cool ({}).'
                         .format(self.name, 'init', self.daylight_set_cool, self.night_set_cool))
             if self.daylight_set_cool >= self.wakeup_set_cool:
                 pass
             else:
-                log.log(model_diag_level, '{} {} -- daylight_set_cool ({}) is not >= wakeup_set_cool ({}).'
+                log.log(self.model_diag_level, '{} {} -- daylight_set_cool ({}) is not >= wakeup_set_cool ({}).'
                         .format(self.name, 'init', self.daylight_set_cool, self.wakeup_set_cool))
             # if self.evening_set_heat >= self.night_set_heat:
             #     pass
             # else:
-            #     log.log(model_diag_level, '{} {} -- evening_set_heat ({}) is not >= night_set_heat ({}).'
+            #     log.log(self.model_diag_level, '{} {} -- evening_set_heat ({}) is not >= night_set_heat ({}).'
             #             .format(self.name, 'init', self.evening_set_heat, self.night_set_heat))
             # if self.weekend_day_set_heat >= self.weekend_night_set_heat:
             #     pass
             # else:
-            #     log.log(model_diag_level, '{} {} -- weekend_day_set_heat ({}) is not >= weekend_night_set_heat ({}).'
+            #     log.log(self.model_diag_level, '{} {} -- weekend_day_set_heat ({}) is not >= weekend_night_set_heat ({}).'
             #             .format(self.name, 'init', self.weekend_day_set_heat, self.weekend_night_set_heat))
         if self.sqft > 0:
             pass
         else:
-            log.log(model_diag_level, '{} {} -- number of sqft ({}) is negative value'
+            log.log(self.model_diag_level, '{} {} -- number of sqft ({}) is negative value'
                     .format(self.name, 'init', self.sqft))
         if self.stories > 0:
             pass
         else:
-            log.log(model_diag_level, '{} {} -- number of stories ({}) is negative'
+            log.log(self.model_diag_level, '{} {} -- number of stories ({}) is negative'
                     .format(self.name, 'init', self.stories))
         if self.doors >= 0:
             pass
         else:
-            log.log(model_diag_level, '{} {} -- number of doors ({}) is negative'
+            log.log(self.model_diag_level, '{} {} -- number of doors ({}) is negative'
                     .format(self.name, 'init', self.doors))
 
         Rroof_lower = 2
@@ -398,7 +395,7 @@ class HVACDSOT:  # TODO: update class name
         if Rroof_lower <= self.Rroof < Rroof_upper:
             pass
         else:
-            log.log(model_diag_level, '{} {} --  Rroof is {}, outside of nominal range of {} to {}'
+            log.log(self.model_diag_level, '{} {} --  Rroof is {}, outside nominal range of {} to {}'
                     .format(self.name, 'init', self.Rroof, Rroof_lower, Rroof_upper))
 
         Rwall_lower = 2
@@ -406,7 +403,7 @@ class HVACDSOT:  # TODO: update class name
         if Rwall_lower <= self.Rwall < Rwall_upper:
             pass
         else:
-            log.log(model_diag_level, '{} {} -- Rwall is {}, outside of nominal range of {} to {}'
+            log.log(self.model_diag_level, '{} {} -- Rwall is {}, outside nominal range of {} to {}'
                     .format(self.name, 'init', self.Rwall, Rwall_lower, Rwall_upper))
 
         Rfloor_lower = 2
@@ -414,7 +411,7 @@ class HVACDSOT:  # TODO: update class name
         if Rfloor_lower <= self.Rfloor < Rfloor_upper:
             pass
         else:
-            log.log(model_diag_level, '{} {} -- Rfloor is {}, outside of nominal range of {} to {}'
+            log.log(self.model_diag_level, '{} {} -- Rfloor is {}, outside nominal range of {} to {}'
                     .format(self.name, 'init', self.Rfloor, Rfloor_lower, Rfloor_upper))
 
         Rdoor_lower = 1
@@ -422,7 +419,7 @@ class HVACDSOT:  # TODO: update class name
         if Rdoor_lower <= self.Rdoors < Rdoor_upper:
             pass
         else:
-            log.log(model_diag_level, '{} {} -- Rdoors is {}, outside of nominal range of {} to {}'
+            log.log(self.model_diag_level, '{} {} -- Rdoors is {}, outside nominal range of {} to {}'
                     .format(self.name, 'init', self.Rdoors, Rdoor_lower, Rdoor_upper))
 
         airchange_per_hour_lower = 0.1
@@ -430,7 +427,7 @@ class HVACDSOT:  # TODO: update class name
         if airchange_per_hour_lower <= self.airchange_per_hour < airchange_per_hour_upper:
             pass
         else:
-            log.log(model_diag_level, '{} {} -- airchange_per_hour is {}, outside of nominal range of {} to {}.'
+            log.log(self.model_diag_level, '{} {} -- airchange_per_hour is {}, outside nominal range of {} to {}.'
                     .format(self.name, 'init', self.airchange_per_hour, airchange_per_hour_lower, airchange_per_hour_upper))
 
         glazing_layers_lower = 1
@@ -438,7 +435,7 @@ class HVACDSOT:  # TODO: update class name
         if glazing_layers_lower <= self.glazing_layers <= glazing_layers_upper:
             pass
         else:
-            log.log(model_diag_level, '{} {} -- glazing_layers is (are) {}, outside of nominal range of {} to {}'
+            log.log(self.model_diag_level, '{} {} -- glazing_layers is (are) {}, outside nominal range of {} to {}'
                     .format(self.name, 'init', self.glazing_layers, glazing_layers_lower, glazing_layers_upper))
 
         cooling_COP_lower = 1
@@ -446,14 +443,13 @@ class HVACDSOT:  # TODO: update class name
         if cooling_COP_lower <= self.cooling_COP <= cooling_COP_upper:
             pass
         else:
-            log.log(model_diag_level, '{} {} -- cooling_COP is {}, outside of nominal range of {} to {}'
+            log.log(self.model_diag_level, '{} {} -- cooling_COP is {}, outside of nominal range of {} to {}'
                     .format(self.name, 'init', self.cooling_COP, cooling_COP_lower, cooling_COP_upper))
 
-    def calc_thermostat_settings(self, model_diag_level, sim_time):
+    def calc_thermostat_settings(self, sim_time):
         """ Sets the ETP parameters from configuration data
 
         Args:
-            model_diag_level (int): Specific level for logging errors; set to 11
             sim_time (str): Current time in the simulation; should be human-readable
 
         References:
@@ -494,8 +490,8 @@ class HVACDSOT:  # TODO: update class name
             #     # log.info('basepoint_cooling is within the bounds.')
             #     pass
             # else:
-            #     log.log(model_diag_level,
-            #             '{} {} -- basepoint_cooling is {}, outside of nominal range of {} to {}'
+            #     log.log(self.model_diag_level,
+            #             '{} {} -- basepoint_cooling is {}, outside nominal range of {} to {}'
             #             .format(self.name, sim_time, self.basepoint_cooling, basepoint_cooling_lower, basepoint_cooling_upper))
 
             self.basepoint_heating = mid_point - self.deadband / 2.0 - 0.5
@@ -505,8 +501,8 @@ class HVACDSOT:  # TODO: update class name
             #     # log.info('basepoint_heating is within the bounds.')
             #     pass
             # else:
-            #     log.log(model_diag_level,
-            #             '{} {} -- basepoint_heating is {}, outside of nominal range of {} to {}'
+            #     log.log(self.model_diag_level,
+            #             '{} {} -- basepoint_heating is {}, outside nominal range of {} to {}'
             #             .format(self.name, sim_time, self.basepoint_heating, basepoint_heating_lower, basepoint_heating_upper))
         # print("self.basepoint_cooling "+str(self.basepoint_cooling))
         # print("self.basepoint_heating "+str(self.basepoint_heating))
@@ -834,7 +830,7 @@ class HVACDSOT:  # TODO: update class name
         # print('  CM -> {:.2f}'.format(self.CM))
 
     def set_price_forecast(self, price_forecast):
-        """ Set the 24-hour price forecast and calculate mean and std
+        """ Set the 24-hour price forecast and calculate price mean, std_dev and delta
 
         Args:
             price_forecast ([float x 24]): predicted price in $/kwh
@@ -846,14 +842,13 @@ class HVACDSOT:  # TODO: update class name
         self.price_std_dev = np.std(self.price_forecast)
         self.price_delta = np.max(self.price_forecast) - np.min(self.price_forecast)
 
-    def set_temperature_forecast(self, fncs_str):
+    def set_temperature_forecast(self, message):
         """ Set the 48-hour price forecast and calculate min and max
 
         Args:
-            fncs_str: temperature_forecast ([float x 48]): predicted temperature in F
+            message: temperature_forecast ([float x 48]): predicted temperature in F
         """
-
-        temperature_forecast = eval(fncs_str)
+        temperature_forecast = eval(message)
         self.temperature_forecast = [float(temperature_forecast[key]) for key in temperature_forecast.keys()]
         # print ("temperature forecast inside function")
         # print(self)
@@ -861,105 +856,102 @@ class HVACDSOT:  # TODO: update class name
         self.temp_min_48hour = min(self.temperature_forecast)
         self.temp_max_48hour = max(self.temperature_forecast)
 
-    def set_humidity_forecast(self, fncs_str):
-        """ Set the 48-hour price forecast and calculate min and max
+    def set_humidity_forecast(self, message):
+        """ Set the 48-hour humidity_forecast so that it can be used for forcasting
 
         Args:
-            fncs_str: temperature_forecast ([float x 48]): predicted temperature in F
+            message: humidity forecast ([float x 48]): predicted humidity in relative percent
         """
-
-        humidity_forecast = eval(fncs_str)
+        humidity_forecast = eval(message)
         self.humidity_forecast = [float(humidity_forecast[key]) for key in humidity_forecast.keys()]
 
-    def set_solargain_forecast(self, solargain_array):
-        """ Set the 48-hour solargain forecast
+    def set_solargain_forecast(self, solargain_forecast):
+        """ Set the 48-hour solargain_forecast variable so that it can be used for forcasting
 
         Args:
-            solargain_array: solargain_forecast ([float x 48]): forecasted solargain in BTu/(h*sf)
+            solargain_forecast: solar gain forecast ([float x 48]): forecasted solar gain in BTu/(h*sf)
         """
         # bringing solar gain to nominal for the use in different homes
         # A3 has solargain_factor of 40.548
-        self.solargain_forecast = solargain_array
+        self.solargain_forecast = solargain_forecast
 
-    def store_full_internalgain_forecast(self, forecast_internalgain):
-        """
+    def store_full_internalgain_forecast(self, full_internalgain_forecast):
+        """ Sets the full_internalgain_forecast variable so that it can be used for forcasting
+
         Args:
-            forecast_internalgain: internal gain forecast to store for future
-
-        Returns: sets the variable so that it can be used later hours as well
+            full_internalgain_forecast: internal gain forecast to store for future
         """
-        self.full_internalgain_forecast = forecast_internalgain
+        self.full_internalgain_forecast = full_internalgain_forecast
 
-    def store_full_zipload_forecast(self, forecast_ziploads):
-        """
+    def store_full_zipload_forecast(self, full_forecast_ziploads):
+        """ Sets the full_forecast_ziploads variable so that it can be used for forcasting
+
         Args:
-            forecast_ziploads: internal gain forecast to store for future
-
-        Returns: sets the variable so that it can be used later hours as well
+            full_forecast_ziploads: zip load forecast to store for future
         """
-        self.full_forecast_ziploads = forecast_ziploads
+        self.full_forecast_ziploads = full_forecast_ziploads
 
-    def set_internalgain_forecast(self, internalgain_array):
-        """ Set the 48-hour internalgain forecast
+    def set_internalgain_forecast(self, internalgain_forecast):
+        """ Set the 48-hour internalgain_forecast variable so that it can be used for forcasting
+
         Args:
-            internalgain_array: internalgain_forecast ([float x 48]): forecasted internalgain in BTu/h
+            internalgain_forecast: internal gain forecast ([float x 48]): forecasted internal gain in BTu/h
         """
-        self.internalgain_forecast = internalgain_array
+        self.internalgain_forecast = internalgain_forecast
 
     def set_zipload_forecast(self, forecast_ziploads):
-        """
-        Set the 48-hour zipload forecast
+        """ Set the 48-hour forecast_ziploads variable so that it can be used for forcasting
+
         Args:
             forecast_ziploads: array of zipload forecast
-        Returns: nothing, sets the property
         """
         self.forecast_ziploads = forecast_ziploads
 
-    def set_temperature(self, fncs_str):
+    def set_temperature(self, message: str):
         """ Sets the outside temperature attribute
 
         Args:
-            fncs_str (str): FNCS message with outdoor temperature in F
+            message (str): Message with outdoor temperature in F
         """
-        val = parse_number(fncs_str)
+        val = parse_number(message)
         self.outside_air_temperature = val
 
-    def set_humidity(self, fncs_str):
+    def set_humidity(self, message: str):
         """ Sets the humidity attribute
 
         Args:
-            fncs_str (str): FNCS message with humidity
+            message (str): Message with humidity
         """
-        val = parse_number(fncs_str)
+        val = parse_number(message)
         if val > 0.0:
             self.humidity = val
 
-    def set_solar_direct(self, fncs_str):
+    def set_solar_direct(self, message: str):
         """ Sets the solar irradiance attribute, if greater than zero
 
         Args:
-            fncs_str (str): FNCS message with solar irradiance
+            message (str): Message with solar irradiance
         """
-        val = parse_number(fncs_str)
+        val = parse_number(message)
         if val >= 0.0:
             self.solar_direct = val
 
-    def set_solar_diffuse(self, fncs_str):
+    def set_solar_diffuse(self, message: str):
         """ Sets the solar diffuse attribute, if greater than zero
 
         Args:
-            fncs_str (str): FNCS message with solar irradiance
+            message (str): Message with solar irradiance
         """
-        val = parse_number(fncs_str)
+        val = parse_number(message)
         if val >= 0.0:
             self.solar_diffuse = val
 
     def get_solargain(self, climate_conf, current_time):
-        """ estimates the nominal solargain without solargain_factor
+        """ estimates the nominal solar gain without solar gain factor
 
         Args:
             climate_conf: latitude and longitude info in a dict
-            current_time: the time for which solargain needs to be estiamted
+            current_time: the time for which solar gain needs to be estimated
         """
         lat = math.radians(float(climate_conf['latitude']))  # converting to radians
         lon = math.radians(float(climate_conf['longitude']))
@@ -1035,14 +1027,13 @@ class HVACDSOT:  # TODO: update class name
         """
         self.cleared_price = price
 
-    def bid_accepted(self, model_diag_level, sim_time):
+    def bid_accepted(self, sim_time):
         """ Update the thermostat setting if the last bid was accepted
 
         The last bid is always "accepted". If it wasn't high enough,
         then the thermostat could be turned up.
 
         Args:
-            model_diag_level (int): Specific level for logging errors; set to 11
             sim_time (str): Current time in the simulation; should be human-readable
 
         Returns:
@@ -1101,7 +1092,7 @@ class HVACDSOT:  # TODO: update class name
             else:
                 ramp_high_tmp = 10000000000000.0
                 ramp_low_tmp = 10000000000000.0
-                log.log(model_diag_level, '{} {} -- thermostat mode not defined.'.format(self.name, sim_time))
+                log.log(self.model_diag_level, '{} {} -- thermostat mode not defined.'.format(self.name, sim_time))
             use_RT_curve = True
             use_DA_curve = False
             use_leg_clearing = False
@@ -1181,37 +1172,37 @@ class HVACDSOT:  # TODO: update class name
                 elif setpoint_tmp < basepoint_tmp - abs(self.range_low_heat):
                     setpoint_tmp = basepoint_tmp - abs(self.range_low_heat)
 
-            returnflag = True
+            return_flag = True
         else:
             setpoint_tmp = basepoint_tmp
-            returnflag = False
+            return_flag = False
 
         if self.thermostat_mode == 'Cooling':
             self.cooling_setpoint = setpoint_tmp
             if self.cooling_setpoint_lower < self.cooling_setpoint < self.cooling_setpoint_upper:
                 pass
-            else: # Correct unallowed setpoints to the closest allowed value
-                log.log(model_diag_level,
+            else:
+                log.log(self.model_diag_level,
                         '{} {} -- cooling_setpoint ({}), outside of nominal range {} to {}'
                         .format(self.name, sim_time, self.cooling_setpoint, self.cooling_setpoint_lower,
                                 self.cooling_setpoint_upper))
                 if self.cooling_setpoint < self.cooling_setpoint_lower:
-                    self.cooling_setpoint == self.cooling_setpoint_lower
+                    self.cooling_setpoint = self.cooling_setpoint_lower
                 elif self.cooling_setpoint > self.cooling_setpoint_upper:
-                    self.cooling_setpoint == self.cooling_setpoint_upper
+                    self.cooling_setpoint = self.cooling_setpoint_upper
         else:
             self.heating_setpoint = setpoint_tmp
             if self.heating_setpoint_lower < self.heating_setpoint < self.heating_setpoint_upper:
                 pass
             else:
-                log.log(model_diag_level,
+                log.log(self.model_diag_level,
                         '{} {} -- heating_setpoint ({}), outside of nominal range of {} to {}'
                         .format(self.name, sim_time, self.heating_setpoint, self.heating_setpoint_lower,
                                 self.heating_setpoint_upper))
                 if self.heating_setpoint < self.heating_setpoint_lower:
-                    self.heating_setpoint == self.heating_setpoint_lower
+                    self.heating_setpoint = self.heating_setpoint_lower
                 elif self.heating_setpoint > self.heating_setpoint_upper:
-                    self.heating_setpoint == self.heating_setpoint_upper
+                    self.heating_setpoint = self.heating_setpoint_upper
 
         if self.heating_setpoint + self.deadband / 2.0 >= self.cooling_setpoint - self.deadband / 2.0:
             if self.thermostat_mode == 'Heating':
@@ -1262,14 +1253,7 @@ class HVACDSOT:  # TODO: update class name
 
         self.air_temp_agent = x[0][0]  # this gets updated at the end
         self.mass_temp = x[1][0]  # this gets updated at the end
-
-        # if self.name == "R4_12_47_1_tn_9_hse_1":
-        #     print("RT clearing",self.name,sim_time,self.hvac_on,self.hvac_kw)
-        #     print("temp",setpoint_tmp,self.temp_room[0],self.temp_curve)
-        #     print("quan",self.bid_quantity,self.Qopt_da_prev,self.quantity_curve)
-        #     print("price",self.cleared_price,self.price_forecast_0)
-        #     print("bid",self.bid_rt)
-        return returnflag
+        return return_flag
 
     def set_time(self, minute, hour, day):
         """ Sets the current hour and minute
@@ -1283,11 +1267,10 @@ class HVACDSOT:  # TODO: update class name
         self.hour = hour
         self.day = day
 
-    def change_basepoint(self, model_diag_level, sim_time):
+    def change_basepoint(self, sim_time):
         """ Updates the time-scheduled thermostat setting
 
         Args:
-            model_diag_level (int): Specific level for logging errors; set to 11
             sim_time (str): Current time in the simulation; should be human-readable
 
         Returns:
@@ -1318,84 +1301,83 @@ class HVACDSOT:  # TODO: update class name
                 # log.info('basepoint_cooling is within the bounds.')
                 pass
             else:
-                log.log(model_diag_level, '{} {} -- basepoint_cooling ({}) is out of bounds.'
+                log.log(self.model_diag_level, '{} {} -- basepoint_cooling ({}) is out of bounds.'
                         .format(self.name, sim_time, self.basepoint_cooling))
             self.basepoint_heating = val_heat
             if 60 < self.basepoint_heating < 85:
                 # log.info('basepoint_heating is within the bounds.')
                 pass
             else:
-                log.log(model_diag_level, '{} {} -- basepoint_heating ({}) is out of bounds.'
+                log.log(self.model_diag_level, '{} {} -- basepoint_heating ({}) is out of bounds.'
                         .format(self.name, sim_time, self.basepoint_heating))
-            self.calc_thermostat_settings(model_diag_level, sim_time)  # update thermostat settings
+            self.calc_thermostat_settings(sim_time)  # update thermostat settings
             return True
         return False
 
-    def set_house_load(self, fncs_str):
+    def set_house_load(self, message: str):
         """ Sets the hvac_load attribute, if greater than zero
 
         Args:
-            fncs_str (str): FNCS message with load in kW
+            message (str): Message with load in kW
         """
-        log.debug(f'hvac name: {self.houseName}, house load: {fncs_str}')
-        val = parse_number(fncs_str)
+        log.debug(f'hvac name: {self.houseName}, house load: {message}')
+        val = parse_number(message)
         if val > 0.0:
             self.house_kw = val
 
-    def set_hvac_load(self, fncs_str):
+    def set_hvac_load(self, message: str):
         """ Sets the hvac_load attribute, if greater than zero
 
         Args:
-            fncs_str (str): FNCS message with load in kW
+            message (str): Message with load in kW
         """
-        log.debug(f'hvac name: {self.houseName}, hvac load: {fncs_str}')
-        val = parse_number(fncs_str)
+        log.debug(f'hvac name: {self.houseName}, hvac load: {message}')
+        val = parse_number(message)
         if val > 0.0:
             self.hvac_kw = val
 
-    def set_wh_load(self, fncs_str):
+    def set_wh_load(self, message: str):
         """ Sets the wh_load attribute, if greater than zero
 
         Args:
-            fncs_str (str): FNCS message with load in kW
+            message (str): Message with load in kW
         """
-        log.debug(f'hvac name: {self.houseName}, water heater load: {fncs_str}')
-        val = parse_number(fncs_str)
+        log.debug(f'hvac name: {self.houseName}, water heater load: {message}')
+        val = parse_number(message)
         if val >= 0.0:
             self.wh_kw = val
 
-    def set_hvac_state(self, fncs_str):
+    def set_hvac_state(self, message: str):
         """ Sets the hvac_on attribute
 
         Args:
-            fncs_str (str): FNCS message with state, ON or OFF
+            message (str): Message with state, ON or OFF
         """
-        log.debug(f'hvac name: {self.houseName}, hvac state: {fncs_str}')
-        if fncs_str == 'OFF':
+        log.debug(f'hvac name: {self.houseName}, hvac state: {message}')
+        if message == 'OFF':
             self.hvac_on = False
         else:
             self.hvac_on = True
 
-    def set_air_temp(self, fncs_str, model_diag_level, sim_time):
+    def set_air_temp(self, message, sim_time):
         """ Sets the air_temp attribute
 
         Args:
-            fncs_str (str): FNCS message with temperature in degrees Fahrenheit
-            model_diag_level (int): Specific level for logging errors; set to 11
+            message (str): Message with temperature in degrees Fahrenheit
             sim_time (str): Current time in the simulation; should be human-readable
         """
-        log.debug(f'hvac load name: {self.houseName}, string: {fncs_str}')
-        T_air = parse_number(fncs_str)
+        log.debug(f'hvac load name: {self.houseName}, string: {message}')
+        T_air = parse_number(message)
         if self.T_lower_limit < T_air < self.T_upper_limit:
             pass
         else:
             # No more than 20deg swing in an hour
             if self.air_temp - 20 < T_air < self.air_temp + 20:
                 T_air = self.air_temp
-                log.log(model_diag_level,
+                log.log(self.model_diag_level,
                         '{} Severe Warning temp {}: 20 degree swing, setting to last temperature'
                         .format(self.name, T_air))
-            log.log(model_diag_level,
+            log.log(self.model_diag_level,
                     '{} {} -- air_temp ({}) is out of bounds, outside of nominal range of {} to {}.'
                     .format(self.name, sim_time, self.air_temp, self.T_lower_limit, self.T_upper_limit))
         self.air_temp = T_air
@@ -1407,20 +1389,19 @@ class HVACDSOT:  # TODO: update class name
         else:
             self.thermostat_mode = 'Heating'
 
-    def set_voltage(self, fncs_str):
+    def set_voltage(self, message: str):
         """ Sets the mtr_v attribute
 
         Args:
-            fncs_str (str): FNCS message with meter line-neutral voltage
+            message (str): Message with meter line-neutral voltage
         """
-        log.debug(f'hvac load name: {self.houseName}, string: {fncs_str}')
-        self.mtr_v = parse_magnitude(fncs_str)
+        log.debug(f'hvac load name: {self.houseName}, string: {message}')
+        self.mtr_v = parse_magnitude(message)
 
-    def formulate_bid_rt(self, model_diag_level, sim_time):
+    def formulate_bid_rt(self, sim_time):
         """ Bid to run the air conditioner through the next period for real-time
 
         Args:
-            model_diag_level (int): Specific level for logging errors; set to 11
             sim_time (str): Current time in the simulation; should be human-readable
 
         Returns:
@@ -1655,10 +1636,6 @@ class HVACDSOT:  # TODO: update class name
         BID = [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]]
         P = 1
         Q = 0
-        # Qopt_DA = self.bid_da[0][1][0]*min_adj/60.0 + self.Qopt_da_prev*(1-min_adj/60.0)
-        # Qopt_DA = self.bid_da[0][1][0]
-        # self.bid_quantity_rt = Qopt_DA
-        # topt = self.temp_room[0]
         if Q_min != Q_max:
             CurveSlope = (delta_DA_price / (0 - self.hvac_kw) * (1 + self.ProfitMargin_slope / 100))
             yIntercept = self.price_forecast_0 - CurveSlope * Qopt_DA
@@ -1764,8 +1741,6 @@ class HVACDSOT:  # TODO: update class name
             BID (float) (windowLength X 4 X 2): DA bids to be sent to the retail DA market
         """
 
-        # save the previous bid quantity for interpolation use
-        self.Qopt_da_prev = self.bid_da[0][1][0]
         self.price_forecast_0 = self.price_forecast[0]
         BID = []
         for _ in self.TIME:
@@ -1932,8 +1907,6 @@ class HVACDSOT:  # TODO: update class name
                         self.heating_COP_K2 * self.temperature_forecast[t] ** 2 +
                         self.heating_COP_K3 * self.temperature_forecast[t] ** 3)
 
-        # temp_room_init = self.air_temp
-        self.temp_da_prev = self.temp_room[0]
         if self.thermostat_mode == "Cooling":
             self.temp_room_init = self.cooling_setpoint
         else:
@@ -1984,7 +1957,7 @@ class HVACDSOT:  # TODO: update class name
         else:
             # update SOHC
             return m.temp_room[t] == (self.eps * m.temp_room[t - 1] + factor)
-        
+
     def temp_bound_rule(self, m, t):
         if self.thermostat_mode == 'Cooling':
             return (self.temp_desired_48hour_cool[t] - self.range_low_cool,
@@ -2035,7 +2008,7 @@ class HVACDSOT:  # TODO: update class name
 
         else:  # for linear optimizer
             prob = pulp.LpProblem("QuantityBid", pulp.LpMinimize)
-            # Decsicion variables
+            # Decision variables
             # classmethod dicts(name, indexs, lowBound=None, upBound=None, cat=0, indexStart=[])
 
             if self.thermostat_mode == 'Cooling':
@@ -2045,7 +2018,7 @@ class HVACDSOT:  # TODO: update class name
                 # if self.hvac_kw>6.0:
                 #    self.hvac_kw = 6.0
                 quan_hvac = pulp.LpVariable.dicts("hvac_quantity", self.TIME, 0, self.hvac_kw)
-                temp_room = pulp.LpVariable.dicts("Temparature_room", self.TIME,
+                temp_room = pulp.LpVariable.dicts("Temperature_room", self.TIME,
                                                   self.temp_min_cool, self.temp_max_cool)
 
                 prob += (pulp.lpSum((self.price_forecast[t] * quan_hvac[t] * self.slider) +
@@ -2055,7 +2028,7 @@ class HVACDSOT:  # TODO: update class name
                                      (self.temp_desired_48hour_cool[t] - temp_room[t])) for t in self.TIME))
             else:
                 quan_hvac = pulp.LpVariable.dicts("hvac_quantity", self.TIME, -self.hvac_kw, 0)
-                temp_room = pulp.LpVariable.dicts("Temparature_room", self.TIME,
+                temp_room = pulp.LpVariable.dicts("Temperature_room", self.TIME,
                                                   self.temp_min_heat, self.temp_max_heat)
                 prob += (pulp.lpSum((self.price_forecast[t] * quan_hvac[t]) +
                                     (((-2 * self.range_high_heat * self.price_std_dev) / self.temp_delta) *

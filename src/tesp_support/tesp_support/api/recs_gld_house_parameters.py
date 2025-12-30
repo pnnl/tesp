@@ -520,24 +520,26 @@ def get_residential_metadata(metadata, sample_data, state, hsdens_str, inc_lev, 
 
 def get_RECS_jsons(bldg_in, bldg_out, hvac_out,
                    sample=None, bin_size_thres=100, climate_zone=None, wh_shift=0.0):
-    '''
+    """
     Generate residential building metadata and HVAC setpoint JSON files based on RECS data.
+
     Args:
         bldg_in (str): Path to input DSOT_residential_parameters_metadata.json file (using some assumptions from DSOT).
         bldg_out (str): Path to output residential building metadata JSON file.
         hvac_out (str): Path to output residential HVAC setpoints distribution JSON file.
         sample (dict): Dictionary specifying states, housing densities, and income levels to sample from RECS data. 
-                       If 'housing_density' includes 'No_DSO_Type', then housing density will not be used as a filter when sampling RECS data.
-                       Example: {'state': ['CA', 'TX'], 'housing_density': ['U', 'S', 'R'], 'income_level': ['Low', 'Middle']}
-                       Example: {'state': ['TX'], 'housing_density': ['No_DSO_Type'], 'income_level': ['Low', 'Middle','Upper']}
+            If 'housing_density' includes 'No_DSO_Type', then housing density will not be used as a filter when sampling RECS data.
+            Example: {'state': ['CA', 'TX'], 'housing_density': ['U', 'S', 'R'], 'income_level': ['Low', 'Middle']}
+            Example: {'state': ['TX'], 'housing_density': ['No_DSO_Type'], 'income_level': ['Low', 'Middle','Upper']}
         bin_size_thres (int): Minimum bin size threshold for sampling RECS data.
-                              Minimum acceptable count of samples for selected triple - state, housing density, income level.
+            Minimum acceptable count of samples for selected triple - state, housing density, income level.
         climate_zone (str): IECC climate zone to use if bin size threshold is not met.
         wh_shift (float): Percentage of water heaters to shift from gas to electric (direct shift of water heater types to electric).
-                          Example: 0.1 = 10% shift - subtracts from gas WH distribution and adds to electric WH distribution.
+            Example: 0.1 = 10% shift - subtracts from gas WH distribution and adds to electric WH distribution.
+
     Returns:
         None
-    '''
+    """
 
     # Read RECS data file
     if sample is None:

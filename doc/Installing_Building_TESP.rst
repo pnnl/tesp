@@ -255,8 +255,8 @@ Make sure the following tools are installed.
 * Python 3 - `Windows needs to install manually <https://www.python.org/downloads/windows/>`_, Linux and macOS generally include it.
 *  (optional) An IDE (integrated development environment), `VS Code <https://code.visualstudio.com/download>`_ and `PyCharm CE <https://www.jetbrains.com/pycharm/download/?section=windows>`_ are popular but there are others.
 * Package manager - `Anaconda <https://www.anaconda.com/download>`_ or `pip <https://pip.pypa.io/en/stable/installation/>`_ (macOS and Linux generally come with pip already installed).
-* git - `Windows installer is here <https://git-scm.com/downloads/win>`_; macOS and Linux already have git installed.
-* pip - `Windows installer is here <https://pip.pypa.io/en/stable/installation/>`_; macOS and Linux already have pip installed.
+* git - `Windows git installer is here <https://git-scm.com/downloads/win>`_; macOS and Linux already have git installed.
+* pip - `Windows pip installer is here <https://pip.pypa.io/en/stable/installation/>`_; macOS and Linux already have pip installed.
 
 
 Create a Virtual Environment

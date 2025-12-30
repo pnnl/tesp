@@ -32,7 +32,7 @@ from ..weather import PSMv3toDAT as PSM
 # spec.loader.exec_module(PSM)
 
 # Setting up logging
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 # Setting up pretty printing, mostly for debugging.
 pp = pprint.PrettyPrinter(indent=4, )
@@ -54,7 +54,7 @@ def _open_file(file_path, typ='r'):
     try:
         fh = open(file_path, typ)
     except IOError:
-        logger.error('Unable to open {}'.format(file_path))
+        log.error('Unable to open {}'.format(file_path))
     else:
         return fh
 
@@ -104,8 +104,8 @@ def parse_DSO_location(dso_metadata_path, worksheet_name):
             dso_meta.append({'lat': lat,
                              'long': long,
                              '200-bus': bus_200})
-    logger.info('Parsed DSO metadata file {}'.format(dso_metadata_path))
-    logger.info(pp.pformat(dso_meta))
+    log.info('Parsed DSO metadata file {}'.format(dso_metadata_path))
+    log.info(pp.pformat(dso_meta))
     return dso_meta
 
 
@@ -170,7 +170,7 @@ def download_nsrdb_data(dso_meta, output_path):
         # csv_fh = open(output_file, 'wb')
         # csv_fh.write(r.content)
         # csv_fh.close()
-        logger.info('Downloaded data for DSO {} and...'.format(dso_num))
+        log.info('Downloaded data for DSO {} and...'.format(dso_num))
 
         # We've already moved to the correct folder at the top of this
         #   function and all that is needed is the filename.
@@ -178,7 +178,7 @@ def download_nsrdb_data(dso_meta, output_path):
         PSM.weatherdat(file,
                        'Bus_{}'.format(dso_num + 1),
                        '{}_{}'.format(lat, long))
-        logger.info('\t...converted PSM to DAT for DSO {}'.format(dso_num))
+        log.info('\t...converted PSM to DAT for DSO {}'.format(dso_num))
 
 
 def _auto_run(args):
@@ -201,7 +201,7 @@ def _auto_run(args):
     #   Excel worksheet that contains the values for the DSO metadata.
     dso_meta = parse_DSO_location(args.dso_metadata, args.dso_metadata_worksheet_name)
     download_nsrdb_data(dso_meta, args.nsrdb_output_path)
-    logger.info('Download and conversion for all weather files complete.')
+    log.info('Download and conversion for all weather files complete.')
 
 
 if __name__ == '__main__':

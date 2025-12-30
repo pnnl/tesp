@@ -8,7 +8,7 @@ import math
 import json
 import bisect
 import csv as csv
-import logging as log
+import logging
 import numpy as np
 import pandas as pd
 import pypower.api as pp
@@ -1001,10 +1001,10 @@ def tso_psst_loop_f(casename):
     ppopt_market = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['opf_dc'], OPF_ALG_DC=200)  # dc for
     ppopt_regular = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['pf_dc'], PF_MAX_IT=20, PF_ALG=1)  # ac for power flow
 
-    logger = log.getLogger()
-    logger.setLevel(log.INFO)
-    # logger.setLevel(log.WARNING)
-    # logger.setLevel(log.DEBUG)
+    log = logging.getLogger(__name__)
+    log.setLevel(logging.INFO)
+    # log.setLevel(logging.DEBUG)
+
     log.info(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     log.info('starting tso loop...')
 
