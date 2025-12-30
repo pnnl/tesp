@@ -248,7 +248,7 @@ class HVACDSOT:  # TODO: update class name
         self.heating_system_type = (house_properties['heating'])
         self.cooling_system_type = (house_properties['cooling'])
         self.design_heating_setpoint = 70.0
-        self.heating_design_temperature = 0.0  # TODO: not sure where to get this (guess for now)
+        self.heating_design_temperature = 0.0  # Minimum hourly temp in weather file. Default = 0, will be set by weather data.
 
         self.heating_capacity_K0 = 0.34148808
         self.heating_capacity_K1 = 0.00894102
@@ -2016,6 +2016,9 @@ class HVACDSOT:  # TODO: update class name
         if nonlinear:
             # Create model
             model = pyo.ConcreteModel()
+            # Parameters
+            Quantity = [0 for _ in self.TIME]
+            temp_room = [0 for _ in self.TIME]
             # Decision variables
             model.quan_hvac = pyo.Var(self.TIME, bounds=(0.0, self.hvac_kw))
             model.temp_room = pyo.Var(self.TIME, bounds=self.temp_bound_rule)
@@ -2025,13 +2028,12 @@ class HVACDSOT:  # TODO: update class name
             model.con1 = pyo.Constraint(self.TIME, rule=self.con_rule_eq1)
             # Solve
             results = get_run_solver("hvac_" + self.name, pyo, model, self.solver)
-            Quantity = [0 for _ in self.TIME]
-            temp_room = [0 for _ in self.TIME]
             TOL = 0.00001  # Tolerance for checking bid
             for t in self.TIME:
                 temp_room[t] = pyo.value(model.temp_room[t])
-                # if self.temp_room[t] > TOL:
-                Quantity[t] = pyo.value(model.quan_hvac[t])
+                self.temp_room[t] = temp_room[t]
+                if self.temp_room[t] > TOL:
+                    Quantity[t] = pyo.value(model.quan_hvac[t])
 
         else:  # for linear optimizer
             prob = pulp.LpProblem("QuantityBid", pulp.LpMinimize)
