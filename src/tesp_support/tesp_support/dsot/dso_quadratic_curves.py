@@ -5,13 +5,12 @@
 
 """
 import json
-import logging as log
+import logging
 
 import numpy as np
 import pandas as pd
 
-logger = log.getLogger()
-
+log = logging.getLogger(__name__)
 
 class DSO_LMPs_vs_Q:
     """

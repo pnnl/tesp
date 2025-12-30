@@ -668,7 +668,7 @@ def CreateMeter(model_name, seg_number, glmfile):
 
 
 def parse_kva(cplx):
-    toks = re.split('[\+j]', cplx)
+    toks = re.split(r'[\+j]', cplx)
     p = float(toks[0])
     q = float(toks[1])
     return 0.001 * math.sqrt(p * p + q * q)

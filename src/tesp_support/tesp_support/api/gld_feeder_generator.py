@@ -4,8 +4,7 @@
 the functionality of the residential_feeder_glm.py, the commercial_feeder_glm.py, 
 and the copperplate_feeder_glm.py.
 
-Replaces ZIP loads with houses, optional storage, electric vehicles, and solar
-generation.
+Replaces ZIP loads with houses, optional storage, electric vehicles, and solar generation.
 
 As this module populates the feeder backbone with houses and DER, it uses
 the Networkx package to perform graph-based capacity analysis, upgrading
@@ -17,90 +16,78 @@ source file.
 References:
     `GridAPPS-D Feeder Models <https://github.com/GRIDAPPSD/Powergrid-Models>`_
 
-Public Functions:
-    Config
-    :preamble: Add required modules, objects, includes, defines, and sets 
-        required to run a .glm model.
-    :generate_recs: Generate RECS metadata if it does not yet exist based on
-        user config.
-    :load_recs: Assign default values for residential and commercial buildings,
-        batteries, and electric vehicles, based on imported metadata for each.
-    :load_position: Read in positional data from feeder, if specified in config,
-        to aid plotting function of populated feeder model.
-    :add_position: Create a coordinate pair posiiton for a new node added to the 
-    feeder based off the position of its basenode.
+Config class:
+    preamble: Add required modules, objects, includes, defines, and sets required to run a glm model.
 
-    Residential_Build
-    :buildingTypeLabel: Assign formatted name of region, building type name, 
-        and thermal integrity level.
-    :checkResidentialBuildingTable: Verify that the regional building parameter
-        histograms sum to one.
-    :selectSetpointBins: Randomly choose a histogram row from the cooling and
-        heating setpoints. The random number for the heating setpoint row is
-        generated internally.
-    :add_small_loads: Write loads that are too small for a house, onto a node.
-    :getDsoIncomeLevelTable: Retrieve the DSO income level fractions for the
-        given dso type and state.
-    :selectIncomeLevel: Select the income level based on region and probability.
-    :getDsoThermalTable: Define the distribution of thermal integrity values
-        based on household income level, vintage, and building type.
-    :selectResidentialBuilding: Retrieve the thermal integrity level by
-        building type and region.
-    :selectThermalProperties: Retrieve the building thermal properties by
-        building type and thermal integrity level.
-    :add_houses: Add houses, along with solar panels, batteries, and electric
-        vehicle charges, onto a node.
-    
-    Commercial_Build
-    :add_one_commercial_zone: Write one pre-configured commercial zone as a
-        house and small loads such as lights, plug loads, and gas water heaters
-        as ZIPLoads.
-    :define_commercial_zones: Define building parameters for commercial building
-        zones and ZIP loads, then add to model as house object (commercial zone)
-        or load object (ZIP load).
-    :define_comm_bldg: Randomly select a set number of buildings by type and 
-        size (sqft).
-    :normalize_dict_prob: Ensure that the probability distribution of values in 
-        a dictionary effectively sums to one.
-    :rand_bin_select: Returns the element (bin) in a dictionary given a certain
-        probability.
-    :sub_bin_select: Returns a scalar value within a bin range based on a uniform
-        probability within that bin range.
-    :find_envelope_prop: Returns the envelope value for a given type of property
-        based on the age and (ASHRAE) climate zone of the building.
-    
-    Battery
-    :add_batt: Define and add battery and inverter objects to house, under the 
-        parentage of the parent_mtr.
-    
-    Solar
-    :add_solar: Define and add solar and inverter objects to house, under the
-        parentage of the parent_mtr.
+    generate_recs: Generate RECS metadata if it does not yet exist based on user config.
 
-    Electric_Vehicle
-    :add_ev: Define and add electric vehicle charging object to the house, under 
-        the parentage of the house object
-    :selectEVmodel: Select the EV model based on available sale distribution data
-    :match_driving_schedule: Method to match the schedule of each vehicle from 
-        NHTS data based on vehicle ev_range
-    :is_drive_time_valid: Check if work arrival time and home arrival time add up
-        properly
-    :process_nhts_data: Read the large NHTS survey data file containing driving 
-        data, process it, and return a dataframe
+    load_recs: Assign default values for residential and commercial buildings, batteries, and electric vehicles, based on imported metadata for each.
 
-    Feeder
-    :feeder_gen: Read in the backbone feeder, then loop through transformer
-    instances and assign a standard size based on the downstream load.
-    Change the referenced transformer_configuration attributes. Write the
-    standard transformer_configuration instance we need
-    :identify_xfmr_houses: For the full-order feeders, scan each service 
-    transformer to determine the number of houses it should have
-    :identify_commercial_loads: For the full-order feeders, scan each load with
-    load_class==C to determine the number of zones it should have
+    load_position: Read in positional data from feeder, if specified in config, to aid plotting function of populated feeder model.
+
+    add_position: Create a coordinate pair position for a new node added to the feeder based off the position of its base node.
+
+Residential_Build class:
+    buildingTypeLabel: Assign formatted name of region, building type name, and thermal integrity level.
+
+    checkResidentialBuildingTable: Verify that the regional building parameter histograms sum to one.
+
+    selectSetpointBins: Randomly choose a histogram row from the cooling and heating setpoints. The random number for the heating setpoint row is generated internally.
+
+    add_small_loads: Write loads that are too small for a house, onto a node.
+
+    getDsoIncomeLevelTable: Retrieve the DSO income level fractions for the given dso type and state.
+
+    selectIncomeLevel: Select the income level based on region and probability.
+
+    getDsoThermalTable: Define the distribution of thermal integrity values based on household income level, vintage, and building type.
+
+    selectResidentialBuilding: Retrieve the thermal integrity level by building type and region.
+
+    selectThermalProperties: Retrieve the building thermal properties by building type and thermal integrity level.
+
+    add_houses: Add houses, along with solar panels, batteries, and electric vehicle charges, onto a node.
+
+Commercial_Build class:
+    add_one_commercial_zone: Write one pre-configured commercial zone as a house and small loads such as lights, plug loads, and gas water heaters as ZIPLoads.
+
+    define_commercial_zones: Define building parameters for commercial building zones and ZIP loads, then add to model as house object (commercial zone) or load object (ZIP load).
+
+    define_comm_bldg: Randomly select a set number of buildings by type and size (sqft).
+
+    normalize_dict_prob: Ensure that the probability distribution of values in a dictionary effectively sums to one.
+
+    rand_bin_select: Returns the element (bin) in a dictionary given a certain probability.
+
+    sub_bin_select: Returns a scalar value within a bin range based on a uniform probability within that bin range.
+
+    find_envelope_prop: Returns the envelope value for a given type of property based on the age and (ASHRAE) climate zone of the building.
+    
+Battery class
+    add_batt: Define and add battery and inverter objects to house, under the parentage of the parent_mtr.
+    
+Solar class
+    add_solar: Define and add solar and inverter objects to house, under the parentage of the parent_mtr.
+
+Electric_Vehicle class
+    add_ev: Define and add electric vehicle charging object to the house, under the parentage of the house object
+
+    selectEVmodel: Select the EV model based on available sale distribution data match_driving_schedule: Method to match the schedule of each vehicle from NHTS data based on vehicle ev_range
+
+    is_drive_time_valid: Check if work arrival time and home arrival time add up properly
+
+    process_nhts_data: Read the large NHTS survey data file containing driving data, process it, and return a dataframe
+
+Feeder class
+    feeder_gen: Read in the backbone feeder, then loop through transformer instances and assign a standard size based on the downstream load. Change the referenced transformer_configuration attributes. Write the standard transformer_configuration instance we need
+
+    identify_xfmr_houses: For the full-order feeders, scan each service transformer to determine the number of houses it should have
+
+    identify_commercial_loads: For the full-order feeders, scan each load with load_class==C to determine the number of zones it should have
 
 """
 
-import logging as log
+import logging
 import math
 import json
 import os
@@ -118,8 +105,8 @@ from ..api.recs_gld_house_parameters import get_RECS_jsons
 position = None
 extra_billing_meters = set()
 
-log.basicConfig(level=log.WARNING)
-log.getLogger('matplotlib.font_manager').disabled = True
+log = logging.getLogger(__name__)
+logging.getLogger('matplotlib.font_manager').disabled = True
 
 class Config:
     def __init__(self, config=None):
@@ -296,12 +283,13 @@ class Config:
         """ Read in positional data from feeder, if specified in config, to
         aid plotting function of populated feeder model.
         Use position files for taxonomy feeder, if no input feeder specified.
+
         Args:
             None
+
         Returns:
             dict: self.pos_data, .glm objects and their position coordinates
-            dict: self.pos, an empty dictionary to assign positions to objects
-                added by feeder generator
+            dict: self.pos, an empty dictionary to assign positions to objects added by feeder generator
     """
         if not hasattr(self, "in_file_glm") or not self.in_file_glm:
             self.gis_file = self.taxonomy.replace('-', '_').replace('.', '_').replace('_glm', '_pos.json')
@@ -322,8 +310,7 @@ class Config:
                 self.gis_file = False
                 print("Position data not available for base feeder.")
                 pass
-        else:
-            pass
+        return None
 
     def add_position(self, basenode:str, newnode:str):
         """Create a coordinate pair posiiton for a new node, meter, or object added to the feeder, slightly offset from the basenode that it is added to.

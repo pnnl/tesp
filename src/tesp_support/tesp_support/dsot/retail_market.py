@@ -162,10 +162,6 @@ class RetailMarket:
         self.AMES_RT = None
         self.AMES_DA = None
 
-        # self.AMES_RT_agent_quantities = None
-        # self.AMES_RT_agent_prices = None
-        # self.AMES_DA_agent_quantities = None
-        # self.AMES_DA_agent_prices = None
         self.gproxy = DataClient(retail_dict['serverPort']).proxy
         self.current_time = None
 

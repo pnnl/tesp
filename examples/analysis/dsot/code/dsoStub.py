@@ -1,11 +1,14 @@
 import json
-import logging as log
+import logging
 import os
 
 import tesp_support.original.fncs as fncs
 import tesp_support.api.tso_helpers as tso
 from tesp_support.api.parse_helpers import parse_mva
 
+log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
+# log.setLevel(logging.DEBUG)
 
 def dso_make_yaml(casename):
     log.info('Reading configuration...')
@@ -109,11 +112,6 @@ def dso_loop(casename):
     tnext_rt = -30  # start the real time bid
     tnext_da = (10 * 3600) - 15  # start the day ahead bid
     power_factor = 0.57  # roughly 30 deg
-
-    logger = log.getLogger()
-    # logger.setLevel(log.DEBUG)
-    logger.setLevel(log.INFO)
-    # logger.setLevel(log.WARNING)
 
     log.info('Reading configuration...')
     ppc = tso.load_json_case(casename + '.json')

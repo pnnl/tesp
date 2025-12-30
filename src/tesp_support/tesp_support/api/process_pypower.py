@@ -15,7 +15,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Setting up logging
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 def read_pypower_metrics(path, name_root):

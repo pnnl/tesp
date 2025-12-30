@@ -15,7 +15,6 @@ For this study, an ERCOT-spanning electrical power system model was constructed 
 
 .. _fig_dsot_scope_scale:
 .. figure:: ../../media/dsot/dsot_scope_scale.png
-	:name: dsot_scope_scale
 
 	DSO+T modeled infrastructure
 
@@ -40,7 +39,6 @@ The DSO+T analysis, though run on a single local compute node, has a relatively 
 
 .. _fig_dsot_architecture:
 .. figure:: ../../media/dsot/dsot_software_architecture.png
-	:name: dsot_software_architecture
 
 	High-level DSO+T software architecture diagram
 	
@@ -56,7 +54,6 @@ The market structure for the transactive system implemented for the DSO+T was sp
 
 .. _fig_dsot_wholesale_market_structure:
 .. figure:: ../../media/dsot/dsot_wholesale_market_structure.png
-	:name: dsot_wholesale_market_structure
 
 	Overview of the wholesale market architecture in the DSO+T study.
 
@@ -66,9 +63,8 @@ The retail market was designed specifically for the DSO+T study and its structur
 
 .. _fig_dsot_retail_market_structure:
 .. figure:: ../../media/dsot/dsot_retail_market_structure.png
-    :name: dsot_retail_market_structure
 
-    Overview of the retail market architecture in the DSO+T study
+	Overview of the retail market architecture in the DSO+T study
     
 The DSO had the responsibility of providing market/load forecast information for all customers in it's jurisdiction and thus had to estimate loads for those not participating the in the transactive system as well as receiving bid information for those participating. Since the communication with the day-ahead market occurred at a specific time and was not communicated as a price-responsive bid curve but a fixed demand quantity, the retail day-ahead market operated in an iterative manner to allow all retail market participants to converge on a day-ahead bid that accounted for their expected flexibility. This iterative process also used weather and solar production forecasts as well as a generic wholesale market marginal cost curve that acted as a wholesale price estimator. After the wholesale markets cleared (day-ahead and real-time), the DSO adjusts these prices to cover their fixed and non-energy marginal costs and communicates these to the market participants. Non-participating customers payed a flat rate that was calculated offline prior to the simulation.
 
@@ -83,7 +79,6 @@ and 21.3 GW of rooftop solar were added (though the rooftop-solar was implemente
 
 .. _fig_dsot_ercot_8_bus:
 .. figure:: ../../media/dsot/dsot_ercot_8_bus.png
-    :name: dsot_ercot_8_bus
 
     Topology of the simplified 8-bus bulk power system model utilized.
 
@@ -118,14 +113,12 @@ Figures :numref:`fig_dsot_peak_load_correlation` and :numref:`fig_dsot_min_load_
 
 .. _fig_dsot_peak_load_correlation:
 .. figure:: ../../media/dsot/dsot_peak_load_correlation.png
-    :name: dsot_peak_load_correlation
-    
+
     Modeled and historical peak load for ERCOT
 
 .. _fig_dsot_min_load_correlation:
 .. figure:: ../../media/dsot/dsot_min_load_correlation.png
-    :name: dsot_min_load_correlation
-    
+
     Modeled and historical minimum load for ERCOT
 
 

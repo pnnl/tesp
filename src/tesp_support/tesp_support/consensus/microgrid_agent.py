@@ -9,7 +9,6 @@ Public Functions:
 """
 
 import json
-import logging as log
 import time
 from copy import deepcopy
 from datetime import datetime, timedelta
@@ -129,7 +128,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
 
     # enable logging
     level = config['LogLevel']
-    enable_logging(level, 11, metrics_root)
+    log.enable_logging(level, 11, metrics_root)
 
     log.info('starting substation loop...')
     log.info('config file -> ' + configfile)
@@ -784,7 +783,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                     # set the nominal solargain
                     obj.get_solargain(config_glm['climate'], current_retail_time)
                     # formulate the real-time bid
-                    bid = obj.formulate_bid_rt(11, current_time)
+                    bid = obj.formulate_bid_rt(current_time)
                     # add real-time bid to the retail market
                     retail_market_obj.curve_aggregator_RT('Buyer', bid, obj.name)
             timing(proc[3], False)
@@ -794,7 +793,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
             for key, obj in water_heater_agent_objs.items():
                 if obj.participating and with_market:
                     # formulate the real-time bid
-                    bid = obj.formulate_bid_rt(11, current_time)
+                    bid = obj.formulate_bid_rt(current_time)
                     # add real-time bid to the retail market
                     retail_market_obj.curve_aggregator_RT('Buyer', bid, obj.name)
             timing(proc[4], False)
@@ -1456,7 +1455,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                 # publish the cleared real-time price to HVAC meter
                 pub_price = h.helicsFederateGetPublication(fed, str(fed_name + '/' + obj.name + '/price'))
                 status = h.helicsPublicationPublishDouble(pub_price, retail_market_obj.cleared_price_RT)
-                if obj.participating and obj.bid_accepted(11, current_time):
+                if obj.participating and obj.bid_accepted(current_time):
                     # if HVAC real-time bid is accepted adjust the cooling setpoint in GridLAB-D
                     # if obj.thermostat_mode == 'Cooling':
                     pub_csp = h.helicsFederateGetPublication(fed, str(fed_name + '/' + obj.name + '/cooling_setpoint'))
@@ -1469,7 +1468,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                 # for key, obj in hvac_agent_objs.items():
                 #     # publish the cleared real-time price to HVAC meter
                 #     fncs.publish(obj.name + '/price', retail_market_obj.cleared_price_RT)
-                #     if obj.participating and obj.bid_accepted(11, current_time):
+                #     if obj.participating and obj.bid_accepted(current_time):
                 #         # if HVAC real-time bid is accepted adjust the cooling setpoint in GridLAB-D
                 #         #if obj.thermostat_mode == 'Cooling':
                 #         fncs.publish(obj.name + '/cooling_setpoint', obj.cooling_setpoint)
@@ -1507,7 +1506,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                     )
             # ### Publish using HELICS ####
             for key, obj in water_heater_agent_objs.items():
-                if obj.participating and obj.bid_accepted(11, current_time):
+                if obj.participating and obj.bid_accepted(current_time):
                     # if Water heater real-time bid is accepted adjust the thermostat setpoint in GridLAB-D
                     water_heater_name = obj.name.replace("hse", "wh")
                     # print("Water_heater name",water_heater_name)
@@ -1521,7 +1520,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
 
                 # ### Publish using FNCS ####
                 # for key, obj in water_heater_agent_objs.items():
-                #     if obj.participating and obj.bid_accepted(11, current_time):
+                #     if obj.participating and obj.bid_accepted(current_time):
                 #         # if Water heater real-time bid is accepted adjust the thermostat setpoint in GridLAB-D
                 #         water_heater_name = obj.name.replace("hse", "wh")
                 #         # print("Water_heater name",water_heater_name)

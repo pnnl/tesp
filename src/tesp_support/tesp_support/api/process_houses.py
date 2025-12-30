@@ -15,7 +15,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Setting up logging
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 def read_houses_metrics(path, name_root, diction_name=''):
@@ -26,12 +26,12 @@ def read_houses_metrics(path, name_root, diction_name=''):
         try:
             lp = open(diction_name).read()
         except:
-            logger.error(f'Unable to open house metrics file {diction_name}')
+            log.error(f'Unable to open house metrics file {diction_name}')
     else:
         try:
             lp = open(gld_dict_path).read()
         except:
-            logger.error(f'Unable to open house metrics file {gld_dict_path}')
+            log.error(f'Unable to open house metrics file {gld_dict_path}')
     diction = json.loads(lp)
     hse_keys = list(diction['houses'].keys())
     hse_keys.sort()

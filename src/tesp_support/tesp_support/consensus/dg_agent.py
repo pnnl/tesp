@@ -8,7 +8,6 @@ Public Functions:
 
 """
 import json
-import logging as log
 import time
 from datetime import datetime, timedelta
 
@@ -115,7 +114,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
 
     # enable logging
     level = config['LogLevel']
-    enable_logging(level, 11, metrics_root)
+    log = enable_logging(level, 11, metrics_root)
 
     log.info('starting substation loop...')
     log.info('config file -> ' + configfile)

@@ -15,7 +15,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Setting up logging
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 def read_inv_metrics(path, name_root, diction_name=''):
@@ -33,12 +33,12 @@ def read_inv_metrics(path, name_root, diction_name=''):
         try:
             lp = open(diction_name).read()
         except:
-            logger.error(f'Unable to open metrics diction file {diction_name}')
+            log.error(f'Unable to open metrics diction file {diction_name}')
     else:
         try:
             lp = open(glm_dict_path).read()
         except:
-            logger.error(f'Unable to open metrics diction file {glm_dict_path}')
+            log.error(f'Unable to open metrics diction file {glm_dict_path}')
     diction = json.loads(lp)
     sub_keys = list(diction['feeders'].keys())
     sub_keys.sort()
