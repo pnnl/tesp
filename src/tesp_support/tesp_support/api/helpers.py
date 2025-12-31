@@ -94,7 +94,7 @@ def randomize_residential_skew(wh_skew=False):
         return randomize_skew(residential_skew_std, residential_skew_max)
 
 
-def get_run_solver(name:str, pyo, model, solver):
+def get_run_solver(name:str, pyo, model, solver, params=None):
     """ Solve the pyomo model with the specified solver, checking that the
       solver is available and that the model solves.
 
@@ -133,11 +133,13 @@ def get_run_solver(name:str, pyo, model, solver):
     }
 
     if status != SolverStatus.ok or term not in acceptable_terms:
-        msg = (f"[{name}] Solver '{solver}' failed: "
+        # Optional, print more detail:
+        if params:
+            for k, v in params.items():
+                print(f"{k}:{v}")
+        raise RuntimeError(f"[{name}] Solver '{solver}' failed: "
                f"status={status}, termination={term}")
-        # Print more detail:
-        # results.write()
-        raise RuntimeError(msg)
+        
 
     return results
 

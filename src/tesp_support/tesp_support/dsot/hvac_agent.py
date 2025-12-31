@@ -2001,8 +2001,13 @@ class HVACDSOT:  # TODO: update class name
             model.obj = pyo.Objective(rule=self.obj_rule, sense=pyo.minimize)
             # Constraints
             model.con1 = pyo.Constraint(self.TIME, rule=self.con_rule_eq1)
+            # Pass params to the solver for logging purposes
+            params = {
+                "hvac_kw": self.hvac_kw,
+                "temp_bounds": self.temp_bound_rule
+            }
             # Solve
-            results = get_run_solver("hvac_" + self.name, pyo, model, self.solver)
+            results = get_run_solver("hvac_" + self.name, pyo, model, self.solver, params)
             TOL = 0.00001  # Tolerance for checking bid
             for t in self.TIME:
                 temp_room[t] = pyo.value(model.temp_room[t])
