@@ -2002,9 +2002,12 @@ class HVACDSOT:  # TODO: update class name
             # Constraints
             model.con1 = pyo.Constraint(self.TIME, rule=self.con_rule_eq1)
             # Pass params to the solver for logging purposes
+            temp_bounds = {}
+            for t in self.TIME:
+                temp_bounds[t] = self.temp_bound_rule(None, t)
             params = {
                 "hvac_kw": self.hvac_kw,
-                "temp_bounds": self.temp_bound_rule
+                "temp_bounds": temp_bounds
             }
             # Solve
             results = get_run_solver("hvac_" + self.name, pyo, model, self.solver, params)

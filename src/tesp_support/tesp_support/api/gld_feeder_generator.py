@@ -682,6 +682,11 @@ class Residential_Build:
             if self.config.gis_file:
                 self.config.add_position(basenode, mtrname1)
             self.glm.add_metrics_collector(mtrname1, "meter")
+            # HVAC Debugging Recorders
+            self.glm.add_group_recorder("class=house", "hvac_load", "hvac_load.csv")
+            self.glm.add_group_recorder("class=house", "cooling_setpoint", "cooling_setpoint.csv")
+            self.glm.add_group_recorder("class=house", "heating_setpoint", "heating_setpoint.csv")
+            self.glm.add_group_recorder("class=house", "thermostat_mode", "thermostat_mode.csv")
 
             self.mdl.triplex_meter.add(hse_m_name, {
                 "parent": mtrname1,
