@@ -94,21 +94,51 @@ def randomize_residential_skew(wh_skew=False):
         return randomize_skew(residential_skew_std, residential_skew_max)
 
 
-def get_run_solver(name, pyo, model, solver):
-    # prefer cplex over ipopt (for production runs)
-    try:
-        solver = pyo.SolverFactory(solver)
-    except Exception as e:  # could be better/more specific
-        print('Name {}\n Warning ' + solver + ' not present; got exception {}'.format(name, e))
-        exit()
-    results = solver.solve(model, tee=False)
-    # TODO better solver handling
-    #    if results.solver.status != SolverStatus.ok:
-    #    print("The " + name + " solver status of: {}".format(results.solver.status))
-    # exit()
-    #    if results.solver.termination_condition != TerminationCondition.optimal:
-    #    print("The " + name + " termination condition of: {}".format(results.solver.termination_condition))
-    # exit()
+def get_run_solver(name:str, pyo, model, solver):
+    """ Solve the pyomo model with the specified solver, checking that the
+      solver is available and that the model solves.
+
+    Args:
+        name (str): name of the solver, ex: hvac_{house_name}
+        pyo (module): the pyomo module (import pyomo.environ as pyo)
+        model: the pyomo model instance to be solved (pyo.ConcreteModel())
+        solver (str): choice of solver. Prefer cplex over ipopt for production
+          runs
+
+    Raises:
+        RuntimeError: If the solver is not available, or if the solve does not
+          complete with an acceptable status/termination condition. The 
+          exception message includes the model name, solver name, and solver 
+          status.
+
+    Returns:
+        results: solver results object
+    """
+
+    from pyomo.opt import SolverStatus, TerminationCondition
+    opt = pyo.SolverFactory(solver)
+    if opt is None or not opt.available():
+        raise RuntimeError(f"[{name}] Solver '{solver}' not available")
+
+    results = opt.solve(model, tee=False)
+
+    status = results.solver.status
+    term   = results.solver.termination_condition
+
+    # Acceptable termination conditions
+    acceptable_terms = {
+        TerminationCondition.optimal,
+        TerminationCondition.locallyOptimal,
+        TerminationCondition.feasible,
+    }
+
+    if status != SolverStatus.ok or term not in acceptable_terms:
+        msg = (f"[{name}] Solver '{solver}' failed: "
+               f"status={status}, termination={term}")
+        # Print more detail:
+        # results.write()
+        raise RuntimeError(msg)
+
     return results
 
 

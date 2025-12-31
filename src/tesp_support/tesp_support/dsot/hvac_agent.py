@@ -1967,11 +1967,13 @@ class HVACDSOT:  # TODO: update class name
                     self.temp_desired_48hour_heat[t] + self.range_high_heat)
 
     def DA_optimal_quantities(self):
-        """ Generates Day Ahead optimized quantities for Water Heater according to the forecasted prices
-        and water draw schedule, called by DA_formulate_bid function
+        """ Generates Day Ahead optimized quantities for Water Heater according 
+          to the forecasted prices and water draw schedule, called by 
+          DA_formulate_bid function
 
         Returns:
-            Quantity (list) (1 x windowLength): Optimized quantities for each hour in the DA bidding horizon, in kWh
+            Quantity (list) (1 x windowLength): Optimized quantities for each 
+              hour in the DA bidding horizon, in kWh
         """
 
         # this is for model validation only
