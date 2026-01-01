@@ -20,7 +20,7 @@ from scipy import linalg
 from ..api.helpers import get_run_solver, logging, log
 from ..api.parse_helpers import parse_number, parse_magnitude
 
-logging.getLogger('pyomo.core').setLevel(logging.ERROR)
+logging.getLogger('pyomo.core').setLevel(logging.DEBUG)
 
 class HVACDSOT:  # TODO: update class name
     """
@@ -1186,10 +1186,10 @@ class HVACDSOT:  # TODO: update class name
                         '{} {} -- cooling_setpoint ({}), outside of nominal range {} to {}'
                         .format(self.name, sim_time, self.cooling_setpoint, self.cooling_setpoint_lower,
                                 self.cooling_setpoint_upper))
-                if self.cooling_setpoint < self.cooling_setpoint_lower:
-                    self.cooling_setpoint = self.cooling_setpoint_lower
-                elif self.cooling_setpoint > self.cooling_setpoint_upper:
-                    self.cooling_setpoint = self.cooling_setpoint_upper
+                # if self.cooling_setpoint < self.cooling_setpoint_lower:
+                #     self.cooling_setpoint = self.cooling_setpoint_lower
+                # elif self.cooling_setpoint > self.cooling_setpoint_upper:
+                #     self.cooling_setpoint = self.cooling_setpoint_upper
         else:
             self.heating_setpoint = setpoint_tmp
             if self.heating_setpoint_lower < self.heating_setpoint < self.heating_setpoint_upper:
@@ -1199,10 +1199,10 @@ class HVACDSOT:  # TODO: update class name
                         '{} {} -- heating_setpoint ({}), outside of nominal range of {} to {}'
                         .format(self.name, sim_time, self.heating_setpoint, self.heating_setpoint_lower,
                                 self.heating_setpoint_upper))
-                if self.heating_setpoint < self.heating_setpoint_lower:
-                    self.heating_setpoint = self.heating_setpoint_lower
-                elif self.heating_setpoint > self.heating_setpoint_upper:
-                    self.heating_setpoint = self.heating_setpoint_upper
+                # if self.heating_setpoint < self.heating_setpoint_lower:
+                #     self.heating_setpoint = self.heating_setpoint_lower
+                # elif self.heating_setpoint > self.heating_setpoint_upper:
+                #     self.heating_setpoint = self.heating_setpoint_upper
 
         if self.heating_setpoint + self.deadband / 2.0 >= self.cooling_setpoint - self.deadband / 2.0:
             if self.thermostat_mode == 'Heating':
@@ -1335,6 +1335,8 @@ class HVACDSOT:  # TODO: update class name
         val = parse_number(message)
         if val > 0.0:
             self.hvac_kw = val
+        else:
+            raise Exception(f"hvac_kw not set for {self.houseName} with hvac load {message}")
 
     def set_wh_load(self, message: str):
         """ Sets the wh_load attribute, if greater than zero
