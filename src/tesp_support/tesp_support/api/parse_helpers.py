@@ -7,7 +7,11 @@ import re
 
 
 def parse_number(arg):
-    """ Parse floating-point number from a FNCS message; must not have leading sign or exponential notation
+    """ Parse floating-point number from a FNCS message; leading signs are 
+      handled so long as no space exists between sign and value.
+        E.g., +100, not + 100.
+      Trailing units are handled by the exception.
+        E.g., +100 % or 
 
     Args:
         arg (str): the FNCS string value
@@ -16,10 +20,9 @@ def parse_number(arg):
     """
     try:
         return float(arg)
-    except:
-        if 'inf' in arg:
-            raise ValueError(f"Expected float: {arg}")
-        return float(''.join(ele for ele in arg if ele.isdigit() or ele == '.'))
+    except ValueError:
+        return float(arg.split(maxsplit=1)[0])
+
 
 
 def parse_magnitude_1(arg):

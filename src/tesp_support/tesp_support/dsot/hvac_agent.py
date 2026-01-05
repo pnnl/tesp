@@ -1315,14 +1315,14 @@ class HVACDSOT:  # TODO: update class name
         return False
 
     def set_house_load(self, message: str):
-        """ Sets the hvac_load attribute, if greater than zero
+        """ Sets the house_load attribute, if greater than zero
 
         Args:
             message (str): Message with load in kW
         """
         log.debug(f'hvac name: {self.houseName}, house load: {message}')
         val = parse_number(message)
-        if val > 0.0:
+        if val >= 0.0:
             self.house_kw = val
 
     def set_hvac_load(self, message: str):
@@ -1333,10 +1333,14 @@ class HVACDSOT:  # TODO: update class name
         """
         log.debug(f'hvac name: {self.houseName}, hvac load: {message}')
         val = parse_number(message)
-        if val > 0.0:
+        if val >= 0.0 and val < 99.0:
             self.hvac_kw = val
+        elif val >= 99.0:
+            # This message should never occur. If set_hvac_load is run for a 
+            # house, the init val of 100 should be overwritten.
+            log.error(f'hvac name: {self.houseName}, hvac load: {val} too high!')
         else:
-            raise Exception(f"hvac_kw not set for {self.houseName} with hvac load {message}")
+            raise Exception(f"hvac_kw not set for {self.houseName} with hvac load {val}")
 
     def set_wh_load(self, message: str):
         """ Sets the wh_load attribute, if greater than zero
@@ -2012,6 +2016,13 @@ class HVACDSOT:  # TODO: update class name
                 "temp_bounds": temp_bounds
             }
             # Solve
+            if self.hvac_kw >= 99:
+                if not self.cooling_participating:
+                    raise Exception(f"hvac_kw is {self.hvac_kw} for {self.name}. Thermostat mode is set to {self.thermostat_mode}. This house is not participating in COOLING")
+                if not self.heating_participating:
+                    raise Exception(f"hvac_kw is {self.hvac_kw} for {self.name}. Thermostat mode is set to {self.thermostat_mode}. This house is not participating in HEATING")
+                raise Exception(f"hvac_kw is {self.hvac_kw} for {self.name}. Thermostat mode is set to {self.thermostat_mode}.")
+
             results = get_run_solver("hvac_" + self.name, pyo, model, self.solver, params)
             TOL = 0.00001  # Tolerance for checking bid
             for t in self.TIME:
