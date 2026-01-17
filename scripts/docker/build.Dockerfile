@@ -1,6 +1,9 @@
 ARG DOCKER_VER
 ARG TAG=$DOCKER_VER
-
+ARG BUILD_GRIDLABD=yes
+ARG BUILD_ENERGYPLUS=yes
+ARG BUILD_NS3=yes
+ARG BUILD_IPOPT=yes
 # Build runtime image
 FROM cosim-library:tesp_$TAG AS cosim-build
 

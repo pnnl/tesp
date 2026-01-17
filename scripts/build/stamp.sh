@@ -10,6 +10,21 @@ if [[ -z ${TESPDIR} ]]; then
 fi
 
 cd "$DOCKER_DIR" || exit
+
+# Support non-interactive/CI mode
+FORCE_NO_PROMPT=0
+while [[ "$1" != "" ]]; do
+    case "$1" in
+        -y|--yes)
+            FORCE_NO_PROMPT=1
+            shift
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
 tesp_ver=$(cat ../tesp_version)
 grid_ver=$(cat ../grid_version)
 
@@ -22,18 +37,22 @@ echo
 echo "    git log --pretty=format:"%h %s" --graph"
 echo
 
-while true; do
-    read -rp "Are you ready to stamp TESP ${tesp_ver} and grid applications ${grid_ver}? " yn
-    case $yn in
-        [Yy]* ) stamp="yes"; break;;
-        [Nn]* ) stamp="no"; break;;
-        * ) echo "Please answer [y]es or [n]o.";;
-    esac
-done
+if [[ $FORCE_NO_PROMPT -eq 1 ]]; then
+  stamp="yes"
+else
+  while true; do
+      read -rp "Are you ready to stamp TESP ${tesp_ver} and grid applications ${grid_ver}? " yn
+      case $yn in
+          [Yy]* ) stamp="yes"; break;;
+          [Nn]* ) stamp="no"; break;;
+          * ) echo "Please answer [y]es or [n]o.";;
+      esac
+  done
 
-if [[ $stamp == "no" ]]; then
-  echo "Exiting grid applications software stamping"
-  exit
+  if [[ $stamp == "no" ]]; then
+    echo "Exiting grid applications software stamping"
+    exit
+  fi
 fi
 
 cd "${REPO_DIR}" || exit

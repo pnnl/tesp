@@ -1,0 +1,55 @@
+name: Deploy Docker Image CI
+
+on:
+  push:
+    branches: [ "main", "test-workflow" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  build:
+    name: Build Docker image and push to repositories
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Generate docker .env
+        run: |
+          python3 ./scripts/docker/generate_env.py
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build (docker-compose)
+        run: |
+          cd scripts/docker
+          docker-compose --profile build build
+          # Note: running docker-compose from the directory containing the compose file
+          # ensures it picks up the generated .env in this directory.
+
+      - name: Smoke test built image
+        run: |
+          # determine version used for tagging
+          VER=$(cat scripts/grid_version | tr -d '\n')
+          echo "Using grid_version=${VER}"
+          # quick smoke: run a simple Python command inside the built cosim-build image
+          docker run --rm cosim-build:tesp_${VER} python3 -c "import sys; print('smoke ok'); sys.exit(0)"
+
+
+      # - name: Test
+      #   run: |
+      #     source tesp.env
+      #     ./scripts/helpers/runtesp "cd capabilities/te30 && python3 prepare_case.py && ./runh.sh"
+      # - name: login to hub
+      #   uses: docker/login-action@v2
+      #   with:
+      #     username: ${{ secrets.DOCKER_USERNAME }}
+      #     password: ${{ secrets.DOCKER_PASSWORD }}
+
+#      - name: Publish
+#        run: |
+#          cd scripts/docker
+#          ./push-images.sh

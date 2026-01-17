@@ -2,7 +2,7 @@
 ARG UBUNTU=ubuntu
 ARG UBUNTU_VERSION=:22.04
 
-FROM ${UBUNTU}${UBUNTU_VERSION} AS cosim-ubuntu
+FROM ${UBUNTU}:${UBUNTU_VERSION} AS cosim-ubuntu
 
 RUN echo "===== Building TESP Ubuntu =====" && \
   export DEBIAN_FRONTEND=noninteractive && \
