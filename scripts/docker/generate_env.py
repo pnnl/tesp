@@ -58,7 +58,7 @@ UBUNTU_VERSION=22.04
 
 # Build directory (where build scripts are located)
 # When running docker-compose from `scripts/docker/`, default to the repo-relative path
-BUILD_DIR=../scripts/build
+BUILD_DIR=../build
 
 # CPLEX Configuration (optional)
 CPLEX_BIN=cplex_studio129.linux-x86-64.bin

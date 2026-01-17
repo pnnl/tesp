@@ -67,8 +67,8 @@ services:
   # ---------------------------------------------------------------------------
   cosim-build:
     build:
-      context: ${BUILD_DIR:-../scripts/build}
-      dockerfile: ../scripts/docker/build.Dockerfile
+      context: ${BUILD_DIR:-../build}
+      dockerfile: ../docker/build.Dockerfile
       args:
         - DOCKER_VER=${VER:-1.0}
         - TAG=${VER:-1.0}
@@ -104,8 +104,8 @@ services:
 #  # ---------------------------------------------------------------------------
 #  cosim-cplex:
 #    build:
-#      context: ../scripts/build
-#      dockerfile: ./cplex.Dockerfile
+#      context: ../build
+#      dockerfile: ../docker/cplex.Dockerfile
 #      args:
 #        - DOCKER_VER=${DOCKER_VER:-1.0}
 #        - TAG=${DOCKER_VER:-1.0}
@@ -135,8 +135,8 @@ services:
 #  # ---------------------------------------------------------------------------
 #  cosim-user:
 #    build:
-#      context: ../scripts/build
-#      dockerfile: ./user.Dockerfile
+#      context: ../build
+#      dockerfile: ../docker/user.Dockerfile
 #      args:
 #        - DOCKER_VER=${DOCKER_VER:-1.0}
 #        - TAG=${DOCKER_VER:-1.0}
