@@ -20,6 +20,12 @@ jobs:
         run: |
           python3 ./scripts/docker/generate_env.py
 
+      - name: Show generated .env (debug)
+        run: |
+          echo "--- content of scripts/docker/.env ---"
+          cat scripts/docker/.env
+          echo "-------------------------------------"
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
