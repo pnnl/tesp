@@ -44,7 +44,7 @@ RUN echo "===== Setup & TESP Clone =====" && \
     echo "$SIM_USER" | sudo -S chown -hR $SIM_USER:$SIM_GRP ${SIM_HOME} && \
     echo "$SIM_USER" | sudo -S chmod -R g+rwX ${SIM_HOME} && \
     cd ${REPO_DIR} && \
-    git clone -b develop --depth 1 https://github.com/pnnl/tesp.git && \
+    git clone -b develop https://github.com/pnnl/tesp.git && \
     mv tesp/src ${TESPDIR} && \
     mv tesp/data ${TESPDIR} && \
     mv tesp/DISCLAIMER.txt ${TESPDIR} && \
@@ -72,7 +72,7 @@ RUN if [ "${BUILD_TESP}" = "yes" ]; then \
 RUN if [ "${BUILD_PSST}" = "yes" ]; then \
       echo "===== PSST =====" && \
       cd ${REPO_DIR} && \
-      git clone -b master --depth 1 https://github.com/ames-market/AMES-V5.0.git && \
+      git clone -b master https://github.com/ames-market/AMES-V5.0.git && \
       ${BUILD_DIR}/patch.sh AMES-V5.0 AMES-V5.0 && \
       mv AMES-V5.0/README.rst . && \
       mv AMES-V5.0/psst . && \
@@ -122,7 +122,7 @@ ARG BUILD_FNCS=yes
 RUN if [ "${BUILD_FNCS}" = "yes" ]; then \
       echo "===== Building FNCS =====" && \
       cd ${REPO_DIR} && \
-      git clone -b feature/opendss --depth 1 https://github.com/FNCS/fncs.git && \
+      git clone -b feature/opendss https://github.com/FNCS/fncs.git && \
       ${BUILD_DIR}/patch.sh fncs fncs && \
       cd ${BUILD_DIR} && \
       ./fncs_b.sh clean > fncs.log 2>&1 && \
@@ -141,7 +141,7 @@ ARG BUILD_HELICS_PY=yes
 RUN if [ "${BUILD_HELICS}" = "yes" ]; then \
       echo "===== Building HELICS =====" && \
       cd ${REPO_DIR} && \
-      git clone -b main --depth 1 https://github.com/GMLC-TDC/HELICS-src && \
+      git clone -b main https://github.com/GMLC-TDC/HELICS-src && \
       ${BUILD_DIR}/patch.sh HELICS-src HELICS-src && \
       cd ${BUILD_DIR} && \
       ./HELICS-src_b.sh clean > HELICS-src.log 2>&1 && \
@@ -166,7 +166,7 @@ RUN if [ "${BUILD_ENERGYPLUS}" = "yes" ]; then \
       if [ "${BUILD_FNCS}" != "yes" ]; then echo "WARNING: EnergyPlus may require FNCS"; fi && \
       echo "===== Building EnergyPlus =====" && \
       cd ${REPO_DIR} && \
-      git clone -b fncs_9.3.0 --depth 1 https://github.com/FNCS/EnergyPlus.git && \
+      git clone -b fncs_9.3.0 https://github.com/FNCS/EnergyPlus.git && \
       ${BUILD_DIR}/patch.sh EnergyPlus EnergyPlus && \
       cd ${BUILD_DIR} && \
       ./EnergyPlus_b.sh clean > EnergyPlus.log 2>&1 && \
@@ -185,9 +185,9 @@ RUN if [ "${BUILD_NS3}" = "yes" ]; then \
       if [ "${BUILD_HELICS}" != "yes" ]; then echo "WARNING: NS-3 may require HELICS"; fi && \
       echo "===== Building NS-3 =====" && \
       cd ${REPO_DIR} && \
-      git clone --depth 1 https://gitlab.com/nsnam/ns-3-dev.git && \
+      git clone https://gitlab.com/nsnam/ns-3-dev.git && \
       ${BUILD_DIR}/patch.sh ns-3-dev ns-3-dev && \
-      git clone -b main --depth 1 https://github.com/GMLC-TDC/helics-ns3 ns-3-dev/contrib/helics && \
+      git clone -b main https://github.com/GMLC-TDC/helics-ns3 ns-3-dev/contrib/helics && \
       ${BUILD_DIR}/patch.sh ns-3-dev/contrib/helics helics-ns3 && \
       cd ${BUILD_DIR} && \
       ./ns-3-dev_b.sh clean > ns-3-dev.log 2>&1 && \
@@ -221,7 +221,7 @@ RUN if [ "${BUILD_GRIDLABD}" = "yes" ]; then \
       if [ "${BUILD_KLU}" != "yes" ]; then echo "WARNING: GridLAB-D may require KLU"; fi && \
       echo "===== Building GridLAB-D =====" && \
       cd ${REPO_DIR} && \
-      git clone -b develop --depth 1 https://github.com/gridlab-d/gridlab-d.git && \
+      git clone -b develop https://github.com/gridlab-d/gridlab-d.git && \
       ${BUILD_DIR}/patch.sh gridlab-d gridlab-d && \
       cd ${BUILD_DIR} && \
       ./gridlab-d_b.sh clean > gridlab-d.log 2>&1 && \
