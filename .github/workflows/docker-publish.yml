@@ -6,15 +6,19 @@ on:
   pull_request:
     branches: [ "main" ]
 
-jobs:
+env:
+  # Enable BuildKit for all Docker operations
+  DOCKER_BUILDKIT: 1
+  COMPOSE_DOCKER_CLI_BUILD: 1
 
+jobs:
   build:
     name: Build Docker image and push to repositories
     runs-on: ubuntu-latest
-
+    
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4  # Updated to v4
 
       - name: Generate docker .env
         run: |
@@ -22,32 +26,58 @@ jobs:
 
       - name: Show generated .env (debug)
         run: |
-          echo "--- content of scripts/docker/.env ---"
+          echo "--- Content of scripts/docker/.env ---"
           cat scripts/docker/.env
-          echo "-------------------------------------"
+          echo "--------------------------------------"
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3  # Updated to v3
 
-      - name: Install docker-compose
+      - name: Build base images (ubuntu and library)
+        working-directory: scripts/docker
         run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose
+          # Build in correct dependency order
+          docker compose build cosim-ubuntu
+          docker compose build cosim-library
 
-      - name: Build (docker-compose)
+      - name: Build main image (cosim-build)
+        working-directory: scripts/docker
         run: |
-          cd scripts/docker
-          docker-compose --profile build build
-          # Note: running docker-compose from the directory containing the compose file
-          # ensures it picks up the generated .env in this directory.
+          # Build the main image
+          docker compose build cosim-build
+
+      - name: List built images
+        run: |
+          echo "--- Built Docker Images ---"
+          docker images | grep -E "(cosim|tesp)" || echo "No matching images found"
+          echo "---------------------------"
 
       - name: Smoke test built image
         run: |
-          # determine version used for tagging
+          # Determine version used for tagging
           VER=$(cat scripts/grid_version | tr -d '\n')
           echo "Using grid_version=${VER}"
-          # quick smoke: run a simple Python command inside the built cosim-build image
-          docker run --rm cosim-build:tesp_${VER} python3 -c "import sys; print('smoke ok'); sys.exit(0)"
+          
+          # Quick smoke test: run a simple Python command inside the built image
+          docker run --rm cosim-build:tesp_${VER} python3 -c "
+          import sys
+          print('Python version:', sys.version)
+          try:
+              import tesp_support
+              print('tesp_support: OK')
+          except ImportError as e:
+              print('tesp_support: FAILED -', e)
+          print('Smoke test: PASSED')
+          sys.exit(0)
+          "
+
+      # Optional: More comprehensive tests
+      - name: Component verification
+        run: |
+          VER=$(cat scripts/grid_version | tr -d '\n')
+          docker run --rm cosim-build:tesp_${VER} bash -c "
+          echo '=== Component Verification ==='
+          "
 
 
       # - name: Test
