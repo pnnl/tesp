@@ -26,8 +26,8 @@ services:
   # ---------------------------------------------------------------------------
   cosim-ubuntu:
     build:
-      context: ../../
-      dockerfile: ./scripts/docker/ubuntu.Dockerfile
+      context: ./
+      dockerfile: ubuntu.Dockerfile
       args:
         - UBUNTU=ubuntu
         - UBUNTU_VERSION=${UBUNTU_VERSION:-24.04}
@@ -44,8 +44,8 @@ services:
   # ---------------------------------------------------------------------------
   cosim-library:
     build:
-      context: ../../
-      dockerfile: ./scripts/docker/library.Dockerfile
+      context: ./
+      dockerfile: library.Dockerfile
       args:
         - DOCKER_VER=${VER:-1.0}
         - TAG=${VER:-1.0}

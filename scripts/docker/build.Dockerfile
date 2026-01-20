@@ -46,7 +46,7 @@ ENV PSST_WARNING=ignore
 # 'PSST_WARNING action' -- one of "error", "ignore", "always", "default", "module", or "once"
 
 COPY . ${BUILD_DIR}
-
+RUN python3 --version && python3 -m pip --version && python3 -c "import sys; print(sys.version_info)"
 RUN echo "===== Building TESP Build =====" && \
   echo "Configure name and email for git" && \
   git config --global user.name "${SIM_USER}" && \
