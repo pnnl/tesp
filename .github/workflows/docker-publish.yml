@@ -24,16 +24,8 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-
-      - name: Prepare cache directory
-        run: mkdir -p /tmp/.buildx-cache /tmp/.buildx-cache-new
-
-      - name: Cache Docker layers
-        uses: actions/cache@v4
         with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-docker-${{ hashFiles('scripts/docker/*.Dockerfile') }}
-          restore-keys: ${{ runner.os }}-docker-
+          driver: docker
 
       - name: Build cosim-ubuntu
         uses: docker/build-push-action@v5
@@ -45,8 +37,6 @@ jobs:
           build-args: |
             UBUNTU=ubuntu
             UBUNTU_VERSION=24.04
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
 
       - name: Build cosim-library
         uses: docker/build-push-action@v5
@@ -62,11 +52,6 @@ jobs:
             SIM_GRP=runner
             SIM_UID=1001
             SIM_USER=worker
-          # Reference the locally built image
-          build-contexts: |
-            cosim-ubuntu:tesp_${{ steps.version.outputs.VER }}=docker-image://cosim-ubuntu:tesp_${{ steps.version.outputs.VER }}
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
 
       - name: Build cosim-build
         uses: docker/build-push-action@v5
@@ -80,16 +65,9 @@ jobs:
             TAG=${{ steps.version.outputs.VER }}
             SIM_USER=worker
             SIM_GRP=runner
-          # Reference the locally built image
-          build-contexts: |
-            cosim-library:tesp_${{ steps.version.outputs.VER }}=docker-image://cosim-library:tesp_${{ steps.version.outputs.VER }}
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
 
-      - name: Update cache
-        run: |
-          rm -rf /tmp/.buildx-cache
-          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+      - name: List images
+        run: docker images | grep -E "cosim|tesp"
 
       - name: Smoke test
         run: |
