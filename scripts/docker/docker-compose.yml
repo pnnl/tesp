@@ -30,7 +30,7 @@ services:
       dockerfile: ubuntu.Dockerfile
       args:
         - UBUNTU=ubuntu
-        - UBUNTU_VERSION=${VER:-24.04.1}
+        - UBUNTU_VERSION=${UBUNTU_VERSION:-24.04}
     image: cosim-ubuntu:tesp_${VER:-24.04.1}
     container_name: cosim-ubuntu
     profiles:
