@@ -6,91 +6,80 @@ on:
   pull_request:
     branches: [ "main" ]
 
-env:
-  # Enable BuildKit for all Docker operations
-  DOCKER_BUILDKIT: 1
-  COMPOSE_DOCKER_CLI_BUILD: 1
-
 jobs:
   build:
-    name: Build Docker image and push to repositories
+    name: Build Docker image
     runs-on: ubuntu-latest
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4  # Updated to v4
+        uses: actions/checkout@v4
 
       - name: Generate docker .env
-        run: |
-          python3 ./scripts/docker/generate_env.py
+        run: python3 ./scripts/docker/generate_env.py
 
-      - name: Show generated .env (debug)
-        run: |
-          echo "--- Content of scripts/docker/.env ---"
-          cat scripts/docker/.env
-          echo "--------------------------------------"
+      - name: Get version
+        id: version
+        run: echo "VER=$(cat scripts/grid_version | tr -d '\n')" >> $GITHUB_OUTPUT
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3  # Updated to v3
+        uses: docker/setup-buildx-action@v3
 
-      - name: Build base images (ubuntu and library)
-        working-directory: scripts/docker
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-docker-${{ hashFiles('scripts/docker/*.Dockerfile') }}
+          restore-keys: ${{ runner.os }}-docker-
+
+      - name: Build cosim-ubuntu
+        uses: docker/build-push-action@v5
+        with:
+          context: scripts/docker
+          file: scripts/docker/ubuntu.Dockerfile
+          tags: cosim-ubuntu:tesp_${{ steps.version.outputs.VER }}
+          load: true
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
+      - name: Build cosim-library
+        uses: docker/build-push-action@v5
+        with:
+          context: scripts/docker
+          file: scripts/docker/library.Dockerfile
+          tags: cosim-library:tesp_${{ steps.version.outputs.VER }}
+          load: true
+          build-args: |
+            DOCKER_VER=${{ steps.version.outputs.VER }}
+            TAG=${{ steps.version.outputs.VER }}
+            SIM_GID=9002
+            SIM_GRP=runner
+            SIM_UID=1001
+            SIM_USER=worker
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
+      - name: Build cosim-build
+        uses: docker/build-push-action@v5
+        with:
+          context: scripts/build
+          file: scripts/docker/build_staged.Dockerfile
+          tags: cosim-build:tesp_${{ steps.version.outputs.VER }}
+          load: true
+          build-args: |
+            DOCKER_VER=${{ steps.version.outputs.VER }}
+            TAG=${{ steps.version.outputs.VER }}
+            SIM_USER=worker
+            SIM_GRP=runner
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
+      - name: Update cache
         run: |
-          # Build in correct dependency order
-          docker compose build cosim-ubuntu
-          docker compose build cosim-library
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
-      - name: Build main image (cosim-build)
-        working-directory: scripts/docker
+      - name: Smoke test
         run: |
-          # Build the main image
-          docker compose build cosim-build
-
-      - name: List built images
-        run: |
-          echo "--- Built Docker Images ---"
-          docker images | grep -E "(cosim|tesp)" || echo "No matching images found"
-          echo "---------------------------"
-
-      - name: Smoke test built image
-        run: |
-          # Determine version used for tagging
-          VER=$(cat scripts/grid_version | tr -d '\n')
-          echo "Using grid_version=${VER}"
-          
-          # Quick smoke test: run a simple Python command inside the built image
-          docker run --rm cosim-build:tesp_${VER} python3 -c "
-          import sys
-          print('Python version:', sys.version)
-          try:
-              import tesp_support
-              print('tesp_support: OK')
-          except ImportError as e:
-              print('tesp_support: FAILED -', e)
-          print('Smoke test: PASSED')
-          sys.exit(0)
-          "
-
-      # Optional: More comprehensive tests
-      - name: Component verification
-        run: |
-          VER=$(cat scripts/grid_version | tr -d '\n')
-          docker run --rm cosim-build:tesp_${VER} bash -c "
-          echo '=== Component Verification ==='
-          "
-
-
-      # - name: Test
-      #   run: |
-      #     source tesp.env
-      #     ./scripts/helpers/runtesp "cd capabilities/te30 && python3 prepare_case.py && ./runh.sh"
-      # - name: login to hub
-      #   uses: docker/login-action@v2
-      #   with:
-      #     username: ${{ secrets.DOCKER_USERNAME }}
-      #     password: ${{ secrets.DOCKER_PASSWORD }}
-
-#      - name: Publish
-#        run: |
-#          cd scripts/docker
-#          ./push-images.sh
+          docker run --rm cosim-build:tesp_${{ steps.version.outputs.VER }} \
+            python3 -c "import tesp_support; print('OK')"
