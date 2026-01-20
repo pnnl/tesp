@@ -54,7 +54,7 @@ SIM_GRP=runner
 # -----------------------------------------------------------------------------
 # Build Configuration
 # -----------------------------------------------------------------------------
-UBUNTU_VERSION=22.04
+UBUNTU_VERSION=24.04
 
 # Build directory (where build scripts are located)
 # When running docker-compose from `scripts/docker/`, default to the repo-relative path
@@ -62,6 +62,20 @@ BUILD_DIR=../build
 
 # CPLEX Configuration (optional)
 CPLEX_BIN=cplex_studio129.linux-x86-64.bin
+
+# -----------------------------------------------------------------------------
+# Component Build Flags (set to 'no' to skip building)
+# -----------------------------------------------------------------------------
+BUILD_GRIDLABD=yes
+BUILD_ENERGYPLUS=yes
+BUILD_NS3=yes
+BUILD_IPOPT=yes
+BUILD_FNCS=yes
+BUILD_HELICS=yes
+BUILD_KLU=yes
+BUILD_PSST=yes
+BUILD_HELICS_PY=yes
+BUILD_TESP=yes
 
 # -----------------------------------------------------------------------------
 # Runtime Environment Variables

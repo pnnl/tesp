@@ -1,23 +1,34 @@
 # =============================================================================
-# TESP Docker Compose - Original Multi-Dockerfile Build System (moved)
+# TESP Docker Compose - Multi-Stage Build System
 # =============================================================================
-# Replicates the build-images.sh workflow with 5 separate Dockerfiles:
+# Build stages:
 #   1. ubuntu.Dockerfile    -> cosim-ubuntu
-#   2. library.Dockerfile   -> cosim-library
-#   3. build.Dockerfile     -> cosim-build
-#   4. cplex.Dockerfile     -> cosim-cplex
-#   5. user.Dockerfile      -> cosim-user
+#   2. library.Dockerfile   -> cosim-library  
+#   3. build_staged.Dockerfile -> cosim-build (multi-stage staged build with parallel compilation)
 #
 # Usage:
-#   Build all:        docker-compose -f scripts/docker/docker-compose.yml build
-#   Build specific:   docker-compose -f scripts/docker/docker-compose.yml build cosim-build
-#   Run:              docker-compose -f scripts/docker/docker-compose.yml run --rm cosim-build
-#   Clean:            docker-compose -f scripts/docker/docker-compose.yml down --rmi all -v
-# =============================================================================
-
-
-# =============================================================================
-# Service Definitions (matching original build-images.sh)
+#   Build all:           docker compose build
+#   Build specific:      docker compose build cosim-build
+#   Build without NS3:   BUILD_NS3=no docker compose build cosim-build
+#   Debug specific stage: BUILD_TARGET=build-gridlabd docker compose build cosim-build
+#   Run:                 docker compose run --rm cosim-build
+#   Clean:               docker compose down --rmi all -v
+#
+# Environment variables (set in .env or shell):
+#   VER              - Version tag (default: 24.04.1)
+#   SIM_USER         - Container user (default: worker)
+#   SIM_GRP          - Container group (default: runner)
+#   BUILD_GRIDLABD   - Build GridLAB-D (default: yes)
+#   BUILD_ENERGYPLUS - Build EnergyPlus (default: yes)
+#   BUILD_NS3        - Build NS-3 (default: yes)
+#   BUILD_IPOPT      - Build Ipopt (default: yes)
+#   BUILD_FNCS       - Build FNCS (default: yes)
+#   BUILD_HELICS     - Build HELICS (default: yes)
+#   BUILD_KLU        - Build KLU solver (default: yes)
+#   BUILD_PSST       - Build PSST (default: yes)
+#   BUILD_HELICS_PY  - Build HELICS Python (default: yes)
+#   BUILD_TESP       - Build TESP agents (default: yes)
+#   BUILD_TARGET     - Target stage for debugging (default: cosim-build)
 # =============================================================================
 
 services:
@@ -63,16 +74,31 @@ services:
       - all
 
   # ---------------------------------------------------------------------------
-  # STAGE 3: build - Clone, compile, and install all simulation tools
+  # STAGE 3: build - Multi-stage build with parallel compilation
   # ---------------------------------------------------------------------------
   cosim-build:
     build:
       context: ${BUILD_DIR:-../build}
-      dockerfile: ../docker/build.Dockerfile
+      dockerfile: ../docker/build_staged.Dockerfile
+      # Target specific stage for debugging (default: final stage)
+      # target: ${BUILD_TARGET:-cosim-build}
       args:
+        # Version and user configuration
         - DOCKER_VER=${VER:-24.04.1}
         - TAG=${VER:-24.04.1}
         - SIM_USER=${SIM_USER:-worker}
+        - SIM_GRP=${SIM_GRP:-runner}
+        # Component build flags - set to 'no' to skip
+        - BUILD_GRIDLABD=${BUILD_GRIDLABD:-yes}
+        - BUILD_ENERGYPLUS=${BUILD_ENERGYPLUS:-yes}
+        - BUILD_NS3=${BUILD_NS3:-yes}
+        - BUILD_IPOPT=${BUILD_IPOPT:-yes}
+        - BUILD_FNCS=${BUILD_FNCS:-yes}
+        - BUILD_HELICS=${BUILD_HELICS:-yes}
+        - BUILD_KLU=${BUILD_KLU:-yes}
+        - BUILD_PSST=${BUILD_PSST:-yes}
+        - BUILD_HELICS_PY=${BUILD_HELICS_PY:-yes}
+        - BUILD_TESP=${BUILD_TESP:-yes}
       network: host
     image: cosim-build:tesp_${VER:-24.04.1}
     container_name: cosim-build
@@ -99,69 +125,40 @@ services:
     tty: true
     command: /bin/bash
 
-#  # ---------------------------------------------------------------------------
-#  # STAGE 4: cplex - Add IBM CPLEX optimizer (optional, commercial license)
-#  # ---------------------------------------------------------------------------
-#  cosim-cplex:
-#    build:
-#      context: ../build
-#      dockerfile: ../docker/cplex.Dockerfile
-#      args:
-#        - DOCKER_VER=${DOCKER_VER:-1.0}
-#        - TAG=${DOCKER_VER:-1.0}
-#        - SIM_USER=${SIM_USER:-worker}
-#        - CPLEX_BIN=${CPLEX_BIN:-cplex_studio129.linux-x86-64.bin}
-#    image: cosim-cplex:tesp_${DOCKER_VER:-1.0}
-#    container_name: cosim-cplex
-#    depends_on:
-#      - cosim-build
-#    environment:
-#      - PSST_SOLVER=/home/${SIM_USER:-worker}/tenv/ibm/cplex/bin/x86-64_linux/cplexamp
-#      - PSST_WARNING=${PSST_WARNING:-ignore}
-#    volumes:
-#      - ${HOST_EXAMPLES_DIR:-../examples}:/home/${SIM_USER:-worker}/examples:rw
-#      - ${HOST_DATA_DIR:-../data}:/home/${SIM_USER:-worker}/data:rw
-#      - ${HOST_OUTPUT_DIR:-../outputs}:/home/${SIM_USER:-worker}/outputs:rw
-#      - tesp-installation:/home/${SIM_USER:-worker}/tenv
-#    working_dir: /home/${SIM_USER:-worker}
-#    stdin_open: true
-#    tty: true
-#    command: /bin/bash
-#    profiles:
-#      - cplex
-#
-#  # ---------------------------------------------------------------------------
-#  # STAGE 5: user - Adjust user/group IDs (for host UID/GID matching)
-#  # ---------------------------------------------------------------------------
-#  cosim-user:
-#    build:
-#      context: ../build
-#      dockerfile: ../docker/user.Dockerfile
-#      args:
-#        - DOCKER_VER=${DOCKER_VER:-1.0}
-#        - TAG=${DOCKER_VER:-1.0}
-#        - SIM_GID=${SIM_GID:-9002}
-#        - SIM_GRP=${SIM_GRP:-runner}
-#        - SIM_UID=${SIM_UID:-1001}
-#        - SIM_USER=${SIM_USER:-worker}
-#    image: cosim-user:tesp_${DOCKER_VER:-1.0}
-#    container_name: cosim-user
-#    depends_on:
-#      - cosim-build
-#    environment:
-#      - PSST_SOLVER=${PSST_SOLVER:-cbc}
-#      - PSST_WARNING=${PSST_WARNING:-ignore}
-#    volumes:
-#      - ${HOST_EXAMPLES_DIR:-../examples}:/home/${SIM_USER:-worker}/examples:rw
-#      - ${HOST_DATA_DIR:-../data}:/home/${SIM_USER:-worker}/data:rw
-#      - ${HOST_OUTPUT_DIR:-../outputs}:/home/${SIM_USER:-worker}/outputs:rw
-#      - tesp-installation:/home/${SIM_USER:-worker}/tenv
-#    working_dir: /home/${SIM_USER:-worker}
-#    stdin_open: true
-#    tty: true
-#    command: /bin/bash
-#    profiles:
-#      - user
+  # ---------------------------------------------------------------------------
+  # Debug service - Build only up to a specific stage
+  # ---------------------------------------------------------------------------
+  cosim-debug:
+    build:
+      context: ${BUILD_DIR:-../build}
+      dockerfile: ../docker/build_staged.Dockerfile
+      target: ${BUILD_TARGET:-build-complete}
+      args:
+        - DOCKER_VER=${VER:-24.04.1}
+        - TAG=${VER:-24.04.1}
+        - SIM_USER=${SIM_USER:-worker}
+        - SIM_GRP=${SIM_GRP:-runner}
+        - BUILD_GRIDLABD=${BUILD_GRIDLABD:-yes}
+        - BUILD_ENERGYPLUS=${BUILD_ENERGYPLUS:-yes}
+        - BUILD_NS3=${BUILD_NS3:-yes}
+        - BUILD_IPOPT=${BUILD_IPOPT:-yes}
+        - BUILD_FNCS=${BUILD_FNCS:-yes}
+        - BUILD_HELICS=${BUILD_HELICS:-yes}
+        - BUILD_KLU=${BUILD_KLU:-yes}
+        - BUILD_PSST=${BUILD_PSST:-yes}
+        - BUILD_HELICS_PY=${BUILD_HELICS_PY:-yes}
+        - BUILD_TESP=${BUILD_TESP:-yes}
+      network: host
+    image: cosim-debug:tesp_${VER:-24.04.1}
+    container_name: cosim-debug
+    depends_on:
+      - cosim-library
+    profiles:
+      - debug
+    working_dir: /home/${SIM_USER:-worker}
+    stdin_open: true
+    tty: true
+    command: /bin/bash
 
 # =============================================================================
 # Named Volumes
