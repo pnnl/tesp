@@ -1,6 +1,6 @@
 # Build runtime image
 ARG UBUNTU=ubuntu
-ARG UBUNTU_VERSION=:24.04
+ARG UBUNTU_VERSION=24.04
 
 FROM ${UBUNTU}:${UBUNTU_VERSION} AS cosim-ubuntu
 
