@@ -25,6 +25,9 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Prepare cache directory
+        run: mkdir -p /tmp/.buildx-cache /tmp/.buildx-cache-new
+
       - name: Cache Docker layers
         uses: actions/cache@v4
         with:
@@ -39,6 +42,9 @@ jobs:
           file: scripts/docker/ubuntu.Dockerfile
           tags: cosim-ubuntu:tesp_${{ steps.version.outputs.VER }}
           load: true
+          build-args: |
+            UBUNTU=ubuntu
+            UBUNTU_VERSION=24.04
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
 
@@ -56,6 +62,9 @@ jobs:
             SIM_GRP=runner
             SIM_UID=1001
             SIM_USER=worker
+          # Reference the locally built image
+          build-contexts: |
+            cosim-ubuntu:tesp_${{ steps.version.outputs.VER }}=docker-image://cosim-ubuntu:tesp_${{ steps.version.outputs.VER }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
 
@@ -71,6 +80,9 @@ jobs:
             TAG=${{ steps.version.outputs.VER }}
             SIM_USER=worker
             SIM_GRP=runner
+          # Reference the locally built image
+          build-contexts: |
+            cosim-library:tesp_${{ steps.version.outputs.VER }}=docker-image://cosim-library:tesp_${{ steps.version.outputs.VER }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
 
