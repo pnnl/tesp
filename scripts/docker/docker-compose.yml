@@ -30,7 +30,7 @@ services:
       dockerfile: ubuntu.Dockerfile
       args:
         - UBUNTU=ubuntu
-        - UBUNTU_VERSION=${VER:-24.04}
+        - UBUNTU_VERSION=${VER:-24.04.1}
     image: cosim-ubuntu:tesp_${VER:-24.04.1}
     container_name: cosim-ubuntu
     profiles:
@@ -47,13 +47,13 @@ services:
       context: ./
       dockerfile: library.Dockerfile
       args:
-        - DOCKER_VER=${VER:-1.0}
-        - TAG=${VER:-1.0}
+        - DOCKER_VER=${VER:-24.04.1}
+        - TAG=${VER:-24.04.1}
         - SIM_GID=${SIM_GID:-9002}
         - SIM_GRP=${SIM_GRP:-runner}
         - SIM_UID=${SIM_UID:-1001}
         - SIM_USER=${SIM_USER:-worker}
-    image: cosim-library:tesp_${VER:-1.0}
+    image: cosim-library:tesp_${VER:-24.04.1}
     container_name: cosim-library
     depends_on:
       - cosim-ubuntu
@@ -70,11 +70,11 @@ services:
       context: ${BUILD_DIR:-../build}
       dockerfile: ../docker/build.Dockerfile
       args:
-        - DOCKER_VER=${VER:-1.0}
-        - TAG=${VER:-1.0}
+        - DOCKER_VER=${VER:-24.04.1}
+        - TAG=${VER:-24.04.1}
         - SIM_USER=${SIM_USER:-worker}
       network: host
-    image: cosim-build:tesp_${VER:-1.0}
+    image: cosim-build:tesp_${VER:-24.04.1}
     container_name: cosim-build
     depends_on:
       - cosim-library
@@ -168,7 +168,7 @@ services:
 # =============================================================================
 volumes:
   tesp-installation:
-    name: tesp-installation-${DOCKER_VER:-1.0}
+    name: tesp-installation-${VER:-24.04.1}
     driver: local
 
 # =============================================================================
