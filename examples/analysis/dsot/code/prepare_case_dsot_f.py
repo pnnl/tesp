@@ -18,8 +18,8 @@ import tesp_support.dsot.case_merge as cm
 import tesp_support.dsot.glm_dictionary as gd
 
 
-recs_data = False
-#recs_data = True  # rerun recs_gld_house_parameters.py
+#recs_data = False
+recs_data = True  # rerun recs_gld_house_parameters.py
 if recs_data:
     rcs = "RECS"
     sys.path.append('../')

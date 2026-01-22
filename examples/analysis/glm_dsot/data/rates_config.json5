@@ -111,8 +111,10 @@
   "bulkpower_bus": 1,
   // set to true for running ames opf, set to false for running pypower opf
   "ames": true,
-  // cbc, ipopt, or cplex. If solver = cbc, "quadratic" is set to false
-  "solver": "cplex", // ONLY USED if no solver specified in tesp.env
+  // Set solver for agent [cbc, ipopt, or cplex].
+  "solver": "cbc",
+  // Solver for tso_PSST.py is set by PSST_SOLVER in tesp.env or by command line export variable
+  // If solver = cbc, "quadratic" is set to false
   "numCore": 12,
   "method": "FBS",
   "other_method": "NR",
@@ -182,7 +184,7 @@
   "backbone_files": {
     // taxonomy feeder file
     "taxonomy": "",
-    // random seed
+    // random seed, should chose a prime number
     "seed": 0,
     "support_path": "../../../dsot/data/schedules/",
     "weather_path": "../../../dsot/data/weather/"

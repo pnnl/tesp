@@ -347,7 +347,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                         # New schedule to implement RECS 2020 data
                         prob = np.random.uniform(0, 1)  # a random number
                         inc_level = val['income_level'] # Determine income level of house from glm dictionary
-                        # Detemine teleworking
+                        # Determine teleworking
                         n_tw_days, tw_dows = telework(prob, state, dso_type, inc_level)
                         
                         # Determine setpoint transition times

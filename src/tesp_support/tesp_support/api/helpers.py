@@ -9,10 +9,9 @@ import json
 from scipy.stats import truncnorm
 from numpy import random
 
-# Setting up main/standard debugging output
+# Setting up main/standard logging with INFO level
 log = logging.getLogger()
 log.setLevel(logging.INFO)
-# log.setLevel(logging.DEBUG)
 
 def enable_logging(level, model_diag_level, name_prefix):
     """ Enable logging for process
@@ -22,20 +21,21 @@ def enable_logging(level, model_diag_level, name_prefix):
             model_diag_level (int): initial value used to filter logging files
             name_prefix (str): description prefix for the log file name
     """
-    main_fh = logging.FileHandler(name_prefix + '_log.txt', mode='w')
     if level == 'DEBUG':
-        main_fh.setLevel(logging.DEBUG)
+        log.setLevel(logging.DEBUG)
     elif level == 'INFO':
-        main_fh.setLevel(logging.INFO)
+        log.setLevel(logging.INFO)
     elif level == 'WARNING':
-        main_fh.setLevel(logging.WARNING)
+        log.setLevel(logging.WARNING)
     elif level == 'ERROR':
-        main_fh.setLevel(logging.ERROR)
+        log.setLevel(logging.ERROR)
     elif level == 'CRITICAL':
-        main_fh.setLevel(logging.CRITICAL)
+        log.setLevel(logging.CRITICAL)
     else:
         print('WARNING: unknown logging level specified, reverting to default INFO level')
-        main_fh.setLevel(logging.INFO)
+        log.setLevel(logging.INFO)
+
+    main_fh = logging.FileHandler(name_prefix + '_log.txt', mode='w')
     main_format = logging.Formatter('%(levelname)s: %(module)s: %(lineno)d: %(message)s')
     main_fh.setFormatter(main_format)
     main_fh.addFilter(all_but_one_level(model_diag_level))
@@ -102,11 +102,10 @@ def get_run_solver(name:str, pyo, model, solver, params=None):
         name (str): name of the solver, ex: hvac_{house_name}
         pyo (module): the pyomo module (import pyomo.environ as pyo)
         model: the pyomo model instance to be solved (pyo.ConcreteModel())
-        solver (str): choice of solver. Prefer cplex over ipopt for production
-          runs
+        solver (str): choice of solver. Prefer cplex over ipopt for production runs
 
     Raises:
-        RuntimeError: If the solver is not available, or if the solve does not
+        RuntimeError: If the solver is not available, or if the solver does not
           complete with an acceptable status/termination condition. The 
           exception message includes the model name, solver name, and solver 
           status.
