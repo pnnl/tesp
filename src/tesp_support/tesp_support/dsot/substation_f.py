@@ -1033,18 +1033,29 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                 log.info('No opts need solving, skipping use of "parallel" obj!')
                 results = []
             # add participating agents to day-ahead bid to the retail market
+            agent_errors = []
+            agent_success = 0
+            agent_count = 0
             for i, (res, p_age) in enumerate(zip(results, P_age_DA)):  # range(len(P_age_DA)):
                 timing(p_age.__class__.__name__, True)
                 # passing the optimization output to the agent
                 if p_age.__class__.__name__ == "HVACDSOT":
                     p_age.optimized_Quantity = res[0][:]
                     p_age.temp_room = res[1][:]
+                    if res[2]["success"]:
+                        agent_success += 1
+                    else:
+                        agent_errors.append(f"{p_age.name}:{res[2]["termination"]}")
+                    agent_count += 1
                 else:
                     p_age.optimized_Quantity = res[:]
+
                 # formulate the day-ahead bid
                 bid = p_age.formulate_bid_da()
                 timing(p_age.__class__.__name__, False)
                 retail_market_obj.curve_aggregator_DA('Buyer', bid, p_age.name)
+            log.info(f"HVAC solver: Successes: {agent_success}, Participating: {agent_count}, Success Rate: {agent_success/agent_count}, Agents: {len(hvac_agent_objs)}")
+            log.debug(f"HVAC solver failers: {agent_errors}")
             del results
 
             # collect agent only DA quantities and price

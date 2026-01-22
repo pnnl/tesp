@@ -128,10 +128,10 @@ class HVACDSOT:  # TODO: update class name
         self.temp_max_heat_da = 0.0
         self.temp_min_heat_da = 0.0
 
-        self.price_forecast = [0 for _ in range(48)]  # np.random.rand(1)[0]
+        self.price_forecast = [0.0 for _ in range(48)]  # np.random.rand(1)[0]
         # self.price_forecast_DA = [0 for _ in range(48)]  # np.random.rand(1)[0]
-        self.price_forecast_0 = 0
-        self.price_forecast_0_new = 0
+        self.price_forecast_0 = 0.0
+        self.price_forecast_0_new = 0.0
         self.price_std_dev = 0.0
         self.price_delta = 0.0
         self.price_mean = 0.0
@@ -148,12 +148,12 @@ class HVACDSOT:  # TODO: update class name
 
         # it is important to initialize following two variables of length less than 48
         # so that in very first run, they can be populated by actual forecast
-        self.full_internalgain_forecast = [0]
-        self.full_forecast_ziploads = [0]
+        self.full_internalgain_forecast = [0.0]
+        self.full_forecast_ziploads = [0.0]
 
         self.air_temp = 72.0
         self.mass_temp = 72.0
-        self.hvac_kw = 100.0
+        self.hvac_kw = 20.0
         self.wh_kw = 0.0
         self.house_kw = 5.0
         self.mtr_v = 120.0
@@ -1315,8 +1315,10 @@ class HVACDSOT:  # TODO: update class name
         """
         log.debug(f'hvac name: {self.houseName}, house load: {message}')
         val = parse_number(message)
-        if 0.0 <= val:
+        if 0.0 < val:
             self.house_kw = val
+        else:
+            log.log(self.model_diag_level, f'hvac name: {self.houseName}, hvac load: {message}')
 
     def set_hvac_load(self, message: str):
         """ Sets the hvac_load attribute, if greater than zero
@@ -1326,10 +1328,10 @@ class HVACDSOT:  # TODO: update class name
         """
         log.debug(f'hvac name: {self.houseName}, hvac load: {message}')
         val = parse_number(message)
-        if 0.0 <= val < 99.0:
+        if 0.0 < val:  # < 99.0:
             self.hvac_kw = val
         else:
-            log.error(f'hvac name: {self.houseName}, hvac load: {message}')
+            log.log(self.model_diag_level, f'hvac name: {self.houseName}, hvac load: {message}')
 
     def set_wh_load(self, message: str):
         """ Sets the wh_load attribute, if greater than zero
@@ -1339,10 +1341,10 @@ class HVACDSOT:  # TODO: update class name
         """
         log.debug(f'hvac name: {self.houseName}, water heater load: {message}')
         val = parse_number(message)
-        if 0.0 <= val < 99.0:
+        if 0.0 < val:  # < 99.0:
             self.wh_kw = val
         else:
-            log.error(f'hvac name: {self.houseName}, water heater load: {message}')
+            log.log(self.model_diag_level, f'hvac name: {self.houseName}, water heater load: {message}')
 
     def set_hvac_state(self, message: str):
         """ Sets the hvac_on attribute
@@ -1955,7 +1957,7 @@ class HVACDSOT:  # TODO: update class name
                         self.solargain_forecast[t] * self.solar_heatgain_factor) / self.UA))
         if t == 0:
             # Initial SOHC state
-            return m.temp_room[0] == (self.eps * self.temp_room_init + factor)
+            return m.temp_room[t] == (self.eps * self.temp_room_init + factor)
         else:
             # update SOHC
             return m.temp_room[t] == (self.eps * m.temp_room[t - 1] + factor)
@@ -1987,15 +1989,21 @@ class HVACDSOT:  # TODO: update class name
         #     temp_room.insert(len(self.temp_room), temp_room.pop(0))
         #     return [Quantity, temp_room]
 
-        nonlinear = True
-        # Initialize the problem
+        # Parameters
+        params = {
+            "success": True,
+            "termination": "",
+            "hvac_kw": self.hvac_kw,
+            "temp_bounds": {}
+        }
+        Quantity = [0 for _ in self.TIME]
+        temp_room = [0 for _ in self.TIME]
 
+        # Initialize the problem, always nonlinear right now
+        nonlinear = True
         if nonlinear:
             # Create model
             model = pyo.ConcreteModel()
-            # Parameters
-            Quantity = [0 for _ in self.TIME]
-            temp_room = [0 for _ in self.TIME]
             # Decision variables
             model.quan_hvac = pyo.Var(self.TIME, bounds=(0.0, self.hvac_kw))
             model.temp_room = pyo.Var(self.TIME, bounds=self.temp_bound_rule)
@@ -2003,27 +2011,21 @@ class HVACDSOT:  # TODO: update class name
             model.obj = pyo.Objective(rule=self.obj_rule, sense=pyo.minimize)
             # Constraints
             model.con1 = pyo.Constraint(self.TIME, rule=self.con_rule_eq1)
+            results = get_run_solver("hvac_" + self.name, pyo, model, self.solver, params)
+
             # Pass params to the solver for logging purposes
             temp_bounds = {}
             for t in self.TIME:
                 temp_bounds[t] = self.temp_bound_rule(None, t)
-            params = {
-                "hvac_kw": self.hvac_kw,
-                "temp_bounds": temp_bounds
-            }
-            # Solve
-            if self.hvac_kw >= 99:
-                if not self.participating:
-                    raise Exception(f"hvac_kw is {self.hvac_kw} for {self.name}. Thermostat mode is set to {self.thermostat_mode}. This house is NOT participating in this mode")
-                raise Exception(f"hvac_kw is {self.hvac_kw} for {self.name}. Thermostat mode is set to {self.thermostat_mode} and device participation is {self.participating}.")
+            params["temp_bounds"] = temp_bounds
 
-            results = get_run_solver("hvac_" + self.name, pyo, model, self.solver, params)
-            TOL = 0.00001  # Tolerance for checking bid
+            for k, v in params.items():
+                log.debug(f"{k}:{v}")
+
             for t in self.TIME:
                 temp_room[t] = pyo.value(model.temp_room[t])
-                self.temp_room[t] = temp_room[t]
-                if self.temp_room[t] > TOL:
-                    Quantity[t] = pyo.value(model.quan_hvac[t])
+                # if self.temp_room[t] > 0.00001:  # Tolerance for checking bid
+                Quantity[t] = pyo.value(model.quan_hvac[t])
 
         else:  # for linear optimizer
             prob = pulp.LpProblem("QuantityBid", pulp.LpMinimize)
@@ -2037,28 +2039,28 @@ class HVACDSOT:  # TODO: update class name
                 # if self.hvac_kw>6.0:
                 #    self.hvac_kw = 6.0
                 quan_hvac = pulp.LpVariable.dicts("hvac_quantity", self.TIME, 0, self.hvac_kw)
-                temp_room = pulp.LpVariable.dicts("Temperature_room", self.TIME,
+                tmp_room = pulp.LpVariable.dicts("Temperature_room", self.TIME,
                                                   self.temp_min_cool, self.temp_max_cool)
 
                 prob += (pulp.lpSum((self.price_forecast[t] * quan_hvac[t] * self.slider) +
                                     (((2 * self.range_high_cool * self.price_std_dev) / self.temp_delta) *
-                                     (temp_room[t] - self.temp_desired_48hour_cool[t])) +
+                                     (tmp_room[t] - self.temp_desired_48hour_cool[t])) +
                                     (((2 * self.range_low_cool * self.price_std_dev) / self.temp_delta) *
-                                     (self.temp_desired_48hour_cool[t] - temp_room[t])) for t in self.TIME))
+                                     (self.temp_desired_48hour_cool[t] - tmp_room[t])) for t in self.TIME))
             else:
                 quan_hvac = pulp.LpVariable.dicts("hvac_quantity", self.TIME, -self.hvac_kw, 0)
-                temp_room = pulp.LpVariable.dicts("Temperature_room", self.TIME,
+                tmp_room = pulp.LpVariable.dicts("Temperature_room", self.TIME,
                                                   self.temp_min_heat, self.temp_max_heat)
                 prob += (pulp.lpSum((self.price_forecast[t] * quan_hvac[t]) +
                                     (((-2 * self.range_high_heat * self.price_std_dev) / self.temp_delta) *
-                                     (temp_room[t] - self.temp_desired_48hour_heat[t])) +
+                                     (tmp_room[t] - self.temp_desired_48hour_heat[t])) +
                                     (((-2 * self.range_low_heat * self.price_std_dev) / self.temp_delta) *
-                                     (self.temp_desired_48hour_heat[t] - temp_room[t])) for t in self.TIME))
+                                     (self.temp_desired_48hour_heat[t] - tmp_room[t])) for t in self.TIME))
             # else:
             #    log.log('Thermostat mode is not defined.')
 
             # Constraints
-            prob += temp_room[0] == (self.eps * self.temp_room_init + (1 - self.eps) *
+            prob += tmp_room[0] == (self.eps * self.temp_room_init + (1 - self.eps) *
                                      (self.temp_outside_init +
                                       ((-self.cooling_cop_adj[0] * quan_hvac[0] *
                                         3412.1416331279 / self.latent_factor[0] +
@@ -2066,7 +2068,7 @@ class HVACDSOT:  # TODO: update class name
                                         self.solar_heatgain_factor) / self.UA)))  # Initial SOHC state
 
             for t in range(1, self.windowLength):  # Update SOHC
-                prob += temp_room[t] == (self.eps * temp_room[t - 1] + (1 - self.eps) *
+                prob += tmp_room[t] == (self.eps * tmp_room[t - 1] + (1 - self.eps) *
                                          (self.temperature_forecast[t] +
                                           ((-self.cooling_cop_adj[t] * quan_hvac[t] *
                                             3412.1416331279 / self.latent_factor[t] +
@@ -2075,16 +2077,14 @@ class HVACDSOT:  # TODO: update class name
 
             prob.solve()  # Solve optimization for one HVAC
 
-            Quantity = []
-            for _ in self.TIME:
-                Quantity.append(0)
             TOL = 0.00001  # Tolerance for checking bid
             for t in self.TIME:
-                self.temp_room[t] = temp_room[t].varValue
-                if temp_room[t].varValue > TOL:
+                temp_room[t] = tmp_room[t].varValue
+                if tmp_room[t].varValue > TOL:
                     Quantity[t] = quan_hvac[t].varValue
 
-        return [Quantity, temp_room]
+        log.info(f"DA optimal Q: {Quantity}, {temp_room}")
+        return [Quantity, temp_room, params ]
 
     def test_function(self):
         """ Test function with the only purpose of returning the name of the object

@@ -134,10 +134,11 @@ def get_run_solver(name:str, pyo, model, solver, params=None):
     if status != SolverStatus.ok or term not in acceptable_terms:
         # Optional, print more detail:
         if params:
-            for k, v in params.items():
-                print(f"{k}:{v}")
-        raise RuntimeError(f"[{name}] Solver '{solver}' failed: "
-               f"status={status}, termination={term}. hvac_kw: {params['hvac_kw']}, temp_bounds: {params['temp_bounds']}.")
+            params["success"] = False
+            params["termination"] = term
+
+        # raise RuntimeError(f"[{name}] Solver '{solver}' failed: "
+        #        f"status={status}, termination={term}")
         
 
     return results

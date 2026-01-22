@@ -369,7 +369,7 @@ class RetailMarket:
                     log.info("Buyer and seller prices are identical!")
                     return clear_type, cleared_price, cleared_quantity, congestion_surcharge
 
-            log.info("ERROR retail intersection not found (not supposed to happen)" +
+            log.info("Failure retail intersection not found (not supposed to happen)" +
                      "\n  quantities: " + str(buyer_quantities) +
                      "\n  buyer_prices: " + str(buyer_prices) +
                      "\n  seller_prices: " + str(seller_prices))

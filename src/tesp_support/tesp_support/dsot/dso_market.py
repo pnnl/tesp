@@ -469,7 +469,7 @@ class DSOMarket:
                         trial_clear_type = MarketClearingType.UNCONGESTED
                     return Pwclear, cleared_quantity, trial_clear_type
 
-            log.info("ERROR dso intersection not found (not supposed to happen)." +
+            log.info("Failure dso intersection not found (not supposed to happen)." +
                      " buyer_quantities: " + str(buyer_quantities) +
                      ", buyer_prices: " + str(buyer_prices) +
                      ", seller_prices: " + str(seller_prices))
