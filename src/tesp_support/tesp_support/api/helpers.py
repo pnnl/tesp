@@ -138,7 +138,7 @@ def get_run_solver(name:str, pyo, model, solver, params=None):
             for k, v in params.items():
                 print(f"{k}:{v}")
         raise RuntimeError(f"[{name}] Solver '{solver}' failed: "
-               f"status={status}, termination={term}")
+               f"status={status}, termination={term}. hvac_kw: {params['hvac_kw']}, temp_bounds: {params['temp_bounds']}.")
         
 
     return results

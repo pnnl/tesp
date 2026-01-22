@@ -642,7 +642,7 @@ def glm_diction(case_name, feed_key):
         # Assign Residential vs C&I buildings parameters
         if building_type in ['SINGLE_FAMILY', 'MOBILE_HOME', 'APARTMENTS', 'MULTI_FAMILY']:
             tariff_class = 'residential'
-            number_of_doors = 0
+            number_of_doors = 4 # GLD default, if unspecified
             number_of_stories = house["number_of_stories"]
             ceiling_height = house["ceiling_height"]
             window_exterior_transmission_coefficient = house["window_exterior_transmission_coefficient"]
@@ -743,21 +743,18 @@ def glm_diction(case_name, feed_key):
                         scalar[zip_name] = zip_scalar
                     else:
                         scalar[zip_name] = glm.ZIPload.instances[zip_name]['base_power']
+                    
+                    for string in strings:
+                        if string in zip_name:
+                            houses[hs_name]["zip_skew"] = float(zip_skew)
+                            houses[hs_name]["zip_heatgain_fraction"][f'{string}_loads'] = float(hf[zip_name])
+                            houses[hs_name]["zip_scalar"][f'{string}_loads'] = float(scalar[zip_name])
+                            houses[hs_name]["zip_power_fraction"][f'{string}_loads'] = float(pf[zip_name])
+                            houses[hs_name]["zip_power_pf"][f'{string}_loads'] = float(p_pf[zip_name])
+
                 except KeyError:
                     # Not every house has ziploads
                     pass
-
-                for string in strings:
-                    if string in zip_name:
-                        houses[hs_name]["zip_skew"] = float(zip_skew)
-                        houses[hs_name]["zip_heatgain_fraction"][f'{string}_loads'] = float(hf[zip_name])
-                        houses[hs_name]["zip_scalar"][f'{string}_loads'] = float(scalar[zip_name])
-                        houses[hs_name]["zip_power_fraction"][f'{string}_loads'] = float(pf[zip_name])
-                        houses[hs_name]["zip_power_pf"][f'{string}_loads'] = float(p_pf[zip_name])
-
-
-            # except KeyError:
-            #     pass
 
             billingmeters[glm.triplex_meter.instances[house['parent']]['parent']]['children'].append(hs_name)
 

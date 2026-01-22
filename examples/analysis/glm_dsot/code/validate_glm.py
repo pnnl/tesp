@@ -15,13 +15,15 @@ def read_glm(data_path, caseName):
         caseName (str): the name of the case folder
     """
     glm = GLMModifier()
-    for dso_key in range(1,8):
+    for dso_key in range(1,9):
         in_file_glm = os.path.abspath(caseName + '/Substation_' + str(dso_key) + '/Substation_' + str(dso_key) + '.glm')
         i_glm, success = glm.read_model(os.path.join(data_path, in_file_glm))
+        glm.del_object('helics_msg', f"gldSubstation_{dso_key}") # FNCS run
+        #glm.del_object('fncs_msg', f"gldSubstation_{dso_key}") # HELICS run
         glm.write_model(os.path.join(data_path, in_file_glm))
         if not success:
             exit()
-        gd.glm_dict(caseName, "Substation_" + str(dso_key))
+        gd.glm_diction(caseName, "Substation_" + str(dso_key))
         shutil.move(f'{caseName}/Substation_{dso_key}/Substation_{dso_key}_glm_dict.json',
                         f'{caseName}/DSO_{dso_key}/Substation_{dso_key}_glm_dict.json')     
         
@@ -41,7 +43,7 @@ def read_feeder_glm(data_path, caseName, feeder_name):
     glm.write_model(os.path.join(data_path, in_file_glm))
     if not success:
         exit()
-    gd.glm_dict(caseName, feeder_name)
+    gd.glm_diction(caseName, feeder_name)
     try:
         shutil.move(f'{caseName}/{feeder_name}/{feeder_name}_glm_dict.json',
                         f'{caseName}/DSO_1/{feeder_name}_glm_dict.json')

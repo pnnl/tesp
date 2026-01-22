@@ -661,7 +661,10 @@ class EVDSOT:
              sim_time (str): Current time in the simulation; should be human-readable
         """
         val = parse_number(msg_str)
-        self.Cinit = self.capacity / 100 * val
+        try:
+            self.Cinit = self.capacity / 100 * val
+        except TypeError:
+            raise Exception(f'Unable to set SOC for capacity {self.capacity} and val {val}')
 
         if self.Cmin < self.Cinit < self.Cmax:
             pass
