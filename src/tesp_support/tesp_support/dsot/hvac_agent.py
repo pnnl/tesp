@@ -20,7 +20,7 @@ from scipy import linalg
 from ..api.helpers import get_run_solver, logging, log
 from ..api.parse_helpers import parse_number, parse_magnitude
 
-logging.getLogger('pyomo.core').setLevel(logging.DEBUG)
+logging.getLogger('pyomo.core').setLevel(logging.ERROR)
 
 class HVACDSOT:  # TODO: update class name
     """
@@ -103,10 +103,9 @@ class HVACDSOT:  # TODO: update class name
         self.slider = float(hvac_dict['slider_setting'])
         self.cooling_participating = hvac_dict['cooling_participating']
         self.heating_participating = hvac_dict['heating_participating']
-        # Initialize to include either cooling or heating participation.
-        # self.participating is modified later based on the active thermostat mode
+        # Initialize self.participating to True
+        # The variable is modified later based on the active thermostat mode
         self.participating = True
-        #self.participating = self.cooling_participating or self.heating_participating
         self.windowLength = 48
         self.TIME = range(self.windowLength)
         self.optimized_Quantity = [[]] * self.windowLength
@@ -154,12 +153,11 @@ class HVACDSOT:  # TODO: update class name
 
         self.air_temp = 72.0
         self.mass_temp = 72.0
-        self.hvac_kw = 100
+        self.hvac_kw = 100.0
         self.wh_kw = 0.0
         self.house_kw = 5.0
         self.mtr_v = 120.0
         self.hvac_on = False
-        # self.hvac_demand = 1.0
         self.minute = 0
         self.hour = 0
         self.day = 0
@@ -1189,10 +1187,6 @@ class HVACDSOT:  # TODO: update class name
                         '{} {} -- cooling_setpoint ({}), outside of nominal range {} to {}'
                         .format(self.name, sim_time, self.cooling_setpoint, self.cooling_setpoint_lower,
                                 self.cooling_setpoint_upper))
-                # if self.cooling_setpoint < self.cooling_setpoint_lower:
-                #     self.cooling_setpoint = self.cooling_setpoint_lower
-                # elif self.cooling_setpoint > self.cooling_setpoint_upper:
-                #     self.cooling_setpoint = self.cooling_setpoint_upper
         else:
             self.heating_setpoint = setpoint_tmp
             if self.heating_setpoint_lower < self.heating_setpoint < self.heating_setpoint_upper:
@@ -1202,10 +1196,6 @@ class HVACDSOT:  # TODO: update class name
                         '{} {} -- heating_setpoint ({}), outside of nominal range of {} to {}'
                         .format(self.name, sim_time, self.heating_setpoint, self.heating_setpoint_lower,
                                 self.heating_setpoint_upper))
-                # if self.heating_setpoint < self.heating_setpoint_lower:
-                #     self.heating_setpoint = self.heating_setpoint_lower
-                # elif self.heating_setpoint > self.heating_setpoint_upper:
-                #     self.heating_setpoint = self.heating_setpoint_upper
 
         if self.heating_setpoint + self.deadband / 2.0 >= self.cooling_setpoint - self.deadband / 2.0:
             if self.thermostat_mode == 'Heating':
@@ -1325,7 +1315,7 @@ class HVACDSOT:  # TODO: update class name
         """
         log.debug(f'hvac name: {self.houseName}, house load: {message}')
         val = parse_number(message)
-        if val > 0.0:
+        if 0.0 <= val:
             self.house_kw = val
 
     def set_hvac_load(self, message: str):
@@ -1334,16 +1324,12 @@ class HVACDSOT:  # TODO: update class name
         Args:
             message (str): Message with load in kW
         """
-        log.info(f'hvac name: {self.houseName}, hvac load: {message}')
+        log.debug(f'hvac name: {self.houseName}, hvac load: {message}')
         val = parse_number(message)
-        if val > 0.0 and val < 99.0:
+        if 0.0 <= val < 99.0:
             self.hvac_kw = val
-        elif val >= 99.0:
-            # This message should never occur. If set_hvac_load is run for a 
-            # house, the init val of 100 should be overwritten.
-            log.error(f'hvac name: {self.houseName}, hvac load: {val} too high!')
         else:
-            log.info(f"hvac_kw not set for {self.houseName} with hvac load {val}")
+            log.error(f'hvac name: {self.houseName}, hvac load: {message}')
 
     def set_wh_load(self, message: str):
         """ Sets the wh_load attribute, if greater than zero
@@ -1353,8 +1339,10 @@ class HVACDSOT:  # TODO: update class name
         """
         log.debug(f'hvac name: {self.houseName}, water heater load: {message}')
         val = parse_number(message)
-        if val >= 0.0:
+        if 0.0 <= val < 99.0:
             self.wh_kw = val
+        else:
+            log.error(f'hvac name: {self.houseName}, water heater load: {message}')
 
     def set_hvac_state(self, message: str):
         """ Sets the hvac_on attribute
@@ -1393,14 +1381,12 @@ class HVACDSOT:  # TODO: update class name
 
         # This is a correction within the hour for the DA prediction of thermostat mode using heating as default
         self.participating = False
+        self.thermostat_mode = 'OFF'
         if self.air_temp > (self.temp_min_cool + self.temp_max_heat) / 2.0:
-            # if self.air_temp >= self.temp_min_cool + self.deadband / 2.0:
             self.thermostat_mode = 'Cooling'
             if self.cooling_system_type != "NONE":
                 self.participating = self.cooling_participating
-        elif self.air_temp == (self.temp_min_cool + self.temp_max_heat) / 2.0:
-            self.thermostat_mode = 'OFF'
-        else:
+        elif self.air_temp < (self.temp_min_cool + self.temp_max_heat) / 2.0:
             self.thermostat_mode = 'Heating'
             if self.heating_system_type != "GAS":
                 self.participating = self.heating_participating
@@ -1532,7 +1518,7 @@ class HVACDSOT:  # TODO: update class name
 
             # self.temp_curve[0] = self.air_temp
             if ((self.thermostat_mode == "Cooling" and self.hvac_on) or
-                    (self.thermostat_mode != "Cooling" and not self.hvac_on)):
+                (self.thermostat_mode != "Cooling" and not self.hvac_on)):
                 self.temp_curve[0] = self.air_temp + self.deadband / 2.0
             elif ((self.thermostat_mode != "Cooling" and self.hvac_on) or
                   (self.thermostat_mode == "Cooling" and not self.hvac_on)):
@@ -1565,9 +1551,9 @@ class HVACDSOT:  # TODO: update class name
                     Q_total += 1 / 10 * self.hvac_kw
                     # self.quantity_curve[itime] = (time[itime]-last_T_off) * self.hvac_kw / T
                     if ((x[0][0] < self.temp_curve[itemp] - self.deadband / 2.0 and
-                         self.thermostat_mode == 'Cooling') or
-                            (x[0][0] > self.temp_curve[itemp] + self.deadband / 2.0 and
-                             self.thermostat_mode == 'Heating')):
+                            self.thermostat_mode == 'Cooling') or
+                        (x[0][0] > self.temp_curve[itemp] + self.deadband / 2.0 and
+                            self.thermostat_mode == 'Heating')):
                         hvac_on_tmp = False
                 else:
                     AxB = AEx + self.B_ETP_OFF
@@ -1583,9 +1569,9 @@ class HVACDSOT:  # TODO: update class name
                     # self.quantity_curve[itime] = last_T_on * self.hvac_kw / T
                     # last_T_off = time[itime]
                     if ((x[0][0] > self.temp_curve[itemp] + self.deadband / 2.0 and
-                         self.thermostat_mode == 'Cooling') or
-                            (x[0][0] < self.temp_curve[itemp] - self.deadband / 2.0 and
-                             self.thermostat_mode == 'Heating')):
+                            self.thermostat_mode == 'Cooling') or
+                        (x[0][0] < self.temp_curve[itemp] - self.deadband / 2.0 and
+                            self.thermostat_mode == 'Heating')):
                         hvac_on_tmp = True
                 # self.temp_curve[itime] = x[0][0]
                 # if self.thermostat_mode == "Cooling":

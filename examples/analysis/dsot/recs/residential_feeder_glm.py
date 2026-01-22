@@ -901,10 +901,10 @@ def obj(parent, model, line, itr, oidh, octr):
     """
     octr += 1
     # Identify the object type
-    m = re.search('object ([^:{\s]+)[:{\s]', line, re.IGNORECASE)
+    m = re.search(r'object ([^:{\s]+)[:{\s]', line, re.IGNORECASE)
     _type = m.group(1)
     # If the object has an id number, store it
-    n = re.search('object ([^:]+:[^{\s]+)', line, re.IGNORECASE)
+    n = re.search(r'object ([^:]+:[^{\s]+)', line, re.IGNORECASE)
     if n:
         oid = n.group(1)
     line = next(itr)
@@ -1996,7 +1996,7 @@ def write_houses(basenode, op, vnom):
         # P(solar|income and SF)
         sol_g_inc_sf = p_sol_inc_sf / (p_sf_g_inc * il_percentage)
         # P(battery and solar and SF and income)
-        p_bat_sol_sf_inc = storage_percentage * res_bldg_metadata['storage_percentage'][income]
+        p_bat_sol_sf_inc = storage_percentage * res_bldg_metadata['battery_percentage'][income]
         # P(battery|solar and SF and income)
         bat_g_sol_sf_inc = p_bat_sol_sf_inc / (sol_g_inc_sf * p_sf_g_inc * il_percentage)
         # P(ev|income)

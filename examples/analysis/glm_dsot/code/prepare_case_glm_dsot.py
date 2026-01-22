@@ -95,9 +95,7 @@ def prepare_case(case:str):
     case_type = config["case_type"]
 
     if config["solver"] == 'cbc':
-        config["quadratic"] == False
-    elif config["solver"] == 'cplex':
-        config["solver"] = "${INSTDIR}/ibm/cplex/bin/x86-64_linux/cplexamp"
+        config["quadratic"] = False
 
     pv = case_type["pv"]
     bt = case_type["bt"]

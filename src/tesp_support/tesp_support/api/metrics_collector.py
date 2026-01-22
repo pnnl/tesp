@@ -6,16 +6,12 @@
 import collections
 import itertools
 import json
-import logging
 import os.path
 
 import numpy as np
 import pandas as pd
 
-
-log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
-# log.setLevel(logging.DEBUG)
+from ..api.helpers import log
 
 class MetricsTable(object):
     def __init__(self, columns, units):

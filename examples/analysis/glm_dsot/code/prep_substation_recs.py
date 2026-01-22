@@ -365,7 +365,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                         # New schedule to implement RECS 2020 data
                         prob = np.random.uniform(0, 1)  # a random number
                         inc_level = val['income_level'] # Determine income level of house from glm dictionary
-                        # Detemine teleworking
+                        # Determine teleworking
                         n_tw_days, tw_dows = telework(prob, state, dso_type, inc_level)
                         
                         # Determine setpoint transition times
@@ -377,7 +377,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                             thermostat_schedule_config['WeekdayEveningToNightTime'])
                         weekend_day_start = random_norm_trunc(thermostat_schedule_config['WeekendDaylightStart'])
                         weekend_night_start = random_norm_trunc(thermostat_schedule_config['WeekendNightStart'])
-                        # check if night_StartTime is not beyond 24.0
+                        # check if night_night_start is not beyond 24.0
                         night_start = min(night_start, 23.9)
                         weekend_night_start = min(weekend_night_start, 23.9)
 
