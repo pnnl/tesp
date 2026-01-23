@@ -48,7 +48,8 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.napoleon',
               'sphinx.ext.todo',
               'sphinx-jsonschema',
-              'sphinxcontrib.bibtex'
+              'sphinxcontrib.bibtex',
+              'sphinxcontrib.mermaid'
               ]
 
 bibtex_bibfiles = ['./references/refs.bib']
