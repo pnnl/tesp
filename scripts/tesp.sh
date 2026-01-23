@@ -65,7 +65,7 @@ fi
 # add build tools for compiling
 sudo apt-get update
 sudo apt-get -y upgrade
-sudo apt-get -y reinstall pkgconf \
+sudo apt-get -y pkgconf \
 git \
 build-essential \
 autoconf \
@@ -76,7 +76,7 @@ cmake \
 unzip
 
 # add tools/libs for Java support, HELICS, FNCS, GridLAB-D, Ipopt/cbc
-sudo apt-get -y reinstall openjdk-11-jdk \
+sudo apt-get -y install openjdk-11-jdk \
 libzmq5-dev \
 libczmq-dev \
 libboost-dev \
@@ -95,7 +95,6 @@ python${_ver_}-tk \
 python3-pil.imagetk
 
 sudo ln -sf /usr/lib/jvm/java-11-openjdk-amd64 /usr/lib/jvm/default-java
-exit
 
 echo
 if [[ -z $1 && -z $2 ]]; then

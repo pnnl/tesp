@@ -1,5 +1,5 @@
-tesp\_support package
-=====================
+PYPI tesp\_support package
+==========================
 
 .. automodule:: tesp_support
    :members:

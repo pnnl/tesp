@@ -32,6 +32,7 @@ seaborn
 sphinx-jsonschema
 sphinx-rtd-theme
 sphinxcontrib-bibtex
+sphinxcontrib-mermaid
 sphinx
 #src/tesp_support/
 tables
