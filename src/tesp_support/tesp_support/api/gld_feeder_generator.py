@@ -4,7 +4,8 @@
 the functionality of the residential_feeder_glm.py, the commercial_feeder_glm.py, 
 and the copperplate_feeder_glm.py.
 
-Replaces ZIP loads with houses, optional storage, electric vehicles, and solar generation.
+Replaces ZIP loads with houses, optional storage, electric vehicles, and solar 
+generation.
 
 As this module populates the feeder backbone with houses and DER, it uses
 the Networkx package to perform graph-based capacity analysis, upgrading
@@ -17,73 +18,106 @@ References:
     `GridAPPS-D Feeder Models <https://github.com/GRIDAPPSD/Powergrid-Models>`_
 
 Config class:
-    preamble: Add required modules, objects, includes, defines, and sets required to run a glm model.
+    preamble: Add required modules, objects, includes, defines, and sets required 
+      to run a glm model.
 
-    generate_recs: Generate RECS metadata if it does not yet exist based on user config.
+    generate_recs: Generate RECS metadata if it does not yet exist based on user 
+      config.
 
-    load_recs: Assign default values for residential and commercial buildings, batteries, and electric vehicles, based on imported metadata for each.
+    load_recs: Assign default values for residential and commercial buildings, 
+      batteries, and electric vehicles, based on imported metadata for each.
 
-    load_position: Read in positional data from feeder, if specified in config, to aid plotting function of populated feeder model.
+    load_position: Read in positional data from feeder, if specified in config, 
+      to aid plotting function of populated feeder model.
 
-    add_position: Create a coordinate pair position for a new node added to the feeder based off the position of its base node.
+    add_position: Create a coordinate pair position for a new node added to the 
+      feeder based off the position of its base node.
 
 Residential_Build class:
-    buildingTypeLabel: Assign formatted name of region, building type name, and thermal integrity level.
+    buildingTypeLabel: Assign formatted name of region, building type name, and 
+      thermal integrity level.
 
-    checkResidentialBuildingTable: Verify that the regional building parameter histograms sum to one.
+    checkResidentialBuildingTable: Verify that the regional building parameter 
+      histograms sum to one.
 
-    selectSetpointBins: Randomly choose a histogram row from the cooling and heating setpoints. The random number for the heating setpoint row is generated internally.
+    selectSetpointBins: Randomly choose a histogram row from the cooling and 
+      heating setpoints. The random number for the heating setpoint row is generated internally.
 
     add_small_loads: Write loads that are too small for a house, onto a node.
 
-    getDsoIncomeLevelTable: Retrieve the DSO income level fractions for the given dso type and state.
+    getDsoIncomeLevelTable: Retrieve the DSO income level fractions for the 
+      given dso type and state.
 
     selectIncomeLevel: Select the income level based on region and probability.
 
-    getDsoThermalTable: Define the distribution of thermal integrity values based on household income level, vintage, and building type.
+    getDsoThermalTable: Define the distribution of thermal integrity values 
+      based on household income level, vintage, and building type.
 
-    selectResidentialBuilding: Retrieve the thermal integrity level by building type and region.
+    selectResidentialBuilding: Retrieve the thermal integrity level by building 
+      type and region.
 
-    selectThermalProperties: Retrieve the building thermal properties by building type and thermal integrity level.
+    selectThermalProperties: Retrieve the building thermal properties by 
+      building type and thermal integrity level.
 
-    add_houses: Add houses, along with solar panels, batteries, and electric vehicle charges, onto a node.
+    add_houses: Add houses, along with solar panels, batteries, and electric 
+      vehicle charges, onto a node.
 
 Commercial_Build class:
-    add_one_commercial_zone: Write one pre-configured commercial zone as a house and small loads such as lights, plug loads, and gas water heaters as ZIPLoads.
+    add_one_commercial_zone: Write one pre-configured commercial zone as a house 
+      and small loads such as lights, plug loads, and gas water heaters as 
+      ZIPLoads.
 
-    define_commercial_zones: Define building parameters for commercial building zones and ZIP loads, then add to model as house object (commercial zone) or load object (ZIP load).
+    define_commercial_zones: Define building parameters for commercial building 
+      zones and ZIP loads, then add to model as house object (commercial zone) 
+      or load object (ZIP load).
 
-    define_comm_bldg: Randomly select a set number of buildings by type and size (sqft).
+    define_comm_bldg: Randomly select a set number of buildings by type and size
+      (sqft).
 
     normalize_dict_prob: Ensure that the probability distribution of values in a dictionary effectively sums to one.
 
-    rand_bin_select: Returns the element (bin) in a dictionary given a certain probability.
+    rand_bin_select: Returns the element (bin) in a dictionary given a certain 
+      probability.
 
-    sub_bin_select: Returns a scalar value within a bin range based on a uniform probability within that bin range.
+    sub_bin_select: Returns a scalar value within a bin range based on a uniform
+      probability within that bin range.
 
-    find_envelope_prop: Returns the envelope value for a given type of property based on the age and (ASHRAE) climate zone of the building.
+    find_envelope_prop: Returns the envelope value for a given type of property 
+      based on the age and (ASHRAE) climate zone of the building.
     
 Battery class
-    add_batt: Define and add battery and inverter objects to house, under the parentage of the parent_mtr.
+    add_batt: Define and add battery and inverter objects to house, under the 
+      parentage of the parent_mtr.
     
 Solar class
-    add_solar: Define and add solar and inverter objects to house, under the parentage of the parent_mtr.
+    add_solar: Define and add solar and inverter objects to house, under the 
+      parentage of the parent_mtr.
 
 Electric_Vehicle class
-    add_ev: Define and add electric vehicle charging object to the house, under the parentage of the house object
+    add_ev: Define and add electric vehicle charging object to the house, under 
+      the parentage of the house object
 
-    selectEVmodel: Select the EV model based on available sale distribution data match_driving_schedule: Method to match the schedule of each vehicle from NHTS data based on vehicle ev_range
+    selectEVmodel: Select the EV model based on available sale distribution data
+      
+    match_driving_schedule: Method to match the schedule of each vehicle from 
+      NHTS data based on vehicle ev_range
 
-    is_drive_time_valid: Check if work arrival time and home arrival time add up properly
+    is_drive_time_valid: Check if work arrival time and home arrival time add up
+      properly
 
-    process_nhts_data: Read the large NHTS survey data file containing driving data, process it, and return a dataframe
+    process_nhts_data: Read the large NHTS survey data file containing driving 
+      data, process it, and return a dataframe
 
 Feeder class
-    feeder_gen: Read in the backbone feeder, then loop through transformer instances and assign a standard size based on the downstream load. Change the referenced transformer_configuration attributes. Write the standard transformer_configuration instance we need
+    feeder_gen: Read in the backbone feeder, then loop through transformer 
+      instances and assign a standard size based on the downstream load. Change 
+      the referenced transformer_configuration attributes. Write the standard transformer_configuration instance we need
 
-    identify_xfmr_houses: For the full-order feeders, scan each service transformer to determine the number of houses it should have
+    identify_xfmr_houses: For the full-order feeders, scan each service 
+      transformer to determine the number of houses it should have
 
-    identify_commercial_loads: For the full-order feeders, scan each load with load_class==C to determine the number of zones it should have
+    identify_commercial_loads: For the full-order feeders, scan each load with 
+      load_class==C to determine the number of zones it should have
 
 """
 
@@ -126,6 +160,8 @@ class Config:
     def preamble(self) -> None:
         """ Add required modules, objects, includes, defines, and sets required
         to run a .glm model.
+        Args:
+            None
         Returns:
             None
         """
@@ -136,8 +172,7 @@ class Config:
         self.glm.add_module("generators", {})
         self.glm.add_module("connection", {})
         self.glm.add_module("residential", {"implicit_enduses": "NONE"})
-        self.glm.add_module("powerflow", {"lu_solver": "KLU", "solver_method": "NR", "default_maximum_voltage_error": 1e-6})
-        #TODO: max voltage error was set to 0.01 in original copperplate. Keep?
+        self.glm.add_module("powerflow", {"lu_solver": "KLU", "solver_method": "NR", "default_maximum_voltage_error": 0.01})
 
         # Add player files if pre-defining solar generation
         if self.use_solar_player:
@@ -147,6 +182,7 @@ class Config:
                 player_file = str(os.path.join(self.solar_data_path, self.BuildingPrep['solar_P_player_file']))
             self.glm.model.add_class("player", "double", "P_out_inj", False, f'"{player_file}"')
 
+        # Setup the simulation clock
         self.glm.model.set_clock(self.StartTime, self.EndTime, self.time_zone)
 
         # Add includes
@@ -164,6 +200,7 @@ class Config:
             for key in self.defines:
                 self.glm.model.add_define(key, self.defines[key])
 
+        # Add messenger (HELICS or FNCS) for cosimulation
         if self.messenger:
             num = self.DSO.replace('DSO_', '')
             if self.messenger == 'HELICS':
@@ -234,15 +271,15 @@ class Config:
             None
 
         Returns:
-            dict: comm_bldgs_pop, list of buildings comprising the commercial
+            comm_bldgs_pop (dict) list of buildings comprising the commercial
               population
-            df: self.ev_dr_metadata, a dataframe containing start_time, end_time,
+            self.ev_dr_metadata (df): a dataframe containing start_time, end_time,
               travel_day (weekday/weekend) and daily miles driven
         """
 
         assign_defaults(self.com_bld, os.path.join(self.data_path, self.commercial_meta_file))
         # generate the total population of commercial buildings by type and size
-        # TODO: These are designated in the config file, not calculated. Keep?
+        # based on pre-defined values in the config
         num_comm_customers = round(self.number_of_gld_homes *
                                    self.RCI_customer_count_mix["commercial"] /
                                    self.RCI_customer_count_mix["residential"])
@@ -288,8 +325,10 @@ class Config:
             None
 
         Returns:
-            dict: self.pos_data, .glm objects and their position coordinates
-            dict: self.pos, an empty dictionary to assign positions to objects added by feeder generator
+            self.gis_file (str): name of gis position file of base feeder
+            self.pos_data (dict): .glm objects and their position coordinates
+            self.pos (dict): an empty dictionary to assign positions to objects
+              added by feeder generator
     """
         if not hasattr(self, "in_file_glm") or not self.in_file_glm:
             self.gis_file = self.taxonomy.replace('-', '_').replace('.', '_').replace('_glm', '_pos.json')
@@ -310,14 +349,18 @@ class Config:
                 self.gis_file = False
                 print("Position data not available for base feeder.")
                 pass
-        return None
+        return self.gis_file, self.pos_data, self.pos
 
     def add_position(self, basenode:str, newnode:str):
-        """Create a coordinate pair posiiton for a new node, meter, or object added to the feeder, slightly offset from the basenode that it is added to.
+        """Create a coordinate pair posiiton for a new node, meter, or object 
+          added to the feeder, slightly offset from the basenode that it is added to.
 
         Args:
             basenode (str): name of base node newnode is added to (parent)
             newnode (str): name of the new node (child)
+        
+        Returns:
+            None
         """
         try:
             base = self.pos_data[basenode]
@@ -504,7 +547,7 @@ class Residential_Build:
         """Select the income level based on region and probability.
 
         Args:
-            incTable (): income table
+            incTable (list): income table
             prob (float): probability
 
         Returns:
@@ -548,7 +591,8 @@ class Residential_Build:
                 total += dsoThermalPct[row][col]
         if total > 1.01 or total < 0.99:
             raise UserWarning('House vintage distribution does not sum to 1!')
-        #log.info('dsoThermalPct sums to %.4f', total)
+        log.debug('dsoThermalPct sums to %.4f', total)
+
         return dsoThermalPct
 
     def selectResidentialBuilding(self, rgnTable: list, prob: float) -> list:
@@ -605,15 +649,6 @@ class Residential_Build:
         Raises:
             ValueError: if bldg_type does not exist, raise: Wrong building type 
                 chosen!
-            UserWarning: if daily drive miles exceeds range of EV, raise: daily 
-                travel miles for EV cannot be more than range of the vehicle!
-            UserWarning: if home arrival time, leave time, and work arrival 
-                times are incorrectly formatted, raise: invalid HHMM format of 
-                driving time!
-            UserWarning: if home or work durations exceed all hours of the day 
-                or are negative, raise: invalid home or work duration for ev!
-            UserWarning: if drive times are not valid, raise: home and work 
-                arrival time are not consistent with durations!
 
         Returns:
             None
@@ -655,10 +690,12 @@ class Residential_Build:
                 inc = 'Middle'
             elif inc_lev == 2:
                 inc = 'Upper'
+            # Assign house (hs), meter (mtr), water heater (wh), inverter (inv),
+            # solar object (_sol), and battery object (bat) names
             hsename = f'{basenode}_{inc}_hs_{idx}'
             hse_m_name = f'{basenode}_hsmtr_{idx}'
             whname = f'{hsename}_wh'
-            sol_i_name = f'{hsename}_solinv'
+            sol_i_name = f'{hsename}_solinv' 
             batt_i_name = f'{hsename}_batinv'
             sol_m_name = f'{hsename}_solmtr'
             sol_name = f'{hsename}_sol'
@@ -682,11 +719,6 @@ class Residential_Build:
             if self.config.gis_file:
                 self.config.add_position(basenode, mtrname1)
             self.glm.add_metrics_collector(mtrname1, "meter")
-            # HVAC Debugging Recorders
-            self.glm.add_group_recorder("class=house", "hvac_load", "hvac_load.csv")
-            self.glm.add_group_recorder("class=house", "cooling_setpoint", "cooling_setpoint.csv")
-            self.glm.add_group_recorder("class=house", "heating_setpoint", "heating_setpoint.csv")
-            self.glm.add_group_recorder("class=house", "thermostat_mode", "thermostat_mode.csv")
 
             self.mdl.triplex_meter.add(hse_m_name, {
                 "parent": mtrname1,
@@ -778,7 +810,7 @@ class Residential_Build:
                 else:
                     # 2-level large 16 units apts:
                     # There are 4 type of units: 4 corner bottom floor, 4 corner upper,
-                    # 4 middle upper and 4 middle lower floor units. Each unit type has 25% chance
+                    # 4 middle upper, and 4 middle lower floor units. Each unit type has 25% chance
                     if rng.random() < 0.25:  # 4 corner bottom floor units
                         ewf = 0.5
                         ecf = 0
@@ -921,11 +953,13 @@ class Residential_Build:
                 params["cooling_setpoint"] = np.round(cooling_set)
                 params["heating_setpoint"] = np.round(heating_set)
 
+            # Add house to model
             self.mdl.house.add(hsename, params)
 
             if self.config.gis_file:
                 self.config.add_position(hse_m_name, hsename)
 
+            # Add responsive and unresponsive loads as ZIPloads
             # heatgain fraction, Zpf, Ipf, Ppf, Z, I, P
             params = {"parent": hsename,
                     "schedule_skew": '{:.0f}'.format(skew_value),
@@ -963,7 +997,7 @@ class Residential_Build:
                 water_var = 0.95 + rng.random() * 0.1  # +/-5% variability
                 wh_demand_type = 'large_'
 
-                # Water heater sizing
+                # Water heater sizing based on floor area of house
                 wh_data = self.water_heater_tank_size
                 if floor_area <= wh_data['floor_area']['1_2_people']['floor_area_max']:
                     size_array = range(wh_data['tank_size']['1_2_people']['min'],
@@ -1105,6 +1139,7 @@ class Commercial_Build:
             bldg (dict): dictionary of GridLAB-D house and zipload attributes
             key (str): location name for object
             phases (str): the phase of the building's meter
+
         Returns:
             None
         """
@@ -1149,6 +1184,10 @@ class Commercial_Build:
             "cooling_COP": '{:2.2f}'.format(bldg['COP_A']),
             "cooling_setpoint": '80.0',
             "heating_setpoint": '60.0' })
+        
+        # Add position data to commercial building, if available
+        if self.config.gis_file:
+            self.config.add_position(key, name)
 
         # Define ZIPload parameters [lights, plug loads, exterior lights, gas
         # water heater, occupancy, and refrigeration]
@@ -1194,8 +1233,7 @@ class Commercial_Build:
         self.mdl.ZIPload.add(f"{name}_occupancy", params)
 
         params["base_power"] = '{:.2f};'.format(bldg['adj_refrig'])
-        # TODO: schedule skew: set to 0.01 to avoid a divide by zero issue
-        # in the agent code. Should be set to zero after that is fixed.
+        # set to 0.01 to avoid a divide by zero issue in the agent code.
         # params["schedule_skew"] = 0.01 #'{:.0f}'.format(bldg['skew_value']) # Unused in DSOT
         self.mdl.ZIPload.add(f"{name}_lrg_refrig", params)
 
@@ -1207,18 +1245,12 @@ class Commercial_Build:
 
         if self.config.case_type['bt']:
             # Number of batteries determined by size of commercial building
-            # TODO: Review battery results to see if one battery per 10000 sqft. is appropriate.
+            # Assume one battery per 10000 sqft. 
             batt_num = int(math.floor(bldg['floor_area'] / 10000) + 1)
             self.config.batt.add_batt(self.config.storage_deployment, batt_num, 1, mtr, f'{mtr}_batmtr', f'{mtr}_bat', f'{mtr}_batinv', phases, 120.0)
 
         if self.config.case_type['ev']:
             self.config.ev.add_ev(self.config.ev_deployment, name)
-
-        # Add position data to commercial building, if available
-        if self.config.gis_file:
-            self.config.add_position(key, name)
-            self.config.add_position(key, f'{mtr}_solmtr')
-            self.config.add_position(key, f'{mtr}_batmtr')
 
 
     def define_commercial_zones(self, rgn: int, key: str, kva: float, feed_type: str) -> None:
@@ -1255,7 +1287,7 @@ class Commercial_Build:
             phases = "ABC"
             vln = float(277.0)
             params = {"phases": phases,
-                      "nominal_voltage": 277.0,
+                      "nominal_voltage": vln,
                       }
             # Assume user-defined tariff from config. If default, use None
             self.glm.add_tariff(params, self.config)
@@ -1269,9 +1301,7 @@ class Commercial_Build:
 
         log.info('load: %s, mtr: %s, type: %s, kVA: %.4f, nphs: %s, phases: %s, vln: %.3f', key, mtr, comm_type, kva, nphs, phases, vln)
 
-        # Check floor area is sensible for building type
-        # TODO: This is a band-aid. Floor area is as it was defined in DSOT, 
-        # but those buildings not specifically defined below are way too small.
+        # Check floor area is sensible for building type (as in DSOT)
         if floor_area < 1000:
             floor_area = 10000. * (0.5 + 1. * rng.random())
 
@@ -1357,15 +1387,14 @@ class Commercial_Build:
                                                     self.general['thermal_integrity'],
                                                     self.config.climate) * 1.15 * rng.normal(1, 0.05)
             # Unused in DSOT
-            if bldg_specs['fraction_awnings'] > rng.uniform(0, 1):
-                bldg['window_exterior_transmission_coefficient'] = rng.normal(0.5, 0.1)
-            else:
-                bldg['window_exterior_transmission_coefficient'] = 1
+            # if bldg_specs['fraction_awnings'] > rng.uniform(0, 1):
+            #     bldg['window_exterior_transmission_coefficient'] = rng.normal(0.5, 0.1)
+            # else:
+            #     bldg['window_exterior_transmission_coefficient'] = 1
             
             bldg['Rfloor'] = 22. # Value from previous study
             bldg['Rdoors'] = 3. # Value from previous study
             bldg['no_of_doors'] = 3 # Value from previous study
-
 
             bldg['init_temp'] = 68. + 4. * rng.random()
 
@@ -1374,21 +1403,19 @@ class Commercial_Build:
             bldg['airchange_per_hour']= bldg_specs['ventilation_requirements']['air_change_per_hour']
             bldg['COP_A'] = self.general['HVAC']['COP'][str(bldg['age'])] * rng.normal(1, 0.05)
             # Determine heating system type of building
+            bldg['heat_type'] = 'GAS'
             if rng.normal(0, 1) <= bldg_specs['primary_electric_heating'][self.config.utility_type]:
                 bldg['heat_type'] = Commercial_Build.rand_bin_select(bldg_specs['electric_heating_system_type'], rng.normal(0, 1))
-                if bldg['heat_type'] == None: #TODO: This should not be necessary
-                    bldg['heat_type'] = 'GAS'
-            else:
-                bldg['heat_type'] = 'GAS'
+
             #  HVAC oversizing factor
             bldg['os_rand'] = rng.normal(self.general['HVAC']['oversizing_factor']['mean'],
                                             self.general['HVAC']['oversizing_factor']['std_dev'])
             bldg['os_rand'] = min(self.general['HVAC']['oversizing_factor']['upper_bound'], max(bldg['os_rand'],
                                 self.general['HVAC']['oversizing_factor']['lower_bound']))
             
-            # Multi-zone buildings will adjust these adj_ values according to their
-            # number of zones. Single-zone buildings will keep the base power
-            # ZIPload schedule adjustments below. 
+            # Multi-zone buildings will adjust these adj_ values according to
+            #  their number of zones. Single-zone buildings will keep the base
+            #  power ZIPload schedule adjustments below. 
             # randomize 10# then convert W/sf -> kW
             adj_lights = (bldg_specs['internal_heat_gains']['lighting'] * (0.9 + 0.1 * rng.random()) 
                             * bldg['floor_area'] / 1000.0)
@@ -1427,12 +1454,12 @@ class Commercial_Build:
                 bldg['Rwall'] = 18.3
                 bldg['Rfloor'] = 46.0
                 bldg['Rdoors'] = 3.0
-                #int_gains = 3.24  # W/sf #TODO: where did this come from?
+                #int_gains = 3.24  # W/sf 
                 bldg['base_schedule'] = 'office'
                 bldg['no_of_stories'] = 1
-                tot_bldg_area = 40000. * (0.5 * rng.random() + 0.5) # TODO where did this come from?
+                tot_bldg_area = 40000. * (0.5 * rng.random() + 0.5) 
                 for floor in range(1, 4):
-                    bldg['aspect_ratio'] = 1.5  # Moving aspect ratio here so it is not overwritten below
+                    bldg['aspect_ratio'] = 1.5  
                     total_depth = math.sqrt(tot_bldg_area / (3. * bldg['aspect_ratio']))
                     total_width = bldg['aspect_ratio'] * total_depth
                     if floor == 3:
@@ -1441,12 +1468,12 @@ class Commercial_Build:
                         bldg['exterior_ceiling_fraction'] = 0
                     for zone in range(1, 6):
                         if zone == 5:
-                            bldg['window_wall_ratio'] = 0  # this was not in the CCSI version
+                            #bldg['window_wall_ratio'] = 0  # Not in the CCSI version
                             bldg['exterior_wall_fraction'] = 0
                             w = total_depth - 60.  # Increased from 30 to avoid zone 5 being over 10k sq ft
                             d = total_width - 60.  # Increased from 30 to avoid zone 5 being over 10k sq ft
                         else:
-                            bldg['window_wall_ratio'] = 0.33 #TODO Not in DSOT version
+                            #bldg['window_wall_ratio'] = 0.33 # Unused in DSOT version
                             d = 30.  # Increased from 15 to avoid zone 5 being over 10k sq ft when building over 50k sqft
                             if zone == 1 or zone == 3:
                                 w = total_width - 30.
@@ -1464,13 +1491,11 @@ class Commercial_Build:
                                         bldg['floor_area'] / (tot_bldg_area / 3.))
 
                         # bldg['thermal_mass_per_floor_area'] = 3.9 * (0.5 + 1. * rng.random()) # Unused in DSOT
-                        #bldg['interior_exterior_wall_ratio'] = bldg['floor_area'] / (bldg['ceiling_height'] * 2. * (w + d)) - 1. \
-                        #                                        + bldg['window_wall_ratio'] * bldg[
-                        #                                            'exterior_wall_fraction'] # Unused in DSOT
+                        # bldg['interior_exterior_wall_ratio'] = bldg['floor_area'] / (bldg['ceiling_height'] * 2. * (w + d)) - 1. \
+                        #     + bldg['window_wall_ratio'] * bldg['exterior_wall_fraction'] # Unused in DSOT
                         bldg['interior_exterior_wall_ratio'] = 1
 
                         # Round to zero, presumably the exterior doors are treated like windows
-                        # TODO: why? no_of_doors ends up being zero (same for DSOT, but why?)
                         bldg['no_of_doors'] = 0.1
                         bldg['init_temp'] = 68. + 4. * rng.random()
 
@@ -1493,7 +1518,7 @@ class Commercial_Build:
                 bldg['Rwall'] = 18.3
                 bldg['Rfloor'] = 46.
                 bldg['Rdoors'] = 3.
-                #int_gains = 3.6  # W/sf #TODO: where did this come from?
+                #int_gains = 3.6  # W/sf # Unused in DSOT
                 bldg['base_schedule'] = 'bigbox'
                 tot_bldg_area = 20000. * (0.5 + 1. * rng.random())
                 bldg['floor_area'] = tot_bldg_area / 6.
@@ -1528,8 +1553,8 @@ class Commercial_Build:
 
                     bldg['interior_exterior_wall_ratio'] = 1 # DSOT version does not use below calculation
                     #bldg['interior_exterior_wall_ratio'] = (bldg['floor_area'] + bldg['no_of_doors'] * 20.) \
-                    #                                        / (bldg['ceiling_height'] * 2. * (w + d)) - 1. + bldg[
-                    #                                            'window_wall_ratio'] * bldg['exterior_wall_fraction']
+                    #      / (bldg['ceiling_height'] * 2. * (w + d)) - 1. + bldg[
+                    #      'window_wall_ratio'] * bldg['exterior_wall_fraction']
                     bldg['init_temp'] = 68. + 4. * rng.random()
 
                     bldg['adj_lights'] = adj_lights * bldg['floor_area'] / tot_bldg_area
@@ -1550,7 +1575,7 @@ class Commercial_Build:
                 bldg['Rwall'] = 18.3
                 bldg['Rfloor'] = 40.0
                 bldg['Rdoors'] = 3.0
-                #int_gains = 3.6  # W/sf #TODO: where did this come from?
+                #int_gains = 3.6  # W/sf # Unused in DSOT
                 bldg['exterior_ceiling_fraction'] = 1.
                 bldg['base_schedule'] = 'stripmall'
                 num_of_zone = int(6 * rng.random() + 1.)
@@ -1995,7 +2020,6 @@ class Electric_Vehicle:
             if not Electric_Vehicle.is_drive_time_valid(drive_sch):
                 raise UserWarning('home and work arrival time are not consistent with durations!')
 
-            #print('random ' + str(num) + ', ev_prob ' + str(ev_prob) + 'Let`s add an ev!')
             self.ev_count += 1
             params = {"parent": house_name,
                         "configuration": volt_conf,
@@ -2011,15 +2035,11 @@ class Electric_Vehicle:
                         "mileage_efficiency": ev_mileage,
                         "mileage_classification": ev_range,
                         "charging_efficiency": ev_charge_eff}
-            ev_name = f'{house_name}_{ev_name}_chgr' #Required for summary stats
+            ev_name = f'{house_name}_{ev_name}_chgr' # Required for summary stats
             ev_name = ev_name.replace(" ","") # Remove any spaces
             ev_name = f'{ev_name}_{self.ev_count}'
             self.glm.add_object("evcharger_det", ev_name, params)
             self.glm.add_metrics_collector(ev_name, "evcharger_det")
-            # Additional recorders
-            # self.glm.add_collector("class=evcharger_det", "sum(actual_charge_rate)", "EV_charging_total.csv")
-            # self.glm.add_group_recorder("class=evcharger_det", "actual_charge_rate", "EV_charging_power.csv")
-            # self.glm.add_group_recorder("class=evcharger_det", "battery_SOC", "EV_SOC.csv")
 
     @staticmethod
     def selectEVmodel(evTable: dict, prob: float) -> str:
@@ -2049,7 +2069,7 @@ class Electric_Vehicle:
         - Checks to make sure daily travel miles are less than (ev_range-margin).
             Allows a reserve SoC to be specified.
         - Checks if home_duration is enough to charge for daily_miles (driven+margin)
-        - During v1g or v2g mode, we only allow charging to start at the top
+        - During V1G or V2G mode, we only allow charging to start at the top
             of the hour following the vehicle arriving home. Charging must
             end at the full hour just before vehicle leaves home. The actual
             chargeable hours duration may be smaller than the car home duration 
@@ -2069,8 +2089,8 @@ class Electric_Vehicle:
                 'A particular EV can not be charged fully even within 23 hours!'
 
         Returns:
-            dict: driving_sch containing {daily_miles, home_arr_time,
-            home_leave_time, home_duration, work_arr_time, work_duration}
+            driving_sch (dict): containing {daily_miles, home_arr_time,
+              home_leave_time, home_duration, work_arr_time, work_duration}
         """
 
         while True:
@@ -2101,7 +2121,7 @@ class Electric_Vehicle:
          
         # Estimate remaining time at work
         work_duration = max(24 * 3600 - (home_duration + commute_duration), 1)  
-        # minimum work duration is 3600 sec or 1 hour to set reasonable schedule
+        # Minimum work duration is 3600 sec or 1 hour to set reasonable schedule
         # Note that minimum must be at least 1 to avoid errors in GridLAB-D
         work_arr_secs = get_secs_from_hhmm(home_leave_time) + int(commute_duration / 2)
         if work_arr_secs > 24 * 3600:  # if midnight crossing
@@ -2123,7 +2143,7 @@ class Electric_Vehicle:
 
         Args:
             drive_sch (dict): Contains {daily_miles, home_arr_time,
-            home_leave_time, home_duration, work_arr_time, work_duration}
+              home_leave_time, home_duration, work_arr_time, work_duration}
 
         Returns:
             bool: true or false
@@ -2147,7 +2167,7 @@ class Electric_Vehicle:
             data_file (str): path of the file
 
         Returns:
-            dataframe: df_fin, containing start_time, end_time, travel_day
+            df_fin (df): containing start_time, end_time, travel_day
                 (weekday/weekend) and daily miles driven
         """
 
@@ -2192,6 +2212,9 @@ class Feeder:
             config (Config): the feeder config
             feed_type (str): Whether the feeder type is the full residential
                 and commercial type feeders (full) or the copperplate (copp)
+        
+        Returns:
+            None
         """
         self.config = config
         self.glm = config.glm
@@ -2251,6 +2274,7 @@ class Feeder:
         self.glm.add_voltage_class('meter', self.config.vln, self.config.vll, self.secnode)
         self.glm.add_voltage_class('load', self.config.vln, self.config.vll, self.secnode)
 
+        # Delete nodes being overwritten as feeder is populated
         for key, val in self.to_delete.items():
             self.glm.model.object_entities[val].del_instance(key)
             if self.config.gis_file:
@@ -2308,7 +2332,7 @@ class Feeder:
             None
         """
 
-        # Read in backbone feeder to populate. User-defined or taxonomy feeder.
+        # Read in backbone feeder to populate. User-defined or taxonomy feeder
         if not hasattr(self.config, 'in_file_glm') or not self.config.in_file_glm:
             i_glm, success = self.glm.model.readBackboneModel(self.config.taxonomy)
             print('User feeder not defined, using taxonomy feeder', self.config.taxonomy)
@@ -2319,7 +2343,7 @@ class Feeder:
             if not success:
                 exit()
 
-        # To plot an unpopulated version of the base feeder:
+        # Plot an unpopulated version of the base feeder
         if self.config.make_plot:
             print("Plotting the unpopulated feeder as a reference. Close to proceed.")
             if self.config.gis_file:
@@ -2447,7 +2471,8 @@ class Feeder:
 
         Args:
             gld_class (str): the GridLAB-D class name to scan
-            seg_loads (dict): dictionary of downstream load (kva) served by each GridLAB-D link
+            seg_loads (dict): dictionary of downstream load (kva) served by each
+              GridLAB-D link
             avg_house (float): the average house load in kva
             rgn (int): the region number, 1..5
 
@@ -2554,9 +2579,6 @@ class Feeder:
                     nzones = int((kva / avgBuilding) + 0.5)
                     target_sqft = kva / sqft_kva_ratio
                     sqft_error = -target_sqft
-                    # TODO: Need a way to place all remaining buildings if this is the last/fourth feeder.
-                    # TODO: Need a way to place link for j-modelica buildings on fourth feeder of Urban DSOs
-                    # TODO: Need to work out what to do if we run out of commercial buildings before we get to the fourth feeder.
                     remain_comm_kva = 0
                     for bldg in comm_bldgs_pop:
                         if 0 >= (comm_bldgs_pop[bldg][1] - target_sqft) > sqft_error:
