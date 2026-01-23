@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2023 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # file: substation.py
 """Manages the simple_auction and hvac agents for the te30 and sgip1 examples
 
@@ -16,11 +16,11 @@ import json
 from datetime import datetime
 from datetime import timedelta
 
-import tesp_support.original.fncs as fncs
-from tesp_support.api.parse_helpers import parse_magnitude, parse_kw
+from ..original import fncs as fncs
+from ..api.parse_helpers import parse_magnitude, parse_kw
 from .hvac_agent import hvac
 from .simple_auction import simple_auction
-from tesp_support.api.bench_profile import bench_profile
+from ..api.bench_profile import bench_profile
 
 
 @bench_profile
@@ -82,10 +82,10 @@ def substation_loop_f(configfile, metrics_root, hour_stop=48, flag='WithMarket')
         row = diction['controllers'][key]
         hvacObjs[key] = hvac(row, key, aucObj)
         ctl = hvacObjs[key]
-        topicMap[key + '#Tair'] = [ctl, 2]
-        topicMap[key + '#V1'] = [ctl, 3]
-        topicMap[key + '#Load'] = [ctl, 4]
-        topicMap[key + '#On'] = [ctl, 5]
+        topicMap[key + '/air_temperature'] = [ctl, 2]
+        topicMap[key + '/measured_voltage'] = [ctl, 3]
+        topicMap[key + '/hvac_load'] = [ctl, 4]
+        topicMap[key + '/power_state'] = [ctl, 5]
 
     # ==================== Time step looping under FNCS ===========================
 
@@ -132,7 +132,7 @@ def substation_loop_f(configfile, metrics_root, hour_stop=48, flag='WithMarket')
                 # print('temp ',value, flush=True)
             elif row[1] == 3:
                 row[0].set_voltage_from_fncs_str(value)
-                # print('volatge ', value, flush=True)
+                # print('voltage ', value, flush=True)
             elif row[1] == 4:
                 row[0].set_hvac_load_from_fncs_str(value)
                 # print('load ', value, flush=True)

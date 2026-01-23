@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2024 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: parse_helpers.py
 
@@ -7,24 +7,31 @@ import re
 
 
 def parse_number(arg):
-    """ Parse floating-point number from a FNCS message; must not have leading sign or exponential notation
+    """ Parse floating-point number from a string;
+
+    Leading signs are handled so long as no space exists between sign and value.
+        E.g., +100, not + 100.
+    Trailing units are handled by the exception.
+        E.g., +100 % or 
 
     Args:
-        arg (str): the FNCS string value
+        arg (str): The string value
     Returns:
         float: the parsed number
     """
+    if 'inf' in arg:
+        raise ValueError(f"Expected float: {arg}")
     try:
         return float(arg)
-    except:
-        return float(''.join(ele for ele in arg if ele.isdigit() or ele == '.'))
+    except ValueError:
+        return float(arg.split(maxsplit=1)[0])
 
 
 def parse_magnitude_1(arg):
-    """ Parse the magnitude of a possibly complex number from FNCS
+    """ Parse the magnitude of a possibly complex number from a string
 
     Args:
-        arg (str): the FNCS string value
+        arg (str): The string value
     Returns:
         float: the parsed number, or 0 if parsing fails
     """
@@ -42,10 +49,10 @@ def parse_magnitude_1(arg):
 
 
 def parse_magnitude_2(arg):
-    """ Helper function to find the magnitude of a possibly complex number from FNCS
+    """ Helper function to find the magnitude of a possibly complex number from a string
 
     Args:
-        arg (str): The FNCS value
+        arg (str): The string value
     Returns:
         float: the parsed number, or 0 if parsing fails
     """
@@ -61,15 +68,14 @@ def parse_magnitude_2(arg):
 
 
 def parse_helic_input(arg):
-    """ Helper function to find the magnitude of a possibly complex number from Helics as a string
+    """ Helper function to find the magnitude of a possibly complex number from a string
 
     Args:
-        arg (str): The Helics value
+        arg (str): The string value from HELICS
     Returns:
         float: the parsed number, or 0 if parsing fails
     """
     try:
-
         tok = arg.strip('[]')
         vals = re.split(',', tok)
         if len(vals) < 2:  # only a real part provided
@@ -83,10 +89,10 @@ def parse_helic_input(arg):
 
 
 def parse_magnitude(arg):
-    """ Parse the magnitude of a possibly complex number from FNCS
+    """ Parse the magnitude of a possibly complex number from a string
 
     Args:
-        arg (str): the FNCS string value
+        arg (str): The string value
     Returns:
         float: the parsed number, or 0 if parsing fails
     """
@@ -125,10 +131,14 @@ def parse_magnitude(arg):
 
 
 def parse_mva(arg):
-    """ Helper function to parse P+jQ from a FNCS value
+    """ Helper function to parse P+jQ from a string
+        If unit tag on end of the string will be used
+            KVA * 1
+            MVA * 1000
+            VA / 1000
 
     Args:
-      arg (str): FNCS value in rectangular format
+      arg (str): The string value in rectangular form
     Returns:
       float, float: P [MW] and Q [MVAR]
     """
@@ -174,11 +184,11 @@ def parse_kva(arg):  # this drops the sign of p and q
     """ Parse the kVA magnitude from GridLAB-D P+jQ volt-amperes in rectangular form
 
     Args:
-        arg (str): the GridLAB-D P+jQ value
+        arg (str): the GridLAB-D P+jQ string value
     Returns:
         float: the parsed kva value
     """
-    toks = list(filter(None, re.split('[\+j-]', arg)))
+    toks = list(filter(None, re.split(r'[\+j-]', arg)))
     p = float(toks[0])
     q = float(toks[1])
     return 0.001 * math.sqrt(p * p + q * q)
@@ -186,9 +196,13 @@ def parse_kva(arg):  # this drops the sign of p and q
 
 def parse_kva_old(arg):
     """ Parse the kVA magnitude from GridLAB-D P+jQ volt-amperes in rectangular form
+        If unit tag on end of the string will be used
+            KVA * 1
+            MVA * 1000
+            VA / 1000
 
     Args:
-        arg (str): the GridLAB-D P+jQ value
+        arg (str): the GridLAB-D P+jQ string value
     Returns:
         float: the parsed kva value
     """
@@ -235,10 +249,14 @@ def parse_kva_old(arg):
 
 
 def parse_kw(arg):
-    """ Parse the kilowatt load of a possibly complex number from FNCS
+    """ Parse the kilowatt load of a possibly complex number from a string
+        If unit tag on end of the string will be used
+            KVA * 1
+            MVA * 1000
+            VA / 1000
 
     Args:
-        arg (str): the FNCS string value
+        arg (str): The string value
     Returns:
         float: the parsed number in kW, or 0 if parsing fails
     """
@@ -291,25 +309,40 @@ def parse_kw(arg):
             print('parse_kw does not understand', arg)
             return 0
 
+def complex_kva(arg):
+    z1 = complex(arg)
+    return math.sqrt(z1.real/1000 * z1.real/1000 + z1.imag/1000 * z1.imag/1000)
 
-def _test():
+
+def test():
     print('parse_number')
+    print(parse_number('6 m'))
+    print(parse_number('-76'))
+    print(parse_number('-0.0068 cm'))
+    print(parse_number('10.0068'))
     # print(parse_number('-0.00681678+0.00373295j'))
     # print(parse_number('-0.00681678-0.00373295j'))
     # print(parse_number('559966.6667+330033.3333j'))
     # print(parse_number('186283.85296131+110424.29850536j'))
 
     print('\nparse_kw')
+    print(parse_kw('-76'))
     print(parse_kw('-0.00681678+0.00373295j'))
     print(parse_kw('-0.00681678-0.00373295j'))
     print(parse_kw('559966.6667+330033.3333j'))
     print(parse_kw('186283.85296131+110424.29850536j'))
 
     print('\nparse_kva_old')
-    print(parse_kva_old('-0.00681678-0.00373295j'))
+    print(parse_kva_old('-0.00681678+0.00373295j' ))
     print(parse_kva_old('-0.00681678-0.00373295j'))
     # print(parse_kva_old('559966.6667+330033.3333j'))
     # print(parse_kva_old('186283.85296131+110424.29850536j'))
+
+    print('\ncomplex_kva')
+    print(complex_kva('-0.00681678+0.00373295j'))
+    print(complex_kva('-0.00681678-0.00373295j'))
+    print(complex_kva('559966.6667+330033.3333j'))
+    print(complex_kva('186283.85296131+110424.29850536j'))
 
     print('\nparse_kva')
     print(parse_kva('-0.00681678+0.00373295j'))

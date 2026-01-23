@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2023 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # file: tso_PYPOWER_f.py
 """ PYPOWER solutions under control of FNCS or HELICS for te30 and dsot, sgip1 examples
 
@@ -12,10 +12,10 @@ import pypower.api as pp
 from math import sqrt
 from copy import deepcopy
 
-import tesp_support.original.fncs as fncs
-from tesp_support.api.parse_helpers import parse_mva
-from tesp_support.api.tso_helpers import load_json_case, make_dictionary
-from tesp_support.api.bench_profile import bench_profile
+from ..original import fncs as fncs
+from ..api.parse_helpers import parse_mva
+from ..api.tso_helpers import load_json_case, make_dictionary
+from ..api.bench_profile import bench_profile
 
 @bench_profile
 def tso_pypower_loop_f(casefile, rootname):

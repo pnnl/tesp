@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2023 Battelle Memorial Institute
+# Copyright (c) 2018-2025 Battelle Memorial Institute
 # file: prep_substation_recs_f.py
 """ Sets up the FNCS and agent configurations for DSOT ercot case 8 example
 
@@ -87,24 +87,27 @@ def select_setpt_night(wakeup_set, daylight_set, mode, st, hd, inc_lev):
         return 40
     else:
         night_set = wakeup_set
-        # clm = hdr.index('HOME AND GONE PAIR  ' + str(int(wakeup_set_cool)) + '&' + str(int(daylight_set_cool)) + '-%')
-        clm = [i for i in range(len(hdr)) if str(int(wakeup_set)) + '&' + str(int(daylight_set)) in hdr[i]]
-        prob2 = np.random.uniform(0, 1)
-        total = 0
-        for row in range(len(temp)):
-            total += temp[row][clm]
-            if total >= prob2 * 100:
-                night_set = temp[row][0]
-                break
-        # Need catch for cases where probability is very large (0.99999) and hvac_setpt probabilities add to less than unity
-        if total < prob2 * 100:
-            night_set = wakeup_set
-        # Do not allow cooling setpt at unoccupied home less than at night
-        if mode == 'cool' and daylight_set < night_set:
-            night_set = wakeup_set
-        # Do not allow heating setpt at unoccupied home more than at night
-        if mode == 'heat' and daylight_set > night_set:
-            night_set = wakeup_set
+        try:
+            clm = hdr.index('HOME AND GONE PAIR ' + str(int(wakeup_set)) + '&' + str(int(daylight_set)))
+            prob2 = np.random.uniform(0, 1)
+            total = 0
+            for row in range(len(temp)):
+                total += temp[row][clm]
+                if total >= prob2 * 100:
+                    night_set = temp[row][0]
+                    break
+            # Need catch for cases where probability is very large (0.99999) and hvac_setpt probabilities add to less than unity
+            if total < prob2 * 100:
+                night_set = wakeup_set
+            # Do not allow cooling setpt at unoccupied home less than at night
+            if mode == 'cool' and daylight_set < night_set:
+                night_set = wakeup_set
+            # Do not allow heating setpt at unoccupied home more than at night
+            if mode == 'heat' and daylight_set > night_set:
+                night_set = wakeup_set
+        except:
+            print("WARNING select setpt not found:", wakeup_set, daylight_set, mode, st, hd, inc_lev, ", setting to ", wakeup_set)
+            pass
         return night_set
 
 def telework(prob, st, hd, inc_lev):
@@ -343,7 +346,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                         # New schedule to implement RECS 2020 data
                         prob = np.random.uniform(0, 1)  # a random number
                         inc_level = val['income_level'] # Determine income level of house from glm dictionary
-                        # Detemine teleworking
+                        # Determine teleworking
                         n_tw_days, tw_dows = telework(prob, state, dso_type, inc_level)
                         
                         # Determine setpoint transition times
@@ -624,7 +627,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                               'arrival_home': val['arrival_home'],
                               'work_duration': val['work_duration'],
                               'home_duration': val['home_duration'],
-                              'miles_per_kwh': val['miles_per_kwh'],
+                              'miles_per_kWh': val['miles_per_kWh'],
                               'range_miles': val['range_miles'],
                               'efficiency': val['efficiency'],
                               'slider_setting': float('{:.4f}'.format(slider)),
@@ -701,7 +704,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                 'number_of_gld_homes': market_config['DSO']['number_of_gld_homes'],
                 'distribution_charge_rate': market_config['DSO']['distribution_charge_rate'],
                 'dso_retail_scaling': market_config['DSO']['dso_retail_scaling'],
-                'full_metrics_detail': simulation_config['metricsFullDetail'],
+                'metrics_full_detail': simulation_config['metrics_full_detail'],
                 'quadratic': simulation_config['quadratic']
             }
             if DSO_quadratic_curves:
@@ -743,7 +746,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                 'Wind_m': market_config['Retail']['Wind_m'],
                 'delta_T_TOR': market_config['Retail']['delta_T_TOR'],
                 'delta_T_ave_wind_R': market_config['Retail']['delta_T_ave_wind_R'],
-                'full_metrics_detail': simulation_config['metricsFullDetail']
+                'metrics_full_detail': simulation_config['metrics_full_detail']
             }
 
         else:
@@ -829,53 +832,53 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
     for key, val in hvac_agents.items():
         house_name = val['houseName']
         meter_name = val['meterName']
-        print('  ' + key + '#V1:', file=yp)
+        print('  ' + key + '/measured_voltage:', file=yp)
         print('    topic: ' + gld_sim_name + '/' + meter_name + '/measured_voltage_1', file=yp)
         print('    default: 120', file=yp)
-        print('  ' + key + '#Tair:', file=yp)
+        print('  ' + key + '/air_temperature:', file=yp)
         print('    topic: ' + gld_sim_name + '/' + house_name + '/air_temperature', file=yp)
         print('    default: 80', file=yp)
-        print('  ' + key + '#HvacLoad:', file=yp)
+        print('  ' + key + '/hvac_load:', file=yp)
         print('    topic: ' + gld_sim_name + '/' + house_name + '/hvac_load', file=yp)
         print('    default: 0', file=yp)
-        print('  ' + key + '#TotalLoad:', file=yp)
+        print('  ' + key + '/total_load:', file=yp)
         print('    topic: ' + gld_sim_name + '/' + house_name + '/total_load', file=yp)
         print('    default: 0', file=yp)
-        print('  ' + key + '#On:', file=yp)
+        print('  ' + key + '/power_state:', file=yp)
         print('    topic: ' + gld_sim_name + '/' + house_name + '/power_state', file=yp)
         print('    default: 0', file=yp)
 
     for key, val in water_heater_agents.items():
         wh_name = val['waterheaterName']
-        print('  ' + key + '#LTTEMP:', file=yp)
+        print('  ' + key + '/lower_tank_temperature:', file=yp)
         print('    topic: ' + gld_sim_name + '/' + wh_name + '/lower_tank_temperature', file=yp)
         print('    default: 80', file=yp)
-        print('  ' + key + '#UTTEMP:', file=yp)
+        print('  ' + key + '/upper_tank_temperature:', file=yp)
         print('    topic: ' + gld_sim_name + '/' + wh_name + '/upper_tank_temperature', file=yp)
         print('    default: 120', file=yp)
-        print('  ' + key + '#LTState:', file=yp)
+        print('  ' + key + '/lower_heating_element_state:', file=yp)
         print('    topic: ' + gld_sim_name + '/' + wh_name + '/lower_heating_element_state', file=yp)
         print('    default: 0', file=yp)
-        print('  ' + key + '#UTState:', file=yp)
+        print('  ' + key + '/upper_heating_element_state:', file=yp)
         print('    topic: ' + gld_sim_name + '/' + wh_name + '/upper_heating_element_state', file=yp)
         print('    default: 0', file=yp)
-        print('  ' + key + '#WHLoad:', file=yp)
+        print('  ' + key + '/heating_element_capacity:', file=yp)
         print('    topic: ' + gld_sim_name + '/' + wh_name + '/heating_element_capacity', file=yp)
         print('    default: 0', file=yp)
-        print('  ' + key + '#WDRATE:', file=yp)
+        print('  ' + key + '/water_demand:', file=yp)
         print('    topic: ' + gld_sim_name + '/' + wh_name + '/water_demand', file=yp)
         print('    default: 0', file=yp)
 
     for key, val in battery_agents.items():
         # key is the name of inverter resource
         battery_name = val['batteryName']
-        print('  ' + key + '#SOC:', file=yp)
+        print('  ' + key + '/state_of_charge:', file=yp)
         print('    topic: ' + gld_sim_name + '/' + battery_name + '/state_of_charge', file=yp)
         print('    default: 0.5', file=yp)
 
     for key, val in ev_agents.items():
         ev_name = val['evName']
-        print('  ' + key + '#SOC:', file=yp)
+        print('  ' + key + '/battery_SOC:', file=yp)
         print('    topic: ' + gld_sim_name + '/' + ev_name + '/battery_SOC', file=yp)
         print('    default: 0.5', file=yp)
 
@@ -911,11 +914,11 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
 
     # write GridLAB-D FNCS message configuration
     op = open(gldfileroot + '_gridlabd.txt', 'w')
-    print('publish "commit:network_node.distribution_load -> distribution_load; 1000";', file=op)
-    # JH removed as we do not currently have the TSO in the federation
-    # print('subscribe "precommit:' + market_config['DSO']['NetworkName'] +
-    #       '.positive_sequence_voltage <- pypower/three_phase_voltage_' + gldfileroot + '";', file=op)  # TODO: this is very likely not correct
     if feedercnt == 1:
+        print('publish "commit:network_node.distribution_load -> distribution_load; 1000";', file=op)
+        # JH removed as we do not currently have the TSO in the federation
+        print('subscribe "precommit:network_node.positive_sequence_voltage'
+              '<- pypower/three_phase_voltage_' + bus + '";', file=op)
         if 'climate' in gd:
             for wTopic in ['temperature', 'humidity', 'solar_direct', 'solar_diffuse', 'pressure', 'wind_speed']:
                 print('subscribe "precommit:' + gd['climate']['name'] + '.' + wTopic + ' <- '
@@ -979,7 +982,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
         battery_name = val['batteryName']
         substation_sim_key = substation_name + '/' + key
         print('publish "commit:' + battery_name + '.state_of_charge -> '
-              + battery_name + '/state_of_charge; 0.01";', file=op)
+              + key + '/state_of_charge; 0.01";', file=op)
         print('subscribe "precommit:' + key + '.P_Out <- '
               + substation_sim_key + '/p_out";', file=op)
         print('subscribe "precommit:' + key + '.Q_Out <- '

@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Battelle Memorial Institute
+# Copyright (c) 2023-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: glm_model.py
 """GridLAB-D model I/O for TESP api
@@ -181,7 +181,6 @@ class GLMModel:
             datatype = "TEXT"
         elif m_type == "bool":
             datatype = "BOOLEAN"
-            unit = "|true|false|"
         elif m_type == "timestamp":
             datatype = "TEXT"
         elif m_type == "complex":
@@ -442,6 +441,33 @@ class GLMModel:
             diction += "\n"
         return diction
 
+    def glm_merge(self):
+        diction = ""
+
+        G = self.draw_network()
+        power_entities = []
+        for node_name in G:
+            for object_name in self.object_entities:
+                for name in self.object_entities[object_name].instances:
+                    if node_name == name:
+                        if node_name in power_entities:
+                            continue
+                        diction += self.get_diction(self.object_entities, object_name, self.instanceToObject, name)
+                        power_entities.append(name)
+
+        # Write the objects
+        for object_name in self.object_entities:
+            for name in self.object_entities[object_name].instances:
+                if name not in power_entities:
+                    diction += self.get_diction(self.object_entities, object_name, self.instanceToObject, name)
+
+        # Write the schedules
+        for name in self.schedule_types:
+            for line in self.schedule_types[name]:
+                diction += line + "\n"
+            diction += "\n"
+        return diction
+
     def instancesToSQLite(self, filename):
         if os.path.isfile(filename):
             try:
@@ -527,20 +553,25 @@ class GLMModel:
             raise TypeError("GRIDLABD object type and/or object name {obj_type} must be a string and is not.")
         return None
 
-    def is_edge_class(self, s):
+    def is_edge_class(self, s:str, exclude:list=None) -> bool:
         """ Edge class is networkx terminology. In GridLAB-D, we will represent those with
         the variable 'edge_classes' define in this model
 
         Args:
             s (str): the GridLAB-D class name
+            exclude (list):
+
         Returns:
             bool: True if an edge class, False otherwise
         """
+        if exclude is not None:
+            if s in exclude:
+                return False
         if s in self.edge_classes.keys():
             return True
         return False
 
-    def is_node_class(self, s):
+    def is_node_class(self, s:str) -> bool:
         """Node class is networkx terminology. In GridLAB-D, we will represent those nodes with
         the variable 'node_classes' define in this model
 
@@ -586,12 +617,15 @@ class GLMModel:
 
     def del_object(self, _type, name):
         # del name and set object entity instance to model type
-        del self.model[_type][name]
+        try:
+            del self.model[_type][name]
+        except:
+            pass
 
     def glm_schedule(self, line, itr):
         # This only grab the lines, real parsing of the schedule
 
-        m_sched = re.search('schedule\W+(\w+)\s*([;{])', line, re.IGNORECASE)
+        m_sched = re.search(r'schedule\W+(\w+)\s*([;{])', line, re.IGNORECASE)
         if m_sched:
             # schedule found
             self.schedule_types[m_sched.group(1)] = []
@@ -638,13 +672,13 @@ class GLMModel:
 
         # Identify the object type
         if line.find(";") > 0:
-            m = re.search(mod + ' ([^;\s]+)[;\s]', line, re.IGNORECASE)
+            m = re.search(mod + r' ([^;\s]+)[;\s]', line, re.IGNORECASE)
             _type = m.group(1)
             self.set_module_instance(_type, params)
             return _type
 
         if line.find("{") > 0:
-            m = re.search(mod + ' ([^{\s]+)[{\s]', line, re.IGNORECASE)
+            m = re.search(mod + r' ([^{\s]+)[{\s]', line, re.IGNORECASE)
             _type = m.group(1)
 
         pos = line.find("//")
@@ -667,7 +701,7 @@ class GLMModel:
                 inline_comments[tokens[0]] = substring
 
             # find a parameter
-            m = re.match('\s*(\S+) ([^;]+);', line)
+            m = re.match(r'\s*(\S+) ([^;]+);', line)
             if m:
                 params[m.group(1)] = m.group(2)
                 if len(comments) > 0:
@@ -702,10 +736,10 @@ class GLMModel:
         """
         # Identify the object type
         oid = ""
-        m = re.search('object ([^:{\s]+)[:{\s]', line, re.IGNORECASE)
+        m = re.search(r'object ([^:{\s]+)[:{\s]', line, re.IGNORECASE)
         _type = m.group(1)
         # If the object has an id number, store it
-        n = re.search('object ([^:]+:[^{\s]+)', line, re.IGNORECASE)
+        n = re.search(r'object ([^:]+:[^{\s]+)', line, re.IGNORECASE)
         if n:
             oid = n.group(1)
         # else:
@@ -745,7 +779,7 @@ class GLMModel:
                     inline_comments[tokens[0]] = substring
 
             intobj = 0
-            m = re.match('\s*(\S+) ([^;{]+)[;{]', line)
+            m = re.match(r'\s*(\S+) ([^;{]+)[;{]', line)
             if m:
                 param = m.group(1)
                 val = m.group(2)
@@ -829,7 +863,7 @@ class GLMModel:
             while line != '':
                 line = line.replace("\t", " ")
                 # skip white space lines
-                while re.match('\s+$', line):
+                while re.match(r'\s+$', line):
                     line = ip.readline()
                 line = line.strip()
                 if len(line) > 0:
@@ -914,7 +948,7 @@ class GLMModel:
         for t in self.model:
             # Grabs all nodes that have physical connections in the model
             # (e.g. line, transformer, switch, ...)
-            if self.is_edge_class(t):
+            if self.is_edge_class(t, exclude=['parent']):
                 for o in self.model[t]:
                     n1 = self.model[t][o]['from']
                     n2 = self.model[t][o]['to']
@@ -931,6 +965,8 @@ class GLMModel:
                         G.add_edge(o, p, eclass='parent', ename=o, edata={})
 
         # now we back-fill the node attributes because 'add_edge' adds the nodes
+        class_to_delete = []
+        node_to_delete = []
         for t in self.model:
             if self.is_node_class(t):
                 for o in self.model[t]:
@@ -938,10 +974,16 @@ class GLMModel:
                         G.nodes()[o]['nclass'] = t
                         G.nodes()[o]['ndata'] = self.model[t][o]
                     else:
-                        print('orphaned node', t, o)
+                        print('Removing orphaned nodes', t, o)
+                        class_to_delete.append(t)
+                        node_to_delete.append(o)
+
+        for idk in range(len(class_to_delete)):
+            self.del_object(class_to_delete[idk], node_to_delete[idk])
+
         return G
 
-    def plot_model(self, pos=None, node_labels=False, edge_labels=False, node_legend=True, edge_legend=True):
+    def plot_model(self, pos=None, node_labels=False, edge_labels=False, node_legend=True, edge_legend=True) -> dict:
 
         def update_annot(ind):
             _node_idx = ind["ind"][0]
@@ -998,6 +1040,9 @@ class GLMModel:
                 nc.append(self.node_classes[v['nclass']])
                 nlb[u] = u
             except:
+                # various gray/grey
+                nc.append('grey')
+                nlb[u] = u
                 continue
 
         # Edges colors and attributes
@@ -1037,12 +1082,15 @@ class GLMModel:
         plt.subplots_adjust(left=0.01, bottom=0.01, right=0.99, top=0.99)
         plt.show()
 
+        return pos
+
     def set_clock(self, starttime: str, stoptime: str, timezone: str):
-        clock = self.module_entities['clock'].instances['clock']
+        gld_type = name = 'clock'
+        clock = self.module_entities[gld_type].instances[name]
         clock['starttime'] = "'" + starttime + "'"
         clock['stoptime'] = "'" + stoptime + "'"
         clock['timezone'] = timezone
-        del clock['timestamp'] #remove timestamp, conflicts with starttime
+        self.module_entities[gld_type].del_item(name, 'timestamp')
 
     def add_include(self, file: str):
         self.include_lines.append(f"#include \"{file}\"")
@@ -1070,7 +1118,8 @@ class GLMModel:
 
     @staticmethod
     def union_of_phases(phs1, phs2):
-        """Collect all phases on both sides of a connection
+        """Collect all phases on both sides of a connection.
+        Load on 'N' phase lines are trivial and therefore neglected.
 
         Args:
             phs1 (str): first phasing
@@ -1131,9 +1180,9 @@ class GLMModel:
                             - accumulated load
                             - all affected phases
         """
-        swing_node = ''
         G = self.draw_network()
 
+        swing_node = ''
         # Identify swing node in GridLAB-D model
         for n1, data in G.nodes(data=True):
             if 'nclass' in data:
@@ -1142,11 +1191,13 @@ class GLMModel:
                         swing_node = n1
                         break
 
-        # Finds the load on each segment (i.e. edge, line) by iterating over all 
+        # Finds the load on each segment (i.e. edge, line) by iterating over all
         # load definitions, identifying all affected lines and adding the load
         # to those lines.            
         seg_loads = {}  # [name][kva, phases]
         total_kva = 0.0
+        nodes_to_delete = []
+        class_to_delete = []
         for n1, data in G.nodes(data=True):
             if 'ndata' in data:
                 kva = self.accumulate_load_kva(data['ndata'])
@@ -1154,6 +1205,8 @@ class GLMModel:
                 if kva > 0:
                     total_kva += kva
                     nodes = nx.shortest_path(G, n1, swing_node)
+                    nodes_to_delete.append(nodes[0])
+                    class_to_delete.append(data['nclass'])
                     edges = zip(nodes[0:], nodes[1:])
                     for u, v in edges:
                         eclass = G[u][v]['eclass']
@@ -1164,17 +1217,20 @@ class GLMModel:
                             seg_loads[ename][0] += kva
                             seg_loads[ename][1] = self.union_of_phases(seg_loads[ename][1], data['ndata']['phases'])
 
-                            # Band-aid for poor accumulation of phase information for parrallel curcuits
+                            # Band-aid for poor accumulation of phase information for parallel circuits
                             # "ABCS" is not a valid phase set and should be "ABCN".
                             # seg_phs = seg_phs.replace('ABCS', 'ABCN')
                             seg_loads[ename][1] = seg_loads[ename][1].replace('ABCS', 'ABCN')
                         else:
-                            print(f"Unknown edge class: {eclass}")
-        # sub_graphs = nx.connected_components(G)
-        # print(f"  swing node {swing_node}, with {len(list(sub_graphs))}, sub graphs and {:.2f}.format(total_kva)} total kva")
-        
-        return seg_loads
+                            # print(f"Unknown edge class: {eclass}")
+                            pass
 
+        # sub_graphs = nx.connected_components(G)
+        # print(len(seg_loads),  seg_loads)
+        # print(f"  swing node {swing_node}, with {len(list(sub_graphs))} subgraph(s) and {total_kva:.2f} total kva")
+        
+        to_delete = dict(zip(nodes_to_delete, class_to_delete))
+        return seg_loads, to_delete
 
 
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2024 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: helpers.py
 """ Utility functions for use within tesp_support, including new agents.
@@ -9,6 +9,9 @@ import json
 from scipy.stats import truncnorm
 from numpy import random
 
+# Setting up main/standard logging with INFO level
+log = logging.getLogger()
+log.setLevel(logging.INFO)
 
 def enable_logging(level, model_diag_level, name_prefix):
     """ Enable logging for process
@@ -18,29 +21,25 @@ def enable_logging(level, model_diag_level, name_prefix):
             model_diag_level (int): initial value used to filter logging files
             name_prefix (str): description prefix for the log file name
     """
-
-    # Setting up main/standard debugging output
-    logger = logging.getLogger()
-    # logger.setLevel(logging.DEBUG)
-    logger.setLevel(logging.INFO)
-    main_fh = logging.FileHandler(name_prefix + '_log.txt', mode='w')
     if level == 'DEBUG':
-        main_fh.setLevel(logging.DEBUG)
+        log.setLevel(logging.DEBUG)
     elif level == 'INFO':
-        main_fh.setLevel(logging.INFO)
+        log.setLevel(logging.INFO)
     elif level == 'WARNING':
-        main_fh.setLevel(logging.WARNING)
+        log.setLevel(logging.WARNING)
     elif level == 'ERROR':
-        main_fh.setLevel(logging.ERROR)
+        log.setLevel(logging.ERROR)
     elif level == 'CRITICAL':
-        main_fh.setLevel(logging.CRITICAL)
+        log.setLevel(logging.CRITICAL)
     else:
         print('WARNING: unknown logging level specified, reverting to default INFO level')
-        main_fh.setLevel(logging.INFO)
+        log.setLevel(logging.INFO)
+
+    main_fh = logging.FileHandler(name_prefix + '_log.txt', mode='w')
     main_format = logging.Formatter('%(levelname)s: %(module)s: %(lineno)d: %(message)s')
     main_fh.setFormatter(main_format)
     main_fh.addFilter(all_but_one_level(model_diag_level))
-    logger.addHandler(main_fh)
+    log.addHandler(main_fh)
 
     # Setting up model diagnostics logging output
     model_diag_fh = logging.FileHandler(name_prefix + '_diag.txt', mode='w')
@@ -48,8 +47,10 @@ def enable_logging(level, model_diag_level, name_prefix):
     model_diag_format = logging.Formatter('%(levelname)s: %(module)s: %(lineno)d: %(message)s')
     model_diag_fh.setFormatter(model_diag_format)
     model_diag_fh.addFilter(all_from_one_level_down(model_diag_level))
-    logger.addHandler(model_diag_fh)
-    return logging
+    log.addHandler(model_diag_fh)
+
+    log.addHandler(logging.StreamHandler())
+    return log
 
 
 class all_from_one_level_down(object):
@@ -65,8 +66,8 @@ class all_but_one_level(object):
         self.__level = level
 
     @staticmethod
-    def filter(logRecord):
-        return logRecord.levelno != 11
+    def filter(log_record):
+        return log_record.levelno != 11
 
 
 def randomize_skew(value, skew_max):
@@ -93,21 +94,53 @@ def randomize_residential_skew(wh_skew=False):
         return randomize_skew(residential_skew_std, residential_skew_max)
 
 
-def get_run_solver(name, pyo, model, solver):
-    # prefer cplex over ipopt (for production runs)
-    try:
-        solver = pyo.SolverFactory(solver)
-    except Exception as e:  # could be better/more specific
-        print('Name {}\n Warning ' + solver + ' not present; got exception {}'.format(name, e))
-        exit()
-    results = solver.solve(model, tee=False)
-    # TODO better solver handling
-    #    if results.solver.status != SolverStatus.ok:
-    #    print("The " + name + " solver status of: {}".format(results.solver.status))
-    # exit()
-    #    if results.solver.termination_condition != TerminationCondition.optimal:
-    #    print("The " + name + " termination condition of: {}".format(results.solver.termination_condition))
-    # exit()
+def get_run_solver(name:str, pyo, model, solver, params=None):
+    """ Solve the pyomo model with the specified solver, checking that the
+      solver is available and that the model solves.
+
+    Args:
+        name (str): name of the solver, ex: hvac_{house_name}
+        pyo (module): the pyomo module (import pyomo.environ as pyo)
+        model: the pyomo model instance to be solved (pyo.ConcreteModel())
+        solver (str): choice of solver. Prefer cplex over ipopt for production runs
+
+    Raises:
+        RuntimeError: If the solver is not available, or if the solver does not
+          complete with an acceptable status/termination condition. The 
+          exception message includes the model name, solver name, and solver 
+          status.
+
+    Returns:
+        results: solver results object
+    """
+
+    from pyomo.opt import SolverStatus, TerminationCondition
+    opt = pyo.SolverFactory(solver)
+    if opt is None or not opt.available():
+        raise RuntimeError(f"[{name}] Solver '{solver}' not available")
+
+    results = opt.solve(model, tee=False)
+
+    status = results.solver.status
+    term   = results.solver.termination_condition
+
+    # Acceptable termination conditions
+    acceptable_terms = {
+        TerminationCondition.optimal,
+        TerminationCondition.locallyOptimal,
+        TerminationCondition.feasible,
+    }
+
+    if status != SolverStatus.ok or term not in acceptable_terms:
+        # Optional, print more detail:
+        if params:
+            params["success"] = False
+            params["termination"] = term
+
+        # raise RuntimeError(f"[{name}] Solver '{solver}' failed: "
+        #        f"status={status}, termination={term}")
+        
+
     return results
 
 
@@ -134,20 +167,21 @@ def zoneMeterName(ldname):
     return ldname.replace('_load_', '_meter_')
 
 
-def gld_strict_name(val):
+def gld_strict_name(name, prefix="gld_"):
     """ Sanitizes a name for GridLAB-D publication to FNCS
     GridLAB-D name should not begin with a number, or contain '-' for FNCS
 
     Args:
-        val (str): the input name
+        name (str): the input name
+        prefix (str): the prefix to be use if the name starts with a number
 
     Returns:
-        str: val with all '-' replaced by '_', and any leading digit replaced by 'gld\_'
+        str: name with all '-' replaced by '_', and any leading digit replaced by prefix
     """
-    val = val.replace('"', '')
-    if val[0].isdigit():
-        val = "gld_" + val
-    return val.replace('-', '_')
+    name = name.replace('"', '')
+    if name[0].isdigit():
+        name = prefix + name
+    return name.replace('-', '_')
 
 
 def get_region(s):
@@ -163,7 +197,6 @@ def get_region(s):
     elif 'R5' in s:
         region = 5
     return region
-
 
 
 class HelicsMsg(object):

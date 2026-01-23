@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2024 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: DSOT_sankey
 
@@ -7,7 +7,7 @@ import matplotlib
 import pandas as pd
 import plotly.graph_objects as go
 
-import tesp_support.dsot.plots as pt
+from ..dsot import plots as pt
 
 
 # Example from: https://plotly.com/python/sankey-diagram/

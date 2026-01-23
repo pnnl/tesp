@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2023 Battelle Memorial Institute
+# Copyright (c) 2018-2025 Battelle Memorial Institute
 # file: prep_ercot_substation.py
 
 import json

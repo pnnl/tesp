@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2024 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: customer_CFS.py
 
@@ -9,7 +9,7 @@
 import json
 import os
 
-import tesp_support.dsot.dso_helper_functions as dso_helper
+from ..dsot import dso_helper_functions as dso_helper
 
 
 def customer_CFS(GLD_metadata,

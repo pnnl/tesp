@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Battelle Memorial Institute
+# Copyright (c) 2023-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: entity.py
 """
@@ -185,6 +185,7 @@ class Entity:
                             continue
                 else:
                     # add to dictionary datatype, label, unit, item, value
+                    # todo This should not be in this call, or should be registered helper class to the look up
                     if self.find_item("parent") or self.find_item("configuration"):
                         # todo lookup attr in parent, configuration if it exists, for now add it
                         self.add_attr("TEXT", attr, "", attr, "")
@@ -223,8 +224,9 @@ class Entity:
         if type(object_name) == str:
             try:
                 del self.instances[object_name]
+                # print(f"Deleted {self.entity}:{object_name}")
             except:
-                # TODO: Need to add error message
+                print(f"Can't find {self.entity}:{object_name} for deletion")
                 pass
         else:
             print("object name is not a string in", self.entity)
@@ -298,7 +300,11 @@ class Entity:
         if self.find_item(item):
             _item = self.__getattribute__(item)
             if type(_item) == Item:
-                del self.instances[object_name][item]
+                try:
+                    del self.instances[object_name][item]
+                except:
+                    print(f"Can't find {object_name}:{item} for deletion")
+                    pass
 
     def toList(self):
         """ List the Item(s) in the Entity

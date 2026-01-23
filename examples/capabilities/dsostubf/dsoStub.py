@@ -110,11 +110,6 @@ def dso_loop(casename):
     tnext_da = (10 * 3600) - 15  # start the day ahead bid
     power_factor = 0.57  # roughly 30 deg
 
-    logger = log.getLogger()
-    # logger.setLevel(log.DEBUG)
-    logger.setLevel(log.INFO)
-    # logger.setLevel(log.WARNING)
-
     log.info('Reading configuration...')
     ppc = load_json_case(casename + '.json')
 

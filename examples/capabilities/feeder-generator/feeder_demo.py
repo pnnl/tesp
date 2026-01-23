@@ -7,4 +7,4 @@ config_path = os.path.expandvars('$TESPDIR/examples/capabilities/feeder-generato
 config_file = 'feeder_config.json5'
 
 config = gld_feeder.Config(os.path.join(config_path, config_file))
-feeder = gld_feeder.Feeder(config)
+feeder = gld_feeder.Feeder(config, "full")

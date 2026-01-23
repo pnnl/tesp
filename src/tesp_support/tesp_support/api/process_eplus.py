@@ -1,6 +1,6 @@
-# Copyright (C) 2017-2024 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
-# Copyright (C) 2017-2023 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # file: process_eplus.py
 """Functions to plot data from the EnergyPlus agent
 
@@ -16,7 +16,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Setting up logging
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 def read_eplus_metrics(path, name_root, quiet=False):
@@ -29,7 +29,7 @@ def read_eplus_metrics(path, name_root, quiet=False):
         if not quiet:
             print('Metrics data starting', lst['StartTime'])
     except:
-        logger.error(f'Unable to open eplus metrics file {eplus_dict_path}')
+        log.error(f'Unable to open eplus metrics file {eplus_dict_path}')
         return
 
     # make a sorted list of the times

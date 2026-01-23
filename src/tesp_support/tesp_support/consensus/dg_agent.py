@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2024 Battelle Memorial Institute
+# Copyright (c) 2022-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: dg_agent.py
 """Manages the Transactive Control scheme for DSO+T implementation version 1
@@ -8,7 +8,6 @@ Public Functions:
 
 """
 import json
-import logging as log
 import time
 from datetime import datetime, timedelta
 
@@ -16,11 +15,11 @@ import helics as h
 import numpy as np
 from joblib import Parallel
 
-import tesp_support.consensus.generator as consensus
+from ..consensus import generator as consensus
 from .dso_market import DSOMarket
 from .retail_market import RetailMarket
-from tesp_support.api.helpers import enable_logging
-from tesp_support.api.metrics_collector import MetricsStore, MetricsCollector
+from ..api.helpers import enable_logging
+from ..api.metrics_collector import MetricsStore, MetricsCollector
 
 # import multiprocessing as mp
 NUM_CORE = 1
@@ -115,7 +114,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
 
     # enable logging
     level = config['LogLevel']
-    enable_logging(level, 11, metrics_root)
+    log = enable_logging(level, 11, metrics_root)
 
     log.info('starting substation loop...')
     log.info('config file -> ' + configfile)
@@ -152,7 +151,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
 
             # check the unit of the market
             dso_unit = config['markets'][key]['unit']
-            dso_full_metrics = config['markets'][key]['full_metrics_detail']  # True for full
+            dso_full_metrics = config['markets'][key]['metrics_full_detail']  # True for full
 
             # Update the supply curves for the wholesale. Only once as this will define a curve per day
             # might need to play around with the curve a,b,c here but for now let's run with the defaults
@@ -185,7 +184,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
 
             # check the unit of the market
             retail_unit = config['markets'][key]['unit']
-            retail_full_metrics = config['markets'][key]['full_metrics_detail']  # True for full
+            retail_full_metrics = config['markets'][key]['metrics_full_detail']  # True for full
             log.info('instantiated Retail market agent')
 
     # adding the metrics collector object

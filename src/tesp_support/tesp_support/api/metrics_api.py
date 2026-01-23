@@ -1,11 +1,11 @@
-# Copyright (C) 2019-2024 Battelle Memorial Institute
+# Copyright (c) 2019-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: metrics_api.py
 
 import pandas as pd
 import logging as log_msg
 
-import tesp_support.api.metrics_base_api as bc
+from ..api import metrics_base_api as bc
 
 
 def synch_time_series(series_list, synch_interval, interval_unit):

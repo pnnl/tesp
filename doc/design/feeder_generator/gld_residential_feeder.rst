@@ -18,6 +18,8 @@ Before using ``gld_residential_feeder.py``, we need the required metadata. Start
 Using the Feeder Generator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+The feeder generator relies on seven classes: Config, Residential_Build, Commercial_Build, Battery, Solar, Electric_Vehicle, and Feeder, each of which are detailed below.
+
 Config
 ~~~~~~
 
@@ -67,7 +69,7 @@ The primary function of this class is to scan loads assigned with a 'C' class by
 Battery
 ~~~~~~~
 
-The primary function of this class is to define the battery and inverter objects to add to the houses via the ``add_bat`` function. 
+The primary function of this class is to define the battery and inverter objects to add to the houses via the ``add_batt`` function. 
 
 Solar
 ~~~~~
@@ -92,13 +94,16 @@ To run the feeder generator, the ``Config`` class must first be initialized with
 
     def _test1():
     config = Config("./feeder_config.json5")
-    feeder = Feeder(config)   
+    feeder = Feeder(config, "full")   
 
 
     if __name__ == "__main__":
         _test1()
 
+The ``Feeder`` has two optoins, "full", or "copperplate", specifying whether to populate a full-order feeder with both residential and commercial buildings, or a simplified copperplate feeder model that has limited commercial buildings.
+
 Sample output to console.::
+
     User feeder not defined, using taxonomy feeder R1-12.47-2.glm
     Average House size: 4.5 kVA
     Results in a populated feeder with:
@@ -128,9 +133,9 @@ Results
 ~~~~~~~
 An example test case with the user-defined IEEE-123.glm test feeder will yield the following graph.
 
-.. image:: ../media/feeder-generator/IEEE-123.glm_network-unpopulated.png
+.. image:: ../../media/feeder-generator/IEEE-123.glm_network-unpopulated.png
     :width: 800
 
 
-.. image:: ../media/feeder-generator/IEEE-123.glm_network-populated.png
+.. image:: ../../media/feeder-generator/IEEE-123.glm_network-populated.png
     :width: 800

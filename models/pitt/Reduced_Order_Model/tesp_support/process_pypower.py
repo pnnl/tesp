@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2023 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # file: process_pypower.py
 """Functions to plot bus and generator data from PYPOWER
 

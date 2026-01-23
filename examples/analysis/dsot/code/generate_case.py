@@ -1,4 +1,4 @@
-# Copyright (C) 2019-2023 Battelle Memorial Institute
+# Copyright (c) 2019-2025 Battelle Memorial Institute
 # file: generate_case.py
 """ Utility function to split a year run to monthly runs. This is DSO+T specific helper functions
 """
@@ -16,12 +16,17 @@ def generate_case(case_name, port, pv=None, bt=None, fl=None, ev=None):
     split_case = ppc['splitCase']
     case_start_year = ppc['caseStartYear']
     case_end_year = ppc['caseEndYear']
+    case_rate = ppc['rate']
+    if len(case_rate) > 0:
+        case_rate_and_node = node + "_" + case_rate + "_"
+    else:
+        case_rate_and_node = node + "_"
 
     if split_case:
         while True:
             for i in range(0, 12):
-                directory_name = str(case_start_year) + "_rnd_" + '{0:0>2}'.format(i+1)
-                ppc['caseName'] = node + "_" + directory_name
+                directory_name = str(case_start_year) + "_" + '{0:0>2}'.format(i+1)
+                ppc['caseName'] = case_rate_and_node + directory_name
                 ppc['port'] = int(port + i)
 
                 year = case_start_year

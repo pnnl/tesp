@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2024 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: tso_psst.py
 
@@ -8,7 +8,7 @@ import math
 import json
 import bisect
 import csv as csv
-import logging as log
+import logging
 import numpy as np
 import pandas as pd
 import pypower.api as pp
@@ -45,29 +45,29 @@ def tso_psst_loop(casename):
                 if first:
                     first = False
                     continue
-                rd_curve.append(float(m_row[0]))
+                ec_curve.append(float(m_row[0]))
                 # publishing LMP as $/kWh/p.u.h
-                rd_adder.append(float(m_row[1]))
-            rd_curve.reverse()
-            rd_adder.reverse()
+                ec_adder.append(float(m_row[1]))
+            ec_curve.reverse()
+            ec_adder.reverse()
 
-    def rob_and_don(generation):
+    def energy_and_capacity(generation):
         adder = 0
-        if r_and_d:
-            ii = bisect.bisect_left(rd_curve, generation)
-            log.debug(f"Rob and Don index: {ii}, curve length: {len(rd_curve)}")
-            if -1 < ii < len(rd_curve):
-                if generation - rd_curve[ii] < 0.0001:
-                    adder = rd_adder[ii]
+        if e_and_c:
+            ii = bisect.bisect_left(ec_curve, generation)
+            log.debug(f"Energy and Capacity index: {ii}, curve length: {len(ec_curve)}")
+            if -1 < ii < len(ec_curve):
+                if generation - ec_curve[ii] < 0.0001:
+                    adder = ec_adder[ii]
                 else:
                     # interpolation between upper and lower bounds
-                    percent = (generation - rd_curve[ii]) / (rd_curve[ii+1] - rd_curve[ii])
-                    adder = ((rd_adder[ii+1] - rd_adder[ii]) * percent) + rd_adder[ii+1]
+                    percent = (generation - ec_curve[ii]) / (ec_curve[ii+1] - ec_curve[ii])
+                    adder = ((ec_adder[ii+1] - ec_adder[ii]) * percent) + ec_adder[ii+1]
             else:
-                if generation > rd_curve[-1]:
-                    adder = rd_adder[-1]
+                if generation > ec_curve[-1]:
+                    adder = ec_adder[-1]
                 else:
-                    adder = rd_adder[0]
+                    adder = ec_adder[0]
         return adder
 
     def get_sub(sub_idx):
@@ -152,18 +152,16 @@ def tso_psst_loop(casename):
 
         # rob and don adder if used
         adder = [0 for _ in range(hours_in_a_day)]
-        if r_and_d:
-            log.debug(f"Renewables: {renew}")
+        if e_and_c:
             generation = [0 for _ in range(hours_in_a_day)]
             for g in dispatch:
                 row = dispatch[g]
                 for ii in range(hours_in_a_day):
                     generation[ii] += row[ii]
             for ii in range(hours_in_a_day):
-                for _ in range(total_bus_num):
-                    generation[ii] += renew[ii][_]
-                adder[ii] = rob_and_don(generation[ii])
-                log.info(f"generation: {generation[ii]}, adder: {adder[ii]}")
+                generation[ii] += renew[ii] * baseS
+                adder[ii] = energy_and_capacity(generation[ii])
+                log.info(f"generation: {generation[ii]}, renewables: {renew[ii] * baseS}, adder: {adder[ii]}")
                 for jj in range(dsoBus.shape[0]):
                     DA_LMPs[jj][ii] += adder[ii]
 
@@ -177,7 +175,11 @@ def tso_psst_loop(casename):
                 row[0], row[1], row[2], row[3], row[4], row[5],
                 row[6], row[7], row[8], row[9], row[10], row[11],
                 row[12], row[13], row[14], row[15], row[16], row[17],
-                row[18], row[19], row[20], row[21], row[22], row[23]
+                row[18], row[19], row[20], row[21], row[22], row[23],
+                adder[0], adder[1], adder[2], adder[3], adder[4], adder[5],
+                adder[6], adder[7], adder[8], adder[9], adder[10], adder[11],
+                adder[12], adder[13], adder[14], adder[15], adder[16], adder[17],
+                adder[18], adder[19], adder[20], adder[21], adder[22], adder[23]
             )
 
         # log.debug("DA line power")
@@ -341,7 +343,6 @@ def tso_psst_loop(casename):
 
         # set the lmps and generator dispatch and publish LMP
         generation = 0.0
-        log.info(f"Renewables: {renew}")
         for ii in range(numGen):
             # if using gridpiq to gauge environmental emission concerns
             if piq and day > 1:
@@ -355,9 +356,9 @@ def tso_psst_loop(casename):
             generation += gen[ii, 1]
 
         adder = 0.0
-        if r_and_d:
-            adder = rob_and_don(generation)
-            log.debug(f"generation: {generation}, adder: {adder}")
+        if e_and_c:
+            adder = energy_and_capacity(generation)
+            log.debug(f"generation: {generation}, renewables: {renew * baseS}, adder: {adder}")
             if adder > 0:
                 for ii in range(total_bus_num):
                     for jj in range(TAU):
@@ -473,7 +474,7 @@ def tso_psst_loop(casename):
         log.info('Total TSO ramp up: ' + str(tot_gen_up) + ', Total TSO ramp down: ' + str(tot_gen_down))
 
         da_curtail = [[]] * hours_in_a_day
-        renew = [[]] * hours_in_a_day
+        renew = []
         for jj in range(hours_in_a_day):
             total_neg = 0
             total_dso = 0
@@ -545,7 +546,7 @@ def tso_psst_loop(casename):
                     tot_dso += total
                     da_curtail[jj].append(total)
 
-            renew[jj].append(total_neg*curtail)
+            renew.append(total_neg*curtail)
             log.info('DA Hour: ' + str(jj + 1))
             log.info('Total DSO Load: ' + str(total_dso))
             log.info('Total DSO to PSST: ' + str(tot_dso) + ', Total Renewables: ' + str(total_neg))
@@ -1022,10 +1023,10 @@ def tso_psst_loop(casename):
     ppopt_market = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['opf_dc'], OPF_ALG_DC=200)  # dc for
     ppopt_regular = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['pf_dc'], PF_MAX_IT=20, PF_ALG=1)  # ac for power flow
 
-    logger = log.getLogger()
-    logger.setLevel(log.INFO)
-    # logger.setLevel(log.WARNING)
-    # logger.setLevel(log.DEBUG)
+    log = logging.getLogger(__name__)
+    log.setLevel(logging.INFO)
+    # log.setLevel(logging.DEBUG)
+
     log.info(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     log.info('starting tso loop...')
 
@@ -1034,6 +1035,7 @@ def tso_psst_loop(casename):
         solver = pst.SOLVER
     if solver == 'cbc':
         ppc['gencost'][:, 4] = 0.0  # can't use quadratic costs with CBC solver
+    log.info(f'solver choice: {solver}')
 
     # these have been aliased from case name .json file
     bus = ppc['bus']
@@ -1146,7 +1148,13 @@ def tso_psst_loop(casename):
             ('LMP_9', 'USD/kwh'), ('LMP_10', 'USD/kwh'), ('LMP_11', 'USD/kwh'), ('LMP_12', 'USD/kwh'),
             ('LMP_13', 'USD/kwh'), ('LMP_14', 'USD/kwh'), ('LMP_15', 'USD/kwh'), ('LMP_16', 'USD/kwh'),
             ('LMP_17', 'USD/kwh'), ('LMP_18', 'USD/kwh'), ('LMP_19', 'USD/kwh'), ('LMP_20', 'USD/kwh'),
-            ('LMP_21', 'USD/kwh'), ('LMP_22', 'USD/kwh'), ('LMP_23', 'USD/kwh'), ('LMP_24', 'USD/kwh')
+            ('LMP_21', 'USD/kwh'), ('LMP_22', 'USD/kwh'), ('LMP_23', 'USD/kwh'), ('LMP_24', 'USD/kwh'),
+            ('Adder_1', 'USD/kwh'), ('Adder_2', 'USD/kwh'), ('Adder_3', 'USD/kwh'), ('Adder_4', 'USD/kwh'),
+            ('Adder_5', 'USD/kwh'), ('Adder_6', 'USD/kwh'), ('Adder_7', 'USD/kwh'), ('Adder_8', 'USD/kwh'),
+            ('Adder_9', 'USD/kwh'), ('Adder_10', 'USD/kwh'), ('Adder_11', 'USD/kwh'), ('Adder_12', 'USD/kwh'),
+            ('Adder_13', 'USD/kwh'), ('Adder_14', 'USD/kwh'), ('Adder_15', 'USD/kwh'), ('Adder_16', 'USD/kwh'),
+            ('Adder_17', 'USD/kwh'), ('Adder_18', 'USD/kwh'), ('Adder_19', 'USD/kwh'), ('Adder_20', 'USD/kwh'),
+            ('Adder_21', 'USD/kwh'), ('Adder_22', 'USD/kwh'), ('Adder_23', 'USD/kwh'), ('Adder_24', 'USD/kwh')
         ],
         file_string='da_lmp_{}'.format(casefile),
         collector=collector,
@@ -1288,10 +1296,10 @@ def tso_psst_loop(casename):
     rt_lmps = {}
     rt_dispatch = {}
 
-    rd_curve = []
-    rd_adder = []
-    r_and_d = ppc["RandD"]
-    if r_and_d:
+    ec_curve = []
+    ec_adder = []
+    e_and_c = ppc["EandC"]
+    if e_and_c:
         open_ldcurve(ppc["LDCurve"])
 
     # listening to message objects key on bus number
@@ -1563,8 +1571,8 @@ def tso_psst_loop(casename):
                 da_gen, da_genCost, da_genFuel, da_numGen = use_generator(idx_add, idx_del)
 
                 psst_case = os.path.join(output_Path, file_time + "dam.dat")
-                used_renew = write_psst_file(psst_case, True, da_gen, da_genCost, da_genFuel, da_numGen)
-                da_adder, da_status, da_schedule, da_dispatch, da_lmps = scucDAM(psst_case, used_renew)
+                da_used_renew = write_psst_file(psst_case, True, da_gen, da_genCost, da_genFuel, da_numGen)
+                da_adder, da_status, da_schedule, da_dispatch, da_lmps = scucDAM(psst_case, da_used_renew)
                 da_run_cnt += 1
                 if da_status:
                     da_status_cnt += 1

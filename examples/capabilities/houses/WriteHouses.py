@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2023 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # file: WriteHouses.py
 
 import tesp_support.original.residential_feeder_glm as fg

@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2024 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: case_comparison_plots.py
 import os
@@ -12,7 +12,7 @@ import pandas as pd
 import seaborn as sns
 from datetime import datetime, date, timedelta
 
-import tesp_support.dsot.plots as pt
+from ..dsot import plots as pt
 
 
 def rec_diff(d1, d2):
@@ -427,7 +427,7 @@ def retail_price_comparison_plot(dso, day_range, metadata_path, cases, data_path
                                 * tou_params["DSO_" + dso][month_name]["periods"][k]["ratio"]
         elif rate_scenario == "DSOT":
             DA_LMPs_df['Retail'] = DA_LMPs_df['da_lmp'+str(dso)]/1000 + tariff['DSO_'+str(dso)]['transactive_dist_rate']
-        elif rate_scenario == "RandD":
+        elif rate_scenario in ["RandD", "EandC"]:
             # DA_LMPs_df['Retail'] = (DA_LMPs_df['da_lmp'+str(dso)])/1000 + tariff['DSO_'+str(dso)]['transactive_dist_rate']
             DA_LMPs_df['Retail'] = (DA_LMPs_df['da_lmp'+str(dso)] + DA_LMPs_df[' Adder'])/1000 + tariff['DSO_'+str(dso)]['transactive_dist_rate']
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2024 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: process_gld.py
 """Functions to plot data from GridLAB-D
@@ -15,7 +15,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Setting up logging
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 def read_gld_metrics(path, name_root, diction_name=''):
@@ -35,12 +35,12 @@ def read_gld_metrics(path, name_root, diction_name=''):
         try:
             lp = open(diction_name).read()
         except:
-            logger.error(f'Unable to open metrics diction file {diction_name}')
+            log.error(f'Unable to open metrics diction file {diction_name}')
     else:
         try:
             lp = open(glm_dict_path).read()
         except:
-            logger.error(f'Unable to open metrics diction file {glm_dict_path}')
+            log.error(f'Unable to open metrics diction file {glm_dict_path}')
     diction = json.loads(lp)
     fdr_keys = list(diction['feeders'].keys())
     fdr_keys.sort()

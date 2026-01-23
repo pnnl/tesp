@@ -58,25 +58,26 @@ if hayden:
     subscription_path = 'C:/Users/reev057/DSOT-DATA/Rates/Subscription'
     metadata_path = 'C:/Users/reev057/PycharmProjects/TESP_Public/examples/analysis/dsot/data'
 else:
-    tesp_dir = os.path.expandvars('$TESPDIR') 
-    datapath = os.path.join(tesp_dir, 'examples/analysis/dsot/data/post_processing') 
+    tesp_dir = os.path.expandvars('$TESPDIR')
+    datapath = os.path.join(tesp_dir, 'examples/analysis/dsot/data/post_processing')
     flat_path = os.path.join(datapath, 'Flat')
     DSOT_path = os.path.join(datapath, 'DSOT')
     TOU_path = os.path.join(datapath, 'TOU')
     transactive_path = os.path.join(datapath, 'rob-don')
     subscription_path = os.path.join(datapath, 'sub') # duplicate the 'rob-don' folder and rename to 'sub'
-    metadata_path = os.path.join(tesp_dir, 'examples/analysis/dsot/data') 
+    metadata_path = os.path.join(tesp_dir, 'examples/analysis/dsot/data')
 
 # ------------------- Select case_path to post process ------------------------
 system_case = "8_hi_system_case_config.json"
 
 # Add cases to case list, in order of dependencies, if any
 # Note, do not add the base case to the case_list
-case_list = []
-case_list.append(DSOT_path)
-case_list.append(TOU_path)
-case_list.append(transactive_path)
-case_list.append(subscription_path)
+case_list = [
+    DSOT_path,
+    TOU_path,
+    transactive_path,
+    subscription_path
+]
 
 
 def process_dso(
@@ -188,7 +189,7 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
     if run_base == True:
         case_list.insert(0, str(base_case_path))
         logger.info("Added base case to processing list")
-    else: 
+    else:
         pass
     # Run each case once to generate required files, once to square up 
     # case_list = np.repeat(case_list, 2)
@@ -299,9 +300,9 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
             rate_scenario = "time-of-use"
             path_adder= ''
         if case_path == transactive_path:
-            case_name = 'RandD'
+            case_name = 'RandD'  # new EandC
             rate_scenario = "transactive"
-            path_adder = ''
+            path_adder = 'rnd'   # new enc
         if case_path == subscription_path:
             case_name = 'Sub'
             rate_scenario = "subscription"
@@ -309,7 +310,7 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
 
         print('---------------Postprocessing ' + str(case_name), 'Case ----------------')
         logger.info('Starting postprocessing for case: %s', case_name)
-        
+
 
         #  Month, path of month data, first day of real data, last day of real data + 1
         if case_path == TOU_path:
@@ -487,8 +488,8 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
 
             results = []
             with ProcessPoolExecutor(max_workers=8) as executor:  # adjust max_workers for CPU/memory
-                futures = {executor.submit(process_dso, dso_num, case_path, demand_case_path, metadata_path, 
-                                            month_def, agent_prefix, metadata_file, case_name, 
+                futures = {executor.submit(process_dso, dso_num, case_path, demand_case_path, metadata_path,
+                                            month_def, agent_prefix, metadata_file, case_name,
                                             rate_scenario): dso_num for dso_num in dso_range}
                 for future in as_completed(futures):
                     dso_num, surplus_err = future.result()
@@ -606,10 +607,10 @@ def batch_process():
     run_base = True
     run_annual_postprocessing(case_list, base_case_path, demand_case_path, run_base)
 
-def one_process():
+def one_process(case):
     # Select case to post-process
-    case = flat_path
-    base_case_path = case
+    case = case
+    base_case_path = flat_path
     demand_case_path = case
 
     run_base = False
@@ -622,7 +623,7 @@ if __name__ == "__main__":
     start_time = time.time()
     logger.info("Starting annual postprocessing script")
     # batch_process()
-    one_process()
+    one_process(flat_path)  # options are flat_path, TOU_path, RND_path
     end_time = time.time()
     total_time = end_time - start_time
     logger.info("Annual postprocessing script completed in %.2f minutes", total_time / 60)

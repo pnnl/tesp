@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2024 Battelle Memorial Institute
+# Copyright (c) 2022-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: glm_dictionary.py
 # tuned to feederGenerator_TSP.m for sequencing of objects and attributes
@@ -301,7 +301,7 @@ def glm_dict_with_microgrids(name_root, config=None, ercot=False):  # , te30=Fal
                                      'arrival_home': ev_arr_home,
                                      'work_duration': ev_dur_work,
                                      'home_duration': ev_dur_home,
-                                     'miles_per_kwh': ev_mileage,
+                                     'miles_per_kWh': ev_mileage,
                                      'range_miles': ev_range,
                                      'efficiency': ev_charg_eff}
             if inHouses:

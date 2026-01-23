@@ -19,8 +19,7 @@ if __name__ == '__main__':
     pd.options.mode.chained_assignment = None  # default='warn'
     head, tail = os.path.split(os.getcwd())
     # data_path = os.path.join(head, 'results', 'tamu', 'tamu_test1_csvs')
-    data_path = os.path.join(
-        head, 'results', 'gld')
+    data_path = os.path.join(head, 'results', 'gld')
     # MN = MeterNetwork()
     # MN.from_csv(
     #     os.path.join(data_path, 'R1-12.47-1_ns3.csv'),
@@ -95,9 +94,9 @@ if __name__ == '__main__':
     # with open(config_file, 'r') as file:
     #     config = json.load(file)
     #     logging.config.dictConfig(config)
-    # logger = logging.getLogger(__name__)
+    # log = logging.getLogger(__name__)
     # from timeit import default_timer as timer
-    # logger.info('Starting the calculations for the TAMU models...')
+    # log.info('Starting the calculations for the TAMU models...')
     # print('Starting the calculations for the TAMU models...')
     # # # counter = 0
     # # # while counter < 10:
@@ -143,7 +142,7 @@ if __name__ == '__main__':
     #     'tamu_test1_results.h5'.format())
     # #     counter += 1
     # print('Finished the calculations for the TAMU models.')
-    # logger.info('Finished the calculations for the TAMU models.')
+    # log.info('Finished the calculations for the TAMU models.')
     # end = timer()
     # print('total time:', end - start)
     # -----Testing the Compare class -----

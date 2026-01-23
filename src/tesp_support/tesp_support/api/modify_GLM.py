@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2023 Battelle Memorial Institute
+# Copyright (c) 2023-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: glm_modifier.py
 import math
@@ -413,14 +413,12 @@ class GLMModifier:
         return sk
 
     # custom objects
-    def add_tariff(self, params: dict) -> None:
+    def add_tariff(self, params: dict, config: dict = None) -> None:
         """Writes tariff information to billing meters. Default values are
         defined in default_values.json and can be optionally provided by
         the caller.
 
-        Args:
-            params (dict): Parameters to define the tarriff, see GridLAB-D
-            Power Flow User Guide for details:
+        Power Flow User Guide for config details:
 
             "bill_mode"
             "price"
@@ -433,23 +431,29 @@ class GLMModifier:
             "third_tier_energy"
             "third_tier_price"
 
+        Args:
+            params (dict): Parameters to define the tariff, see GridLAB-D
+            config (dict):
+
         Returns:
             None
         """
-        params["bill_mode"] = self.defaults.bill_mode
-        params["price"] = self.defaults.kwh_price
-        params["monthly_fee"] = self.defaults.monthly_fee
+        if config is None:
+            config = self.defaults
+        params["bill_mode"] = config.bill_mode
+        params["price"] = config.price
+        params["monthly_fee"] = config.monthly_fee
         params["bill_day"] = "1"
-        if 'TIERED' in self.defaults.bill_mode:
-            if self.defaults.tier1_energy > 0.0:
-                params["first_tier_energy"] = self.defaults.tier1_energy
-                params["first_tier_price"] = self.defaults.tier1_price
-            if self.defaults.tier2_energy > 0.0:
-                params["second_tier_energy"] = self.defaults.tier2_energy
-                params["second_tier_price"] = self.defaults.tier2_price
-            if self.defaults.tier3_energy > 0.0:
-                params["third_tier_energy"] = self.defaults.tier3_energy
-                params["third_tier_price"] = self.defaults.tier3_price
+        if 'TIERED' in config.bill_mode:
+            if config.tier_1_energy > 0.0:
+                params["first_tier_energy"] = config.tier_1_energy
+                params["first_tier_price"] = config.tier_1_price
+            if config.tier_2_energy > 0.0:
+                params["second_tier_energy"] = config.tier_2_energy
+                params["second_tier_price"] = config.tier_2_price
+            if config.tier_3_energy > 0.0:
+                params["third_tier_energy"] = config.tier_3_energy
+                params["third_tier_price"] = config.tier_3_price
 
     def add_voltage_dump(self, outname: str) -> None:
         """Adds voltage_dump and current_dump objects to the GLMModel object
@@ -731,7 +735,7 @@ class GLMModifier:
                 self.add_metrics_collector(e_name, prefix + gld_class)
             self.add_object(prefix + gld_class, e_name, params)
 
-    # TODO params xfrm diction
+    # TODO params xfmr diction
     def add_xfmr_config(self,
                         key: str, phs: str, kvat: float, v_nom: float,
                         v_sec: float, install_type: str,
@@ -825,7 +829,7 @@ class GLMModifier:
             params["diameter"] = str(row[4])
             self.add_object("triplex_line_configuration", name, params)
 
-    def add_substation(self, name: str, phs: str, v_ll: float) -> None:
+    def add_substation(self, node_name: str, phs: str, v_ll: float) -> None:
         """Write the substation swing node, transformer, metrics collector and fncs_msg/helics object
 
         Args:
@@ -836,19 +840,17 @@ class GLMModifier:
         # if this feeder will be combined with others, need USE_FNCS to appear first as a marker for the substation
         if len(self.defaults.case_name) > 0:
             if self.defaults.message_broker == "fncs_msg":
-                def_params = dict()
                 t_name = "gld" + self.defaults.substation_name
-                def_params["parent"] = "network_node"
-                def_params["configure"] = self.defaults.case_name + '_gridlabd.txt'
-                def_params["option"] = "transport:hostname localhost, port " + str(self.defaults.port)
-                def_params["aggregate_subscriptions"] = "true"
-                def_params["aggregate_publications"] = "true"
-                self.add_object("fncs_msg", t_name, def_params)
+                params = {"parent": "network_node",
+                              "configure": self.defaults.case_name + '_gridlabd.txt',
+                              "option": "transport:hostname localhost, port " + str(self.defaults.port),
+                              "aggregate_subscriptions": "true",
+                              "aggregate_publications": "true"}
+                self.add_object("fncs_msg", t_name, params)
             if self.defaults.message_broker == "helics_msg":
-                def_params = dict()
                 t_name = "gld" + self.defaults.substation_name
-                def_params["configure"] = self.defaults.case_name + '.json'
-                self.add_object("helics_msg", t_name, def_params)
+                params = {"configure": self.defaults.case_name + '.json'}
+                self.add_object("helics_msg", t_name, params)
 
         name = 'substation_xfmr_config'
         params = {"connect_type": 'WYE_WYE',
@@ -864,13 +866,13 @@ class GLMModifier:
 
         name = "substation_transformer"
         params = {"from": "network_node",
-                  "to": name, "phases": phs,
+                  "to": node_name, "phases": phs,
                   "configuration": "substation_xfmr_config"}
         self.add_object("transformer", name, params)
 
         vsrcln = self.defaults.transmissionVoltage / math.sqrt(3.0)
         name = "network_node"
-        params = {"groupid": self.defaults.base_feeder_name,
+        params = {"groupid": self.defaults.base_feeder_name.replace(".glm", ""),
                   "bustype": 'SWING',
                   "nominal_voltage": '{:.2f}'.format(vsrcln),
                   "positive_sequence_voltage": '{:.2f}'.format(vsrcln),

@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2024 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: DSO_rate_making.py
 """
@@ -31,7 +31,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num,
     Args:
         metadata (dict): metadata structure for the DSO to be analyzed
         dir_path (str): directory path for the case to be analyzed
-        folder_prefix (str): prefix of GLD folder name (e.g. '\TE_base_s')
+        folder_prefix (str): prefix of GLD folder name (e.g. '/TE_base_s')
         dso_num (str): number of the DSO folder to be opened
         day_range (list): range of days to be summed (for example a month).
         SF (float): Scaling factor to scale GLD results to TSO scale (e.g. 1743)
@@ -3607,8 +3607,8 @@ def _testing():
 
     sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
 
-    data_path = 'C:/Users/reev057\PycharmProjects/DSO+T/Data/Simdata/DER2/V1.1-1336-gb74f2d99/lean_8'
-    base_case = 'C:/Users/reev057\PycharmProjects/DSO+T/Data/Simdata/DER2/V1.1-1336-gb74f2d99/lean_8'
+    data_path = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/V1.1-1336-gb74f2d99/lean_8'
+    base_case = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/V1.1-1336-gb74f2d99/lean_8'
     agent_prefix = '/DSO_'
     GLD_prefix = '/Substation_'
     tariff_path = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/analysis/dsot/data'
@@ -3649,7 +3649,7 @@ def _testing():
         #             ['Oct', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_10', 2, 31],
         #             ['Nov', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_11', 2, 30],
         #             ['Dec', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_12', 2, 7]]
-        month_def = [['Jan', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata\DER2/V1.1-1336-gb74f2d99/lean_8', 2, 4]]
+        month_def = [['Jan', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/V1.1-1336-gb74f2d99/lean_8', 2, 4]]
 
         #  -------------- Calculate dataframe of monthly power consumption and peak power demand ---------
         process_meters = True
