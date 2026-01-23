@@ -48,7 +48,7 @@ done
 
 # Some support depends linux version for python
 _ver_="3.12"
-lv=( $(cat /etc/issue) )
+lv=( $(cat /etc/issue.net) )
 lv=( ${lv[1]//./ } )
 if [[ ${lv[0]} -lt 24 && ${lv[0]} -gt 18 ]]; then
   echo "'deadsnakes' has been added to ppa repository"
@@ -57,7 +57,7 @@ elif [[ ${lv[0]} -eq 24 ]]; then
   echo "'deadsnakes' will not add to ppa repository"
 else
   echo "**************************************************"
-  echo "$(cat /etc/issue), not supported for TESP"
+  echo "$(cat /etc/issue.net), not supported for TESP"
   echo "**************************************************"
   exit
 fi
@@ -65,7 +65,7 @@ fi
 # add build tools for compiling
 sudo apt-get update
 sudo apt-get -y upgrade
-sudo apt-get -y install pkgconf \
+sudo apt-get -y reinstall pkgconf \
 git \
 build-essential \
 autoconf \
@@ -76,7 +76,7 @@ cmake \
 unzip
 
 # add tools/libs for Java support, HELICS, FNCS, GridLAB-D, Ipopt/cbc
-sudo apt-get -y install openjdk-11-jdk \
+sudo apt-get -y reinstall openjdk-11-jdk \
 libzmq5-dev \
 libczmq-dev \
 libboost-dev \
@@ -95,6 +95,7 @@ python${_ver_}-tk \
 python3-pil.imagetk
 
 sudo ln -sf /usr/lib/jvm/java-11-openjdk-amd64 /usr/lib/jvm/default-java
+exit
 
 echo
 if [[ -z $1 && -z $2 ]]; then

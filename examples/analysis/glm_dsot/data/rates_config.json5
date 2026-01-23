@@ -99,7 +99,7 @@
   "dt": 15,
   "pf_dc": 1,
   "opf_dc": 1,
-  "LogLevel": "DEBUG",
+  "LogLevel": "INFO",
   "gld_debug": 0,
   "DSOT_case": true,
   // Default: blank, otherwise set a path for all outputs
@@ -112,7 +112,7 @@
   // set to true for running ames opf, set to false for running pypower opf
   "ames": true,
   // Set solver for agent [cbc, ipopt, or cplex].
-  "solver": "cbc",
+  "solver": "ipopt",
   // Solver for tso_PSST.py is set by PSST_SOLVER in tesp.env or by command line export variable
   // If solver = cbc, "quadratic" is set to false
   "numCore": 12,
