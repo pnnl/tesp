@@ -1934,8 +1934,8 @@ def load_duration_plot(dso, system, subsystem, variable, day, case, comp, agent_
         LDC_comp_data.sort(reverse=True)
         load_comp_data = np.array(LDC_comp_data)
 
-    l = len(load_case_data)
-    index = np.array(range(0, l)) * 100 / l
+    len_data = len(load_case_data)
+    index = np.array(range(0, len_data)) * 100 / len_data
 
     if subsystem is None:
         subsystem = ''
@@ -3271,11 +3271,11 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
         DSOTmean = np.mean(DSOT_data)
         DSOTmedian = np.median(DSOT_data)
 
-    l = len(ERCOTLDC_data)
-    index = np.array(range(0, l)) * 100 / l
+    len_data = len(ERCOTLDC_data)
+    index = np.array(range(0, len_data)) * 100 / len_data
 
-    l = len(DSOT_data)
-    dsot_index = np.array(range(0, l)) * 100 / l
+    len_data = len(DSOT_data)
+    dsot_index = np.array(range(0, len_data)) * 100 / len_data
 
     plt.clf()
     plt.plot(index, ERCOTLDC_data, label='ERCOT Delta DA LMP')
@@ -3399,11 +3399,11 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
         DSOTmean = np.mean(DSOT_RT_data)
         DSOTmedian = np.median(DSOT_RT_data)
 
-    l = len(ERCOTRTLDC_data)
-    index = np.array(range(0, l)) * 100 / l
+    len_data = len(ERCOTRTLDC_data)
+    index = np.array(range(0, len_data)) * 100 / len_data
 
-    l = len(DSOT_RT_data)
-    dsot_index = np.array(range(0, l)) * 100 / l
+    len_data = len(DSOT_RT_data)
+    dsot_index = np.array(range(0, len_data)) * 100 / len_data
 
     plt.clf()
     plt.plot(index, ERCOTRTLDC_data, label='ERCOT Delta RT LMP')
@@ -3511,11 +3511,11 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
         DSOTmean = np.mean(DSOT_data)
         DSOTmedian = np.median(DSOT_data)
 
-    l = len(ERCOTGDC_data)
-    index = np.array(range(0, l)) * 100 / l
+    len_data = len(ERCOTGDC_data)
+    index = np.array(range(0, len_data)) * 100 / len_data
 
-    l = len(DSOT_data)
-    dsot_index = np.array(range(0, l)) * 100 / l
+    len_data = len(DSOT_data)
+    dsot_index = np.array(range(0, len_data)) * 100 / len_data
 
     plt.clf()
     plt.plot(index, ERCOTGDC_data, label='ERCOT Delta DA LMP')
@@ -5855,8 +5855,8 @@ def run_plots():
         LDC_case_data.sort(reverse=False)
         load_case_data = np.array(LDC_case_data)
 
-        l = len(load_case_data)
-        index = np.array(range(0, l)) * 100 / l
+        len_data = len(load_case_data)
+        index = np.array(range(0, len_data)) * 100 / len_data
 
         plt.clf()
         plt.plot(index, load_case_data, label='wind')
@@ -5999,8 +5999,8 @@ def run_plots():
             LMPLowLDC_data.sort(reverse=False)
             LMPLowLDC_data = np.array(LMPLowLDC_data)
 
-            l = len(DeltaLDC_data)
-            index_day = np.array(range(0, l)) * 100 / l
+            len_data = len(DeltaLDC_data)
+            index_day = np.array(range(0, len_data)) * 100 / len_data
 
             PriceLDC_data = prices_data[place + ' $_mwh'].values.tolist()
             PriceLDC_data.sort(reverse=False)
@@ -6011,15 +6011,15 @@ def run_plots():
                 DADeltaLDC = DeltaLDC_data
                 DAHighLDC = LMPHighLDC_data
                 DALowLDC = LMPLowLDC_data
-                l = len(DAPriceLDC)
-                index_hr = np.array(range(0, l)) * 100 / l
+                len_data = len(DAPriceLDC)
+                index_hr = np.array(range(0, len_data)) * 100 / len_data
             elif scenario == 'RT':
                 RTPriceLDC = PriceLDC_data
                 RTDeltaLDC = DeltaLDC_data
                 RTHighLDC = LMPHighLDC_data
                 RTLowLDC = LMPLowLDC_data
-                l = len(RTPriceLDC)
-                index_15min = np.array(range(0, l)) * 100 / l
+                len_data = len(RTPriceLDC)
+                index_15min = np.array(range(0, len_data)) * 100 / len_data
 
         plt.clf()
         plt.plot(index_day, RTDeltaLDC, label='RT Delta LMP')

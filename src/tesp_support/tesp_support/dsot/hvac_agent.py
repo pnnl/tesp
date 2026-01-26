@@ -731,7 +731,7 @@ class HVACDSOT:  # TODO: update class name
             log.error(f'We could not calculate Wg. Glazing Treatment {self.glazing_treatment} Glazing Layers {self.glazing_layers} Window Frame {self.window_frame}')
 
         Rd = self.Rdoors
-        I = self.airchange_per_hour
+        ac_per_hr = self.airchange_per_hour
         mf = self.thermal_mass_per_floor_area
         # some hard-coded GridLAB-D defaults
         aspect = self.aspect_ratio  # footprint x/y ratio
@@ -768,11 +768,11 @@ class HVACDSOT:  # TODO: update class name
         Aw = (Awt - Ag - Ad) * EWR  # net exterior wall area, taking EWR as 1s
         Vterm = self.sqft * h * VHa
 
-        # airchange_per_hour = I
+        # airchange_per_hour = ac_per_hr
         # volume = ceiling_height*floor_area = 8.0*2500.0
         # air_density = 0.0735
         # air_heat_capacity = 0.2402
-        # airchange_UA = airchange_per_hour * volume * air_density * air_heat_capacity = I*;
+        # airchange_UA = airchange_per_hour * volume * air_density * air_heat_capacity = ac_per_hr*;
 
         # floor_area= 2500.0
         # exterior_ceiling_fraction = 1.0
@@ -796,7 +796,7 @@ class HVACDSOT:  # TODO: update class name
         def div(x, y, def_val_if_zero_denom=0):
             return x / y if y != 0 else def_val_if_zero_denom
 
-        self.UA = div(Ac, Rc) + div(Af, Rf) + div(Aw, Rw) + div(Ag, Rg) + div(Ad, Rd) + Vterm * I
+        self.UA = div(Ac, Rc) + div(Af, Rf) + div(Aw, Rw) + div(Ag, Rg) + div(Ad, Rd) + Vterm * ac_per_hr
         self.CA = 3 * Vterm
         self.HM = hs * (Aw / EWR + Awt * IWR + Ac * self.stories / ECR)
         self.CM = self.sqft * mf - 2 * Vterm

@@ -112,7 +112,7 @@ class precooler:
         Rf = thermalIntegrity[self.ti]['Rfloor']
         Rg = thermalIntegrity[self.ti]['Rwindows']  # g for glazing
         Rd = thermalIntegrity[self.ti]['Rdoors']
-        I = thermalIntegrity[self.ti]['airchange_per_hour']
+        ac_per_hr = thermalIntegrity[self.ti]['airchange_per_hour']
         # some hard-coded GridLAB-D defaults
         aspect = 1.5  # footprint x/y ratio
         A1d = 19.5  # area of one door
@@ -135,7 +135,7 @@ class precooler:
         Aw = (Awt - Ag - Ad) * EWR  # net exterior wall area, taking EWR as 1s
         Vterm = self.sqft * h * VHa
 
-        self.UA = (Ac / Rc) + (Ad / Rd) + (Af / Rf) + (Ag / Rg) + (Aw / Rw) + Vterm * I
+        self.UA = (Ac / Rc) + (Ad / Rd) + (Af / Rf) + (Ag / Rg) + (Aw / Rw) + Vterm * ac_per_hr
         self.CA = 3 * Vterm
         self.HM = hs * (Aw / EWR + Awt * IWR + Ac * self.stories / ECR)
         self.CM = self.sqft * mf - 2 * Vterm
