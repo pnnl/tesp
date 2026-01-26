@@ -33,7 +33,7 @@ from copy import deepcopy
 import numpy as np
 
 from ..dsot.helpers_dsot import Curve, get_intersect, MarketClearingType, resample_curve, resample_curve_for_price_only
-from ..api.schedule_client import *
+from ..api.schedule_client import DataClient
 
 
 class RetailMarket:

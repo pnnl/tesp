@@ -1355,7 +1355,7 @@ def customer_cfs_delta(cases, data_paths, metadata_file, metadata_path = None):
     file_path_fig = os.path.join(data_paths[0], 'plots', plot_filename)
     plt.savefig(file_path_fig, bbox_inches='tight')
 
-    pop_subset = customer_cfs_df[customer_cfs_df['cust_participating'] == True]
+    pop_subset = customer_cfs_df[customer_cfs_df['cust_participating']]
 
     # Plot participating customer savings by customer class:
     plot_customer_pdf('tariff_class', customer_class, 'bill_savings_pct', pop_subset, cases[1], data_paths[1])
@@ -1392,7 +1392,7 @@ def customer_cfs_delta(cases, data_paths, metadata_file, metadata_path = None):
     pop_subset = pop_subset[pop_subset['dso'] == 1]
     plot_customer_pdf('cust_participating', participation, 'bill_savings_pct', pop_subset, cases[1],
                       data_paths[1])
-    pop_subset = pop_subset[pop_subset['cust_participating'] == True]
+    pop_subset = pop_subset[pop_subset['cust_participating']]
     # plot_customer_pdf('dso', dsos, 'net_bill_savings_pct', pop_subset, cases[1], data_paths[1])
 
     # Plot residential customer bills by solar

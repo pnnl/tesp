@@ -19,7 +19,7 @@ import numpy as np
 from ..api.helpers import log
 from ..api.parse_helpers import parse_kw
 from ..dsot.helpers_dsot import Curve, get_intersect, MarketClearingType
-from ..api.schedule_client import *
+from ..api.schedule_client import DataClient
 
 
 class DSOMarket:

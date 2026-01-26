@@ -17,13 +17,13 @@ from copy import deepcopy
 from datetime import datetime, timedelta
 from math import cos, sin
 
-import glm
+from pyglm import glm
 import numpy as np
 import pandas as pd
 import pytz
 
 from .hvac_agent import HVACDSOT
-from ..api.schedule_client import *
+from ..api.schedule_client import DataClient
 
 
 class Forecasting:
