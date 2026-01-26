@@ -2343,10 +2343,10 @@ class Feeder:
                     self.config.base.base_feeder_name = self.config.taxonomy
                 sec_v = float(i_glm.transformer_configuration[e_config]['secondary_voltage'])
                 if sec_v > 500:
-                    log.warning(f"WARNING: %s id has a secondary voltage that is higher than 500 V", e_name)
+                    log.warning(f"WARNING: {e_name} id has a secondary voltage that is higher than 500 V")
                     continue
                 if e_name not in self.seg_loads:
-                    log.warning(f"WARNING: %s not in the seg loads", e_name)
+                    log.warning(f"WARNING: {e_name} not in the seg loads")
                     continue
 
                 seg_kva = self.seg_loads[e_name][0]

@@ -2,7 +2,7 @@
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: case_comparison_plots.py
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import waterfall_chart #distribution name: waterfallcharts
 import matplotlib.pyplot as plt
@@ -10,7 +10,6 @@ import matplotlib
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from datetime import datetime, date, timedelta
 
 from ..dsot import plots as pt
 

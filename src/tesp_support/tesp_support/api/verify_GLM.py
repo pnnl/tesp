@@ -1,9 +1,8 @@
 """This script was written to check generated .glms against existing .glms that have been tested and are known to solve successfully.
 
 """
-from api.modify_GLM import GLMModifier
+from ..api.modify_GLM import GLMModifier
 import os
-import numpy as np
 
 class Read:
     def __init__(self, data_path, in_file_glm):

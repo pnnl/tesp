@@ -283,7 +283,7 @@ def create_load_less_solar(input_load_filename, output_load_filename, solar_dir,
                                              f'_solar_diagnostics.csv')
             diag_fh = _open_file(file_path,'w')
             full_data = full_data + f'DSO {bus_idx}\n'
-            full_data = full_data + f'Load (MW),Distributed Solar (MW),Load less solar (MW)\n'
+            full_data = full_data + 'Load (MW),Distributed Solar (MW),Load less solar (MW)\n'
 
         # Reading the solar data for the given DSO in
         if mode == mode.HOUR:

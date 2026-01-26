@@ -198,7 +198,7 @@ class Schema:
         return self.tables
 
     def get_columns(self, table, skip_rows=0):
-        if not table in self.skip_rows:
+        if table not in self.skip_rows:
             self.skip_rows[table] = skip_rows
         else:
             if skip_rows > 0:

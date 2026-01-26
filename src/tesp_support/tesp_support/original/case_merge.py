@@ -126,8 +126,8 @@ def merge_substation_msg(target, sources):
         lp = open(workdir + fdr + '_substation.json').read()
         cfg = json.loads(lp)
         for key in cfg:
-            if not key in ["subscriptions", "publications"]:
-                if not key in diction:
+            if key not in ["subscriptions", "publications"]:
+                if key not in diction:
                     diction[key] = cfg[key]
                 else:
                     if diction[key] != cfg[key]:
