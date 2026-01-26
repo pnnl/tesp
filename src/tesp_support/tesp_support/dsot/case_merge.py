@@ -180,6 +180,10 @@ def del_danglers(glm: GLMModifier, glm_type: str, i_glm_obj):
     print(f"'From' dangler objects: {from_dangler}" )
     print(f"'To' and 'From' objects: {to_from_dangler}" )
 
+def remove(glm: GLMModifier, glm_type: str, i_glm_obj_instances):
+    if len(i_glm_obj_instances):
+        glm.del_object(glm_type, next(iter(i_glm_obj_instances)))
+
 def glm_merge(target, sources, xfmva, plot: bool, pos_data: dict):
     """ Combines GridLAB-D input files into "target". The source files must
     already exist. This is an updated version of merge_glm() that utilizes
@@ -242,20 +246,21 @@ def glm_merge(target, sources, xfmva, plot: bool, pos_data: dict):
             }
             glm.add_object("switch", "tie_" + fdr, params)
             # Delete the duplicate components
-            glm.del_object('voltdump', next(iter(i_glm.voltdump.instances)))
-            glm.del_object('currdump', next(iter(i_glm.currdump.instances)))
-            glm.del_object('climate', next(iter(i_glm.climate.instances)))
-            glm.del_object('player', next(iter(i_glm.player.instances)))
-            glm.del_object('recorder', next(iter(i_glm.recorder.instances)))
+            remove(glm,'voltdump', i_glm.voltdump.instances)
+            remove(glm,'currdump', i_glm.currdump.instances)
+            remove(glm,'climate', i_glm.climate.instances)
+            remove(glm,'player', i_glm.player.instances)
+            remove(glm,'recorder', i_glm.recorder.instances)
+            remove(glm,'metrics_collector_writer', i_glm.metrics_collector_writer.instances)
             try:
-                glm.del_object('fncs_msg', next(iter(i_glm.fncs_msg.instances)))
+                remove(glm,'fncs_msg', i_glm.fncs_msg.instances)
             except StopIteration:
-                glm.del_object('helics_msg', next(iter(i_glm.helics_msg.instances)))
+                remove(glm,'helics_msg', i_glm.helics_msg.instances)
 
             glm.del_object('substation', 'network_node')
             glm.del_object('transformer', 'substation_transformer')
             glm.del_object('metrics_collector', 'mc_network_node')
-            glm.del_object('metrics_collector_writer', next(iter(i_glm.metrics_collector_writer.instances)))
+
             # Print the rest of the feeder's glm to the same model file
             print(glm.model.glm_merge(), file=op)
     op.close()

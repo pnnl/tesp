@@ -604,8 +604,9 @@ class GLMModifier:
                             params[p] = e_object[p]
             self.add_object(gld_class, e_name, params)
 
-            if want_metrics:
-                self.add_metrics_collector(e_name, gld_class)
+            if self.defaults.metrics_interval > 0:
+                if gld_class in ['capacitor', 'regulator', 'transformer']:
+                    self.add_metrics_collector(e_name, gld_class)
 
     def add_voltage_class(self, gld_class: str, v_ln: float, v_ll: float, secmtrnode: dict) -> None:
         """Write GridLAB-D instances that have a primary nominal voltage (i.e. node, meter and load).

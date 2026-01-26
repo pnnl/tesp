@@ -156,6 +156,8 @@ class Config:
         self.ev = Electric_Vehicle(self)
         global rng
         rng = np.random.default_rng(self.seed)
+        self.glm.defaults.metrics_interval = self.metrics_interval
+
 
     def preamble(self) -> None:
         """ Add required modules, objects, includes, defines, and sets required
@@ -2451,17 +2453,14 @@ class Feeder:
                     'overhead_line', 'underground_line', 'series_reactor',
                     'regulator', 'transformer', 'capacitor']
             for link in links:
-                metrics = False
-                if link in ['regulator', 'capacitor']:
-                    metrics = True
-                self.glm.add_link_class(link, self.seg_loads, want_metrics=metrics)
+                self.glm.add_link_class(link, self.seg_loads)
 
         elif self.feed_type == "copp":
             self.config.base.base_feeder_name = "commercial_copperplate_feeder"
             self.glm.add_config_class('regulator_configuration')
-            self.glm.add_link_class('regulator', self.seg_loads, want_metrics=True)
+            self.glm.add_link_class('regulator', self.seg_loads)
             self.glm.add_config_class('transformer_configuration')
-            self.glm.add_link_class('transformer', self.seg_loads, want_metrics=True)
+            self.glm.add_link_class('transformer', self.seg_loads)
 
         return self.secnode, self.seg_loads
 

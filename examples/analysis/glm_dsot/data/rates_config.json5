@@ -2,7 +2,7 @@
   // Set to "HELICS" or "FNCS"
   'messenger': "FNCS",
   // Case name root, case_type will be added as a suffix when needed
-  "caseName": "gld_feeder_test",
+  "caseName": "feeder_test",
   // Simulation start time, YYYY-MM-DD HH:MM:SS
   "StartTime": "2016-08-05 00:00:00",
   // Simulation end time, YYYY-MM-DD HH:MM:SS
@@ -111,7 +111,7 @@
   "bulkpower_bus": 1,
   // set to true for running ames opf, set to false for running pypower opf
   "ames": true,
-  // Set solver for agent [cbc, ipopt, or cplex].
+  // Set solver for agent [cbc, ipopt (default), or cplex].
   "solver": "ipopt",
   // Solver for tso_PSST.py is set by PSST_SOLVER in tesp.env or by command line export variable
   // If solver = cbc, "quadratic" is set to false
@@ -184,11 +184,15 @@
   "backbone_files": {
     // taxonomy feeder file
     "taxonomy": "",
-    // random seed, should chose a prime number
+    // random seed, should choose a prime number
     "seed": 0,
     "support_path": "../../../dsot/data/schedules/",
     "weather_path": "../../../dsot/data/weather/"
   },
+  // *** Gridlabd metrics
+  // Setting metrics_interval to 0 turns off metrics
+  // Removes all metrics collector and writer in the glm files
+  "metrics_interval": 0,
   "metrics": [
     "house",
     "waterheater",
@@ -201,11 +205,11 @@
     "substation",
     "evchagerdet"
   ],
-  "metrics_interval": 300,
   "metrics_interim": 7200,
   "metrics_filename": "${METRICS_FILE}",
   "metrics_alternate": "yes",
   "metrics_extension": "h5",
+  // *** Substation metrics
   // Level of reporting detail. False = limited, true = full
   "metrics_full_detail": true,
   "minimum_step": 30,
