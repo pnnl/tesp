@@ -203,7 +203,7 @@ def customer_monthly_stats(cases, data_paths, output_path, dso_num, cust_class=N
                     is_in_class = False
                     print(f"CFS is missing: {e}")
 
-                if cust_class == None or is_in_class:
+                if cust_class is None or is_in_class:
                     for case2 in cases:
                         for month in months:
                             meters.append(meter)
@@ -219,9 +219,10 @@ def customer_monthly_stats(cases, data_paths, output_path, dso_num, cust_class=N
                     results_df.loc[(customer, case, month), 'total bill'] = var_df.loc[(customer), month].sum()
                     results_df.loc[(customer, case, month), 'month'] = month
                     results_df.loc[(customer, case, month), 'case'] = case
-                    results_df.loc[(customer, case, month), 'change'] = 100 * (results_df.loc[(customer, case, month), 'total bill'] \
-                                                                            - results_df.loc[(customer, cases[0], month), 'total bill']) \
-                                                                            / results_df.loc[(customer, cases[0], month), 'total bill']
+                    results_df.loc[(customer, case, month), 'change'] = (100 * (
+                            results_df.loc[(customer, case, month), 'total bill'] -
+                            results_df.loc[(customer, cases[0], month), 'total bill']) /
+                            results_df.loc[(customer, cases[0], month), 'total bill'] )
 
     plt.clf()
 
@@ -865,7 +866,7 @@ def dso_cfs_delta(cases_list, data_paths_list, dso_range, metadata_file, metadat
         comp_path = data_paths_list[i][0]
         case_name = Case_name_dict[cases_list[i][1]]
 
-        if metadata_path == None:
+        if metadata_path is None:
             path = "../../../examples/dsot_data"
         else:
             path = metadata_path
@@ -1143,7 +1144,7 @@ def customer_cfs_delta(cases, data_paths, metadata_file, metadata_path = None):
     # EnergyPurchased
     # BlendedRate
     # EffectiveCostEnergy
-    if metadata_path == None:
+    if metadata_path is None:
         path = "../../../examples/dsot_data"
     else:
         path = metadata_path
@@ -1281,7 +1282,7 @@ def customer_cfs_delta(cases, data_paths, metadata_file, metadata_path = None):
             DER_list = 'None '
         customer_comp_cfs_df.loc[customer, 'DER_participating'] = DER_list[:-1]
 
-    if subpopulation != None:
+    if subpopulation is not None:
         pop_subset = customer_cfs_df[customer_cfs_df['tariff_class'] == subpopulation]
         pop_comp_subset = customer_comp_cfs_df[customer_comp_cfs_df['tariff_class'] == subpopulation]
     else:
@@ -1364,7 +1365,7 @@ def customer_cfs_delta(cases, data_paths, metadata_file, metadata_path = None):
     # Plot participating customer savings by building type:
     plot_customer_pdf('Building Type', building_type, 'net_energy_cost_savings_pct', pop_subset, cases[1], data_paths[1])
 
-    if subpopulation != None:
+    if subpopulation is not None:
         pop_subset = customer_cfs_df[customer_cfs_df['tariff_class'] == subpopulation]
         pop_comp_subset = customer_comp_cfs_df[customer_comp_cfs_df['tariff_class'] == subpopulation]
     else:

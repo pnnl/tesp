@@ -1376,7 +1376,7 @@ class Commercial_Build:
             # Determine heating system type of building
             if rng.normal(0, 1) <= bldg_specs['primary_electric_heating'][self.config.utility_type]:
                 bldg['heat_type'] = Commercial_Build.rand_bin_select(bldg_specs['electric_heating_system_type'], rng.normal(0, 1))
-                if bldg['heat_type'] == None: #TODO: This should not be necessary
+                if bldg['heat_type'] is None: #TODO: This should not be necessary
                     bldg['heat_type'] = 'GAS'
             else:
                 bldg['heat_type'] = 'GAS'
