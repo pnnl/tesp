@@ -1847,7 +1847,7 @@ def write_houses(basenode, op, vnom, bIgnoreThermostatSchedule=True, bWriteServi
         heating_str = 'heating{:.0f}*{:.4f}+{:.2f}'.format(heating_sch, heating_scale, heating_diff)
         # default heating and cooling setpoints are 70 and 75 degrees in GridLAB-D
         # we need more separation to assure no overlaps during transactive simulations
-        if bIgnoreThermostatSchedule == True:
+        if bIgnoreThermostatSchedule:
             print('  cooling_setpoint 80.0;', file=op)
             print('  heating_setpoint 60.0;', file=op)
         else:

@@ -1418,7 +1418,7 @@ def customer_cfs_delta(cases, data_paths, metadata_file, metadata_path = None):
     pop_subset = pop_subset[pop_subset['tariff_class'] == 'Residential']
     # plot_customer_pdf('cust_participating', participation, 'bill_savings_pct', pop_subset, cases[1],
     #                   data_paths[1])
-    pop_subset = pop_subset[pop_subset['cust_participating'] == True]
+    pop_subset = pop_subset[pop_subset['cust_participating']]
 
 
     plt.figure(figsize=(6, 4))

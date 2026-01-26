@@ -4677,7 +4677,7 @@ def customer_comparative_analysis(case_data, comp_data, case_path, comp_path, ds
     # x = customer_diff_df.loc(axis=0)[:, ['kw-hr']]
 
     customer_diff_df.to_csv(path_or_buf=case_path + '/customer_diff_data_DSO' + dso_num + '.csv')
-    participating = customer_diff_df.loc[customer_diff_df[('metadata', 'participating')] == True]
+    participating = customer_diff_df.loc[customer_diff_df[('metadata', 'participating')]]
 
     plt.figure()
     plt.scatter(participating[('metadata', 'slider_setting')], -100 * participating[(month, 'kw-hr')])

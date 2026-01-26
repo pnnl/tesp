@@ -227,7 +227,7 @@ class RetailMarket:
         cleared_price = 0.0
         cleared_quantity = 0.0
 
-        if curve_buyer.uncontrollable_only == True:
+        if curve_buyer.uncontrollable_only:
             temp = curve_buyer.quantities[0]
             if min(curve_seller.quantities) <= temp <= max(curve_seller.quantities):
                 cleared_quantity = temp
