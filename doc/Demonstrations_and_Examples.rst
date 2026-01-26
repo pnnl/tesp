@@ -4,8 +4,8 @@
     
 .. _RunExamples:
 
-TESP Demonstrations and Examples
-================================
+Demonstrations and Examples
+===========================
 
 To help users of TESP to better understand how the software platform has been created and integrated, a number of sample projects are included in the distribution of TESP and are divided into two categories: capability demonstrations and analysis examples. 
 
@@ -13,8 +13,8 @@ Capability demonstrations are sample projects that are relatively simple and int
 
 In contract, analysis examples are versions of analysis that have been performed in the past with TESP with specific analysis objectives. These examples have much more comprehensive documentation within TESP and have produced one or more publications that provide further detail. The versions of these analysis that are included in TESP are not necessarily the same as those that were originally used but they are very similar and are examples of specific transactive concepts or mechanisms. The results of the version of these examples that are distributed with TESP are not only examples of how a transactive energy study could be assembled with TESP but the results produced by running the examples will be as meaningful (though not necessarily identical) to those used to produce the original analysis conclusions and publications.
 
-TESP Capability Demonstrations
-------------------------------
+Capability Demonstrations
+-------------------------
 
 .. toctree::
     :maxdepth: 2
@@ -48,8 +48,8 @@ Some general tips for Linux:
 * **./kill5570.sh** will terminate all processes connected to port 5570; if you have to do this, make sure **lsof -i :5570** shows nothing before attempting another case
 * it is recommended that you append **&** to any python plot commands, so they run in the background.
 
-TESP Example Analysis 
----------------------
+Example Analysis
+----------------
 
 .. toctree::
     :maxdepth: 3

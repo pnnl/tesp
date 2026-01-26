@@ -3,6 +3,7 @@
 # file: DSOT_sankey
 
 from os.path import expandvars
+
 import matplotlib
 import pandas as pd
 import plotly.graph_objects as go
@@ -102,8 +103,7 @@ def load_CFS_data(results_path, dso_range, update_data, scale, labelvals, calibr
 
         # Compile data for all DSOs:
         for dso in dso_range:
-            revenue = pt.load_json(results_path,
-                                                        'DSO' + str(dso) + '_Revenues_and_Energy_Sales.json')
+            revenue = pt.load_json(results_path,  'DSO' + str(dso) + '_Revenues_and_Energy_Sales.json')
             expenses = pt.load_json(results_path, 'DSO' + str(dso) + '_Expenses.json')
             capital_costs = pt.load_json(results_path, 'DSO' + str(dso) + '_Capital_Costs.json')
 
@@ -219,14 +219,16 @@ def load_CFS_data(results_path, dso_range, update_data, scale, labelvals, calibr
                 cap_cost = 2671
                 fixed_ops = 23.4
             data['data'][0]['link']['value'][link_id] = gendata_df.loc['Total revenue ($k)', fuel] + CapacityPayments * \
-                                                   cap_factor * gendata_df.loc['Capacity (MW)', fuel] / TotalCapacity
+                                                        cap_factor * gendata_df.loc['Capacity (MW)', fuel] / TotalCapacity
             total_gen_revenue += data['data'][0]['link']['value'][link_id]
             data['data'][0]['link']['value'][link_id + 1] = gendata_df.loc['Capacity (MW)', fuel] * 0.0913 * cap_cost
             data['data'][0]['link']['value'][link_id + 3] = gendata_df.loc['Fuel cost ($k)', fuel]
             data['data'][0]['link']['value'][link_id + 4] = gendata_df.loc['Startup costs ($k)', fuel]
             data['data'][0]['link']['value'][link_id + 2] = max(fixed_ops * gendata_df.loc['Capacity (MW)', fuel],
-                data['data'][0]['link']['value'][link_id] - data['data'][0]['link']['value'][link_id + 1] -
-                data['data'][0]['link']['value'][link_id + 3] - data['data'][0]['link']['value'][link_id + 4])
+                                                                data['data'][0]['link']['value'][link_id] -
+                                                                data['data'][0]['link']['value'][link_id + 1] -
+                                                                data['data'][0]['link']['value'][link_id + 3] -
+                                                                data['data'][0]['link']['value'][link_id + 4])
 
         # Calibration step to balance generator revenues whose splits that are only estimates:
         if calibrate:
@@ -255,16 +257,22 @@ def load_CFS_data(results_path, dso_range, update_data, scale, labelvals, calibr
                     cap_factor = 0.38
                     cap_cost = 2671
                     fixed_ops = 23.4
-                data['data'][0]['link']['value'][link_id] = data['data'][0]['link']['value'][link_id] * correction_factor
+                data['data'][0]['link']['value'][link_id] = data['data'][0]['link']['value'][
+                                                                link_id] * correction_factor
                 corrected_total_gen_revenue += data['data'][0]['link']['value'][link_id]
-                data['data'][0]['link']['value'][link_id + 2] = max(fixed_ops * gendata_df.loc['Capacity (MW)', fuel], data['data'][0]['link']['value'][link_id] \
-                    - data['data'][0]['link']['value'][link_id + 1] - data['data'][0]['link']['value'][link_id + 3] \
-                    - data['data'][0]['link']['value'][link_id + 4])
+                data['data'][0]['link']['value'][link_id + 2] = max(fixed_ops * gendata_df.loc['Capacity (MW)', fuel],
+                                                                    data['data'][0]['link']['value'][link_id] -
+                                                                    data['data'][0]['link']['value'][link_id + 1] -
+                                                                    data['data'][0]['link']['value'][link_id + 3] -
+                                                                    data['data'][0]['link']['value'][link_id + 4])
                 if data['data'][0]['link']['value'][link_id] != 0.0:
-                    profit_correction = data['data'][0]['link']['value'][link_id] / (data['data'][0]['link']['value'][link_id + 1]
-                        + data['data'][0]['link']['value'][link_id + 2] + data['data'][0]['link']['value'][link_id + 3]
-                        + data['data'][0]['link']['value'][link_id + 4])
-                    data['data'][0]['link']['value'][link_id + 1] = data['data'][0]['link']['value'][link_id + 1] * profit_correction
+                    profit_correction = data['data'][0]['link']['value'][link_id] / (
+                                data['data'][0]['link']['value'][link_id + 1] +
+                                data['data'][0]['link']['value'][link_id + 2] +
+                                data['data'][0]['link']['value'][link_id + 3] +
+                                data['data'][0]['link']['value'][link_id + 4])
+                    data['data'][0]['link']['value'][link_id + 1] = data['data'][0]['link']['value'][
+                                                                        link_id + 1] * profit_correction
                     data['data'][0]['link']['value'][link_id + 2] = data['data'][0]['link']['value'][
                                                                         link_id + 2] * profit_correction
                     data['data'][0]['link']['value'][link_id + 3] = data['data'][0]['link']['value'][
@@ -292,7 +300,8 @@ def load_CFS_data(results_path, dso_range, update_data, scale, labelvals, calibr
             data['data'][0]['valuesuffix'] = "$B"
 
         # Find the total max value for each node and add it to the label
-        total_costs = data['data'][0]['link']['value'][9] + data['data'][0]['link']['value'][10] + data['data'][0]['link']['value'][11]
+        total_costs = data['data'][0]['link']['value'][9] + data['data'][0]['link']['value'][10] + \
+                      data['data'][0]['link']['value'][11]
         if labelvals:
             data = label_nodes(data, total_costs)
 
@@ -328,13 +337,11 @@ def load_CFS_delta_data(results_path, comp_path, dso_range, update_data, scale, 
 
         # Compile data for all DSOs:
         for dso in dso_range:
-            revenue = pt.load_json(results_path,
-                                                        'DSO' + str(dso) + '_Revenues_and_Energy_Sales.json')
+            revenue = pt.load_json(results_path, 'DSO' + str(dso) + '_Revenues_and_Energy_Sales.json')
             expenses = pt.load_json(results_path, 'DSO' + str(dso) + '_Expenses.json')
             capital_costs = pt.load_json(results_path, 'DSO' + str(dso) + '_Capital_Costs.json')
 
-            revenue_comp = pt.load_json(comp_path,
-                                                             'DSO' + str(dso) + '_Revenues_and_Energy_Sales.json')
+            revenue_comp = pt.load_json(comp_path, 'DSO' + str(dso) + '_Revenues_and_Energy_Sales.json')
             expenses_comp = pt.load_json(comp_path, 'DSO' + str(dso) + '_Expenses.json')
             capital_costs_comp = pt.load_json(comp_path, 'DSO' + str(dso) + '_Capital_Costs.json')
 
@@ -395,7 +402,8 @@ def load_CFS_delta_data(results_path, comp_path, dso_range, update_data, scale, 
 
         if calibrate:
             data['data'][0]['link']['value'][6] = total_benefits - total_expenses
-            data['data'][0]['link']['value'][10] = data['data'][0]['link']['value'][6] - data['data'][0]['link']['value'][11]
+            data['data'][0]['link']['value'][10] = data['data'][0]['link']['value'][6] - \
+                                                   data['data'][0]['link']['value'][11]
 
     else:
         total_benefits = 3
@@ -440,10 +448,10 @@ def load_energy_data(results_path, dso_range, update_data, scale, labelvals, cal
         # Load and assign generator data:
         gendata_df = pd.read_csv(results_path + "/generator_statistics_AMES.csv", index_col=[0], dtype=object)
         if mode == 'Average':
-        gendata_df.loc['Capacity (MW)', :] = \
-            gendata_df.loc['Capacity (MW)', :].apply(pd.to_numeric, errors='ignore')
-        gendata_df.loc['Capacity Factor (-)', :] = \
-            gendata_df.loc['Capacity Factor (-)', :].apply(pd.to_numeric, errors='ignore')
+            gendata_df.loc['Capacity (MW)', :] = \
+                gendata_df.loc['Capacity (MW)', :].apply(pd.to_numeric, errors='ignore')
+            gendata_df.loc['Capacity Factor (-)', :] = \
+                gendata_df.loc['Capacity Factor (-)', :].apply(pd.to_numeric, errors='ignore')
         elif mode == 'Peak':
             gendata_df.loc['Coincident Peak Power (MW)', :] = \
                 gendata_df.loc['Coincident Peak Power (MW)', :].apply(pd.to_numeric, errors='ignore')
@@ -458,19 +466,19 @@ def load_energy_data(results_path, dso_range, update_data, scale, labelvals, cal
         for fuel in ['nuc', 'coal', 'gas', 'wind', 'solar']:
             link_id = fuel_key[fuel]
             if mode == 'Average':
-            if gendata_df.loc['Capacity (MW)', fuel] != 0:
-                data['data'][0]['link']['value'][link_id] = gendata_df.loc['Capacity (MW)', fuel] * \
-                                                            gendata_df.loc['Capacity Factor (-)', fuel]
-            elif mode == 'Peak':
-                if gendata_df.loc['Coincident Peak Power (MW)', fuel] != 0:
-                    data['data'][0]['link']['value'][link_id] = gendata_df.loc['Coincident Peak Power (MW)', fuel]
+                if gendata_df.loc['Capacity (MW)', fuel] != 0:
+                    data['data'][0]['link']['value'][link_id] = gendata_df.loc['Capacity (MW)', fuel] * \
+                                                                gendata_df.loc['Capacity Factor (-)', fuel]
+                elif mode == 'Peak':
+                    if gendata_df.loc['Coincident Peak Power (MW)', fuel] != 0:
+                        data['data'][0]['link']['value'][link_id] = gendata_df.loc['Coincident Peak Power (MW)', fuel]
 
         # Load Building and DER load totals:
         loaddata_df = pd.read_csv(results_path + "/DSO_load_stats.csv", index_col=[0], dtype=object)
         loaddata_df.loc[load_field, :] = loaddata_df.loc[load_field, :].apply(pd.to_numeric, errors='ignore')
         total_load = loaddata_df.loc[load_field, 'Total Load'] + loaddata_df.loc[load_field, 'PV']
         RC_ratio = loaddata_df.loc[load_field, 'total_res'] / (
-                    loaddata_df.loc[load_field, 'total_comm'] + loaddata_df.loc[load_field, 'total_res'])
+                loaddata_df.loc[load_field, 'total_comm'] + loaddata_df.loc[load_field, 'total_res'])
 
         #  Create dictionary of load keys and number of first link number
         load_key = {'total_res': 8,
@@ -487,7 +495,7 @@ def load_energy_data(results_path, dso_range, update_data, scale, labelvals, cal
             if load in ['Plug Loads', 'HVAC Loads']:
                 data['data'][0]['link']['value'][link_id] = loaddata_df.loc[load_field, load] * RC_ratio
                 data['data'][0]['link']['value'][link_id + 5] = loaddata_df.loc[load_field, load] * (1 - RC_ratio)
-            elif load in ['Battery']:   # Matching sign convention of battery data (negative is charging).
+            elif load in ['Battery']:  # Matching sign convention of battery data (negative is charging).
                 data['data'][0]['link']['value'][link_id] = -loaddata_df.loc[load_field, load] * RC_ratio
                 data['data'][0]['link']['value'][link_id + 5] = -loaddata_df.loc[load_field, load] * (1 - RC_ratio)
             else:
@@ -537,14 +545,15 @@ def load_energy_data(results_path, dso_range, update_data, scale, labelvals, cal
                       + data['data'][0]['link']['value'][6])
 
             if (data['data'][0]['link']['value'][2] + data['data'][0]['link']['value'][3]) != 0:
-            factor = gap / (data['data'][0]['link']['value'][2] + data['data'][0]['link']['value'][3])
-            data['data'][0]['link']['value'][2] = (1+factor) * data['data'][0]['link']['value'][2]
-            data['data'][0]['link']['value'][3] = (1+factor) * data['data'][0]['link']['value'][3]
+                factor = gap / (data['data'][0]['link']['value'][2] + data['data'][0]['link']['value'][3])
+                data['data'][0]['link']['value'][2] = (1+factor) * data['data'][0]['link']['value'][2]
+                data['data'][0]['link']['value'][3] = (1+factor) * data['data'][0]['link']['value'][3]
             else:
                 # Method to estimate wind and solar when AMES has error and does not report them.  Scales utility solar
                 # off of dist PV solar
                 data['data'][0]['link']['value'][2] = 0.68 * loaddata_df.loc[load_field, 'PV']
                 data['data'][0]['link']['value'][3] = gap - data['data'][0]['link']['value'][2]
+
 
         # Scale to GW
         if scale:
@@ -606,7 +615,6 @@ def sankey_plot():
     # power_mode = 'Average'
     # metric_mode = 'Power'
     metric_mode = 'CashFlow'
-
 
     config_path = 'C:/Users/reev057/PycharmProjects/TESP_Public/examples/analysis/dsot/code'
     case_config = pt.load_json(config_path, system_case)
@@ -689,7 +697,7 @@ def sankey_plot():
             color=data['data'][0]['link']['color']
         ))])
 
-    fig.update_layout(title_text=data['layout']['title']['text']+title_suffix,
+    fig.update_layout(title_text=data['layout']['title']['text'] + title_suffix,
                       font_size=10)
     # fig.show()
     fig.write_html('C:/Users/reev057/DSOT-DATA/Rates/' + filename, auto_open=True)

@@ -205,11 +205,11 @@ def customer_monthly_stats(cases, data_paths, output_path, dso_num, cust_class=N
                     print(f"CFS is missing: {e}")
 
                 if cust_class == None or is_in_class:
-                for case2 in cases:
-                    for month in months:
-                        meters.append(meter)
-                        case_list.append(case2)
-                        month_list.append(month)
+                    for case2 in cases:
+                        for month in months:
+                            meters.append(meter)
+                            case_list.append(case2)
+                            month_list.append(month)
 
             results_df = pd.DataFrame(
                 index=[meters, case_list, month_list],
