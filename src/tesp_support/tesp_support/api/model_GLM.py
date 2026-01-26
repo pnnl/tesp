@@ -485,7 +485,7 @@ class GLMModel:
         return False
 
     def set_module_instance(self, mod_type, params):
-        if type(mod_type) == str:
+        if type(mod_type) is str:
             try:
                 entity = self.module_entities[mod_type]
                 return entity.set_instance(mod_type, params)
@@ -502,7 +502,7 @@ class GLMModel:
         return None
 
     def get_module_instance(self, mod_type):
-        if type(mod_type) == str:
+        if type(mod_type) is str:
             try:
                 entity = self.module_entities[mod_type]
                 return entity.get_instance(mod_type)
@@ -517,16 +517,16 @@ class GLMModel:
         #     item = entity.find_item(attr)
         #     self.instances = {}
         #     instance = self.instances[object_name]
-        #     if type(item) == entity.Item:
+        #     if type(item) is entity.Item:
         #         try:
         #             _ = instance[attr]
         #         except:
-        #             if type(attr) == str:
+        #             if type(attr) is str:
         #                 instance[attr] = {}
         #             else:
         #                 print("Attribute id is not a string in", entity, "named", object_name)
         #                 continue
-        if type(obj_type) == str and type(object_name) == str:
+        if type(obj_type) is str and type(object_name) is str:
             try:
                 entity = self.object_entities[obj_type]
             except:
@@ -543,7 +543,7 @@ class GLMModel:
             raise TypeError("GRIDLABD object type and/or object name {obj_type} must be a string and is not.")
 
     def get_object_instance(self, obj_type, object_name):
-        if type(obj_type) == str and type(obj_type) == str:
+        if type(obj_type) is str and type(obj_type) is str:
             try:
                 entity = self.object_entities[obj_type]
                 return entity.get_instance(object_name)

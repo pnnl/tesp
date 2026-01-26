@@ -165,7 +165,7 @@ class Entity:
         Returns:
             Entity instance: an object with name and values
         """
-        if type(object_name) == str:
+        if type(object_name) is str:
             try:
                 instance = self.instances[object_name]
             except:
@@ -174,11 +174,11 @@ class Entity:
 
             for attr in params:
                 item = self.find_item(attr)
-                if type(item) == Item:
+                if type(item) is Item:
                     try:
                         _ = instance[attr]
                     except:
-                        if type(attr) == str:
+                        if type(attr) is str:
                             instance[attr] = {}
                         else:
                             print("Attribute id is not a string in", self.entity, "named", object_name)
@@ -205,7 +205,7 @@ class Entity:
         Returns:
             Entity instance: an object with name and values or None when object_name is invalid
         """
-        if type(object_name) == str:
+        if type(object_name) is str:
             try:
                 return self.instances[object_name]
             except:
@@ -221,7 +221,7 @@ class Entity:
         Args:
             object_name (str): the name of the instance
         """
-        if type(object_name) == str:
+        if type(object_name) is str:
             try:
                 del self.instances[object_name]
                 # print(f"Deleted {self.entity}:{object_name}")
@@ -266,7 +266,7 @@ class Entity:
     # def del_item_default(self, item):
     #     if self.find_item(item):
     #         _item = self.__getattribute__(item)
-    #         if type(_item) == Item:
+    #         if type(_item) is Item:
     #             setattr(self, _item, None)
     #             # remove all instances
     #             for object_name in self.instances:
@@ -285,7 +285,7 @@ class Entity:
         """
         if self.find_item(item):
             _item = self.__getattribute__(item)
-            if type(_item) == Item:
+            if type(_item) is Item:
                 self.instances[object_name][item] = val
                 return self.instances[object_name][item]
         return None
@@ -299,7 +299,7 @@ class Entity:
         """
         if self.find_item(item):
             _item = self.__getattribute__(item)
-            if type(_item) == Item:
+            if type(_item) is Item:
                 try:
                     del self.instances[object_name][item]
                 except:
@@ -315,7 +315,7 @@ class Entity:
         diction = []
         for attr in self.__dict__:
             item = self.__getattribute__(attr)
-            if type(item) == Item:
+            if type(item) is Item:
                 diction.append(attr)
         return diction
 
@@ -328,7 +328,7 @@ class Entity:
         diction = []
         for attr in self.__dict__:
             item = self.__getattribute__(attr)
-            if type(item) == Item:
+            if type(item) is Item:
                 diction.append(item.toList())
         return diction
 
@@ -342,7 +342,7 @@ class Entity:
         diction = "\nEntity: " + self.entity
         for attr in self.__dict__:
             item = self.__getattribute__(attr)
-            if type(item) == Item:
+            if type(item) is Item:
                 diction += ("\n  " + item.label + ", code=" + item.item +
                             ", type=" + item.datatype + ", default=" + str(item))
         return diction
@@ -373,7 +373,7 @@ class Entity:
 
         for field in self.__dict__:
             val = self.__getattribute__(field)
-            if type(val) == Item:
+            if type(val) is Item:
                 # print(field, "=", val.datatype)
                 # Insert record into table
                 record = (val.label, val.unit, val.datatype, val.item, val.value)
