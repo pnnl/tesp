@@ -14,14 +14,11 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-# Set up logging
-logger = logging.getLogger(__name__)
-
-# sys.path.insert(0, dirname(abspath(__file__)))
-
-from .plots import load_da_retail_price, customer_meta_data, load_json, load_agent_data, \
+from ..dsot.plots import load_da_retail_price, customer_meta_data, load_json, load_agent_data, \
     load_system_data, get_date, tic, toc, load_retail_data, load_ames_data, load_gen_data, load_indust_data
 
+# Set up logging
+logger = logging.getLogger(__name__)
 
 def read_meters(metadata, dir_path, folder_prefix, dso_num,
                 day_range, SF, dso_data_path, rate_scenario=None):
