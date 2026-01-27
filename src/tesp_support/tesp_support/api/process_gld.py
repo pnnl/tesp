@@ -34,12 +34,12 @@ def read_gld_metrics(path, name_root, diction_name=''):
     if len(diction_name) > 0:
         try:
             lp = open(diction_name).read()
-        except:
+        except Exception:
             log.error(f'Unable to open metrics diction file {diction_name}')
     else:
         try:
             lp = open(glm_dict_path).read()
-        except:
+        except Exception:
             log.error(f'Unable to open metrics diction file {glm_dict_path}')
     diction = json.loads(lp)
     fdr_keys = list(diction['feeders'].keys())
@@ -194,7 +194,7 @@ def read_gld_metrics(path, name_root, diction_name=''):
     lst_m.pop('StartTime')
     meta_m = lst_m.pop('Metadata')
     nBillingMeters = 0
-    if not lst_m[time_key] is None:
+    if lst_m[time_key] is not None:
         nBillingMeters = len(lst_m[time_key])
     #  print('\nBilling Meter Metadata for', nBillingMeters, 'objects')
     for key, val in meta_m.items():

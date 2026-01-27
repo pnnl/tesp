@@ -30,10 +30,9 @@ from ..api.parse_helpers import parse_kw
 import matplotlib
 try:
     matplotlib.use('TkAgg')
-except:
+except Exception:
     pass
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt

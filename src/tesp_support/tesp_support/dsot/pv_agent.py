@@ -80,7 +80,7 @@ def _test():
     obj1 = PVDSOT(agent, agent, 'test', 11, sim_time)
     solar_f = forecast_obj.get_solar_forecast(sim_time, 1)
     quant = obj1.scale_pv_forecast(solar_f)
-    print(quant)
+    log.debug(f"PV Agent quantities: {quant}")
 
 
 if __name__ == "__main__":

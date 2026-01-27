@@ -41,7 +41,7 @@ def inner_substation_loop(metrics_root, with_market):
     def publish(name, val):
         try:
             pub = cache_pub[name]
-        except:
+        except Exception:
             cache_pub[name] = helics.helicsFederateGetPublication(hFed, name)
             pub = cache_pub[name]
         # pub = helics.helicsFederateGetPublication(hFed, name)
@@ -444,6 +444,11 @@ def inner_substation_loop(metrics_root, with_market):
             )
 
         if retail_full_metrics:
+            site_da_wh_cleared_quantities = None
+            site_da_hvac_cleared_quantities = None
+            site_da_batt_cleared_quantities = None
+            site_da_total_quantities_cleared = None
+
             retail_site_3600 = MetricsStore(
                 name_units_pairs=[
                     ('meters', ['meterName'] * len(site_da_meter)),
@@ -657,6 +662,7 @@ def inner_substation_loop(metrics_root, with_market):
     retail_cleared_quantity_diff_applied = 0.0
     retail_cleared_quantity_RT = 0.0
     retail_cleared_quantity_RT_unadjusted = 0.0
+    retail_cleared_quantity_DA = None
     load_base_from_retail = 0.0
     load_base_for_wholesale = 0.0
     gld_load = []
@@ -736,7 +742,7 @@ def inner_substation_loop(metrics_root, with_market):
         for t in range(subCount):
             try:
                 sub = cache_sub[t]
-            except:
+            except Exception:
                 cache_sub[t] = helics.helicsFederateGetInputByIndex(hFed, t)
                 sub = cache_sub[t]
             key = helics.helicsInputGetTarget(sub)
@@ -760,7 +766,7 @@ def inner_substation_loop(metrics_root, with_market):
             try:
                 # log.info('Used ref load')
                 forecast_obj.base_run_load = np.array(dso_market_obj.ref_load_da) * 1.0e3
-            except:
+            except Exception:
                 if tnext_historic_load_da == 1:
                     # log.info('Used forecast load')
                     forecast_obj.base_run_load = np.array(forecast_obj.base_run_load) * dso_market_obj.DSO_Q_max * 0.65
@@ -1063,18 +1069,29 @@ def inner_substation_loop(metrics_root, with_market):
                 log.info('No opts need solving, skipping use of "parallel" obj!')
                 results = []
             # add participating agents to day-ahead bid to the retail market
+            agent_errors = []
+            agent_success = 0
+            agent_count = 0
             for i, (res, p_age) in enumerate(zip(results, P_age_DA)):  # range(len(P_age_DA)):
                 timing(p_age.__class__.__name__, True)
                 # passing the optimization output to the agent
                 if p_age.__class__.__name__ == "HVACDSOT":
                     p_age.optimized_Quantity = res[0][:]
                     p_age.temp_room = res[1][:]
+                    if res[2]["success"]:
+                        agent_success += 1
+                    else:
+                        agent_errors.append(f"{p_age.name}:{res[2]["termination"]}")
+                    agent_count += 1
                 else:
                     p_age.optimized_Quantity = res[:]
+
                 # formulate the day-ahead bid
                 bid = p_age.formulate_bid_da()
                 timing(p_age.__class__.__name__, False)
                 retail_market_obj.curve_aggregator_DA('Buyer', bid, p_age.name)
+            log.info(f"HVAC solver: Successes: {agent_success}, Participating: {agent_count}, Success Rate: {agent_success/agent_count}, Agents: {len(hvac_agent_objs)}")
+            log.debug(f"HVAC solver failers: {agent_errors}")
             del results
 
             # collect agent only DA quantities and price
@@ -1357,7 +1374,7 @@ def inner_substation_loop(metrics_root, with_market):
                 lmp_rt = dso_market_obj.lmp_rt[0]   # TSO sends the price in $/MWh
                 dso_market_obj.active_power_rt = (dso_market_obj.cleared_q_rt * 1.0e3) + retail_cleared_quantity_diff_observed_last  # TSO sends back the total quantity in MW
                 ames_lmp = True
-            except:
+            except Exception:
                 dso_market_obj.active_power_rt = retail_market_obj.cleared_quantity_RT_for_AMES + retail_cleared_quantity_diff_observed_last  # TSO sends back the total quantity in MW
                 lmp_rt = dso_market_obj.default_lmp * 1.0e3
                 log.info("No AMES running -- assigned a default lmp using the lmp forecaster")
@@ -1401,7 +1418,7 @@ def inner_substation_loop(metrics_root, with_market):
             for ii in range(24):
                 try:
                     lmp_da.append(dso_market_obj.lmp_da[ii] / 1.0e3)  # TSO sends the price in $/MWh
-                except:
+                except Exception:
                     lmp_da.append(0.0)
                 c1 = retail_market_obj.AMES_DA[ii][3]
                 c2 = retail_market_obj.AMES_DA[ii][2]
@@ -1848,7 +1865,7 @@ def inner_substation_loop(metrics_root, with_market):
                             publish(water_heater_name + '/lower_tank_setpoint', obj.Setpoint_bottom)
                             publish(water_heater_name + '/upper_tank_setpoint', obj.Setpoint_upper)
                             # print('My published setpoints',obj.Setpoint_bottom, obj.Setpoint_upper)
-                        except:
+                        except Exception:
                             water_heater_name = water_heater_name.replace("_Middle", "")
                             water_heater_name = water_heater_name.replace("_Low", "")
                             water_heater_name = water_heater_name.replace("_Upper", "")

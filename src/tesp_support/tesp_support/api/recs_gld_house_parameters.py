@@ -305,27 +305,27 @@ def get_residential_metadata(metadata, sample_data, state, hsdens_str, inc_lev, 
             metadata['housing_vintage'][state][hsdens_str][inc_lev][h][y] = round(total_dict[h][y] / total, 4)
     
     # Get number of stories by house type and vintage
-    for hc, l in housing_type_consol_dict.items():
+    for hc, htc in housing_type_consol_dict.items():
         metadata['num_stories'][state][hsdens_str][inc_lev][hc] = {}
-        k1 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[0])]
-        k2 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[1])]
+        k1 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(htc[0])]
+        k2 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(htc[1])]
         total_dict_consol[hc] = {}
         for p, y in housing_vintage_dict.items():
             metadata['num_stories'][state][hsdens_str][inc_lev][hc][y] = {}
             if k1==k2:
-                total_dict_consol[hc][y] = total_dict[l[0]][y]
+                total_dict_consol[hc][y] = total_dict[htc[0]][y]
             else:
-                total_dict_consol[hc][y] = total_dict[l[0]][y]+total_dict[l[1]][y]
+                total_dict_consol[hc][y] = total_dict[htc[0]][y]+total_dict[htc[1]][y]
             for n, s in num_stories_dict.items():
                 metadata['num_stories'][state][hsdens_str][inc_lev][hc][y][s] = round(sample_data.loc[((sample_data[house_type_str].isin([k1,k2])) &
                                                                                                     (sample_data[vintage_str] == p) &
                                                                                                    (sample_data[n_stories_str] == n)),
                                                                                                     'NWEIGHT'].sum()/total_dict_consol[hc][y], 4)
     # Get floor_area distribution by house type
-    for hc, l in housing_type_consol_dict.items():
+    for hc, htc in housing_type_consol_dict.items():
         metadata['floor_area'][state][hsdens_str][inc_lev][hc] = {}
-        k1 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[0])]
-        k2 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[1])]
+        k1 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(htc[0])]
+        k2 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(htc[1])]
         # for p, y in housing_vintage_dict.items():
         values = sample_data.loc[(sample_data[house_type_str].isin([k1, k2])), flr_area_str].values
         weighting = sample_data.loc[(sample_data[house_type_str].isin([k1, k2])), 'NWEIGHT'].values
@@ -350,9 +350,9 @@ def get_residential_metadata(metadata, sample_data, state, hsdens_str, inc_lev, 
     #                                                                                          'NWEIGHT'].sum()/sum(total_dict['mobile_home'].values()),4)
 
     # Get distribution for air conditioning for homes with gas or resistance heating by house type
-    for hc, l in housing_type_consol_dict.items():
-        k1 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[0])]
-        k2 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[1])]
+    for hc, htc in housing_type_consol_dict.items():
+        k1 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(htc[0])]
+        k2 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(htc[1])]
         total_gas_res_homes = sample_data.loc[((sample_data[house_type_str].isin([k1,k2])) &
                                                (~sample_data[sh_equip_str].isin([4, 13]))), 'NWEIGHT'].sum()
         metadata['air_conditioning'][state][hsdens_str][inc_lev][hc] = round(sample_data.loc[((sample_data[house_type_str].isin([k1,k2])) &
@@ -361,10 +361,10 @@ def get_residential_metadata(metadata, sample_data, state, hsdens_str, inc_lev, 
                                                                                            'NWEIGHT'].sum()/total_gas_res_homes, 4)
 
     # Get distribution for gas heating by house type and vintage
-    for hc, l in housing_type_consol_dict.items():
+    for hc, htc in housing_type_consol_dict.items():
         metadata['space_heating_type'][state][hsdens_str][inc_lev][hc] = {}
-        k1 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[0])]
-        k2 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[1])]
+        k1 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(htc[0])]
+        k2 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(htc[1])]
         for p, y in housing_vintage_dict.items():
             metadata['space_heating_type'][state][hsdens_str][inc_lev][hc][y] = {}
             # Gas heating defined as all heating that is not electric
@@ -397,9 +397,9 @@ def get_residential_metadata(metadata, sample_data, state, hsdens_str, inc_lev, 
     #                                          (sample_data[wh_fuel_str]==5)),'NWEIGHT'].sum()
     #         metadata['water_heating_type'][state][hsdens_str][inc_lev][h][y]=round((both_gas+both_electric)/total_dict[h][y],4)
 
-    for hc, l in housing_type_consol_dict.items():
-        k1 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[0])]
-        k2 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[1])]
+    for hc, htc in housing_type_consol_dict.items():
+        k1 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(htc[0])]
+        k2 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(htc[1])]
         metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc] = {}
         metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_gas'] = {}
         metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_electric'] = {}
@@ -463,9 +463,9 @@ def get_residential_metadata(metadata, sample_data, state, hsdens_str, inc_lev, 
             metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_electric']['electric'] = 0
 
     # Get distribution for high ceilings by house type and vintage
-    for hc, l in housing_type_consol_dict.items():
-        k1 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[0])]
-        k2 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[1])]
+    for hc, htc in housing_type_consol_dict.items():
+        k1 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(htc[0])]
+        k2 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(htc[1])]
         metadata['high_ceilings'][state][hsdens_str][inc_lev][hc] = {}
         for p, y in housing_vintage_dict.items():
             metadata['high_ceilings'][state][hsdens_str][inc_lev][hc][y] = round(

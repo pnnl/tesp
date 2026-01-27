@@ -17,13 +17,13 @@ from copy import deepcopy
 from datetime import datetime, timedelta
 from math import cos, sin
 
-import glm
+from pyglm import glm
 import numpy as np
 import pandas as pd
 import pytz
 
 from .hvac_agent import HVACDSOT
-from ..api.schedule_client import *
+from ..api.schedule_client import DataClient
 
 
 class Forecasting:
@@ -297,7 +297,7 @@ class Forecasting:
     def forecasting_schedules(self, name, time, len_forecast=48):
         try:
             self.DA_output = self.gProxy.forecasting_schedules(name, time, len_forecast)
-        except:
+        except Exception:
             print(f'Did not expect name:{name} time:{time} in zipload')
         return self.DA_output
 

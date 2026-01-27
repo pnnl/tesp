@@ -227,7 +227,7 @@ class RetailMarket:
         cleared_price = 0.0
         cleared_quantity = 0.0
 
-        if curve_buyer.uncontrollable_only == True:
+        if curve_buyer.uncontrollable_only:
             temp = curve_buyer.quantities[0]
             if min(curve_seller.quantities) <= temp <= max(curve_seller.quantities):
                 cleared_quantity = temp
@@ -554,7 +554,7 @@ class RetailMarket:
             if z[1] - z[0] * (resp_max_mw - unresp_mw) < 0:
                 try:
                     resp_max_mw = unresp_mw + abs(z[1] / z[0])
-                except:
+                except Exception:
                     print(
                         'quadratic coefficient of price sensitivity bid to AMES found zero for bid of quantity range' + str(
                             [unresp_mw, resp_max_mw]))

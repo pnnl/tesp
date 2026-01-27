@@ -227,7 +227,7 @@ def tso_pypower_loop(casefile, rootname, helicsConfig):
                     bus[newidx, 2] += feeder_load
             gen[4][9] = -resp_max
             res = pp.runopf(ppc, ppopt_market)
-            if res['success'] == False:
+            if not res['success']:
                 conv_accum = False
             opf_bus = deepcopy(res['bus'])
             opf_gen = deepcopy(res['gen'])

@@ -4,7 +4,7 @@
 the functionality of the residential_feeder_glm.py, the commercial_feeder_glm.py, 
 and the copperplate_feeder_glm.py.
 
-Replaces ZIP loads with houses, optional storage, electric vehicles, and solar 
+Replaces ZIP loads with houses, optional storage, electric vehicles, and solar
 generation.
 
 As this module populates the feeder backbone with houses and DER, it uses
@@ -18,57 +18,57 @@ References:
     `GridAPPS-D Feeder Models <https://github.com/GRIDAPPSD/Powergrid-Models>`_
 
 Config class:
-    preamble: Add required modules, objects, includes, defines, and sets required 
+    preamble: Add required modules, objects, includes, defines, and sets required
       to run a glm model.
 
-    generate_recs: Generate RECS metadata if it does not yet exist based on user 
+    generate_recs: Generate RECS metadata if it does not yet exist based on user
       config.
 
-    load_recs: Assign default values for residential and commercial buildings, 
+    load_recs: Assign default values for residential and commercial buildings,
       batteries, and electric vehicles, based on imported metadata for each.
 
-    load_position: Read in positional data from feeder, if specified in config, 
+    load_position: Read in positional data from feeder, if specified in config,
       to aid plotting function of populated feeder model.
 
-    add_position: Create a coordinate pair position for a new node added to the 
+    add_position: Create a coordinate pair position for a new node added to the
       feeder based off the position of its base node.
 
 Residential_Build class:
-    buildingTypeLabel: Assign formatted name of region, building type name, and 
+    buildingTypeLabel: Assign formatted name of region, building type name, and
       thermal integrity level.
 
-    checkResidentialBuildingTable: Verify that the regional building parameter 
+    checkResidentialBuildingTable: Verify that the regional building parameter
       histograms sum to one.
 
-    selectSetpointBins: Randomly choose a histogram row from the cooling and 
+    selectSetpointBins: Randomly choose a histogram row from the cooling and
       heating setpoints. The random number for the heating setpoint row is generated internally.
 
     add_small_loads: Write loads that are too small for a house, onto a node.
 
-    getDsoIncomeLevelTable: Retrieve the DSO income level fractions for the 
+    getDsoIncomeLevelTable: Retrieve the DSO income level fractions for the
       given dso type and state.
 
     selectIncomeLevel: Select the income level based on region and probability.
 
-    getDsoThermalTable: Define the distribution of thermal integrity values 
+    getDsoThermalTable: Define the distribution of thermal integrity values
       based on household income level, vintage, and building type.
 
-    selectResidentialBuilding: Retrieve the thermal integrity level by building 
+    selectResidentialBuilding: Retrieve the thermal integrity level by building
       type and region.
 
-    selectThermalProperties: Retrieve the building thermal properties by 
+    selectThermalProperties: Retrieve the building thermal properties by
       building type and thermal integrity level.
 
-    add_houses: Add houses, along with solar panels, batteries, and electric 
+    add_houses: Add houses, along with solar panels, batteries, and electric
       vehicle charges, onto a node.
 
 Commercial_Build class:
-    add_one_commercial_zone: Write one pre-configured commercial zone as a house 
-      and small loads such as lights, plug loads, and gas water heaters as 
+    add_one_commercial_zone: Write one pre-configured commercial zone as a house
+      and small loads such as lights, plug loads, and gas water heaters as
       ZIPLoads.
 
-    define_commercial_zones: Define building parameters for commercial building 
-      zones and ZIP loads, then add to model as house object (commercial zone) 
+    define_commercial_zones: Define building parameters for commercial building
+      zones and ZIP loads, then add to model as house object (commercial zone)
       or load object (ZIP load).
 
     define_comm_bldg: Randomly select a set number of buildings by type and size
@@ -76,47 +76,47 @@ Commercial_Build class:
 
     normalize_dict_prob: Ensure that the probability distribution of values in a dictionary effectively sums to one.
 
-    rand_bin_select: Returns the element (bin) in a dictionary given a certain 
+    rand_bin_select: Returns the element (bin) in a dictionary given a certain
       probability.
 
     sub_bin_select: Returns a scalar value within a bin range based on a uniform
       probability within that bin range.
 
-    find_envelope_prop: Returns the envelope value for a given type of property 
+    find_envelope_prop: Returns the envelope value for a given type of property
       based on the age and (ASHRAE) climate zone of the building.
     
 Battery class
-    add_batt: Define and add battery and inverter objects to house, under the 
+    add_batt: Define and add battery and inverter objects to house, under the
       parentage of the parent_mtr.
     
 Solar class
-    add_solar: Define and add solar and inverter objects to house, under the 
+    add_solar: Define and add solar and inverter objects to house, under the
       parentage of the parent_mtr.
 
 Electric_Vehicle class
-    add_ev: Define and add electric vehicle charging object to the house, under 
+    add_ev: Define and add electric vehicle charging object to the house, under
       the parentage of the house object
 
     selectEVmodel: Select the EV model based on available sale distribution data
-      
-    match_driving_schedule: Method to match the schedule of each vehicle from 
+
+    match_driving_schedule: Method to match the schedule of each vehicle from
       NHTS data based on vehicle ev_range
 
     is_drive_time_valid: Check if work arrival time and home arrival time add up
       properly
 
-    process_nhts_data: Read the large NHTS survey data file containing driving 
+    process_nhts_data: Read the large NHTS survey data file containing driving
       data, process it, and return a dataframe
 
 Feeder class
-    feeder_gen: Read in the backbone feeder, then loop through transformer 
-      instances and assign a standard size based on the downstream load. Change 
+    feeder_gen: Read in the backbone feeder, then loop through transformer
+      instances and assign a standard size based on the downstream load. Change
       the referenced transformer_configuration attributes. Write the standard transformer_configuration instance we need
 
-    identify_xfmr_houses: For the full-order feeders, scan each service 
+    identify_xfmr_houses: For the full-order feeders, scan each service
       transformer to determine the number of houses it should have
 
-    identify_commercial_loads: For the full-order feeders, scan each load with 
+    identify_commercial_loads: For the full-order feeders, scan each load with
       load_class==C to determine the number of zones it should have
 
 """
@@ -354,13 +354,13 @@ class Config:
         return self.gis_file, self.pos_data, self.pos
 
     def add_position(self, basenode:str, newnode:str):
-        """Create a coordinate pair posiiton for a new node, meter, or object 
+        """Create a coordinate pair posiiton for a new node, meter, or object
           added to the feeder, slightly offset from the basenode that it is added to.
 
         Args:
             basenode (str): name of base node newnode is added to (parent)
             newnode (str): name of the new node (child)
-        
+
         Returns:
             None
         """
@@ -697,7 +697,7 @@ class Residential_Build:
             hsename = f'{basenode}_{inc}_hs_{idx}'
             hse_m_name = f'{basenode}_hsmtr_{idx}'
             whname = f'{hsename}_wh'
-            sol_i_name = f'{hsename}_solinv' 
+            sol_i_name = f'{hsename}_solinv'
             batt_i_name = f'{hsename}_batinv'
             sol_m_name = f'{hsename}_solmtr'
             sol_name = f'{hsename}_sol'
@@ -1186,7 +1186,7 @@ class Commercial_Build:
             "cooling_COP": '{:2.2f}'.format(bldg['COP_A']),
             "cooling_setpoint": '80.0',
             "heating_setpoint": '60.0' })
-        
+
         # Add position data to commercial building, if available
         if self.config.gis_file:
             self.config.add_position(key, name)
@@ -1247,7 +1247,7 @@ class Commercial_Build:
 
         if self.config.case_type['bt']:
             # Number of batteries determined by size of commercial building
-            # Assume one battery per 10000 sqft. 
+            # Assume one battery per 10000 sqft.
             batt_num = int(math.floor(bldg['floor_area'] / 10000) + 1)
             self.config.batt.add_batt(self.config.storage_deployment, batt_num, 1, mtr, f'{mtr}_batmtr', f'{mtr}_bat', f'{mtr}_batinv', phases, 120.0)
 
@@ -1417,7 +1417,7 @@ class Commercial_Build:
             
             # Multi-zone buildings will adjust these adj_ values according to
             #  their number of zones. Single-zone buildings will keep the base
-            #  power ZIPload schedule adjustments below. 
+            #  power ZIPload schedule adjustments below.
             # randomize 10# then convert W/sf -> kW
             adj_lights = (bldg_specs['internal_heat_gains']['lighting'] * (0.9 + 0.1 * rng.random()) 
                             * bldg['floor_area'] / 1000.0)
@@ -1456,12 +1456,12 @@ class Commercial_Build:
                 bldg['Rwall'] = 18.3
                 bldg['Rfloor'] = 46.0
                 bldg['Rdoors'] = 3.0
-                #int_gains = 3.24  # W/sf 
+                #int_gains = 3.24  # W/sf
                 bldg['base_schedule'] = 'office'
                 bldg['no_of_stories'] = 1
-                tot_bldg_area = 40000. * (0.5 * rng.random() + 0.5) 
+                tot_bldg_area = 40000. * (0.5 * rng.random() + 0.5)
                 for floor in range(1, 4):
-                    bldg['aspect_ratio'] = 1.5  
+                    bldg['aspect_ratio'] = 1.5
                     total_depth = math.sqrt(tot_bldg_area / (3. * bldg['aspect_ratio']))
                     total_width = bldg['aspect_ratio'] * total_depth
                     if floor == 3:
@@ -2214,7 +2214,7 @@ class Feeder:
             config (Config): the feeder config
             feed_type (str): Whether the feeder type is the full residential
                 and commercial type feeders (full) or the copperplate (copp)
-        
+
         Returns:
             None
         """
@@ -2369,10 +2369,10 @@ class Feeder:
                     self.config.base.base_feeder_name = self.config.taxonomy
                 sec_v = float(i_glm.transformer_configuration[e_config]['secondary_voltage'])
                 if sec_v > 500:
-                    log.warning(f"WARNING: %s id has a secondary voltage that is higher than 500 V", e_name)
+                    log.warning(f"WARNING: {e_name} id has a secondary voltage that is higher than 500 V")
                     continue
                 if e_name not in self.seg_loads:
-                    log.warning(f"WARNING: %s not in the seg loads", e_name)
+                    log.warning(f"WARNING: {e_name} not in the seg loads")
                     continue
 
                 seg_kva = self.seg_loads[e_name][0]
@@ -2489,7 +2489,7 @@ class Feeder:
         dso_income_pct = self.config.res_bld.getDsoIncomeLevelTable()
         try:
             entity = self.mdl.__getattribute__(gld_class)
-        except:
+        except Exception:
             return
         for e_name, e_object in entity.items():
             if e_name in seg_loads:
@@ -2552,7 +2552,7 @@ class Feeder:
 
         try:
             entity = self.mdl.__getattribute__(gld_class)
-        except:
+        except Exception:
             return
         for e_name, e_object in entity.items():
             if 'load_class' not in e_object:

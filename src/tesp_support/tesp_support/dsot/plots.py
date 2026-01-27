@@ -62,7 +62,7 @@ def load_json(dir_path, file_name, use_cache=True):
         try:
             cache = cache_output[name]
             return cache
-        except:
+        except Exception:
             with open(name) as json_file:
                 cache_output[name] = json.load(json_file)
         return cache_output[name]
@@ -236,8 +236,14 @@ def load_gen_data(dir_path, gen_name, day_range):
             for day in day_range:
                 for dso in dso_list:
                     arr = np.array([sim_start + timedelta(days=1) * (day - 1) + timedelta(hours=i) for i in range(24)])
-                    dates += arr.tolist()
-                    dsos += np.array([dso for i in range(24)]).tolist()
+                    if data_df.columns.str.contains('Adder').any():
+                        dates += arr.tolist() + arr.tolist()
+                        dsos_day = np.array([dso for i in range(24)]).tolist()
+                        adders = [item.replace("lmp", "adder") for item in dsos_day]
+                        dsos += dsos_day + adders
+                    else:
+                        dsos += np.array([dso for i in range(24)]).tolist()
+                        dates += arr.tolist()
 
             gen_data_df = pd.DataFrame(index=[dates, dsos], columns=[column_key[gen_name][:-1]])
             gen_data_df[column_key[gen_name][:-1]] = test
@@ -311,7 +317,7 @@ def load_ames_data(dir_path, day_range):
     name = os.path.join(dir_path + '/opf.csv')
     try:
         data_df = cache_df[name]
-    except:
+    except Exception:
         # Load AMES data
         data_df = pd.read_csv(name, index_col='seconds')
         cache_df[name] = data_df
@@ -350,7 +356,7 @@ def load_ercot_data(metadata_file, sim_start, day_range):
 
     try:
         data_df = cache_df[metadata_file]
-    except:
+    except Exception:
         # Load ERCOT load profiles data
         data_df = pd.read_csv(metadata_file, index_col='Seconds')
         cache_df[metadata_file] = data_df
@@ -382,7 +388,7 @@ def load_indust_data(indust_file, day_range):
 
     try:
         indust_df = cache_df[indust_file]
-    except:
+    except Exception:
         # Load Industrial load profiles data
         indust_df = pd.read_csv(indust_file, index_col='seconds')
         cache_df[indust_file] = indust_df
@@ -581,7 +587,7 @@ def load_agent_data(dir_path, folder_prefix, dso_num, day_num, agent_name):
         elif agent_name in ['retail_market', 'dso_market']:
             try:
                 agent_bid_df = pd.read_hdf(filename, key='/metrics_df1', mode='r')
-            except:
+            except Exception:
                 agent_bid_df = None
         else:
             agent_bid_df = pd.read_hdf(filename, key='/metrics_df2', mode='r')
@@ -1770,13 +1776,19 @@ def subscription_plot(dso, day_range, metadata_path, case, demand_case):
     output_df = output_df.rename(columns={'sum': 'Total Load'})
     output_df['Block Load'] = basedemand_df[['sum']]
 
-    # if basedemand_df.index[-1] < stop_time:
-    #     raise Exception('Customer baseline demand data not available for ' + str(stop_time) + ".")
+    #  Load in retail price data
+    # Load Tariff structure
+    # TODO: read in actual rate scenario (currently hard coded to 'RandD')
+    file_name = "rate_case_values_" + "RandD" + ".json"
+    tariff = load_json(metadata_path, file_name, False)
 
-    # Plot Building Stacked Chart with ERCOT and Substation loads for reference
-    plt.figure(figsize=(15, 10))
-    plt.plot(demand_df.index, demand_df['sum'], label='Total Customer Demand', color='black')
-    plt.plot(basedemand_df.index, basedemand_df['sum'], label='Total Customer Subscriptions', color='red')
+    price_path = os.path.dirname(case)
+    DA_LMPs_df = pd.read_csv(price_path + '/Annual_DA_LMP_Load_data.csv', index_col=0, parse_dates=True)
+    DA_LMPs_df = DA_LMPs_df.loc[start_time:stop_time, :]
+    DA_LMPs_df['Retail'] = (DA_LMPs_df['da_lmp' + str(dso)] + DA_LMPs_df[' Adder']) / 1000 + tariff['DSO_' + str(dso)][
+        'transactive_dist_rate']
+
+    fig, ax1 = plt.subplots(figsize=(15, 10))
 
     large_font = True
     if large_font:
@@ -1788,14 +1800,24 @@ def subscription_plot(dso, day_range, metadata_path, case, demand_case):
         label_font = 25
         legend_font = 17
 
-    plt.legend(loc='lower left', prop={'size': legend_font})
-    # plt.legend(loc='lower left', prop={'size': legend_font}, ncol=2)
-    plt.xlabel('Time', size=label_font)
-    plt.ylabel('Load (MW)', size=label_font)
-    plt.ylim(top=30000, bottom=0)
-    ax = plt.gca()
-    ax.tick_params(axis='both', which='major', labelsize=tick_font)
-    # plt.title('DSO load profile by end-load type (ALL DSOs)', size=20)
+    # Plot the first dataset
+    ax1.plot(demand_df.index, demand_df['sum'], label='Total Customer Demand', color='black')
+    ax1.plot(basedemand_df.index, basedemand_df['sum'], label='Total Customer Block Purchase', color='red')
+    ax1.set_xlabel('Time', size=label_font)
+    ax1.set_ylabel('Load (MW)', size=label_font)
+    ax1.tick_params(axis='both', which='major', labelsize=tick_font)
+    ax1.set_ylim(top=30000, bottom=0)
+    ax2 = ax1.twinx()  # Create a second axes that shares the same x-axis
+
+    # Plot the second dataset
+    ax2.plot(DA_LMPs_df.index, DA_LMPs_df['Retail'], label='Retail Price', color='#965c79', linewidth=3)
+    ax2.set_ylabel('Retail Price ($/kW-hr)', size=label_font)
+    ax2.tick_params(axis='both', which='major', labelsize=tick_font)
+    ax2.set_ylim(top=0.4, bottom=0)
+
+    ax1.legend(loc='lower left', fontsize=legend_font)
+    ax2.legend(loc='lower right', fontsize=legend_font)
+
     plot_filename = datetime.now().strftime(
         '%Y%m%d') + 'Subscription_plot_DSO_' + demand_df.index[0].strftime('%m-%d') + '.png'
     file_path_fig = os.path.join(case, 'plots', plot_filename)
@@ -1912,8 +1934,8 @@ def load_duration_plot(dso, system, subsystem, variable, day, case, comp, agent_
         LDC_comp_data.sort(reverse=True)
         load_comp_data = np.array(LDC_comp_data)
 
-    l = len(load_case_data)
-    index = np.array(range(0, l)) * 100 / l
+    len_data = len(load_case_data)
+    index = np.array(range(0, len_data)) * 100 / len_data
 
     if subsystem is None:
         subsystem = ''
@@ -2530,9 +2552,11 @@ def dso_load_stats(dso_range, month_list, data_path, metadata_path, plot=False):
         saves dso load comparison plots to file
         saves summary of Qmax for each DSO to file
         """
-    # Aggregate all the monthly data
-    # Load commesurate ERCOT Load data
 
+    previous_end_time = None
+
+    # Aggregate all the monthly data
+    # Load commensurate ERCOT Load data
     for i in range(len(month_list)):
         filename = (month_list[i][1] + '/DER_profiles.h5')
         der_loads_df = pd.read_hdf(filename, key='DER_Profiles', mode='r')
@@ -2593,7 +2617,7 @@ def dso_load_stats(dso_range, month_list, data_path, metadata_path, plot=False):
     # Merge to remove any duplicate dso timestamps.
     dso_total_df = pd.merge(ercot_loads_df['ERCOT Net Load'], dso_total_df, left_index=True, right_index=True)
 
-    dso_load_stats = pd.DataFrame(index=['Average', 'Sum', 'Max', 'Min', 'Average Daily Range'],
+    dso_load_stats = pd.DataFrame(index=['Average', 'Sum', 'Max', 'Min', 'Average Daily Range', 'Coincident Peak'],
                                   columns=dso_total_df.columns)
 
     dso_daily_max_df = dso_total_df.groupby(pd.Grouper(freq='D')).max()
@@ -2618,6 +2642,10 @@ def dso_load_stats(dso_range, month_list, data_path, metadata_path, plot=False):
         dso_load_stats.loc['Min Index', col] = dso_total_df[col].idxmin()
         dso_load_stats.loc['Max Daily Range Index', col] = dso_daily_range_df[col].idxmax()
         dso_load_stats.loc['Min Daily Range Index', col] = dso_daily_range_df[col].idxmin()
+
+    # Once total load peak ('Max Index' for coincident peak total load) is determined write out peak loads:
+    for col in dso_load_stats.columns:
+        dso_load_stats.loc['Coincident Peak', col] = dso_total_df.loc[dso_load_stats.loc['Max Index', 'Total Load'], col]
 
     # Find and save QMax for each DSO.
     Qmax = {}
@@ -3245,11 +3273,11 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
         DSOTmean = np.mean(DSOT_data)
         DSOTmedian = np.median(DSOT_data)
 
-    l = len(ERCOTLDC_data)
-    index = np.array(range(0, l)) * 100 / l
+    len_data = len(ERCOTLDC_data)
+    index = np.array(range(0, len_data)) * 100 / len_data
 
-    l = len(DSOT_data)
-    dsot_index = np.array(range(0, l)) * 100 / l
+    len_data = len(DSOT_data)
+    dsot_index = np.array(range(0, len_data)) * 100 / len_data
 
     plt.clf()
     plt.plot(index, ERCOTLDC_data, label='ERCOT Delta DA LMP')
@@ -3373,11 +3401,11 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
         DSOTmean = np.mean(DSOT_RT_data)
         DSOTmedian = np.median(DSOT_RT_data)
 
-    l = len(ERCOTRTLDC_data)
-    index = np.array(range(0, l)) * 100 / l
+    len_data = len(ERCOTRTLDC_data)
+    index = np.array(range(0, len_data)) * 100 / len_data
 
-    l = len(DSOT_RT_data)
-    dsot_index = np.array(range(0, l)) * 100 / l
+    len_data = len(DSOT_RT_data)
+    dsot_index = np.array(range(0, len_data)) * 100 / len_data
 
     plt.clf()
     plt.plot(index, ERCOTRTLDC_data, label='ERCOT Delta RT LMP')
@@ -3485,11 +3513,11 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
         DSOTmean = np.mean(DSOT_data)
         DSOTmedian = np.median(DSOT_data)
 
-    l = len(ERCOTGDC_data)
-    index = np.array(range(0, l)) * 100 / l
+    len_data = len(ERCOTGDC_data)
+    index = np.array(range(0, len_data)) * 100 / len_data
 
-    l = len(DSOT_data)
-    dsot_index = np.array(range(0, l)) * 100 / l
+    len_data = len(DSOT_data)
+    dsot_index = np.array(range(0, len_data)) * 100 / len_data
 
     plt.clf()
     plt.plot(index, ERCOTGDC_data, label='ERCOT Delta DA LMP')
@@ -3967,6 +3995,7 @@ def generation_statistics(dir_path, config_dir, config_file, day_range, use_gen_
 
     total_hours = len(day_range) * 24
     sum_df = pd.DataFrame(columns=fuel_list)
+    Max_Index = ames_df[' TotalLoad'].idxmax()
     for fuel in fuel_list:
         gen_cols = [col for col in data_df.columns if fuel in gen_key[col][0]]
 
@@ -4020,6 +4049,7 @@ def generation_statistics(dir_path, config_dir, config_file, day_range, use_gen_
                 generator_df.loc['Ramp/Limit (-)', gen] = max(abs(generator_df.loc['Max Ramp down (MW/min)', gen]),
                                                               generator_df.loc['Max Ramp up (MW/min)', gen]) \
                                                           / generator_df.loc['Ramp Limit (MW/min)', gen]
+            generator_df.loc['Coincident Peak Power (MW)', gen] = data_df.loc[Max_Index, gen]
 
         sum_df[fuel] = data_df[gen_cols].sum(axis=1)
         generator_df.loc['Fuel', fuel] = fuel
@@ -4043,6 +4073,8 @@ def generation_statistics(dir_path, config_dir, config_file, day_range, use_gen_
                                                         generator_df.loc['Capacity (MW)', fuel]
             generator_df.loc['Max Ramp down (-)', fuel] = generator_df.loc['Max Ramp down (MW/min)', fuel] / \
                                                           generator_df.loc['Capacity (MW)', fuel]
+        generator_df.loc['Coincident Peak Power (MW)', fuel] = sum_df.loc[Max_Index, fuel]
+
     if use_gen_data:
         file_name = '/generator_statistics_PYPower.csv'
     else:
@@ -4647,7 +4679,7 @@ def customer_comparative_analysis(case_data, comp_data, case_path, comp_path, ds
     # x = customer_diff_df.loc(axis=0)[:, ['kw-hr']]
 
     customer_diff_df.to_csv(path_or_buf=case_path + '/customer_diff_data_DSO' + dso_num + '.csv')
-    participating = customer_diff_df.loc[customer_diff_df[('metadata', 'participating')] == True]
+    participating = customer_diff_df.loc[customer_diff_df[('metadata', 'participating')]]
 
     plt.figure()
     plt.scatter(participating[('metadata', 'slider_setting')], -100 * participating[(month, 'kw-hr')])
@@ -5825,8 +5857,8 @@ def run_plots():
         LDC_case_data.sort(reverse=False)
         load_case_data = np.array(LDC_case_data)
 
-        l = len(load_case_data)
-        index = np.array(range(0, l)) * 100 / l
+        len_data = len(load_case_data)
+        index = np.array(range(0, len_data)) * 100 / len_data
 
         plt.clf()
         plt.plot(index, load_case_data, label='wind')
@@ -5969,8 +6001,8 @@ def run_plots():
             LMPLowLDC_data.sort(reverse=False)
             LMPLowLDC_data = np.array(LMPLowLDC_data)
 
-            l = len(DeltaLDC_data)
-            index_day = np.array(range(0, l)) * 100 / l
+            len_data = len(DeltaLDC_data)
+            index_day = np.array(range(0, len_data)) * 100 / len_data
 
             PriceLDC_data = prices_data[place + ' $_mwh'].values.tolist()
             PriceLDC_data.sort(reverse=False)
@@ -5981,15 +6013,15 @@ def run_plots():
                 DADeltaLDC = DeltaLDC_data
                 DAHighLDC = LMPHighLDC_data
                 DALowLDC = LMPLowLDC_data
-                l = len(DAPriceLDC)
-                index_hr = np.array(range(0, l)) * 100 / l
+                len_data = len(DAPriceLDC)
+                index_hr = np.array(range(0, len_data)) * 100 / len_data
             elif scenario == 'RT':
                 RTPriceLDC = PriceLDC_data
                 RTDeltaLDC = DeltaLDC_data
                 RTHighLDC = LMPHighLDC_data
                 RTLowLDC = LMPLowLDC_data
-                l = len(RTPriceLDC)
-                index_15min = np.array(range(0, l)) * 100 / l
+                len_data = len(RTPriceLDC)
+                index_15min = np.array(range(0, len_data)) * 100 / len_data
 
         plt.clf()
         plt.plot(index_day, RTDeltaLDC, label='RT Delta LMP')

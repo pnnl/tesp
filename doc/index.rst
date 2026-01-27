@@ -10,10 +10,10 @@ Transactive Energy Simulation Platform (TESP)
    :maxdepth: 3
    :caption: Contents:
 
-   Overview
-   Installing_Building
+   TESP_Overview
+   Installing_Building_TESP
    Demonstrations_and_Examples
-   Developing_Customizing
+   Developing_Customizing_TESP
    References
    Archive
 

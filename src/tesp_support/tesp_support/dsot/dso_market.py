@@ -19,7 +19,7 @@ import numpy as np
 from ..api.helpers import log
 from ..api.parse_helpers import parse_kw
 from ..dsot.helpers_dsot import Curve, get_intersect, MarketClearingType
-from ..api.schedule_client import *
+from ..api.schedule_client import DataClient
 
 
 class DSOMarket:
@@ -74,7 +74,7 @@ class DSOMarket:
                 self.curve_a = np.asarray(dso_dict['curve_a'])  # * Q_max_scale * Q_max_scale
                 self.curve_b = np.asarray(dso_dict['curve_b'])  # * Q_max_scale
                 self.curve_c = np.asarray(dso_dict['curve_c'])
-            except:
+            except Exception:
                 quadratic = False
 
         if not quadratic:
@@ -304,7 +304,7 @@ class DSOMarket:
                     self.trial_clear_type_RT = MarketClearingType.CONGESTED
                 else:
                     self.trial_clear_type_RT = MarketClearingType.UNCONGESTED
-            except:
+            except Exception:
                 self.Pwclear_RT, self.trial_cleared_quantity_RT, self.trial_clear_type_RT = \
                     self.trial_wholesale_clearing(self.curve_ws_node[day_of_week][hour_of_day],
                                                   self.curve_DSO_RT, day_of_week, hour_of_day)

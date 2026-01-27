@@ -36,6 +36,7 @@ sphinxcontrib-mermaid
 sphinx
 #src/tesp_support/
 tables
+tqdm
 urllib3
 waterfallcharts
 xarray

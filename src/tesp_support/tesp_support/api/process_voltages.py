@@ -25,12 +25,12 @@ def read_voltages_metrics(path, name_root, diction_name=''):
     if len(diction_name) > 0:
         try:
             lp = open(diction_name).read()
-        except:
+        except Exception:
             log.error(f'Unable to open voltage metric file {diction_name}')
     else:
         try:
             lp = open(glm_dict_path).read()
-        except:
+        except Exception:
             log.error(f'Unable to open voltage metrics file {glm_dict_path}')
     diction = json.loads(lp)
     mtr_keys = list(diction['billingmeters'].keys())

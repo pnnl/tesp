@@ -283,7 +283,8 @@ def customer_CFS(GLD_metadata,
             'PeakLoad': customer_bill['MaxLoad'],
             'LoadFactor': customer_bill['LoadFactor'],
             'BlendedRate': customer_bill['BlendedRate'],
-            'EffectiveCostEnergy': EffectiveCostEnergy
+            'EffectiveCostEnergy': EffectiveCostEnergy,
+            'BillVolatility': customer_bill['Volatility']
         }
 
         if rate_scenario == "time-of-use":

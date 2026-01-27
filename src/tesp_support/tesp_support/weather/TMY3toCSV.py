@@ -41,7 +41,7 @@ def readtmy3(filename=None, coerce_year=None, recolumn=True):
     if filename is None:
         try:
             filename = _interactive_load()
-        except:
+        except Exception:
             raise Exception('Interactive load failed. Tkinter not supported '
                             'on this system. Try installing X-Quartz and '
                             'reloading')

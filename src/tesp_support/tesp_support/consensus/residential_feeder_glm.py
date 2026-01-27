@@ -2726,6 +2726,8 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
     # (Laurentiu Marinovici 11/18/2019)
     global res_bldg_metadata  # to store residential metadata
     global batt_metadata  # to store battery metadata
+    global ev_metadata  # to store ev model metadata
+    global pv_rating_MW
     global cop_lookup
     global generators  # To store generator metadata
 
@@ -2784,8 +2786,10 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
     if 'AgentName' in config['WeatherPrep']:
         weatherName = config['WeatherPrep']['AgentName']
     dso_type = config['SimulationConfig']['DSO_type']
+    pv_rating_MW = config['SimulationConfig']['rooftop_pv_rating_MW']
     res_bldg_metadata = config['BuildingPrep']['ResBldgMetaData']
     batt_metadata = config['BuildingPrep']['BattMetaData']
+    ev_metadata = config['BuildingPrep']['EvModelMetaData']
     # if not provided in JSON config, use a regional default
     electric_cooling_percentage = res_bldg_metadata['air_conditioning']
     ashrae_zone = config['BuildingPrep']['ASHRAEZone']
@@ -2796,7 +2800,7 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
     try:
         generators = config['SimulationConfig']['dso'][next(iter(config['SimulationConfig']['dso']))]['generators']
         print("Found {} generators in SimulationConfig".format(len(generators)))
-    except:
+    except Exception:
         generators = {}
         print("Found No generators in SimulationConfig")
     # -------- create cop lookup table by vintage bin-----------

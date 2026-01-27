@@ -1075,6 +1075,9 @@ def tso_psst_loop(casename):
     swing_bus = int(ppc['swing_bus'])
     noScale = ppc['noScale']
 
+    # The Grid Project Impact Quantification (GridPIQ) screening tool, default false
+    # provides insight into the impacts of a grid project within its context."
+    # gridpiq private repo https://stash.pnnl.gov/projects/GPIQ/repos/gpiq_python/browse
     pq = None
     piq = False
     piq_hour = 0

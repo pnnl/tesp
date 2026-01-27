@@ -1051,7 +1051,7 @@ class WaterHeaterDSOT:
         """
         try:
             _tmp = parse_number(message)
-        except:
+        except Exception:
             _tmp = self.T_bottom
             print("Error wh lower temp:", message, self.name)
         self.T_bottom = _tmp
@@ -1074,7 +1074,7 @@ class WaterHeaterDSOT:
         """
         try:
             _tmp = parse_number(message)
-        except:
+        except Exception:
             _tmp = self.T_upper
             print("Error wh upper temp:", message, self.name)
         self.T_upper = _tmp

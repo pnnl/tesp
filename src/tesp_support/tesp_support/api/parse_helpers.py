@@ -83,7 +83,7 @@ def parse_helic_input(arg):
 
         vals[0] = float(vals[0])
         return vals[0]
-    except:
+    except Exception:
         print('parse_helic_input does not understand', arg)
         return 0
 
@@ -122,10 +122,10 @@ def parse_magnitude(arg):
         tok = arg.strip('; MWVACFKdegri').replace(" ", "")  # rectangular form, including real only
         b = complex(tok)
         return abs(b)  # b.real
-    except:
+    except Exception:
         try:
             return parse_helic_input(arg)
-        except:
+        except Exception:
             print('parse_magnitude does not understand' + arg)
             return 0
 
@@ -302,10 +302,10 @@ def parse_kw(arg):
             q /= 1000.0
 
         return p
-    except:
+    except Exception:
         try:
             return parse_helic_input(arg)/1000.0
-        except:
+        except Exception:
             print('parse_kw does not understand', arg)
             return 0
 

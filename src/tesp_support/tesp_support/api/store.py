@@ -198,7 +198,7 @@ class Schema:
         return self.tables
 
     def get_columns(self, table, skip_rows=0):
-        if not table in self.skip_rows:
+        if table not in self.skip_rows:
             self.skip_rows[table] = skip_rows
         else:
             if skip_rows > 0:
@@ -270,7 +270,7 @@ class Schema:
         if table in self.tables:
             if table in self.columns:
                 if self.ext == ".csv":
-                    if type(dt) == list:
+                    if type(dt) is list:
                         df = pd.read_csv(self.file, names=self.columns[table], skiprows=self.skip_rows[table])
                         df['dates'] = pd.date_range(start=dt[0], periods=len(df), freq=dt[1])
                         df = df[(start < df['dates']) & (df['dates'] < end)]
@@ -362,7 +362,7 @@ class Store:
 
     def add_path(self, path, description=""):
         for directory in self.store:
-            if type(directory) == Directory:
+            if type(directory) is Directory:
                 if path in directory.file:
                     return directory
         directory = Directory(path, description)
@@ -370,13 +370,13 @@ class Store:
         return directory
 
     def add_directory(self, directory):
-        if type(directory) == Directory:
+        if type(directory) is Directory:
             self.store.append(directory)
         return
 
     def del_directory(self, name):
         for i, directory in enumerate(self.store):
-            if type(directory) == Directory:
+            if type(directory) is Directory:
                 if directory['name'] == name:
                     del self.store[i]
         return
@@ -385,19 +385,19 @@ class Store:
         if name is None:
             desc = []
             for directory in self.store:
-                if type(directory) == Directory:
+                if type(directory) is Directory:
                     desc.append([directory['name'], directory['description']])
             return desc
         else:
             for i, directory in enumerate(self.store):
-                if type(directory) == Directory:
+                if type(directory) is Directory:
                     if directory['name'] == name:
                         return self.store[i]
         return None
 
     def add_file(self, path, name="", description=""):
         for schema in self.store:
-            if type(schema) == Schema:
+            if type(schema) is Schema:
                 if path in schema.file:
                     return schema
         schema = Schema(path, name, description)
@@ -405,13 +405,13 @@ class Store:
         return schema
 
     def add_schema(self, scheme):
-        if type(scheme) == Schema:
+        if type(scheme) is Schema:
             self.store.append(scheme)
         return
 
     def del_schema(self, name):
         for i, schema in enumerate(self.store):
-            if type(schema) == Schema:
+            if type(schema) is Schema:
                 if schema['name'] == name:
                     del self.store[i]
         return
@@ -420,12 +420,12 @@ class Store:
         if name is None:
             desc = []
             for schema in self.store:
-                if type(schema) == Schema:
+                if type(schema) is Schema:
                     desc.append([schema.name, schema.ext, schema.description])
             return desc
         else:
             for schema in self.store:
-                if type(schema) == Schema:
+                if type(schema) is Schema:
                     if schema.name == name:
                         return schema
         return None
@@ -455,7 +455,7 @@ class Store:
                                 if "include" in table:
                                     directory.recurse[name] = table["recurse"]
                                     directory.include[name] = table["include"]
-                        except:
+                        except Exception:
                             pass
                     else:
                         try:
@@ -470,14 +470,14 @@ class Store:
                                     scheme.skip_rows[name] = table["skip_rows"]
                                 if "date" in table:
                                     scheme.dates[name] = table["date"]
-                        except:
+                        except Exception:
                             pass
 
     def zip(self):
         theZipFile = zf.ZipFile(self.root + '.zip', 'w')
         theZipFile.write(self.file)
         for file in self.store:
-            if type(file) == Directory:
+            if type(file) is Directory:
                 file.zip(theZipFile)
         theZipFile.close()
 

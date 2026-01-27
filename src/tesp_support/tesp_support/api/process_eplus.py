@@ -28,7 +28,7 @@ def read_eplus_metrics(path, name_root, quiet=False):
         lst = json.loads(lp)
         if not quiet:
             print('Metrics data starting', lst['StartTime'])
-    except:
+    except Exception:
         log.error(f'Unable to open eplus metrics file {eplus_dict_path}')
         return
 

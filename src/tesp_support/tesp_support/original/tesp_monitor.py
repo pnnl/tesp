@@ -25,10 +25,9 @@ import matplotlib
 
 try:
     matplotlib.use('TkAgg')
-except:
+except Exception:
     pass
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
@@ -250,7 +249,7 @@ class TespMonitorGUI:
                 try:
                     os.kill(proc.pid, 9)
                     os.wait()
-                except:
+                except Exception:
                     pass
                 del proc
         self.pids = []
@@ -389,7 +388,7 @@ class TespMonitorGUI:
 
                 if bRedraw:
                     self.fig.canvas.draw()
-            except:
+            except Exception:
                 # print('exception frame', i, 'of', self.nsteps, flush=True)
                 pass
 
@@ -540,7 +539,7 @@ class TespMonitorGUI:
 
                 if bRedraw:
                     self.fig.canvas.draw()
-            except:
+            except Exception:
                 # print('exception frame', i, 'of', self.nsteps, flush=True)
                 pass
 

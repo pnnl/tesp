@@ -18,6 +18,8 @@ import os
 import json
 import math
 
+from ..api.helpers import log
+
 
 def ercotMeterName(objname):
     """ Enforces the meter naming convention for ERCOT
@@ -139,6 +141,8 @@ def glm_dict(name_root, config=None, ercot=False):  # , te30=False):
     else:
         bulkpowerBus = 'TBD'
     name = ''
+    lastHouse = ''
+    lastBillingMeter = ''
     houses = {}
     waterheaters = {}
     ziploads = {}
@@ -472,13 +476,6 @@ def glm_dict(name_root, config=None, ercot=False):  # , te30=False):
                 if lst[0] == 'parent':
                     lastMeterParent = lst[1].strip(';')
                 if lst[0] == 'bill_mode':
-                    # if te30:
-                    #    if 'flatrate' not in name:
-                    #        billingmeters[name] = {'feeder_id': feeder_id, 'phases': phases, 'vll': vll, 'vln': vln,
-                    #                               'children': [], 'building_type': 'UNKNOWN',
-                    #                               'tariff_class': 'industrial'}
-                    #        lastBillingMeter = name
-                    # else:
                     billingmeters[name] = {'feeder_id': feeder_id, 'phases': phases, 'vll': vll, 'vln': vln,
                                            'children': [], 'building_type': 'UNKNOWN', 'tariff_class': 'industrial'}
                     lastBillingMeter = name
@@ -500,20 +497,12 @@ def glm_dict(name_root, config=None, ercot=False):  # , te30=False):
                     inMeters = False
         elif len(lst) == 1:
             if hasSolar:
-                # if ercot:
-                #    lastBillingMeter = ercotMeterName(name)
-                # elif te30:
-                #    lastBillingMeter = lastMeterParent
                 inverters[lastInverter] = {'feeder_id': feeder_id,
                                            'billingmeter_id': lastBillingMeter,
                                            'rated_W': rating,
                                            'resource': 'solar',
                                            'inv_eta': inv_eta}
             elif hasBattery:
-                # if ercot:
-                #    lastBillingMeter = ercotMeterName(name)
-                # elif te30:
-                #    lastBillingMeter = lastMeterParent
                 inverters[lastInverter] = {'feeder_id': feeder_id,
                                            'billingmeter_id': lastBillingMeter,
                                            'rated_W': rating,
@@ -565,12 +554,8 @@ def glm_dict(name_root, config=None, ercot=False):  # , te30=False):
                 if bldg in mtr['building_type']:
                     mtr['tariff_class'] = 'residential'
         except KeyError as keyErr:
-            # print('I got a KeyError. Reason - {0}. See: {1}'.format(str(keyErr), format_exc())) # sys.exc_info()[2].tb_)
+            log.debug(f"Got a KeyError. Reason - {keyErr}")
             pass
-        # except:
-        #	print('Cannot find id {0} from {1} in the list of billing meters.'.format(val['billingmeter_id'], key))
-        #	print('System returned error code: {0}.'.format(sys.exc_info()[0]))
-        #	pass
 
     for key, val in inverters.items():
         mtr = billingmeters[val['billingmeter_id']]

@@ -192,7 +192,7 @@ def Wh_Energy_Purchases(dir_path, dso_num, simdata=False, h1=5, h2=16, h3=20, pl
 
     # determines the bilateral quantity for each hourly interval
     bilateral_MW_data = bilateral_MW_data.set_index(['date_time'])
-    bilateral_MW_data['Fixed Quantity (MW)'] = np.select(conditions_Q, choices_Q, default='0')
+    bilateral_MW_data['Fixed Quantity (MW)'] = np.select(conditions_Q, choices_Q)
 
     bilateral_price_data = load_price_data(dir_path, 'DA', dso_num, simdata, place)
     bilateral_price_data['hour'] = bilateral_price_data['date_time'].dt.hour
@@ -221,7 +221,7 @@ def Wh_Energy_Purchases(dir_path, dso_num, simdata=False, h1=5, h2=16, h3=20, pl
 
     # determines the bilateral price for each hourly interval
     bilateral_price_data = bilateral_price_data.set_index(['date_time'])
-    bilateral_price_data['Fixed Price ($/MWh)'] = np.select(conditions_P, choices_P, default='0')
+    bilateral_price_data['Fixed Price ($/MWh)'] = np.select(conditions_P, choices_P)
 
     # Monthly computations
     WhBLEnergyMonthly = (pd.to_numeric(bilateral_MW_data['Fixed Quantity (MW)']).resample('M')).sum()
