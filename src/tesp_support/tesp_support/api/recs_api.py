@@ -24,12 +24,12 @@ def get_recs_data(file_name):
     try:
         t_recs_df = pd.read_excel(file_name, sheet_name=0, header=0)
         return t_recs_df
-    except:
+    except Exception:
         try:
             con = sqlite.connect(file_name)
             t_recs_df = pd.read_sql_query("SELECT * from RECSwIncomeLvl", con)
             return t_recs_df
-        except:
+        except Exception:
             return None
 class recs_data_set:
     """Class is used to access and process a file which contains RECS data."""

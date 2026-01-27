@@ -114,7 +114,7 @@ class Entity:
                         tmp = Item(attr[3], attr[0], attr[2], attr[4], attr[1])
                     setattr(self, attr[4], tmp)
                 self.item_cnt = len(config)
-        except:
+        except Exception:
             pass
 
     # def __init__(self, config):
@@ -153,7 +153,7 @@ class Entity:
         """
         try:
             return self.__getattribute__(item)
-        except:
+        except Exception:
             return None
 
     def set_instance(self, object_name, params):
@@ -168,7 +168,7 @@ class Entity:
         if type(object_name) is str:
             try:
                 instance = self.instances[object_name]
-            except:
+            except Exception:
                 self.instances[object_name] = {}
                 instance = self.instances[object_name]
 
@@ -177,7 +177,7 @@ class Entity:
                 if type(item) is Item:
                     try:
                         _ = instance[attr]
-                    except:
+                    except Exception:
                         if type(attr) is str:
                             instance[attr] = {}
                         else:
@@ -208,7 +208,7 @@ class Entity:
         if type(object_name) is str:
             try:
                 return self.instances[object_name]
-            except:
+            except Exception:
                 self.instances[object_name] = {}
                 return self.instances[object_name]
         else:
@@ -225,7 +225,7 @@ class Entity:
             try:
                 del self.instances[object_name]
                 # print(f"Deleted {self.entity}:{object_name}")
-            except:
+            except Exception:
                 print(f"Can't find {self.entity}:{object_name} for deletion")
                 pass
         else:
@@ -302,7 +302,7 @@ class Entity:
             if type(_item) is Item:
                 try:
                     del self.instances[object_name][item]
-                except:
+                except Exception:
                     print(f"Can't find {object_name}:{item} for deletion")
                     pass
 
@@ -483,7 +483,7 @@ def _test():
                 mylist[name].toSQLite(conn)
                 # mylist[name].instanceToSQLite(conn)
         conn.close()
-    except:
+    except Exception:
         print("Database Sqlite3.db not formed")
 
 

@@ -2465,7 +2465,7 @@ class Feeder:
         dso_income_pct = self.config.res_bld.getDsoIncomeLevelTable()
         try:
             entity = self.mdl.__getattribute__(gld_class)
-        except:
+        except Exception:
             return
         for e_name, e_object in entity.items():
             if e_name in seg_loads:
@@ -2528,7 +2528,7 @@ class Feeder:
 
         try:
             entity = self.mdl.__getattribute__(gld_class)
-        except:
+        except Exception:
             return
         for e_name, e_object in entity.items():
             if 'load_class' not in e_object:

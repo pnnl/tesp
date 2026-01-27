@@ -69,7 +69,7 @@ class DataProxy(object):
         idx = name + str(col_num)
         try:
             cache = cache_output[idx]
-        except:
+        except Exception:
             cache_output[idx] = [0, 0]
             cache = cache_output[idx]
 
@@ -124,7 +124,7 @@ class DataProxy(object):
         idx = name + str(col_num)
         try:
             cache = cache_output[idx]
-        except:
+        except Exception:
             cache_output[idx] = [0, 0]
             cache = cache_output[idx]
         if cache[0] != time:

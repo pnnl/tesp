@@ -25,12 +25,12 @@ def read_houses_metrics(path, name_root, diction_name=''):
     if len(diction_name) > 0:
         try:
             lp = open(diction_name).read()
-        except:
+        except Exception:
             log.error(f'Unable to open house metrics file {diction_name}')
     else:
         try:
             lp = open(gld_dict_path).read()
-        except:
+        except Exception:
             log.error(f'Unable to open house metrics file {gld_dict_path}')
     diction = json.loads(lp)
     hse_keys = list(diction['houses'].keys())

@@ -62,7 +62,7 @@ def load_json(dir_path, file_name, use_cache=True):
         try:
             cache = cache_output[name]
             return cache
-        except:
+        except Exception:
             with open(name) as json_file:
                 cache_output[name] = json.load(json_file)
         return cache_output[name]
@@ -317,7 +317,7 @@ def load_ames_data(dir_path, day_range):
     name = os.path.join(dir_path + '/opf.csv')
     try:
         data_df = cache_df[name]
-    except:
+    except Exception:
         # Load AMES data
         data_df = pd.read_csv(name, index_col='seconds')
         cache_df[name] = data_df
@@ -356,7 +356,7 @@ def load_ercot_data(metadata_file, sim_start, day_range):
 
     try:
         data_df = cache_df[metadata_file]
-    except:
+    except Exception:
         # Load ERCOT load profiles data
         data_df = pd.read_csv(metadata_file, index_col='Seconds')
         cache_df[metadata_file] = data_df
@@ -388,7 +388,7 @@ def load_indust_data(indust_file, day_range):
 
     try:
         indust_df = cache_df[indust_file]
-    except:
+    except Exception:
         # Load Industrial load profiles data
         indust_df = pd.read_csv(indust_file, index_col='seconds')
         cache_df[indust_file] = indust_df
@@ -587,7 +587,7 @@ def load_agent_data(dir_path, folder_prefix, dso_num, day_num, agent_name):
         elif agent_name in ['retail_market', 'dso_market']:
             try:
                 agent_bid_df = pd.read_hdf(filename, key='/metrics_df1', mode='r')
-            except:
+            except Exception:
                 agent_bid_df = None
         else:
             agent_bid_df = pd.read_hdf(filename, key='/metrics_df2', mode='r')

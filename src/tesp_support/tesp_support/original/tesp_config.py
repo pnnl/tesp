@@ -524,11 +524,11 @@ class TespConfigGUI:
                 try:
                     tmp = int(val)
                     val = tmp
-                except:
+                except Exception:
                     try:
                         tmp = float(val)
                         val = tmp
-                    except:
+                    except Exception:
                         pass
                 section = variables[row - 1][3]
                 attribute = variables[row - 1][4]

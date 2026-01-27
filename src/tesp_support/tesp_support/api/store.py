@@ -455,7 +455,7 @@ class Store:
                                 if "include" in table:
                                     directory.recurse[name] = table["recurse"]
                                     directory.include[name] = table["include"]
-                        except:
+                        except Exception:
                             pass
                     else:
                         try:
@@ -470,7 +470,7 @@ class Store:
                                     scheme.skip_rows[name] = table["skip_rows"]
                                 if "date" in table:
                                     scheme.dates[name] = table["date"]
-                        except:
+                        except Exception:
                             pass
 
     def zip(self):

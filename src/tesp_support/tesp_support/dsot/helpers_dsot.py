@@ -199,7 +199,7 @@ def write_dsot_management_script(master_file, case_path, config=None, system_con
         try:
             if not sub_val['used']:
                 continue
-        except:
+        except Exception:
             pass
         bus = sub_val['bus_number']
         dm = divmod(bus, 20)
@@ -257,7 +257,7 @@ def write_dsot_management_script(master_file, case_path, config=None, system_con
             try:
                 if not sub_val['used']:
                     continue
-            except:
+            except Exception:
                 pass
             outfile.write('cd %s\n' % sub_val['substation'])
             outfile.write(
@@ -333,7 +333,7 @@ def write_dsot_management_script_f(master_file, case_path, config=None, system_c
         try:
             if not sub_val['used']:
                 continue
-        except:
+        except Exception:
             pass
         bus = sub_val['bus_number']
         dm = divmod(bus, 20)
@@ -392,7 +392,7 @@ def write_dsot_management_script_f(master_file, case_path, config=None, system_c
                 try:
                     if not sub_val['used']:
                         continue
-                except:
+                except Exception:
                     pass
                 outfile.write('cd %s\n' % sub_val['substation'])
                 outfile.write('start /b cmd /c gridlabd -D USE_FNCS -D METRICS_FILE="%s_metrics_" %s.glm ^> '
@@ -490,7 +490,7 @@ def write_dsot_management_script_f(master_file, case_path, config=None, system_c
                 try:
                     if not sub_val['used']:
                         continue
-                except:
+                except Exception:
                     pass
                 outfile.write('cd %s\n' % sub_val['substation'])
                 outfile.write(

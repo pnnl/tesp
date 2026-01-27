@@ -736,7 +736,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
             try:
                 # log.info('Used ref load')
                 forecast_obj.base_run_load = np.array(dso_market_obj.ref_load_da) * 1.0e3
-            except:
+            except Exception:
                 if tnext_historic_load_da == 1:
                     # log.info('Used forecast load')
                     forecast_obj.base_run_load = np.array(forecast_obj.base_run_load) * dso_market_obj.DSO_Q_max * 0.65
@@ -1344,7 +1344,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                 lmp_rt = dso_market_obj.lmp_rt[0]   # TSO sends the price in $/MWh
                 dso_market_obj.active_power_rt = (dso_market_obj.cleared_q_rt * 1.0e3) + retail_cleared_quantity_diff_observed_last  # TSO sends back the total quantity in MW
                 ames_lmp = True
-            except:
+            except Exception:
                 dso_market_obj.active_power_rt = retail_market_obj.cleared_quantity_RT_for_AMES + retail_cleared_quantity_diff_observed_last  # TSO sends back the total quantity in MW
                 lmp_rt = dso_market_obj.default_lmp * 1.0e3
                 log.info("No AMES running -- assigned a default lmp using the lmp forecaster")
@@ -1388,7 +1388,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
             for ii in range(24):
                 try:
                     lmp_da.append(dso_market_obj.lmp_da[ii] / 1.0e3)  # TSO sends the price in $/MWh
-                except:
+                except Exception:
                     lmp_da.append(0.0)
                 c1 = retail_market_obj.AMES_DA[ii][3]
                 c2 = retail_market_obj.AMES_DA[ii][2]
@@ -1835,7 +1835,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                             fncs.publish(water_heater_name + '/lower_tank_setpoint', obj.Setpoint_bottom)
                             fncs.publish(water_heater_name + '/upper_tank_setpoint', obj.Setpoint_upper)
                             # print('My published setpoints',obj.Setpoint_bottom, obj.Setpoint_upper)
-                        except:
+                        except Exception:
                             water_heater_name = water_heater_name.replace("_Middle", "")
                             water_heater_name = water_heater_name.replace("_Low", "")
                             water_heater_name = water_heater_name.replace("_Upper", "")

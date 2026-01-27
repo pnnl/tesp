@@ -562,7 +562,7 @@ class GLMModifier:
         """
         try:
             entity = self.glm.__getattribute__(gld_class)
-        except:
+        except Exception:
             return
         for e_name, e_object in entity.items():
             params = dict()
@@ -588,7 +588,7 @@ class GLMModifier:
         """
         try:
             entity = self.glm.__getattribute__(gld_class)
-        except:
+        except Exception:
             return
         for e_name, e_object in entity.items():
             params = dict()
@@ -632,7 +632,7 @@ class GLMModifier:
         """
         try:
             entity = self.glm.__getattribute__(gld_class)
-        except:
+        except Exception:
             return
         for e_name, e_object in entity.items():
             phs = e_object['phases']

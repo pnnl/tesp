@@ -733,7 +733,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
         if retail_market_obj.basecase:
             try:
                 forecast_obj.base_run_load = np.array(dso_market_obj.ref_load_da) * 1000
-            except:
+            except Exception:
                 if tnext_historic_load_da == 1:
                     forecast_obj.base_run_load = np.array(forecast_obj.base_run_load) * dso_market_obj.DSO_Q_max
 

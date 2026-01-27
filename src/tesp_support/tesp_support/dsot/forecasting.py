@@ -297,7 +297,7 @@ class Forecasting:
     def forecasting_schedules(self, name, time, len_forecast=48):
         try:
             self.DA_output = self.gProxy.forecasting_schedules(name, time, len_forecast)
-        except:
+        except Exception:
             print(f'Did not expect name:{name} time:{time} in zipload')
         return self.DA_output
 

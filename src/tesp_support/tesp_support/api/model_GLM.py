@@ -253,7 +253,7 @@ class GLMModel:
             try:
                 self.conn = sqlite3.connect(filename)
                 print("Opened database successfully")
-            except:
+            except Exception:
                 raise FileNotFoundError(f"Unable to form database at {filename}")
 
             for name in self.module_entities:
@@ -382,7 +382,7 @@ class GLMModel:
             if self.module_entities["clock"]:
                 diction += self.get_diction(self.module_entities, "clock", self.instanceToModule, "clock")
             diction += "\n"
-        except:
+        except Exception:
             raise AttributeError("No 'clock' defined in model.")
 
         # Write the sets commands
@@ -473,7 +473,7 @@ class GLMModel:
             try:
                 self.conn = sqlite3.connect(filename)
                 print("Opened database successfully")
-            except:
+            except Exception:
                 raise FileNotFoundError(f"Unable to form database at {filename}")
             for name in self.module_entities:
                 self.module_entities[name].instanceToSQLite(self.conn)
@@ -489,7 +489,7 @@ class GLMModel:
             try:
                 entity = self.module_entities[mod_type]
                 return entity.set_instance(mod_type, params)
-            except:
+            except Exception:
                 print("Unrecognized GRIDLABD module:", mod_type, "must be a new class")
                 self.class_types.append(mod_type)
                 entity = self.module_entities[mod_type] = Entity(mod_type, None)
@@ -506,7 +506,7 @@ class GLMModel:
             try:
                 entity = self.module_entities[mod_type]
                 return entity.get_instance(mod_type)
-            except:
+            except Exception:
                 print("Unrecognized GRIDLABD module:", mod_type)
         else:
             raise TypeError(f"{mod_type} must be a string and is not.")
@@ -520,7 +520,7 @@ class GLMModel:
         #     if type(item) is entity.Item:
         #         try:
         #             _ = instance[attr]
-        #         except:
+        #         except Exception:
         #             if type(attr) is str:
         #                 instance[attr] = {}
         #             else:
@@ -529,7 +529,7 @@ class GLMModel:
         if type(obj_type) is str and type(object_name) is str:
             try:
                 entity = self.object_entities[obj_type]
-            except:
+            except Exception:
                 print("Unrecognized GRIDLABD object and id:", obj_type, object_name, ", must be a new object")
                 if obj_type in self.class_types:
                     entity = self.object_entities[obj_type] = O_Entity(obj_type, self.objects[obj_type])
@@ -547,7 +547,7 @@ class GLMModel:
             try:
                 entity = self.object_entities[obj_type]
                 return entity.get_instance(object_name)
-            except:
+            except Exception:
                 print("Unrecognized GRIDLABD object and id:", obj_type, object_name)
         else:
             raise TypeError("GRIDLABD object type and/or object name {obj_type} must be a string and is not.")
@@ -619,7 +619,7 @@ class GLMModel:
         # del name and set object entity instance to model type
         try:
             del self.model[_type][name]
-        except:
+        except Exception:
             pass
 
     def glm_schedule(self, line, itr):
@@ -934,7 +934,7 @@ class GLMModel:
     def write(self, filepath):
         try:
             op = open(filepath, "w+")
-        except:
+        except Exception:
             raise FileNotFoundError(f"{filepath} unable to be opened for writing")
 
         # we can write using instance objects
@@ -1039,7 +1039,7 @@ class GLMModel:
             try:
                 nc.append(self.node_classes[v['nclass']])
                 nlb[u] = u
-            except:
+            except Exception:
                 # various gray/grey
                 nc.append('grey')
                 nlb[u] = u

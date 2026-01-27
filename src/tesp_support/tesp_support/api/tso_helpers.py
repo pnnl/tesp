@@ -322,7 +322,7 @@ def dist_slack(mpc, prev_load):
     gov_R = gov_R.tolist()
     try:
         capacity = mpc['gen'][gov_idx, 8][0]
-    except:
+    except Exception:
         # log.info("Distribution governor idx length -> " + str(len(gov_idx)))
         # log.info("Distribution governor capacity failed, trying coal")
         for i in range(len(mpc['genfuel'])):

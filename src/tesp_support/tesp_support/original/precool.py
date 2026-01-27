@@ -19,11 +19,11 @@ import logging
 
 try:
     import helics
-except:
+except Exception:
     pass
 try:
     from ..original import fncs as fncs
-except:
+except Exception:
     pass
 
 import json

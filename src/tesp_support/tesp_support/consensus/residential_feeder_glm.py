@@ -2800,7 +2800,7 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
     try:
         generators = config['SimulationConfig']['dso'][next(iter(config['SimulationConfig']['dso']))]['generators']
         print("Found {} generators in SimulationConfig".format(len(generators)))
-    except:
+    except Exception:
         generators = {}
         print("Found No generators in SimulationConfig")
     # -------- create cop lookup table by vintage bin-----------

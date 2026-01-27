@@ -446,16 +446,16 @@ class BatteryDSOT:
         m = float('nan')
         try:
             m = (BID[0][P] - BID[1][P]) / (BID[0][Q] - BID[1][Q])  # y = m*x + b
-        except:
+        except Exception:
             try:
                 m = (BID[2][P] - BID[3][P]) / (BID[2][Q] - BID[3][Q])  # y = m*x + b
-            except:
+            except Exception:
                 temp = 1
 
         if isnan(m) and temp == 0:
             try:
                 m = (BID[2][P] - BID[3][P]) / (BID[2][Q] - BID[3][Q])  # y = m*x + b
-            except:
+            except Exception:
                 temp = 1
 
         if isnan(m):
@@ -558,16 +558,16 @@ class BatteryDSOT:
         m = float('nan')
         try:
             m = (BID[0][P] - BID[1][P]) / (BID[0][Q] - BID[1][Q])  # y = m*x + b
-        except:
+        except Exception:
             try:
                 m = (BID[2][P] - BID[3][P]) / (BID[2][Q] - BID[3][Q])  # y = m*x + b
-            except:
+            except Exception:
                 temp = 1
 
         if isnan(m) and temp == 0:
             try:
                 m = (BID[2][P] - BID[3][P]) / (BID[2][Q] - BID[3][Q])  # y = m*x + b
-            except:
+            except Exception:
                 temp = 1
 
         if isnan(m):

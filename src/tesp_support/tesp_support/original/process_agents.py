@@ -26,12 +26,12 @@ def read_agent_metrics(path, name_root, diction_name='', print_dictionary=False)
     if len(diction_name) > 0:
         try:
             lp = open(diction_name).read()
-        except:
+        except Exception:
             log.error(f'Unable to open agent metrics file {diction_name}')
     else:
         try:
             lp = open(agent_dict_path).read()
-        except:
+        except Exception:
             log.error(f'Unable to open agent metrics file {agent_dict_path}')
     model = json.loads(lp)
     a_keys = list(model['markets'].keys())
