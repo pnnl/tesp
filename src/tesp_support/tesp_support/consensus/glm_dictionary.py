@@ -128,6 +128,8 @@ def glm_dict_with_microgrids(name_root, config=None, ercot=False):  # , te30=Fal
     else:
         bulkpowerBus = 'TBD'
     name = ''
+    lastHouse = ''
+    lastBillingMeter = ''
     houses = {}
     waterheaters = {}
     ziploads = {}

@@ -1578,170 +1578,170 @@ def plot_customer_pdf(attribute, variables, metric, pop_df, case, output_path):
     file_path_fig = os.path.join(output_path, 'plots', plot_filename)
     plt.savefig(file_path_fig, bbox_inches='tight')
 
-
-def DSOT_plots():
-    pd.set_option('display.max_columns', 50)
-
-    # ------------ Selection of DSO and Day  ---------------------------------
-    DSO_num = '2'  # Needs to be non-zero integer
-    day_num = '9'  # Needs to be non-zero integer
-    # Set day range of interest (1 = day 1)
-    day_range = range(2, 3)  # 1 = Day 1. Starting at day two as agent data is missing first hour of run.
-    dso_range = range(1, 9)  # 1 = DSO 1 (end range should be last DSO +1)
-
-    #  ------------ Select folder locations for different cases ---------
-
-    data_path = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/V1.1-1317-gfbf326a2/MR-Batt/lean_8_bt'
-    # data_path = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2'
-    metadata_path = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/analysis/Dsot/Data'
-    ercot_path = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/analysis/Dsot/Data'
-    base_case = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/v1.1-1545-ga2893bd8'
-    batt_case = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/v1.1-1567-g8cb140e1'
-    Output_path = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/v1.1-1567-g8cb140e1'
-    trans_case = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/V1.1-1317-gfbf326a2/MR-Flex/lean_8_fl'
-    config_path = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/Dsot_v3'
-    case_config_name = '200_system_case_config.json'
-
-
-    # system_case = '8_system_case_config.json'
-    # system_case = '8_hi_system_case_config.json'
-    system_case = '200_system_case_config.json'
-    # system_case = '200_hi_system_case_config.json'
-
-    config_path = 'C:/Users/reev057/PycharmProjects/examples/dsot_v3'
-    case_config = pt.load_json(config_path, system_case)
-    metadata_path = 'C:/Users/reev057/PycharmProjects/examples/dsot_data'
-    dso_metadata_file = case_config['dsoPopulationFile']
-    DSOmetadata = pt.load_json(metadata_path, dso_metadata_file)
-
-    # DSO range for 8 node case.  (for 200 node case we will need to determine active DSOs from metadata file).
-    # dso_range = range(1, 2)
-    dso_range = []
-    for DSO in DSOmetadata.keys():
-        if 'DSO' in DSO:
-            if DSOmetadata[DSO]['used']:
-                dso_range.append(int(DSO.split('_')[-1]))
-
-    agent_prefix = '/DSO_'
-    GLD_prefix = '/Substation_'
-    case_config = pt.load_json(config_path, case_config_name)
-    metadata_file = case_config['dsoPopulationFile']
-    dso_meta_file = metadata_path + '/' + metadata_file
-
-    # ---------- Flags to turn on and off plot types etc
-    DER_load_Curves = False # plot load curve comparisons
-    Annual_whiskers = False  # plot annual box and whisker and quantity-duration curves
-    dso_valuation_waterfall = False
-    Customer_PDFs = True
-
-    compare_MR_cases = False
-    compare_HR_cases = True
-    compare_All_cases = False
-    compare_MR_vs_HR_BAU = False
-    compare_200_vs_8_BAU = False
-
-    if compare_MR_cases:
-        # Cases = ['MR BAU', 'MR Batt', 'MR Flex']
-        # Data_paths = [mr_bau_path, mr_batt_path, mr_flex_path]
-        Data_paths = [mr_200_bau_path, mr_200_batt_path, mr_200_flex_path]
-        # Cases = ['MR BAU', 'MR Batt']
-        # Data_paths = [mr_bau_path, mr_batt_path]
-        Cases = ['MR BAU', 'MR Flex']
-        # Data_paths = [mr_bau_path, mr_flex_path]
-        # Data_paths = [mr_200_bau_path, mr_200_flex_path]
-        Variables = ['DA LMP', 'Total Load', 'Hybrid']
-
-    if compare_MR_vs_HR_BAU:
-        Cases = ['MR BAU', 'HR BAU']
-        Data_paths = [mr_200_bau_path, hr_200_bau_path]
-        # Variables = ['Curtailment Percent', 'Renewable Percent', 'DA LMP', 'RT LMP', 'Total Load']
-        Variables = ['DA LMP', 'RT LMP', 'Total Load']
-
-    if compare_HR_cases:
-        # Cases = ['HR BAU', 'HR Batt', 'HR Flex']
-        # Data_paths = [hr_200_bau_path, hr_200_batt_path, hr_200_flex_path]
-        Cases = ['HR BAU', 'HR Flex']
-        Data_paths = [hr_200_bau_path, hr_200_flex_path]
-        # Cases = ['HR BAU', 'HR Batt']
-        # Data_paths = [hr_bau_path, hr_batt_path]
-        # Data_paths = [hr_bau_path, hr_flex_path]
-        Variables = ['DA LMP', 'Total Load', 'Hybrid']
-
-    if compare_All_cases:
-        Cases = ['MR Batt', 'MR BAU', 'HR BAU', 'HR Batt']
-        Data_paths = [mr_batt_path, mr_bau_path, hr_bau_path, hr_batt_path]
-        Variables = ['Renewable Percent', 'DA LMP', 'Total Load']
-
-    if compare_200_vs_8_BAU:
-        Cases = ['MR BAU-200', 'MR BAU-8']
-        Data_paths = [mr_200_bau_path, mr_bau_path]
-        Variables = ['DA LMP', 'Total Load']
-
-        Cases = ['MR BAU-200', 'MR BAU-8', 'HR BAU-200', 'HR BAU-8', 'HR Batt-200', 'HR Batt-8']
-        Data_paths = [mr_200_bau_path, mr_bau_path, hr_200_bau_path, hr_bau_path, hr_200_batt_path, hr_batt_path]
-        Variables = ['DA LMP', 'Total Load']
-
-    Cases_list = [['MR BAU', 'MR Batt'], ['MR BAU', 'MR Flex'], ['HR BAU', 'HR Batt']]
-    Data_paths_list = [[mr_bau_path, mr_batt_path], [mr_bau_path, mr_flex_path], [hr_bau_path, hr_batt_path]]
-    Cases_list = [['MR BAU', 'MR Batt'], ['MR BAU', 'MR Flex'], ['HR BAU', 'HR Batt'], ['HR BAU', 'HR Flex']]
-    Data_paths_list = [[mr_200_bau_path, mr_200_batt_path], [mr_200_bau_path, mr_200_flex_path], [hr_200_bau_path, hr_200_batt_path], [hr_200_bau_path, hr_200_flex_path]]
-
-    Output_path = Data_paths[0]
-
-    # DSO Market Plot
-    # base_lean = "C:/Users/reev057/DSOT-DATA/w_lean_aug_8"
-    # case_lean = "C:/Users/reev057/DSOT-DATA/w_lean_aug_8_bt"
-    # pt.dso_market_plot(dso_range, "6", base_lean, dso_metadata_file, metadata_path, case_lean)
-
-    # Check if there is a plots folder - create if not.
-    check_folder = os.path.isdir(data_path + '/plots')
-    if not check_folder:
-        os.makedirs(data_path + '/plots')
-
-    if DER_load_Curves:
-        # Cycle through months and days for interest for load profiles
-        Months = ['01', '03', '08']
-        # Months = ['08']
-        # Day_Ranges = [range(21, 24), range(4, 11), range(4, 33)]
-        Day_Ranges = [range(21, 24), range(25, 28), range(13, 16)]
-        # Day_Ranges = [range(11, 18)]
-        for i in range(len(Months)):
-            day_range = Day_Ranges[i]
-            if compare_MR_cases:
-                # case_path = Data_paths[1] + "/8_2016_" + Months[i] + "_fl"
-                # comp_path = Data_paths[0] + "/8_2016_" + Months[i]
-                case_path = Data_paths[2] + "/200_2016_" + Months[i] + "_fl"
-                case2_path = Data_paths[1] + "/200_2016_" + Months[i] + "_bt"
-                comp_path = Data_paths[0] + "/200_2016_" + Months[i]
-            if compare_HR_cases:
-                # case_path = Data_paths[1] + "/8_2016_" + Months[i] + "_pv_bt_ev"
-                # comp_path = Data_paths[0] + "/8_2016_" + Months[i] + "_pv"
-                case2_path = Data_paths[2] + "/200_2016_" + Months[i] + "_pv_fl_ev"
-                case_path = Data_paths[1] + "/200_2016_" + Months[i] + "_pv_bt_ev"
-                comp_path = Data_paths[0] + "/200_2016_" + Months[i] + "_pv"
-            # pt.der_stack_plot(dso_range, day_range, metadata_path, case_path, comp_path)
-            # pt.der_stack_plot(dso_range, day_range, metadata_path, comp_path)
-            # pt.bldg_stack_plot(dso_range, day_range, comp_path, metadata_path)
-            pt.generation_load_profiles(comp_path, metadata_path, comp_path, day_range,
-                                                             False, comp_path)
-            pt.generation_load_profiles(case_path, metadata_path, case_path, day_range,
-                                                             False, comp_path)
-            pt.generation_load_profiles(case2_path, metadata_path, case2_path, day_range,
-                                                             False, comp_path)
-            # pt.generation_load_profiles(comp_path, metadata_path, comp_path, day_range,
-            #                                                  True)
-
-    if Annual_whiskers:
-        for Variable in Variables:
-            plot_annual_stats(Cases, Data_paths, Output_path, DSO_num, Variable)
-
-    if Customer_PDFs:
-        customer_cfs_delta(Cases, Data_paths, Output_path, metadata_file)
-
-    # reduction_by_class(Cases, Data_paths, Output_path, 'Load')
-    if dso_valuation_waterfall:
-        dso_cfs_delta(Cases_list, Data_paths_list, dso_range, metadata_file)
-
+# Does not run no mr_*u_path defined
+# def DSOT_plots():
+#     pd.set_option('display.max_columns', 50)
+#
+#     # ------------ Selection of DSO and Day  ---------------------------------
+#     DSO_num = '2'  # Needs to be non-zero integer
+#     day_num = '9'  # Needs to be non-zero integer
+#     # Set day range of interest (1 = day 1)
+#     day_range = range(2, 3)  # 1 = Day 1. Starting at day two as agent data is missing first hour of run.
+#     dso_range = range(1, 9)  # 1 = DSO 1 (end range should be last DSO +1)
+#
+#     #  ------------ Select folder locations for different cases ---------
+#
+#     data_path = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/V1.1-1317-gfbf326a2/MR-Batt/lean_8_bt'
+#     # data_path = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2'
+#     metadata_path = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/analysis/Dsot/Data'
+#     ercot_path = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/analysis/Dsot/Data'
+#     base_case = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/v1.1-1545-ga2893bd8'
+#     batt_case = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/v1.1-1567-g8cb140e1'
+#     Output_path = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/v1.1-1567-g8cb140e1'
+#     trans_case = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/V1.1-1317-gfbf326a2/MR-Flex/lean_8_fl'
+#     config_path = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/Dsot_v3'
+#     case_config_name = '200_system_case_config.json'
+#
+#
+#     # system_case = '8_system_case_config.json'
+#     # system_case = '8_hi_system_case_config.json'
+#     system_case = '200_system_case_config.json'
+#     # system_case = '200_hi_system_case_config.json'
+#
+#     config_path = 'C:/Users/reev057/PycharmProjects/examples/dsot_v3'
+#     case_config = pt.load_json(config_path, system_case)
+#     metadata_path = 'C:/Users/reev057/PycharmProjects/examples/dsot_data'
+#     dso_metadata_file = case_config['dsoPopulationFile']
+#     DSOmetadata = pt.load_json(metadata_path, dso_metadata_file)
+#
+#     # DSO range for 8 node case.  (for 200 node case we will need to determine active DSOs from metadata file).
+#     # dso_range = range(1, 2)
+#     dso_range = []
+#     for DSO in DSOmetadata.keys():
+#         if 'DSO' in DSO:
+#             if DSOmetadata[DSO]['used']:
+#                 dso_range.append(int(DSO.split('_')[-1]))
+#
+#     agent_prefix = '/DSO_'
+#     GLD_prefix = '/Substation_'
+#     case_config = pt.load_json(config_path, case_config_name)
+#     metadata_file = case_config['dsoPopulationFile']
+#     dso_meta_file = metadata_path + '/' + metadata_file
+#
+#     # ---------- Flags to turn on and off plot types etc
+#     DER_load_Curves = False # plot load curve comparisons
+#     Annual_whiskers = False  # plot annual box and whisker and quantity-duration curves
+#     dso_valuation_waterfall = False
+#     Customer_PDFs = True
+#
+#     compare_MR_cases = False
+#     compare_HR_cases = True
+#     compare_All_cases = False
+#     compare_MR_vs_HR_BAU = False
+#     compare_200_vs_8_BAU = False
+#
+#     if compare_MR_cases:
+#         # Cases = ['MR BAU', 'MR Batt', 'MR Flex']
+#         # Data_paths = [mr_bau_path, mr_batt_path, mr_flex_path]
+#         Data_paths = [mr_200_bau_path, mr_200_batt_path, mr_200_flex_path]
+#         # Cases = ['MR BAU', 'MR Batt']
+#         # Data_paths = [mr_bau_path, mr_batt_path]
+#         Cases = ['MR BAU', 'MR Flex']
+#         # Data_paths = [mr_bau_path, mr_flex_path]
+#         # Data_paths = [mr_200_bau_path, mr_200_flex_path]
+#         Variables = ['DA LMP', 'Total Load', 'Hybrid']
+#
+#     if compare_MR_vs_HR_BAU:
+#         Cases = ['MR BAU', 'HR BAU']
+#         Data_paths = [mr_200_bau_path, hr_200_bau_path]
+#         # Variables = ['Curtailment Percent', 'Renewable Percent', 'DA LMP', 'RT LMP', 'Total Load']
+#         Variables = ['DA LMP', 'RT LMP', 'Total Load']
+#
+#     if compare_HR_cases:
+#         # Cases = ['HR BAU', 'HR Batt', 'HR Flex']
+#         # Data_paths = [hr_200_bau_path, hr_200_batt_path, hr_200_flex_path]
+#         Cases = ['HR BAU', 'HR Flex']
+#         Data_paths = [hr_200_bau_path, hr_200_flex_path]
+#         # Cases = ['HR BAU', 'HR Batt']
+#         # Data_paths = [hr_bau_path, hr_batt_path]
+#         # Data_paths = [hr_bau_path, hr_flex_path]
+#         Variables = ['DA LMP', 'Total Load', 'Hybrid']
+#
+#     if compare_All_cases:
+#         Cases = ['MR Batt', 'MR BAU', 'HR BAU', 'HR Batt']
+#         Data_paths = [mr_batt_path, mr_bau_path, hr_bau_path, hr_batt_path]
+#         Variables = ['Renewable Percent', 'DA LMP', 'Total Load']
+#
+#     if compare_200_vs_8_BAU:
+#         Cases = ['MR BAU-200', 'MR BAU-8']
+#         Data_paths = [mr_200_bau_path, mr_bau_path]
+#         Variables = ['DA LMP', 'Total Load']
+#
+#         Cases = ['MR BAU-200', 'MR BAU-8', 'HR BAU-200', 'HR BAU-8', 'HR Batt-200', 'HR Batt-8']
+#         Data_paths = [mr_200_bau_path, mr_bau_path, hr_200_bau_path, hr_bau_path, hr_200_batt_path, hr_batt_path]
+#         Variables = ['DA LMP', 'Total Load']
+#
+#     Cases_list = [['MR BAU', 'MR Batt'], ['MR BAU', 'MR Flex'], ['HR BAU', 'HR Batt']]
+#     Data_paths_list = [[mr_bau_path, mr_batt_path], [mr_bau_path, mr_flex_path], [hr_bau_path, hr_batt_path]]
+#     Cases_list = [['MR BAU', 'MR Batt'], ['MR BAU', 'MR Flex'], ['HR BAU', 'HR Batt'], ['HR BAU', 'HR Flex']]
+#     Data_paths_list = [[mr_200_bau_path, mr_200_batt_path], [mr_200_bau_path, mr_200_flex_path], [hr_200_bau_path, hr_200_batt_path], [hr_200_bau_path, hr_200_flex_path]]
+#
+#     Output_path = Data_paths[0]
+#
+#     # DSO Market Plot
+#     # base_lean = "C:/Users/reev057/DSOT-DATA/w_lean_aug_8"
+#     # case_lean = "C:/Users/reev057/DSOT-DATA/w_lean_aug_8_bt"
+#     # pt.dso_market_plot(dso_range, "6", base_lean, dso_metadata_file, metadata_path, case_lean)
+#
+#     # Check if there is a plots folder - create if not.
+#     check_folder = os.path.isdir(data_path + '/plots')
+#     if not check_folder:
+#         os.makedirs(data_path + '/plots')
+#
+#     if DER_load_Curves:
+#         # Cycle through months and days for interest for load profiles
+#         Months = ['01', '03', '08']
+#         # Months = ['08']
+#         # Day_Ranges = [range(21, 24), range(4, 11), range(4, 33)]
+#         Day_Ranges = [range(21, 24), range(25, 28), range(13, 16)]
+#         # Day_Ranges = [range(11, 18)]
+#         for i in range(len(Months)):
+#             day_range = Day_Ranges[i]
+#             if compare_MR_cases:
+#                 # case_path = Data_paths[1] + "/8_2016_" + Months[i] + "_fl"
+#                 # comp_path = Data_paths[0] + "/8_2016_" + Months[i]
+#                 case_path = Data_paths[2] + "/200_2016_" + Months[i] + "_fl"
+#                 case2_path = Data_paths[1] + "/200_2016_" + Months[i] + "_bt"
+#                 comp_path = Data_paths[0] + "/200_2016_" + Months[i]
+#             if compare_HR_cases:
+#                 # case_path = Data_paths[1] + "/8_2016_" + Months[i] + "_pv_bt_ev"
+#                 # comp_path = Data_paths[0] + "/8_2016_" + Months[i] + "_pv"
+#                 case2_path = Data_paths[2] + "/200_2016_" + Months[i] + "_pv_fl_ev"
+#                 case_path = Data_paths[1] + "/200_2016_" + Months[i] + "_pv_bt_ev"
+#                 comp_path = Data_paths[0] + "/200_2016_" + Months[i] + "_pv"
+#             # pt.der_stack_plot(dso_range, day_range, metadata_path, case_path, comp_path)
+#             # pt.der_stack_plot(dso_range, day_range, metadata_path, comp_path)
+#             # pt.bldg_stack_plot(dso_range, day_range, comp_path, metadata_path)
+#             pt.generation_load_profiles(comp_path, metadata_path, comp_path, day_range,
+#                                                              False, comp_path)
+#             pt.generation_load_profiles(case_path, metadata_path, case_path, day_range,
+#                                                              False, comp_path)
+#             pt.generation_load_profiles(case2_path, metadata_path, case2_path, day_range,
+#                                                              False, comp_path)
+#             # pt.generation_load_profiles(comp_path, metadata_path, comp_path, day_range,
+#             #                                                  True)
+#
+#     if Annual_whiskers:
+#         for Variable in Variables:
+#             plot_annual_stats(Cases, Data_paths, Output_path, DSO_num, Variable)
+#
+#     if Customer_PDFs:
+#         customer_cfs_delta(Cases, Data_paths, Output_path, metadata_file)
+#
+#     # reduction_by_class(Cases, Data_paths, Output_path, 'Load')
+#     if dso_valuation_waterfall:
+#         dso_cfs_delta(Cases_list, Data_paths_list, dso_range, metadata_file)
+#
 
 def rates_plots():
     # ------------ Selection of DSO and Day  ---------------------------------

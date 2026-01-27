@@ -141,6 +141,8 @@ def glm_dict(name_root, config=None, ercot=False):  # , te30=False):
     else:
         bulkpowerBus = 'TBD'
     name = ''
+    lastHouse = ''
+    lastBillingMeter = ''
     houses = {}
     waterheaters = {}
     ziploads = {}
@@ -474,13 +476,6 @@ def glm_dict(name_root, config=None, ercot=False):  # , te30=False):
                 if lst[0] == 'parent':
                     lastMeterParent = lst[1].strip(';')
                 if lst[0] == 'bill_mode':
-                    # if te30:
-                    #    if 'flatrate' not in name:
-                    #        billingmeters[name] = {'feeder_id': feeder_id, 'phases': phases, 'vll': vll, 'vln': vln,
-                    #                               'children': [], 'building_type': 'UNKNOWN',
-                    #                               'tariff_class': 'industrial'}
-                    #        lastBillingMeter = name
-                    # else:
                     billingmeters[name] = {'feeder_id': feeder_id, 'phases': phases, 'vll': vll, 'vln': vln,
                                            'children': [], 'building_type': 'UNKNOWN', 'tariff_class': 'industrial'}
                     lastBillingMeter = name
@@ -502,20 +497,12 @@ def glm_dict(name_root, config=None, ercot=False):  # , te30=False):
                     inMeters = False
         elif len(lst) == 1:
             if hasSolar:
-                # if ercot:
-                #    lastBillingMeter = ercotMeterName(name)
-                # elif te30:
-                #    lastBillingMeter = lastMeterParent
                 inverters[lastInverter] = {'feeder_id': feeder_id,
                                            'billingmeter_id': lastBillingMeter,
                                            'rated_W': rating,
                                            'resource': 'solar',
                                            'inv_eta': inv_eta}
             elif hasBattery:
-                # if ercot:
-                #    lastBillingMeter = ercotMeterName(name)
-                # elif te30:
-                #    lastBillingMeter = lastMeterParent
                 inverters[lastInverter] = {'feeder_id': feeder_id,
                                            'billingmeter_id': lastBillingMeter,
                                            'rated_W': rating,

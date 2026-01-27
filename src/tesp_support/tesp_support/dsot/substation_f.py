@@ -430,6 +430,11 @@ def inner_substation_loop(configfile, metrics_root, with_market):
             )
 
         if retail_full_metrics:
+            site_da_wh_cleared_quantities = None
+            site_da_hvac_cleared_quantities = None
+            site_da_batt_cleared_quantities = None
+            site_da_total_quantities_cleared = None
+
             retail_site_3600 = MetricsStore(
                 name_units_pairs=[
                     ('meters', ['meterName'] * len(site_da_meter)),
@@ -643,6 +648,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
     retail_cleared_quantity_diff_applied = 0.0
     retail_cleared_quantity_RT = 0.0
     retail_cleared_quantity_RT_unadjusted = 0.0
+    retail_cleared_quantity_DA = None
     load_base_from_retail = 0.0
     load_base_for_wholesale = 0.0
     gld_load = []

@@ -2552,9 +2552,11 @@ def dso_load_stats(dso_range, month_list, data_path, metadata_path, plot=False):
         saves dso load comparison plots to file
         saves summary of Qmax for each DSO to file
         """
-    # Aggregate all the monthly data
-    # Load commesurate ERCOT Load data
 
+    previous_end_time = None
+
+    # Aggregate all the monthly data
+    # Load commensurate ERCOT Load data
     for i in range(len(month_list)):
         filename = (month_list[i][1] + '/DER_profiles.h5')
         der_loads_df = pd.read_hdf(filename, key='DER_Profiles', mode='r')

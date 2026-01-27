@@ -29,9 +29,10 @@ class DataClient(object):
         self.proxy = self.mgr.DataProxy()
 
     # Verify the server is running (not required)
-    @staticmethod
-    def _checkForProcess(name):
-        for proc in psutil.process_iter():
-            if proc.name() == name:
-                return True
-        return False
+    # Uncomment for assert message above
+    # @staticmethod
+    # def _checkForProcess(name):
+    #     for proc in psutil.process_iter():
+    #         if proc.name() == name:
+    #             return True
+    #     return False
