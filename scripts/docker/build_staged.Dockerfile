@@ -4,7 +4,7 @@ ARG TAG=$DOCKER_VER
 # ============================================================
 # Base stage: Common setup
 # ============================================================
-FROM cosim-library:tesp_$TAG AS base
+FROM tesp-library:tesp_$TAG AS base
 ARG SIM_USER
 ARG SIM_GRP
 ENV SIM_HOME=/home/$SIM_USER
@@ -120,11 +120,12 @@ FROM python-deps AS build-fncs
 ARG BUILD_FNCS=yes
 
 RUN if [ "${BUILD_FNCS}" = "yes" ]; then \
-      echo "===== Building FNCS =====" && \
+      echo "===== Downloading FNCS =====" && \
       cd ${REPO_DIR} && \
       git clone -b feature/opendss https://github.com/FNCS/fncs.git && \
       ${BUILD_DIR}/patch.sh fncs fncs && \
       cd ${BUILD_DIR} && \
+      echo "===== Building FNCS =====" && \
       ./fncs_b.sh clean > fncs.log 2>&1 && \
       ./fncs_j_b.sh clean > fncs_j.log 2>&1 && \
       cd ${REPO_DIR} && \
@@ -139,11 +140,12 @@ ARG BUILD_HELICS=yes
 ARG BUILD_HELICS_PY=yes
 
 RUN if [ "${BUILD_HELICS}" = "yes" ]; then \
-      echo "===== Building HELICS =====" && \
+      echo "===== Downloading HELICS =====" && \
       cd ${REPO_DIR} && \
       git clone -b main https://github.com/GMLC-TDC/HELICS-src && \
       ${BUILD_DIR}/patch.sh HELICS-src HELICS-src && \
       cd ${BUILD_DIR} && \
+      echo "===== Building HELICS =====" && \
       ./HELICS-src_b.sh clean > HELICS-src.log 2>&1 && \
       cd ${REPO_DIR} && \
       rm -rf HELICS-src ; \
@@ -282,7 +284,7 @@ RUN echo "===== Build Verification =====" && \
 # ============================================================
 # Final stage: Clean production image
 # ============================================================
-FROM cosim-library:tesp_$TAG AS cosim-build
+FROM tesp-library:tesp_$TAG AS tesp-build
 ARG SIM_USER
 ARG SIM_GRP
 ENV SIM_HOME=/home/$SIM_USER
