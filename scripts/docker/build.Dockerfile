@@ -127,10 +127,10 @@ RUN echo "===== Building TESP Build =====" && \
   rm -r ThirdParty-ASL && \
   rm -r ThirdParty-Mumps && \
   echo "Install Python Libraries and TESP pypi..." && \
-  pip install --no-warn-script-location --upgrade pip  > "pypi.log" && \
-  pip install --no-warn-script-location --no-cache-dir -r ${TESPDIR}/requirements.txt  >> "pypi.log" && \
-  pip install --no-warn-script-location --no-cache-dir helics[cli]  >> "pypi.log" && \
-  pip install --no-warn-script-location --no-cache-dir -e ${REPO_DIR}/psst  >> "pypi.log" && \
-  pip install --no-warn-script-location --no-cache-dir -e ${TESPDIR}/src/tesp_support  >> "pypi.log" && \
+  pip install --no-warn-script-location --break-system-packages --upgrade pip  > "pypi.log" && \
+  pip install --no-warn-script-location --break-system-packages --no-cache-dir -r ${TESPDIR}/requirements.txt  >> "pypi.log" && \
+  pip install --no-warn-script-location --break-system-packages --no-cache-dir helics[cli]  >> "pypi.log" && \
+  pip install --no-warn-script-location --break-system-packages --no-cache-dir -e ${REPO_DIR}/psst  >> "pypi.log" && \
+  pip install --no-warn-script-location --break-system-packages --no-cache-dir -e ${TESPDIR}/src/tesp_support  >> "pypi.log" && \
   echo "${SIM_USER}" | sudo -S ldconfig && \
   ${BUILD_DIR}/versions.sh

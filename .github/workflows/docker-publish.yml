@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Build
         run: |
@@ -23,11 +23,13 @@ jobs:
           ./build-images.sh
 
       - name: List images
-        run: docker images | grep -E "cosim|tesp"
+        run: docker images | grep -E "tesp"
 
       - name: Smoke test
-        run: |
-          docker run --rm tesp-build:tesp_${{ steps.version.outputs.VER }} \
+        run: |          
+          source tesp.env
+          VER=$(cat scripts/grid_version | tr -d '\n')
+          docker run --rm tesp-build:tesp_${VER} \
             python3 -c "import tesp_support; print('OK')" || exit 1
 
       # - name: login to hub
