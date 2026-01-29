@@ -18,8 +18,9 @@ jobs:
 
       - name: Build
         run: |
-         cd scripts/docker
-         ./build-images.sh
+          source tesp.env
+          cd scripts/docker
+          ./build-images.sh
 
       - name: List images
         run: docker images | grep -E "cosim|tesp"
