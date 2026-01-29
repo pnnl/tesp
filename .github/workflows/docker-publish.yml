@@ -16,16 +16,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: login to hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
       - name: Build
         run: |
          cd scripts/docker
          ./build-images.sh
+
+      - name: List images
+        run: docker images | grep -E "cosim|tesp"
+
+      - name: Smoke test
+        run: |
+          docker run --rm tesp-build:tesp_${{ steps.version.outputs.VER }} \
+            python3 -c "import tesp_support; print('OK')"
+
+      # - name: login to hub
+      #   uses: docker/login-action@v2
+      #   with:
+      #     username: ${{ secrets.DOCKER_USERNAME }}
+      #     password: ${{ secrets.DOCKER_PASSWORD }}
 
       # - name: Test
       #   run: |
