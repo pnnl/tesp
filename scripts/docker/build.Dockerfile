@@ -5,7 +5,7 @@ ARG BUILD_ENERGYPLUS=yes
 ARG BUILD_NS3=yes
 ARG BUILD_IPOPT=yes
 # Build runtime image
-FROM cosim-library:tesp_$TAG AS cosim-build
+FROM tesp-library:tesp_$TAG AS tesp-build
 
 ARG SIM_USER
 ARG SIM_GRP
@@ -16,7 +16,7 @@ ENV SIM_EMAIL=pnnl.com
 USER $SIM_USER
 WORKDIR $SIM_HOME
 
-# CoSim exports
+# TESP exports
 ENV TESPDIR=$SIM_HOME/tesp
 ENV INSTDIR=$SIM_HOME/tenv
 ENV REPO_DIR=$SIM_HOME/repo
