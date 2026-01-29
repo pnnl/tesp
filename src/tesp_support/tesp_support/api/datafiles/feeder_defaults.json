@@ -117,7 +117,7 @@
   "Eplus_kVA": 150.0,
 
   "max208kva": 100.0,
-  "xfmrMargin": 1.0,
+  "xfmrMargin": 1.20,
   "fuseMargin": 2.50,
   "transmissionVoltage": 345000.0,
   "transmissionXfmrMVAbase": 12.0,

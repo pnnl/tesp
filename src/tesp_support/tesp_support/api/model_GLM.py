@@ -75,7 +75,7 @@ class GLMModel:
         objects ...
         schedule ...
 
-    Can be used any where::
+    Can be used anywhere::
 
         #define -> are one line black boxes
         #include -> *.glm files are black boxes
@@ -1217,7 +1217,7 @@ class GLMModel:
                             seg_loads[ename][0] += kva
                             seg_loads[ename][1] = self.union_of_phases(seg_loads[ename][1], data['ndata']['phases'])
 
-                            # Band-aid for poor accumulation of phase information for parallel circuits
+                            # Band-Aid for poor accumulation of phase information for parallel circuits
                             # "ABCS" is not a valid phase set and should be "ABCN".
                             # seg_phs = seg_phs.replace('ABCS', 'ABCN')
                             seg_loads[ename][1] = seg_loads[ename][1].replace('ABCS', 'ABCN')

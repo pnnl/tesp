@@ -121,8 +121,8 @@ class Forecasting:
         """ Initialize the data frame for one year
 
         Args:
-            start_time (datetime, str) : time in str format - DD/MM/YYY HH:MT:SS
-            end_time (datetime, str) : time in str format - DD/MM/YYY HH:MT:SS
+            start_time (datetime | str) : time in str format - DD/MM/YYY HH:MT:SS
+            end_time (datetime | str) : time in str format - DD/MM/YYY HH:MT:SS
         """
         # convert start_time and end_time to strings if they are in datetime
         if isinstance(start_time, datetime):
@@ -147,7 +147,7 @@ class Forecasting:
 
         Args:
             filename (str): name of glm file to be loaded
-            schedule_name (str): name of the schedule to be laoded
+            schedule_name (str): name of the schedule to be loaded
         """
         print("Reading and constructing 1 year dataframe for {} schedule from {}".format(schedule_name, filename))
         ip_file = glm.load(filename)
@@ -269,9 +269,10 @@ class Forecasting:
     def add_skew_scalar(self, datafr, N_skew, N_scalar):
         """ Skew the values with given seconds and multiply by scalar in the whole year dataframe
 
-            Args:
+        Args:
             datafr (DataFrame): dataframe created with the schedule name for a year
             N_skew (int): number of seconds to skew either (+ or -)
+            N_scalar (int): scalar multiplier
        """
         df = deepcopy(datafr)
         if N_skew != 0:

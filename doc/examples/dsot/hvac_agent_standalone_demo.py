@@ -173,8 +173,6 @@ class HVACDSOT:
     def calc_thermostat_settings(self):
         """ Sets the ETP parameters from configuration data
 
-        Args:
-
         References:
             `Table 3 -  Easy to use slider settings <http://gridlab-d.shoutwiki.com/wiki/Transactive_controls>`_
         """

@@ -123,16 +123,17 @@ def parse_solar_metadata(solar_metadata_path):
 
 
 def _create_200_node_csv_file_and_headers(filename, output_path):
-    """ Writes out headers for solar data file where all solar data
+    """
+    Writes out headers for solar data file where all solar data
     is stored as a table (rows for each timestamp, columns for each of
     the 200 buses).
 
-        Args:
-            filename (str): name of output file
-            output_path (str): Path to location where output file will be written
-        Returns:
-            dsot_fh (File object): File handle for output file
-        """
+    Args:
+        filename (str): name of output file
+        output_path (str): Path to location where output file will be written
+    Returns:
+        dsot_fh (File object): File handle for output file
+    """
     outpath = os.path.join(output_path, filename)
     dsot_fh = _open_file(outpath, 'w')
 
@@ -155,22 +156,22 @@ def _create_200_node_csv_file_and_headers(filename, output_path):
 
 def _add_extra_days_to_hourly(profile):
     """
-        This function adds extra buffer days to the beginning of an
-        hourly profile and adds leap day to the profile.
+    This function adds extra buffer days to the beginning of an
+    hourly profile and adds leap day to the profile.
 
-        Checks are made on the incoming profile length to see what days
-        need to be added.
-            8760 - Add leap day and three warm-up days
-            8784 - Assume leap day has already been added
+    Checks are made on the incoming profile length to see what days
+    need to be added.
+        8760 - Add leap day and three warm-up days
+        8784 - Assume leap day has already been added
 
-        The added data is a replication of the first few days of Jan
-        (for the days before Jan 1) and Feb 28th (for Leap Day).
+    The added data is a replication of the first few days of Jan
+    (for the days before Jan 1) and Feb 28th (for Leap Day).
 
-        Args:
-            profile (list): hourly profile values
-        Returns:
-            profile (list): Augmented hourly profile values
-        """
+    Args:
+        profile (list): hourly profile values
+    Returns:
+        profile (list): Augmented hourly profile values
+    """
 
     if len(profile) == 8760:
         add_buffer_days = True

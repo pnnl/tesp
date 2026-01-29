@@ -110,8 +110,8 @@ class Forecasting:
         """ Initialize the data frame for one year
 
         Args:
-            start_time (datetime, str) : time in str format - DD/MM/YYY HH:MT:SS
-            end_time (datetime, str) : time in str format - DD/MM/YYY HH:MT:SS
+            start_time (datetime | str) : time in str format - DD/MM/YYY HH:MT:SS
+            end_time (datetime | str) : time in str format - DD/MM/YYY HH:MT:SS
         """
         # convert start_time and end_time to strings if they are in datetime
         if isinstance(start_time, datetime):
@@ -136,7 +136,7 @@ class Forecasting:
 
         Args:
             filename (str): name of glm file to be loaded
-            schedule_name (str): name of the schedule to be laoded
+            schedule_name (str): name of the schedule to be loaded
         """
         print("Reading and constructing 1 year dataframe for {} schedule from {}".format(schedule_name, filename))
         ip_file = glm.load(filename)

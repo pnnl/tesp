@@ -50,7 +50,7 @@ class GLMModifier:
         Args:
             gld_type (str): name of GridLAB-D module to add
             params (dict): Dictionary keys are the module attribute names and
-            the dictionary values are the module attribute values.
+                the dictionary values are the module attribute values.
 
         Returns:
             Entity: Dictionary-like object of the module added
@@ -109,7 +109,7 @@ class GLMModifier:
             gld_type (str): Class of GridLAB-D object to add
             name (str): Name of GridLAB-D object to add
             params (dict): Object attribute names are the dictionary keys and
-            object attributed parameters are the dictionary values
+                object attributed parameters are the dictionary values
 
         Returns:
             Entity: Dictionary-like object of the object added
@@ -182,9 +182,9 @@ class GLMModifier:
 
         Args:
             gld_type (str): Class of GridLAB-D object to which the
-            attribute is being added
+                attribute is being added
             name (str): Name of GridLAB-D object to which the
-            attribute is being added
+                attribute is being added
             item_name (str): Name of attribute being added
             item_value (str): Value of attribute being added
 
@@ -199,9 +199,9 @@ class GLMModifier:
 
         Args:
             gld_type (string): Class of GridLAB-D object from which the
-            attribute is being removed
+                attribute is being removed
             name (string): Name of GridLAB-D object from which the
-            attribute is being removed
+                attribute is being removed
             item_name (string): Name of attribute to remove
         """
         self.model.object_entities[gld_type].del_item(name, item_name)
@@ -239,7 +239,7 @@ class GLMModifier:
         have been 5, 10, 15, 25, 37.5, 50, 75, 100, 167, 250, 333 or 500 kVA
 
         Args:
-            kva (float): load magnitude to be serviced by transfomer
+            kva (float): load magnitude to be serviced by transformer
             margin (float):
 
         Returns:
@@ -255,14 +255,14 @@ class GLMModifier:
         n500 = int((kva + 250.0) / 500.0)
         return 500.0 * n500
 
-    def find_1phase_xfmr(self, kva: float) -> float:
+    def find_1phase_xfmr(self, kva: float) -> list[float]:
         """Select a standard 1-phase transformer size based on provided kVA load value.
 
         Standard sizes are defined in feeder_defaults.json and historically
         have been 5, 10, 15, 25, 37.5, 50, 75, 100, 167, 250, 333 or 500 kVA
 
         Args:
-            kva (float): load magnitude to be serviced by transfomer
+            kva (float): load magnitude to be serviced by transformer
 
         Returns:
             [float,float,float,float,float]:
@@ -274,8 +274,8 @@ class GLMModifier:
         """
         for row in self.defaults.single_phase:
             if row[0] >= kva:
-                return row[0], 0.01 * row[1], 0.01 * row[2], 0.01 * row[3], 0.01 * row[4]
-        return self.find_1phase_xfmr_w_margin(kva)
+                return [row[0], 0.01 * row[1], 0.01 * row[2], 0.01 * row[3], 0.01 * row[4]]
+        return [self.find_1phase_xfmr_w_margin(kva), 0.01, 0.06, 0.005, 0.01]
 
     def find_3phase_xfmr_w_margin(self, kva: float, margin: float = None) -> float:
         """Select a standard 3-phase transformer size with some design margin
@@ -301,14 +301,14 @@ class GLMModifier:
         n10 = int((kva + 5000.0) / 10000.0)
         return 500.0 * n10
 
-    def find_3phase_xfmr(self, kva: float) -> float:
+    def find_3phase_xfmr(self, kva: float) -> list[float]:
         """Select a standard 3-phase transformer size, with data
 
         Standard sizes are 30, 45, 75, 112.5, 150, 225, 300, 500, 750, 1000, 1500,
         2000, 2500, 3750, 5000, 7500 or 10000 kVA
 
         Args:
-            kva (float): load magnitude to be serviced by transfomer
+            kva (float): load magnitude to be serviced by transformer
 
         Returns:
             [float,float,float,float,float]:
@@ -320,8 +320,8 @@ class GLMModifier:
         """
         for row in self.defaults.three_phase:
             if row[0] >= kva:
-                return row[0], 0.01 * row[1], 0.01 * row[2], 0.01 * row[3], 0.01 * row[4]
-        return self.find_3phase_xfmr_w_margin(kva)
+                return [row[0], 0.01 * row[1], 0.01 * row[2], 0.01 * row[3], 0.01 * row[4]]
+        return [self.find_3phase_xfmr_w_margin(kva), 0.01, 0.08, 0.005, 0.0]
 
     def find_fuse_limit_w_margin(self, amps: float, margin=None) -> float:
         """ Find a fuse size that's unlikely to melt during power flow
@@ -626,7 +626,7 @@ class GLMModifier:
             gld_class (str): the GridLAB-D class name to write
             v_ln (float): the primary nominal line-to-neutral voltage
             v_ll (float): the primary nominal line-to-line voltage
-            secmtrnode (dict): key to [transfomer kva, phasing, nominal voltage] by secondary node name
+            secmtrnode (dict): key to [transformer kva, phasing, nominal voltage] by secondary node name
 
         Returns:
             None

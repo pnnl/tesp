@@ -559,7 +559,7 @@ def prepare_case(case:str):
                 config["outputPath"] = f'{config["outputPath"]}/{config["caseName"]}.glm'
                 config['taxonomy'] = f'{config["copperplate_feeder_name"]}.glm'
                 config["backbone_files"] = config["copperplate_feeder_file"]
-                config["gis_path"] = False
+                config["gis_file"] = False
                 config_dump = pyjson5.dumps(config, indent=2)
                 output_file = 'copper_config_dump.json5'
                 with open(os.path.join("../data/", output_file), 'w', encoding='utf-8') as file:
