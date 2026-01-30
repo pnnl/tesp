@@ -27,7 +27,8 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install ./src/tesp_support ruff pytest mypy
+        pip install -e ./src/tesp_support 
+        pip install ruff pytest mypy
 
     - name: Lint with ruff
       run: |
