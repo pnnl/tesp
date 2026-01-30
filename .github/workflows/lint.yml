@@ -33,21 +33,19 @@ jobs:
         # Test code with ruff. This will check for syntax and runtime errors.
         # We will want to expand the scope as code is improved.
         # stop the build if there are Python syntax errors or undefined names
-        # The values after --select are prefixes that match all error codes starting with those characters.
+        # The values after --ignore prefixes that match all error codes starting with those characters.
         # E9xx: Runtime (https://pycodestyle.pycqa.org/en/latest/intro.html#error-codes)
         # F codes found at https://flake8.pycqa.org/en/latest/user/error-codes.html
-        # F821: undefined name name
-        # F822: undefined name name in __all__
-        # F823: local variable name … referenced before assignment
-        # F824: global name / nonlocal name is unused: name is never assigned in scope
-        ruff check ./src --select=E9,F63,F7,F821,F822,F823  --statistics
+        # F841    unused-variable
+        # E731    lambda-assignment
+        ruff check ./src --ignore=F841,E731
         # exit-zero treats all errors as warnings.
-        ruff check ./src --exit-zero --statistics
+        # ruff check ./src --exit-zero --statistics
     # # Uncomment testing when tests are ready
     - name: Test with pytest
       run: |
         pytest ./src/tesp_support/test/api  # only api tests for now
     # # Uncomment type checking when code is ready
-    # - name: Check types with mypy
-    #   run: |
-    #     mypy ./src/tesp_support/tesp_support/api
+    - name: Check types with mypy
+      run: |
+        mypy ./src/tesp_support/tesp_support/apii --disable-error-code import-untyped --disable-error-code union-attr --disable-error-code attr-defined --disable-error-code import-not-found

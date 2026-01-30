@@ -186,7 +186,7 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
     logger.info("Run base: %s", run_base)
 
     # Process the base case first
-    if run_base == True:
+    if run_base:
         case_list.insert(0, str(base_case_path))
         logger.info("Added base case to processing list")
     else:

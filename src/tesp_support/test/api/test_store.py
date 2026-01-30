@@ -4,7 +4,6 @@ import tempfile
 import os
 import csv
 import sqlite3
-import pandas as pd
 from tesp_support.api.store import Schema, Directory, Store
 
 
@@ -207,11 +206,11 @@ def test_store_series_data_reading():
             # Test setting date by column
             if "Hour_End" in columns:
                 result = schema.set_date_bycol(tables[0], "Hour_End")
-                assert result == True
+                assert result
 
             # Test setting date by row
             result = schema.set_date_byrow(tables[0], "2016-01-01 00:00", "H")
-            assert result == True
+            assert result
 
             store.write()
 

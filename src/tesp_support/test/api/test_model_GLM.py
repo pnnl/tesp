@@ -2,33 +2,31 @@
 import pytest
 import tempfile
 import os
-import sqlite3
-import json
 from tesp_support.api.model_GLM import GLMModel, O_Entity
-from tesp_support.api.entity import Entity
 
 
 def test_glmmodel_simple_glm_content():
     """Test reading and writing simple GLM content"""
     # Create a simple GLM file content
-    glm_content = """clock {
+    glm_content = """
+clock {
     timezone EST+5EDT;
     starttime '2016-01-01 00:00:00';
     stoptime '2016-01-01 23:59:59';
-    }
+}
 
-    #set profiler=1
+#set profiler=1
 
-    module powerflow {
-        solver_method NR;
-    }
+module powerflow {
+    solver_method NR;
+}
 
-    object node {
-        name test_node;
-        phases ABCN;
-        nominal_voltage 7200;
-    }
-    """
+object node {
+    name test_node;
+    phases ABCN;
+    nominal_voltage 7200;
+}
+"""
 
     with tempfile.NamedTemporaryFile(mode="w", suffix=".glm", delete=False) as f:
         f.write(glm_content)
@@ -38,7 +36,7 @@ def test_glmmodel_simple_glm_content():
         model = GLMModel()
         success = model.readModel(temp_file)
 
-        assert success == True
+        assert success
         # After reading, clock instance should exist
         assert "clock" in model.module_entities["clock"].instances
         clock_instance = model.module_entities["clock"].instances["clock"]
@@ -265,18 +263,18 @@ def test_glmmodel_edge_node_classification():
     model = GLMModel()
 
     # Test edge classes
-    assert model.is_edge_class("overhead_line") == True
-    assert model.is_edge_class("underground_line") == True
-    assert model.is_edge_class("transformer") == True
-    assert model.is_edge_class("switch") == True
-    assert model.is_edge_class("node") == False
+    assert model.is_edge_class("overhead_line")
+    assert model.is_edge_class("underground_line")
+    assert model.is_edge_class("transformer")
+    assert model.is_edge_class("switch")
+    assert not model.is_edge_class("node")
 
     # Test node classes
-    assert model.is_node_class("node") == True
-    assert model.is_node_class("load") == True
-    assert model.is_node_class("meter") == True
-    assert model.is_node_class("house") == True
-    assert model.is_node_class("overhead_line") == False
+    assert model.is_node_class("node")
+    assert model.is_node_class("load")
+    assert model.is_node_class("meter")
+    assert model.is_node_class("house")
+    assert not model.is_node_class("overhead_line")
 
 
 def test_glmmodel_add_object():
@@ -334,47 +332,6 @@ def test_glmmodel_entities_help():
     assert "Entity: load" in help_output
 
 
-def test_glmmodel_simple_glm_content():
-    """Test reading and writing simple GLM content"""
-    # Create a simple GLM file content
-    glm_content = """
-clock {
-    timezone EST+5EDT;
-    starttime '2016-01-01 00:00:00';
-    stoptime '2016-01-01 23:59:59';
-}
-
-#set profiler=1
-
-module powerflow {
-    solver_method NR;
-}
-
-object node {
-    name test_node;
-    phases ABCN;
-    nominal_voltage 7200;
-}
-"""
-
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".glm", delete=False) as f:
-        f.write(glm_content)
-        temp_file = f.name
-
-    try:
-        model = GLMModel()
-        success = model.readModel(temp_file)
-
-        assert success == True
-        assert "clock" in model.module_entities["clock"].instances
-        assert "#set profiler=1" in model.set_lines
-        assert "powerflow" in model.module_entities["powerflow"].instances
-        assert "test_node" in model.model["node"]
-
-    finally:
-        os.unlink(temp_file)
-
-
 def test_glmmodel_write_functionality():
     """Test writing GLM output"""
     model = GLMModel()
@@ -392,7 +349,7 @@ def test_glmmodel_write_functionality():
 
     try:
         success = model.write(temp_file)
-        assert success == True
+        assert success
 
         # Verify file was written and contains expected content
         with open(temp_file, "r") as f:

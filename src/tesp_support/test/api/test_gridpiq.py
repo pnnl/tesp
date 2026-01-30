@@ -2,7 +2,6 @@
 import pytest
 import tempfile
 import json
-from datetime import datetime, timedelta
 from tesp_support.api.gridpiq import GridPIQ
 
 

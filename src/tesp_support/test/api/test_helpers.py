@@ -91,11 +91,11 @@ def test_all_from_one_level_down_filter():
             self.levelno = level
     
     # Should pass records at or below WARNING level
-    assert filter_obj.filter(MockLogRecord(logging.DEBUG)) == True
-    assert filter_obj.filter(MockLogRecord(logging.INFO)) == True
-    assert filter_obj.filter(MockLogRecord(logging.WARNING)) == True
-    assert filter_obj.filter(MockLogRecord(logging.ERROR)) == False
-    assert filter_obj.filter(MockLogRecord(logging.CRITICAL)) == False
+    assert filter_obj.filter(MockLogRecord(logging.DEBUG))
+    assert filter_obj.filter(MockLogRecord(logging.INFO))
+    assert filter_obj.filter(MockLogRecord(logging.WARNING))
+    assert not filter_obj.filter(MockLogRecord(logging.ERROR))
+    assert not filter_obj.filter(MockLogRecord(logging.CRITICAL))
 
 
 def test_all_but_one_level_filter():
@@ -107,9 +107,9 @@ def test_all_but_one_level_filter():
             self.levelno = level
     
     # Should filter out level 11
-    assert filter_obj.filter(MockLogRecord(10)) == True
-    assert filter_obj.filter(MockLogRecord(11)) == False
-    assert filter_obj.filter(MockLogRecord(12)) == True
+    assert filter_obj.filter(MockLogRecord(10))
+    assert not filter_obj.filter(MockLogRecord(11))
+    assert filter_obj.filter(MockLogRecord(12))
 
 
 def test_randomize_skew():
@@ -297,7 +297,7 @@ def test_helics_msg_pubs():
     
     assert len(msg._pubs) == 1
     pub = msg._pubs[0]
-    assert pub["global"] == True
+    assert pub["global"]
     assert pub["key"] == "voltage_A"
     assert pub["type"] == "double"
     assert pub["info"]["object"] == "meter_1"
@@ -312,7 +312,7 @@ def test_helics_msg_pubs_n():
     
     assert len(msg._pubs) == 1
     pub = msg._pubs[0]
-    assert pub["global"] == False
+    assert not pub["global"]
     assert pub["key"] == "test_key"
     assert pub["type"] == "string"
     assert "info" not in pub
@@ -326,7 +326,7 @@ def test_helics_msg_pubs_e():
     
     assert len(msg._pubs) == 1
     pub = msg._pubs[0]
-    assert pub["global"] == True
+    assert pub["global"]
     assert pub["key"] == "zone_temp"
     assert pub["type"] == "double"
     assert pub["unit"] == "degC"
@@ -369,7 +369,7 @@ def test_helics_msg_subs_e():
     sub = msg._subs[0]
     assert sub["key"] == "outdoor_temp"
     assert sub["type"] == "double"
-    assert sub["require"] == True
+    assert sub["require"]
     assert sub["info"]["source"] == "weather"
 
 

@@ -72,7 +72,7 @@ def test_glmmodifier_object_operations():
     
     # Test renaming object
     success = modifier.rename_object("node", "test_node", "renamed_node")
-    assert success == True
+    assert success
     assert "renamed_node" in modifier.model.model["node"]
     assert "test_node" not in modifier.model.model["node"]
     
@@ -118,12 +118,12 @@ object node {
     try:
         # Test reading model
         glm_obj, success = modifier.read_model(input_file)
-        assert success == True
+        assert success
         assert "test_node" in modifier.model.model["node"]
         
         # Test writing model
         success = modifier.write_model(output_file)
-        assert success == True
+        assert success
         assert os.path.exists(output_file)
         
         # Verify written content
