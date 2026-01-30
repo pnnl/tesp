@@ -1677,26 +1677,28 @@ class Commercial_Build:
         return diction
 
     @staticmethod
-    def rand_bin_select(diction: dict, probability: float) -> str | None:
-        """ Returns the element (bin) in a dictionary given a certain
-          probability.
+    def rand_bin_select(diction: dict, probability: float) -> str:
+        """ Returns the element (bin) in a dictionary given a certain probability.
 
         Args:
-            diction: dictionary of elements and associated non-cumulative 
-                probabilities
-            probability: scalar value between 0 and 1
+            diction (dict): dictionary of elements and associated non-cumulative probabilities
+            probability (float): scalar value between 0 and 1
 
         Returns:
             str: element
         """
 
         total = 0
-
+        ret_element = ""
+        if 0 > probability or probability > 1:
+            raise Exception("rand_bin_select: Value must be 0<= probability <=1")
         for element in diction:
             total += diction[element]
-            if total >= probability:
-                return element
-        return None
+            if total >= probability and ret_element == "" :
+                ret_element = element
+        if total > 1.0001:
+            raise Exception(f"rand_bin_select: dictionary elements total summed are {total} > 1")
+        return ret_element
 
     @staticmethod
     def sub_bin_select(bin_range: str, bin_type: str, prob: float) -> int:

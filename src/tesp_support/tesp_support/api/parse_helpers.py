@@ -20,7 +20,7 @@ def parse_number(arg):
         float: the parsed number
     """
     if 'inf' in arg:
-        raise ValueError(f"Expected float: {arg}")
+        raise ValueError(f"Expected float, got {arg}")
     try:
         return float(arg)
     except ValueError:
