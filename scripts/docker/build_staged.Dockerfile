@@ -198,24 +198,18 @@ RUN if [ "${BUILD_NS3}" = "yes" ]; then \
     fi
 
 # ============================================================
-# MERGE: Combine KLU + HELICS for GridLAB-D
-# (GridLAB-D depends on FNCS, HELICS, and KLU)
-# ============================================================
-FROM build-helics AS build-gridlabd-base
-ARG SIM_USER
-ARG SIM_GRP
-
-# Copy KLU artifacts from parallel build
-COPY --from=build-klu --chown=$SIM_USER:$SIM_GRP $SIM_HOME/tenv $SIM_HOME/tenv
-
-# ============================================================
 # BUILD: GridLAB-D (depends on FNCS, HELICS, KLU)
 # ============================================================
-FROM build-gridlabd-base AS build-gridlabd
+FROM build-helics AS build-gridlabd
+ARG SIM_USER
+ARG SIM_GRP
 ARG BUILD_GRIDLABD=yes
 ARG BUILD_FNCS=yes
 ARG BUILD_HELICS=yes
 ARG BUILD_KLU=yes
+
+# Copy KLU artifacts from parallel build
+COPY --from=build-klu --chown=$SIM_USER:$SIM_GRP $SIM_HOME/tenv $SIM_HOME/tenv
 
 RUN if [ "${BUILD_GRIDLABD}" = "yes" ]; then \
       if [ "${BUILD_FNCS}" != "yes" ]; then echo "WARNING: GridLAB-D may require FNCS"; fi && \

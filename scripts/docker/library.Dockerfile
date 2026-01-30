@@ -22,7 +22,9 @@ RUN echo "===== Building TESP Library =====" && \
   libtool \
   libjsoncpp-dev \
   gfortran \
-  cmake && \
+  cmake \  
+  gcc-12 \
+  g++-12 && \
   echo "root:${SIM_USER}" | chpasswd && \
   addgroup --gid ${SIM_GID} ${SIM_GRP} && \
   useradd -m -s /bin/bash -g ${SIM_GRP} -G sudo,${SIM_GRP} -u ${SIM_UID} ${SIM_USER} && \
