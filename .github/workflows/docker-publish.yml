@@ -54,7 +54,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: scripts/build
-          file: scripts/docker/build_staged2.Dockerfile
+          file: scripts/docker/build.Dockerfile
           tags: tesp-build:tesp_${{ steps.version.outputs.VER }}
           load: true
           build-args: |
