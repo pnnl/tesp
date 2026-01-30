@@ -3,6 +3,13 @@ ECHO off
 REM Copyright (c) 2021-2025 Battelle Memorial Institute
 REM file: runtesp.bat
 
+REM Auto-set TESPDIR to three levels up if not defined
+IF NOT DEFINED TESPDIR (
+    FOR %%I IN ("%~sp0\..\..") DO SET TESPDIR=%%~fI
+)
+ECHO "TESPDIR"
+ECHO %TESPDIR%
+ECHO " ----- "
 IF NOT DEFINED TESPDIR GOTO no_tesp
 
 REM == standard use
@@ -46,11 +53,11 @@ ECHO "So long TESP folks!"
 EXIT /b 1
 
 :no_tesp
-ECHO "Set the 'TESPDIR' environment variable for the TESP directory"
-ECHO "Command line terminal example:"
-ECHO "C:\> set /p TESPDIR=C:\Users\JoeUser\tesp"
-ECHO "Permanently set an environment variable for the current user:"
-ECHO "C:\> setx TESPDIR 'C:\Users\JoeUser\tesp'"
-ECHO "Permanently set global environment variable (for all users):"
-ECHO "C:\> setx /M TESPDIR 'C:\Users\JoeUser\tesp'"
+ECHO Set the 'TESPDIR' environment variable for the TESP directory
+ECHO Command line terminal example:
+ECHO C:\^> set TESPDIR=C:\Users\JoeUser\tesp
+ECHO Permanently set an environment variable for the current user:
+ECHO C:\^> setx TESPDIR "C:\Users\JoeUser\tesp"
+ECHO Permanently set global environment variable (for all users):
+ECHO C:\^> setx /M TESPDIR "C:\Users\JoeUser\tesp"
 EXIT /b 1
