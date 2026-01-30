@@ -1,7 +1,8 @@
 # Copyright (c) 2017-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: metrics_collector.py
-""" Utility functions for metrics collection within tesp_support, able to write to JSON and HDF5 """
+""" Utility functions for metrics collection within tesp_support, able to write 
+to JSON and HDF5 """
 
 import collections
 import itertools
@@ -87,26 +88,33 @@ class MetricsTable(object):
 
 class MetricsStore(object):
     """
-    This stores our metrics in appropriately sized tables, geared towards being ready to write to hdf5
-    (so writing to JSON might take longer than if we kept things ready to write to JSON).
+    This stores our metrics in appropriately sized tables, geared towards being 
+        ready to write to hdf5 (so writing to JSON might take longer than if we 
+        kept things ready to write to JSON).
 
     Attributes:
-        time_uid_pairs (list): an ongoing list of (time, uid) pairs incoming with data
+        time_uid_pairs (list): an ongoing list of (time, uid) pairs incoming 
+            with data
         index_to_shapes (list): shapes of incoming column's units
-        file_string (str): the file path (barring extension) which will be appended with "_metrics.{h5, JSON}"
-        shape_to_tables (MetricsTable): a common store for these metrics, to ease writing out all metrics/tables
+        file_string (str): the file path (barring extension) which will be 
+            appended with "_metrics.{h5, JSON}"
+        shape_to_tables (MetricsTable): a common store for these metrics, to 
+            ease writing out all metrics/tables
     """
 
     def __init__(self, name_units_pairs, file_string, collector):
         """
         Args:
-            name_units_pairs (list of pairs): an ordered list of (name, units) pairs, where name is 
-                the name of a column and units is the units (possibly non-scalar) of that column-name (if non-scalar, we expand)
-            file_string (str): the file path (barring extension) which will be appended with "_metrics.{h5, JSON}"
-            collector (MetricsCollectorBase): a common store for these metrics, to ease writing out all metrics/tables
+            name_units_pairs (list of pairs): an ordered list of (name, units) 
+                pairs, where name is the name of a column and units is the units
+                (possibly non-scalar) of that column-name (if non-scalar, we expand)
+            file_string (str): the file path (barring extension) which will be 
+                appended with "_metrics.{h5, JSON}"
+            collector (MetricsCollectorBase): a common store for these metrics, 
+                to ease writing out all metrics/tables
         """
-        # Note: this new format doesn't allow for extra metadata info to be stored/sent here, 
-        # which I believe I saw in earlier JSON metadata outputs
+        # Note: this new format doesn't allow for extra metadata info to be 
+        # stored/sent here, which I believe I saw in earlier JSON metadata outputs
         self.time_uid_pairs = list()
         self.index_to_shapes = list()
         shape_to_cols = collections.defaultdict(list)
@@ -127,11 +135,13 @@ class MetricsStore(object):
 
     def append_data(self, time, uid, *args):
         """
-        Appends a single (time, uid) pair's metrics to appropriate tables (depends on shape of each arg)
+        Appends a single (time, uid) pair's metrics to appropriate tables 
+            (depends on shape of each arg)
 
             time (str or int): time in seconds after start of simulation
             uid (str or int or ?): unique identifier of an object (e.g. a name)
-            args (list): a list of length/order equal to name_units_pairs seen when constructing this store
+            args (list): a list of length/order equal to name_units_pairs seen 
+                when constructing this store
         """
         self.time_uid_pairs.append([time, uid])
         # bin columns by shape, then update corresponding subtables
@@ -153,7 +163,8 @@ class MetricsStore(object):
 
 class MetricsCollector(object):
     """
-    Metrics collector base class that handles collecting and writing data to disk (.json).
+    Metrics collector base class that handles collecting and writing data to 
+        disk (.json).
 
     Attributes:
         start_time (pd.Timestamp): the start time of the simulation
@@ -170,22 +181,26 @@ class MetricsCollector(object):
         """
         Args:
             start_time (str): start time of simulation in datetime string format
-            write_hdf5 (bool): flag to determine if we write to .h5 (if True) or .json (if False; defaults to this)
+            write_hdf5 (bool): flag to determine if we write to .h5 (if True) or
+                .json (if False; defaults to this)
         Returns:
-            MetricsCollector: MetricsCollectorHDF or Base instance, depending on write_hdf5 flag
+            MetricsCollector: MetricsCollectorHDF or Base instance, depending on 
+                write_hdf5 flag
         """
         return MetricsCollectorHDF(start_time) if write_hdf5 else MetricsCollector(start_time)
 
     def register_metrics_store(self, metrics_store):
         """
         Args:
-            metrics_store (MetricsStore): A store to be appended to our ongoing list
+            metrics_store (MetricsStore): A store to be appended to our ongoing 
+                list
         """
         log.debug('registering metrics store with file_string {}'.format(metrics_store.file_string))
         self.metrics_stores.append(metrics_store)
 
     def write_metrics(self):
-        """ Write all known metrics to disk (.json) and reset data within each metric."""
+        """ Write all known metrics to disk (.json) and reset data within each
+            metric."""
         log.debug('writing metrics (to json, in serial)')
         # TODO: look into 'ray' package?: https://towardsdatascience.com/10x-faster-parallel-python-without-python-multiprocessing-e5017c93cce1
         for m in self.metrics_stores:
@@ -236,8 +251,8 @@ def to_json(metrics_store, start_time):
     """ This function writes the metric data to JSON files (and clears the data)
 
     Args:
-        metrics_store (MetricsStore): a store containing metrics tables to dump to file
-        start_time (pd.Timestamp): start time of simulation times
+        metrics_store (MetricsStore): a store containing metrics tables to dump 
+            to file start_time (pd.Timestamp): start time of simulation times
     """
     i = 0
     while os.path.isfile('{}{}_metrics.json'.format(metrics_store.file_string, i)):
@@ -267,7 +282,8 @@ def to_hdf(metrics_store, start_time, num_writes_counter):
     """ This function writes the metric data to HDF5 files (and clears the data)
 
     Args:
-        metrics_store (MetricsStore): a store containing metrics tables to dump to file
+        metrics_store (MetricsStore): a store containing metrics tables to dump 
+            to file
         start_time (pd.Timestamp): start time of simulation times
         num_writes_counter (int): interval counter
     """
@@ -333,9 +349,17 @@ def to_hdf(metrics_store, start_time, num_writes_counter):
 
 
 def finalize_hdf(metrics_store):
+    """   
+    TODO: decide if we want to index (past time/uid?) and if we want such high 
+        levels of compression or indexing opt once all appends done, run this to 
+        create index
+
+    Can now access with a simple: 
+    pd.read_hdf(filename, key, where='time >= pd.Timestamp(...) and uid in [uid1, ...]')
+
+    :param metrics_store: Description
+    """
     filename = '{}_metrics.h5'.format(metrics_store.file_string)
-    # TODO: decide if we want to index (past time/uid?) and if we want such high levels of compression or indexing opt
-    # # once all appends done, run this to create index
     if os.path.isfile(filename):
         log.debug('opening file {} to compress'.format(filename))
         with pd.HDFStore(filename, 'r+', complevel=9) as out_store:
@@ -346,7 +370,7 @@ def finalize_hdf(metrics_store):
                     log.debug('successfully indexed key {}'.format(key))
     else:
         log.warning('No file {} to try and compress at end of sim, passing!'.format(filename))
-    # can now access with a simple pd.read_hdf(filename, key, where='time >= pd.Timestamp(...) and uid in [uid1, ...]')
+
 
 # TODO: move these timeit-enabling functions?
 # def setup_factory(n_times, n_uids, n_stores, write_hdf5):

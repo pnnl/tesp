@@ -1081,7 +1081,7 @@ def inner_substation_loop(metrics_root, with_market):
                     if res[2]["success"]:
                         agent_success += 1
                     else:
-                        agent_errors.append(f"{p_age.name}:{res[2]["termination"]}")
+                        agent_errors.append(f"{p_age.name}:{res[2]['termination']}")
                     agent_count += 1
                 else:
                     p_age.optimized_Quantity = res[:]

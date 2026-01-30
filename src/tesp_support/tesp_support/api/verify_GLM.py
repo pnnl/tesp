@@ -1,4 +1,5 @@
-"""This script was written to check generated .glms against existing .glms that have been tested and are known to solve successfully.
+"""This script was written to check generated .glms against existing .glms that 
+have been tested and are known to solve successfully.
 
 """
 from ..api.modify_GLM import GLMModifier

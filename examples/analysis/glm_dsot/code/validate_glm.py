@@ -25,7 +25,8 @@ def read_glm(data_path, caseName):
             exit()
         gd.glm_diction(caseName, "Substation_" + str(dso_key))
         shutil.move(f'{caseName}/Substation_{dso_key}/Substation_{dso_key}_glm_dict.json',
-                        f'{caseName}/DSO_{dso_key}/Substation_{dso_key}_glm_dict.json')     
+                        f'{caseName}/DSO_{dso_key}/Substation_{dso_key}_glm_dict.json')
+        
         
 def read_feeder_glm(data_path, caseName, feeder_name):
     """Read in a particular feeder .glms written from a prepare_case_dsot.py that 

@@ -40,13 +40,14 @@ class TespMonitorGUI:
     """ Manages a GUI with 4 plotted variables, and buttons to stop TESP
 
     The GUI reads a JSON file with scripted shell commands to launch
-    other HELICS/FNCS federates, and a YAML file with HELICS/FNCS subscriptions to update
-    the solution status. Both JSON and YAML files are written by *tesp.tesp_config*
-    The plotted variables provide a sign-of-life and sign-of-stability indication
-    for each of the major federates in the te30 or sgip1 examples, namely
-    GridLAB-D, PYPOWER, EnergyPlus, and the substation_loop that manages a simple_auction
-    with multiple hvac agents. If a solution appears to be unstable or must be
-    stopped for any other reason, exiting the solution monitor will do so.
+    other HELICS/FNCS federates, and a YAML file with HELICS/FNCS subscriptions 
+    to update the solution status. Both JSON and YAML files are written by 
+    *tesp.tesp_config*. The plotted variables provide a sign-of-life and 
+    sign-of-stability indication for each of the major federates in the te30 or 
+    sgip1 examples, namely GridLAB-D, PYPOWER, EnergyPlus, and the 
+    substation_loop that manages a simple_auction with multiple hvac agents. 
+    If a solution appears to be unstable or must be stopped for any other reason,
+    exiting the solution monitor will do so.
 
     The plots are created and updated with animated and bit-blitted Matplotlib
     graphs hosted on a TkInter GUI. When the JSON and YAML files are loaded,
@@ -58,7 +59,8 @@ class TespMonitorGUI:
     Attributes:
       root (Tk): the TCL Tk toolkit instance
       top (Window): the top-level TCL Tk Window
-      labelvar (StringVar): used to display the monitor JSON configuration file path
+      labelvar (StringVar): used to display the monitor JSON configuration file 
+        path
       hrs ([float]): x-axis data array for time in hours, shared by all plots
       y0 ([float]): y-axis data array for PYPOWER bus voltage
       y1 ([float]): y-axis data array for EnergyPlus load
@@ -66,7 +68,8 @@ class TespMonitorGUI:
       y2auc ([float]): y-axis data array for simple_auction cleared_price
       y3fncs ([float]): y-axis data array for GridLAB-D load via FNCS
       y3gld ([float]): y-axis data array for sample-and-hold GridLAB-D load
-      gld_load (float): the most recent load published by GridLAB-D; due to the deadband, this value isn't necessary published at every FNCS time step
+      gld_load (float): the most recent load published by GridLAB-D; due to the 
+        deadband, this value isn't necessary published at every FNCS time step
       y0min (float): the first y axis minimum value
       y0max (float): the first y axis maximum value
       y1min (float): the second y axis minimum value
@@ -78,15 +81,20 @@ class TespMonitorGUI:
       hour_stop (float): the maximum x axis time value to plot
       ln0 (Line2D): the plotted PYPOWER bus voltage, color GREEN
       ln1 (Line2D): the plotted EnergyPlus load, color RED
-      ln2lmp (Line2D): the plotted PYPOWER locational marginal price (LMP), color BLUE
+      ln2lmp (Line2D): the plotted PYPOWER locational marginal price (LMP), 
+        color BLUE
       ln2auc (Line2D): the plotted simple_auction cleared_price, color BLACK
-      ln3gld (Line2D): the plotted sample-and-hold GridLAB-D substation load, color MAGENTA
-      ln3fncs (Line2D): the plotted GridLAB-D substation load published via FNCS; may be zero if not published for the current animation frame, color CYAN
+      ln3gld (Line2D): the plotted sample-and-hold GridLAB-D substation load, 
+        color MAGENTA
+      ln3fncs (Line2D): the plotted GridLAB-D substation load published via FNCS;
+        may be zero if not published for the current animation frame, color CYAN
       fig (Figure): animated Matplotlib figure hosted on the GUI
       ax (Axes): set of 4 xy axes to plot on
       canvas (FigureCanvasTkAgg): a TCL Tk canvas that can host Matplotlib
-      bFNCSactive (bool): True if a TESP simulation is running with other FNCS federates, False if not
-      bHELICSactive (bool): True if a TESP simulation is running with other HELICS federates, False if not
+      bFNCSactive (bool): True if a TESP simulation is running with other FNCS 
+        federates, False if not
+      bHELICSactive (bool): True if a TESP simulation is running with other 
+        HELICS federates, False if not
     """
 
     def __init__(self, master, HELICS=True):
@@ -193,10 +201,11 @@ class TespMonitorGUI:
         self.canvas.get_tk_widget().grid(row=1, columnspan=5, sticky=tk.W + tk.E + tk.N + tk.S)
 
     def on_closing(self):
-        """ Verify whether the user wants to stop TESP simulations before exiting the monitor
+        """ Verify whether the user wants to stop TESP simulations before exiting
+            the monitor
 
-        This monitor is itself a FNCS federate, so it can not be shut down without shutting
-        down all other FNCS federates in the TESP simulation.
+        This monitor is itself a FNCS federate, so it can not be shut down 
+            without shutting down all other FNCS federates in the TESP simulation.
         """
         if messagebox.askokcancel('Quit', 'Do you want to close this window? This is likely to stop all simulations.'):
             self.Quit()
@@ -211,7 +220,8 @@ class TespMonitorGUI:
         self.root.destroy()
 
     def OpenConfig(self):
-        """ Read the JSON configuration file for this monitor, and initialize the plot axes
+        """ Read the JSON configuration file for this monitor, and initialize the
+            plot axes
         """
         fname = filedialog.askopenfilename(initialdir='.',
                                            initialfile=self.filename,
@@ -278,7 +288,8 @@ class TespMonitorGUI:
         print("Process successfully terminated", flush=True)
 
     def expand_limits(self, v, vmin, vmax):
-        """ Whenever a variable meets a vertical axis limit, expand the limits with 10% padding above and below
+        """ Whenever a variable meets a vertical axis limit, expand the limits 
+            with 10% padding above and below
 
         Args:
           v (float): the out of range value
@@ -298,7 +309,7 @@ class TespMonitorGUI:
 
     def update_plots_f(self, i):
         """
-    This function is called by Matplotlib for each animation frame
+        This function is called by Matplotlib for each animation frame
 
         Each time called, collect FNCS messages until the next time to plot
         has been reached. Then update the plot quantities and return the
@@ -447,7 +458,7 @@ class TespMonitorGUI:
 
     def update_plots(self, i):
         """
-    This function is called by Matplotlib for each animation frame
+        This function is called by Matplotlib for each animation frame
 
         Each time called, collect HELICS messages until the next time to plot
         has been reached. Then update the plot quantities and return the
@@ -552,7 +563,8 @@ class TespMonitorGUI:
         return self.ln0, self.ln1, self.ln2auc, self.ln2lmp, self.ln3fncs, self.ln3gld
 
     def launch_all(self):
-        """ Launches the simulators, initializes HELICS and starts the animated plots
+        """ Launches the simulators, initializes HELICS and starts the animated 
+            plots
         """
         self.root.update()
 
