@@ -28,7 +28,6 @@ jobs:
       run: |
         python -m pip install uv 
         uv pip install ./src/tesp_support ruff pytest mypy --system
-
     - name: Lint with ruff
       run: |
 #       Test code with ruff. This will check for syntax and runtime errors.
@@ -40,14 +39,12 @@ jobs:
         ruff check ./src --ignore=F841,E731
 #       exit-zero treats all errors as warnings.
         # ruff check ./src --exit-zero --statistics
-
 #   Uncomment type checking when code is ready
     - name: Check types with mypy
       run: |
 #       Stop the build if there are Python syntax errors and runtime errors.
 #       The values after --disable-error-code ignores match codes starting with those characters.
         mypy ./src/tesp_support/tesp_support/api --disable-error-code import-untyped --disable-error-code union-attr --disable-error-code attr-defined --disable-error-code import-not-found
-
 #   Uncomment testing when tests are ready
     - name: Test with pytest
       run: |
