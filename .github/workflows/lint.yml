@@ -24,27 +24,29 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
+
     - name: Install dependencies
       run: |
-        python -m pip install ./src/tesp_support ruff pytest mypy
+        pip install ./src/tesp_support ruff pytest mypy
+
     - name: Lint with ruff
       run: |
-#       Test code with ruff. This will check for syntax and runtime errors.
-#       The values after --ignore prefixes that match all error codes starting with those characters.
-#       F codes found at https://flake8.pycqa.org/en/latest/user/error-codes.html
-#       F841    unused-variable
-#       E9xx: Runtime (https://pycodestyle.pycqa.org/en/latest/intro.html#error-codes)
-#       E731    lambda-assignment
+        #       Test code with ruff. This will check for syntax and runtime errors.
+        #       The values after --ignore prefixes that match all error codes starting with those characters.
+        #       F codes found at https://flake8.pycqa.org/en/latest/user/error-codes.html
+        #       F841    unused-variable
+        #       E9xx: Runtime (https://pycodestyle.pycqa.org/en/latest/intro.html#error-codes)
+        #       E731    lambda-assignment
         ruff check ./src --ignore=F841,E731
-#       exit-zero treats all errors as warnings.
+        #       exit-zero treats all errors as warnings.
         # ruff check ./src --exit-zero --statistics
-#   Uncomment type checking when code is ready
+    
     - name: Check types with mypy
       run: |
-#       Stop the build if there are Python syntax errors and runtime errors.
-#       The values after --disable-error-code ignores match codes starting with those characters.
+        #       Stop the build if there are Python syntax errors and runtime errors.
+        #       The values after --disable-error-code ignores match codes starting with those characters.
         mypy ./src/tesp_support/tesp_support/api --disable-error-code import-untyped --disable-error-code union-attr --disable-error-code attr-defined --disable-error-code import-not-found
-#   Uncomment testing when tests are ready
+
     - name: Test with pytest
       run: |
         source ./tesp.env
