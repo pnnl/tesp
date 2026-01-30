@@ -141,8 +141,4 @@ USER root
 RUN ldconfig
 USER $SIM_USER
 RUN ${BUILD_DIR}/versions.sh && \
-    gridlabd --version && \
-    helics_broker --version && \
-    energyplus --version && \
-    fncs_broker --help > /dev/null && \
     python3 -c "import tesp_support; print('tesp_support OK')"

@@ -22,7 +22,7 @@ RUN echo "===== Building TESP Library =====" && \
   libtool \
   libjsoncpp-dev \
   gfortran \
-  cmake \  
+  cmake \
   gcc-12 \
   g++-12 && \
   echo "root:${SIM_USER}" | chpasswd && \
