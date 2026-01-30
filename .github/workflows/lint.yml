@@ -26,8 +26,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        python -m pip install uv 
-        uv pip install ./src/tesp_support ruff pytest mypy --system
+        python -m pip install ./src/tesp_support ruff pytest mypy
     - name: Lint with ruff
       run: |
 #       Test code with ruff. This will check for syntax and runtime errors.
