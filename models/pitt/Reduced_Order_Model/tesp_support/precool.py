@@ -188,7 +188,7 @@ class precooler:
     """ Set the air_temp member variable
 
     Args:
-        str (str): FNCS message with temperature in degrees Fahrenheit
+        str (str): Message with temperature in degrees Fahrenheit
     """
     self.air_temp = parse_fncs_magnitude (str)
 
@@ -196,7 +196,7 @@ class precooler:
     """ Sets the mtr_v attribute
 
     Args:
-        str (str): FNCS message with meter line-neutral voltage
+        str (str): Message with meter line-neutral voltage
     """
     self.mtr_v = parse_fncs_magnitude (str)
 

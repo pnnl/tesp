@@ -24,7 +24,7 @@ from tesp_support.api.data import feeders_path
 from tesp_support.api.modify_GLM import GLMModifier
 
 # Setting up logging
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 # Setting up pretty printing, mostly for debugging.
 pp = pprint.PrettyPrinter(indent=4)
 

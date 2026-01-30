@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2024 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: schedule_client.py
 """Client class used by entities to access schedule server
@@ -29,9 +29,10 @@ class DataClient(object):
         self.proxy = self.mgr.DataProxy()
 
     # Verify the server is running (not required)
-    @staticmethod
-    def _checkForProcess(name):
-        for proc in psutil.process_iter():
-            if proc.name() == name:
-                return True
-        return False
+    # Uncomment for assert message above
+    # @staticmethod
+    # def _checkForProcess(name):
+    #     for proc in psutil.process_iter():
+    #         if proc.name() == name:
+    #             return True
+    #     return False

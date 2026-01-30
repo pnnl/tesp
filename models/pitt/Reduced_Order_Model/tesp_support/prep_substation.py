@@ -271,23 +271,23 @@ def ProcessGLM(fileroot):
     for key, val in controllers.items():
         houseName = val['houseName']
         meterName = val['meterName']
-        print('  ' + key + '#V1:', file=yp)
+        print('  ' + key + '/measured_voltage:', file=yp)
         print('    topic: gridlabdSimulator1/' + meterName + '/measured_voltage_1', file=yp)
         print('    default: 120', file=yp)
-        print('  ' + key + '#Tair:', file=yp)
+        print('  ' + key + '/air_temperature:', file=yp)
         print('    topic: gridlabdSimulator1/' + houseName + '/air_temperature', file=yp)
         print('    default: 80', file=yp)
-        print('  ' + key + '#Load:', file=yp)
+        print('  ' + key + '/hvac_load:', file=yp)
         print('    topic: gridlabdSimulator1/' + houseName + '/hvac_load', file=yp)
         print('    default: 0', file=yp)
-        print('  ' + key + '#On:', file=yp)
+        print('  ' + key + '/power_state:', file=yp)
         print('    topic: gridlabdSimulator1/' + houseName + '/power_state', file=yp)
         print('    default: 0', file=yp)
     yp.close()
 
     op = open(fileroot + '_gridlabd.txt', 'w')
     print('publish "commit:network_node.distribution_load -> distribution_load; 1000";', file=op)
-    print('subscribe "precommit:' + network_node + '.positive_sequence_voltage <- pypower/three_phase_voltage_B7";',
+    print('subscribe "precommit:network_node.positive_sequence_voltage <- pypower/three_phase_voltage_B7";',
           file=op)
     if len(Eplus_Bus) > 0:  # hard-wired names for a single building
         print('subscribe "precommit:Eplus_load.constant_power_A <- eplus_json/power_A";', file=op)
@@ -302,7 +302,7 @@ def ProcessGLM(fileroot):
         print('publish "commit:' + houseName + '.air_temperature -> ' + houseName + '/air_temperature";', file=op)
         print('publish "commit:' + houseName + '.power_state -> ' + houseName + '/power_state";', file=op)
         print('publish "commit:' + houseName + '.hvac_load -> ' + houseName + '/hvac_load";', file=op)
-        print('publish "commit:' + meterName + '.measured_voltage_1 -> ' + meterName + '/measured_voltage_1";', file=op)
+        print('publish "commit:' + meterName + '.measured_voltage_1 -> ' + meterName + '/measured_voltage";', file=op)
         print('subscribe "precommit:' + houseName + '.cooling_setpoint <- substation/' + key + '/cooling_setpoint";',
               file=op)
         print('subscribe "precommit:' + houseName + '.heating_setpoint <- substation/' + key + '/heating_setpoint";',

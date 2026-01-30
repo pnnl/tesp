@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2024 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: wind_gen_year.py
 
@@ -121,7 +121,7 @@ def test():
     # Create Dataframe for a year wind generation with 1 hour resolution
     while day < max_days:
         df_wind_day = pd.DataFrame(columns=plant_name,
-                                   index=pd.date_range(start=start_day + pd.Timedelta(day, unit='d'), periods=24, freq='H'))
+                                   index=pd.date_range(start=start_day + pd.Timedelta(day, unit='d'), periods=24, freq='h'))
         wind_plant = generate_wind_data_24hr(wind_plants)  # generate 24-hour wind data with hourly resolution
         i = 0
         for key, row in wind_plants.items():

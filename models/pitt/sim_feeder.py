@@ -103,7 +103,7 @@ def obj(parent, model, line, itr, oidh, octr):
         params['parent'] = parent
         # print('nested '+type)
     while not oend:
-        m = re.match('\s*(\S+) ([^;{]+)[;{]', line)
+        m = re.match(r'\s*(\S+) ([^;{]+)[;{]', line)
         if m:
             # found a parameter
             param = m.group(1)
@@ -668,7 +668,7 @@ def CreateMeter(model_name, seg_number, glmfile):
 
 
 def parse_kva(cplx):
-    toks = re.split('[\+j]', cplx)
+    toks = re.split(r'[\+j]', cplx)
     p = float(toks[0])
     q = float(toks[1])
     return 0.001 * math.sqrt(p * p + q * q)
@@ -1032,7 +1032,7 @@ def _one_test(k):
     lines = []
     line = ip.readline()
     while line != '':
-        while re.match('\s*//', line) or re.match('\s+$', line):
+        while re.match(r'\s*//', line) or re.match(r'\s+$', line):
             # skip comments and white space
             line = ip.readline()
         lines.append(line.rstrip())

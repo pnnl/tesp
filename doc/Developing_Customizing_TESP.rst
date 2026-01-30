@@ -4,8 +4,8 @@
     _ Copyright (c) 2021-2025 Battelle Memorial Institute
     _ file: Developing_Customizing_TESP.rst
 
-Developing and Customizing TESP
-*******************************
+Developing and Customizing
+**************************
 
 Introduction
 ------------
@@ -16,4 +16,5 @@ Though TESP comes with a collection of capability demonstrations and analysis ex
     :maxdepth: 2
     
     ./developing/Standard_third_party_tools
-
+    ./developing/Building_Docker_images
+    ./developing/Custom_Docker_images

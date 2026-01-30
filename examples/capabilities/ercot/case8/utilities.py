@@ -107,9 +107,9 @@ def write_substation_msg(fileroot, gldSimName, aucSimName, controllers, dt):
     for key, val in controllers.items():
         house_name = str(val['houseName'])
         meter_name = str(val['meterName'])
-        dso.subs_n(gldSimName + "/" + house_name + "#air_temperature", "double")
-        dso.subs_n(gldSimName + "/" + house_name + "#hvac_load", "double")
-        dso.subs_n(gldSimName + "/" + house_name + "#power_state", "string")
+        dso.subs_n(gldSimName + "/" + house_name + "/air_temperature", "double")
+        dso.subs_n(gldSimName + "/" + house_name + "/hvac_load", "double")
+        dso.subs_n(gldSimName + "/" + house_name + "/power_state", "string")
         dso.pubs_n(False, key + "/cooling_setpoint", "double")
         dso.pubs_n(False, key + "/heating_setpoint", "double")
         dso.pubs_n(False, key + "/thermostat_deadband", "double")
@@ -149,9 +149,9 @@ def write_gridlabd_msg(fileroot, weatherName, aucSimName, controllers, dt):
         house_class = val['houseClass']
         sub_key = aucSimName + "/" + key + "/"
         for prop in ['power_state']:
-            gld.pubs(False, house_name + "#" + prop, "string", house_name, prop)
+            gld.pubs(False, house_name + "/" + prop, "string", house_name, prop)
         for prop in ['air_temperature', 'hvac_load']:
-            gld.pubs(False, house_name + "#" + prop, "double", house_name, prop)
+            gld.pubs(False, house_name + "/" + prop, "double", house_name, prop)
         for prop in ['cooling_setpoint', 'heating_setpoint', 'thermostat_deadband']:
             gld.subs(sub_key + prop, "double", house_name, prop)
         if meter_name not in pubSubMeters:

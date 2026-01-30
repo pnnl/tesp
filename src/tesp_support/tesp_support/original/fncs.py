@@ -163,7 +163,7 @@ try:
                              ctypes.POINTER(ctypes.c_int),
                              ctypes.POINTER(ctypes.c_int)]
     _get_version.restype = None
-except:
+except Exception:
     pass
 
 def time_request(time):

@@ -42,7 +42,7 @@ config_file = os.path.join(
 with open(config_file, 'r') as file:
     config = json.load(file)
     logging.config.dictConfig(config)
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 class MeterNetwork:
@@ -64,7 +64,7 @@ class MeterNetwork:
     def __init__(self):
         """
     This initializes the class."""
-        logger.info(
+        log.info(
             '++++++++++ A MeterNetwork object has been created ++++++++++')
 
     @classmethod
@@ -95,7 +95,7 @@ class MeterNetwork:
         # Checking to make sure this is a valid file:
         assert os.path.isfile(excel_file), \
             'Oops! %r is not a valid Excel file' % excel_file
-        logger.info('Reading in the data from the excel spreadsheet')
+        log.info('Reading in the data from the excel spreadsheet')
         # Reading in the spreadsheet:
         nodes = pd.read_excel(excel_file, sheet_name=sheet)
         # Checking if model name and feeder information is
@@ -117,7 +117,7 @@ class MeterNetwork:
         #   the y-value, especially with geospatial data. There
         #   will be errors or incorrect results, otherwise.
         nodes = nodes[columns]
-        logger.info('Creating a NetworkX representation of the data')
+        log.info('Creating a NetworkX representation of the data')
         # Creating a NetworkX representation of the data:
         G = nx.Graph()
         G.add_nodes_from(
@@ -126,12 +126,12 @@ class MeterNetwork:
         )
         edges = list(combinations(nodes[columns[0]], 2))
         G.add_edges_from(edges)
-        logger.info('Reformatting the meter position info for plotting')
+        log.info('Reformatting the meter position info for plotting')
         # Grabbing the positional data for plotting:
         positions = {
             n: (a, b) for n, a, b in zip(
                 nodes[columns[0]], nodes[columns[1]], nodes[columns[2]])}
-        logger.info('Saving the metadata as attributes of the object')
+        log.info('Saving the metadata as attributes of the object')
         self.meter_nodes = list(G.nodes())
         self.meter_edges = list(G.edges())
         self.meter_positions = positions
@@ -162,7 +162,7 @@ class MeterNetwork:
         """
         assert os.path.isfile(csv_file), \
             'Oops! %r is not a valid CSV file.' % csv_file
-        logger.info('Reading in the data from the csv file')
+        log.info('Reading in the data from the csv file')
         # Reading in the .csv file:
         nodes = pd.read_csv(csv_file)
         # Checking if model name and feeder information is
@@ -184,7 +184,7 @@ class MeterNetwork:
         #   the y-value, especially with geospatial data. There
         #   will be errors or incorrect results, otherwise.
         nodes = nodes[columns]
-        logger.info('Creating a NetworkX representation of! the data')
+        log.info('Creating a NetworkX representation of! the data')
         # Creating a NetworkX representation of the data:
         G = nx.Graph()
         edges = list(combinations(nodes[columns[0]], 2))
@@ -193,12 +193,12 @@ class MeterNetwork:
             [(n, {'pos': (a, b)}) for n, a, b, in zip(
                 nodes[columns[0]], nodes[columns[1]], nodes[columns[2]])]
         )
-        logger.info('Reformatting the meter position info for plotting')
+        log.info('Reformatting the meter position info for plotting')
         # Grabbing the positional data for plotting:
         positions = {
             n: (a, b) for n, a, b in zip(
                 nodes[columns[0]], nodes[columns[1]], nodes[columns[2]])}
-        logger.info('Saving the metadata as attributes of the object')
+        log.info('Saving the metadata as attributes of the object')
         self.meter_nodes = list(G.nodes())
         self.meter_edges = list(G.edges())
         self.meter_positions = positions
@@ -234,7 +234,7 @@ class MeterNetwork:
         """
         assert os.path.isfile(json_file), \
             'Oops! %r is not a valid JSON' % json_file
-        logger.info('Reading in the data from the JSON file')
+        log.info('Reading in the data from the JSON file')
         # Reading in the JSON file:
         with open(json_file, 'r') as file:
             data = json.load(file)
@@ -252,7 +252,7 @@ class MeterNetwork:
         #   NOTE: This function assumes the first
         #   key is the key that contains all the meters.
         nodes = data[key_list[0]]
-        logger.info('Creating a NetworkX representation of the data')
+        log.info('Creating a NetworkX representation of the data')
         # Creating a NetworkX representation of the data:
         G = nx.Graph()
         edges = list(combinations(list(nodes.keys()), 2))
@@ -261,12 +261,12 @@ class MeterNetwork:
             [(n, {'pos': (
                 nodes[n][position_labels[0]], nodes[n][position_labels[1]])})
              for n in list(nodes.keys())])
-        logger.info('Reformatting the meter position info for plotting')
+        log.info('Reformatting the meter position info for plotting')
         # Grabbing the positional data for plotting:
         positions = {
             n: (nodes[n][position_labels[0]],
                 nodes[n][position_labels[1]]) for n in list(nodes.keys())}
-        # logger.info('Saving the metadata as attributes of the object')
+        # log.info('Saving the metadata as attributes of the object')
         self.meter_nodes = list(nodes.keys())
         self.meter_edges = list(G.edges())
         self.meter_positions = positions
@@ -291,14 +291,14 @@ class MeterNetwork:
             representation of the meter names, locations, and
             other information.
         """
-        logger.info(
+        log.info(
             'Grabbing the meter names and positions from the network')
         # Grabbing the meter names and positional information:
         name = [n for n in self.graph.nodes()]
         pos = nx.get_node_attributes(self.graph, 'pos')
         pos_x = [pos[n][0] for n in self.graph.nodes()]
         pos_y = [pos[n][1] for n in self.graph.nodes()]
-        logger.info(
+        log.info(
             'Creating a dataframe of the meter network')
         # Creating a dataframe:
         dataframe = pd.DataFrame(
@@ -308,12 +308,12 @@ class MeterNetwork:
              'pos_x': pos_x,
              'pos_y': pos_y},
             index=range(0, len(self.graph.nodes())))
-        logger.info(
+        log.info(
             'Finished creating a dataframe for {};'.format(
                 self.feeder))
-        logger.info(
+        log.info(
             'it has feeder info, meters, and meter positions.')
-        logger.info(
+        log.info(
             'Now, we evaluate {}'.format(self.feeder))
         return dataframe
 
@@ -358,17 +358,17 @@ class MeterNetwork:
         Returns:
             (null)
         """
-        logger.info(
+        log.info(
             'Creating a NetworkX representation of the meter network.')
         # Creating a NetworkX representation of the meter network:
         G = nx.Graph()
         G.add_nodes_from(nodes)
         G.add_edges_from(edges)
-        logger.info('Adding node (aka meter) positions.')
+        log.info('Adding node (aka meter) positions.')
         # "Drawing" it:
         nodes = hvnx.draw_networkx_nodes(
             G, pos=plot_positions, **node_args)
-        logger.info(
+        log.info(
             'Adding edges (abstract connections between nodes')
         edges = hvnx.draw_networkx_edges(
             G, pos=plot_positions, **edge_args)
@@ -376,4 +376,4 @@ class MeterNetwork:
         # Saving it:
         if save_plot is True:
             hv.save(plot, '{}.png'.format(output_dir), fmt='png')
-            logger.info('Saving the graph as a picture.')
+            log.info('Saving the graph as a picture.')

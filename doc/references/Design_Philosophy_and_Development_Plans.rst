@@ -1,6 +1,5 @@
-============================================
-TESP Design Philosophy and Development Plans
-============================================
+Design Philosophy and Development Plans
+=======================================
 
 Introduction
 ------------

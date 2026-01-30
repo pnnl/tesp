@@ -19,18 +19,16 @@ The function call order for this agent is:
         * inform_bid(price) {update RTprice}
         * bid_accepted() {update inv_P_setpoint and GridLAB-D P_out if needed}
 """
-import logging as log
 from copy import deepcopy
 from math import isnan
 
 import numpy as np
 import pyomo.environ as pyo
 
-from ..api.helpers import get_run_solver
+from ..api.helpers import get_run_solver, logging, log
 from ..api.parse_helpers import parse_number
 
-logger = log.getLogger()
-
+logging.getLogger('pyomo.core').setLevel(logging.ERROR)
 
 class BatteryDSOT:
     # TODO: update inputs for this agent
@@ -79,6 +77,7 @@ class BatteryDSOT:
     def __init__(self, diction, inv_properties, key, model_diag_level, sim_time, solver):
         # initialize from Args:
         self.name = key
+        self.model_diag_level = model_diag_level
         self.solver = solver
         self.participating = diction['participating']
         self.Rc = float(diction['rating']) * 0.001
@@ -139,7 +138,7 @@ class BatteryDSOT:
             # log.info('Cmin < capacity < Cmax.')
             pass
         else:
-            log.log(model_diag_level, '{} {} -- capacity is {}, not between Cmin ({}) and Cmax ({})'.
+            log.log(self.model_diag_level, '{} {} -- capacity is {}, not between Cmin ({}) and Cmax ({})'.
                     format(self.name, 'init', self.capacity, self.Cmin, self.Cmax))
 
         Lin_lower = 0
@@ -148,7 +147,7 @@ class BatteryDSOT:
             # log.info('Lin is within the bounds.')
             pass
         else:
-            log.log(model_diag_level, '{} {} -- Lin is {}, outside of nominal range of {} to {}'.
+            log.log(self.model_diag_level, '{} {} -- Lin is {}, outside of nominal range of {} to {}'.
                     format(self.name, 'init', self.Lin, Lin_lower, Lin_upper))
 
         Lout_lower = 0
@@ -157,7 +156,7 @@ class BatteryDSOT:
             # log.info('Lout is within the bounds.')
             pass
         else:
-            log.log(model_diag_level, '{} {} -- Lout is {}, outside of nominal range of {} to {}'.
+            log.log(self.model_diag_level, '{} {} -- Lout is {}, outside of nominal range of {} to {}'.
                     format(self.name, 'init', self.Lout, Lout_lower, Lout_upper))
 
         reserved_soc_lower = 0
@@ -166,14 +165,14 @@ class BatteryDSOT:
             # log.info('reserved_soc is within the bounds.')
             pass
         else:
-            log.log(model_diag_level, '{} {} -- reserved_soc is {}, outside of nominal range of {} to {}'.
+            log.log(self.model_diag_level, '{} {} -- reserved_soc is {}, outside of nominal range of {} to {}'.
                     format(self.name, 'init', self.reserved_soc, reserved_soc_lower, reserved_soc_upper))
 
         if 0 < self.batteryLifeDegFactor < 1:
             # log.info('batteryLifeDegFactor is within the bounds.')
             pass
         else:
-            log.log(model_diag_level, '{} {} -- batteryLifeDegFactor is out of bounds.'.
+            log.log(self.model_diag_level, '{} {} -- batteryLifeDegFactor is out of bounds.'.
                     format(self.name, 'init'))
 
     def test_function(self):
@@ -195,7 +194,7 @@ class BatteryDSOT:
         Returns:
             bool: True if the inverter settings changed, False if not.
         """
-        self.RT_gridlabd_set_P(11, current_time)
+        self.RT_gridlabd_set_P(current_time)
         return self.RT_flag
 
     def set_price_forecast(self, forecasted_price):
@@ -341,7 +340,7 @@ class BatteryDSOT:
         results = get_run_solver("bt_" + self.name, pyo, model, self.solver)
         # print('*** optimization model ***:')
         # print(model.pprint())
-        # print('bt objective function is ', pyo.value(model.obj))
+        # print("bt objective function is ", pyo.value(model.obj))
 
         Quantity = [0] * len(model.E_DA_in)
         TOL = 0.00001  # Tolerance for checking bid
@@ -349,7 +348,7 @@ class BatteryDSOT:
             if pyo.value(model.E_DA_in[t]) > TOL:
                 Quantity[t] = pyo.value(model.E_DA_in[t])  # For logging
             if pyo.value(model.E_DA_out[t]) > TOL:
-                Quantity[t] = pyo.value(-model.E_DA_out[t])
+                Quantity[t] = pyo.value(model.E_DA_out[t]) * -1
 
         return Quantity
 
@@ -447,16 +446,16 @@ class BatteryDSOT:
         m = float('nan')
         try:
             m = (BID[0][P] - BID[1][P]) / (BID[0][Q] - BID[1][Q])  # y = m*x + b
-        except:
+        except Exception:
             try:
                 m = (BID[2][P] - BID[3][P]) / (BID[2][Q] - BID[3][Q])  # y = m*x + b
-            except:
+            except Exception:
                 temp = 1
 
         if isnan(m) and temp == 0:
             try:
                 m = (BID[2][P] - BID[3][P]) / (BID[2][Q] - BID[3][Q])  # y = m*x + b
-            except:
+            except Exception:
                 temp = 1
 
         if isnan(m):
@@ -490,11 +489,10 @@ class BatteryDSOT:
 
         return BIDr
 
-    def RT_gridlabd_set_P(self, model_diag_level, sim_time):
+    def RT_gridlabd_set_P(self, sim_time):
         """ Update variables for battery output "inverter"
 
         Args:
-            model_diag_level (int): Specific level for logging errors; set it to 11
             sim_time (str): Current time in the simulation; should be human-readable
 
         inv_P_setpoint is a float in W
@@ -517,23 +515,22 @@ class BatteryDSOT:
         if self.inv_P_setpoint <= self.Rd * 1000:
             pass
         else:
-            log.log(model_diag_level, '{} {} -- output power ({}) is not <= rated output power ({}).'.
+            log.log(self.model_diag_level, '{} {} -- output power ({}) is not <= rated output power ({}).'.
                     format(self.name, sim_time, self.inv_P_setpoint, self.Rd))
 
         if self.inv_P_setpoint >= -self.Rc * 1000:
             pass
         else:
-            log.log(model_diag_level, '{} {} -- input power ({}) is not <= rated input power ({}).'.
+            log.log(self.model_diag_level, '{} {} -- input power ({}) is not <= rated input power ({}).'.
                     format(self.name, sim_time, -self.inv_P_setpoint, self.Rc))
 
-    def set_SOC(self, msg_str, model_diag_level, sim_time):
+    def set_SOC(self, msg_str, sim_time):
         """ Set the battery state of charge
 
         Updates the self.Cinit of the battery
 
         Args:
              msg_str (str): message with battery SOC in pu
-             model_diag_level (int): Specific level for logging errors; set it to 11
              sim_time (str): Current time in the simulation; should be human-readable
         """
         val = parse_number(msg_str)
@@ -542,7 +539,7 @@ class BatteryDSOT:
         if self.Cmin < self.Cinit < self.Cmax:
             pass
         else:
-            log.log(model_diag_level, '{} {} -- SOC ({}) is not between Cmin ({}) and Cmax ({}).'.
+            log.log(self.model_diag_level, '{} {} -- SOC ({}) is not between Cmin ({}) and Cmax ({}).'.
                     format(self.name, sim_time, self.Cinit, self.Cmin, self.Cmax))
 
     def from_P_to_Q_battery(self, BID, PRICE):
@@ -561,16 +558,16 @@ class BatteryDSOT:
         m = float('nan')
         try:
             m = (BID[0][P] - BID[1][P]) / (BID[0][Q] - BID[1][Q])  # y = m*x + b
-        except:
+        except Exception:
             try:
                 m = (BID[2][P] - BID[3][P]) / (BID[2][Q] - BID[3][Q])  # y = m*x + b
-            except:
+            except Exception:
                 temp = 1
 
         if isnan(m) and temp == 0:
             try:
                 m = (BID[2][P] - BID[3][P]) / (BID[2][Q] - BID[3][Q])  # y = m*x + b
-            except:
+            except Exception:
                 temp = 1
 
         if isnan(m):
@@ -636,8 +633,8 @@ def test():
     # model_diag_level = 11
     # helpers.enable_logging('DEBUG', model_diag_level, 'battery_agent')
     sim_time = '2019-11-20 07:47:00'
-
-    B_obj1 = BatteryDSOT(agent, glm, 'test', 11, sim_time, 'ipopt')  # make object; add model_diag_level and sim_time
+    # make object; add model_diag_level and sim_time
+    B_obj1 = BatteryDSOT(agent, glm, 'test', 11, sim_time, 'ipopt')
     # print(B_obj1.optimized_Quantity)
     Q = B_obj1.Q
 

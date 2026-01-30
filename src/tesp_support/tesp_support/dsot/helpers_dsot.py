@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2024 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: helpers_dsot.py
 """ Utility functions for use within tesp_support, including new agents.
@@ -16,7 +16,7 @@ import numpy as np
 from ..api.helpers import HelicsMsg
 
 
-def write_mircogrids_management_script(master_file, case_path, system_config=None, substation_config=None,
+def write_mircogrids_management_script(case_path, system_config=None, substation_config=None,
                                        weather_config=None):
     """ Write experiment management scripts from JSON configuration data,
     linux ans helics only
@@ -28,7 +28,6 @@ def write_mircogrids_management_script(master_file, case_path, system_config=Non
     - clean.{sh, bat}, simple run script to clean generated output files from the experiment
 
     Args:
-        master_file (str): name of the master file to the experiment case
         case_path (str): path to the experiment case
         system_config (dict): configuration of the system for the experiment case
         substation_config (dict): configuration of the substations in the experiment case
@@ -39,11 +38,8 @@ def write_mircogrids_management_script(master_file, case_path, system_config=Non
     out_path = system_config['out_path']
     if out_path == "":
         out_path = "."
-    dsoNum = len(substation_config.keys())  # the market agents/federates
-    substNum = dsoNum  # the GridLAB-D federates
-    weatherAgNum = len(weather_config.keys())  # the weather agents/federates
-    dbgOptions = ['', 'gdb -x ../../gdbinit --args ', 'valgrind --track-origins=yes ']
-    dbg = dbgOptions[system_config['gld_debug']]
+    dbg_options = ['', 'gdb -x ../../gdbinit --args ', 'valgrind --track-origins=yes ']
+    dbg = dbg_options[system_config['gld_debug']]
 
     with open(out_folder + '/run.sh', 'w') as outfile:
         outfile.write('# !/bin/bash\n\n')
@@ -173,6 +169,7 @@ def write_dsot_management_script(master_file, case_path, config=None, system_con
     Args:
         master_file (str): name of the master file to the experiment case
         case_path (str): path to the experiment case
+        config (dict): new configuration of the system for the experiment case
         system_config (dict): configuration of the system for the experiment case
         substation_config (dict): configuration of the substations in the experiment case
         weather_config (dict): configuration of the climates being used
@@ -186,12 +183,12 @@ def write_dsot_management_script(master_file, case_path, config=None, system_con
     #if out_path == "":
     out_path = "."
     try:
-        archive_folder = config['archive_path']
+        archive_folder = config['archivePath']
     except TypeError:
         archive_folder = system_config['archivePath']
 
     try:
-        config_file = config['data_path'] + '/' + 'schedule_server_file_' + str(config['nodes'])
+        config_file = config['data_path'] + '/' + config['schedule_server_file_' + str(config['nodes'])]
     except TypeError:
         config_file = system_config['dataPath'] + '/' + system_config['dsoScheduleServerFile']
     # count how many schedule servers we need
@@ -202,28 +199,27 @@ def write_dsot_management_script(master_file, case_path, config=None, system_con
         try:
             if not sub_val['used']:
                 continue
-        except:
+        except Exception:
             pass
         bus = sub_val['bus_number']
         dm = divmod(bus, 20)
         if dm[0] not in ports:
             ports.append(dm[0])
 
-    dbgOptions = ['', 'gdb -x ../../gdbinit --args ', 'valgrind --track-origins=yes ']
+    dbg_options = ['', 'gdb -x ../../gdbinit --args ', 'valgrind --track-origins=yes ']
     try:
-        dbg = dbgOptions[config['gld_debug']]
+        dbg = dbg_options[config['gld_debug']]
     except TypeError:
-        dbg = dbgOptions[system_config['gldDebug']]
+        dbg = dbg_options[system_config['gldDebug']]
 
     with open(out_folder + '/run.sh', 'w') as outfile:
         outfile.write('#!/bin/bash\n\n')
         if platform.system() == 'Darwin':
             # this is needed if you are not comfortable disabling System Integrity Protection
-            dyldPath = environ.get('DYLD_LIBRARY_PATH')
-            if dyldPath is not None:
-                outfile.write('export DYLD_LIBRARY_PATH=%s\n\n' % dyldPath)
+            dyld_path = environ.get('DYLD_LIBRARY_PATH')
+            if dyld_path is not None:
+                outfile.write('export DYLD_LIBRARY_PATH=%s\n\n' % dyld_path)
 
-        outfile.write('(exec date &> ./debug.log &)\n')      
         outfile.write('mkdir -p PyomoTempFiles\n\n')
         outfile.write('# To run agents set with_market=1 else set with_market=0\n')
         try:
@@ -261,7 +257,7 @@ def write_dsot_management_script(master_file, case_path, config=None, system_con
             try:
                 if not sub_val['used']:
                     continue
-            except:
+            except Exception:
                 pass
             outfile.write('cd %s\n' % sub_val['substation'])
             outfile.write(
@@ -285,7 +281,6 @@ def write_dsot_management_script(master_file, case_path, config=None, system_con
                     outfile.write('(exec python3 -c "import tesp_support.api.player as tesp;'
                                   'tesp.load_player_loop(\'./%s\', \'%s\')" &> %s/%s_player.log &)\n'
                                   % (master_file, players[plyr], out_path, player[0]))
-        outfile.write('(exec date &> ./debug.log &)\n')
 
     try:
         write_management_script(archive_folder, case_path, out_path, config['gld_debug'], 1)
@@ -293,7 +288,7 @@ def write_dsot_management_script(master_file, case_path, config=None, system_con
         write_management_script(archive_folder, case_path, out_path, system_config['gldDebug'], 1)
 
 
-def write_dsot_management_script_f(master_file, case_path, system_config=None, substation_config=None,
+def write_dsot_management_script_f(master_file, case_path, config=None, system_config=None, substation_config=None,
                                    weather_config=None):
     """ Write experiment management scripts from JSON configuration data,
     windows and linux, fncs only
@@ -307,6 +302,7 @@ def write_dsot_management_script_f(master_file, case_path, system_config=None, s
     Args:
         master_file (str): name of the master file to the experiment case
         case_path (str): path to the experiment case
+        config (dict): new configuration of the system for the experiment case
         system_config (dict): configuration of the system for the experiment case
         substation_config (dict): configuration of the substations in the experiment case
         weather_config (dict): configuration of the climates being used
@@ -316,13 +312,19 @@ def write_dsot_management_script_f(master_file, case_path, system_config=None, s
     tso = 1 + len(players)
     if master_file == '':
         tso = 0
-    out_path = system_config['out_path']
-    if out_path == "":
-        out_path = "."
+    #out_path = system_config['out_path']
+    #if out_path == "":
+    out_path = "."
 
-    archive_folder = system_config['archive_path']
+    try:
+        archive_folder = config['archivePath']
+    except TypeError:
+        archive_folder = system_config['archivePath']
 
-    config_file = system_config['data_path'] + '/' + system_config['schedule_server_file']
+    try:
+        config_file = config['data_path'] + '/' + config['schedule_server_file_' + str(config['nodes'])]
+    except TypeError:
+        config_file = system_config['dataPath'] + '/' + system_config['dsoScheduleServerFile']
     # count how many schedule servers we need
     ports = []
     for sub_key, sub_val in substation_config.items():
@@ -331,17 +333,21 @@ def write_dsot_management_script_f(master_file, case_path, system_config=None, s
         try:
             if not sub_val['used']:
                 continue
-        except:
+        except Exception:
             pass
         bus = sub_val['bus_number']
         dm = divmod(bus, 20)
         if dm[0] not in ports:
             ports.append(dm[0])
 
-    dbgOptions = ['', 'gdb -x ../../gdbinit --args ', 'valgrind --track-origins=yes ']
-    dbg = dbgOptions[system_config['gld_debug']]
+    dbg_options = ['', 'gdb -x ../../gdbinit --args ', 'valgrind --track-origins=yes ']
+    try:
+        dbg = dbg_options[config['gld_debug']]
+    except TypeError:
+        dbg = dbg_options[system_config['gldDebug']]
 
     if platform.system() == 'Windows':
+        print("Windows")
         with open(out_folder + '/run.bat', 'w') as outfile:
             outfile.write('set FNCS_FATAL=yes\n')
             outfile.write('set FNCS_LOG_STDOUT=yes\n')
@@ -351,10 +357,16 @@ def write_dsot_management_script_f(master_file, case_path, system_config=None, s
             # outfile.write('set FNCS_BROKER="tcp://*:' + str(system_config['port']) + '"\n')
 
             outfile.write('rem To run agents set with_market=1 else set with_market=0 \n')
-            if system_config["market"]:
-                outfile.write('set with_market=1\n')
-            else:
-                outfile.write('set with_market=0\n')
+            try:
+                if config["market"]:
+                    outfile.write('with_market=1\n\n')
+                else:
+                    outfile.write('with_market=0\n\n')
+            except TypeError:
+                if system_config["market"]:
+                    outfile.write('with_market=1\n\n')
+                else:
+                    outfile.write('with_market=0\n\n')
 
             for cnt in range(len(ports)):
                 outfile.write('start /b cmd /c python -c "import tesp_support.api.schedule_server as tesp;'
@@ -380,7 +392,7 @@ def write_dsot_management_script_f(master_file, case_path, system_config=None, s
                 try:
                     if not sub_val['used']:
                         continue
-                except:
+                except Exception:
                     pass
                 outfile.write('cd %s\n' % sub_val['substation'])
                 outfile.write('start /b cmd /c gridlabd -D USE_FNCS -D METRICS_FILE="%s_metrics_" %s.glm ^> '
@@ -431,16 +443,22 @@ def write_dsot_management_script_f(master_file, case_path, system_config=None, s
             outfile.write('export FNCS_LOG_LEVEL=INFO\n')
             if platform.system() == 'Darwin':
                 # this is needed if you are not comfortable disabling System Integrity Protection
-                dyldPath = environ.get('DYLD_LIBRARY_PATH')
-                if dyldPath is not None:
-                    outfile.write('export DYLD_LIBRARY_PATH=%s\n\n' % dyldPath)
+                dyld_path = environ.get('DYLD_LIBRARY_PATH')
+                if dyld_path is not None:
+                    outfile.write('export DYLD_LIBRARY_PATH=%s\n\n' % dyld_path)
 
             outfile.write('mkdir -p PyomoTempFiles\n\n')
             outfile.write('# To run agents set with_market=1 else set with_market=0 \n')
-            if system_config["market"]:
-                outfile.write('with_market=1\n\n')
-            else:
-                outfile.write('with_market=0\n\n')
+            try:
+                if config["market"]:
+                    outfile.write('with_market=1\n\n')
+                else:
+                    outfile.write('with_market=0\n\n')
+            except TypeError:
+                if system_config["market"]:
+                    outfile.write('with_market=1\n\n')
+                else:
+                    outfile.write('with_market=0\n\n')
 
             for cnt in range(len(ports)):
                 outfile.write('(exec python3 -c "import tesp_support.api.schedule_server as tesp;'
@@ -449,9 +467,14 @@ def write_dsot_management_script_f(master_file, case_path, system_config=None, s
             outfile.write('# wait schedule server to populate\n')
             outfile.write('sleep 60\n')
 
-            outfile.write('(export FNCS_BROKER="tcp://*:' + str(system_config['port'])
-                          + '" && fncs_broker %s &> %s/broker.log &)\n'
-                          % (str(len(weather_config) * 3 + tso), out_path))
+            try:
+                outfile.write('(export FNCS_BROKER="tcp://*:' + str(system_config['port'])
+                            + '" && fncs_broker %s &> %s/broker.log &)\n'
+                            % (str(len(weather_config) * 3 + tso), out_path))
+            except KeyError:
+                outfile.write('(export FNCS_BROKER="tcp://*:' + str(config['port'])
+                            + '" && fncs_broker %s &> %s/broker.log &)\n'
+                            % (str(len(weather_config) * 3 + tso), out_path))
 
             for w_key, w_val in weather_config.items():
                 outfile.write('cd %s\n' % w_key)
@@ -467,7 +490,7 @@ def write_dsot_management_script_f(master_file, case_path, system_config=None, s
                 try:
                     if not sub_val['used']:
                         continue
-                except:
+                except Exception:
                     pass
                 outfile.write('cd %s\n' % sub_val['substation'])
                 outfile.write(
@@ -495,10 +518,13 @@ def write_dsot_management_script_f(master_file, case_path, system_config=None, s
                                       'tesp.load_player_loop_f(\'./%s\', \'%s\')" &> %s/%s_player.log &)\n'
                                       % (player[0], master_file, players[plyr], out_path, player[0]))
 
-        write_management_script(archive_folder, case_path, out_path, system_config['gld_debug'], 1)
+        try:
+            write_management_script(archive_folder, case_path, out_path, config['gld_debug'], 1)
+        except TypeError:
+            write_management_script(archive_folder, case_path, out_path, system_config['gldDebug'], 1)
 
 
-def write_management_script(archive_folder, case_path, out_path, gld_Debug, run_post):
+def write_management_script(archive_folder, case_path, out_path, gld_debug, run_post):
     out_folder = './' + case_path
 
     with open(out_folder + '/monitor.sh', 'w') as outfile:
@@ -538,7 +564,7 @@ done
 """)
 
     with open(out_folder + '/docker-run.sh', 'w') as outfile:
-        gdb_extra = "" if gld_Debug == 0 else \
+        gdb_extra = "" if gld_debug == 0 else \
             """
         --cap-add=SYS_PTRACE \\
         --security-opt seccomp=unconfined \\"""
@@ -550,12 +576,13 @@ docker images -q ${IMAGE} > docker_version
 hostname > hostname
 
 CASE="%s"
-SRCWORK_DIR="$TESPDIR/examples/analysis/dsot/code/$CASE"
-WORKING_DIR="$SIM_HOME/tesp/examples/analysis/dsot/code/$CASE"
+CASEDIR="%s"
+SRCWORK_DIR="$CASEDIR/$CASE"
+WORKING_DIR="$SIM_HOME/tesp/examples/analysis/$CASEDIR/code/$CASE"
 ARCHIVE_DIR="%s"
 
-chown -fR ${UID}:${SIM_GID} "$SRCWORK_DIR"
-chmod -fR 774 "$SRCWORK_DIR"
+chown -fR ${UID}:${SIM_GID} "$TESPDIR"
+chmod -fR 774 "$TESPDIR"
 
 docker run \\
        -e LOCAL_UID=$UID \\
@@ -567,7 +594,7 @@ docker run \\
        ${IMAGE} \\
        /bin/bash -c "./run.sh; ./monitor.sh"
 
-        """ % (path.basename(out_folder), archive_folder, gdb_extra))
+        """ % (path.basename(out_folder), path ,archive_folder, gdb_extra))
 
     with open(out_folder + '/postprocess.sh', 'w') as outfile:
         if run_post == 1:
@@ -874,8 +901,8 @@ def resample_curve_for_price_only(x_vec_1, x_vec_2, y_vec_2):
 
 
 def resample_curve_for_market(x_vec_1, y_vec_1, x_vec_2, y_vec_2):  # , min_q, max_q, num_samples):
-    flatList = [item for elem in [x_vec_1, x_vec_2] for item in elem]
-    x = np.array(flatList)
+    flat_list = [item for elem in [x_vec_1, x_vec_2] for item in elem]
+    x = np.array(flat_list)
     x = np.sort(x)
     x = np.unique(x)
     new_p_1 = []
@@ -891,8 +918,8 @@ def test():
     x_vec_1 = [0.0, 1.5, 2.5, 5.5, 10, 11]
     x_vec_2 = [8.0, 9.0, 10.0, 12]
     y_vec_2 = [8.0, 9.0, 10.0, 12]  # ?
-    flatList = [item for elem in [x_vec_1, x_vec_2] for item in elem]
-    x = np.array(flatList)
+    flat_list = [item for elem in [x_vec_1, x_vec_2] for item in elem]
+    x = np.array(flat_list)
     x = np.sort(x)
     x = np.unique(x)
     new_p_1 = []

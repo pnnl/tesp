@@ -4,12 +4,11 @@
 import helics as h
 import logging
 
-logger = logging.getLogger(__name__)
-logger.addHandler(logging.StreamHandler())
-logger.setLevel(logging.WARNING)
+log = logging.getLogger(__name__)
+log.addHandler(logging.StreamHandler())
 
 helicsversion = h.helicsGetVersion()
-logger.info("Loadshed Federate: HELICS version = {}".format(helicsversion))
+log.info("Loadshed Federate: HELICS version = {}".format(helicsversion))
 
 
 def create_federate(deltat=1.0, fedinitstring="--federates=1"):
@@ -25,10 +24,10 @@ def show_helics_query(fed, qstr):
     hq = h.helicsCreateQuery("mainbroker", qstr)
     qret = h.helicsQueryExecute(hq, fed)
     try:
-        logger.info(qstr + "=" + ",".join(qret))
+        log.info(qstr + "=" + ",".join(qret))
     except:
-        logger.info(qstr + "=")
-        logger.info(qret)
+        log.info(qstr + "=")
+        log.info(qret)
         pass
     h.helicsQueryFree(hq)
 
@@ -36,10 +35,10 @@ def show_helics_query(fed, qstr):
 def main():
     fed = create_federate()
     fedName = h.helicsFederateGetName(fed)
-    logger.info("The name of the federate is: {0}.".format(fedName))
+    log.info("The name of the federate is: {0}.".format(fedName))
     endpoint_count = h.helicsFederateGetEndpointCount(fed)
-    logger.info("Number of {0} endpoints.".format(endpoint_count))
-    logger.info("########################   Entering Execution Mode  ##########################################")
+    log.info("Number of {0} endpoints.".format(endpoint_count))
+    log.info("########################   Entering Execution Mode  ##########################################")
     h.helicsFederateEnterExecutingMode(fed)
 
     swStatusEpName = fedName + "/sw_status"
@@ -58,24 +57,24 @@ def main():
         currTime = h.helicsFederateGetCurrentTime(fed)
         grantedtime = h.helicsFederateRequestNextStep(fed)
         if (currTime * 100) % 100 == 0:
-            logger.debug("Current time: {0}, Granted time: {1}".format(currTime, grantedtime))
+            log.debug("Current time: {0}, Granted time: {1}".format(currTime, grantedtime))
         end_name = h.helicsEndpointGetName(swStatusEp)
         for swt in switchings:
             t = swt[0]
             val = swt[1]
             if int(currTime) == t:
                 if val == 1:
-                    logger.info("Switching " + end_name + " to CLOSED at second " + str(t))
+                    log.info("Switching " + end_name + " to CLOSED at second " + str(t))
                     h.helicsEndpointSendBytesTo(swStatusEp, "CLOSED".encode(), "")
                 elif val == 0:
-                    logger.info("Switching " + end_name + " to OPEN at second " + str(t))
+                    log.info("Switching " + end_name + " to OPEN at second " + str(t))
                     h.helicsEndpointSendBytesTo(swStatusEp, "OPEN".encode(), "")
                 else:
-                    logger.info("!!!!!!! Signals should only be 0 or 1 !!!!!!!")
-    logger.info("Destroying federate")
+                    log.info("!!!!!!! Signals should only be 0 or 1 !!!!!!!")
+    log.info("Destroying federate")
     destroy_federate(fed)
 
 
 if __name__ == "__main__":
     main()
-    logger.info("Done!")
+    log.info("Done!")

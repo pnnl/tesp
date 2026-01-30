@@ -4,7 +4,7 @@
 import os
 import math
 import json
-import logging as log
+import logging
 import numpy as np
 import pandas as pd
 import pypower.api as pp
@@ -770,10 +770,10 @@ def tso_psst_loop():
             ppopt_market = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['opf_dc'], OPF_ALG_DC=200)  # dc for
             ppopt_regular = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['pf_dc'], PF_MAX_IT=20, PF_ALG=1)  # ac for power flow
             
-            logger = log.getLogger()
-            # logger.setLevel(log.DEBUG)
-            logger.setLevel(log.INFO)
-            # logger.setLevel(log.WARNING)
+            log = logging.getLogger(__name__)
+            log.setLevel(logging.INFO)
+            # log.setLevel(logging.DEBUG)
+
             log.info('starting tso loop...')
             
             x = np.array(range(25))
@@ -783,7 +783,12 @@ def tso_psst_loop():
             t = np.append([0, 0, 0], t)
             t = np.append(t, [1, 1, 1])
             tck_load = [t, [x, y], 3]
-            
+
+            ames = ppc['ames']
+            solver = ppc['solver']
+            if pst.SOLVER is not None:
+                solver = pst.SOLVER
+                
             if ppc['solver'] == 'cbc':
                 ppc['gencost'][:, 4] = 0.0  # can't use quadratic costs with CBC solver
             
@@ -827,11 +832,6 @@ def tso_psst_loop():
             swing_bus = int(ppc['swing_bus'])
             noScale = ppc['noScale']
             curve = ppc['curve']
-            
-            ames = ppc['ames']
-            solver = ppc['solver']
-            if pst.SOLVER is not None:
-                solver = pst.SOLVER
             
             priceCap = 2 * ppc['priceCap']
             reserveDown = ppc['reserveDown']

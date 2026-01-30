@@ -12,7 +12,7 @@ import pandas as pd
 
 try:
     from ..original import fncs as fncs
-except:
+except Exception:
     pass
 import random
 import numpy

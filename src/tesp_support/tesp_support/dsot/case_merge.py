@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2024 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: case_merge.py
 """Combines GridLAB-D and agent files to run a multi-feeder TESP simulation
@@ -15,6 +15,7 @@ import json
 from os import path
 
 from ..api.helpers import gld_strict_name
+from ..api.modify_GLM import GLMModifier
 
 def merge_glm(target, sources, xfmva):
     """ Combines GridLAB-D input files into "target". The source files must already exist.
@@ -22,7 +23,7 @@ def merge_glm(target, sources, xfmva):
     Args:
         target (str): the path to the target GLM file, including the name of the file
         sources (list): list of feeder names in the target directory to merge
-        xfmva (int):
+        xfmva (int): transformer MVA
     """
     print('combining', sources, 'glm files into', target)
     workdir = path.split(path.dirname(target))[0]
@@ -102,6 +103,180 @@ def merge_glm(target, sources, xfmva):
         inFirstFile = False
     op.close()
 
+def rename(glm: GLMModifier, glm_type: str, i_glm_obj, prefix: str):
+    keys = list(i_glm_obj.keys())
+    for k in keys:
+        glm.rename_object(glm_type, k, prefix + "_" + k)
+
+def del_names(glm: GLMModifier, glm_type: str, i_glm_obj, find_str: str):
+    keys = list(i_glm_obj.keys())
+    for k in keys:
+        if find_str in k:
+            glm.del_object(glm_type, k)
+
+def del_danglers(glm: GLMModifier, glm_type: str, i_glm_obj):
+    """_summary_
+
+    Args:
+        glm (GLMModifier): _description_
+        glm_type (str): _description_
+        i_glm_obj (_type_): _description_
+    """
+    keys = list(i_glm_obj.keys())
+    to_dangler = []
+    from_dangler = []
+    to_from_dangler = []
+    for k in keys:
+        from_found = ""
+        to_found = ""
+        from_name = i_glm_obj[k]["from"]
+        to_name = i_glm_obj[k]["to"]
+        for type_name, obj_type in glm.model.object_entities.items():
+            if glm_type != type_name:
+                if to_name in obj_type.instances:
+                    to_found = type_name
+                if from_name in obj_type.instances:
+                    from_found = type_name
+            if to_found != "" and from_found != "":
+                break
+        if to_found != "" and from_found != "":
+            continue
+
+        for type_name, obj_type in glm.model.object_entities.items():
+            if glm_type != type_name:
+                for obj_name, obj_int in obj_type.instances.items():
+                    if hasattr(obj_type, "from"):
+                        if to_found == "":
+                            if to_name == obj_int["from"]:
+                                to_found = type_name
+                                continue
+                        if from_found == "":
+                            if from_name == obj_int["to"]:
+                                from_found = type_name
+                                continue
+                    if to_found != "" and from_found != "":
+                        break
+            if to_found != "" and from_found != "":
+                break
+        if to_found != "" and from_found != "":
+            continue
+
+        if to_found == "":
+            if from_found != "":
+                # 'to' is not found, but 'from' is found
+                from_dangler.append([from_found, from_name])
+                # glm.del_object(glm_type, k)
+            else:
+                # 'to' or 'from' are not found
+                to_from_dangler.append([glm_type, k])
+                glm.del_object(glm_type, k)
+        if from_found == "":
+            if to_found != "":
+                # 'to' is found, but 'from' is not found
+                to_dangler.append([to_found, to_name, from_found, from_name])
+                # glm.del_object(glm_type, k)
+
+    print(f"'To' dangler objects: {to_dangler}" )
+    print(f"'From' dangler objects: {from_dangler}" )
+    print(f"'To' and 'From' objects: {to_from_dangler}" )
+
+def remove(glm: GLMModifier, glm_type: str, i_glm_obj_instances):
+    if len(i_glm_obj_instances):
+        glm.del_object(glm_type, next(iter(i_glm_obj_instances)))
+
+def glm_merge(target, sources, xfmva, plot: bool, pos_data: dict):
+    """ Combines GridLAB-D input files into "target". The source files must
+    already exist. This is an updated version of merge_glm() that utilizes
+    GLMModifier and GLMModel to achieve the same goal for feeders generated with
+    gld_feeder_generator, using the same.
+
+    Args:
+        target (str): the path to the target GLM file, including the name of the file
+        sources (list): list of feeder names in the target directory to merge
+        xfmva (int): transformer MVA
+        plot (bool): whether to plot the merged glm
+        pos_data (dict): dictionary of position data for the feeders
+    """
+    print('combining', sources, 'glm files into', target)
+    workdir = path.split(path.dirname(target))[0]
+    op = open(target, 'w')
+    inFirstFile = True
+    for fdr in sources:
+        glm = GLMModifier()
+        i_glm, success = glm.read_model(workdir + '/' + fdr + '/' + fdr + '.glm')
+        # Rename inherited taxonomy components based on feeder names
+        rename(glm, 'line_configuration', i_glm.line_configuration, fdr)
+        rename(glm, 'regulator_configuration', i_glm.regulator_configuration, fdr)
+        rename(glm, 'transformer_configuration', i_glm.transformer_configuration, fdr)
+        rename(glm, 'triplex_line_configuration', i_glm.triplex_line_configuration, fdr)
+        rename(glm, 'overhead_line_conductor', i_glm.overhead_line_conductor, fdr)
+        rename(glm, 'underground_line_conductor', i_glm.underground_line_conductor, fdr)
+        rename(glm, 'triplex_line_conductor', i_glm.triplex_line_conductor, fdr)
+        rename(glm, 'line_spacing', i_glm.line_spacing, fdr)
+        # Clean up excess feeder components
+        del_names(glm, 'triplex_line', i_glm.triplex_line, "_tl_")
+        del_names(glm, 'triplex_meter', i_glm.triplex_meter, "_tm_")
+
+        # Setup just one feeder's substation
+        if inFirstFile:
+            i_glm.transformer_configuration[fdr + "_substation_xfmr_config"]["power_rating"] = xfmva * 1e3
+            i_glm.substation["network_node"]["base_power"] = xfmva * 1e6
+            headNode = i_glm.transformer["substation_transformer"]["to"]
+            glm.del_object_attr("node", headNode, "bustype")
+            glm.add_object("node", "substation_node", i_glm.node[headNode])
+            i_glm.transformer["substation_transformer"]["to"] = "substation_node"
+            params = {
+                "phases": 'ABCN',
+                "from": 'substation_node',
+                "to": headNode,
+                "status": "CLOSED"
+            }
+            glm.add_object("switch", "tie_" + fdr, params)
+            print(glm.model.instancesToGLM(), file=op)
+            inFirstFile = False
+        else:
+            headNode = i_glm.transformer["substation_transformer"]["to"]
+            i_glm.transformer["substation_transformer"]["to"] = "substation_node"
+            glm.del_object_attr("node", headNode, "bustype")
+            params = {
+                "phases": 'ABCN',
+                "from": 'substation_node',
+                "to": headNode,
+                "status": "CLOSED"
+            }
+            glm.add_object("switch", "tie_" + fdr, params)
+            # Delete the duplicate components
+            remove(glm,'voltdump', i_glm.voltdump.instances)
+            remove(glm,'currdump', i_glm.currdump.instances)
+            remove(glm,'climate', i_glm.climate.instances)
+            remove(glm,'player', i_glm.player.instances)
+            remove(glm,'recorder', i_glm.recorder.instances)
+            remove(glm,'metrics_collector_writer', i_glm.metrics_collector_writer.instances)
+            try:
+                remove(glm,'fncs_msg', i_glm.fncs_msg.instances)
+            except StopIteration:
+                remove(glm,'helics_msg', i_glm.helics_msg.instances)
+
+            glm.del_object('substation', 'network_node')
+            glm.del_object('transformer', 'substation_transformer')
+            glm.del_object('metrics_collector', 'mc_network_node')
+
+            # Print the rest of the feeder's glm to the same model file
+            print(glm.model.glm_merge(), file=op)
+    op.close()
+    # Now re-read the merged .glm and re-write it all in the proper order
+    i_glm, success = glm.read_model(target)
+    import os
+    os.remove(target)
+    glm.write_model(target)
+    if plot:
+        print('Plotting the merged substation model.')
+        head_pos = pos_data[headNode]
+        pos_data['substation_node'] = [head_pos[0] + 8, head_pos[1] + 8]
+        glm.model.plot_model(pos_data)
+    else:
+        pass
+
 def merge_glm_dict(target, sources, xfmva):
     """ Combines GridLAB-D metadata files into "target". The source files must already exist.
 
@@ -113,7 +288,7 @@ def merge_glm_dict(target, sources, xfmva):
     Args:
         target (str): the path to the target JSON file, including the name of the file
         sources (list): list of feeder names in the target directory to merge
-        xfmva (int):
+        xfmva (int): transformer MVA
     """
     print('combining', sources, 'GridLAB-D json files into', target)
     diction = {'bulkpower_bus': 'TBD',
@@ -130,7 +305,6 @@ def merge_glm_dict(target, sources, xfmva):
     for fdr in sources:
         lp = open(path.dirname(target) + '/' + fdr + '_glm_dict.json').read()
         cfg = json.loads(lp)
-        fdr_id = gld_strict_name(cfg['base_feeder'])
         if sources.index(fdr) == 0:
             diction['bulkpower_bus'] = cfg['bulkpower_bus']
             diction['message_name'] = cfg['message_name']

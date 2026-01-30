@@ -1,4 +1,4 @@
-# Copyright (c) 2022-2024 Battelle Memorial Institute
+# Copyright (c) 2022-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: case_merge.py
 """Combines GridLAB-D and agent files to run a multi-feeder TESP simulation

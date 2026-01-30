@@ -529,7 +529,7 @@ def parse_kva(cplx):  # this drops the sign of p and q
     Returns:
         float: the parsed kva value
     """
-    toks = list(filter(None, re.split('[\+j-]', cplx)))
+    toks = list(filter(None, re.split(r'[\+j-]', cplx)))
     p = float(toks[0])
     q = float(toks[1])
     return 0.001 * sqrt(p * p + q * q)
@@ -752,7 +752,7 @@ def obj(parent, model, line, itr, oidh, octr):
     if parent is not None:
         params['parent'] = parent
     while not oend:
-        m = re.match('\s*(\S+) ([^;{]+)[;{]', line)
+        m = re.match(r'\s*(\S+) ([^;{]+)[;{]', line)
         if m:
             # found a parameter
             param = m.group(1)
@@ -847,10 +847,10 @@ def write_link_class(model, h, t, seg_loads, op):
 
 
 # name, r, gmr, ampacity
-triplex_conductors = [['triplex_4/0_aa', 0.48, 0.0158, 1000.0]]
+triplex_conductors = [['triplex_4/0AA', 0.48, 0.0158, 1000.0]]
 
 # name, hot, neutral, thickness, diameter
-triplex_configurations = [['tpx_config', 'triplex_4/0_aa', 'triplex_4/0_aa', 0.08, 0.522]]
+triplex_configurations = [['tpx_config', 'triplex_4/0AA', 'triplex_4/0AA', 0.08, 0.522]]
 
 
 def write_local_triplex_configurations(op):
@@ -2020,7 +2020,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
         lines = []
         line = ip.readline()
         while line is not '':
-            while re.match('\s*//', line) or re.match('\s+$', line):
+            while re.match(r'\s*//', line) or re.match(r'\s+$', line):
                 # skip comments and white space
                 line = ip.readline()
             lines.append(line.rstrip())

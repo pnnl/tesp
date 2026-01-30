@@ -228,16 +228,16 @@ def ProcessGLM(fileroot, weatherName):
     for key, val in controllers.items():
         houseName = val['houseName']
         meterName = val['meterName']
-        print('  ' + key + '#V1:', file=yp)
+        print('  ' + key + '/measured_voltage:', file=yp)
         print('    topic: ' + gldSimName + '/' + meterName + '/measured_voltage_1', file=yp)
         print('    default: 120', file=yp)
-        print('  ' + key + '#Tair:', file=yp)
+        print('  ' + key + '/air_temperature:', file=yp)
         print('    topic: ' + gldSimName + '/' + houseName + '/air_temperature', file=yp)
         print('    default: 80', file=yp)
-        print('  ' + key + '#Load:', file=yp)
+        print('  ' + key + '/hvac_load:', file=yp)
         print('    topic: ' + gldSimName + '/' + houseName + '/hvac_load', file=yp)
         print('    default: 0', file=yp)
-        print('  ' + key + '#On:', file=yp)
+        print('  ' + key + '/power_state:', file=yp)
         print('    topic: ' + gldSimName + '/' + houseName + '/power_state', file=yp)
         print('    default: 0', file=yp)
     yp.close()

@@ -14,5 +14,6 @@ References for TESP
     ./references/Code_Reference
     ./references/Coding_Style_Guide
     ./references/Design_Philosophy_and_Development_Plans
+    ./references/TESP_roadmap
     ./references/zBibliography
     ./references/LICENSE

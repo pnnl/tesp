@@ -6,7 +6,9 @@ Implements the ramp bidding method, with HVAC power as the
 bid quantity, and thermostat setting changes as the response
 mechanism.
 """
-import tesp_support.api.helpers as helpers
+import numpy as np
+import tesp_support.api.parse_helpers as helpers
+
 
 class hvac:
     """
@@ -53,14 +55,17 @@ class hvac:
         bid_price (float): the current bid price in $/kwh
         cleared_price (float): the cleared market price in $/kwh
     """
-    def __init__(self,dict,key,aucObj):
+
+    def __init__(self, dict, key, aucObj):
         """ Initializes the class
         """
         self.name = key
         self.control_mode = dict['control_mode']
-        self.houseName = dict['houseName']        # 'house_name'=  "R1_12_47_3_tn_1_hse_1"    in RL_agent_dict.json                               
+        # 'house_name'=  "R1_12_47_3_tn_1_hse_1"    in RL_agent_dict.json
+        self.houseName = dict['houseName']
         self.meterName = dict['meterName']
-        self.period = float(dict['period'])         # 'period' =300  in RL_agent_dict.json   
+        # 'period' =300  in RL_agent_dict.json
+        self.period = float(dict['period'])
         self.wakeup_start = float(dict['wakeup_start'])
         self.daylight_start = float(dict['daylight_start'])
         self.evening_start = float(dict['evening_start'])
@@ -83,7 +88,7 @@ class hvac:
         self.std_dev = aucObj.std_dev
         self.mean = aucObj.clearing_price
 
-        self.Trange = abs (2.0 * self.offset_limit)
+        self.Trange = abs(2.0 * self.offset_limit)
 
         self.air_temp = 78.0
         self.hvac_kw = 3.0
@@ -94,12 +99,10 @@ class hvac:
         self.setpoint = 0.0
         self.cleared_price = 0.0
         self.bid_price = 0.0
-        
-        
-        
-        self.ave=0.0
 
-    def inform_bid (self,price):
+        self.ave = 0.0
+
+    def inform_bid(self, price):
         """ Set the cleared_price attribute
 
         Args:
@@ -107,7 +110,7 @@ class hvac:
         """
         self.cleared_price = price
 
-    def bid_accepted (self):
+    def bid_accepted(self):
         """ Update the thermostat setting if the last bid was accepted
 
         The last bid is always "accepted". If it wasn't high enough,
@@ -126,7 +129,7 @@ class hvac:
             return True
         return False
 
-    def formulate_bid (self):
+    def formulate_bid(self):
         """ Bid to run the air conditioner through the next period
         
         Returns:
@@ -144,129 +147,120 @@ class hvac:
             self.bid_price = p
         return [self.bid_price, self.hvac_kw, self.hvac_on]
 
-    def change_basepoint (self,hod,dow):
+    def change_basepoint(self, hod, dow):
         """ Updates the time-scheduled thermostat setting
 
         Args:
             hod (float): the hour of the day, from 0 to 24
             dow (int): the day of the week, zero being Monday
         Returns:
-            bool: True if the setting changed, Falso if not
+            bool: True if the setting changed, False if not
         """
-        if dow > 4: # a weekend
+        if dow > 4:  # a weekend
             val = self.weekend_night_set
-            if hod >= self.weekend_day_start and hod < self.weekend_night_start:
+            if self.weekend_day_start <= hod < self.weekend_night_start:
                 val = self.weekend_day_set
-        else: # a weekday
+        else:  # a weekday
             val = self.night_set
-            if hod >= self.wakeup_start and hod < self.daylight_start:
+            if self.wakeup_start <= hod < self.daylight_start:
                 val = self.wakeup_set
-            elif hod >= self.daylight_start and hod < self.evening_start:
+            elif self.daylight_start <= hod < self.evening_start:
                 val = self.daylight_set
-            elif hod >= self.evening_start and hod < self.night_start:
+            elif self.evening_start <= hod < self.night_start:
                 val = self.evening_set
         if abs(self.basepoint - val) > 0.1:
             self.basepoint = val
             return True
         return False
-    
-    def get_basepoint (self,hod,dow):
+
+    def get_basepoint(self, hod, dow):
         """ Updates the time-scheduled thermostat setting
 
         Args:
             hod (float): the hour of the day, from 0 to 24
             dow (int): the day of the week, zero being Monday
         Returns:
-            bool: True if the setting changed, Falso if not
+            bool: True if the setting changed, False if not
         """
-        if dow > 4: # a weekend
+        if dow > 4:  # a weekend
             val = self.weekend_night_set
-            if hod >= self.weekend_day_start and hod < self.weekend_night_start:
+            if self.weekend_day_start <= hod < self.weekend_night_start:
                 val = self.weekend_day_set
-        else: # a weekday
+        else:  # a weekday
             val = self.night_set
-            if hod >= self.wakeup_start and hod < self.daylight_start:
+            if self.wakeup_start <= hod < self.daylight_start:
                 val = self.wakeup_set
-            elif hod >= self.daylight_start and hod < self.evening_start:
+            elif self.daylight_start <= hod < self.evening_start:
                 val = self.daylight_set
-            elif hod >= self.evening_start and hod < self.night_start:
+            elif self.evening_start <= hod < self.night_start:
                 val = self.evening_set
-        return val    
+        return val
 
-    def set_hvac_load (self,str):
+    def set_hvac_load(self, _str):
         """ Sets the hvac_load attribute, if greater than zero
 
         Args:
-            str (str): FNCS message with load in kW
+            _str (str): message with load in kW
         """
-        val = helpers.parse_fncs_number (str)
+        val = helpers.parse_number(_str)
         if val > 0.0:
             self.hvac_kw = val
-            
-    
-    def set_hvac_ave (self,str):
 
-        val = helpers.parse_fncs_number (str)
+    def set_hvac_ave(self, _str):
+
+        val = helpers.parse_number(_str)
         if val >= 0.0:
             self.ave = val
 
-    def set_hvac_state (self,str):
+    def set_hvac_state(self, _str):
         """ Sets the hvac_on attribute
 
         Args:
-            str (str): FNCS message with state, ON or OFF
+            _str (str): message with state, ON or OFF
         """
         if str == 'OFF':
             self.hvac_on = False
         else:
             self.hvac_on = True
 
-    def set_air_temp (self,str):
+    def set_air_temp(self, _str):
         """ Sets the air_temp attribute
 
         Args:
-            str (str): FNCS message with temperature in degrees Fahrenheit
+            _str (str): message with temperature in degrees Fahrenheit
         """
-        self.air_temp = helpers.parse_fncs_number (str)
+        self.air_temp = helpers.parse_number(_str)
 
-    def set_voltage (self,str):
+    def set_voltage(self, _str):
         """ Sets the mtr_v attribute
 
         Args:
-            str (str): FNCS message with meter line-neutral voltage
+            _str (str): message with meter line-neutral voltage
         """
-        self.mtr_v = helpers.parse_fncs_magnitude (str)
-    
+        self.mtr_v = helpers.parse_magnitude(_str)
+
     def get_state(self):
         """ return the current state：
         T_room, T_set, P_clear as a 3*1 array
-        
-         Args:
-            str (str): rl_house
-            
+
         """
-        state=np.array([[self.air_temp],[self.setpoint],[self.basepoint],[self.cleared_price]])        
-        
+        state = np.array([[self.air_temp], [self.setpoint], [self.basepoint], [self.cleared_price]])
+
         return state
-   
-    
-    def reset(self,hod,dow):
-        
-        if dow > 4: # a weekend
+
+    def reset(self, hod, dow):
+
+        if dow > 4:  # a weekend
             val = self.weekend_night_set
-            if hod >= self.weekend_day_start and hod < self.weekend_night_start:
+            if self.weekend_day_start <= hod < self.weekend_night_start:
                 val = self.weekend_day_set
-        else: # a weekday
+        else:  # a weekday
             val = self.night_set
-            if hod >= self.wakeup_start and hod < self.daylight_start:
+            if self.wakeup_start <= hod < self.daylight_start:
                 val = self.wakeup_set
-            elif hod >= self.daylight_start and hod < self.evening_start:
+            elif self.daylight_start <= hod < self.evening_start:
                 val = self.daylight_set
-            elif hod >= self.evening_start and hod < self.night_start:
+            elif self.evening_start <= hod < self.night_start:
                 val = self.evening_set
-#        if abs(self.basepoint - val) > 0.1:
+        #        if abs(self.basepoint - val) > 0.1:
         self.basepoint = val
-        
-  
-        
-        
