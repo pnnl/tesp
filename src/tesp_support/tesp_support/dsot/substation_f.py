@@ -657,6 +657,8 @@ def inner_substation_loop(configfile, metrics_root, with_market):
     retail_day_ahead_diff_observed = 0.0
     ames_lmp = False
     timing(proc[0], False)
+    forecast_load = []
+    agent_class = ["HVACDSOT", "EVDSOT", "BatteryDSOT", "WaterHeaterDSOT"]
 
     log.info("Initialize FNCS dso federate")
     fncs.initialize()
@@ -1038,30 +1040,46 @@ def inner_substation_loop(configfile, metrics_root, with_market):
             else:
                 log.info('No opts need solving, skipping use of "parallel" obj!')
                 results = []
+
+            # Set up statistics for agent solvers
+            agent_errors = [[] for _ in range(4)]
+            agent_success = [0 for _ in range(4)]
+            agent_count = [0 for _ in range(4)]
+
             # add participating agents to day-ahead bid to the retail market
-            agent_errors = []
-            agent_success = 0
-            agent_count = 0
             for i, (res, p_age) in enumerate(zip(results, P_age_DA)):  # range(len(P_age_DA)):
-                timing(p_age.__class__.__name__, True)
+                agent = agent_class.index(p_age.__class__.__name__)
+                timing(agent_class[agent], True)
                 # passing the optimization output to the agent
-                if p_age.__class__.__name__ == "HVACDSOT":
+                if agent == 0:
                     p_age.optimized_Quantity = res[0][:]
                     p_age.temp_room = res[1][:]
                     if res[2]["success"]:
-                        agent_success += 1
+                        agent_success[agent] += 1
                     else:
-                        agent_errors.append(f"{p_age.name}:{res[2]["termination"]}")
-                    agent_count += 1
+                        agent_errors[agent].append(f"{p_age.name}:{res[2]["termination"]}")
+                    agent_count[agent] += 1
                 else:
-                    p_age.optimized_Quantity = res[:]
+                    p_age.optimized_Quantity = res[0][:]
+                    if res[1]["success"]:
+                        agent_success[agent] += 1
+                    else:
+                        agent_errors[agent].append(f"{p_age.name}:{res[1]["termination"]}")
+                    agent_count[agent] += 1
 
                 # formulate the day-ahead bid
                 bid = p_age.formulate_bid_da()
-                timing(p_age.__class__.__name__, False)
+                timing(agent_class[agent], False)
                 retail_market_obj.curve_aggregator_DA('Buyer', bid, p_age.name)
-            log.info(f"HVAC solver: Successes: {agent_success}, Participating: {agent_count}, Success Rate: {agent_success/agent_count}, Agents: {len(hvac_agent_objs)}")
-            log.debug(f"HVAC solver failers: {agent_errors}")
+
+            # Statistics on agent solvers
+            for agent in range(4):
+                if agent_count[agent]:
+                    log.info(f"{agent_class[agent]} solver: Successes: {agent_success[agent]}, Participating: {agent_count[agent]}, Success Rate: {agent_success[agent]/agent_count[agent]}, Agents: {len(hvac_agent_objs)}")
+                    log.debug(f"{agent_class[agent]} solver: Failers: {agent_errors[agent]}")
+                else:
+                    log.info(f"No {agent_class[agent]} agents")
+
             del results
 
             # collect agent only DA quantities and price

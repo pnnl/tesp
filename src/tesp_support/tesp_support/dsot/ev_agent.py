@@ -411,6 +411,11 @@ class EVDSOT:
         Returns:
             Quantity (float) (1 x windowLength): Optimal quantity from optimization for all hours of the window specified by windowLength
         """
+        # Parameters
+        params = {
+            "success": True,
+            "termination": "",
+        }
         if self.Cinit > self.Cmax:
             self.Cinit = self.Cmax
         if self.Cinit < self.Cmin:
@@ -437,7 +442,7 @@ class EVDSOT:
 
         # print('home depart hours: ', self.home_depart_hours)
         # print('day_ahead_price_forecast...', self.f_DA)
-        results = get_run_solver('ev_' + self.name, pyo, model, self.solver)
+        results = get_run_solver('ev_' + self.name, pyo, model, self.solver, params)
         # print('*** optimization model ***:')
         # print(model.pprint())
         # print('ev objective function is ', pyo.value(model.obj))
@@ -463,7 +468,7 @@ class EVDSOT:
         # ax2.set_ylabel('SOC')
         # ax3.plot(self.f_DA)
         # ax3.set_ylabel('$/kWh')
-        return Quantity
+        return [Quantity, params]
 
     def formulate_bid_rt(self):
         """ Formulates RT bid

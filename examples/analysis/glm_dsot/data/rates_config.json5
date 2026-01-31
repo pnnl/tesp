@@ -15,8 +15,8 @@
   "RECS": true,
   "time_zone": "CST+6CDT",
   "case_type": {
-    "bt": 0, // bt = battery participates
-    "fl": 1, // fl = flexible loads (houses) participate
+    "bt": 1, // bt = battery participates
+    "fl": 0, // fl = flexible loads (houses) participate
     "ev": 0, // ev = electric vehicles participate
     "pv": 0  // pv = photovoltaics
   },

@@ -640,6 +640,12 @@ class WaterHeaterDSOT:
         #         else:
         #             self.delta_SOHC_model_hour()
         # =============================================================================
+        # Parameters
+        params = {
+            "success": True,
+            "termination": "",
+        }
+
         self.delta_SOHC_model_hour()
 
         # Decision variables
@@ -654,7 +660,7 @@ class WaterHeaterDSOT:
         model.con1 = pyo.Constraint(self.TIME, rule=self.con_rule_ine1)
         model.con2 = pyo.Constraint(self.TIME, rule=self.con_rule_eq1)
 
-        results = get_run_solver("wh_" + self.name, pyo, model, self.solver)
+        results = get_run_solver("wh_" + self.name, pyo, model, self.solver, params)
 
         Quantity = [0 for _ in self.TIME]
         SC = [0 for _ in self.TIME]
@@ -684,7 +690,7 @@ class WaterHeaterDSOT:
         # print("SOHC_Current",self.SOHC)
         # print("Name: "+str(self.name) + "Day-Ahead Quantity: " + str(Quantity))
         # =============================================================================
-        return Quantity
+        return [Quantity, params]
 
     def delta_SOHC_model_hour(self):
         """ Function used to fit the hourly delta_SOHC estimation model, where hourly delta_SOHC is assumed to be a function of wd_rate E_upper and E_bottom values with one-hour interval
