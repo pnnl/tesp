@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2024 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: forecasting.py
 """Class responsible for forecasting 
@@ -17,13 +17,13 @@ from copy import deepcopy
 from datetime import datetime, timedelta
 from math import cos, sin
 
-import glm
+from pyglm import glm
 import numpy as np
 import pandas as pd
 import pytz
 
 from .hvac_agent import HVACDSOT
-from ..api.schedule_client import *
+from ..api.schedule_client import DataClient
 
 
 class Forecasting:
@@ -95,7 +95,7 @@ class Forecasting:
         self.firstRun = True
         # data = pd.read_csv("C:\\Users\\sing492\\OneDrive - PNNL\\Documents\\Projects\\TESP_DSOT\\Hvac Debug Ahmad\\Qi_individual.csv",
         #                        index_col=0)
-        # date_rng = pd.date_range(start='7/1/2013', end='7/10/2013', freq='H')
+        # date_rng = pd.date_range(start='7/1/2013', end='7/10/2013', freq='h')
         # df = pd.DataFrame(date_rng, columns=['date'])
         # df['solar_gain'] = data['solar_gain'].tolist()
         # df['internal_gain'] = data['internal_gain'].tolist()
@@ -121,8 +121,8 @@ class Forecasting:
         """ Initialize the data frame for one year
 
         Args:
-            start_time (datetime, str) : time in str format - DD/MM/YYY HH:MT:SS
-            end_time (datetime, str) : time in str format - DD/MM/YYY HH:MT:SS
+            start_time (datetime | str) : time in str format - DD/MM/YYY HH:MT:SS
+            end_time (datetime | str) : time in str format - DD/MM/YYY HH:MT:SS
         """
         # convert start_time and end_time to strings if they are in datetime
         if isinstance(start_time, datetime):
@@ -147,7 +147,7 @@ class Forecasting:
 
         Args:
             filename (str): name of glm file to be loaded
-            schedule_name (str): name of the schedule to be laoded
+            schedule_name (str): name of the schedule to be loaded
         """
         print("Reading and constructing 1 year dataframe for {} schedule from {}".format(schedule_name, filename))
         ip_file = glm.load(filename)
@@ -269,9 +269,10 @@ class Forecasting:
     def add_skew_scalar(self, datafr, N_skew, N_scalar):
         """ Skew the values with given seconds and multiply by scalar in the whole year dataframe
 
-            Args:
+        Args:
             datafr (DataFrame): dataframe created with the schedule name for a year
             N_skew (int): number of seconds to skew either (+ or -)
+            N_scalar (int): scalar multiplier
        """
         df = deepcopy(datafr)
         if N_skew != 0:
@@ -295,32 +296,35 @@ class Forecasting:
         return df
 
     def forecasting_schedules(self, name, time, len_forecast=48):
-        self.DA_output = self.gProxy.forecasting_schedules(name, time, len_forecast)
+        try:
+            self.DA_output = self.gProxy.forecasting_schedules(name, time, len_forecast)
+        except Exception:
+            print(f'Did not expect name:{name} time:{time} in zipload')
         return self.DA_output
 
-    def set_solar_diffuse_forecast(self, fncs_str):
+    def set_solar_diffuse_forecast(self, message: str):
         """ Set the 48-hour solar diffuse forecast
         Args:
-            param fncs_str: solar_diffuse_forecast ([float x 48]):
+            param message: solar_diffuse_forecast ([float x 48]):
         """
-        solar_diffuse_forecast = eval(fncs_str)
+        solar_diffuse_forecast = eval(message)
         self.solar_diffuse_forecast = [float(solar_diffuse_forecast[key]) for key in solar_diffuse_forecast.keys()]
 
-    def set_solar_direct_forecast(self, fncs_str):
+    def set_solar_direct_forecast(self, message: str):
         """ Set the 48-hour solar direct forecast
         Args:
-            param fncs_str: solar_direct_forecast ([float x 48]):
+            param message: solar_direct_forecast ([float x 48]):
         """
-        solar_direct_forecast = eval(fncs_str)
+        solar_direct_forecast = eval(message)
         self.solar_direct_forecast = [float(solar_direct_forecast[key]) for key in solar_direct_forecast.keys()]
 
-    def set_temperature_forecast(self, fncs_str):
+    def set_temperature_forecast(self, message: str):
         """ Set the 48-hour temperature forecast
 
         Args:
-            fncs_str: temperature_forecast ([float x 48]): predicted temperature in F
+            message: temperature_forecast ([float x 48]): predicted temperature in F
         """
-        temperature_forecast = eval(fncs_str)
+        temperature_forecast = eval(message)
         self.temperature_forecast = [float(temperature_forecast[key]) for key in temperature_forecast.keys()]
         # log.info('FORECAST AGENT ' + str(self.temperature_forecast) )
 
@@ -426,12 +430,12 @@ class Forecasting:
         Args:
             skew_scalar: dictionary containing 'zip_skew', 'zip_scalar' and 'zip_heatgain_fraction' for each zip load
             'zip_skew' is a scalar and same for all type of zip loads for the given house. 'zip_scalar' and 'zip_heatgain_fraction'
-            are dictionary containing different values for each tyoe of zip load
+            are dictionary containing different values for each type of zip load
             time: Datetime format: forecast start time
             extra_forecast_hours: (int) number of hours for which forecast needs to be stored. For example if it is 24, then
             we need to get forecast for 48+24=72 hours so that there is no need to come back to this function for next 24-hours.
         Returns:
-            list of (48+extra_forecast_hours) values of total zipl loads and total internal gain due to zip loads
+            list of (48+extra_forecast_hours) values of total zip loads and total internal gain due to zip loads
         """
         len_forecast = self.windowLength + extra_forecast_hours
         zip_load = [0.0] * len_forecast
@@ -463,7 +467,7 @@ class Forecasting:
     def get_solar_forecast(self, time, dso_num):
         time = time.replace(minute=0, second=0)
         print("***** time *****", time)
-        # temp = self.solar_df.loc[pd.date_range(time, periods=self.windowLength, freq='H')][dso_num]
+        # temp = self.solar_df.loc[pd.date_range(time, periods=self.windowLength, freq='h')][dso_num]
         temp = self.gProxy.forecasting_pv_schedules('pv_power', time, self.windowLength, dso_num)
         return temp.values.tolist()
 

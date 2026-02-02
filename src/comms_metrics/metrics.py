@@ -44,7 +44,7 @@ with open(config_file, 'r') as file:
     config = json.load(file)
     logging.config.dictConfig(config)
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 class EvaluateSystem:
@@ -100,8 +100,8 @@ class EvaluateSystem:
         assert 'feeder' in self.dataframe.columns, \
             'Make sure the feeder name is included in the dataframe.'
         self.feeder = self.dataframe['feeder'].unique()[0]
-        logger.info('----- An EvaluateSystem object has -----')
-        logger.info('----- been created for {} --'.format(self.feeder))
+        log.info('----- An EvaluateSystem object has -----')
+        log.info('----- been created for {} --'.format(self.feeder))
         self.meters = meters
         assert pos_x in self.dataframe.columns, 'Oops! {} is not in the dataframe'.format(pos_x)
         self.pos_x = pos_x
@@ -209,7 +209,7 @@ class EvaluateSystem:
                 index=range(len(perms)))
             self.perm_df = perm_df
         else:
-            logger.error('"{}" is invalid. It must be "feet" or "geo".'.format(unit))
+            log.error('"{}" is invalid. It must be "feet" or "geo".'.format(unit))
 
     def get_distances(self):
         """ This function calculates the distances between all
@@ -224,8 +224,8 @@ class EvaluateSystem:
             that has the calculated distance between all meters
             in a given meter network (aka model).
         """
-        logger.info('........................................')
-        logger.info('calculating the distances between all the meters')
+        log.info('........................................')
+        log.info('calculating the distances between all the meters')
         if self.unit == 'geo':
             self._modify_dataframe()
             p_df = self.perm_df
@@ -246,7 +246,7 @@ class EvaluateSystem:
             # Saving the result to be used for the different
             # metrics:
             distance_dataframe = p_df[['start', 'end', 'distance']]
-            logger.info('\tsaving the results to be used elsewhere')
+            log.info('\tsaving the results to be used elsewhere')
             self.distance_dataframe = distance_dataframe
         elif self.unit == 'feet':
             self._modify_dataframe()
@@ -258,11 +258,11 @@ class EvaluateSystem:
             # Saving the result to be used for the different
             # metrics:
             distance_dataframe = p_df[['start', 'end', 'distance']]
-            logger.info('\tsaving the results to be used elsewhere')
+            log.info('\tsaving the results to be used elsewhere')
             self.distance_dataframe = distance_dataframe
         else:
-            logger.error('{} is an invalid option. It must be "feet" or "geo".'.format(self.unit))
-        logger.info('finished calculating the distances.')
+            log.error('{} is an invalid option. It must be "feet" or "geo".'.format(self.unit))
+        log.info('finished calculating the distances.')
         return distance_dataframe
 
     def meter_density(self, meter, radius):
@@ -286,8 +286,8 @@ class EvaluateSystem:
             total_meters (int) - The total number of meters within
             the radius.
         """
-        logger.info('........................................')
-        logger.info('Finding all the meters within {} (ft) of {}'.format(radius, meter))
+        log.info('........................................')
+        log.info('Finding all the meters within {} (ft) of {}'.format(radius, meter))
         assert isinstance(radius, float), \
             'Oops, {} is not a float.'.format(radius)
         # Grabbing the dataframe that has all the calculated
@@ -298,7 +298,7 @@ class EvaluateSystem:
         # Counting the total number of meters within a certain
         # distance:
         total_meters = len(reduced_dd)
-        logger.info('The number of meters within {} (ft) of {} is {}.'.format(radius, meter, total_meters))
+        log.info('The number of meters within {} (ft) of {} is {}.'.format(radius, meter, total_meters))
         return total_meters
 
     def meter_range(self, meter):
@@ -318,8 +318,8 @@ class EvaluateSystem:
             radius (float) - The maximum distance that envelopes all
             meters with a given meter as the center.
         """
-        logger.info('........................................')
-        logger.info('Finding the largest radius where {} is the center'.format(meter))
+        log.info('........................................')
+        log.info('Finding the largest radius where {} is the center'.format(meter))
         # Grabbing the dataframe that has all the calculated
         # distances between all the meters:
         dd = self.distance_dataframe
@@ -327,7 +327,7 @@ class EvaluateSystem:
         reduced_dd = dd[dd.start == meter]
         # Finding the maximum distance:
         radius = np.max(reduced_dd['distance'])
-        logger.info('{} (ft) captures all meters with {} as the center'.format(radius, meter))
+        log.info('{} (ft) captures all meters with {} as the center'.format(radius, meter))
         return radius
 
     def isolated_meter_count(self, radius):
@@ -352,8 +352,8 @@ class EvaluateSystem:
             isolated from others, given a specific distance.
         """
         assert isinstance(radius, float), 'Oops, {} is not a float.'.format(radius)
-        logger.info('........................................')
-        logger.info('Counting all the isolated meters within {} (ft)'.format(radius))
+        log.info('........................................')
+        log.info('Counting all the isolated meters within {} (ft)'.format(radius))
         # Grabbing the dataframe that has all the calculated
         # distances between all the meters:
         dd = self.distance_dataframe.copy()
@@ -367,7 +367,7 @@ class EvaluateSystem:
         isolated_count = len(gpd_df[
                                  (gpd_df.is_isolated == 'T') &
                                  (gpd_df.total_count == len(self.meters) - 1)]['start'].values[:])
-        logger.info('{} meters are isolated within {} (ft)'.format(isolated_count, radius))
+        log.info('{} meters are isolated within {} (ft)'.format(isolated_count, radius))
         return isolated_count
 
     def meter_continuity(self, radius):
@@ -393,8 +393,8 @@ class EvaluateSystem:
             continuity (bool) - Just whether the meters are
             connected to each other.
         """
-        logger.info('........................................')
-        logger.info('Checking to see if paths exist between any {} {} {}'.
+        log.info('........................................')
+        log.info('Checking to see if paths exist between any {} {} {}'.
                     format('two meters within', radius, 'feet.'))
         assert isinstance(radius, float), 'Oops, {} is not a float.'.format(radius)
         # Grabbing the dataframe that has all the calculated
@@ -416,11 +416,11 @@ class EvaluateSystem:
         # Otherwise, a path doesn't exist and the model
         # is not continuous.
         if dd_set1 == r_set1 and dd_set2 == r_set2:
-            logger.info('\tPaths exists between any two nodes.')
-            logger.info('\tThus, there is continuity across the network of meters.')
+            log.info('\tPaths exists between any two nodes.')
+            log.info('\tThus, there is continuity across the network of meters.')
             continuity = True
         else:
-            logger.info('\tThere must not be a path between ANY two nodes.')
+            log.info('\tThere must not be a path between ANY two nodes.')
             continuity = False
         return continuity
 
@@ -451,8 +451,8 @@ class EvaluateSystem:
             with a certain number of meters near them within a
             given distance.
         """
-        logger.info('........................................')
-        logger.info('Counting how many meters have {} meters within {}'.format(y, radius))
+        log.info('........................................')
+        log.info('Counting how many meters have {} meters within {}'.format(y, radius))
         assert isinstance(radius, float), 'Oops! {} is not a float.'.format(radius)
         assert isinstance(y, int), 'Oops! {} is not an int.'.format(y)
         # Grabbing the dataframe that has all the calculated
@@ -469,7 +469,7 @@ class EvaluateSystem:
         single_hop_count = len(gpd_df[
                                    (gpd_df.within_radius == 'T') &
                                    (gpd_df.total_count >= y)]['start'].values[:])
-        logger.info(
+        log.info(
             'There are {} meters that have {} meters within {} feet.'.format(
                 single_hop_count, y, radius))
         return single_hop_count
@@ -540,8 +540,8 @@ class EvaluateSystem:
             dens (list) - List of number of meters near a given
             meter within each of the radii.
         """
-        logger.info('........................................')
-        logger.info('Counting the number of meters nearby within each radius.')
+        log.info('........................................')
+        log.info('Counting the number of meters nearby within each radius.')
         # Grabbing the dataframe that has all the calculated
         # distances between all meters:
         dd = self.distance_dataframe.copy()
@@ -570,7 +570,7 @@ class EvaluateSystem:
         # Saving the results as an attribute:
         self.dens_df = pd.DataFrame(
             density_dict, index=range(len(dens)))
-        logger.info(
+        log.info(
             'Finished counting the number of meters nearby.')
         return dens
 
@@ -591,9 +591,9 @@ class EvaluateSystem:
             capture all the meters around a given meter
             as the center.
         """
-        logger.info(
+        log.info(
             '........................................')
-        logger.info(
+        log.info(
             'Getting all the maximum radii for each meter as the center.')
         # Grabbing the dataframe that has all the calculated
         # distances between all meters:
@@ -609,7 +609,7 @@ class EvaluateSystem:
         # Saving the results as an attribute to be used
         # elsewhere:
         self.range_df = gpd_df
-        logger.info(
+        log.info(
             'Finished getting all the maximum radii for each meter.')
         return ranges
 
@@ -630,9 +630,9 @@ class EvaluateSystem:
             iso (list) - List of all the isolated meter counts
             for each of the radii.
         """
-        logger.info(
+        log.info(
             '........................................')
-        logger.info(
+        log.info(
             'Getting the isolated meter count for all radii.')
         # Getting the isolated meter count for each radius:
         iso_tuples = [
@@ -647,7 +647,7 @@ class EvaluateSystem:
         # Saving results as an attribute:
         self.iso_df = pd.DataFrame(
             isolated_dict, index=range(len(iso)))
-        logger.info(
+        log.info(
             'Finished getting the isolated meter count for all radii.')
         return iso
 
@@ -668,9 +668,9 @@ class EvaluateSystem:
             conts (list) - List of the booleans of just whether
             paths exist between any two nodes within given radii.
         """
-        logger.info(
+        log.info(
             '........................................')
-        logger.info(
+        log.info(
             'Checking to see if paths exist between any two {}'.format(
                 'nodes within each of the given radii.'))
         # Checking if the model is continuous across
@@ -688,7 +688,7 @@ class EvaluateSystem:
         # Saving the results as an attribute:
         self.cont_df = pd.DataFrame(
             continuity_dict, index=range(len(conts)))
-        logger.info(
+        log.info(
             'Finished seeing if paths exist within each of the radii.')
         return conts
 
@@ -717,8 +717,8 @@ class EvaluateSystem:
         #   reducing the amount of values to test is
         #   for better analysis and realistic results.
         y_list = [1, 2, 3, 4, 5, 10]
-        logger.info('........................................')
-        logger.info('Counting the number of meters that have {}'.format(
+        log.info('........................................')
+        log.info('Counting the number of meters that have {}'.format(
                 'a given number of meters nearby within each radius.'))
         # Grabbing the dataframe that has all the calculated
         # distances between all meters:
@@ -757,7 +757,7 @@ class EvaluateSystem:
         # Saving results as an attribute:
         self.shc_df = shc_df
         shc = self.shc_df['count']
-        logger.info('Finished getting all the single hop counts.')
+        log.info('Finished getting all the single hop counts.')
         return shc
 
     def all_islands(self, radii):
@@ -943,8 +943,8 @@ class EvaluateSystem:
             for all meters for all radii. It is represented as a
             percent.
         """
-        logger.info('........................................')
-        logger.info('Calculating the composite score for the meter network.')
+        log.info('........................................')
+        log.info('Calculating the composite score for the meter network.')
         # Checking whether or the metric dataframes are empty or not:
         #   NOTE: If they are empty, then we call the functions to
         #   fill them out and grab the results. If they're not empty,
@@ -983,12 +983,12 @@ class EvaluateSystem:
         # dens_frac = (np.sum(densities) / len(densities)) / (len(meters) - 1)
         range_frac = 1 - ((np.sum(ranges) / len(ranges)) / np.max(ranges))
         island_frac = 1 - (np.mean(islands) / len(meters))
-        logger.info('\tdensity score = {}, isolated score = {}'.format(dens_frac, iso_frac))
-        logger.info('\tcontinuous score = {}, single hop score = {}'.format(cont_frac, shc_frac))
-        logger.info('\trange score = {}'.format(range_frac))
+        log.info('\tdensity score = {}, isolated score = {}'.format(dens_frac, iso_frac))
+        log.info('\tcontinuous score = {}, single hop score = {}'.format(cont_frac, shc_frac))
+        log.info('\trange score = {}'.format(range_frac))
         # For now, evenly weighting each of the fractions:
         score = (0.2 * (dens_frac + iso_frac + shc_frac + cont_frac)) + (0.1 * (range_frac + island_frac))
-        logger.info('The overall score for this network = {}{}'.format(score, '%'))
+        log.info('The overall score for this network = {}{}'.format(score, '%'))
         # Saving the scores:
         self.composite_score = score
         self.score_df = pd.DataFrame(
@@ -1018,7 +1018,7 @@ class Results:
 
     def __init__(self):
         """ This initializes the class."""
-        logger.info('########### Created a Results object for saving data ###########')
+        log.info('########### Created a Results object for saving data ###########')
         self.systems = []
 
     def add(self, system):
@@ -1035,7 +1035,7 @@ class Results:
         Returns:
             (null)
         """
-        logger.info(
+        log.info(
             'Added {} to the Results object'.format(system.feeder))
         self.systems.append(system)
 
@@ -1059,7 +1059,7 @@ class Results:
         shcs = [s.shc_df for s in self.systems]
         islands = [s.island_df for s in self.systems]
         scores = [s.score_df for s in self.systems]
-        logger.info('\t Creating an HDF5 file')
+        log.info('\t Creating an HDF5 file')
         # Creating an HDF% store:
         #   NOTE: This will allow us to save the
         #   results from all the dataframes into
@@ -1074,7 +1074,7 @@ class Results:
         shc_df = pd.concat(shcs, axis=0, ignore_index=True)
         island_df = pd.concat(islands, axis=0, ignore_index=True)
         scores_df = pd.concat(scores, axis=0, ignore_index=True)
-        logger.info('Saving all the results to the file')
+        log.info('Saving all the results to the file')
         # Adding the dataframes to the HDF5 file:
         store['density'] = dens_df
         store['range'] = range_df
@@ -1084,8 +1084,8 @@ class Results:
         store['island'] = island_df
         store['scores'] = scores_df
         store.close()
-        logger.info('Finished saving the results to file')
-        logger.info(
+        log.info('Finished saving the results to file')
+        log.info(
             '########### Finished system evaluation calculations. ###########')
 
 

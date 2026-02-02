@@ -910,7 +910,7 @@ def tso_most_loop_f(bTestDAM=False, test_bids=None):
                 write_most_base_case(ppc, 'rtmcase_{:d}.m'.format(ts))
             #      rBus, rBranch, rGen, rGenCost = solve_most_rtm_case(ppc['MostCommand'], 'solvertmcase.m')
             ropf = pp.runopf(ppc, ppopt_market)
-            if ropf['success'] == False:
+            if not ropf['success']:
                 ropf['bus'][:, 13] = ppc['lmp_cap']
                 conv_accum = False
             opf_bus = deepcopy(ropf['bus'])

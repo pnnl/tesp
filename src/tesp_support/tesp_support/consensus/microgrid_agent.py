@@ -1,4 +1,4 @@
-# Copyright (c) 2022-2024 Battelle Memorial Institute
+# Copyright (c) 2022-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: microgrid_agent.py
 """Manages the Transactive Control scheme for DSO+T implementation version 1
@@ -9,7 +9,6 @@ Public Functions:
 """
 
 import json
-import logging as log
 import time
 from copy import deepcopy
 from datetime import datetime, timedelta
@@ -129,7 +128,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
 
     # enable logging
     level = config['LogLevel']
-    enable_logging(level, 11, metrics_root)
+    log = enable_logging(level, 11, metrics_root)
 
     log.info('starting substation loop...')
     log.info('config file -> ' + configfile)
@@ -212,7 +211,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
 
             # check the unit of the market
             dso_unit = config['markets'][key]['unit']
-            dso_full_metrics = config['markets'][key]['full_metrics_detail']  # True for full
+            dso_full_metrics = config['markets'][key]['metrics_full_detail']  # True for full
 
             # Update the supply curves for the wholesale. Only once as this will define a curve per day
             # might need to play around with the curve a,b,c here but for now let's run with the defaults
@@ -247,7 +246,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
 
             # check the unit of the market
             retail_unit = config['markets'][key]['unit']
-            retail_full_metrics = config['markets'][key]['full_metrics_detail']  # True for full
+            retail_full_metrics = config['markets'][key]['metrics_full_detail']  # True for full
             log.info('instantiated Retail market agent')
 
     # instantiate the HVAC controller objects and map their FNCS inputs
@@ -289,13 +288,12 @@ def inner_substation_loop(configfile, metrics_root, with_market):
             topic_map[weather_topic + '#SolarDiffuse'].append(hvac_agent_objs[key].set_solar_diffuse)
 
         # map FNCS topics
-        topic_map[key + '#Tair'] = [hvac_agent_objs[key].set_air_temp]
-        topic_map[key + '#V1'] = [hvac_agent_objs[key].set_voltage]
-        topic_map[key + '#HvacLoad'] = [hvac_agent_objs[key].set_hvac_load]
-        topic_map[key + '#TotalLoad'] = [hvac_agent_objs[key].set_house_load]
-        topic_map[key + '#On'] = [hvac_agent_objs[key].set_hvac_state]
-        # topic_map[key + '#Demand'] = [hvac_agent_objs[key].set_hvac_demand]
-        topic_map[key + '#whLoad'] = [hvac_agent_objs[key].set_wh_load]
+        topic_map[key + '/air_temperature'] = [hvac_agent_objs[key].set_air_temp]
+        topic_map[key + '/measured_voltage'] = [hvac_agent_objs[key].set_voltage]
+        topic_map[key + '/hvac_load'] = [hvac_agent_objs[key].set_hvac_load]
+        topic_map[key + '/total_load'] = [hvac_agent_objs[key].set_house_load]
+        topic_map[key + '/power_state'] = [hvac_agent_objs[key].set_hvac_state]
+        topic_map[key + '/heating_element_capacity'] = [hvac_agent_objs[key].set_wh_load]
 
     log.info('instantiated %s HVAC control agents' % (len(hvac_keys)))
 
@@ -313,12 +311,12 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                 water_heater_agent_objs[key] = WaterHeaterDSOT(row, gld_row, key, 11, current_time, solver)
 
                 # map FNCS topics
-                topic_map[wh_key + '#LTTEMP'] = [water_heater_agent_objs[key].set_wh_lower_temperature]
-                topic_map[wh_key + '#UTTEMP'] = [water_heater_agent_objs[key].set_wh_upper_temperature]
-                topic_map[wh_key + '#LTState'] = [water_heater_agent_objs[key].set_wh_lower_state]
-                topic_map[wh_key + '#UTState'] = [water_heater_agent_objs[key].set_wh_upper_state]
-                topic_map[wh_key + '#WHLoad'] = [water_heater_agent_objs[key].set_wh_load]
-                topic_map[wh_key + '#WDRATE'] = [water_heater_agent_objs[key].set_wh_wd_rate_val]
+                topic_map[wh_key + '/lower_tank_temperature'] = [water_heater_agent_objs[key].set_wh_lower_temperature]
+                topic_map[wh_key + '/upper_tank_temperature'] = [water_heater_agent_objs[key].set_wh_upper_temperature]
+                topic_map[wh_key + '/lower_heating_element_state'] = [water_heater_agent_objs[key].set_wh_lower_state]
+                topic_map[wh_key + '/upper_heating_element_state'] = [water_heater_agent_objs[key].set_wh_upper_state]
+                topic_map[wh_key + '/heating_element_capacity'] = [water_heater_agent_objs[key].set_wh_load]
+                topic_map[wh_key + '/water_demand'] = [water_heater_agent_objs[key].set_wh_wd_rate_val]
             except KeyError as e:
                 log.info('Error {}, wh_name in key={}'.format(e, key))
     log.info('instantiated %s water heater control agents' % (len(water_heater_keys)))
@@ -332,7 +330,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
         battery_agent_objs[key] = BatteryDSOT(row, gld_row, key, 11, current_time, solver)
 
         # map FNCS topics
-        topic_map[key + '#SOC'] = [battery_agent_objs[key].set_SOC]
+        topic_map[key + '/state_of_charge'] = [battery_agent_objs[key].set_SOC]
     log.info('instantiated %s Battery control agents' % (len(battery_keys)))
 
     site_dictionary = config['site_agent']
@@ -705,7 +703,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                 for itopic in range(len(topic_map[topic])):
                     value = h.helicsInputGetString(subid["m{}".format(i)])
                     log.debug(topic + ' -> ' + value)
-                    if any(x in topic for x in ['#Tair', '#SOC', '#LTTEMP', '#UTTEMP']):
+                    if any(x in topic for x in ['/air_temperature', '/state_of_charge', '/battery_SOC', '/lower_tank_temperature', '/upper_tank_temperature']):
                         # these function has 2 additional inputs for logging
                         topic_map[topic][itopic](value, 11, current_time)
                     else:
@@ -723,7 +721,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
         #         for itopic in range(len(topic_map[topic])):
         #             value = fncs.get_value(topic)
         #             log.debug(topic + ' -> ' + value)
-        #             if any(x in topic for x in ['#Tair','#SOC','#LTTEMP','#UTTEMP']):
+        #             if any(x in topic for x in ['/air_temperature', '/state_of_charge', '/battery_SOC', '/lower_tank_temperature', '/upper_tank_temperature']):
         #                 # these function has 2 additional inputs for logging
         #                 topic_map[topic][itopic](value, 11, current_time)
         #             else:
@@ -735,7 +733,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
         if retail_market_obj.basecase:
             try:
                 forecast_obj.base_run_load = np.array(dso_market_obj.ref_load_da) * 1000
-            except:
+            except Exception:
                 if tnext_historic_load_da == 1:
                     forecast_obj.base_run_load = np.array(forecast_obj.base_run_load) * dso_market_obj.DSO_Q_max
 
@@ -785,7 +783,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                     # set the nominal solargain
                     obj.get_solargain(config_glm['climate'], current_retail_time)
                     # formulate the real-time bid
-                    bid = obj.formulate_bid_rt(11, current_time)
+                    bid = obj.formulate_bid_rt(current_time)
                     # add real-time bid to the retail market
                     retail_market_obj.curve_aggregator_RT('Buyer', bid, obj.name)
             timing(proc[3], False)
@@ -795,7 +793,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
             for key, obj in water_heater_agent_objs.items():
                 if obj.participating and with_market:
                     # formulate the real-time bid
-                    bid = obj.formulate_bid_rt(11, current_time)
+                    bid = obj.formulate_bid_rt(current_time)
                     # add real-time bid to the retail market
                     retail_market_obj.curve_aggregator_RT('Buyer', bid, obj.name)
             timing(proc[4], False)
@@ -1457,7 +1455,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                 # publish the cleared real-time price to HVAC meter
                 pub_price = h.helicsFederateGetPublication(fed, str(fed_name + '/' + obj.name + '/price'))
                 status = h.helicsPublicationPublishDouble(pub_price, retail_market_obj.cleared_price_RT)
-                if obj.participating and obj.bid_accepted(11, current_time):
+                if obj.participating and obj.bid_accepted(current_time):
                     # if HVAC real-time bid is accepted adjust the cooling setpoint in GridLAB-D
                     # if obj.thermostat_mode == 'Cooling':
                     pub_csp = h.helicsFederateGetPublication(fed, str(fed_name + '/' + obj.name + '/cooling_setpoint'))
@@ -1470,7 +1468,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                 # for key, obj in hvac_agent_objs.items():
                 #     # publish the cleared real-time price to HVAC meter
                 #     fncs.publish(obj.name + '/price', retail_market_obj.cleared_price_RT)
-                #     if obj.participating and obj.bid_accepted(11, current_time):
+                #     if obj.participating and obj.bid_accepted(current_time):
                 #         # if HVAC real-time bid is accepted adjust the cooling setpoint in GridLAB-D
                 #         #if obj.thermostat_mode == 'Cooling':
                 #         fncs.publish(obj.name + '/cooling_setpoint', obj.cooling_setpoint)
@@ -1508,7 +1506,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                     )
             # ### Publish using HELICS ####
             for key, obj in water_heater_agent_objs.items():
-                if obj.participating and obj.bid_accepted(11, current_time):
+                if obj.participating and obj.bid_accepted(current_time):
                     # if Water heater real-time bid is accepted adjust the thermostat setpoint in GridLAB-D
                     water_heater_name = obj.name.replace("hse", "wh")
                     # print("Water_heater name",water_heater_name)
@@ -1522,7 +1520,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
 
                 # ### Publish using FNCS ####
                 # for key, obj in water_heater_agent_objs.items():
-                #     if obj.participating and obj.bid_accepted(11, current_time):
+                #     if obj.participating and obj.bid_accepted(current_time):
                 #         # if Water heater real-time bid is accepted adjust the thermostat setpoint in GridLAB-D
                 #         water_heater_name = obj.name.replace("hse", "wh")
                 #         # print("Water_heater name",water_heater_name)

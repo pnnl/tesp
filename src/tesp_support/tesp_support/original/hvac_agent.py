@@ -178,7 +178,7 @@ class hvac:
         """ Sets the hvac_load attribute, if greater than zero
 
         Args:
-            val (str): FNCS message with load in kW
+            val (str): Message with load in kW
         """
         kw = parse_number(val)
         if kw > 0.0:
@@ -188,7 +188,7 @@ class hvac:
         """ Sets the hvac_on attribute
 
         Args:
-            val (str): FNCS message with state, ON or OFF
+            val (str): Message with state, ON or OFF
         """
         if val == 'OFF':
             self.hvac_on = False
@@ -199,7 +199,7 @@ class hvac:
         """ Sets the air_temp attribute
 
         Args:
-            val (str): FNCS message with temperature in degrees Fahrenheit
+            val (str): Message with temperature in degrees Fahrenheit
         """
         self.air_temp = parse_number(val)
 
@@ -207,7 +207,7 @@ class hvac:
         """ Sets the mtr_v attribute
 
         Args:
-            val (str): FNCS message with meter line-neutral voltage
+            val (str): Message with meter line-neutral voltage
         """
         self.mtr_v = parse_magnitude(val)
 

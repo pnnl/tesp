@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2024 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: water_heater_dsot.py
 """Class that controls the Water Heater DER
@@ -23,14 +23,11 @@ import math
 import numpy as np
 from copy import deepcopy
 import pyomo.environ as pyo
-import logging as log
 
-from ..api.helpers import get_run_solver
+from ..api.helpers import get_run_solver, logging, log
 from ..api.parse_helpers import parse_number
 
-logger = log.getLogger()
-log.getLogger('pyomo.core').setLevel(log.ERROR)
-
+logging.getLogger('pyomo.core').setLevel(logging.ERROR)
 
 class WaterHeaterDSOT:
     """
@@ -119,6 +116,7 @@ class WaterHeaterDSOT:
         """ Initializes the class
         """
         self.name = key
+        self.model_diag_level = model_diag_level
         self.solver = solver
         self.volume = wh_properties['wh_gallons']
         self.diameter = 1.5  # wh_properties['wh_diameter'] Fixed value for all waterheaters in glm file
@@ -262,7 +260,7 @@ class WaterHeaterDSOT:
             # log.info('Tcold is within the bounds.')
             pass
         else:
-            log.log(model_diag_level, '{} {} -- Tcold is {}, outside of nominal range of {} to {.'.format(self.name, 'init', self.Tcold, Tcold_lower, Tcold_upper))
+            log.log(self.model_diag_level, '{} {} -- Tcold is {}, outside of nominal range of {} to {}'.format(self.name, 'init', self.Tcold, Tcold_lower, Tcold_upper))
         
         Tambient_lower = 60
         Tambient_upper = 85
@@ -270,7 +268,7 @@ class WaterHeaterDSOT:
             # log.info('Tambient is within the bounds.')
             pass
         else:
-            log.log(model_diag_level, '{} {} -- Tambient is {}, outside of nominal range of {} to {}'.format(self.name, 'init', self.Tambient, Tambient_lower, Tambient_upper))
+            log.log(self.model_diag_level, '{} {} -- Tambient is {}, outside of nominal range of {} to {}'.format(self.name, 'init', self.Tambient, Tambient_lower, Tambient_upper))
         
         Tdesired_lower = 105
         Tdesired_upper = 120
@@ -278,7 +276,7 @@ class WaterHeaterDSOT:
             # log.info('Tdesired is within the bounds.')
             pass
         else:
-            log.log(model_diag_level, '{} {} -- Tdesired is {}, outside of nominal range of {} to {}'.format(self.name, 'init', self.Tdesired, Tdesired_lower, Tdesired_upper))
+            log.log(self.model_diag_level, '{} {} -- Tdesired is {}, outside of nominal range of {} to {}'.format(self.name, 'init', self.Tdesired, Tdesired_lower, Tdesired_upper))
         
         Tmax_lower = 110
         Tmax_upper = 140
@@ -286,7 +284,7 @@ class WaterHeaterDSOT:
             # log.info('Tmax is withint the bounds.')
             pass
         else:
-            log.log(model_diag_level, '{} {} -- Tmax is {}, outside of nominal range of {} to {}'.format(self.name, 'init', self.Tmax, Tmax_lower, Tmax_upper))
+            log.log(self.model_diag_level, '{} {} -- Tmax is {}, outside of nominal range of {} to {}'.format(self.name, 'init', self.Tmax, Tmax_lower, Tmax_upper))
         
         Tmin_lower = 100
         Tmin_upper = 120
@@ -294,7 +292,7 @@ class WaterHeaterDSOT:
             # log.info('Tmin is within the bounds.')
             pass
         else:
-            log.log(model_diag_level, '{} {} -- Tmin is {}, outside of nominal range of {} to {}'.format(self.name, 'init', self.Tmin, Tmin_lower, Tmin_upper))
+            log.log(self.model_diag_level, '{} {} -- Tmin is {}, outside of nominal range of {} to {}'.format(self.name, 'init', self.Tmin, Tmin_lower, Tmin_upper))
         
         SOHC_lower = 0
         SOHC_upper = 100
@@ -302,7 +300,7 @@ class WaterHeaterDSOT:
             # log.info('SOHC_desired is within the bounds.')
             pass
         else:
-            log.log(model_diag_level, '{} {} -- SOHC_desired is {}, outside of nominal range of {} to {}'.format(self.name, 'init', self.SOHC_desired, SOHC_lower, SOHC_upper))
+            log.log(self.model_diag_level, '{} {} -- SOHC_desired is {}, outside of nominal range of {} to {}'.format(self.name, 'init', self.SOHC_desired, SOHC_lower, SOHC_upper))
         
         volume_lower = 0
         volume_upper = 100
@@ -310,7 +308,7 @@ class WaterHeaterDSOT:
             # log.info('volume is within the bounds.')
             pass
         else:
-            log.log(model_diag_level, '{} {} -- volume is {}, outside of nominal range of {} to {}'.format(self.name, 'init', self.volume, volume_lower, volume_upper))
+            log.log(self.model_diag_level, '{} {} -- volume is {}, outside of nominal range of {} to {}'.format(self.name, 'init', self.volume, volume_lower, volume_upper))
         
         diameter_lower = 0  # TODO: update with better/feasible bounds
         diameter_upper = 100  # TODO: update with better/feasible bounds
@@ -318,7 +316,7 @@ class WaterHeaterDSOT:
             # log.info('diameter is within the bounds.')
             pass
         else:
-            log.log(model_diag_level, '{} {} -- diameter is {}, outside of nominal range of {} to {}'.format(self.name, 'init', self.diameter, diameter_lower, diameter_upper))
+            log.log(self.model_diag_level, '{} {} -- diameter is {}, outside of nominal range of {} to {}'.format(self.name, 'init', self.diameter, diameter_lower, diameter_upper))
         
         Phw_lower = 1.5
         Phw_upper = 10
@@ -326,25 +324,24 @@ class WaterHeaterDSOT:
             # log.info('Phw is within the bounds.')
             pass
         else:
-            log.log(model_diag_level, '{} {} -- Phw is {}, outside of nominal range of {} to {}'.format(self.name, 'init', self.Phw, Phw_lower, Phw_upper))
+            log.log(self.model_diag_level, '{} {} -- Phw is {}, outside of nominal range of {} to {}'.format(self.name, 'init', self.Phw, Phw_lower, Phw_upper))
         
         if 0 <= self.ProfitMargin_intercept:
             # log.info('ProfitMargin_intercept is greater than or equal to 0.')
             pass
         else:
-            log.log(model_diag_level, '{} {} -- ProfitMargin_intercept is {}, negative value'.format(self.name, 'init', self.ProfitMargin_intercept))
+            log.log(self.model_diag_level, '{} {} -- ProfitMargin_intercept is {}, negative value'.format(self.name, 'init', self.ProfitMargin_intercept))
         
         if 0 <= self.ProfitMargin_slope:
             # log.info('ProfitMargin_slope is greater than or equal to 0.')
             pass
         else:
-            log.log(model_diag_level, '{} {} -- ProfitMargin_slope is {}, negative value'.format(self.name, 'init', self.ProfitMargin_slope))
+            log.log(self.model_diag_level, '{} {} -- ProfitMargin_slope is {}, negative value'.format(self.name, 'init', self.ProfitMargin_slope))
 
-    def update_WH_his(self, model_diag_level, sim_time):
+    def update_WH_his(self, sim_time):
         """ Update the historical memory of water heater based on updated readings, called by formulate_bid_rt every 5 mins
 
         Args:
-            model_diag_level (int): Specific level for logging errors; set it to 11
             sim_time (str): Current time in the simulation; should be human-readable
 
         """
@@ -356,7 +353,7 @@ class WaterHeaterDSOT:
             # log.info('runtime_upper is within the bounds.')
             pass
         else:
-            log.log(model_diag_level, '{} {} -- runtime_upper is {}, outside of nominal range of {} to {}'.format(self.name, sim_time, self.runtime_upper, runtime_upper_lower, runtime_upper_upper))
+            log.log(self.model_diag_level, '{} {} -- runtime_upper is {}, outside of nominal range of {} to {}'.format(self.name, sim_time, self.runtime_upper, runtime_upper_lower, runtime_upper_upper))
         
         self.runtime_bottom = np.sum(np.array(self.states_bottom), axis=0)[2]
         runtime_bottom_lower = 0
@@ -365,7 +362,7 @@ class WaterHeaterDSOT:
             # log.info('runtime_bottom is within the bounds.')
             pass
         else:
-            log.log(model_diag_level, '{} {} -- runtime_bottom is {}, outside of nominal range of {} to {}'.format(self.name, sim_time, self.runtime_bottom, runtime_bottom_lower, runtime_bottom_upper))
+            log.log(self.model_diag_level, '{} {} -- runtime_bottom is {}, outside of nominal range of {} to {}'.format(self.name, sim_time, self.runtime_bottom, runtime_bottom_lower, runtime_bottom_upper))
         
         self.runtime_wdrate = np.sum(np.array(self.wd_rate_val), axis=0)[2]
         # =============================================================================
@@ -380,7 +377,7 @@ class WaterHeaterDSOT:
             # log.info('E_upper is within the bounds.')
             pass
         else:
-            log.log(model_diag_level, '{} {} -- E_upper is {}, outside of nominal range of {} to {}'.format(self.name, sim_time, self.E_upper, E_upper_lower, E_upper_upper))
+            log.log(self.model_diag_level, '{} {} -- E_upper is {}, outside of nominal range of {} to {}'.format(self.name, sim_time, self.E_upper, E_upper_lower, E_upper_upper))
         
         self.E_bottom = self.runtime_bottom / 5 * self.Phw / self.hourto5min
         E_bottom_lower = 0
@@ -389,7 +386,7 @@ class WaterHeaterDSOT:
             # log.info('E_bottom is within the bounds.')
             pass
         else:
-            log.log(model_diag_level, '{} {} -- E_bottom is {}, outside of nominal range of {} to {}'.format(self.name, sim_time, self.E_bottom, E_bottom_lower, E_bottom_upper))
+            log.log(self.model_diag_level, '{} {} -- E_bottom is {}, outside of nominal range of {} to {}'.format(self.name, sim_time, self.E_bottom, E_bottom_lower, E_bottom_upper))
         self.E_gld = self.E_upper + self.E_bottom
 
         SOHC_lower = 0
@@ -399,14 +396,14 @@ class WaterHeaterDSOT:
             # log.info('SOHC is within the bounds.')
             pass
         else:
-            log.log(model_diag_level, '{} {} -- SOHC is {}, outside of nominal range of {} to {}'.format(self.name, sim_time, self.SOHC, SOHC_lower, SOHC_upper))
+            log.log(self.model_diag_level, '{} {} -- SOHC is {}, outside of nominal range of {} to {}'.format(self.name, sim_time, self.SOHC, SOHC_lower, SOHC_upper))
         
         self.wd_rate = self.runtime_wdrate / 5
 #        if 0 <= self.wd_rate and 'something' >= self.wd_rate:
 #            # log.info('wd_rate is within the bounds.')
 #            pass
 #        else:
-#            log.log(model_diag_level, '{} wd_rate is out of bounds.'.format(sim_time))
+#            log.log(self.model_diag_level, '{} wd_rate is out of bounds.'.format(sim_time))
         # =============================================================================
         # #        print("wdrate for 5 mins", self.wd_rate)
         # #        print("the states and rating", self.states_upper,self.states_bottom ,self.Phw)
@@ -643,6 +640,12 @@ class WaterHeaterDSOT:
         #         else:
         #             self.delta_SOHC_model_hour()
         # =============================================================================
+        # Parameters
+        params = {
+            "success": True,
+            "termination": "",
+        }
+
         self.delta_SOHC_model_hour()
 
         # Decision variables
@@ -657,7 +660,7 @@ class WaterHeaterDSOT:
         model.con1 = pyo.Constraint(self.TIME, rule=self.con_rule_ine1)
         model.con2 = pyo.Constraint(self.TIME, rule=self.con_rule_eq1)
 
-        results = get_run_solver("wh_" + self.name, pyo, model, self.solver)
+        results = get_run_solver("wh_" + self.name, pyo, model, self.solver, params)
 
         Quantity = [0 for _ in self.TIME]
         SC = [0 for _ in self.TIME]
@@ -687,7 +690,7 @@ class WaterHeaterDSOT:
         # print("SOHC_Current",self.SOHC)
         # print("Name: "+str(self.name) + "Day-Ahead Quantity: " + str(Quantity))
         # =============================================================================
-        return Quantity
+        return [Quantity, params]
 
     def delta_SOHC_model_hour(self):
         """ Function used to fit the hourly delta_SOHC estimation model, where hourly delta_SOHC is assumed to be a function of wd_rate E_upper and E_bottom values with one-hour interval
@@ -739,13 +742,12 @@ class WaterHeaterDSOT:
         # print("Co1_5min", self.co1_5min)
         # print("Co2_5min", self.co2_5min)
 
-    def formulate_bid_rt(self, model_diag_level, sim_time):
+    def formulate_bid_rt(self, sim_time):
         """ Formulate 4 points PQ bid curve for the RT market
 
         Given the physical and operational constraints of the water heater and the current water heater status, 4 points RT bid curve is formulated for the next 5min.
         
         Args:
-            model_diag_level (int): Specific level for logging errors: set it to 11
             sim_time (str): Current time in the simulation; should be human-readable
 
         Returns:
@@ -762,7 +764,7 @@ class WaterHeaterDSOT:
         #        BID = deepcopy(self.bid_da[0])
         # =============================================================================
         # update the water heater history database
-        self.update_WH_his(model_diag_level, sim_time)
+        self.update_WH_his(sim_time)
 
         # update the 5min delta SOHC model when there is enough memory in historical data
         # if len(self.his_SOHC) < self.length_memory:
@@ -959,14 +961,13 @@ class WaterHeaterDSOT:
         self.RT_cleared_price = RTprice
         self.RT_cleared_quantity = self.from_P_to_Q_WH(self.bid_rt, RTprice)
 
-    def bid_accepted(self, model_diag_level, sim_time):
+    def bid_accepted(self, sim_time):
         """ Update the thermostat setting if the last bid was accepted
 
            The last bid is always "accepted". If it wasn't high enough,
            then the thermostat could be turned up.
         
         Args:
-            model_diag_level (int): Specific level for logging errors; set it to 11
             sim_time (str): Current time in the simulation; should be human-readable
         Returns:
            bool: True if the thermostat setting changes, False if not.
@@ -1047,19 +1048,18 @@ class WaterHeaterDSOT:
         self.minute = minute
         self.hour = hour
 
-    def set_wh_lower_temperature(self, fncs_str, model_diag_level, sim_time):
+    def set_wh_lower_temperature(self, message, sim_time):
         """ Sets the lower tank temperature attribute
 
         Args:
-            fncs_str (str): FNCS message with temperature in degrees Fahrenheit
-            model_diag_level (int): Specific level for logging errors; set it to 11
+            message (str): Message with temperature in degrees Fahrenheit
             sim_time (str): Current time in the simulation; should be human-readable
         """
         try:
-            _tmp = parse_number(fncs_str)
-        except:
+            _tmp = parse_number(message)
+        except Exception:
             _tmp = self.T_bottom
-            print("Error wh lower temp:", fncs_str, self.name)
+            print("Error wh lower temp:", message, self.name)
         self.T_bottom = _tmp
 
         T_bottom_lower = 60
@@ -1068,22 +1068,21 @@ class WaterHeaterDSOT:
             # log.info('T_bottom is within the bounds.')
             pass
         else:
-            log.log(model_diag_level, '{} {} -- T_bottom is {}, outside of nominal range of {} to {}'
+            log.log(self.model_diag_level, '{} {} -- T_bottom is {}, outside of nominal range of {} to {}'
                     .format(self.name, sim_time, self.T_bottom, T_bottom_lower, T_bottom_upper))
 
-    def set_wh_upper_temperature(self, fncs_str, model_diag_level, sim_time):
+    def set_wh_upper_temperature(self, message, sim_time):
         """ Sets the upper tank temperature attribute
 
         Args:
-            fncs_str (str): FNCS message with temperature in degrees Fahrenheit
-            model_diag_level (int): Specific level for logging errors; set it to 11
+            message (str): Message with temperature in degrees Fahrenheit
             sim_time (str): Current time in the simulation; should be human-readable
         """
         try:
-            _tmp = parse_number(fncs_str)
-        except:
+            _tmp = parse_number(message)
+        except Exception:
             _tmp = self.T_upper
-            print("Error wh upper temp:", fncs_str, self.name)
+            print("Error wh upper temp:", message, self.name)
         self.T_upper = _tmp
 
         T_upper_lower = 60
@@ -1092,16 +1091,16 @@ class WaterHeaterDSOT:
             # log.info('T_upper is within the bounds.')
             pass
         else:
-            log.log(model_diag_level, '{} {} -- T_upper is {}, outside of nominal range of {} to {}'
+            log.log(self.model_diag_level, '{} {} -- T_upper is {}, outside of nominal range of {} to {}'
                     .format(self.name, sim_time, self.T_upper, T_upper_lower, T_upper_upper))
 
-    def set_wh_lower_state(self, fncs_str):
+    def set_wh_lower_state(self, message: str):
         """ Sets the lower element state attribute
 
         Args:
-            fncs_str (str): FNCS message with ON/OFF status
+            message (str): Message with ON/OFF status
         """
-        if fncs_str == 'OFF':
+        if message == 'OFF':
             state = 0
         else:
             state = 1
@@ -1115,13 +1114,13 @@ class WaterHeaterDSOT:
             else:
                 pass
 
-    def set_wh_upper_state(self, fncs_str):
+    def set_wh_upper_state(self, message: str):
         """ Sets the upper element state attribute
 
         Args:
-            fncs_str (str): FNCS message with ON/OFF status
+            message (str): Message with ON/OFF status
         """
-        if fncs_str == 'OFF':
+        if message == 'OFF':
             state = 0
         else:
             state = 1
@@ -1135,13 +1134,13 @@ class WaterHeaterDSOT:
             else:
                 pass
 
-    def set_wh_wd_rate_val(self, fncs_str):
+    def set_wh_wd_rate_val(self, message: str):
         """ Sets the water draw rate attribute
 
         Args:
-            fncs_str (str): FNCS message with wdrate value in gpm
+            message (str): Message with wdrate value in gpm
         """
-        val = parse_number(fncs_str)
+        val = parse_number(message)
 
         for i in range(len(self.wd_rate_val)):
             if self.wd_rate_val[i][0] == self.hour and self.wd_rate_val[i][1] == self.minute:
@@ -1152,13 +1151,13 @@ class WaterHeaterDSOT:
             else:
                 pass
 
-    def set_wh_load(self, fncs_str):
+    def set_wh_load(self, message: str):
         """ Sets the water heater load attribute, if greater than zero
 
         Args:
-            fncs_str (str): FNCS message with load in kW
+            message (str): Message with load in kW
         """
-        val = parse_number(fncs_str)
+        val = parse_number(message)
         if val > 0.0:
             self.Phw = val
         else:
@@ -1188,15 +1187,14 @@ class WaterHeaterDSOT:
                     break
         return quantity
 
-    def set_air_temp(self, fncs_str, model_diag_level, sim_time):
+    def set_air_temp(self, message, sim_time):
         """ Sets the air_temp attribute
 
         Args:
-            fncs_str (str): FNCS message with temperature in degrees Fahrenheit
-            model_diag_level (int): Specific level for logging errors; set to 11
+            message (str): Message with temperature in degrees Fahrenheit
             sim_time (str): Current time in the simulation; should be human-readable
         """
-        self.Tambient = parse_number(fncs_str)
+        self.Tambient = parse_number(message)
 
     def test_function(self):
         """ Test function with the only purpose of returning the name of the object
@@ -1265,8 +1263,8 @@ def test():
         # model_diag_level = 11
         # helpers.enable_logging('DEBUG', model_diag_level, 'wh_agent')
         sim_time = '2019-11-20 07:47:00'
-        
-        EWH = WaterHeaterDSOT(wh_dict, wh_properties, 'abc', 11, sim_time, 'ipopt')  # add model_diag_level, and sim_time
+        # add model_diag_level, and sim_time
+        EWH = WaterHeaterDSOT(wh_dict, wh_properties, 'abc', 11, sim_time, 'ipopt')
         his_data = np.genfromtxt('mocked_historical_data_WH.csv', delimiter=',', skip_header=1)
         T_bottom = his_data[:, 0]
         T_upper = his_data[:, 1]

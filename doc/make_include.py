@@ -22,7 +22,7 @@ with open(tesp_inc, "w", encoding='utf-8') as fle:
             name = subroot[1]
         else:
             name = root[1] + "." + subroot[1]
-        name1 = name.replace("_", "\_") + " package"
+        name1 = name.replace("_", r"\_") + " package"
         print(name1, file=fle)
         print("=" * len(name1), file=fle)
         print("", file=fle)
@@ -49,7 +49,7 @@ with open(tesp_inc, "w", encoding='utf-8') as fle:
                 else:
                     name = root[1] + "." + subroot[1] + "." + filename
 
-                name1 = name.replace("_", "\_") + " module"
+                name1 = name.replace("_", r"\_") + " module"
                 print(name1, file=fle)
                 print("-" * len(name1), file=fle)
                 print("", file=fle)

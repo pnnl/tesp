@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2024 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: customer_CFS.py
 
@@ -283,7 +283,8 @@ def customer_CFS(GLD_metadata,
             'PeakLoad': customer_bill['MaxLoad'],
             'LoadFactor': customer_bill['LoadFactor'],
             'BlendedRate': customer_bill['BlendedRate'],
-            'EffectiveCostEnergy': EffectiveCostEnergy
+            'EffectiveCostEnergy': EffectiveCostEnergy,
+            'BillVolatility': customer_bill['Volatility']
         }
 
         if rate_scenario == "time-of-use":

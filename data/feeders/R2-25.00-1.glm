@@ -1812,7 +1812,7 @@ object line_configuration {
   spacing ID_99;
 }
 object triplex_line_conductor {
-  name triplex_4/0 AA;
+  name triplex_4/0_aa;
   resistance 0.48;
   geometric_mean_radius 0.0158;
   rating.summer.continuous 1000.0;
@@ -1822,9 +1822,9 @@ object triplex_line_conductor {
 }
 object triplex_line_configuration {
   name ID_1159;
-  conductor_1 triplex_4/0 AA;
-  conductor_2 triplex_4/0 AA;
-  conductor_N triplex_4/0 AA;
+  conductor_1 triplex_4/0_aa;
+  conductor_2 triplex_4/0_aa;
+  conductor_N triplex_4/0_aa;
   insulation_thickness 0.08;
   diameter 0.522;
 }

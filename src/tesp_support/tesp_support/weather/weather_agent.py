@@ -46,7 +46,7 @@ def startWeatherAgent(file):
                 forecastPeriod = conf['forecastPeriod']
                 forecastParameters = conf['parameters']
                 broker_address = conf['broker_address']
-            except:
+            except Exception:
                 pass
     else:
         print('could not open WEATHER_CONFIG file for FNCS or HELICS')

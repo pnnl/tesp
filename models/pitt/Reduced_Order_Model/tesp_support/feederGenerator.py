@@ -529,7 +529,7 @@ def parse_kva(cplx):  # this drops the sign of p and q
     Returns:
         float: the parsed kva value
     """
-    toks = list(filter(None, re.split('[\+j-]', cplx)))
+    toks = list(filter(None, re.split(r'[\+j-]', cplx)))
     p = float(toks[0])
     q = float(toks[1])
     return 0.001 * sqrt(p * p + q * q)
@@ -752,7 +752,7 @@ def obj(parent, model, line, itr, oidh, octr):
     if parent is not None:
         params['parent'] = parent
     while not oend:
-        m = re.match('\s*(\S+) ([^;{]+)[;{]', line)
+        m = re.match(r'\s*(\S+) ([^;{]+)[;{]', line)
         if m:
             # found a parameter
             param = m.group(1)
@@ -847,10 +847,10 @@ def write_link_class(model, h, t, seg_loads, op):
 
 
 # name, r, gmr, ampacity
-triplex_conductors = [['triplex_4/0_aa', 0.48, 0.0158, 1000.0]]
+triplex_conductors = [['triplex_4/0AA', 0.48, 0.0158, 1000.0]]
 
 # name, hot, neutral, thickness, diameter
-triplex_configurations = [['tpx_config', 'triplex_4/0_aa', 'triplex_4/0_aa', 0.08, 0.522]]
+triplex_configurations = [['tpx_config', 'triplex_4/0AA', 'triplex_4/0AA', 0.08, 0.522]]
 
 
 def write_local_triplex_configurations(op):
@@ -1315,7 +1315,7 @@ def write_houses(basenode, op, vnom):
     else:
         vstart = format(-0.5 * vnom, '.2f') + '+' + format(0.866025 * vnom, '.2f') + 'j'
 
-    if forERCOT == True:
+    if forERCOT:
         phs = phs + 'S'
         tpxname = gld_strict_name(basenode + '_tpx')
         mtrname = gld_strict_name(basenode + '_mtr')
@@ -1328,7 +1328,7 @@ def write_houses(basenode, op, vnom):
         print('  voltage_2 ' + vstart + ';', file=op)
         print('}', file=op)
     for i in range(nhouse):
-        if forERCOT == False:
+        if not forERCOT:
             tpxname = gld_strict_name(basenode + '_tpx_' + str(i + 1))
             mtrname = gld_strict_name(basenode + '_mtr_' + str(i + 1))
             print('object triplex_line {', file=op)
@@ -1700,7 +1700,7 @@ def write_substation(op, name, phs, vnom, vll):
     if len(fncs_case) > 0:
         print('#ifdef USE_FNCS', file=op)
         print('object fncs_msg {', file=op)
-        if forERCOT == True:
+        if forERCOT:
             print('  name gridlabd' + fncs_case + ';', file=op)
         else:
             print('  name gridlabdSimulator1;', file=op)
@@ -1760,7 +1760,7 @@ def write_voltage_class(model, h, t, op, vprim, vll, secmtrnode):
                 bHaveS = True
             else:
                 bHaveS = False
-            if bHaveS == True and bHadS == False:
+            if bHaveS and not bHadS:
                 prefix = 'triplex_'
             print('object ' + prefix + t + ' {', file=op)
             if len(parent) > 0:
@@ -1776,17 +1776,17 @@ def write_voltage_class(model, h, t, op, vprim, vll, secmtrnode):
             if 'load_class' in model[t][o]:
                 print('  load_class ' + model[t][o]['load_class'] + ';', file=op)
             if 'constant_power_A' in model[t][o]:
-                if bHaveS == True:
+                if bHaveS:
                     print('  power_1 ' + model[t][o]['constant_power_A'] + ';', file=op)
                 else:
                     print('  constant_power_A ' + model[t][o]['constant_power_A'] + ';', file=op)
             if 'constant_power_B' in model[t][o]:
-                if bHaveS == True:
+                if bHaveS:
                     print('  power_1 ' + model[t][o]['constant_power_B'] + ';', file=op)
                 else:
                     print('  constant_power_B ' + model[t][o]['constant_power_B'] + ';', file=op)
             if 'constant_power_C' in model[t][o]:
-                if bHaveS == True:
+                if bHaveS:
                     print('  power_1 ' + model[t][o]['constant_power_C'] + ';', file=op)
                 else:
                     print('  constant_power_C ' + model[t][o]['constant_power_C'] + ';', file=op)
@@ -1800,19 +1800,19 @@ def write_voltage_class(model, h, t, op, vprim, vll, secmtrnode):
             vstartb = format(-0.5 * vnom, '.2f') + format(-0.866025 * vnom, '.2f') + 'j'
             vstartc = format(-0.5 * vnom, '.2f') + '+' + format(0.866025 * vnom, '.2f') + 'j'
             if 'voltage_A' in model[t][o]:
-                if bHaveS == True:
+                if bHaveS:
                     print('  voltage_1 ' + vstarta + ';', file=op)
                     print('  voltage_2 ' + vstarta + ';', file=op)
                 else:
                     print('  voltage_A ' + vstarta + ';', file=op)
             if 'voltage_B' in model[t][o]:
-                if bHaveS == True:
+                if bHaveS:
                     print('  voltage_1 ' + vstartb + ';', file=op)
                     print('  voltage_2 ' + vstartb + ';', file=op)
                 else:
                     print('  voltage_B ' + vstartb + ';', file=op)
             if 'voltage_C' in model[t][o]:
-                if bHaveS == True:
+                if bHaveS:
                     print('  voltage_1 ' + vstartc + ';', file=op)
                     print('  voltage_2 ' + vstartc + ';', file=op)
                 else:
@@ -2020,7 +2020,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
         lines = []
         line = ip.readline()
         while line is not '':
-            while re.match('\s*//', line) or re.match('\s+$', line):
+            while re.match(r'\s*//', line) or re.match(r'\s+$', line):
                 # skip comments and white space
                 line = ip.readline()
             lines.append(line.rstrip())
@@ -2120,7 +2120,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
         if metrics_interval > 0:
             print('object metrics_collector_writer {', file=op)
             print('  interval', str(metrics_interval) + ';', file=op)
-            if forERCOT == True:
+            if forERCOT:
                 print('  // filename ${METRICS_FILE};', file=op)
                 print('  filename ' + outname + '_metrics.json;', file=op)
             else:
@@ -2268,7 +2268,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
         write_link_class(model, h, 'transformer', seg_loads, op)
         write_link_class(model, h, 'capacitor', seg_loads, op)
 
-        if forERCOT == True:
+        if forERCOT:
             identify_ercot_houses(model, h, 'load', 0.001 * avghouse, rgn)
             connect_ercot_houses(model, h, op, vln, 120.0)
             for key in house_nodes:
@@ -2287,7 +2287,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
 
         write_voltage_class(model, h, 'node', op, vln, vll, secnode)
         write_voltage_class(model, h, 'meter', op, vln, vll, secnode)
-        if forERCOT == False:
+        if not forERCOT:
             write_voltage_class(model, h, 'load', op, vln, vll, secnode)
         if len(Eplus_Bus) > 0 and Eplus_Volts > 0.0 and Eplus_kVA > 0.0:
             print('////////// EnergyPlus large-building load ///////////////', file=op)

@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2024 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: process_gld.py
 """Functions to plot data from GridLAB-D
@@ -15,7 +15,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Setting up logging
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 def read_gld_metrics(path, name_root, diction_name=''):
@@ -34,13 +34,13 @@ def read_gld_metrics(path, name_root, diction_name=''):
     if len(diction_name) > 0:
         try:
             lp = open(diction_name).read()
-        except:
-            logger.error(f'Unable to open metrics diction file {diction_name}')
+        except Exception:
+            log.error(f'Unable to open metrics diction file {diction_name}')
     else:
         try:
             lp = open(glm_dict_path).read()
-        except:
-            logger.error(f'Unable to open metrics diction file {glm_dict_path}')
+        except Exception:
+            log.error(f'Unable to open metrics diction file {glm_dict_path}')
     diction = json.loads(lp)
     fdr_keys = list(diction['feeders'].keys())
     fdr_keys.sort()
@@ -194,7 +194,7 @@ def read_gld_metrics(path, name_root, diction_name=''):
     lst_m.pop('StartTime')
     meta_m = lst_m.pop('Metadata')
     nBillingMeters = 0
-    if not lst_m[time_key] is None:
+    if lst_m[time_key] is not None:
         nBillingMeters = len(lst_m[time_key])
     #  print('\nBilling Meter Metadata for', nBillingMeters, 'objects')
     for key, val in meta_m.items():

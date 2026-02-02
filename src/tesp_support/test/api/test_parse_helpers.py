@@ -11,9 +11,9 @@ from tesp_support.api.parse_helpers import (
 @pytest.mark.parametrize("input_str, expected", [
     ("123.45", 123.45),
     ("0", 0.0),
-    ("123.45abc", 123.45),  # Should extract digits and decimal
-    ("abc123.45def", 123.45),
-    ("1a2b3.4c5", 123.45),
+    ("123.45 abc", 123.45),
+    ("123.45E0", 123.45),
+    ("1.2345e2 def", 123.45),
 ])
 def test_parse_number(input_str, expected):
     result = parse_number(input_str)

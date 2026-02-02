@@ -1,0 +1,24 @@
+#!/bin/bash
+
+echo "Mounting point for sims has been set!"
+# setup for sub directory rates
+# sub="dsot"
+# sub="flat-rate"
+# sub="time-of-use"
+sub="rob-don"
+
+# if you have to remount the share drives
+if ! [ -d "$SIM_DATA" ]; then
+#  sudo mount -t cifs //pnnlfs09.pnl.gov/sharedata37_op$/DSOT /mnt/dsot -o file_mode=0777,dir_mode=0777,username=$USER
+  sudo mount -t cifs //pnnlfs09.pnl.gov/sharedata13_op$/TSP_Rates /mnt/post -o file_mode=0777,dir_mode=0777,username=$USER
+#  sudo mount -t cifs //pnnlfs09.pnl.gov/sharedata05_op$/PHOENIX /mnt/simdata -o file_mode=0777,dir_mode=0777,username=$USER
+fi
+
+# For export directory for SIM_DATA and SIM_POST
+export SIM_DATA=/mnt/post/Rates_Scenario/$sub
+#export SIM_DATA=/mnt/dsot/run_outputs/Rates_Scenario/$sub
+#export SIM_DATA=/mnt/simdata/Rates_Scenario/$sub
+
+export SIM_POST=/mnt/post/Rates_Scenario/$sub
+#export SIM_POST=/mnt/dsot/run_outputs/Rates_Scenario/$sub
+#export SIM_POST=/mnt/simdata/Rates_Scenario/$sub

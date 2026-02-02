@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2024 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: Wh_Energy_Purchases.py
 """Utilities to open and read load
@@ -130,10 +130,10 @@ def load_price_data(dir_path, market_type, dso_num, simdata, place):
     else:
         if market_type == 'DA':
             prices_data = pd.read_excel('DAM_2016.xlsx', sheet_name=place)
-            date_rng = pd.date_range(start='1/1/2016 01:00:00', end='1/1/2017', freq='H')
+            date_rng = pd.date_range(start='1/1/2016 01:00:00', end='1/1/2017', freq='h')
         else:
             prices_data = pd.read_excel('RTM_2016.xlsx', sheet_name=place)
-            # prices_data = prices_data.groupby(pd.Grouper(freq='H')).mean()
+            # prices_data = prices_data.groupby(pd.Grouper(freq='h')).mean()
             date_rng = pd.date_range(start='1/1/2016 01:00:00', periods=len(prices_data), freq='15T')
         prices_data = prices_data.rename(columns={'Settlement Point Price': place + ' $_mwh'})
         prices_data['date_time'] = pd.to_datetime(date_rng)
@@ -192,7 +192,7 @@ def Wh_Energy_Purchases(dir_path, dso_num, simdata=False, h1=5, h2=16, h3=20, pl
 
     # determines the bilateral quantity for each hourly interval
     bilateral_MW_data = bilateral_MW_data.set_index(['date_time'])
-    bilateral_MW_data['Fixed Quantity (MW)'] = np.select(conditions_Q, choices_Q, default='0')
+    bilateral_MW_data['Fixed Quantity (MW)'] = np.select(conditions_Q, choices_Q)
 
     bilateral_price_data = load_price_data(dir_path, 'DA', dso_num, simdata, place)
     bilateral_price_data['hour'] = bilateral_price_data['date_time'].dt.hour
@@ -221,7 +221,7 @@ def Wh_Energy_Purchases(dir_path, dso_num, simdata=False, h1=5, h2=16, h3=20, pl
 
     # determines the bilateral price for each hourly interval
     bilateral_price_data = bilateral_price_data.set_index(['date_time'])
-    bilateral_price_data['Fixed Price ($/MWh)'] = np.select(conditions_P, choices_P, default='0')
+    bilateral_price_data['Fixed Price ($/MWh)'] = np.select(conditions_P, choices_P)
 
     # Monthly computations
     WhBLEnergyMonthly = (pd.to_numeric(bilateral_MW_data['Fixed Quantity (MW)']).resample('M')).sum()

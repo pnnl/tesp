@@ -1,5 +1,5 @@
 ..
-    _ Copyright (c) 2023 Battelle Memorial Institute
+    _ Copyright (c) 2023-2025 Battelle Memorial Institute
     _ file: datastore.rst
 
 .. _datastore:
@@ -188,7 +188,7 @@ Once we've got the data from the two sources as DataFrames, the rest is just usi
 As expected, a strong correlation does exist and all is well.
 
 
-Copyright (c) 2023, Battelle Memorial Institute
+Copyright (c) 2023-2025, Battelle Memorial Institute
 
 License: https://github.com/pnnl/tesp/blob/main/LICENSE
 

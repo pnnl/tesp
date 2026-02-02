@@ -1,4 +1,4 @@
-# Copyright (c) 2022-2024 Battelle Memorial Institute
+# Copyright (c) 2022-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: retail_market.py
 """Class that manages the operation of retail market at substation-level
@@ -227,7 +227,7 @@ class RetailMarket:
         cleared_price = 0.0
         cleared_quantity = 0.0
 
-        if curve_buyer.uncontrollable_only == True:
+        if curve_buyer.uncontrollable_only:
             temp = curve_buyer.quantities[0]
             if min(curve_seller.quantities) <= temp <= max(curve_seller.quantities):
                 cleared_quantity = temp
@@ -299,7 +299,7 @@ class RetailMarket:
                         congestion_surcharge = 0.0
                     return clear_type, cleared_price, cleared_quantity, congestion_surcharge
 
-            log.info("ERROR retail intersection not found (not supposed to happen)" +
+            log.info("Failure retail intersection not found (not supposed to happen)" +
                      "\n  quantities: " + str(buyer_quantities) +
                      "\n  buyer_prices: " + str(buyer_prices) +
                      "\n  seller_prices: " + str(seller_prices))
@@ -554,7 +554,7 @@ class RetailMarket:
             if z[1] - z[0] * (resp_max_mw - unresp_mw) < 0:
                 try:
                     resp_max_mw = unresp_mw + abs(z[1] / z[0])
-                except:
+                except Exception:
                     print(
                         'quadratic coefficient of price sensitivity bid to AMES found zero for bid of quantity range' + str(
                             [unresp_mw, resp_max_mw]))

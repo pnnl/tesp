@@ -1,5 +1,3 @@
-# test_entity.py
-import pytest
 import tempfile
 import os
 import sqlite3
@@ -134,7 +132,7 @@ def test_entity_tohelp():
 
 def test_multiple_entities_from_glm_file():
     """Test loading multiple entities from glm_entities_path and adding to SQLite database"""
-    from tesp_support.api.data import glm_entities_path, tesp_test
+    from tesp_support.api.data import glm_entities_path
     import pyjson5
     import sqlite3
 

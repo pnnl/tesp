@@ -88,24 +88,27 @@ def select_setpt_night(wakeup_set, daylight_set, mode, st, hd, inc_lev):
         return 40
     else:
         night_set = wakeup_set
-        # clm = hdr.index('HOME AND GONE PAIR  ' + str(int(wakeup_set_cool)) + '&' + str(int(daylight_set_cool)) + '-%')
-        clm = [i for i in range(len(hdr)) if str(int(wakeup_set)) + '&' + str(int(daylight_set)) in hdr[i]]
-        prob2 = np.random.uniform(0, 1)
-        total = 0
-        for row in range(len(temp)):
-            total += temp[row][clm]
-            if total >= prob2 * 100:
-                night_set = temp[row][0]
-                break
-        # Need catch for cases where probability is very large (0.99999) and hvac_setpt probabilities add to less than unity
-        if total < prob2 * 100:
-            night_set = wakeup_set
-        # Do not allow cooling setpt at unoccupied home less than at night
-        if mode == 'cool' and daylight_set < night_set:
-            night_set = wakeup_set
-        # Do not allow heating setpt at unoccupied home more than at night
-        if mode == 'heat' and daylight_set > night_set:
-            night_set = wakeup_set
+        try:
+            clm = hdr.index('HOME AND GONE PAIR ' + str(int(wakeup_set)) + '&' + str(int(daylight_set)))
+            prob2 = np.random.uniform(0, 1)
+            total = 0
+            for row in range(len(temp)):
+                total += temp[row][clm]
+                if total >= prob2 * 100:
+                    night_set = temp[row][0]
+                    break
+            # Need catch for cases where probability is very large (0.99999) and hvac_setpt probabilities add to less than unity
+            if total < prob2 * 100:
+                night_set = wakeup_set
+            # Do not allow cooling setpt at unoccupied home less than at night
+            if mode == 'cool' and daylight_set < night_set:
+                night_set = wakeup_set
+            # Do not allow heating setpt at unoccupied home more than at night
+            if mode == 'heat' and daylight_set > night_set:
+                night_set = wakeup_set
+        except:
+            print("WARNING select setpt not found:", wakeup_set, daylight_set, mode, st, hd, inc_lev, ", setting to ", wakeup_set)
+            pass
         return night_set
 
 def telework(prob, st, hd, inc_lev):
@@ -344,7 +347,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                         # New schedule to implement RECS 2020 data
                         prob = np.random.uniform(0, 1)  # a random number
                         inc_level = val['income_level'] # Determine income level of house from glm dictionary
-                        # Detemine teleworking
+                        # Determine teleworking
                         n_tw_days, tw_dows = telework(prob, state, dso_type, inc_level)
                         
                         # Determine setpoint transition times
@@ -625,7 +628,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                               'arrival_home': val['arrival_home'],
                               'work_duration': val['work_duration'],
                               'home_duration': val['home_duration'],
-                              'miles_per_kwh': val['miles_per_kwh'],
+                              'miles_per_kWh': val['miles_per_kWh'],
                               'range_miles': val['range_miles'],
                               'efficiency': val['efficiency'],
                               'slider_setting': float('{:.4f}'.format(slider)),
@@ -702,7 +705,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                 'number_of_gld_homes': market_config['DSO']['number_of_gld_homes'],
                 'distribution_charge_rate': market_config['DSO']['distribution_charge_rate'],
                 'dso_retail_scaling': market_config['DSO']['dso_retail_scaling'],
-                'full_metrics_detail': simulation_config['metricsFullDetail'],
+                'metrics_full_detail': simulation_config['metrics_full_detail'],
                 'quadratic': simulation_config['quadratic']
             }
             if DSO_quadratic_curves:
@@ -744,7 +747,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                 'Wind_m': market_config['Retail']['Wind_m'],
                 'delta_T_TOR': market_config['Retail']['delta_T_TOR'],
                 'delta_T_ave_wind_R': market_config['Retail']['delta_T_ave_wind_R'],
-                'full_metrics_detail': simulation_config['metricsFullDetail']
+                'metrics_full_detail': simulation_config['metrics_full_detail']
             }
 
         else:
@@ -805,34 +808,34 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
         dso.pubs_n(False, key + "/bill_mode", "string")
         dso.pubs_n(False, key + "/price", "double")
         dso.pubs_n(False, key + "/monthly_fee", "double")
-        dso.subs_n(gld_sim_name + "/" + house_name + "#V1", "complex")
-        dso.subs_n(gld_sim_name + "/" + house_name + "#Tair", "double")
-        dso.subs_n(gld_sim_name + "/" + house_name + "#HvacLoad", "double")
-        dso.subs_n(gld_sim_name + "/" + house_name + "#TotalLoad", "double")
-        dso.subs_n(gld_sim_name + "/" + house_name + "#On", "string")
+        dso.subs_n(gld_sim_name + "/" + house_name + "/measured_voltage", "complex")
+        dso.subs_n(gld_sim_name + "/" + house_name + "/air_temperature", "double")
+        dso.subs_n(gld_sim_name + "/" + house_name + "/hvac_load", "double")
+        dso.subs_n(gld_sim_name + "/" + house_name + "/total_load", "double")
+        dso.subs_n(gld_sim_name + "/" + house_name + "/power_state", "string")
 
     for key, val in water_heater_agents.items():
         wh_name = val["waterheaterName"]
         dso.pubs_n(False, key + "/lower_tank_setpoint", "double")
         dso.pubs_n(False, key + "/upper_tank_setpoint", "double")
-        dso.subs_n(gld_sim_name + "/" + wh_name + "#LTTemp", "string")
-        dso.subs_n(gld_sim_name + "/" + wh_name + "#UTTemp", "string")
-        dso.subs_n(gld_sim_name + "/" + wh_name + "#LTState", "string")
-        dso.subs_n(gld_sim_name + "/" + wh_name + "#UTState", "string")
-        dso.subs_n(gld_sim_name + "/" + wh_name + "#WHLoad", "string")
-        dso.subs_n(gld_sim_name + "/" + wh_name + "#WDRate", "string")
+        dso.subs_n(gld_sim_name + "/" + wh_name + "/lower_tank_temperature", "string")
+        dso.subs_n(gld_sim_name + "/" + wh_name + "/upper_tank_temperature", "string")
+        dso.subs_n(gld_sim_name + "/" + wh_name + "/lower_heating_element_state", "string")
+        dso.subs_n(gld_sim_name + "/" + wh_name + "/upper_heating_element_state", "string")
+        dso.subs_n(gld_sim_name + "/" + wh_name + "/heating_element_capacity", "string")
+        dso.subs_n(gld_sim_name + "/" + wh_name + "/water_demand", "string")
 
     for key, val in battery_agents.items():
         # key is the name of inverter resource
         battery_name = val["batteryName"]
         dso.pubs_n(False, key + "/p_out", "double")
         dso.pubs_n(False, key + "/q_out", "double")
-        dso.subs_n(gld_sim_name + "/" + battery_name + "#SOC", "double")
+        dso.subs_n(gld_sim_name + "/" + key + "/state_of_charge", "double")
 
     for key, val in ev_agents.items():
         ev_name = val["evName"]
         dso.pubs_n(False, key + "/ev_out", "double")
-        dso.subs_n(gld_sim_name + "/" + ev_name + "#SOC", "double")
+        dso.subs_n(gld_sim_name + "/" + ev_name + "/battery_SOC", "double")
 
     # these messages are for weather agent used in DSOT agents
     if feedercnt == 1:
@@ -860,15 +863,15 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
         house_name = val['houseName']
         meter_name = val['meterName']
         substation_sim_key = "dso" + substation_name + '/' + key
-        gld.pubs(False, house_name + "#Tair", "double", house_name, "air_temperature")
-        gld.pubs(False, house_name + "#On", "string", house_name, "power_state")
-        gld.pubs(False, house_name + "#HvacLoad", "double", house_name, "hvac_load")
-        gld.pubs(False, house_name + "#TotalLoad", "double", house_name, "total_load")
+        gld.pubs(False, house_name + "/air_temperature", "double", house_name, "air_temperature")
+        gld.pubs(False, house_name + "/power_state", "string", house_name, "power_state")
+        gld.pubs(False, house_name + "/hvac_load", "double", house_name, "hvac_load")
+        gld.pubs(False, house_name + "/total_load", "double", house_name, "total_load")
         # Identify commercial buildings and map measured voltage correctly
         if val['houseClass'] in comm_bldg_list:
-            gld.pubs(False, house_name + "#V1", "complex", meter_name, "measured_voltage_A")
+            gld.pubs(False, house_name + "/measured_voltage", "complex", meter_name, "measured_voltage_A")
         else:
-            gld.pubs(False, house_name + "#V1", "complex", meter_name, "measured_voltage_1")
+            gld.pubs(False, house_name + "/measured_voltage", "complex", meter_name, "measured_voltage_1")
         gld.subs(substation_sim_key + "/cooling_setpoint", "double", house_name, "cooling_setpoint")
         gld.subs(substation_sim_key + "/heating_setpoint", "double", house_name, "heating_setpoint")
         gld.subs(substation_sim_key + "/thermostat_deadband", "double", house_name, "thermostat_deadband")
@@ -879,12 +882,12 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
     for key, val in water_heater_agents.items():
         wh_name = key
         substation_sim_key = "dso" + substation_name + '/' + key
-        gld.pubs(False, wh_name + "#LTTemp", "double", wh_name, "lower_tank_temperature")
-        gld.pubs(False, wh_name + "#UTTemp", "double", wh_name, "upper_tank_temperature")
-        gld.pubs(False, wh_name + "#LTState", "string", wh_name, "lower_heating_element_state")
-        gld.pubs(False, wh_name + "#UTState", "string", wh_name, "upper_heating_element_state")
-        gld.pubs(False, wh_name + "#WHLoad", "double", wh_name, "heating_element_capacity")
-        gld.pubs(False, wh_name + "#WDRate", "double", wh_name, "water_demand")
+        gld.pubs(False, wh_name + "/lower_tank_temperature", "double", wh_name, "lower_tank_temperature")
+        gld.pubs(False, wh_name + "/upper_tank_temperature", "double", wh_name, "upper_tank_temperature")
+        gld.pubs(False, wh_name + "/lower_heating_element_state", "string", wh_name, "lower_heating_element_state")
+        gld.pubs(False, wh_name + "/upper_heating_element_state", "string", wh_name, "upper_heating_element_state")
+        gld.pubs(False, wh_name + "/heating_element_capacity", "double", wh_name, "heating_element_capacity")
+        gld.pubs(False, wh_name + "/water_demand", "double", wh_name, "water_demand")
         gld.subs(substation_sim_key + "/lower_tank_setpoint", "double", wh_name, "lower_tank_setpoint")
         gld.subs(substation_sim_key + "/upper_tank_setpoint", "double", wh_name, "upper_tank_setpoint")
 
@@ -892,14 +895,14 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
         # key is the name of inverter resource
         battery_name = val['batteryName']
         substation_sim_key = "dso" + substation_name + '/' + key
-        gld.pubs(False, battery_name + "#SOC", "double", battery_name, "state_of_charge")
+        gld.pubs(False, key + "/state_of_charge", "double", battery_name, "state_of_charge")
         gld.subs(substation_sim_key + "/p_out", "double", key, "P_Out")
         gld.subs(substation_sim_key + "/q_out", "double", key, "Q_Out")
 
     for key, val in ev_agents.items():
         ev_name = val['evName']
         substation_sim_key = "dso" + substation_name + '/' + key
-        gld.pubs(False, ev_name + "#SOC", "double", ev_name, "battery_SOC")
+        gld.pubs(False, ev_name + "/battery_SOC", "double", ev_name, "battery_SOC")
         gld.subs(substation_sim_key + "/ev_out", "double", ev_name, "maximum_charge_rate")
 
 
