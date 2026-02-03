@@ -90,13 +90,17 @@ pip list > "${BUILD_DIR}/tesp_pypi.id"
 
 echo "Stamping TESP $tesp_ver for install"
 cd "${TESPDIR}" || exit
+
+# echo the version for the pypi setup tools
 echo "$tesp_ver" > "src/tesp_support/version"
+echo "__version__ = \"$tesp_ver\"" > "src/tesp_support/tesp_support/_version.py"
 
 # un-comment for final version
 # git tag "v$tesp_ver"
 
 echo "Creating TESP distribution package for pypi"
 cd "${TESPDIR}/src/tesp_support" || exit
+rm -rf dist/ tesp_support.egg-info/
 python3 -m build . > "${BUILD_DIR}/package.log"
 echo "Checking TESP distribution package for pypi"
 twine check dist/*

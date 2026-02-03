@@ -1,6 +1,6 @@
 [build-system]
-requires = ['setuptools']
-build-backend = 'setuptools.build_meta'
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "tesp_support"
@@ -62,3 +62,4 @@ api = ["*"]
 [project.scripts]
 tesp_components = "tesp_support.api.data:tesp_component"
 schedule_server = "tesp_support.api.schedule_server:main"
+tesp_support = "tesp_support._commands:tesp_support"

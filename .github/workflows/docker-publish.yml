@@ -64,7 +64,7 @@ jobs:
             SIM_GRP=runner
 
       - name: List images
-        run: docker images | grep -E "cosim|tesp"
+        run: docker images | grep -E "tesp"
 
       - name: Smoke test
         run: |
