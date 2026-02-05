@@ -20,7 +20,7 @@ if [[ $1 == "clean" ]]; then
 #  ./ns3 distclean
 fi
 
-CC=gcc-12 CXX=g++-12 ./waf configure --prefix="${INSTDIR}" --with-helics="${INSTDIR}" --build-profile=optimized \
+./waf configure --prefix="${INSTDIR}" --with-helics="${INSTDIR}" --build-profile=optimized \
                 --disable-werror --enable-logs --enable-build-version
 
 #./ns3 configure --prefix="${INSTDIR}" --build-profile=optimized --disable-werror \

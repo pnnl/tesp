@@ -29,8 +29,8 @@ ENV GLPATH=$INSTDIR/lib/gridlabd:$INSTDIR/share/gridlabd
 ENV CPLUS_INCLUDE_PATH=/usr/include/hdf5/serial:$INSTDIR/include
 ENV FNCS_INCLUDE_DIR=$INSTDIR/include
 ENV FNCS_LIBRARY=$INSTDIR/lib
-ENV LD_LIBRARY_PATH=$INSTDIR/lib
-ENV LD_RUN_PATH=$INSTDIR/lib
+ENV LD_LIBRARY_PATH=$INSTDIR/lib:$INSTDIR/lib64
+ENV LD_RUN_PATH=$INSTDIR/lib:$INSTDIR/lib64
 
 # PATH
 ENV PATH=$JAVA_HOME:$INSTDIR/bin:$SIM_HOME/.local/bin:$PATH
@@ -46,7 +46,9 @@ ENV PSST_WARNING=ignore
 # 'PSST_WARNING action' -- one of "error", "ignore", "always", "default", "module", or "once"
 
 COPY . ${BUILD_DIR}
-RUN python3 --version && python3 -m pip --version && python3 -c "import sys; print(sys.version_info)"
+
+RUN python3 --version && pip --version
+
 RUN echo "===== Building TESP Build =====" && \
   echo "Configure name and email for git" && \
   git config --global user.name "${SIM_USER}" && \
@@ -125,7 +127,6 @@ RUN echo "===== Building TESP Build =====" && \
   rm -r ns-3-dev && \
   rm -r Ipopt && \
   rm -r ThirdParty-ASL && \
-  rm -r ThirdParty-Mumps && \
   echo "Install Python Libraries and TESP pypi..." && \
   pip install --no-warn-script-location --break-system-packages --upgrade pip  > "pypi.log" && \
   pip install --no-warn-script-location --break-system-packages --no-cache-dir -r ${TESPDIR}/requirements.txt  >> "pypi.log" && \
@@ -133,4 +134,5 @@ RUN echo "===== Building TESP Build =====" && \
   pip install --no-warn-script-location --break-system-packages --no-cache-dir -e ${REPO_DIR}/psst  >> "pypi.log" && \
   pip install --no-warn-script-location --break-system-packages --no-cache-dir -e ${TESPDIR}/src/tesp_support  >> "pypi.log" && \
   echo "${SIM_USER}" | sudo -S ldconfig && \
-  ${BUILD_DIR}/versions.sh
+#  ${BUILD_DIR}/versions.sh && \
+  echo "Done"

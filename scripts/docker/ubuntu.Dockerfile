@@ -31,6 +31,7 @@ RUN echo "===== Building TESP Ubuntu =====" && \
   coinor-libipopt-dev \
   liblapack-dev \
   libmetis-dev \
+  libmumps-dev \
 # python support
   python3-pip \
   python3-pil.imagetk && \

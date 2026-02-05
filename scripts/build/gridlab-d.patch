@@ -488,7 +488,7 @@ index a9889c36..71cece92 100644
 +// EOF
 \ No newline at end of file
 diff --git a/tape/metrics_collector_writer.cpp b/tape/metrics_collector_writer.cpp
-index 6433db82..dd326877 100644
+index 6433db82..97ff958c 100644
 --- a/tape/metrics_collector_writer.cpp
 +++ b/tape/metrics_collector_writer.cpp
 @@ -1264,7 +1264,12 @@ void metrics_collector_writer::hdfHouseWrite (size_t objs, Json::Value& metrics)
@@ -496,11 +496,11 @@ index 6433db82..dd326877 100644
  			tbl[idx].air_temperature_setpoint_cooling = mtr[HSE_AVG_DEV_COOLING].asDouble();
  			tbl[idx].air_temperature_setpoint_heating = mtr[HSE_AVG_DEV_HEATING].asDouble();
 -			tbl[idx].system_mode = mtr[HSE_SYSTEM_MODE].asInt();
-+	        try {
-+			    tbl[idx].system_mode = mtr[HSE_SYSTEM_MODE].asInt();
++			try {
++				tbl[idx].system_mode = mtr[HSE_SYSTEM_MODE].asInt();
 +			}
 +			catch(...) {
-+			    tbl[idx].system_mode = 0;
++				tbl[idx].system_mode = 0;
 +			}			
  			tbl[idx].waterheater_load_min = mtr[HSE_SYSTEM_MODE + 1].asDouble();
  			tbl[idx].waterheater_load_max = mtr[HSE_SYSTEM_MODE + 2].asDouble();
@@ -523,13 +523,13 @@ index 6433db82..dd326877 100644
 -
 -
 -
-+            try {
-+                tbl[idx].wh_lower_elem_state = mtr[HSE_SYSTEM_MODE + 25].asInt();
-+                tbl[idx].wh_upper_elem_state = mtr[HSE_SYSTEM_MODE + 26].asInt();
++			try {
++				tbl[idx].wh_lower_elem_state = mtr[HSE_SYSTEM_MODE + 25].asInt();
++				tbl[idx].wh_upper_elem_state = mtr[HSE_SYSTEM_MODE + 26].asInt();
 +			}
 +			catch(...) {
-+			    tbl[idx].wh_lower_elem_state = 0;
-+    			tbl[idx].wh_upper_elem_state = 0;
++				tbl[idx].wh_lower_elem_state = 0;
++				tbl[idx].wh_upper_elem_state = 0;
 +			}			
  			idx++;
  		}

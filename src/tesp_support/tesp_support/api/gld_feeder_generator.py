@@ -1203,9 +1203,10 @@ class Commercial_Build:
         params["heatgain_fraction"] = 0.9
         self.mdl.ZIPload.add(f"{name}_plug_loads", params)
 
-        params["base_power"] = '{:s}_exterior*{:.2f}'.format(bldg['base_schedule'], bldg['adj_ext'])
-        params["heatgain_fraction"] = 0.0
-        self.mdl.ZIPload.add(f"{name}_exterior_lights", params)
+        if bldg['adj_ext'] != 0:
+            params["base_power"] = '{:s}_exterior*{:.2f}'.format(bldg['base_schedule'], bldg['adj_ext'])
+            params["heatgain_fraction"] = 0.0
+            self.mdl.ZIPload.add(f"{name}_exterior_lights", params)
 
         params = {
             "parent": name,
@@ -1216,17 +1217,20 @@ class Commercial_Build:
             "current_fraction": 0,
             "power_pf": 1
         }
-        base_power = '{:s}_gas*{:.2f}'.format(bldg['base_schedule'], bldg['adj_gas'])
-        params["base_power"] = base_power
-        self.mdl.ZIPload.add(f"{name}_gas_waterheater", params)
+        if bldg['adj_gas'] != 0:
+            base_power = '{:s}_gas*{:.2f}'.format(bldg['base_schedule'], bldg['adj_gas'])
+            params["base_power"] = base_power
+            self.mdl.ZIPload.add(f"{name}_gas_waterheater", params)
 
-        params["base_power"] = '{:s}_occupancy*{:.2f}'.format(bldg['base_schedule'], bldg['adj_occ'])
-        self.mdl.ZIPload.add(f"{name}_occupancy", params)
+        if bldg['adj_occ'] != 0:
+            params["base_power"] = '{:s}_occupancy*{:.2f}'.format(bldg['base_schedule'], bldg['adj_occ'])
+            self.mdl.ZIPload.add(f"{name}_occupancy", params)
 
-        params["base_power"] = '{:.2f};'.format(bldg['adj_refrig'])
-        # set to 0.01 to avoid a divide by zero issue in the agent code.
-        # params["schedule_skew"] = 0.01 #'{:.0f}'.format(bldg['skew_value']) # Unused in DSOT
-        self.mdl.ZIPload.add(f"{name}_lrg_refrig", params)
+        if bldg['adj_refrig'] != 0:
+            params["base_power"] = '{:.2f}'.format(bldg['adj_refrig'])
+            # set to 0.01 to avoid a divide by zero issue in the agent code.
+            # params["schedule_skew"] = 0.01 #'{:.0f}'.format(bldg['skew_value']) # Unused in DSOT
+            self.mdl.ZIPload.add(f"{name}_lrg_refrig", params)
 
         self.glm.add_metrics_collector(name, "house")
 
@@ -1340,10 +1344,11 @@ class Commercial_Build:
                     params["base_power_" + phs] = "street_lighting*" + '{:.2f}'.format(self.config.base.light_scalar_comm * phsva)
                     params["phases"] = phs
                     # Note that self.config.base.light_scalar_comm = 0 as per DSOT
-            self.mdl.load.add(name, params)
-            # Add position data to commercial ZIPload, if available
-            if self.config.gis_file:
-                self.config.add_position(key, name)
+            if self.config.base.light_scalar_comm != 0:
+                self.mdl.load.add(name, params)
+                # Add position data to commercial ZIPload, if available
+                if self.config.gis_file:
+                    self.config.add_position(key, name)
 
         # Define default commercial building parameters
         else:
@@ -1425,9 +1430,9 @@ class Commercial_Build:
             adj_occ = (bldg_specs['internal_heat_gains']['occupancy'] * occ_load * (0.9 + 0.1 * rng.random()) 
                             * bldg['floor_area'] / 1000.0)
             # Set gas water heating to zero
-            adj_gas = 0 # (0.9 + 0.2 * rng.random())
+            adj_gas = 1 # (0.9 + 0.2 * rng.random())
             # Set exterior lighting to zero as plug and light parameters capture all of CBECS loads.
-            adj_ext = 0 # (0.9 + 0.1 * rng.random()) * bldg['floor_area'] / 1000.
+            adj_ext = 1 # (0.9 + 0.1 * rng.random()) * bldg['floor_area'] / 1000.
             int_gains = adj_lights + adj_plugs + adj_occ + adj_gas
            
             if comm_type == 'lodging':
@@ -1618,8 +1623,8 @@ class Commercial_Build:
                 bldg['adj_lights'] = adj_lights
                 bldg['adj_plugs'] = adj_plugs
                 bldg['adj_refrig'] = adj_refrig
-                bldg['adj_gas'] = adj_gas
-                bldg['adj_ext'] = adj_ext
+                bldg['adj_gas'] = 0
+                bldg['adj_ext'] = 0
                 bldg['adj_occ'] = adj_occ
                 bldg['int_gains'] = int_gains
                 bldg['zonename'] = gld_strict_name(f'{key}_{comm_type}')

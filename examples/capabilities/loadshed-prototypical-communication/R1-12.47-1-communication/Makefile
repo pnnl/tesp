@@ -5,15 +5,12 @@ INSTALL_PATH := ${INSTDIR}
 # Specifically, extracting all the ns-3 libraries to link against later,
 # such that I do not have to speciffy each of them.
 ##############################################################################
-LIBDIRS = $(wildcard $(INSTALL_PATH)/lib*)
+LIBDIRS = $(INSTALL_PATH)/lib64
 $(info <<<<<<<<<< lib directory >>>>>>>>>>)
 $(info $(LIBDIRS))
 NS3_LIBFILES = $(patsubst $(LIBDIRS)/libns3%.so,-lns3%,$(wildcard $(LIBDIRS)/libns3*))
 $(info <<<<<<<<<< ns-3 lib files >>>>>>>>>>)
 $(info $(NS3_LIBFILES))
-HELICS_LIBFILES = $(patsubst $(LIBDIRS)/libhelics%.so,-lhelics%,$(wildcard $(LIBDIRS)/libhelics*))
-$(info <<<<<<<<<< HELICS lib files >>>>>>>>>>)
-$(info $(HELICS_LIBFILES))
 
 ##############################################################################
 # Compiler specifications
@@ -50,12 +47,14 @@ $(info $(CPPFLAGS))
 #   because each compiler already knows where to look for its system files.
 ##############################################################################
 LDFLAGS = -L. \
-          -L$(INSTALL_PATH)/lib
+          -L$(INSTALL_PATH)/lib \
+          -L$(INSTALL_PATH)/lib64
 # What libraries should be linked with.
 LDLIBS =
 LDLIBS += $(NS3_LIBFILES)
 LDLIBS += -lhelicscpp
 LDLIBS += -lhelicscpp-apps
+LDLIBS += -ljsoncpp
 $(info <<<<<<<<<< LDLIBS >>>>>>>>>>)
 $(info $(LDLIBS))
 
