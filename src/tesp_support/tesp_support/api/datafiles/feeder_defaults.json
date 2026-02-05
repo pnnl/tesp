@@ -259,7 +259,7 @@
   "c_i_frac": 0.4,
   "normalized_loadshape_scalar": 1.0,
   "cooling_COP": 3.0,
-  "light_scalar_comm": 0.0,
+  "light_scalar_comm": 1.0,
   "over_sizing_factor": [0.1, 0.2, 0.2, 0.3, 0.3, 0.3],
   "osingleFamilyProperties": [[16.0, 10.0, 10.0, 1, 1, 1, 1, 3, 0.75, 2.8, 2.4],
                              [19.0, 11.0, 12.0, 2, 1, 1, 1, 3, 0.75, 3.0, 2.5],

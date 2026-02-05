@@ -88,6 +88,7 @@ coinor-libcbc-dev \
 coinor-libipopt-dev \
 liblapack-dev \
 libmetis-dev \
+libmumps-dev \
 python${_ver_} \
 python${_ver_}-venv \
 python3-pip \

@@ -28,8 +28,7 @@ NS_LOG_COMPONENT_DEFINE("loadshedCommNetwork");
 
 int main(int argc, char *argv[])
 {
-//  LogComponentEnable("loadshedCommNetwork", LOG_LEVEL_ALL);	
-  //Handle input arguments
+    //Handle input arguments
 	std::string helicsConfigFile = "";
 	double simulationRunTime = 0.0;
 	CommandLine cmd;
@@ -66,16 +65,16 @@ int main(int argc, char *argv[])
 	Ipv4InterfaceContainer p2pInterfaces;
 	p2pInterfaces = address.Assign (p2pDevices);
 
-	//Attach Helics Application to nodes.
+	// Attach Helics Application to nodes.
     NS_LOG_INFO ("Running " << nNodes << " nodes to end time " << Seconds(simulationRunTime));
 //  std::cout << "Running " << nNodes << " nodes to end time " << Seconds(simulationRunTime) << std::endl;
 	std::vector<ApplicationContainer> helicsFilterApps;
 	for(int i=0; i<nNodes; i++) {
-      NS_LOG_INFO (i << ":Filter:" << helics_federate->getFilter(i).getName() << ":Endpoint:" << helics_federate->getEndpoint(i).getName());
-	  ApplicationContainer apps = helicsHelper.InstallFilter(p2pNodes.Get(i), helics_federate->getFilter(i), helics_federate->getEndpoint(i));
-	  apps.Start(Seconds(0.0));
-	  apps.Stop(Seconds(simulationRunTime));
-	  helicsFilterApps.push_back(apps);
+        NS_LOG_INFO (i << ":Filter:" << helics_federate->getFilter(i).getName() << ":Endpoint:" << helics_federate->getEndpoint(i).getName());
+        ApplicationContainer apps = helicsHelper.InstallFilter(p2pNodes.Get(i), helics_federate->getFilter(i), helics_federate->getEndpoint(i));
+        apps.Start(Seconds(0.0));
+        apps.Stop(Seconds(simulationRunTime));
+        helicsFilterApps.push_back(apps);
 	}
 	Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
 	pointToPoint.EnablePcapAll ("second");
@@ -88,4 +87,3 @@ int main(int argc, char *argv[])
 	Simulator::Destroy();
 	return 0;
 }
-

@@ -2,7 +2,7 @@ ARG DOCKER_VER
 ARG TAG=$DOCKER_VER
 
 # Build runtime image
-FROM cosim-ubuntu:tesp_$TAG AS cosim-library
+FROM tesp-ubuntu:tesp_$TAG AS tesp-library
 
 ARG SIM_GID
 ARG SIM_GRP

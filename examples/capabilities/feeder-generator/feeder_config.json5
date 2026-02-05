@@ -20,7 +20,7 @@
     "gis_file": "",               // optional positional data for feeder (.json)
     "taxonomy": "R1-12.47-2.glm", // base taxonomy feeder model
     "out_file_glm": "test.glm",   // REQUIRED: output populated feeder ("myfeeder_populated.glm").
-    "caseName": "MyCase",        // REQUIRED: a name for your case
+    "caseName": "MyCase",         // REQUIRED: a name for your case
     "substation_name": "MySub",   // REQUIRED: a name for the substation
     // Metadata Files
     "data_path": ".",
