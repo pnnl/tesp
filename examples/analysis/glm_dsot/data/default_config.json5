@@ -83,6 +83,7 @@
   "opf_dc": 1,
   "LogLevel": "INFO",
   "gld_debug": 0,
+  "monitor": true,
   "DSOT_case": true,
   // Default: blank, otherwise set a path for all outputs
   "outputPath": "",
