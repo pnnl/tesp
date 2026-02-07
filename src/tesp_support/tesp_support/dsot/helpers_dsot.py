@@ -281,10 +281,6 @@ def write_dsot_management_script(master_file, case_path, config=None, system_con
                     outfile.write('(exec python3 -c "import tesp_support.api.player as tesp;'
                                   'tesp.load_player_loop(\'./%s\', \'%s\')" &> %s/%s_player.log &)\n'
                                   % (master_file, players[plyr], out_path, player[0]))
-        if config['monitor']:
-            # Wait a minute and then open tesp monitor GUI
-            outfile.write('sleep 60\n')
-            outfile.write('exec python3 $TESPDIR/src/tesp_support/tesp_support/dsot/tesp_monitor.py')
 
     try:
         write_management_script(archive_folder, case_path, out_path, config['gld_debug'], 1)
@@ -424,10 +420,6 @@ def write_dsot_management_script_f(master_file, case_path, config=None, system_c
                                       'tesp.load_player_loop_f(\'./%s\', \'%s\')" ^> %s\\%s_player.log 2^>^&1\n'
                                       % (master_file, players[plyr], out_path, player[0]))
                         
-            if config['monitor']:
-                # Wait a minute and then open tesp monitor GUI
-                outfile.write('sleep 60\n')
-                outfile.write('start /b cmd /c python -c $TESPDIR/src/tesp_support/tesp_support/dsot/tesp_monitor.py')
 
         with open(out_folder + '/kill.bat', 'w') as outfile:
             outfile.write('taskkill /F /IM fncs_broker.exe\n')
