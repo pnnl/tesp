@@ -1210,7 +1210,7 @@ class GLMModel:
                     edges = zip(nodes[0:], nodes[1:])
                     for u, v in edges:
                         eclass = G[u][v]['eclass']
-                        if self.is_edge_class(eclass):
+                        if self.is_edge_class(eclass, exclude=['parent']):
                             ename = G[u][v]['ename']
                             if ename not in seg_loads:
                                 seg_loads[ename] = [0.0, '']

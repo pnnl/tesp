@@ -153,7 +153,7 @@ class TespMonitorJSON:
             weatherline = f"import tesp_support.weather.weather_agent_f as tesp;tesp.startWeatherAgent('weather_Substation_' + {dso_num} + '/weather.dat')"
 
             cmd = cmds['commands_f']
-            print(os.cwd)
+            print(os.curdir)
             cmd.append({'args': ['fncs_broker', '5'],
                         'env': [['FNCS_BROKER', 'tcp://*:5570'],
                                 ['FNCS_FATAL', 'YES']],

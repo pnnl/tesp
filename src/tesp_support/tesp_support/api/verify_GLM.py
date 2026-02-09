@@ -211,9 +211,9 @@ class Read:
             return total_area / count if count > 0 else 0.0
 
         self.avg_floor_area = {
-            "Single-Family": safe_avg(sf_floor_area, of),
-            "Multi-Family": safe_avg(mf_floor_area, of),
-            "Mobile-Home": safe_avg(mh_floor_area, of),
+            "Single-Family": safe_avg(sf_floor_area, sf),
+            "Multi-Family": safe_avg(mf_floor_area, mf),
+            "Mobile-Home": safe_avg(mh_floor_area, mh),
             "Office": safe_avg(of_floor_area, of),
             "Warehouse": safe_avg(wh_floor_area, wh),
             "Big Box": safe_avg(bb_floor_area, bb),
@@ -243,7 +243,8 @@ class Read:
 
 def read_new():
     data_path = os.path.expandvars('$TESPDIR/examples/analysis/glm_dsot/code')
-    in_file_glm = '8_2016_04_pv_bt_fl_ev/Substation_1/Substation_1.glm'
+    num = 8
+    in_file_glm = f'feeder_test_pv_bt_fl_ev/Substation_{num}/Substation_{num}.glm'
     print('---------------New----------------')
     return Read(data_path, in_file_glm, label="New")
 
@@ -251,6 +252,7 @@ def read_new():
 def read_old():
     data_path = os.path.expandvars('$TESPDIR/examples/analysis/dsot/code')
     in_file_glm = 'Substation_1_original.glm'
+    #in_file_glm = 'Substation_2_original.glm'
     print('---------------Old----------------')
     return Read(data_path, in_file_glm, label="Old")
 
