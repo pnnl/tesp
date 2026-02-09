@@ -645,8 +645,8 @@ class Residential_Build:
             None
         """
 
-        self.nhouse = int(self.config.base.house_nodes[basenode][0])
-        lg_v_sm = float(self.config.base.house_nodes[basenode][2])
+        nhouse = self.config.base.house_nodes[basenode][0]
+        lg_v_sm = self.config.base.house_nodes[basenode][2]
         phs = self.config.base.house_nodes[basenode][3]
         bldg = self.config.base.house_nodes[basenode][4]
         ti = self.config.base.house_nodes[basenode][5]
@@ -671,7 +671,7 @@ class Residential_Build:
             "voltage_2": vstart })
         tpxname = f'{basenode}_tpx'
         mtrname = f'{tpxname}_mtr'
-        for i in range(self.nhouse):
+        for i in range(nhouse):
             idx = i + 1
             tpxname1 = f'{tpxname}_{idx}'
             mtrname1 = f'{mtrname}_{idx}'
@@ -2489,15 +2489,15 @@ class Feeder:
                 tkva = seg_loads[e_name][0]
                 phs = seg_loads[e_name][1]
                 if 'S' in phs: # Split phase lines run to houses
-                    self.config.res_bld.nhouse = int((tkva / avg_house) + 0.5)  # round to nearest int
+                    nhouse = int((tkva / avg_house) + 0.5)  # round to nearest int
                     node = gld_strict_name(e_object['to'])
-                    if self.config.res_bld.nhouse <= 0:
+                    if nhouse <= 0:
                         total_small += 1
                         total_small_kva += tkva
                         self.config.base.small_nodes[node] = [tkva, phs]
                     else:
-                        total_houses += self.config.res_bld.nhouse
-                        lg_v_sm = tkva / avg_house - self.config.res_bld.nhouse
+                        total_houses += nhouse
+                        lg_v_sm = tkva / avg_house - nhouse
                         # > 0 if we rounded down the number of houses
                         # Get the income level for the dso_type and state
                         inc_lev = self.config.res_bld.selectIncomeLevel(dso_income_pct, rng.uniform(0, 1))
@@ -2505,12 +2505,12 @@ class Feeder:
                         dsoThermalPct = self.config.res_bld.getDsoThermalTable(self.config.income_level[inc_lev])
                         bldg, ti = self.config.res_bld.selectResidentialBuilding(dsoThermalPct, rng.uniform(0, 1))
                         if bldg == 0:
-                            total_sf += self.config.res_bld.nhouse
+                            total_sf += nhouse
                         elif bldg == 1:
-                            total_apt += self.config.res_bld.nhouse
+                            total_apt += nhouse
                         else:
-                            total_mh += self.config.res_bld.nhouse
-                        self.config.base.house_nodes[node] = [self.config.res_bld.nhouse, rgn, lg_v_sm, phs, bldg, ti, inc_lev]
+                            total_mh += nhouse
+                        self.config.base.house_nodes[node] = [nhouse, rgn, lg_v_sm, phs, bldg, ti, inc_lev]
         print('Results in a populated feeder with:')
         print(f"    {total_small} small loads totaling {total_small_kva:.2f} kVA")
         print(f"    {total_houses} houses added to {len(self.config.base.house_nodes)} transformers")

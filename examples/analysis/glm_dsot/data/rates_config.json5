@@ -16,9 +16,9 @@
   "time_zone": "CST+6CDT",
   "case_type": {
     "bt": 1, // bt = battery participates
-    "fl": 0, // fl = flexible loads (houses) participate
-    "ev": 0, // ev = electric vehicles participate
-    "pv": 0  // pv = photovoltaics
+    "fl": 1, // fl = flexible loads (houses) participate
+    "ev": 1, // ev = electric vehicles participate
+    "pv": 1  // pv = photovoltaics
   },
   // Participation rate. Default: 0.80
   "transactive_house_percentage": 0.80,
