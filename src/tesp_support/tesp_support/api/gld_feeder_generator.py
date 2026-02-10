@@ -130,12 +130,12 @@ import numpy as np
 import pandas as pd
 from pandas import DataFrame
 
-from ..api.helpers import gld_strict_name, random_norm_trunc, randomize_residential_skew
-from ..api.modify_GLM import GLMModifier
-from ..api.time_helpers import get_secs_from_hhmm, get_hhmm_from_secs, get_duration, get_dist
-from ..api.time_helpers import is_hhmm_valid, subtract_hhmm_secs, add_hhmm_secs
-from ..api.entity import assign_defaults
-from ..api.recs_gld_house_parameters import get_RECS_jsons
+from .helpers import gld_strict_name, random_norm_trunc, randomize_residential_skew
+from .modify_GLM import GLMModifier
+from .time_helpers import get_secs_from_hhmm, get_hhmm_from_secs, get_duration, get_dist
+from .time_helpers import is_hhmm_valid, subtract_hhmm_secs, add_hhmm_secs
+from .entity import assign_defaults
+from .recs_gld_house_parameters import get_RECS_jsons
 
 rng = np.random.default_rng(7)
 position = None
@@ -1649,8 +1649,8 @@ class Commercial_Build:
             if bldg_type not in ['large_office']:
                 area = Commercial_Build.normalize_dict_prob(bldg_type, self.building_model_specifics[bldg_type]['total_area'])
                 bldg_area_bin = Commercial_Build.rand_bin_select(area, rng.uniform(0, 1))
-                self.bldg_area = Commercial_Build.sub_bin_select(bldg_area_bin, 'total_area', rng.uniform(0, 1))
-                bldgs['bldg_' + str(i + 1)] = [bldg_type, self.bldg_area]
+                bldg_area = Commercial_Build.sub_bin_select(bldg_area_bin, 'total_area', rng.uniform(0, 1))
+                bldgs['bldg_' + str(i + 1)] = [bldg_type, bldg_area]
                 i += 1
         return bldgs
     
@@ -2550,73 +2550,69 @@ class Feeder:
         for e_name, e_object in entity.items():
             if 'load_class' not in e_object:
                 log.warning("load_class not defined! Cannot add commercial loads")
-                return None
-            else:
-                select_bldg = None
-                if e_object['load_class'] != 'C':
-                    continue
-                elif e_object['load_class'] == 'C':
-                    kva = self.glm.model.accumulate_load_kva(e_object)
-                    total_commercial += 1
-                    self.config.com_bld.total_comm_kva += kva
-                    vln = float(e_object['nominal_voltage'])
-                    nphs = 0
-                    phases = e_object['phases']
-                    if 'A' in phases:
-                        nphs += 1
-                    if 'B' in phases:
-                        nphs += 1
-                    if 'C' in phases:
-                        nphs += 1
-                    nzones = int((kva / avgBuilding) + 0.5)
-                    target_sqft = kva / sqft_kva_ratio
-                    sqft_error = -target_sqft
-                    remain_comm_kva = 0
-                    for bldg in comm_bldgs_pop:
-                        if 0 >= (comm_bldgs_pop[bldg][1] - target_sqft) > sqft_error:
-                            select_bldg = bldg
-                            sqft_error = comm_bldgs_pop[bldg][1] - target_sqft
-                        remain_comm_kva += comm_bldgs_pop[bldg][1] * sqft_kva_ratio
-           
-                    if select_bldg is not None:
-                        comm_name = select_bldg
-                        comm_type = comm_bldgs_pop[select_bldg][0]
-                        comm_size = comm_bldgs_pop[select_bldg][1]
-                        if comm_type == 'office':
-                            total_office += 1
-                        elif comm_type == 'warehouse_storage':
-                            total_warehouse_storage += 1
-                        elif comm_type == 'big_box':
-                            total_big_box += 1
-                        elif comm_type == 'strip_mall':
-                            total_strip_mall += 1
-                        elif comm_type == 'education':
-                            total_education += 1
-                        elif comm_type == 'food_service':
-                            total_food_service += 1
-                        elif comm_type == 'food_sales':
-                            total_food_sales += 1
-                        elif comm_type == 'lodging':
-                            total_lodging += 1
-                        elif comm_type == 'healthcare_inpatient':
-                            total_healthcare_inpatient += 1
-                        elif comm_type == 'low_occupancy':
-                            total_low_occupancy += 1
-                        del (comm_bldgs_pop[select_bldg])
-                    else:
-                        if nzones > 0:
-                            log.info('Commercial building could not be found for %.2f KVA load', kva)
-                        comm_name = 'streetlights'
-                        comm_type = 'ZIPload'
-                        comm_size = 0
-                        total_zipload += 1
-                    mtr = gld_strict_name(e_object['parent'])
-                    extra_billing_meters.add(mtr)
-                    self.config.base.comm_loads[e_name] = [mtr, comm_type, comm_size, kva, nphs, phases, vln, total_commercial, comm_name]
+                continue
+            if e_object['load_class'] != 'C':
+                continue
+            kva = self.glm.model.accumulate_load_kva(e_object)
+            total_commercial += 1
+            self.config.com_bld.total_comm_kva += kva
+            vln = float(e_object['nominal_voltage'])
+            nphs = 0
+            phases = e_object['phases']
+            if 'A' in phases:
+                nphs += 1
+            if 'B' in phases:
+                nphs += 1
+            if 'C' in phases:
+                nphs += 1
+            nzones = int((kva / avgBuilding) + 0.5)
+            target_sqft = kva / sqft_kva_ratio
+            sqft_error = -target_sqft
+            select_bldg = None
+            remain_comm_kva = 0
+            for bldg in comm_bldgs_pop:
+                if 0 >= (comm_bldgs_pop[bldg][1] - target_sqft) > sqft_error:
+                    select_bldg = bldg
+                    sqft_error = comm_bldgs_pop[bldg][1] - target_sqft
+                remain_comm_kva += comm_bldgs_pop[bldg][1] * sqft_kva_ratio
 
-        if e_object['load_class'] != 'C':
-            return None
-        
+            if select_bldg is not None:
+                comm_name = select_bldg
+                comm_type = comm_bldgs_pop[select_bldg][0]
+                comm_size = comm_bldgs_pop[select_bldg][1]
+                if comm_type == 'office':
+                    total_office += 1
+                elif comm_type == 'warehouse_storage':
+                    total_warehouse_storage += 1
+                elif comm_type == 'big_box':
+                    total_big_box += 1
+                elif comm_type == 'strip_mall':
+                    total_strip_mall += 1
+                elif comm_type == 'education':
+                    total_education += 1
+                elif comm_type == 'food_service':
+                    total_food_service += 1
+                elif comm_type == 'food_sales':
+                    total_food_sales += 1
+                elif comm_type == 'lodging':
+                    total_lodging += 1
+                elif comm_type == 'healthcare_inpatient':
+                    total_healthcare_inpatient += 1
+                elif comm_type == 'low_occupancy':
+                    total_low_occupancy += 1
+                del (comm_bldgs_pop[select_bldg])
+            else:
+                if nzones > 0:
+                    log.info('Commercial building could not be found for %.2f KVA load', kva)
+                comm_name = 'streetlights'
+                comm_type = 'ZIPload'
+                comm_size = 0
+                total_zipload += 1
+            mtr = gld_strict_name(e_object['parent'])
+            extra_billing_meters.add(mtr)
+            self.config.base.comm_loads[e_name] = [mtr, comm_type, comm_size, kva, nphs, phases, vln, total_commercial, comm_name]
+
+
         # Print commercial info
         print('Results in a populated feeder with:')
         print('    {} commercial loads identified, {} buildings added, approximately {} kVA still to be assigned.'.

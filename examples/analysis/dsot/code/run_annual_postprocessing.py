@@ -29,7 +29,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-''' This script runs key postprocessing functions that warrant execution after every simulation run.  
+""" This script runs key postprocessing functions that warrant execution after every simulation run.  
 It has the following elements:
 
     0. Setup - establish locations and meta data files etc.
@@ -37,16 +37,16 @@ It has the following elements:
     2. Postprocessing that is required across all DSOs and is desired for every run
     3. Postprocessing that is needed over the entire year (and will likely need be executed on Constance).
     4. Postprocessing that compares cases (and will likely need to be executed on Constance).
-'''
+"""
 
 
 # --------------- Select folder locations for different cases -----------------
-'''To run_annual_postprocessing.py, first finish simulating each month for each 
+"""To run_annual_postprocessing.py, first finish simulating each month for each 
 case. Then, move all case folders to datapath. Suggested datapath is to create 
 the subfolder: $TESPDIR/examples/analysis/dsot/data/post_processing
 Finally, specify the directories of the cases you want to postprocess, adding
 each to the case_list below. 
-'''
+"""
 
 hayden = False
 

@@ -7,7 +7,7 @@ plt.rc('ytick', labelsize=22)
 plt.rc('legend', fontsize=22)
 plt.rc('axes', labelsize=22)
 
-d = r'''../SGIP1new'''
+d = '../SGIP1new'
 subdir = [os.path.join(d, o) for o in os.listdir(d) if os.path.isdir(os.path.join(d, o))]
 print(subdir)
 

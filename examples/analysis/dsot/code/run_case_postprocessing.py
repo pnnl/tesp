@@ -7,7 +7,7 @@ from joblib import Parallel, delayed
 import tesp_support.dsot.plots as pt
 import tesp_support.dsot.dso_rate_making as rm
 
-''' This script runs key postprocessing functions that warrant execution after every simulation run.  
+""" This script runs key postprocessing functions that warrant execution after every simulation run.  
 It has the following elements:
     0. Setup - establish locations and meta data files etc.
     1. Postprocessing that is required per DSO (and can be parallelized)
@@ -28,7 +28,7 @@ Supported backends are:
      as NumPy).
     - Finally, you can register backends by calling register_parallel_backend.
     This will allow you to implement a backend of your liking.
-'''
+"""
 _NUM_CORE = -1
 _backend = 'loky'  # 'multiprocessing'  had some problems
 _verbose = 10

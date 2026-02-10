@@ -20,7 +20,7 @@ from ..dsot import dso_CFS as cfs
 # filenames[0]
 
 # old functions
-'''
+"""
 def get_correct_days(dso_path, filenames):
     sub_filenames = []
     temp_df = pd.read_hdf(os.path.join(dso_path, filenames[0]), key='/metrics_df0', mode='r')
@@ -102,7 +102,7 @@ def dict_add(dict_list):
 
 def get_number_levels(d):
     return max(get_number_levels(v) if isinstance(v, dict) else 0 for v in d.values()) + 1
-'''
+"""
 
 
 ###################################################

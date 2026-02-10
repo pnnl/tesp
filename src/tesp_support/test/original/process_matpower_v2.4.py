@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 # first, read and print a dictionary of relevant MATPOWER objects
 
-casepath = r'''C:\Qiuhua\FY2016_Project_Transactive_system\Simulation_Year1\SGIP1\SGIP1a\\'''
+casepath = tesp_path + '/examples/analysis/SGIP1/SGIP1a/'
 casename = 'SGIP1a'
 lp = open(casepath + casename + "_m_dict.json").read()
 dict = json.loads(lp)
@@ -207,10 +207,10 @@ print("Sum of Real power during 240s to 2040s ",
 
 #  -----------save the dataset to a netCMF format file-------------------------
 
-# mp_bus_metrics.to_netcdf(r'''..\mp_bus_metrics.nc''')
+# mp_bus_metrics.to_netcdf('../mp_bus_metrics.nc')
 
 #  -----------load a netCMF format file to dataset-----------------------------
-# mp_bus_metrics2 = xr.open_dataset(r'''..\mp_bus_metrics.nc''')
+# mp_bus_metrics2 = xr.open_dataset('../mp_bus_metrics.nc')
 
 
 # processing the generation part metrics

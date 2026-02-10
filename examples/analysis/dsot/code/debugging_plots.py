@@ -484,11 +484,11 @@ if __name__ == "__main__":
                 AVG_power = data_individual[i][meta_S[V_analis[ivar]]['index']]
                 ax1.plot((AVG_power.resample('60min').mean()/to_kW).values,marker='x',label=V_analis[ivar]);plt.xlabel('time (hours)');plt.grid(True);plt.title('home '+str(i));#ax1.set_ylabel('(F)');
             ax1.legend()
-            '''
+            """
             AVG_power = data_individual[i][meta_S[V_analis[-1]]['index']]
             ax2.plot((AVG_power/to_kW).values,'-', color='k',label=V_analis[-1]);ax2.set_ylabel('price ($/kW)');plt.xlabel('time (hours)');plt.grid(True)
             #ax2.legend()
-            '''
+            """
             plt.show()
 
 

@@ -443,7 +443,7 @@ if __name__ == '__main__':
     case_config_name = '200_system_case_config.json'
 
     contour_idx = 0
-    ''' Contour Index = Title , Units
+    """ Contour Index = Title , Units
     0 = 'Wholesale LMP', 'LMP ($/MW-hr)'
     1 = 'Generation Utilization', 'Generation Fraction (-)' (Fraction of generation capacity dispatched at each bus)
     2 = 'Generation Load', 'Gen Load (MW)'  (Generator capacity dispatched at each bus)
@@ -454,7 +454,7 @@ if __name__ == '__main__':
     7 = 'Load Fraction', 'Load Fraction (-)' (fraction of total system load that resides at each bus)
     8 = 'Renewable Capacity', 'Renew Capacity (MW)' Total renewable capacity installed at each bus
     9 = 'Renewable Generation', 'Renew Gen (MW)' Total renewable generation produced at each bus
-    '''
+    """
     # index_range = range(0,6)
     # for contour_idx in index_range:
     #   bulk_system_map_plot(data_path, config_path, shape_path, case_config_path, case_config_name, dayrange, hr, contour_idx, ercot_200, real_time)
