@@ -153,6 +153,10 @@ done
     subprocess.run(['chmod', '+x', out_folder + '/kill.sh'])
     subprocess.run(['chmod', '+x', out_folder + '/clean.sh'])
     subprocess.run(['chmod', '+x', out_folder + '/docker-run.sh'])
+    try:
+        subprocess.run(['chmod', '+x', out_folder + '/tesp_monitor.sh'])
+    except FileNotFoundError:
+        pass
 
 
 def write_dsot_management_script(master_file, case_path, config=None, system_config=None, substation_config=None,
@@ -286,6 +290,10 @@ def write_dsot_management_script(master_file, case_path, config=None, system_con
         write_management_script(archive_folder, case_path, out_path, config['gld_debug'], 1)
     except TypeError:
         write_management_script(archive_folder, case_path, out_path, system_config['gldDebug'], 1)
+    
+    if config['monitor']:
+        with open(out_folder + '/tesp_monitor.sh', 'w') as outfile:
+            outfile.write('python3 $TESPDIR/src/tesp_support/tesp_support/dsot/tesp_monitor.py')
 
 
 def write_dsot_management_script_f(master_file, case_path, config=None, system_config=None, substation_config=None,
@@ -523,6 +531,10 @@ def write_dsot_management_script_f(master_file, case_path, config=None, system_c
             write_management_script(archive_folder, case_path, out_path, config['gld_debug'], 1)
         except TypeError:
             write_management_script(archive_folder, case_path, out_path, system_config['gldDebug'], 1)
+        
+        if config['monitor']:
+            with open(out_folder + '/tesp_monitor.sh', 'w') as outfile:
+                outfile.write('python3 $TESPDIR/src/tesp_support/tesp_support/dsot/tesp_monitor.py')
 
 
 def write_management_script(archive_folder, case_path, out_path, gld_debug, run_post):
@@ -633,6 +645,10 @@ docker run \\
     subprocess.run(['chmod', '+x', out_folder + '/postprocess.sh'])
     subprocess.run(['chmod', '+x', out_folder + '/kill.sh'])
     subprocess.run(['chmod', '+x', out_folder + '/clean.sh'])
+    try:
+        subprocess.run(['chmod', '+x', out_folder + '/tesp_monitor.sh'])
+    except FileNotFoundError:
+        pass
 
 
 def write_players_msg(case_path, sys_config, dt):

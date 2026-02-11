@@ -35,8 +35,8 @@ import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 
 
-helics = None
-fncs = None
+# helics = None
+# fncs = None
 
 class TespMonitorJSON:
     """Creates the DSO_num_monitor.json files required to run the tesp monitor 
@@ -65,16 +65,20 @@ class TespMonitorJSON:
 
         mtr_federate = "monitor"
         dso_num = dso_key[-1]
-        sub_federate = "sub_" + str(dso_num)
-        gld_federate = "gld_" + str(dso_num)
-        tso_federate = "dso" + str(dso_num)
+        dso_key = str(dso_key)
+        dso_num = str(dso_num)
+        sub_federate = "sub_" + dso_num
+        gld_federate = "gld_" + dso_num
+        tso_federate = "dso" + dso_num
         EpBus = config['energyplus_bus']
         agent_federate = "eplus_agent"
         eplus_federate = "eplus"
+        casePath = os.path.expandvars("$TESPDIR/examples/analysis/glm_dsot/code/")
+        casePath = os.path.join(casePath, caseName)
 
-        GldFile = os.path.join('Substation_' + dso_num, 'Substation_' + dso_num + '.glm')
+        GldFile = os.path.join(casePath, f'Substation_{dso_num}/Substation_{dso_num}.glm')
         # GldMetricsFile was originally just metrics.json--may not work with h5
-        GldMetricsFile = os.path.join('Substation_' + dso_num, 'Substation_' + dso_num + '_substation.h5')
+        GldMetricsFile = os.path.join(casePath, f'Substation_{dso_num}/Substation_{dso_num}_substation.h5')
 
         StartTime = config['StartTime']
         EndTime = config['EndTime']
@@ -86,17 +90,17 @@ class TespMonitorJSON:
         cmds = {'time_stop': seconds,
             'yaml_delta': int(config['AgentPrep']['HVAC']['MarketClearingPeriod']),
             'commands': [],
-            'helics_config': f"DSO_{dso_num}/Substation_{dso_num}.json",
+            'helics_config': f"{casePath}/DSO_{dso_num}/Substation_{dso_num}.json",
             'commands_f': [],
-            'fncs_config': f"DSO_{dso_num}/Substation_{dso_num}.yaml",}
+            'fncs_config': f"{casePath}/DSO_{dso_num}/Substation_{dso_num}.yaml",}
 
         if sys.platform == 'win32':
             pycall = 'python'
         else:
             pycall = 'python3'
 
-        AgentDictFile = os.path.join(dso_key, 'Substation_' + dso_num) # + '_agent_dict.json')
-        PPJsonFile = 'generate_case_config.json'
+        AgentDictFile = os.path.join(casePath, f'{dso_key}/Substation_{dso_num}') # + '_agent_dict.json')
+        PPJsonFile = 'generate_case_config'
 
         WeatherConfigFile = os.path.join('weather_Substation_' + dso_num, "weather_Config.json")
 
@@ -105,16 +109,16 @@ class TespMonitorJSON:
             # write a YAML for the solution monitor
             yamlstr = """name: """ + mtr_federate + """
     time_delta: """ + str(config['AgentPrep']['HVAC']['MarketClearingPeriod']) + """s
-    broker: tcp://localhost:5570
+    broker: tcp://localhost:""" + str(config['port']) + """
     aggregate_sub: true
     values:
-    TPV_""" + str(dso_num) + """:
-        topic: """ + tso_federate + """/three_phase_voltage_""" + str(dso_num) + """
+    TPV_""" + dso_num + """:
+        topic: """ + tso_federate + """/three_phase_voltage_""" + dso_num + """
         default: 0
         type: double
         list: false
-    LMP_""" + str(dso_num) + """:
-        topic: """ + tso_federate + """/LMP_""" + str(dso_num) + """
+    LMP_""" + dso_num + """:
+        topic: """ + tso_federate + """/LMP_""" + dso_num + """
         default: 0
         type: double
         list: false
@@ -147,14 +151,15 @@ class TespMonitorJSON:
             print(yamlstr, file=op)
             op.close()
 
-            SubstationYamlFile = os.path.join(dso_key, 'Substation_' + dso_num + '.yaml')
+            SubstationYamlFile = os.path.join(casePath, f'{dso_key}/Substation_{dso_num}.yaml')
             aucline = "import tesp_support.dsot.substation_f as tesp;tesp.dso_loop_f('" + AgentDictFile + "','" + caseName + "')"
             ppline = "import tesp_support.original.tso_psst_f as tesp;tesp.tso_psst_loop_f('" + PPJsonFile + "','" + caseName + "')"
             weatherline = f"import tesp_support.weather.weather_agent_f as tesp;tesp.startWeatherAgent('weather_Substation_' + {dso_num} + '/weather.dat')"
 
             cmd = cmds['commands_f']
-            print(os.curdir)
-            cmd.append({'args': ['fncs_broker', '5'],
+
+
+            cmd.append({'args': [f'{os.getcwd()}/fncs_broker', '30'],
                         'env': [['FNCS_BROKER', 'tcp://*:5570'],
                                 ['FNCS_FATAL', 'YES']],
                         'log': 'broker_f.log'})
@@ -178,41 +183,65 @@ class TespMonitorJSON:
             op = open(caseName + '/' + dso_key + '_monitor.yaml', 'w')
             json.dump(cmds, op, indent=2)
             op.close()
-            
 
         elif config["messenger"] == 'HELICS':
+            monitor_fed_file = f"{dso_key}_monitor_helics.json"  # federate config
+            monitor_gui_file = f"{dso_key}_monitor.json"         # GUI launcher config
+
+            # Write HELICS federate config for the monitor
             ppc = HelicsMsg(mtr_federate, config['AgentPrep']['HVAC']['MarketClearingPeriod'])
-            ppc.subs_n("dso" + dso_num + "/three_phase_voltage_" + str(dso_num), "double")
-            ppc.subs_n("dso" + dso_num + "/lmp_rt_" + str(dso_num), "double")
+            ppc.subs_n("dso" + dso_num + "/three_phase_voltage_" + dso_num, "double")
+            ppc.subs_n("dso" + dso_num + "/lmp_rt_" + dso_num, "double")
             ppc.subs_n("dso" + dso_num + "/cleared_q_rt_", "double")
             ppc.subs_n(gld_federate + "/distribution_load", "complex")
             if len(EpBus) > 0:
                 ppc.subs_n(agent_federate + "/power_A", "double")
                 ppc.subs_n(eplus_federate + "/WHOLE BUILDING Facility Total Electric Demand Power", "double")
-            ppc.write_file(caseName + '/' + dso_key + '_monitor.json')
+            ppc.write_file(os.path.join(caseName, monitor_fed_file))
 
-
-            SubstationConfigFile = os.path.join(dso_key, 'Substation_' + dso_num + '.json')
+            SubstationConfigFile = os.path.join(casePath, f'{dso_key}/Substation_{dso_num}.json')
             PypowerConfigFile = 'tso_h.json'
-            aucline = "import tesp_support.dsot.substation as tesp;tesp.dso_loop('" + AgentDictFile + "','" + caseName + "')" #,helicsConfig='" + SubstationConfigFile + "')"
-            ppline = "import tesp_support.api.tso_psst as tesp;tesp.tso_psst_loop('" + PPJsonFile + "','" + caseName + "')" #,helicsConfig='" + PypowerConfigFile + "')"
-            weatherline = f"import tesp_support.weather.weather_agent_f as tesp;tesp.startWeatherAgent('weather_Substation_' + {dso_num} + '/weather.dat')"      
+            aucline = (
+                "import tesp_support.dsot.substation as tesp;"
+                f"tesp.dso_loop('{AgentDictFile}','{caseName}', helicsConfig='{SubstationConfigFile}')"
+            )
+            ppline = (
+                "import tesp_support.api.tso_psst as tesp;"
+                f"tesp.tso_psst_loop('{PPJsonFile}', helicsConfig='{PypowerConfigFile}')"
+            )
+            weatherline = (
+                "import tesp_support.weather.weather_agent_f as tesp;"
+                f"tesp.startWeatherAgent('weather_Substation_{dso_num}/weather.dat')"
+            )
 
+            # Write the monitor config
             cmd = cmds['commands']
-            cmd.append({'args': ['helics_broker', '-f', '5', '--loglevel=warning', '--name=mainbroker'],
-                        'log': 'broker.log'})
-            cmd.append({'args': ['gridlabd', '-D', 'USE_HELICS', '-D', 'METRICS_FILE=' + GldMetricsFile, GldFile],
-                        'log': gld_federate + '.log'})
-            cmd.append({'args': [pycall, '-c', aucline],
-                        'log': sub_federate + '.log'})
-            cmd.append({'args': [pycall, '-c', ppline],
-                        'log': tso_federate + '.log'})
-            cmd.append({'args': [pycall, '-c', weatherline],
-                        'env': [['WEATHER_CONFIG', WeatherConfigFile]],
-                        'log': 'weather.log'})
-            op = open(caseName + '/' + dso_key + '_monitor.json', 'w')
-            json.dump(cmds, op, indent=2)
-            op.close()
+            cmd.append({
+                'args': [pycall, '-c',
+                        "import tesp_support.api.schedule_server as tesp;"
+                        "tesp.schedule_server('../../../dsot/data/8_schedule_server_metadata_glm_dsot.json', 5150)"],
+                'log': 'schedule.log'
+            })
+            cmd.append({
+                'args': ['helics_broker', '-f', '5', '--loglevel=warning', '--name=mainbroker'],
+                'log': 'broker.log'
+            })
+            cmd.append({
+                'args': ['gridlabd', '-D', 'USE_HELICS', '-D', f"METRICS_FILE={GldMetricsFile}", GldFile],
+                'log': gld_federate + '.log'
+            })
+            cmd.append({'args': [pycall, '-c', aucline], 'log': sub_federate + '.log'})
+            cmd.append({'args': [pycall, '-c', ppline], 'log': tso_federate + '.log'})
+            cmd.append({
+                'args': [pycall, '-c', weatherline],
+                'env': [['WEATHER_CONFIG', WeatherConfigFile]],
+                'log': 'weather.log'
+            })
+
+            cmds['helics_config'] = monitor_fed_file
+            
+            with open(os.path.join(caseName, monitor_gui_file), 'w') as op:
+                json.dump(cmds, op, indent=2)    
 
 class TespMonitorGUI:
     """ Manages a GUI with 4 plotted variables, and buttons to stop TESP
@@ -275,9 +304,9 @@ class TespMonitorGUI:
         HELICS federates, False if not
     """
 
-    def __init__(self, master, HELICS=False):
+    def __init__(self, master):
         self.root = master
-        self.HELICS = HELICS
+        self.HELICS = None
         self.pids = []
         self.idxlast = -1
         self.time_granted = 0
@@ -294,11 +323,12 @@ class TespMonitorGUI:
 
         self.btn0 = ttk.Button(self.root, text='Open...', command=self.OpenConfig)
         self.btn0.grid(row=0, column=0, sticky=tk.NSEW)
-        self.filename = 'DSO_1_monitor.json'
-        if HELICS:
-            self.btn1 = ttk.Button(self.root, text='Start All', command=self.launch_all, state=tk.DISABLED)
-        else:
-            self.btn1 = ttk.Button(self.root, text='Start All', command=self.launch_all_f, state=tk.DISABLED)
+        self.btn1 = ttk.Button(self.root, text='Start All', command=self.start_all, state=tk.DISABLED)
+        
+        # if HELICS:
+        #     self.btn1 = ttk.Button(self.root, text='Start All', command=self.launch_all, state=tk.DISABLED)
+        # else:
+        #     self.btn1 = ttk.Button(self.root, text='Start All', command=self.launch_all_f, state=tk.DISABLED)
         self.btn1.grid(row=0, column=1, sticky=tk.NSEW)
         self.btn2 = ttk.Button(self.root, text='Kill All', command=self.kill_all, state=tk.DISABLED)
         self.btn2.grid(row=0, column=2, sticky=tk.NSEW)
@@ -402,12 +432,22 @@ class TespMonitorGUI:
             plot axes
         """
         fname = filedialog.askopenfilename(initialdir='.',
-                                           initialfile=self.filename,
-                                           title='Open JSON Monitor Configuration',
-                                           filetypes=(('JSON files', '*.json'), ('all files', '*.*')),
+                                           title='Open Monitor Configuration',
+                                           filetypes=[('JSON files', '*.json'),
+                                                      ('YAML files', ('*.yaml', '*.yml')),
+                                                      ('all files', '*.*')],
                                            defaultextension='json')
-        lp = open(fname)
-        cfg = json.loads(lp.read())
+        
+        ext = os.path.splitext(fname)[1].lower()
+
+        if ext == ".json":
+            self.HELICS = True
+        elif ext in [".yaml", ".yml"]:
+            self.HELICS = False
+
+        with open(fname) as lp:
+            cfg = json.loads(lp.read())
+
         if self.HELICS:
             self.msg_config = cfg['helics_config']
             self.commands = cfg['commands']
@@ -422,6 +462,8 @@ class TespMonitorGUI:
         os.chdir(dirpath)
         self.labelvar.set(dirpath)
         self.btn1['state'] = tk.NORMAL
+        
+    def start_all(self):
         if self.HELICS:
             self.launch_all()
         else:
@@ -608,10 +650,16 @@ class TespMonitorGUI:
             logfd = None
             if 'log' in row:
                 logfd = open(row['log'], 'w')
-            proc = subprocess.Popen(procargs, env=procenv, stdout=logfd)
+            try:
+                proc = subprocess.Popen(procargs, env=procenv, stdout=logfd)
+            except FileNotFoundError:
+                #print(f'procargs = {procargs}, env = {procenv}, stdout = {logfd}')
+                print(f"Couldn't find proc for {row}")
+                proc = "tcp://localhost:5570" 
             if "broker" in procargs[0]:
                 self.broker = proc
-            self.pids.append(proc)
+
+            self.pids.append(self.broker)
 
         print('launched', len(self.pids), 'simulators', flush=True)
         self.root.update()
@@ -815,18 +863,16 @@ class TespMonitorGUI:
         self.fig.canvas.draw()
 
 
-def show_tesp_monitor(HELICS=False):
+def show_tesp_monitor():
     """ Creates and displays the monitor GUI
     """
     global helics, fncs
-    if HELICS:
-        import helics
-    else:
-        from original import fncs as fncs
+    import helics
+    from original import fncs as fncs
 
     root = tk.Tk()
     root.title('Transactive Energy Simulation Platform: Solution Monitor')
-    my_gui = TespMonitorGUI(root, HELICS)
+    my_gui = TespMonitorGUI(root)
     root.update()
     while True:
         try:

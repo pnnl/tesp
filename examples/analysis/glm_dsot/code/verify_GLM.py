@@ -1,10 +1,38 @@
 """This script was written to check generated .glms against existing .glms that 
 have been tested and are known to solve successfully.
 """
-from api.modify_GLM import GLMModifier
+from tesp_support.api.modify_GLM import GLMModifier
+import tesp_support.api.parse_helpers as helpers
 import os
 import matplotlib.pyplot as plt
 import numpy as np
+
+
+def parse_water_demand(val):
+        """
+        Parse strings like 'small_1*1.00' or 'small_1 * 1.00' into 
+         (schedule, multiplier).
+        
+        Returns (schedule, multiplier) or (None, None) if it can't be parsed.
+        """
+        if val is None:
+            return None, None
+        s = str(val).strip().rstrip(";")
+
+        # Expect 'name*multiplier' or 'name * multiplier'
+        parts = s.split("*")
+        if len(parts) != 2:
+            return None, None
+
+        schedule = parts[0].strip()
+        mult_str = parts[1].strip()
+
+        try:
+            multiplier = float(mult_str)
+        except ValueError:
+            return None, None
+
+        return schedule, multiplier
 
 class Read:
     def __init__(self, data_path, in_file_glm, label):
@@ -41,6 +69,33 @@ class Read:
         he_floor_area = 0
         lo = 0
         lo_floor_area = 0
+
+        self.wh_params = {
+            "schedule_skew": [],
+            "heating_element_capacity": [],
+            "thermostat_deadband": [],
+            "tank_diameter": [],
+            "tank_UA": [],
+            "tank_volume": [],
+            "discrete_step_size": [],
+            "lower_tank_setpoint": [],
+            "upper_tank_setpoint": [],
+            "T_mixing_valve": [],
+        }
+        
+        self.wh_water_demand = {}
+
+        for wh_name, water_heaters in i_glm.waterheater.items():
+            for key in self.wh_params.keys():
+                val = helpers.parse_number(water_heaters.get(key))
+                self.wh_params[key].append(val)
+            
+            wd_raw = water_heaters.get("water_demand")
+            sched, mult = parse_water_demand(wd_raw)
+            if sched is not None and mult is not None:
+                if sched not in self.wh_water_demand:
+                    self.wh_water_demand[sched] = []
+                self.wh_water_demand[sched].append(mult)
 
         for house_name, house in i_glm.house.items():
             groupid = house["groupid"]
@@ -239,23 +294,7 @@ class Read:
             "Triplex Meters": total_triplex_meters,
             "Triplex Lines": total_triplex_lines,
         }
-
-
-def read_new():
-    data_path = os.path.expandvars('$TESPDIR/examples/analysis/glm_dsot/code')
-    num = 8
-    in_file_glm = f'feeder_test_pv_bt_fl_ev/Substation_{num}/Substation_{num}.glm'
-    print('---------------New----------------')
-    return Read(data_path, in_file_glm, label="New")
-
-
-def read_old():
-    data_path = os.path.expandvars('$TESPDIR/examples/analysis/dsot/code')
-    in_file_glm = 'Substation_1_original.glm'
-    #in_file_glm = 'Substation_2_original.glm'
-    print('---------------Old----------------')
-    return Read(data_path, in_file_glm, label="Old")
-
+    
 
 def plot_comparison(new_read: Read, old_read: Read):
     width = 0.35
@@ -396,8 +435,126 @@ def plot_comparison(new_read: Read, old_read: Read):
 
     plt.show()
 
+def plot_waterheater_histograms_comparison(new_read, old_read, bins=20):
+    """Side-by-side histograms for New vs Old for each waterheater parameter."""
+    all_keys = set(new_read.wh_params.keys()) | set(old_read.wh_params.keys())
+    keys = [
+        k for k in all_keys
+        if len(new_read.wh_params.get(k, [])) > 0
+        or len(old_read.wh_params.get(k, [])) > 0
+    ]
+
+    n = len(keys)
+    ncols = 3
+    nrows = (n + ncols - 1) // ncols
+
+    plt.figure(figsize=(6 * ncols, 3 * nrows))
+
+    for idx, key in enumerate(keys, start=1):
+        plt.subplot(nrows, ncols, idx)
+
+        new_vals = new_read.wh_params.get(key, [])
+        old_vals = old_read.wh_params.get(key, [])
+
+        # combined range for the histogram bins
+        all_vals = new_vals + old_vals
+        if not all_vals:
+            continue
+
+        plt.hist(
+            old_vals,
+            bins=bins,
+            histtype="step",
+            linewidth=2,
+            color="blue",
+            label=old_read.label,
+        )
+        plt.hist(
+            new_vals,
+            bins=bins,
+            alpha=0.5,
+            color="orange",
+            edgecolor="black",
+            label=new_read.label,
+        )
+
+        plt.title(key)
+        plt.xlabel(key)
+        plt.ylabel("Count")
+        plt.legend()
+
+    plt.suptitle("Waterheater Parameter Distributions – Old vs New")
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    plt.show()
+
+    # Water heater demand
+    all_scheds = set(new_read.wh_water_demand.keys()) | set(old_read.wh_water_demand.keys())
+    scheds = [
+        s for s in all_scheds
+        if len(new_read.wh_water_demand.get(s, [])) > 0
+        or len(old_read.wh_water_demand.get(s, [])) > 0
+    ]
+
+    if scheds:
+        n = len(scheds)
+        ncols = 3
+        nrows = (n + ncols - 1) // ncols
+
+        plt.figure(figsize=(6 * ncols, 3 * nrows))
+
+        for idx, sched in enumerate(scheds, start=1):
+            plt.subplot(nrows, ncols, idx)
+
+            new_vals = new_read.wh_water_demand.get(sched, [])
+            old_vals = old_read.wh_water_demand.get(sched, [])
+
+            if not new_vals and not old_vals:
+                continue
+
+            plt.hist(
+                old_vals,
+                bins=bins,
+                histtype="step",
+                linewidth=2,
+                color="blue",
+                label=old_read.label,
+            )
+            plt.hist(
+                new_vals,
+                bins=bins,
+                alpha=0.5,
+                color="orange",
+                edgecolor="black",
+                label=new_read.label,
+            )
+
+            plt.title(sched)
+            plt.xlabel("Water demand multiplier")
+            plt.ylabel("Count")
+            plt.legend()
+
+        plt.suptitle("Water Demand Multipliers by Schedule – Old vs New")
+        plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+        plt.show()
+
+def read_new():
+    data_path = os.path.expandvars('$TESPDIR/examples/analysis/glm_dsot/code')
+    num = 2
+    in_file_glm = f'feeder_test_pv_bt_fl_ev/Substation_{num}/Substation_{num}.glm'
+    print('---------------New----------------')
+    return Read(data_path, in_file_glm, label="New")
+
+
+def read_old():
+    data_path = os.path.expandvars('$TESPDIR/examples/analysis/dsot/code')
+    num = 2
+    in_file_glm = f'Substation_{num}_original.glm'
+    print('---------------Old----------------')
+    return Read(data_path, in_file_glm, label="Old")
+
 
 if __name__ == "__main__":
     new_read = read_new()
     old_read = read_old()
     plot_comparison(new_read, old_read)
+    plot_waterheater_histograms_comparison(new_read, old_read)
