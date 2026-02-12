@@ -130,12 +130,12 @@ import numpy as np
 import pandas as pd
 from pandas import DataFrame
 
-from api.helpers import gld_strict_name, random_norm_trunc, randomize_residential_skew
-from api.modify_GLM import GLMModifier
-from api.time_helpers import get_secs_from_hhmm, get_hhmm_from_secs, get_duration, get_dist
-from api.time_helpers import is_hhmm_valid, subtract_hhmm_secs, add_hhmm_secs
-from api.entity import assign_defaults
-from api.recs_gld_house_parameters import get_RECS_jsons
+from .helpers import gld_strict_name, random_norm_trunc, randomize_residential_skew
+from .modify_GLM import GLMModifier
+from .time_helpers import get_secs_from_hhmm, get_hhmm_from_secs, get_duration, get_dist
+from .time_helpers import is_hhmm_valid, subtract_hhmm_secs, add_hhmm_secs
+from .entity import assign_defaults
+from .recs_gld_house_parameters import get_RECS_jsons
 
 rng = np.random.default_rng(7)
 position = None
@@ -1203,9 +1203,10 @@ class Commercial_Build:
         params["heatgain_fraction"] = 0.9
         self.mdl.ZIPload.add(f"{name}_plug_loads", params)
 
-        params["base_power"] = '{:s}_exterior*{:.2f}'.format(bldg['base_schedule'], bldg['adj_ext'])
-        params["heatgain_fraction"] = 0.0
-        self.mdl.ZIPload.add(f"{name}_exterior_lights", params)
+        if bldg['adj_ext'] != 0:
+            params["base_power"] = '{:s}_exterior*{:.2f}'.format(bldg['base_schedule'], bldg['adj_ext'])
+            params["heatgain_fraction"] = 0.0
+            self.mdl.ZIPload.add(f"{name}_exterior_lights", params)
 
         params = {
             "parent": name,
@@ -1216,17 +1217,20 @@ class Commercial_Build:
             "current_fraction": 0,
             "power_pf": 1
         }
-        base_power = '{:s}_gas*{:.2f}'.format(bldg['base_schedule'], bldg['adj_gas'])
-        params["base_power"] = base_power
-        self.mdl.ZIPload.add(f"{name}_gas_waterheater", params)
+        if bldg['adj_gas'] != 0:
+            base_power = '{:s}_gas*{:.2f}'.format(bldg['base_schedule'], bldg['adj_gas'])
+            params["base_power"] = base_power
+            self.mdl.ZIPload.add(f"{name}_gas_waterheater", params)
 
-        params["base_power"] = '{:s}_occupancy*{:.2f}'.format(bldg['base_schedule'], bldg['adj_occ'])
-        self.mdl.ZIPload.add(f"{name}_occupancy", params)
+        if bldg['adj_occ'] != 0:
+            params["base_power"] = '{:s}_occupancy*{:.2f}'.format(bldg['base_schedule'], bldg['adj_occ'])
+            self.mdl.ZIPload.add(f"{name}_occupancy", params)
 
-        params["base_power"] = '{:.2f};'.format(bldg['adj_refrig'])
-        # set to 0.01 to avoid a divide by zero issue in the agent code.
-        # params["schedule_skew"] = 0.01 #'{:.0f}'.format(bldg['skew_value']) # Unused in DSOT
-        self.mdl.ZIPload.add(f"{name}_lrg_refrig", params)
+        if bldg['adj_refrig'] != 0:
+            params["base_power"] = '{:.2f}'.format(bldg['adj_refrig'])
+            # set to 0.01 to avoid a divide by zero issue in the agent code.
+            # params["schedule_skew"] = 0.01 #'{:.0f}'.format(bldg['skew_value']) # Unused in DSOT
+            self.mdl.ZIPload.add(f"{name}_lrg_refrig", params)
 
         self.glm.add_metrics_collector(name, "house")
 
@@ -1340,10 +1344,11 @@ class Commercial_Build:
                     params["base_power_" + phs] = "street_lighting*" + '{:.2f}'.format(self.config.base.light_scalar_comm * phsva)
                     params["phases"] = phs
                     # Note that self.config.base.light_scalar_comm = 0 as per DSOT
-            self.mdl.load.add(name, params)
-            # Add position data to commercial ZIPload, if available
-            if self.config.gis_file:
-                self.config.add_position(key, name)
+            if self.config.base.light_scalar_comm != 0:
+                self.mdl.load.add(name, params)
+                # Add position data to commercial ZIPload, if available
+                if self.config.gis_file:
+                    self.config.add_position(key, name)
 
         # Define default commercial building parameters
         else:
@@ -1358,7 +1363,7 @@ class Commercial_Build:
             age = Commercial_Build.normalize_dict_prob('vintage', bldg_specs['vintage'])
             age_bin = Commercial_Build.rand_bin_select(age, rng.uniform(0, 1))
             bldg['age'] = Commercial_Build.sub_bin_select(age_bin, 'vintage', rng.uniform(0, 1))
-          
+
             roof_construction_insulation = Commercial_Build.normalize_dict_prob('roof_construction_insulation', bldg_specs['roof_construction_insulation'])
             bldg['roof_type'] = Commercial_Build.rand_bin_select(roof_construction_insulation, rng.uniform(0, 1))
             wall_construction = Commercial_Build.normalize_dict_prob('wall_construction', bldg_specs['wall_construction'])
@@ -1421,9 +1426,9 @@ class Commercial_Build:
             adj_occ = (bldg_specs['internal_heat_gains']['occupancy'] * occ_load * (0.9 + 0.1 * rng.random()) 
                             * bldg['floor_area'] / 1000.0)
             # Set gas water heating to zero
-            adj_gas = 0 # (0.9 + 0.2 * rng.random())
+            adj_gas = 1 # (0.9 + 0.2 * rng.random())
             # Set exterior lighting to zero as plug and light parameters capture all of CBECS loads.
-            adj_ext = 0 # (0.9 + 0.1 * rng.random()) * bldg['floor_area'] / 1000.
+            adj_ext = 1 # (0.9 + 0.1 * rng.random()) * bldg['floor_area'] / 1000.
             int_gains = adj_lights + adj_plugs + adj_occ + adj_gas
            
             bldg['adj_lights'] = adj_lights
@@ -1447,7 +1452,7 @@ class Commercial_Build:
                 bldg['base_schedule'] = 'retail'
             elif comm_type == 'low_occupancy':
                 bldg['base_schedule'] = 'lowocc'
-            
+
             if bldg['floor_area'] < 10000:
                 bldg['interior_exterior_wall_ratio'] = 1
                 bldg['exterior_floor_fraction'] = 1
@@ -1476,7 +1481,7 @@ class Commercial_Build:
                 total_width = bldg['aspect_ratio'] * total_depth
                 d = total_width / 3.
                 w = total_depth / 2.
-                num_of_zone = 6
+
                 for zone in range(1, 7):
                     if zone == 2 or zone == 5:
                         bldg['exterior_wall_fraction'] = d / (2. * (d + w))
@@ -1514,7 +1519,7 @@ class Commercial_Build:
 
                     bldg['zonename'] = gld_strict_name(f'{key}_zn_{zone}_{comm_type}')
                     Commercial_Build.add_one_commercial_zone(self, bldg, key, phases)
-            
+
             # bldg_size > 30000: three floors, 5 or 6 zones each
             elif bldg['floor_area'] > 30000:
                 bldg['ceiling_height'] = 13.0
@@ -1597,8 +1602,8 @@ class Commercial_Build:
             if bldg_type not in ['large_office']:
                 area = Commercial_Build.normalize_dict_prob(bldg_type, self.building_model_specifics[bldg_type]['total_area'])
                 bldg_area_bin = Commercial_Build.rand_bin_select(area, rng.uniform(0, 1))
-                self.bldg_area = Commercial_Build.sub_bin_select(bldg_area_bin, 'total_area', rng.uniform(0, 1))
-                bldgs['bldg_' + str(i + 1)] = [bldg_type, self.bldg_area]
+                bldg_area = Commercial_Build.sub_bin_select(bldg_area_bin, 'total_area', rng.uniform(0, 1))
+                bldgs['bldg_' + str(i + 1)] = [bldg_type, bldg_area]
                 i += 1
         return bldgs
     
@@ -1630,26 +1635,28 @@ class Commercial_Build:
         return diction
 
     @staticmethod
-    def rand_bin_select(diction: dict, probability: float) -> str | None:
-        """ Returns the element (bin) in a dictionary given a certain
-          probability.
+    def rand_bin_select(diction: dict, probability: float) -> str:
+        """ Returns the element (bin) in a dictionary given a certain probability.
 
         Args:
-            diction: dictionary of elements and associated non-cumulative 
-                probabilities
-            probability: scalar value between 0 and 1
+            diction (dict): dictionary of elements and associated non-cumulative probabilities
+            probability (float): scalar value between 0 and 1
 
         Returns:
             str: element
         """
 
         total = 0
-
+        ret_element = ""
+        if 0 > probability or probability > 1:
+            raise Exception("rand_bin_select: Value must be 0<= probability <=1")
         for element in diction:
             total += diction[element]
-            if total >= probability:
-                return element
-        return None
+            if total >= probability and ret_element == "" :
+                ret_element = element
+        if total > 1.0001:
+            raise Exception(f"rand_bin_select: dictionary elements total summed are {total} > 1")
+        return ret_element
 
     @staticmethod
     def sub_bin_select(bin_range: str, bin_type: str, prob: float) -> int:
@@ -2496,73 +2503,69 @@ class Feeder:
         for e_name, e_object in entity.items():
             if 'load_class' not in e_object:
                 log.warning("load_class not defined! Cannot add commercial loads")
-                return None
-            else:
-                select_bldg = None
-                if e_object['load_class'] != 'C':
-                    continue
-                elif e_object['load_class'] == 'C':
-                    kva = self.glm.model.accumulate_load_kva(e_object)
-                    total_commercial += 1
-                    self.config.com_bld.total_comm_kva += kva
-                    vln = float(e_object['nominal_voltage'])
-                    nphs = 0
-                    phases = e_object['phases']
-                    if 'A' in phases:
-                        nphs += 1
-                    if 'B' in phases:
-                        nphs += 1
-                    if 'C' in phases:
-                        nphs += 1
-                    nzones = int((kva / avgBuilding) + 0.5)
-                    target_sqft = kva / sqft_kva_ratio
-                    sqft_error = -target_sqft
-                    remain_comm_kva = 0
-                    for bldg in comm_bldgs_pop:
-                        if 0 >= (comm_bldgs_pop[bldg][1] - target_sqft) > sqft_error:
-                            select_bldg = bldg
-                            sqft_error = comm_bldgs_pop[bldg][1] - target_sqft
-                        remain_comm_kva += comm_bldgs_pop[bldg][1] * sqft_kva_ratio
-           
-                    if select_bldg is not None:
-                        comm_name = select_bldg
-                        comm_type = comm_bldgs_pop[select_bldg][0]
-                        comm_size = comm_bldgs_pop[select_bldg][1]
-                        if comm_type == 'office':
-                            total_office += 1
-                        elif comm_type == 'warehouse_storage':
-                            total_warehouse_storage += 1
-                        elif comm_type == 'big_box':
-                            total_big_box += 1
-                        elif comm_type == 'strip_mall':
-                            total_strip_mall += 1
-                        elif comm_type == 'education':
-                            total_education += 1
-                        elif comm_type == 'food_service':
-                            total_food_service += 1
-                        elif comm_type == 'food_sales':
-                            total_food_sales += 1
-                        elif comm_type == 'lodging':
-                            total_lodging += 1
-                        elif comm_type == 'healthcare_inpatient':
-                            total_healthcare_inpatient += 1
-                        elif comm_type == 'low_occupancy':
-                            total_low_occupancy += 1
-                        del (comm_bldgs_pop[select_bldg])
-                    else:
-                        if nzones > 0:
-                            log.info('Commercial building could not be found for %.2f KVA load', kva)
-                        comm_name = 'streetlights'
-                        comm_type = 'ZIPload'
-                        comm_size = 0
-                        total_zipload += 1
-                    mtr = gld_strict_name(e_object['parent'])
-                    extra_billing_meters.add(mtr)
-                    self.config.base.comm_loads[e_name] = [mtr, comm_type, comm_size, kva, nphs, phases, vln, total_commercial, comm_name]
+                continue
+            if e_object['load_class'] != 'C':
+                continue
+            kva = self.glm.model.accumulate_load_kva(e_object)
+            total_commercial += 1
+            self.config.com_bld.total_comm_kva += kva
+            vln = float(e_object['nominal_voltage'])
+            nphs = 0
+            phases = e_object['phases']
+            if 'A' in phases:
+                nphs += 1
+            if 'B' in phases:
+                nphs += 1
+            if 'C' in phases:
+                nphs += 1
+            nzones = int((kva / avgBuilding) + 0.5)
+            target_sqft = kva / sqft_kva_ratio
+            sqft_error = -target_sqft
+            select_bldg = None
+            remain_comm_kva = 0
+            for bldg in comm_bldgs_pop:
+                if 0 >= (comm_bldgs_pop[bldg][1] - target_sqft) > sqft_error:
+                    select_bldg = bldg
+                    sqft_error = comm_bldgs_pop[bldg][1] - target_sqft
+                remain_comm_kva += comm_bldgs_pop[bldg][1] * sqft_kva_ratio
 
-        if e_object['load_class'] != 'C':
-            return None
-        
+            if select_bldg is not None:
+                comm_name = select_bldg
+                comm_type = comm_bldgs_pop[select_bldg][0]
+                comm_size = comm_bldgs_pop[select_bldg][1]
+                if comm_type == 'office':
+                    total_office += 1
+                elif comm_type == 'warehouse_storage':
+                    total_warehouse_storage += 1
+                elif comm_type == 'big_box':
+                    total_big_box += 1
+                elif comm_type == 'strip_mall':
+                    total_strip_mall += 1
+                elif comm_type == 'education':
+                    total_education += 1
+                elif comm_type == 'food_service':
+                    total_food_service += 1
+                elif comm_type == 'food_sales':
+                    total_food_sales += 1
+                elif comm_type == 'lodging':
+                    total_lodging += 1
+                elif comm_type == 'healthcare_inpatient':
+                    total_healthcare_inpatient += 1
+                elif comm_type == 'low_occupancy':
+                    total_low_occupancy += 1
+                del (comm_bldgs_pop[select_bldg])
+            else:
+                if nzones > 0:
+                    log.info('Commercial building could not be found for %.2f KVA load', kva)
+                comm_name = 'streetlights'
+                comm_type = 'ZIPload'
+                comm_size = 0
+                total_zipload += 1
+            mtr = gld_strict_name(e_object['parent'])
+            extra_billing_meters.add(mtr)
+            self.config.base.comm_loads[e_name] = [mtr, comm_type, comm_size, kva, nphs, phases, vln, total_commercial, comm_name]
+
+
         # Print commercial info
         print('Results in a populated feeder with:')
         print('    {} commercial loads identified, {} buildings added, approximately {} kVA still to be assigned.'.

@@ -20,7 +20,7 @@ def parse_number(arg):
         float: the parsed number
     """
     if 'inf' in arg:
-        raise ValueError(f"Expected float: {arg}")
+        raise ValueError(f"Expected float, got {arg}")
     try:
         return float(arg)
     except ValueError:
@@ -331,6 +331,7 @@ def test():
     print(parse_kw('-0.00681678-0.00373295j'))
     print(parse_kw('559966.6667+330033.3333j'))
     print(parse_kw('186283.85296131+110424.29850536j'))
+    print(parse_kw('186283.85296131-110424.29850536j'))
 
     print('\nparse_kva_old')
     print(parse_kva_old('-0.00681678+0.00373295j' ))
@@ -349,12 +350,16 @@ def test():
     print(parse_kva('-0.00681678-0.00373295j'))
     print(parse_kva('559966.6667+330033.3333j'))
     print(parse_kva('186283.85296131+110424.29850536j'))
+    print(parse_kva('186283.85296131-110424.29850536j'))
 
     print('\nparse_mva')
     print(parse_mva('-0.00681678+0.00373295j'))
     print(parse_mva('-0.00681678-0.00373295j'))
     print(parse_mva('559966.6667+330033.3333j'))
+    print(parse_mva('+1801330+560473j'))
+    print(parse_mva('+1.80133e06+560473j'))
     print(parse_mva('186283.85296131+110424.29850536j'))
+    print(parse_mva('186283.85296131-110424.29850536j'))
 
     print('\nparse_magnitude')
     print(parse_magnitude('4.544512492208864e-2'))
@@ -364,7 +369,10 @@ def test():
     print(parse_magnitude('-77.86 degF'))
     print(parse_magnitude('+77.86 degC'))
     print(parse_magnitude('-77.86 degC'))
+    print(parse_magnitude('+1801330+560473j'))
+    print(parse_magnitude('+1.80133e06+560473j'))
     print(parse_magnitude('+115.781-4.01083d V'))
+    print(parse_magnitude('+115.781+4.01083d V'))
 
     print('\nparse_magnitude_1')
     # print(parse_magnitude_1('4.544512492208864e-2'))
@@ -373,8 +381,10 @@ def test():
     print(parse_magnitude_1('+77.86 degF'))
     print(parse_magnitude_1('-77.86 degF'))
     print(parse_magnitude_1('+77.86 degC'))
-    print(parse_magnitude_1('-77.86 degC'))
+    print(parse_magnitude_1('+1801330+560473j'))
+    print(parse_magnitude_1('+1.80133e06+560473j'))
     print(parse_magnitude_1('+115.781-4.01083d V'))
+    print(parse_magnitude_1('+115.781+4.01083d V'))
 
     print('\nparse_magnitude_2')
     # print(parse_magnitude_2('4.544512492208864e-2'))
@@ -384,5 +394,8 @@ def test():
     print(parse_magnitude_2('-77.86 degF'))
     print(parse_magnitude_2('+77.86 degC'))
     print(parse_magnitude_2('-77.86 degC'))
+    print(parse_magnitude_2('+1801330+560473j'))
+    print(parse_magnitude_2('+1.80133e06+560473j'))
     print(parse_magnitude_2('+115.781-4.01083d V'))
+    print(parse_magnitude_2('+115.781+4.01083d V'))
 

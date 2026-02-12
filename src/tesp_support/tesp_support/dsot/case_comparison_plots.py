@@ -1120,13 +1120,13 @@ def customer_cfs_delta(cases, data_paths, metadata_file, metadata_path = None):
         saves dso lmps plots to file
         """
 
-    '''
+    """
     commercial versus residential savings
     multi-family versus single vs manufactured home
     HR: solar versus no solar
     HR: ev versus battery versus both.
     Rural, Urban, Suburban
-    '''
+    """
     # dso
     # building_type
     # tariff_class

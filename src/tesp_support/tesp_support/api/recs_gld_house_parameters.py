@@ -6,11 +6,11 @@ import warnings
 import numpy as np
 import pandas as pd
 
-from ..api.data import feeders_path
+from .data import feeders_path
 
 
 def bin_size_check(sample_data, recs_data, state, housing_dens, inc_lev, binsize, climate_zone, income_str):
-    '''
+    """
     Check bin size and adjust sample data to use census region, climate zone, or combine income levels if below threshold.
     Args:
         sample_data (pd.DataFrame): Initial sample data based on state, housing density, and income level.
@@ -24,7 +24,7 @@ def bin_size_check(sample_data, recs_data, state, housing_dens, inc_lev, binsize
     Returns:
         sample_data (pd.DataFrame): Adjusted sample data meeting bin size threshold.
         total (float): Total population weight of the adjusted sample data.
-    '''
+    """
     og_bin_size = len(sample_data)
     print('Bin Size', inc_lev, " ", og_bin_size)
     # Define Census Regions in case sample size is too small for state
@@ -208,7 +208,7 @@ def bin_size_check(sample_data, recs_data, state, housing_dens, inc_lev, binsize
 
 
 def get_residential_metadata(metadata, sample_data, state, hsdens_str, inc_lev, total, wh_shift_per):
-    '''
+    """
     Generate residential metadata distributions from RECS sample data (state, housing density, income level triple).
     Args:
         metadata (dict): Dictionary to store generated metadata distributions.
@@ -221,7 +221,7 @@ def get_residential_metadata(metadata, sample_data, state, hsdens_str, inc_lev, 
     Returns:
         metadata (dict): Updated metadata dictionary with generated distributions.
 
-    '''
+    """
     # Define RECS codebook
     # Define variable strings
     house_type_str = 'TYPEHUQ'
@@ -655,7 +655,7 @@ def get_RECS_jsons(bldg_in, bldg_out, hvac_out,
         json.dump(hvac_setpoints, outfile, indent=2)
 
 def get_hvac_setpoints(metadata, sample_data, state, hsdens_str, inc_lev, total):
-    '''
+    """
     Generate HVAC setpoint distributions based on RECS data.
     Args:
         metadata (dict): Dictionary to store HVAC setpoint distributions.
@@ -666,7 +666,7 @@ def get_hvac_setpoints(metadata, sample_data, state, hsdens_str, inc_lev, total)
         total (float): Total population for the sampled data.
     Returns:
         metadata (dict): Updated dictionary with HVAC setpoint distributions.
-    '''
+    """
     therm_str = 'TYPETHERM'
     tw_str = 'TELLWORK'
     num_tw_str = 'TELLDAYS'

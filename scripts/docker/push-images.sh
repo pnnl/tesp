@@ -16,7 +16,7 @@ docker_tag=${tesp_ver}_ubuntu_${grid_ver}
 # you may need log out first `docker logout` ref. https://stackoverflow.com/a/53835882/248616
 # docker login
 
-# gives following response:
+# gives following example response:
 
 # USING WEB-BASED LOGIN
 # To sign in with credentials on the command line, use 'docker login -u <username>'
@@ -31,5 +31,5 @@ docker_tag=${tesp_ver}_ubuntu_${grid_ver}
 #
 # Login Succeeded
 
-docker tag cosim-build:tesp_${grid_ver} pnnl/tesp:${docker_tag}
+docker tag tesp-build:tesp_${grid_ver} pnnl/tesp:${docker_tag}
 docker push pnnl/tesp:${docker_tag}

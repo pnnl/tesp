@@ -317,6 +317,11 @@ class BatteryDSOT:
         Returns:
             Quantity (float) (1 x windowLength): Optimal quantity from optimization for all hours of the window specified by windowLength
         """
+        # Parameters
+        params = {
+            "success": True,
+            "termination": "",
+        }
         if self.Cinit > self.Cmax:
             self.Cinit = self.Cmax
         if self.Cinit < self.Cmin:
@@ -337,7 +342,7 @@ class BatteryDSOT:
         model.con5 = pyo.Constraint(self.TIME, rule=self.con_rule_eq3)
 
         # print('day_ahead_price_forecast...', self.f_DA)
-        results = get_run_solver("bt_" + self.name, pyo, model, self.solver)
+        results = get_run_solver("bt_" + self.name, pyo, model, self.solver, params)
         # print('*** optimization model ***:')
         # print(model.pprint())
         # print("bt objective function is ", pyo.value(model.obj))
@@ -350,7 +355,7 @@ class BatteryDSOT:
             if pyo.value(model.E_DA_out[t]) > TOL:
                 Quantity[t] = pyo.value(model.E_DA_out[t]) * -1
 
-        return Quantity
+        return [Quantity, params]
 
     def formulate_bid_rt(self):
         """ Formulates RT bid

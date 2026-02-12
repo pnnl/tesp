@@ -3,7 +3,7 @@ import os
 import matplotlib
 import matplotlib.pyplot as plt
 
-d = r'''../SGIP1new'''
+d = '../SGIP1new'
 subdir = [os.path.join(d, o) for o in os.listdir(d) if os.path.isdir(os.path.join(d, o))]
 print(subdir)
 

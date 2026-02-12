@@ -18,13 +18,15 @@ provides two simple APIs for other entities to extract the data.
 import json
 import numpy as np
 import pandas as pd
+from pandas import DataFrame
+
 from multiprocessing.managers import SyncManager
 
 from tesp_support.api.data import arguments
 
 # Global for storing the data to be served
-sch_df_dict = {}
-cache_output = {}
+sch_df_dict: dict[str, DataFrame] = {}
+cache_output: dict[str, DataFrame] = {}
 
 #
 # power_sch = ["pv_power", "../solar/auto_run/solar_pv_power_profiles/8-node_dist_hourly_forecast_power.csv"]

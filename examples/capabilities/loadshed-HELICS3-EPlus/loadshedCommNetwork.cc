@@ -28,7 +28,7 @@ NS_LOG_COMPONENT_DEFINE("loadshedCommNetwork");
 
 int main(int argc, char *argv[])
 {
-	//Handle input arguments
+    //Handle input arguments
 	std::string helicsConfigFile = "";
 	double simulationRunTime = 0.0;
 	CommandLine cmd;
@@ -69,21 +69,24 @@ int main(int argc, char *argv[])
 	p2pInterfaces = address.Assign (p2pDevices);
 
 	// Attach Helics Application to nodes.
-	std::cout << "Running " << nNodes << " nodes to end time " << Seconds(simulationRunTime) << std::endl;
+    NS_LOG_INFO ("Running " << nNodes << " nodes to end time " << Seconds(simulationRunTime));
+//  std::cout << "Running " << nNodes << " nodes to end time " << Seconds(simulationRunTime) << std::endl;
 	std::vector<ApplicationContainer> helicsFilterApps;
 	for(int i=0; i<nNodes; i++) {
-		std::cout << ":Filter:" << helics_federate->getFilter(i).getName() << ":Endpoint:" << helics_federate->getEndpoint(i).getName() << std::endl;
-		ApplicationContainer apps = helicsHelper.InstallFilter(p2pNodes.Get(i), helics_federate->getFilter(i), helics_federate->getEndpoint(i));
-		apps.Start(Seconds(0.0));
-		apps.Stop(Seconds(simulationRunTime));
-		helicsFilterApps.push_back(apps);
+        NS_LOG_INFO (i << ":Filter:" << helics_federate->getFilter(i).getName() << ":Endpoint:" << helics_federate->getEndpoint(i).getName());
+        ApplicationContainer apps = helicsHelper.InstallFilter(p2pNodes.Get(i), helics_federate->getFilter(i), helics_federate->getEndpoint(i));
+        apps.Start(Seconds(0.0));
+        apps.Stop(Seconds(simulationRunTime));
+        helicsFilterApps.push_back(apps);
 	}
 	Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
 
+    NS_LOG_INFO ("About to Run simulator");
+//  std::cout << "About to Run simulator" << std::endl;
 	Simulator::Stop(Seconds(simulationRunTime));
-	std::cout << "===== Run simulator .... =====" << std::endl;
 	Simulator::Run();
-    std::cout << "===== Destroy simulator. =====" << std::endl;
+    NS_LOG_INFO ("About to Destroy simulator");
+//  std::cout << "About to Destroy simulator" << std::endl;
 	Simulator::Destroy();
 	return 0;
 }

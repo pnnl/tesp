@@ -13,7 +13,7 @@ fi
 build_ubuntu=1
 build_library=1
 build_build=1
-build_cplex=1
+build_cplex=0
 build_user=0
 
 paths=(
@@ -46,7 +46,7 @@ ver=$(cat "${TESPDIR}/scripts/grid_version")
 
 for i in "${!names[@]}"; do
   CONTEXT="${paths[$i]}"
-  IMAGE_NAME="cosim-${names[$i]}:tesp_${ver}"
+  IMAGE_NAME="tesp-${names[$i]}:tesp_${ver}"
   DOCKERFILE="${names[$i]}.Dockerfile"
 
   if [ "${builds[$i]}" -eq 1 ]; then

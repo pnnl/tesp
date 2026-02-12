@@ -4,15 +4,12 @@
 import os
 
 import matplotlib.pyplot as plt
-from TransmissionMetricsProcessor import TransmissionMetricsProcessor
 
-# root = []
-# for root, dirs, files in os.walk(r'''C:\Qiuhua\FY2016_Project_Transactive_system\Simulation_Year1\SGIP1\\'''):
-#     # print(root)
-#     print (dirs)
-#     # print (files)
+from tesp_support.api.data import tesp_path
+from tesp_support.valuation.TransmissionMetricsProcessor import TransmissionMetricsProcessor
 
-d = r'''C:\Qiuhua\FY2016_Project_Transactive_system\Simulation_Year1\SGIP1'''
+
+d = tesp_path + '/examples/analysis/SGIP1'
 subdir = [os.path.join(d, o) for o in os.listdir(d) if os.path.isdir(os.path.join(d, o))]
 print(subdir)
 
@@ -26,7 +23,7 @@ colors = {0: 'k', 1: 'b', 2: 'r', 3: 'g', 4: 'm', 5: 'y'}
 fig1, ax1 = plt.subplots()
 
 for i in range(0, len(subdir)):
-    casepath = subdir[i] + "\\"
+    casepath = subdir[i] + "/"
     casename = foldernames[i]  # 'SGIP1a'
     tmp = TransmissionMetricsProcessor()
 

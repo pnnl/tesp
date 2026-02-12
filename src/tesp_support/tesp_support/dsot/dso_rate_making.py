@@ -3594,9 +3594,9 @@ def get_cust_bill(cust, bill_df, bill_metadata, energy_df, rate_scenario):
     # ----------------------   MAIN  ------------------------
 
 def _testing():
-    '''
+    """
     Example of creating energy statistics and bills for each customer (GLD meter) and by customer class.
-    '''
+    """
     # ------------ Selection of DSO Range  ---------------------------------
 
     dso_range = range(4, 5)

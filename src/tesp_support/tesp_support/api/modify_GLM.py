@@ -231,7 +231,7 @@ class GLMModifier:
         return self.model.write(filepath)
 
     # normal objects that use feeder system 'defaults'
-    def find_1phase_xfmr_w_margin(self, kva: float, margin: float = None) -> float:
+    def find_1phase_xfmr_w_margin(self, kva: float, margin: float|None = None) -> float:
         """Select a standard 1-phase transformer size  with some design margin
         (optionally defined by caller) based on provided kVA load value
 
@@ -277,7 +277,7 @@ class GLMModifier:
                 return [row[0], 0.01 * row[1], 0.01 * row[2], 0.01 * row[3], 0.01 * row[4]]
         return [self.find_1phase_xfmr_w_margin(kva), 0.01, 0.06, 0.005, 0.01]
 
-    def find_3phase_xfmr_w_margin(self, kva: float, margin: float = None) -> float:
+    def find_3phase_xfmr_w_margin(self, kva: float, margin: float|None = None) -> float:
         """Select a standard 3-phase transformer size with some design margin
         (optionally defined by caller) based on provided kVA load value
 
@@ -323,7 +323,7 @@ class GLMModifier:
                 return [row[0], 0.01 * row[1], 0.01 * row[2], 0.01 * row[3], 0.01 * row[4]]
         return [self.find_3phase_xfmr_w_margin(kva), 0.01, 0.08, 0.005, 0.0]
 
-    def find_fuse_limit_w_margin(self, amps: float, margin=None) -> float:
+    def find_fuse_limit_w_margin(self, amps: float, margin: float|None = None) -> float:
         """ Find a fuse size that's unlikely to melt during power flow
         under normal operating conditions adding a design margin that
         can be optionally defined by the caller. Default margin is
@@ -359,7 +359,7 @@ class GLMModifier:
                 return row
         return 999999
 
-    def randomize_residential_skew(self, skew_std: float = None, skew_abs_max: float = None) -> float:
+    def randomize_residential_skew(self, skew_std: float|None = None, skew_abs_max: float|None = None) -> float:
         """Returns a random value used to diversify the residential loads being
         defined with schedule skew. Uses two parameters found in
         feeder defaults.json that can optionally be defined by the caller
@@ -376,7 +376,7 @@ class GLMModifier:
             skew_abs_max = self.defaults.residential_skew_max
         return self.randomize_skew(skew_std, skew_abs_max)
 
-    def randomize_commercial_skew(self, skew_std: float = None, skew_abs_max: float = None, ) -> float:
+    def randomize_commercial_skew(self, skew_std: float|None = None, skew_abs_max: float|None = None, ) -> float:
         """Returns a random value used to diversify the commercial loads being
         defined with schedule skew. Uses two parameters found in
         feeder defaults.json that can optionally be defined by the caller
@@ -413,7 +413,7 @@ class GLMModifier:
         return sk
 
     # custom objects
-    def add_tariff(self, params: dict, config: dict = None) -> None:
+    def add_tariff(self, params: dict, config: dict|None = None) -> None:
         """Writes tariff information to billing meters. Default values are
         defined in default_values.json and can be optionally provided by
         the caller.

@@ -16,11 +16,11 @@ docker_tag=${tesp_ver}_ubuntu_${grid_ver}
 IMAGE=pnnl/tesp:${docker_tag}
 
 # for custom use
-#IMAGE=cosim-ubuntu:tesp_${grid_ver}
-#IMAGE=cosim-library:tesp_${grid_ver}
-#IMAGE=cosim-build:tesp_${grid_ver}
-#IMAGE=cosim-cplex:tesp_${grid_ver}
-IMAGE=cosim-user:tesp_${grid_ver}
+#IMAGE=tesp-ubuntu:tesp_${grid_ver}
+#IMAGE=tesp-library:tesp_${grid_ver}
+#IMAGE=tesp-build:tesp_${grid_ver}
+#IMAGE=tesp-cplex:tesp_${grid_ver}
+#IMAGE=tesp-user:tesp_${grid_ver}
 
 echo "Should always confirm that you are logged in to docker using 'docker login'"
 

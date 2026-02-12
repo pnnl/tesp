@@ -553,7 +553,7 @@ class GLMModel:
             raise TypeError("GRIDLABD object type and/or object name {obj_type} must be a string and is not.")
         return None
 
-    def is_edge_class(self, s:str, exclude:list=None) -> bool:
+    def is_edge_class(self, s:str, exclude:list|None = None) -> bool:
         """ Edge class is networkx terminology. In GridLAB-D, we will represent those with
         the variable 'edge_classes' define in this model
 
@@ -585,7 +585,7 @@ class GLMModel:
             return True
         return False
 
-    def add_class(self, class_name:str, value_type:str, value_name:str, static:bool, default:any):
+    def add_class(self, class_name:str, value_type:str, value_name:str, static:bool, default):
         if class_name not in self.module_entities.keys():
             # don't add class_name to self.module_types
             # this makes 'this' a class' in the module_entities list
@@ -1098,7 +1098,7 @@ class GLMModel:
     def del_include(self, file: str):
         self.include_lines.remove(f"#include \"{file}\"")
 
-    def add_set(self, name: str, value: any):
+    def add_set(self, name: str, value):
         self.set_lines.append(f"#set {name}={value}")
 
     def del_set(self, name: str):
@@ -1107,7 +1107,7 @@ class GLMModel:
             if find in self.set_lines[idx]:
                 del self.set_lines[idx]
 
-    def add_define(self, name:str, value: any):
+    def add_define(self, name:str, value):
         self.define_lines.append(f"#define {name}={value}")
 
     def del_define(self, name:str):

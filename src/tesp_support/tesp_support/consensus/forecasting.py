@@ -15,7 +15,7 @@ from datetime import datetime, timedelta
 from math import cos as cos
 from math import sin as sin
 
-import glm
+from pyglm import glm
 import numpy as np
 import pandas as pd
 import pytz
