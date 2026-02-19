@@ -694,11 +694,18 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
     np.random.set_state(st2)
 
     # Including quadratic curves to agent_dict if possible
-    try:
+    try: # DSOT
         with open(case_config["quadraticFile"]) as json_file:
             DSO_quadratic_curves = json.load(json_file)
     except:
-        DSO_quadratic_curves = None
+        try: # glm_dsot
+            nodes = case_config["nodes"]
+            scenario = case_config["scenario"]
+            rate = case_config["rate"]
+            with open(case_config[f'quadratic_file_{nodes}_{scenario}_{rate}']) as json_file:
+                DSO_quadratic_curves = json.load(json_file)      
+        except:
+            DSO_quadratic_curves = None
 
     # Obtain market agent dictionary based on markets
     for market in market_config:
