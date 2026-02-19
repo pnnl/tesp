@@ -651,7 +651,7 @@ def prepare_case(case:str):
             
         if config["monitor"]:
             # Write the monitor.json or monitor.yaml file used in the monitor GUI
-            monitor.TespMonitorJSON.write_monitor(config, caseName, dso_key)
+            monitor.TespMonitorJSON.write_monitor(config, caseName)
         
     if config["messenger"] == 'HELICS':
         tso.write_file(caseName + '/tso_h.json')

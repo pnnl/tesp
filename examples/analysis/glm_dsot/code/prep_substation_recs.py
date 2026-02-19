@@ -699,11 +699,15 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
             DSO_quadratic_curves = json.load(json_file)
     except:
         try: # glm_dsot
-            nodes = case_config["nodes"]
-            scenario = case_config["scenario"]
-            rate = case_config["rate"]
-            with open(case_config[f'quadratic_file_{nodes}_{scenario}_{rate}']) as json_file:
-                DSO_quadratic_curves = json.load(json_file)      
+            if case_config["RECS"]:
+                rate = case_config["rate"]
+                with open(case_config[f'quadratic_file_RECS_{rate}']) as json_file:
+                    DSO_quadratic_curves = json.load(json_file)   
+            else:
+                nodes = case_config["nodes"]
+                scenario = case_config["scenario"]
+                with open(case_config[f'quadratic_file_{nodes}_{scenario}']) as json_file:
+                    DSO_quadratic_curves = json.load(json_file)      
         except:
             DSO_quadratic_curves = None
 
