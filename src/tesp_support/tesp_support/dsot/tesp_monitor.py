@@ -76,9 +76,11 @@ class TespMonitorJSON:
         casePath = os.path.expandvars("$TESPDIR/examples/analysis/glm_dsot/code/")
         casePath = os.path.join(casePath, caseName)
 
-        GldFile = os.path.join(casePath, f'Substation_{dso_num}/Substation_{dso_num}.glm')
+        #GldFile = os.path.join(casePath, f'Substation_{dso_num}/Substation_{dso_num}.glm')
+        GldFile = f'./Substation_{dso_num}/Substation_{dso_num}.glm'
         # GldMetricsFile was originally just metrics.json--may not work with h5
-        GldMetricsFile = os.path.join(casePath, f'Substation_{dso_num}/Substation_{dso_num}_substation.h5')
+        #GldMetricsFile = os.path.join(casePath, f'Substation_{dso_num}/Substation_{dso_num}_substation.h5')
+        GldMetricsFile = f'./Substation_{dso_num}/Substation_{dso_num}_substation.h5'
 
         StartTime = config['StartTime']
         EndTime = config['EndTime']
@@ -90,19 +92,18 @@ class TespMonitorJSON:
         cmds = {'time_stop': seconds,
             'yaml_delta': int(config['AgentPrep']['HVAC']['MarketClearingPeriod']),
             'commands': [],
-            'helics_config': f"{casePath}/DSO_{dso_num}/Substation_{dso_num}.json",
+            'helics_config': f"./Substation_{dso_num}.json",
             'commands_f': [],
-            'fncs_config': f"{casePath}/DSO_{dso_num}/Substation_{dso_num}.yaml",}
+            'fncs_config': f"./Substation_{dso_num}.yaml",}
 
         if sys.platform == 'win32':
             pycall = 'python'
         else:
             pycall = 'python3'
 
-        AgentDictFile = os.path.join(casePath, f'{dso_key}/Substation_{dso_num}') # + '_agent_dict.json')
+        AgentDictFile = f'./{dso_key}/Substation_{dso_num}' # + '_agent_dict.json')
         PPJsonFile = 'generate_case_config'
-
-        WeatherConfigFile = os.path.join('weather_Substation_' + dso_num, "weather_Config.json")
+        WeatherConfigFile = "weather_Config.json"
 
 
         if config["messenger"] == 'FNCS':
@@ -147,14 +148,15 @@ class TespMonitorJSON:
         list: false
     """
                 
-            op = open(caseName + '/' + dso_key + '_monitor.yaml', 'w')
+            op = open('./' + dso_key + '_monitor.yaml', 'w')
             print(yamlstr, file=op)
             op.close()
 
-            SubstationYamlFile = os.path.join(casePath, f'{dso_key}/Substation_{dso_num}.yaml')
+            #SubstationYamlFile = os.path.join(casePath, f'{dso_key}/Substation_{dso_num}.yaml')
+            SubstationYamlFile = f'./{dso_key}/Substation_{dso_num}.yaml'
             aucline = "import tesp_support.dsot.substation_f as tesp;tesp.dso_loop_f('" + AgentDictFile + "','" + caseName + "')"
             ppline = "import tesp_support.original.tso_psst_f as tesp;tesp.tso_psst_loop_f('" + PPJsonFile + "','" + caseName + "')"
-            weatherline = f"import tesp_support.weather.weather_agent_f as tesp;tesp.startWeatherAgent('weather_Substation_' + {dso_num} + '/weather.dat')"
+            weatherline = f"import tesp_support.weather.weather_agent_f as tesp;tesp.startWeatherAgent('./weather_Substation_' + {dso_num} + '/weather.dat')"
 
             cmd = cmds['commands_f']
 
@@ -190,28 +192,29 @@ class TespMonitorJSON:
 
             # Write HELICS federate config for the monitor
             ppc = HelicsMsg(mtr_federate, config['AgentPrep']['HVAC']['MarketClearingPeriod'])
-            ppc.subs_n("dso" + dso_num + "/three_phase_voltage_" + dso_num, "double")
-            ppc.subs_n("dso" + dso_num + "/lmp_rt_" + dso_num, "double")
-            ppc.subs_n("dso" + dso_num + "/cleared_q_rt_", "double")
-            ppc.subs_n(gld_federate + "/distribution_load", "complex")
+            ppc.subs_n("pypower/lmp_da_" + dso_num, "double")
+            ppc.subs_n("pypower/lmp_rt_" + dso_num, "double")
+            ppc.subs_n("pypower/cleared_q_rt_" + dso_num, "double")
+            ppc.subs_n("gldSubstation_" + dso_num + "/gld_load", "complex")
             if len(EpBus) > 0:
                 ppc.subs_n(agent_federate + "/power_A", "double")
                 ppc.subs_n(eplus_federate + "/WHOLE BUILDING Facility Total Electric Demand Power", "double")
             ppc.write_file(os.path.join(caseName, monitor_fed_file))
 
-            SubstationConfigFile = os.path.join(casePath, f'{dso_key}/Substation_{dso_num}.json')
+            #SubstationConfigFile = os.path.join(casePath, f'{dso_key}/Substation_{dso_num}.json')
+            SubstationConfigFile = f'Substation_{dso_num}.json'
             PypowerConfigFile = 'tso_h.json'
             aucline = (
                 "import tesp_support.dsot.substation as tesp;"
-                f"tesp.dso_loop('{AgentDictFile}','{caseName}', helicsConfig='{SubstationConfigFile}')"
+                f"tesp.dso_loop('{AgentDictFile}','{caseName}', helics_config='{SubstationConfigFile}')"
             )
             ppline = (
                 "import tesp_support.api.tso_psst as tesp;"
-                f"tesp.tso_psst_loop('{PPJsonFile}', helicsConfig='{PypowerConfigFile}')"
+                f"tesp.tso_psst_loop('{PPJsonFile}', 1)" #helics_config='{PypowerConfigFile}')"
             )
             weatherline = (
-                "import tesp_support.weather.weather_agent_f as tesp;"
-                f"tesp.startWeatherAgent('weather_Substation_{dso_num}/weather.dat')"
+                "import tesp_support.weather.weather_agent as tesp;"
+                f"tesp.startWeatherAgent('./weather_Substation_{dso_num}/weather.dat')"
             )
 
             # Write the monitor config
@@ -223,11 +226,11 @@ class TespMonitorJSON:
                 'log': 'schedule.log'
             })
             cmd.append({
-                'args': ['helics_broker', '-f', '5', '--loglevel=warning', '--name=mainbroker'],
+                'args': ['helics_broker', '-f', '30', '--loglevel=warning', '--name=mainbroker'],
                 'log': 'broker.log'
             })
             cmd.append({
-                'args': ['gridlabd', '-D', 'USE_HELICS', '-D', f"METRICS_FILE={GldMetricsFile}", GldFile],
+                'args': ['gridlabd', '-D', 'USE_HELICS', '-D', f"METRICS_FILE=./{GldMetricsFile}", GldFile],
                 'log': gld_federate + '.log'
             })
             cmd.append({'args': [pycall, '-c', aucline], 'log': sub_federate + '.log'})
@@ -379,12 +382,12 @@ class TespMonitorGUI:
         self.ax[0].clear()
         self.ax[0].add_line(self.ln0)
         self.ax[0].set_ylabel('[pu]')
-        self.ax[0].set_title('PYPOWER Bus Voltage', fontsize=10)
+        self.ax[0].set_title('DA LMP', fontsize=10)
 
         self.ax[1].clear()
         self.ax[1].add_line(self.ln1)
         self.ax[1].set_ylabel('[kW]')
-        self.ax[1].set_title('Primary School Load', fontsize=10)
+        self.ax[1].set_title('RT LMP', fontsize=10)
 
         self.ax[2].clear()
         self.ax[2].add_line(self.ln2auc)
@@ -651,7 +654,7 @@ class TespMonitorGUI:
             if 'log' in row:
                 logfd = open(row['log'], 'w')
             try:
-                proc = subprocess.Popen(procargs, env=procenv, stdout=logfd)
+                proc = subprocess.Popen(procargs, env=procenv, stdout=logfd, cwd = os.getcwd())
             except FileNotFoundError:
                 #print(f'procargs = {procargs}, env = {procenv}, stdout = {logfd}')
                 print(f"Couldn't find proc for {row}")
@@ -796,18 +799,50 @@ class TespMonitorGUI:
 
         print('launching all simulators', flush=True)
         self.pids = []
+
+        # Need to start schedule server first, separate:
+        schedule_row = None
+        other_rows = []
         for row in self.commands:
+            if "schedule_server" in " ".join(row['args']):
+                schedule_row = row
+            else:
+                other_rows.append(row)
+
+        # for row in self.commands:
+        #     procargs = row['args']
+        #     if sys.platform == 'win32':
+        #         if procargs[0] == 'python3':
+        #             procargs[0] = 'python'  # python3 not defined on Windows
+        procenv = os.environ.copy()
+
+        if schedule_row:
+            procargs = schedule_row['args']
+            logfd = open(schedule_row['log'], 'w') if 'log' in schedule_row else None
+            print("Starting schedule server:", procargs, flush=True)
+            proc = subprocess.Popen(procargs, env=procenv, stdout=logfd, cwd = os.getcwd())
+            self.pids.append(proc)
+            # crude wait; tune as needed or replace with a health check
+            import time
+            time.sleep(60)
+
+
+        for row in other_rows:
             procargs = row['args']
-            if sys.platform == 'win32':
-                if procargs[0] == 'python3':
-                    procargs[0] = 'python'  # python3 not defined on Windows
-            procenv = os.environ.copy()
+            if sys.platform == 'win32' and procargs[0] == 'python3':
+                procargs[0] = 'python'
+            this_env = procenv.copy()
             if 'env' in row:
                 for var in row['env']:
-                    procenv[var[0]] = var[1]
-            logfd = None
-            if 'log' in row:
-                logfd = open(row['log'], 'w')
+                    this_env[var[0]] = var[1]
+            logfd = open(row['log'], 'w') if 'log' in row else None
+            print("Starting:", procargs, flush=True)
+                # if 'env' in row:
+                #     for var in row['env']:
+                #         procenv[var[0]] = var[1]
+                # logfd = None
+                # if 'log' in row:
+                #     logfd = open(row['log'], 'w')
             proc = subprocess.Popen(procargs, env=procenv, stdout=logfd)
             if "broker" in procargs[0]:
                 self.broker = proc
