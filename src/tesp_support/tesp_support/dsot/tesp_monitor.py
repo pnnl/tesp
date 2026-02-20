@@ -76,7 +76,7 @@ class TespMonitorJSON:
 
         cmds = {'time_stop': seconds,
             'yaml_delta': int(config['AgentPrep']['HVAC']['MarketClearingPeriod']),
-            'commands': []}
+            'helics_config': 'DSO_1_monitor_helics.json'}
 
         if sys.platform == 'win32':
             pycall = 'python'
@@ -156,36 +156,9 @@ class TespMonitorJSON:
                 op.close()
 
         elif config["messenger"] == 'HELICS':
-            monitor_gui_file = "monitor.json" # GUI launcher config
-            ppline = (
-                "import tesp_support.api.tso_psst as tesp;"
-                f"tesp.tso_psst_loop('{PPJsonFile}')" #helics_config='{PypowerConfigFile}')"
-            )
-            
-            cmd = cmds['commands']
-            cmd.append({
-                'args': ['helics_broker', '-f', '30', '--loglevel=warning', '--name=mainbroker'],
-                'log': 'broker.log'
-            })
-            cmd.append({'args': [pycall, '-c', ppline], 'log': 'tso_monitor.log'})
-            cmd.append({
-                'args': [pycall, '-c',
-                        "import tesp_support.api.schedule_server as tesp;"
-                        "tesp.schedule_server('../../../dsot/data/8_schedule_server_metadata_glm_dsot.json', 5150)"],
-                'log': 'schedule.log'
-            })
-            cmds['helics_config'] = monitor_fed_file
-
             for dso_num in range(1,9):
                 dso_num = str(dso_num)
-
-                GldFile = f'./Substation_{dso_num}/Substation_{dso_num}.glm'
-                GldMetricsFile = f'./Substation_{dso_num}/Substation_{dso_num}_metrics_'
-                AgentDictFile = f'./DSO_{dso_num}/Substation_{dso_num}' # + '_agent_dict.json')
-                sub_federate = "sub_" + dso_num
-                gld_federate = "gld_" + dso_num
-                tso_federate = "dso" + dso_num
-
+                monitor_gui_file = "monitor.json" # GUI launcher config
                 monitor_fed_file = f"DSO_{dso_num}_monitor_helics.json"  # federate config
                 # Write HELICS federate config for the monitor
                 ppc = HelicsMsg(mtr_federate, config['AgentPrep']['HVAC']['MarketClearingPeriod'])
@@ -194,29 +167,6 @@ class TespMonitorJSON:
                 ppc.subs_n("pypower/cleared_q_rt_" + dso_num, "string")
                 ppc.subs_n("gldSubstation_" + dso_num + "/gld_load", "string")
                 ppc.write_file(os.path.join(caseName, monitor_fed_file))
-
-                SubstationConfigFile = f'Substation_{dso_num}.json'
-                PypowerConfigFile = 'tso_h.json'
-                aucline = (
-                    "import tesp_support.dsot.substation as tesp;"
-                    f"tesp.dso_loop('{AgentDictFile}', 1)" #, helics_config='{SubstationConfigFile}')"
-                )
-                weatherline = (
-                    "import tesp_support.weather.weather_agent as tesp;"
-                    f"tesp.startWeatherAgent('./weather_Substation_{dso_num}/weather.dat')"
-                )
-
-                cmd.append({
-                    'args': ['gridlabd', '-D', 'USE_HELICS', '-D', f"METRICS_FILE={GldMetricsFile}", GldFile],
-                    'env': [['helicsConfig', f'./Substation{dso_num}.json']],
-                    'log': gld_federate + '.log'
-                })
-                cmd.append({'args': [pycall, '-c', aucline], 'log': sub_federate + '.log'})
-                cmd.append({
-                    'args': [pycall, '-c', weatherline],
-                    'env': [['WEATHER_CONFIG', WeatherConfigFile]],
-                    'log': 'weather.log'
-                })
 
         with open(os.path.join(caseName, monitor_gui_file), 'w') as op:
             json.dump(cmds, op, indent=2)    
@@ -286,6 +236,7 @@ class TespMonitorGUI:
         self.root = master
         self.HELICS = None
         self.pids = []
+        self.broker = None
         self.idxlast = -1
         self.time_granted = 0
         self.hFed = None
@@ -427,11 +378,9 @@ class TespMonitorGUI:
 
         if self.HELICS:
             self.msg_config = cfg['helics_config']
-            self.commands = cfg['commands']
         else:
             self.msg_config = cfg['fncs_config']
-            self.commands = cfg['commands_f']
-        # no longer converting seconds to minutes
+
         self.time_stop = int(cfg['time_stop'])
         self.yaml_delta = int(cfg['yaml_delta'])
         self.hour_stop = float(self.time_stop / 3600.0)
@@ -451,14 +400,17 @@ class TespMonitorGUI:
         """
         self.root.update()
         for proc in self.pids:
-            if not proc == self.broker:
-                print('Trying to kill', proc.pid, flush=True)
-                try:
+            if proc is None:
+                continue
+            if self.broker is not None and proc == self.broker:
+                continue
+            print('Trying to kill', getattr(proc, 'pid', proc), flush=True)
+            try:
+                if hasattr(proc, 'pid'):
                     os.kill(proc.pid, 9)
                     os.wait()
-                except Exception:
-                    pass
-                del proc
+            except Exception:
+                pass
         self.pids = []
 
         print('Trying to finalize federation', flush=True)
@@ -771,54 +723,23 @@ class TespMonitorGUI:
         """
         self.root.update()
 
-        print('launching all simulators', flush=True)
+        print('launching simulation using run.sh', flush=True)
         self.pids = []
 
-        # Need to start schedule server first, separate:
-        schedule_row = None
-        other_rows = []
-        for row in self.commands:
-            if "schedule_server" in " ".join(row['args']):
-                schedule_row = row
-            else:
-                other_rows.append(row)
+        proc = subprocess.Popen(['bash', './run.sh'], stdout=open('run.log', 'w'))
+        self.pids.append(proc)
+        self.broker = proc
 
-        # for row in self.commands:
-        #     procargs = row['args']
-        #     if sys.platform == 'win32':
-        #         if procargs[0] == 'python3':
-        #             procargs[0] = 'python'  # python3 not defined on Windows
-        procenv = os.environ.copy()
+        # Wait a sec for the HELICS federation to start up
+        import time
+        time.sleep(60)
 
-        if schedule_row:
-            procargs = schedule_row['args']
-            logfd = open(schedule_row['log'], 'w') if 'log' in schedule_row else None
-            print("Starting schedule server:", procargs, flush=True)
-            proc = subprocess.Popen(procargs, env=procenv, stdout=logfd, cwd = os.getcwd())
-            self.pids.append(proc)
-            import time
-            time.sleep(60)
-
-        for row in other_rows:
-            procargs = row['args']
-            if sys.platform == 'win32' and procargs[0] == 'python3':
-                procargs[0] = 'python'
-            #this_env = procenv.copy()
-            if 'env' in row:
-                for var in row['env']:
-                    procenv[var[0]] = var[1]
-                logfd = None
-                if 'log' in row:
-                    logfd = open(row['log'], 'w')
-            print("Starting:", procargs, flush=True)
-            proc = subprocess.Popen(procargs, env=procenv, stdout=logfd)
-            if "broker" in procargs[0]:
-                self.broker = proc
-            self.pids.append(proc)
-
-        print('launched', len(self.pids), 'simulators', flush=True)
-        self.root.update()
-
+       # Initialize tesp_monitor
+        from pathlib import Path
+        config_path = Path(self.msg_config)
+        config_str = config_path.read_text()
+        print("Creating HELICS monitor federate from:", config_path, flush=True)
+    
         self.hFed = None
         self.sub_power_A = None
         self.sub_TEDP = None
@@ -828,15 +749,13 @@ class TespMonitorGUI:
         self.sub_dist_load = None
 
         # Initialize controllers, map HELICS values to Python attributes
-        self.hFed = helics.helicsCreateValueFederateFromConfig(self.msg_config)
-        #self.hFed = helics.helicsCreateValueFederateFromConfig("./Substation_1.json")
+        self.hFed = helics.helicsCreateValueFederateFromConfig(config_str)
         subCount = helics.helicsFederateGetInputCount(self.hFed)
         for i in range(subCount):
             sub = helics.helicsFederateGetInputByIndex(self.hFed, i)
             key = helics.helicsInputGetName(sub)
             target = helics.helicsInputGetTarget(sub)
-            #print('HELICS subscription key', i, key, 'target', target, flush=True)
-            if 'power_A' in target:
+            if 'lmp_da' in target:
                 self.sub_power_A = sub
             if 'three_phase_voltage' in target:
                 self.sub_TPV_7 = sub
@@ -844,8 +763,8 @@ class TespMonitorGUI:
                 self.sub_LMP_7 = sub
             if 'cleared_q_rt' in target:
                 self.sub_clear_price = sub
-            if 'WHOLE BUILDING' in target:
-                self.sub_TEDP = sub
+            if 'gld_load' in target:
+                self.sub_dist_load = sub
             if 'distribution_load' in target:
                 self.sub_dist_load = sub
         print('Done HELICS subscriptions', flush=True)
