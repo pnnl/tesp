@@ -609,17 +609,23 @@ class TespMonitorGUI:
         v_clear = 0.0
         v_load = 0.0
             
+        # i goes from 0 to self.nsteps - 1
+        if self.time_granted >= self.time_stop:
+            if self.bHELICSactive:
+                print('time granted >= time_stop: finalizing HELICS', flush=True)
+                self.kill_all()
+            return artists
+        
         #while self.time_granted <= self.time_stop    
         while request_time < self.time_stop:
             self.time_granted = int(helics.helicsFederateRequestTime(self.hFed, request_time))
             self.root.update()
             #print(f'time requested: {request_time}. time granted: {self.time_granted}')
             try:
-                #self.root.update()
                 
                 idx = int(self.time_granted / self.yaml_delta)
                 if idx <= self.idxlast:
-                    continue
+                    return artists
                 self.idxlast = idx
 
                 h = float(self.time_granted / 3600.0)
@@ -676,7 +682,7 @@ class TespMonitorGUI:
                     self.y1.append(v_rt)
                     if v_rt < self.y1min or v_rt > self.y1max:
                         self.y1min, self.y1max = self.expand_limits(v_rt, self.y1min, self.y1max)
-                        self.ax[1].set_ylim(self.y1min, self.y2max)
+                        self.ax[1].set_ylim(self.y1min, self.y1max)
                         bRedraw = True
                 else: 
                     self.y1.append(self.y1[-1])
@@ -686,7 +692,7 @@ class TespMonitorGUI:
                     self.y2lmp.append(v_clear)
                     if v_clear < self.y2min or v_clear > self.y2max:
                         self.y2min, self.y2max = self.expand_limits(v_clear, self.y2min, self.y2max)
-                        self.ax[1].set_ylim(self.y2min, self.y2max)
+                        self.ax[2].set_ylim(self.y2min, self.y2max)
                         bRedraw = True
                 else: 
                     self.y2auc.append(self.y2auc[-1])
@@ -697,7 +703,7 @@ class TespMonitorGUI:
                     self.y3gld.append(self.gld_load)  # most recent feeder load from HELICS
                     if v_load_kW < self.y3min or v_load_kW > self.y3max:
                         self.y3min, self.y3max = self.expand_limits(v_load_kW, self.y3min, self.y3max)
-                        self.ax[1].set_ylim(self.y3min, self.y3max)
+                        self.ax[3].set_ylim(self.y3min, self.y3max)
                         bRedraw = True
                 else:
                     self.y3fncs.append(self.y3fncs[-1]) 
@@ -720,12 +726,6 @@ class TespMonitorGUI:
             
             return artists
 
-        # i goes from 0 to self.nsteps - 1
-        if self.time_granted >= self.time_stop:
-            if self.bHELICSactive:
-                print('time granted >= time_stop: finalizing HELICS', flush=True)
-                self.kill_all()
-            return artists
         
     def launch_all(self):
         """ Launches the simulators, initializes HELICS and starts the animated 
@@ -740,6 +740,7 @@ class TespMonitorGUI:
         proc = subprocess.Popen(['bash', './run.sh'], stdout=open('run.log', 'w'))
         self.pids.append(proc)
         self.broker = proc
+        self.root.update()
 
         # Wait a sec for the HELICS federation to start up
         import time
@@ -752,11 +753,11 @@ class TespMonitorGUI:
         print("Creating HELICS monitor federate from:", config_path, flush=True)
     
         self.hFed = None
-        self.sub_power_A = None
-        self.sub_TEDP = None
+        self.sub_lmp_da = None
+        self.sub_lmp_rt = None
         self.sub_clear_price = None
-        self.sub_LMP_7 = None
-        self.sub_TPV_7 = None
+        self.sub_cleared_q_rt = None
+        self.sub_gld_load = None
         self.sub_dist_load = None
 
         # Initialize controllers, map HELICS values to Python attributes
@@ -767,20 +768,14 @@ class TespMonitorGUI:
             key = helics.helicsInputGetName(sub)
             target = helics.helicsInputGetTarget(sub)
 
-            print("Monitor subscription:", i, "key:", key, "target:", target, "sub", sub, flush=True)
-            # Note that HELICS=2 give a key, other gives a name
-            #if 'lmp_da_' in key: 
-            #if '0' in key:
-            if target.endswith("pypower/lmp_da_1"):
+            print("Monitor subscription:", i, "key:", key, "target:", target, flush=True)
+            if target.__contains__("lmp_da_"):
                 self.sub_lmp_da = sub
-            #elif 'lmp_rt_' in key:
-            elif '1' in key:
+            elif target.__contains__("lmp_rt_"):
                 self.sub_lmp_rt = sub
-            #elif 'cleared_q_rt_' in key:
-            elif '2' in key:
+            elif target.__contains__("cleared_q_rt_"):
                 self.sub_cleared_q_rt = sub
-            #elif 'gld_load' in key:
-            elif '3' in key:
+            elif target.__contains__("gld_load"):
                 self.sub_gld_load = sub
 
         print('Done HELICS subscriptions', flush=True)
