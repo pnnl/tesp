@@ -605,6 +605,7 @@ class TespMonitorGUI:
         # Debugging: if your GUI exits too soon, check time request against granted
         print(f'time requested: {request_time}. time granted: {self.time_granted}. time stop: {self.time_stop}')
         v_da = 0.0
+        v_da_24 = 0.0
         v_rt = 0.0
         v_clear = 0.0
         v_load = 0.0
@@ -650,7 +651,8 @@ class TespMonitorGUI:
                 # Debugging: Note that this will print many 0s when values do not change
                 #print(f"frame {i}, time {self.time_granted}, "f"v_da={v_da}, v_rt={v_rt}, v_clear={v_clear}, v_load={v_load}", flush=True)
 
-                v_da = float(v_da)
+                if v_da != 0.0:
+                    v_da_24 = list(map(float, ast.literal_eval(v_da)))
                 v_rt = float(v_rt)
                 v_clear = float(v_clear)
 
@@ -669,13 +671,15 @@ class TespMonitorGUI:
                 # If there is no change in value, HELICS does not update
                 # Only show changes in plots
                 if v_da != 0.0:
-                    self.y0.append(v_da)
+                    self.y0.extend(v_da_24)
+                    self.da_hrs = self.hrs.extend(h + 1 for k in range(len(v_da_24)))
                     # expand the Y axis limits if necessary, keeping a 10% padding around the range
                     if v_da < self.y0min or v_da > self.y0max:
                         self.y0min, self.y0max = self.expand_limits(v_da, self.y0min, self.y0max)
                         self.ax[0].set_ylim(self.y0min, self.y0max)
                         bRedraw = True
                 else: 
+                    self.da_hrs = self.hrs
                     self.y0.append(self.y0[-1])
                 
                 if v_rt != 0.0:
@@ -709,7 +713,7 @@ class TespMonitorGUI:
                     self.y3fncs.append(self.y3fncs[-1]) 
                     self.y3gld.append(self.y3gld[-1])
 
-                self.ln0.set_data(self.hrs, self.y0)
+                self.ln0.set_data(self.da_hrs, self.y0)
                 self.ln1.set_data(self.hrs, self.y1)
                 self.ln2auc.set_data(self.hrs, self.y2auc)
                 self.ln2lmp.set_data(self.hrs, self.y2lmp)
@@ -743,8 +747,23 @@ class TespMonitorGUI:
         self.root.update()
 
         # Wait a sec for the HELICS federation to start up
-        import time
-        time.sleep(60)
+        # import time
+        # time.sleep(60)
+
+        import socket, time
+        def wait_port(host, port, timeout):
+            t0 = time.time()
+            while time.time() - t0 < timeout:
+                try:
+                    with socket.create_connection((host, port), timeout=1):
+                        return True
+                except OSError:
+                    time.sleep(0.2)
+            return False
+
+        if not wait_port("127.0.0.1", 23405, timeout=300):
+            raise RuntimeError("Broker did not open port 23405")
+
 
         # Initialize tesp_monitor
         from pathlib import Path
