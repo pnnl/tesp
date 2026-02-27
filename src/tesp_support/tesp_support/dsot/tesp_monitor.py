@@ -245,6 +245,7 @@ class TespMonitorGUI:
         self.fig, self.ax = plt.subplots(4, 1, sharex='col')
         plt.subplots_adjust(hspace=0.35)
         self.hrs = [0.0]
+        self.da_hrs = [0.0]
         self.y0 = [1.0]
         self.y1 = [0.0]
         self.y2lmp = [0.0]
@@ -651,38 +652,25 @@ class TespMonitorGUI:
                 # Debugging: Note that this will print many 0s when values do not change
                 #print(f"frame {i}, time {self.time_granted}, "f"v_da={v_da}, v_rt={v_rt}, v_clear={v_clear}, v_load={v_load}", flush=True)
 
-                if v_da != 0.0:
-                    v_da_24 = list(map(float, ast.literal_eval(v_da)))
-                v_rt = float(v_rt)
-                v_clear = float(v_clear)
 
-                # Handle substation load as both a string and complex value
-                if v_load != 0.0:
-                    v_load_float = ast.literal_eval(sub_load)
-                    v_load_real = v_load_float[0]
-                    #print(f'v_load_real: {v_load_real}, type: {type(v_load_real)}')
-                    v_load_kW = v_load_real / 1.0e3
-                    self.gld_load = v_load_kW
-                else:
-                    v_load_kW = 0.0
-                    self.gld_load = 0.0
-
-                # update the Y axis data to draw
+               # update the Y axis data to draw
                 # If there is no change in value, HELICS does not update
                 # Only show changes in plots
                 if v_da != 0.0:
+                    v_da_24 = list(map(float, ast.literal_eval(v_da)))
                     self.y0.extend(v_da_24)
-                    self.da_hrs = self.hrs.extend(h + 1 for k in range(len(v_da_24)))
+                    self.da_hrs.extend(h + k for k in range(len(v_da_24)))
                     # expand the Y axis limits if necessary, keeping a 10% padding around the range
-                    if v_da < self.y0min or v_da > self.y0max:
-                        self.y0min, self.y0max = self.expand_limits(v_da, self.y0min, self.y0max)
+                    if v_da_24[0] < self.y0min or v_da_24[0] > self.y0max:
+                        self.y0min, self.y0max = self.expand_limits(v_da_24[0], self.y0min, self.y0max)
                         self.ax[0].set_ylim(self.y0min, self.y0max)
                         bRedraw = True
-                else: 
-                    self.da_hrs = self.hrs
-                    self.y0.append(self.y0[-1])
+                # else: 
+                #     self.da_hrs = self.hrs
+                #     self.y0.append(self.y0[-1])
                 
                 if v_rt != 0.0:
+                    v_rt = float(v_rt)
                     self.y1.append(v_rt)
                     if v_rt < self.y1min or v_rt > self.y1max:
                         self.y1min, self.y1max = self.expand_limits(v_rt, self.y1min, self.y1max)
@@ -692,6 +680,7 @@ class TespMonitorGUI:
                     self.y1.append(self.y1[-1])
                 
                 if v_clear != 0.0:
+                    v_clear = float(v_clear)
                     self.y2auc.append(v_clear)
                     self.y2lmp.append(v_clear)
                     if v_clear < self.y2min or v_clear > self.y2max:
@@ -702,16 +691,26 @@ class TespMonitorGUI:
                     self.y2auc.append(self.y2auc[-1])
                     self.y2lmp.append(self.y2lmp[-1]) # or v_rt, depending on what you want
                 
-                if v_load_kW != 0:
+                if v_load != 0:
+                    # Handle substation load as both a string and complex value
+                    v_load_float = ast.literal_eval(sub_load)
+                    v_load_real = v_load_float[0]
+                    #print(f'v_load_real: {v_load_real}, type: {type(v_load_real)}')
+                    v_load_kW = v_load_real / 1.0e3
+                    self.gld_load = v_load_kW
+                else:
+                    v_load_kW = 0.0
+                    self.gld_load = 0.0
                     self.y3fncs.append(v_load_kW) # feeder load from HELICS (could be zero if no update)
                     self.y3gld.append(self.gld_load)  # most recent feeder load from HELICS
+                    
                     if v_load_kW < self.y3min or v_load_kW > self.y3max:
                         self.y3min, self.y3max = self.expand_limits(v_load_kW, self.y3min, self.y3max)
                         self.ax[3].set_ylim(self.y3min, self.y3max)
                         bRedraw = True
-                else:
-                    self.y3fncs.append(self.y3fncs[-1]) 
-                    self.y3gld.append(self.y3gld[-1])
+                    else:
+                        self.y3fncs.append(self.y3fncs[-1]) 
+                        self.y3gld.append(self.y3gld[-1])
 
                 self.ln0.set_data(self.da_hrs, self.y0)
                 self.ln1.set_data(self.hrs, self.y1)
@@ -735,40 +734,48 @@ class TespMonitorGUI:
         """ Launches the simulators, initializes HELICS and starts the animated 
             plots
         """
-
+        import socket, time
         self.root.update()
-
-        print('launching simulation using run.sh', flush=True)
-
         self.pids = []
+
+        # Make sure nothing else is running (most relevant when debugging)
+        subprocess.run(["pkill", "-f", "helics_broker"], stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL, check=False)
+        subprocess.run(["pkill", "-f", "helics_broker_server"], stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL, check=False)
+        time.sleep(5)
+        
+        # Start the run
+        print('Launching simulation using run.sh', flush=True)
         proc = subprocess.Popen(['bash', './run.sh'], stdout=open('run.log', 'w'))
         self.pids.append(proc)
         self.broker = proc
         self.root.update()
 
-        # Wait a sec for the HELICS federation to start up
-        # import time
-        # time.sleep(60)
+        # Wait for the HELICS federation to start up
+        time.sleep(60)
+        print('Connecting to the broker')
 
-        import socket, time
         def wait_port(host, port, timeout):
             t0 = time.time()
             while time.time() - t0 < timeout:
                 try:
                     with socket.create_connection((host, port), timeout=1):
+                        #print(subprocess.check_output(["bash","-lc","ss -ltnp | grep 23405"], text=True))
+                        print("Connected.")
                         return True
                 except OSError:
                     time.sleep(0.2)
             return False
-
-        if not wait_port("127.0.0.1", 23405, timeout=300):
+        
+        # Make sure we're connected
+        if not wait_port("127.0.0.1", 23405, 120):
             raise RuntimeError("Broker did not open port 23405")
-
+        self.root.update()
 
         # Initialize tesp_monitor
         from pathlib import Path
         config_path = Path(self.msg_config)
-        config_str = config_path.read_text()
         print("Creating HELICS monitor federate from:", config_path, flush=True)
     
         self.hFed = None
@@ -797,14 +804,16 @@ class TespMonitorGUI:
             elif target.__contains__("gld_load"):
                 self.sub_gld_load = sub
 
-        print('Done HELICS subscriptions', flush=True)
+        self.root.update()
+        print('Done securing HELICS subscriptions', flush=True)
         helics.helicsFederateEnterExecutingMode(self.hFed)
+
         self.bHELICSactive = True
         print('HELICS initialized', flush=True)
 
         # Updates when the market clears (yaml_delta)
         self.nsteps = int(self.time_stop / self.yaml_delta)
-        print('Number of time steps -> ' + str(self.nsteps), flush=True)
+        print('Simulation number of time steps: ' + str(self.nsteps), flush=True)
         self.idxlast = -1
         self.time_granted = 0
         self.btn2['state'] = tk.NORMAL
