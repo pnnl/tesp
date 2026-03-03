@@ -653,7 +653,7 @@ class TespMonitorGUI:
                 #print(f"frame {i}, time {self.time_granted}, "f"v_da={v_da}, v_rt={v_rt}, v_clear={v_clear}, v_load={v_load}", flush=True)
 
 
-               # update the Y axis data to draw
+                # update the Y axis data to draw
                 # If there is no change in value, HELICS does not update
                 # Only show changes in plots
                 if v_da != 0.0:
@@ -661,8 +661,9 @@ class TespMonitorGUI:
                     self.y0.extend(v_da_24)
                     self.da_hrs.extend(h + k for k in range(len(v_da_24)))
                     # expand the Y axis limits if necessary, keeping a 10% padding around the range
-                    if v_da_24[0] < self.y0min or v_da_24[0] > self.y0max:
-                        self.y0min, self.y0max = self.expand_limits(v_da_24[0], self.y0min, self.y0max)
+                    if min(v_da_24) < self.y0min or max(v_da_24) > self.y0max:
+                        self.y0min, self.y0max = self.expand_limits(min(v_da_24), self.y0min, self.y0max)
+                        self.y0min, self.y0max = self.expand_limits(max(v_da_24), self.y0min, self.y0max)
                         self.ax[0].set_ylim(self.y0min, self.y0max)
                         bRedraw = True
                 # else: 
@@ -670,47 +671,47 @@ class TespMonitorGUI:
                 #     self.y0.append(self.y0[-1])
                 
                 if v_rt != 0.0:
-                    v_rt = float(v_rt)
-                    self.y1.append(v_rt)
-                    if v_rt < self.y1min or v_rt > self.y1max:
-                        self.y1min, self.y1max = self.expand_limits(v_rt, self.y1min, self.y1max)
+                    v_rt_fl = float(ast.literal_eval(v_rt)[0])
+                    self.y1.append(v_rt_fl)
+                    if v_rt_fl < self.y1min or v_rt_fl > self.y1max:
+                        self.y1min, self.y1max = self.expand_limits(v_rt_fl, self.y1min, self.y1max)
                         self.ax[1].set_ylim(self.y1min, self.y1max)
                         bRedraw = True
                 else: 
                     self.y1.append(self.y1[-1])
                 
                 if v_clear != 0.0:
-                    v_clear = float(v_clear)
-                    self.y2auc.append(v_clear)
-                    self.y2lmp.append(v_clear)
-                    if v_clear < self.y2min or v_clear > self.y2max:
-                        self.y2min, self.y2max = self.expand_limits(v_clear, self.y2min, self.y2max)
+                    v_clear_fl = float(v_clear)
+                    self.y2auc.append(v_clear_fl)
+                    self.y2lmp.append(v_clear_fl)
+                    if v_clear_fl < self.y2min or v_clear_fl > self.y2max:
+                        self.y2min, self.y2max = self.expand_limits(v_clear_fl, self.y2min, self.y2max)
                         self.ax[2].set_ylim(self.y2min, self.y2max)
                         bRedraw = True
                 else: 
                     self.y2auc.append(self.y2auc[-1])
-                    self.y2lmp.append(self.y2lmp[-1]) # or v_rt, depending on what you want
+                    self.y2lmp.append(self.y2lmp[-1]) 
                 
                 if v_load != 0:
                     # Handle substation load as both a string and complex value
-                    v_load_float = ast.literal_eval(sub_load)
-                    v_load_real = v_load_float[0]
+                    v_load_fl = ast.literal_eval(sub_load)
+                    v_load_real = v_load_fl[0]
                     #print(f'v_load_real: {v_load_real}, type: {type(v_load_real)}')
                     v_load_kW = v_load_real / 1.0e3
                     self.gld_load = v_load_kW
-                else:
-                    v_load_kW = 0.0
-                    self.gld_load = 0.0
                     self.y3fncs.append(v_load_kW) # feeder load from HELICS (could be zero if no update)
                     self.y3gld.append(self.gld_load)  # most recent feeder load from HELICS
-                    
+
                     if v_load_kW < self.y3min or v_load_kW > self.y3max:
                         self.y3min, self.y3max = self.expand_limits(v_load_kW, self.y3min, self.y3max)
                         self.ax[3].set_ylim(self.y3min, self.y3max)
                         bRedraw = True
-                    else:
-                        self.y3fncs.append(self.y3fncs[-1]) 
-                        self.y3gld.append(self.y3gld[-1])
+                else:
+                    v_load_kW = 0.0
+                    self.gld_load = 0.0
+                    # feeder load from HELICS could be zero if no update
+                    self.y3fncs.append(self.y3fncs[-1]) 
+                    self.y3gld.append(self.y3gld[-1])
 
                 self.ln0.set_data(self.da_hrs, self.y0)
                 self.ln1.set_data(self.hrs, self.y1)
