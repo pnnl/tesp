@@ -1,0 +1,198 @@
+@startuml sequence_dso_seam
+!theme plain
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 180
+
+title DSO Inflexible Load Estimation — Avoiding Double-Counting Across Iterations
+
+participant "Weather\nService" as WX
+participant "Substation\nMeter" as SUB
+participant "Network\nLoss Model" as NET
+participant "Solar\nForecast" as SOL
+participant "DSO Load\nEstimation\nEngine" as DSO
+participant "Market\nOperator" as MO
+participant "Device\nAgents" as AGENTS
+
+== DA Informational Iteration 1 ==
+
+note over DSO : First iteration — limited knowledge of flexible load
+
+WX -> DSO : total feeder load forecast\n= 1200 kW (14hr ahead)
+note right of WX
+  EXTERNAL: Weather-driven
+  load forecast model using
+  historical AMI data +
+  outdoor temp forecast
+end note
+
+SOL -> DSO : BTM solar forecast\n= 180 kW generation
+note right of SOL
+  EXTERNAL: From irradiance
+  forecast + PV system specs
+  for all rooftop solar on feeder
+end note
+
+NET -> DSO : loss factor = 0.052
+note right of NET
+  EXTERNAL: From power flow
+  model given expected loading
+end note
+
+DSO -> MO : get_total_flexible_committed()
+MO --> DSO : 0 kW
+note right of MO
+  No device agent bids yet
+  (agents are formulating bids
+  concurrently). DSO uses
+  historical average for flex load.
+end note
+
+DSO -> DSO : estimate_inflexible_load()
+note over DSO #LightGreen
+  **Calculation:**
+  
+  Q_inflexible = total_forecast
+               − flexible_committed
+               + losses
+               − btm_solar
+  
+  = 1200 − 0 + (1200 × 0.052) − 180
+  = 1200 − 0 + 62.4 − 180
+  = 1082.4 kW
+  
+  Note: Without flex info, the inflexible
+  bid includes the flexible devices' load.
+  This will be partially double-counted
+  when agents also submit bids.
+  
+  The INFORMATIONAL nature of this
+  iteration means the double-count
+  will be corrected in iteration 2.
+end note
+
+DSO -> MO : submit_dso_inflexible_bid(\n  Q=1082 kW, components={\n    gross_forecast: 1200,\n    flex_subtracted: 0,\n    losses: 62,\n    solar: −180\n  })
+
+AGENTS -> MO : submit_agent_bids()\n(total flexible ~160 kW at expected price)
+
+MO -> MO : clear_market()\n[INFORMATIONAL iter 1]
+MO -> MO : propagate_results()
+
+== DA Informational Iteration 2 ==
+
+note over DSO : Now has iteration 1 clearing data
+
+DSO -> MO : get_total_flexible_committed()
+MO --> DSO : 155 kW
+note right of MO
+  Sum of agent cleared quantities
+  from iteration 1.
+  Now DSO knows how much load
+  is covered by agent bids.
+end note
+
+DSO -> DSO : estimate_inflexible_load()
+note over DSO #LightGreen
+  **Corrected calculation:**
+  
+  Q_inflexible = 1200 − 155 + (1200 × 0.052) − 180
+  = 1200 − 155 + 62.4 − 180
+  = 927.4 kW
+  
+  Double-counting reduced by 155 kW.
+  Market demand now more accurate.
+end note
+
+DSO -> MO : submit_dso_inflexible_bid(Q=927 kW)
+AGENTS -> MO : submit_agent_bids(refined)
+
+MO -> MO : clear_market()\n[INFORMATIONAL iter 2]
+note right of MO
+  Clearing price shifts because
+  demand is 155 kW lower.
+  Price likely decreases slightly.
+end note
+
+== DA Informational Iteration 3 ==
+
+DSO -> MO : get_total_flexible_committed()
+MO --> DSO : 148 kW (agents adjusted bids at new price)
+
+DSO -> DSO : estimate_inflexible_load()
+note over DSO
+  Q_inflexible = 1200 − 148 + 62.4 − 180
+  = 934.4 kW
+  
+  Very close to iteration 2.
+  Converging.
+end note
+
+DSO -> MO : submit_dso_inflexible_bid(Q=934 kW)
+AGENTS -> MO : submit_agent_bids(further refined)
+
+MO -> MO : clear_market()\n[INFORMATIONAL iter 3]
+
+== DA Binding Iteration ==
+
+DSO -> MO : get_total_flexible_committed()
+MO --> DSO : 150 kW (near-final)
+
+DSO -> DSO : estimate_inflexible_load()
+note over DSO
+  Q_inflexible = 1200 − 150 + 62.4 − 180
+  = 932.4 kW (converged)
+end note
+
+DSO -> MO : submit_dso_inflexible_bid(Q=932 kW)
+AGENTS -> MO : submit_agent_bids(final)
+
+MO -> MO : clear_market()\n[BINDING]
+MO -> MO : propagate_results()
+
+== Real-Time Correction (during RT delivery) ==
+
+note over DSO, MO #LightYellow
+  During RT operation, the DSO has real-time
+  metering to close the loop on any remaining
+  estimation error.
+end note
+
+SUB -> DSO : substation_load_actual = 1050 kW
+note right of SUB
+  EXTERNAL: Real-time SCADA
+  measurement at substation
+end note
+
+MO -> DSO : actual flexible power = 142 kW
+note right of MO
+  Sum of actual device agent
+  power consumption this interval
+  (from metering or reported)
+end note
+
+DSO -> DSO : update_with_metering(\n  sub_actual=1050,\n  flex_actual=142,\n  time=now)
+
+note over DSO #LightGreen
+  **Real-time inflexible load:**
+  
+  Q_inflexible_actual = sub_actual − flex_actual
+  = 1050 − 142 = 908 kW
+  
+  Forecast was 932 kW → error = 24 kW (2.6%)
+  
+  This error feeds into the next RT cycle's
+  inflexible bid, correcting in near-real-time.
+  
+  The DSO is the balancing responsible party
+  for inflexible load forecast errors.
+end note
+
+DSO -> MO : submit_dso_inflexible_bid(\n  Q=908 kW, for_next_RT_interval)
+note right of DSO
+  Next RT interval uses the
+  real-time-corrected estimate.
+  Forecast error shrinks toward
+  the irreducible minimum 
+  (~1% of load).
+end note
+
+@enduml

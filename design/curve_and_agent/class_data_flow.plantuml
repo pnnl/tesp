@@ -1,0 +1,292 @@
+@startuml class_diagram_data_flow
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam classFontSize 10
+skinparam packageFontSize 12
+skinparam wrapWidth 150
+
+title Data Flow: External Sources → Agent Functions → GridLAB-D
+
+' ============================================================================
+' EXTERNAL SOURCES (left side)
+' ============================================================================
+package "External Data Sources" <<Rectangle>> #FFE0B2 {
+    
+    class "Weather Service" as ExtWX <<external>> {
+        + outdoor_air_temp_forecast
+        + solar_irradiance_forecast
+        + humidity_forecast
+        + wind_speed_forecast
+    }
+
+    class "Customer Input" as ExtCUST <<external>> {
+        + preference_factor_k : float
+        + thermostat_schedule
+        + ev_departure_time : float
+        + ev_min_soc : float
+        + ev_preferred_soc : float
+        + battery_backup_reserve : float
+        + battery_preferred_soc : float
+    }
+
+    class "Learned Models" as ExtLEARN <<external>> {
+        + hot_water_draw_patterns
+        + ev_arrival_patterns
+        + building_occupancy_model
+        + internal_heat_gain_model
+        + household_load_profile
+    }
+
+    class "DSO and MO Provided" as ExtDSOMO <<external>> {
+        + market_timing_params
+        + penalty_model_params
+        + supply_curve
+        + network_constraints
+        + initial_price_forecasts
+        + regulation_signals
+        + reserve_activation_flags
+    }
+
+    class "Building and Device Specs" as ExtSPECS <<external>> {
+        + battery_replacement_cost : float
+        + battery_rated_cycles : int
+        + battery_rated_dod : float
+        + ev_battery_capacity : float
+        + ev_max_charge_rate : float
+        + pv_capacity : float
+        + pv_orientation : str
+    }
+
+    class "GridLAB-D Simulation State" as ExtGLDSIM <<external>> {
+        + device_physical_state
+        + simulation_time : float
+        + climate_data
+    }
+}
+
+' ============================================================================
+' DATA STREAM LAYER
+' ============================================================================
+package "Data Stream Layer" <<Rectangle>> #E3F2FD {
+
+    class "DataStreamManager" as DsmFlow {
+        - continuous_streams : Dict
+        - event_streams : Dict
+        - constraint_streams : Dict
+        - schedules : Dict
+        --
+        + register_continuous_stream()
+        + register_event_stream()
+        + register_constraint()
+        + register_schedule()
+        + update_stream()
+        + get_forecast_bundle()
+    }
+
+    class "Continuous Forecast Streams" as CfFlow {
+        + outdoor_air_temp
+        + solar_irradiance
+        + humidity
+        + electricity_price
+        + inlet_water_temp
+        + btm_solar_generation
+        + household_net_load
+    }
+
+    class "Event Forecast Streams" as EfFlow {
+        + hot_water_draw
+        + ev_arrival
+        + occupancy_transitions
+    }
+
+    class "Constraint Streams" as CsFlow {
+        + tank_temp_minimum
+        + ev_departure_soc
+        + battery_soc_reserve
+        + charge_rate_limits
+        + network_limits
+    }
+
+    class "Schedule Streams" as SsFlow {
+        + hvac_setpoint_schedule
+        + ev_preferred_soc
+        + battery_preferred_soc
+    }
+
+    DsmFlow *-down- CfFlow
+    DsmFlow *-down- EfFlow
+    DsmFlow *-down- CsFlow
+    DsmFlow *-down- SsFlow
+}
+
+' ============================================================================
+' AGENT FUNCTIONS (center)
+' ============================================================================
+package "Agent Functions" <<Rectangle>> #E8F5E9 {
+
+    class "F1: State Observation" as FuncF1 {
+        + reads GridLAB-D device properties
+        --
+        output: DeviceState
+    }
+
+    class "F2: Flexibility Estimation" as FuncF2 {
+        + uses DeviceModel
+        + uses forecasts and constraints
+        --
+        output: FlexibilityEnvelope
+    }
+
+    class "F3: Preference Curve" as FuncF3 {
+        + inputs: k, P_0, Q_baseline
+        + inputs: degradation_cost (battery)
+        --
+        output: PreferenceCurve
+    }
+
+    class "F4: Bid Formulation" as FuncF4 {
+        + inputs: flex, curve, ledger
+        + applies risk adjustment
+        --
+        output: BidCurve
+    }
+
+    class "F7: Price Response" as FuncF7 {
+        + inputs: price, curve
+        --
+        output: Q_star (target power)
+    }
+
+    class "F8: Control Translation" as FuncF8 {
+        + inputs: Q_star, DeviceModel
+        --
+        output: DeviceCommand
+    }
+
+    class "F9: Device Actuation" as FuncF9 {
+        + writes to GridLAB-D
+        --
+        output: success (bool)
+    }
+
+    class "Planning Optimizer" as FuncPLAN {
+        + inputs: price trajectory
+        + inputs: weather, constraints
+        + inputs: degradation model
+        --
+        output: PlanningResult
+        output: V_stored (battery)
+    }
+
+    class "Dispatch Optimizer" as FuncDISP {
+        + inputs: delivery economics
+        + inputs: penalties, amenity cost
+        --
+        output: DispatchSolution
+    }
+}
+
+' ============================================================================
+' MARKET INTERACTION (right side)
+' ============================================================================
+package "Market Interaction" <<Rectangle>> #F3E5F5 {
+
+    class "Market Operator" as MoFlow {
+        + receives bids from agents
+        + receives inflexible bid from DSO
+        + clears market
+        + propagates results
+    }
+
+    class "DSO Load Engine" as DsoFlow {
+        + estimates inflexible load
+        + subtracts flexible committed
+        + adds distribution losses
+        + subtracts BTM solar
+    }
+}
+
+' ============================================================================
+' GRIDLAB-D (bottom)
+' ============================================================================
+package "GridLAB-D Simulation Objects" <<Rectangle>> #FFCDD2 {
+    class "Device Objects" as GldFlow {
+        + house_and_hvac
+        + waterheater
+        + ev_charger
+        + battery_and_inverter
+    }
+}
+
+' ============================================================================
+' DATA FLOW ARROWS: External → Data Streams
+' ============================================================================
+
+ExtWX -down-> CfFlow : temp, solar,\nhumidity, wind
+ExtCUST -down-> CsFlow : departure,\nreserve
+ExtCUST -down-> SsFlow : setpoints,\npreferences
+ExtLEARN -down-> EfFlow : intensity functions,\nevent distributions
+ExtDSOMO -down-> CfFlow : initial price\nforecast
+ExtDSOMO -down-> CsFlow : network limits
+ExtSPECS -down-> FuncF2 : device\nparameters
+ExtSPECS -down-> FuncPLAN : degradation\nparams
+
+' ============================================================================
+' DATA FLOW ARROWS: GridLAB-D ↔ Agent
+' ============================================================================
+
+ExtGLDSIM -down-> FuncF1 : device state\nproperties
+FuncF9 -down-> GldFlow : setpoint and\npower commands
+FuncF1 -left-> GldFlow : reads from\nGLD objects
+
+' ============================================================================
+' DATA FLOW ARROWS: Customer → Agent
+' ============================================================================
+
+ExtCUST -right-> FuncF3 : k (preference\nfactor)
+
+' ============================================================================
+' DATA FLOW ARROWS: Data Streams → Functions
+' ============================================================================
+
+DsmFlow -right-> FuncF2 : forecasts\nand constraints
+DsmFlow -right-> FuncF3 : schedule (P_0)\nprice forecast
+DsmFlow -right-> FuncF4 : constraints for\nfeasibility
+DsmFlow -right-> FuncPLAN : full forecast\nbundle
+
+' ============================================================================
+' DATA FLOW ARROWS: Function chain
+' ============================================================================
+
+FuncF1 -right-> FuncF2 : DeviceState
+FuncF2 -right-> FuncF3 : FlexibilityEnvelope\n(Q_baseline)
+FuncF3 -down-> FuncF4 : PreferenceCurve
+FuncF3 -down-> FuncF7 : PreferenceCurve\n(price-responsive mode)
+FuncF4 -right-> MoFlow : BidCurve\n(submitted)
+MoFlow -down-> FuncF7 : ClearingResult\n(cleared price)
+FuncF7 -down-> FuncF8 : Q_star
+FuncF8 -down-> FuncF9 : DeviceCommand
+FuncPLAN -down-> FuncF4 : V_stored\n(battery thresholds)
+FuncPLAN -down-> FuncDISP : schedule\nbaseline
+FuncDISP -down-> FuncF8 : optimal Q\nfrom optimizer
+
+' ============================================================================
+' DATA FLOW ARROWS: DSO ↔ MO
+' ============================================================================
+
+MoFlow -left-> DsoFlow : flexible\ncommitted total
+DsoFlow -right-> MoFlow : inflexible\nload bid
+
+' ============================================================================
+' DATA FLOW ARROWS: Feedback loops
+' ============================================================================
+
+MoFlow -up-> CfFlow : informational clear\nupdates price forecast
+
+' ============================================================================
+' DATA FLOW ARROWS: DSO external inputs
+' ============================================================================
+
+ExtDSOMO -right-> MoFlow : timing, penalties,\nsupply curve
+
+@enduml

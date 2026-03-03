@@ -1,0 +1,195 @@
+@startuml sequence_multi_market
+!theme plain
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 180
+
+title Multi-Market Simultaneous Delivery — Dispatch Optimizer Resolution
+
+participant "DeviceAgent" as DA
+participant "GridLAB-D" as GLD
+participant "Command\nArbiter" as CA
+participant "Delivery Value\nCalculator" as DVC
+participant "Dispatch\nOptimizer" as DO
+participant "Device\nModel" as DM
+participant "Preference\nCurve" as PC
+
+note over DA, DO #LightYellow
+  Scenario: Battery agent with three simultaneous active deliveries:
+  • DA Energy: committed 2.0 kW discharge (firm)
+  • RT Energy: committed 1.5 kW discharge (firm)
+  • Regulation Up: committed 1.5 kW capacity (firm)
+  
+  Battery: Q ∈ [−5.0, +5.0] kW, SOC = 0.70
+  Regulation signal just changed to +0.8 (ramp up 80%)
+  Device physical limit: 5.0 kW max discharge
+  
+  Full delivery: 2.0 + 1.5 + (0.8 × 1.5) = 4.7 kW discharge
+  Fits within limit (4.7 < 5.0). No conflict this timestep.
+end note
+
+== Delivery Tick (called every simulation timestep) ==
+
+DA -> DA : _handle_delivery_tick(timestamp)
+
+note over DA : **F1: Observe Device State**
+DA -> GLD : read_battery_state()
+activate GLD
+GLD --> DA : BatteryState\n(soc=0.70, power=−3.5,\ncell_temp=28°C)
+deactivate GLD
+
+DA -> CA : resolve_and_actuate(state, pref_curve, amenity_weight, time)
+activate CA
+
+note over CA : **Step 1: Compute economics for each active delivery**
+
+CA -> DVC : compute("da_energy_001",\nENERGY_BASE, committed=−2.0,\nprice=$0.14, penalty_model,\ninterval=3600, deg_cost=$0.093)
+activate DVC
+note right of DVC
+  Revenue: $0.14 × 2.0 × Δt
+  Penalty if shortfall: $0.21/kWh × shortfall × Δt
+  (1.5× cleared price)
+  Degradation: $0.093 × 2.0 × Δt
+end note
+DVC --> CA : DeliveryEconomics(DA Energy)
+deactivate DVC
+
+CA -> DVC : compute("rt_energy_042",\nENERGY_BASE, committed=−1.5,\nprice=$0.18, penalty_model,\ninterval=300, deg_cost=$0.093)
+activate DVC
+note right of DVC
+  Revenue: $0.18 × 1.5 × Δt
+  Penalty if shortfall: $0.36/kWh × shortfall × Δt
+  (2.0× cleared price)
+  Degradation: $0.093 × 1.5 × Δt
+end note
+DVC --> CA : DeliveryEconomics(RT Energy)
+deactivate DVC
+
+CA -> DVC : compute("reg_up_007",\nREGULATION_UP, committed=1.5,\nprice=$0.12/kW, penalty_model,\nsignals={reg_signal: 0.8},\ndeg_cost=$0.10)
+activate DVC
+note right of DVC
+  Revenue: $0.12 × 1.5 × Δt (capacity)
+    + mileage × |response| × Δt
+  Penalty: score-based (accuracy of
+    following signal × 0.8)
+  Degradation: $0.10 × |response| × Δt
+    (higher rate — regulation cycling)
+end note
+DVC --> CA : DeliveryEconomics(Regulation Up)
+deactivate DVC
+
+note over CA : **Step 2: Get amenity cost function**
+CA -> PC : get_amenity_cost reference
+note right of PC
+  Battery amenity:
+  SOC = 0.70, preferred = 0.80
+  C_amenity = λ × (0.80 − SOC)
+  Discharging lowers SOC → increases amenity cost
+  Customer k=0.8 → low amenity weight
+end note
+
+note over CA : **Step 3: Solve dispatch optimization**
+CA -> DO : solve(\n  economics={DA, RT, Reg},\n  Q_min=−5.0, Q_max=+5.0,\n  pref_curve, amenity_weight=0.2,\n  signals={reg_signal: 0.8})
+activate DO
+
+note over DO #LightGreen
+  **Optimization Problem:**
+  
+  Decision variables:
+    q_base (energy discharge)
+    ΔQ_reg_up_offered ≤ 1.5 kW
+    q_reg = 0.8 × ΔQ_reg_up_offered
+  
+  Physical constraint:
+    |q_base + q_reg| ≤ 5.0 kW
+  
+  Objective: maximize
+    NV_da(q_da) + NV_rt(q_rt) + NV_reg(ΔQ, q_reg)
+    − C_degradation(|Q|) − C_amenity(SOC)
+  
+  where q_base = q_da + q_rt (energy split)
+  
+  **Solution (no conflict):**
+    q_da = −2.0 kW ✓ (full DA delivery)
+    q_rt = −1.5 kW ✓ (full RT delivery)
+    ΔQ_reg = 1.5 kW, q_reg = −1.2 kW ✓
+    Q_total = −(2.0 + 1.5 + 1.2) = −4.7 kW
+    |Q_total| = 4.7 ≤ 5.0 ✓
+end note
+
+DO --> CA : DispatchSolution(\n  Q = −4.7 kW,\n  allocation = {\n    da: −2.0, rt: −1.5,\n    reg: −1.2\n  },\n  displacement_chain = {},\n  total_net_value = $0.0023)
+deactivate DO
+
+note over CA : **Step 4: Translate to device command**
+CA -> DM : (battery: direct power command)
+DM --> CA : DeviceCommand(power_target = −4.7 kW)
+
+note over CA : **Step 5: Actuate via GridLAB-D (F9)**
+CA -> GLD : write_battery_command(\n  power_target = −4.7 kW)
+note right of GLD
+  Writes to GridLAB-D inverter:
+  power_out = +4.7 kW
+  (sign flip: GLD positive = export)
+end note
+GLD --> CA : True
+
+note over CA : **Step 6: Build fulfillment records**
+CA --> DA : {\n  "da_energy_001": Fulfillment(committed=2.0, actual=2.0, shortfall=0),\n  "rt_energy_042": Fulfillment(committed=1.5, actual=1.5, shortfall=0),\n  "reg_up_007": Fulfillment(committed=1.5, actual=1.2, shortfall=0)\n}
+deactivate CA
+
+note over DA : **F12: Log performance for each market**
+DA -> DA : da_market_obj.performance_log.append(...)
+DA -> DA : rt_market_obj.performance_log.append(...)
+DA -> DA : reg_market_obj.performance_log.append(...)
+
+== Next Tick: Conflict Scenario (RT price spikes) ==
+
+note over DA, DO #FFCCCC
+  New RT cycle clears at $0.45/kWh (price spike).
+  RT penalty = 2× = $0.90/kWh.
+  Regulation signal = +1.0 (full ramp up).
+  
+  Full delivery: 2.0(DA) + 1.5(RT) + 1.0×1.5(Reg) = 5.0 kW
+  Exactly at limit. But with degradation cost being higher
+  at full power (C-rate stress), optimizer may curtail something.
+end note
+
+DA -> CA : resolve_and_actuate(...)
+activate CA
+CA -> DO : solve(economics_updated, ...)
+activate DO
+
+note over DO #FFCCCC
+  Now marginal penalties are:
+    DA:  $0.21/kWh × shortfall
+    RT:  $0.90/kWh × shortfall (HIGH — spike)
+    Reg: $0.15/kW × shortfall (modest)
+  
+  Must shed 0.3 kW due to degradation
+  stress penalty at full 5.0 kW.
+  
+  Cheapest to shed: Regulation (lowest penalty)
+  
+  **Solution with displacement:**
+    q_da = −2.0 kW ✓
+    q_rt = −1.5 kW ✓ (protected — highest penalty)
+    q_reg = −1.2 kW (shed 0.3 kW from full 1.5)
+    Q_total = −4.7 kW
+    
+  Reg penalty: $0.15 × 0.3 = $0.045
+  Avoided degradation stress: $0.06
+  Net savings: $0.015
+end note
+
+DO --> CA : DispatchSolution(\n  Q = −4.7,\n  allocation = {da: −2.0, rt: −1.5, reg: −1.2},\n  displacement_chain = {"reg_up_007": "stress_limit"},\n  ...)
+deactivate DO
+
+CA -> GLD : write_battery_command(power = −4.7 kW)
+GLD --> CA : True
+
+CA --> DA : {\n  "da_energy_001": Fulfillment(shortfall=0),\n  "rt_energy_042": Fulfillment(shortfall=0),\n  "reg_up_007": Fulfillment(committed=1.5, actual=1.2,\n    shortfall=0.3, displaced_by="stress_limit")\n}
+deactivate CA
+
+note over DA : **F12: Log — regulation displacement recorded**
+DA -> DA : reg_market_obj.performance_log.append(\n  PerformanceEntry(was_displaced=True,\n    displaced_by="stress_limit"))
+
+@enduml
