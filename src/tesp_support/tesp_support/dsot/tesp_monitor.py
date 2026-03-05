@@ -1,6 +1,30 @@
 # Copyright (c) 2017-2025 Battelle Memorial Institute
 # file: tesp_monitor.py
-"""Presents a GUI to launch a TESP simulation and monitor its progress
+"""
+This tesp_monitor.py is adapted from original/tesp_monitor.py to work with DSOT.
+The monitor is designed follow a DSOT simulation run and plot the following 
+values as they are received:
+    - day-ahead LMPs (DA LMP), 
+    - the real-time LMPs (RT LMP), 
+    - the market clearing price (Clearing Price), and 
+    - the substation load (Total Feeder Load)
+
+Contains two classes:
+  - TespMonitorJSON: Creates the monitor.json file(s) describing the 
+  subscriptions used by the tesp monitor GUI (called by prepare_case_glm_dsot.py)
+  - TespMonitorGUI: calls the run script to start the TESP simulation and then
+  creates and launches the GUI to monitor its progress (launched by tesp_monitor.sh)
+
+To use this monitor, set "monitor" in the case config file to "true". That will
+call tesp_monitor.py to create the required monitor config files. 
+
+TODO: tesp_monitor works with HELICS messenger, the FNCS version needs debugging.
+
+Then, from the case folder, run `./tesp_monitor.sh`. The GUI will launch and ask
+you to select the monitor config file you wish to use. The default is "monitor.json", 
+which points to DSO 1. To change which substation to monitor, edit the file to 
+specify the DSO you wish, like: "DSO_{dso_num}_monitor_helics.json
+
 Public Functions:
   :show_tesp_monitor: Initializes and runs the monitor GUI
 References:
@@ -31,14 +55,18 @@ import matplotlib.pyplot as plt
 
 
 class TespMonitorJSON:
-    """Creates the DSO_num_monitor.json files required to run the tesp monitor 
-     GUI. Adapted from tesp_support/original/tesp_case.py: write_tesp_case()
+    """Creates required files for TespMonitorGUI while preparing the DSOT case:
+    - monitor.[json/yaml] config files required to launch the GUI. 
+    - DSO_[dso_num]_monitor_[helics/fncs].json files specifying the subscribed 
+       values to be plotted by the GUI
+    
+    Adapted from tesp_support/original/tesp_case.py: write_tesp_case()
 
-    * DSO_num_monitor.json: shell commands and other configuration data for the 
-        solution monitor GUI
-    * tesp_monitor.json: HELICS subscriptions and time step for the solution 
+    * DSO_[dso_num]_monitor_[helics/fncs].json: configuration data for the 
+       solution monitor GUI
+    * monitor.json: HELICS subscriptions and time step for the solution 
         monitor GUI
-    * tesp_monitor.yaml: FNCS subscriptions and time step for the solution 
+    * monitor.yaml: FNCS subscriptions and time step for the solution 
         monitor GUI
 
     Returns:
@@ -51,8 +79,8 @@ class TespMonitorJSON:
         is HELICS or FNCS.
         
         Args:
-        config (dict): Configuration
-        caseName (str): Name of simulation or test case
+            config (dict): Configuration
+            caseName (str): Name of simulation or test case
         """
         mtr_federate = "monitor"
         casePath = os.path.expandvars("$TESPDIR/examples/analysis/glm_dsot/code/")
@@ -136,24 +164,25 @@ class TespMonitorJSON:
                 json.dump(cmds, op, indent=2)    
 
 class TespMonitorGUI:
-    """ Manages a GUI with 4 plotted variables, and buttons to stop TESP
-    The GUI reads a JSON file with scripted shell commands to launch
+    """ Manages a GUI with 4 plotted variables, and buttons to stop the monitor
+    The GUI calls the ./run.sh to run the simulation, then reads the json monitor
+    config file assigning the HELICS/FNCS federates, or the YAML monitor config 
+    file with HELICS/FNCS subscriptions to update the solution status.
+     
+    Both JSON and YAML files are written by TespMonitorJSON. The plotted 
+    variables provide a sign-of-life and sign-of-stability indication for each 
+    of the major federates in the DSOT simulation, namely GridLAB-D, PYPOWER, 
+    and the substation_loop that manages a market with multiple agents. 
 
-    other HELICS/FNCS federates, and a YAML file with HELICS/FNCS subscriptions 
-    to update the solution status. Both JSON and YAML files are written by 
-    *tesp.tesp_config*. The plotted variables provide a sign-of-life and 
-    sign-of-stability indication for each of the major federates in the te30 or 
-    sgip1 examples, namely GridLAB-D, PYPOWER, EnergyPlus, and the 
-    substation_loop that manages a simple_auction with multiple hvac agents. 
     If a solution appears to be unstable or must be stopped for any other reason,
-    exiting the solution monitor will do so.
+    exiting the solution monitor will kill the run.
 
     The plots are created and updated with animated and bit-blitted Matplotlib
     graphs hosted on a TkInter GUI. When the JSON and YAML files are loaded,
     the x axis is laid out to match the total TESP simulation time range.
 
     Args:
-        master:
+
 
     Attributes:
       root (Tk): the TCL Tk toolkit instance
@@ -161,25 +190,25 @@ class TespMonitorGUI:
       labelvar (StringVar): used to display the monitor JSON configuration file 
         path
       hrs ([float]): x-axis data array for time in hours, shared by all plots
-      y0 ([float]): y-axis data array for PYPOWER bus voltage
-      y1 ([float]): y-axis data array for EnergyPlus load
+      y0da ([float]): y-axis data array for day-ahead LMPs
+      y1rt ([float]): y-axis data array for the real-time LMPs
       y2lmp ([float]): y-axis data array for PYPOWER LMP
-      y2auc ([float]): y-axis data array for simple_auction cleared_price
-      y3fncs ([float]): y-axis data array for GridLAB-D load via FNCS
-      y3gld ([float]): y-axis data array for sample-and-hold GridLAB-D load
+      y2auc ([float]): TODO: y-axis data array for auction cleared_price
+      y3fncs ([float]): y-axis data array for GridLAB-D load via HELICS/FNCS
+      y3gld ([float]): TODO: y-axis data array for sample-and-hold GridLAB-D load
       gld_load (float): the most recent load published by GridLAB-D; due to the 
-        deadband, this value isn't necessary published at every FNCS time step
-      y0min (float): the first y axis minimum value
-      y0max (float): the first y axis maximum value
-      y1min (float): the second y axis minimum value
-      y1max (float): the second y axis maximum value
+        deadband, this value isn't necessary published at every HELICS/FNCS time step
+      y0damin (float): the first y axis minimum value
+      y0damax (float): the first y axis maximum value
+      y1rtmin (float): the second y axis minimum value
+      y1rtmax (float): the second y axis maximum value
       y2min (float): the third y axis minimum value
       y2max (float): the third y axis maximum value
       y3min (float): the fourth y axis minimum value
       y3max (float): the fourth y axis maximum value
       hour_stop (float): the maximum x axis time value to plot
-      ln0 (Line2D): the plotted PYPOWER bus voltage, color GREEN
-      ln1 (Line2D): the plotted EnergyPlus load, color RED
+      ln0da (Line2D): the plotted PYPOWER bus voltage, color GREEN
+      ln1rt (Line2D): the plotted EnergyPlus load, color RED
       ln2lmp (Line2D): the plotted PYPOWER locational marginal price (LMP), 
         color BLUE
       ln2auc (Line2D): the plotted simple_auction cleared_price, color BLACK
@@ -246,36 +275,36 @@ class TespMonitorGUI:
         plt.subplots_adjust(hspace=0.35)
         self.hrs = [0.0]
         self.da_hrs = [0.0]
-        self.y0 = [1.0]
-        self.y1 = [0.0]
+        self.y0da = [1.0]
+        self.y1rt = [0.0]
         self.y2lmp = [0.0]
         self.y2auc = [0.0]
         self.y3fncs = [0.0]  # GridLAB-D publishes only when changed
         self.gld_load = 0.0
         self.y3gld = [0.0]
-        self.y0min = 1.0
-        self.y0max = 1.0
-        self.y1min = 0.0
-        self.y1max = 0.0
+        self.y0damin = 1.0
+        self.y0damax = 1.0
+        self.y1rtmin = 0.0
+        self.y1rtmax = 0.0
         self.y2min = 0.0
         self.y2max = 0.0
         self.y3min = 0.0
         self.y3max = 0.0
 
-        self.ln0 = Line2D(self.hrs, self.y0, color='green')
-        self.ln1 = Line2D(self.hrs, self.y1, color='red')
+        self.ln0da = Line2D(self.hrs, self.y0da, color='green')
+        self.ln1rt = Line2D(self.hrs, self.y1rt, color='red')
         self.ln2auc = Line2D(self.hrs, self.y2auc, color='black')
         self.ln2lmp = Line2D(self.hrs, self.y2lmp, color='blue')
         self.ln3fncs = Line2D(self.hrs, self.y3fncs, color='cyan')
         self.ln3gld = Line2D(self.hrs, self.y3gld, color='magenta')
 
         self.ax[0].clear()
-        self.ax[0].add_line(self.ln0)
+        self.ax[0].add_line(self.ln0da)
         self.ax[0].set_ylabel('[$]')
         self.ax[0].set_title('DA LMP', fontsize=10)
 
         self.ax[1].clear()
-        self.ax[1].add_line(self.ln1)
+        self.ax[1].add_line(self.ln1rt)
         self.ax[1].set_ylabel('[$]')
         self.ax[1].set_title('RT LMP', fontsize=10)
 
@@ -437,7 +466,7 @@ class TespMonitorGUI:
         """
         # print ('.', end='', flush=True)
         # print ('frame', i, 'of', self.nsteps, flush=True)
-        artists = self.ln0, self.ln1, self.ln2auc, self.ln2lmp, self.ln3fncs, self.ln3gld
+        artists = self.ln0da, self.ln1rt, self.ln2auc, self.ln2lmp, self.ln3fncs, self.ln3gld
         bRedraw = False
         while self.time_granted <= self.time_stop:  # time in seconds
             try:
@@ -474,13 +503,13 @@ class TespMonitorGUI:
                         v3 = parse_kw(value)
                         self.gld_load = v3
                 # expand the Y axis limits if necessary, keeping a 10% padding around the range
-                if v0 < self.y0min or v0 > self.y0max:
-                    self.y0min, self.y0max = self.expand_limits(v0, self.y0min, self.y0max)
-                    self.ax[0].set_ylim(self.y0min, self.y0max)
+                if v0 < self.y0damin or v0 > self.y0damax:
+                    self.y0damin, self.y0damax = self.expand_limits(v0, self.y0damin, self.y0damax)
+                    self.ax[0].set_ylim(self.y0damin, self.y0damax)
                     bRedraw = True
-                if v1 < self.y1min or v1 > self.y1max:
-                    self.y1min, self.y1max = self.expand_limits(v1, self.y1min, self.y1max)
-                    self.ax[1].set_ylim(self.y1min, self.y1max)
+                if v1 < self.y1rtmin or v1 > self.y1rtmax:
+                    self.y1rtmin, self.y1rtmax = self.expand_limits(v1, self.y1rtmin, self.y1rtmax)
+                    self.ax[1].set_ylim(self.y1rtmin, self.y1rtmax)
                     bRedraw = True
                 if v2auc > v2lmp:
                     v2max = v2auc
@@ -498,14 +527,14 @@ class TespMonitorGUI:
                     self.ax[3].set_ylim(self.y3min, self.y3max)
                     bRedraw = True
                 # update the Y axis data to draw
-                self.y0.append(v0)  # Vpu
-                self.y1.append(v1)  # school kW
+                self.y0da.append(v0)  # Vpu
+                self.y1rt.append(v1)  # school kW
                 self.y2auc.append(v2auc)  # price
                 self.y2lmp.append(v2lmp)  # LMP
                 self.y3fncs.append(v3)  # this feeder load from FNCS (could be zero if no update)
                 self.y3gld.append(self.gld_load)  # most recent feeder load from FNCS
-                self.ln0.set_data(self.hrs, self.y0)
-                self.ln1.set_data(self.hrs, self.y1)
+                self.ln0da.set_data(self.hrs, self.y0da)
+                self.ln1rt.set_data(self.hrs, self.y1rt)
                 self.ln2auc.set_data(self.hrs, self.y2auc)
                 self.ln2lmp.set_data(self.hrs, self.y2lmp)
                 self.ln3fncs.set_data(self.hrs, self.y3fncs)
@@ -588,7 +617,7 @@ class TespMonitorGUI:
         """
         import ast
 
-        artists = self.ln0, self.ln1, self.ln2auc, self.ln2lmp, self.ln3fncs, self.ln3gld
+        artists = self.ln0da, self.ln1rt, self.ln2auc, self.ln2lmp, self.ln3fncs, self.ln3gld
         # print ('.', end='', flush=True)
         # print('frame', i, 'of', self.nsteps, flush=True)
         if not self.bHELICSactive:
@@ -658,27 +687,27 @@ class TespMonitorGUI:
                 # Only show changes in plots
                 if v_da != 0.0:
                     v_da_24 = list(map(float, ast.literal_eval(v_da)))
-                    self.y0.extend(v_da_24)
+                    self.y0da.extend(v_da_24)
                     self.da_hrs.extend(h + k for k in range(len(v_da_24)))
                     # expand the Y axis limits if necessary, keeping a 10% padding around the range
-                    if min(v_da_24) < self.y0min or max(v_da_24) > self.y0max:
-                        self.y0min, self.y0max = self.expand_limits(min(v_da_24), self.y0min, self.y0max)
-                        self.y0min, self.y0max = self.expand_limits(max(v_da_24), self.y0min, self.y0max)
-                        self.ax[0].set_ylim(self.y0min, self.y0max)
+                    if min(v_da_24) < self.y0damin or max(v_da_24) > self.y0damax:
+                        self.y0damin, self.y0damax = self.expand_limits(min(v_da_24), self.y0damin, self.y0damax)
+                        self.y0damin, self.y0damax = self.expand_limits(max(v_da_24), self.y0damin, self.y0damax)
+                        self.ax[0].set_ylim(self.y0damin, self.y0damax)
                         bRedraw = True
                 # else: 
                 #     self.da_hrs = self.hrs
-                #     self.y0.append(self.y0[-1])
+                #     self.y0da.append(self.y0da[-1])
                 
                 if v_rt != 0.0:
                     v_rt_fl = float(ast.literal_eval(v_rt)[0])
-                    self.y1.append(v_rt_fl)
-                    if v_rt_fl < self.y1min or v_rt_fl > self.y1max:
-                        self.y1min, self.y1max = self.expand_limits(v_rt_fl, self.y1min, self.y1max)
-                        self.ax[1].set_ylim(self.y1min, self.y1max)
+                    self.y1rt.append(v_rt_fl)
+                    if v_rt_fl < self.y1rtmin or v_rt_fl > self.y1rtmax:
+                        self.y1rtmin, self.y1rtmax = self.expand_limits(v_rt_fl, self.y1rtmin, self.y1rtmax)
+                        self.ax[1].set_ylim(self.y1rtmin, self.y1rtmax)
                         bRedraw = True
                 else: 
-                    self.y1.append(self.y1[-1])
+                    self.y1rt.append(self.y1rt[-1])
                 
                 if v_clear != 0.0:
                     v_clear_fl = float(v_clear)
@@ -713,8 +742,8 @@ class TespMonitorGUI:
                     self.y3fncs.append(self.y3fncs[-1]) 
                     self.y3gld.append(self.y3gld[-1])
 
-                self.ln0.set_data(self.da_hrs, self.y0)
-                self.ln1.set_data(self.hrs, self.y1)
+                self.ln0da.set_data(self.da_hrs, self.y0da)
+                self.ln1rt.set_data(self.hrs, self.y1rt)
                 self.ln2auc.set_data(self.hrs, self.y2auc)
                 self.ln2lmp.set_data(self.hrs, self.y2lmp)
                 self.ln3fncs.set_data(self.hrs, self.y3fncs)
