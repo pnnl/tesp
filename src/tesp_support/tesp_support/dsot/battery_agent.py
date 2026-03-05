@@ -59,7 +59,7 @@ class BatteryDSOT:
         dayAheadCapacity (float): % of battery capacity reserved for day ahead bidding
 
         No initialization required
-        bidSpread (int): this can be used to spread out bids in multiple hours. When set to 1 hour (recommended), it’s effect is none
+        bidSpread (int): this can be used to spread out bids in multiple hours. When set to 1 hour (recommended), its effect is none
         P (int): location of P in bids
         Q (int): location of Q in bids
         f_DA (List[float]) (1 X windowLength): forecasted prices in $/kWh for all the hours in the duration of windowLength

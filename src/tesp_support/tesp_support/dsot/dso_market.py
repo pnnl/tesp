@@ -1,15 +1,21 @@
 # Copyright (c) 2017-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: dso_market.py
-"""Class that manages the operation of DSO agent
+"""DSO market agent implementation.
 
-Functionalities include: 
-Aggregate demand bids from different substations; 
-Wholesale no da trial clearing;
-Conversion between wholesale price and retail price;   
-Generate substation supply curves with and without consideration of the transformer degradation.
+This module defines :class:`DSOMarket`, which performs DSO-side market functions:
+- aggregate substation demand bids (RT and DA),
+- execute trial wholesale-node clearing,
+- convert between wholesale and retail prices,
+- construct substation supply curves, including optional transformer degradation cost.
 
 """
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Note: the doc-strings in this file were either written in full or modified by
+# an AI-assistant trained on the TESP codebase, and specifically this file. 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 import json
 import math
 from copy import deepcopy
@@ -23,12 +29,14 @@ from ..api.schedule_client import DataClient
 
 
 class DSOMarket:
-    """
-    This agent manages the DSO operating
+    """DSO-side market model for DSOT co-simulation.
+
+    The class maintains real-time (RT) and day-ahead (DA) bid/curve state, performs
+    wholesale trial clearing, and produces retail-facing supply curves for substations.
 
     Args:
-        dso_dict:
-        key:
+        dso_dict (dict): DSO configuration (limits, coefficients, scaling, and runtime options).
+        key (str): DSO market agent identifier.
         
     Attributes:
         name (str): name of the DSO agent
@@ -56,7 +64,26 @@ class DSOMarket:
     """
 
     def __init__(self, dso_dict, key):
-        """ Initializes the class
+        """ Initialize the DSO market model state.
+
+        This constructor sets up the data structures used for:
+            - bid intake and cleaning for day-ahead (DA) and real-time (RT) horizons,
+            - aggregation of participant demand curves at the DSO level,
+            - mapping between wholesale node prices/quantities and retail-facing signals,
+            - storage of cleared quantities, prices, and reference load traces.
+
+        The object is intended to be stepped by the DSOT substation/market loop,
+        where DA and RT clearing are performed repeatedly as new forecasts and bids
+        arrive.
+
+        Notes:
+            This class implements the operational market-clearing mechanics. It does
+            not execute simulation orchestration by itself.
+
+        Args:
+            dso_dict (dict): DSO configuration dictionary (limits, pricing, curve options,
+                customer mix, and runtime settings).
+            key (str): DSO agent name/identifier.
         """
         self.active_power_rt = None
         self.name = key
@@ -151,9 +178,9 @@ class DSOMarket:
         self.current_time = None
 
     def update_wholesale_node_curve(self):
-        """ Update the wholesale node curves according to the most updated curve coefficients,
-        may be updated every day
+        """Rebuild wholesale-node supply curves from current quadratic coefficients.
 
+        Recomputes curve samples for each day-of-week and hour-of-day.
         """
         # Update the wholesale node curves according to the most updated curve coefficients
         for day in range(7):
@@ -167,8 +194,10 @@ class DSOMarket:
                               for quantity in self.curve_ws_node[day][hour].quantities.tolist()])
 
     def clean_bids_RT(self):
-        """ Initialize the real-time wholesale node trial clearing
-        """
+        """ Initialize the real-time wholesale node trial clearing by
+        resetting RT clearing state and initializing an empty aggregated RT 
+        demand curve."""
+
         self.Pwclear_RT = 0.0
         self.trial_cleared_quantity_RT = 0.0
         self.curve_DSO_RT = None
@@ -176,8 +205,11 @@ class DSOMarket:
         self.curve_DSO_RT = Curve(self.price_cap, self.num_samples)
 
     def clean_bids_DA(self):
-        """ Initialize the day-ahead wholesale node trial clearing
+        """ Initialize the day-ahead wholesale node trial clearing by 
+        resetting DA clearing state and initializing empty aggregated DA 
+        demand curves.
         """
+
         self.Pwclear_DA = [0.0] * self.windowLength
         self.trial_cleared_quantity_DA = [0.0] * self.windowLength
         self.curve_DSO_DA = dict()
@@ -186,7 +218,8 @@ class DSOMarket:
             self.curve_DSO_DA[idx] = Curve(self.price_cap, self.num_samples)
 
     def curve_aggregator_DSO_RT(self, demand_curve_RT, Q_max):
-        """ Function used to aggregate the substation-level RT demand curves into a DSO-level RT demand curve
+        """ Function used to aggregate the substation-level RT demand curves 
+        into a DSO-level RT demand curve
 
         Args:
             demand_curve_RT (Curve): demand curve to be aggregated for real-time
@@ -344,16 +377,17 @@ class DSOMarket:
         """ An internal shared function called by set_Pwclear_RT and 
         set_Pwclear_DA functions to implement the trial wholesale node clearing
 
+       Perform one wholesale trial clearing between supply and aggregated DSO demand.
+
         Args:
-            curve_ws_node (Curve): wholesale node curve
-            curve_DSO (Curve): aggregated demand curve at DSO level
-            day: 
-            hour: 
+            curve_ws_node (Curve): Wholesale-node supply curve.
+            curve_DSO (Curve): Aggregated DSO demand curve.
+            day (int): Day-of-week index used for diagnostics and curve selection.
+            hour (int): Hour-of-day index used for diagnostics and curve selection.
 
         Returns:
-            Pwclear (float): cleared price, in $/kWh
-            cleared_quantity(float): cleared quantity, in kWh
-            trial_clear_type (int): clear type
+            tuple[float, float, MarketClearingType]:
+                Cleared wholesale price ($/kWh), cleared quantity (kWh), and clearing type.
         """
 
         Pwclear = None
@@ -497,20 +531,14 @@ class DSOMarket:
     def substation_supply_curve_RT(self, retail_obj):
         """ Function used to generate the RT supply curve for each substation
 
-        Args:
+        Build the RT supply curve sent from DSO to a retail market.
 
-        Variables:
-            FeederCongPrice (float): feeder congestion price, in $/kWh
-            FeederPkDemandPrice (float): feeder peak demand price, in $/kWh
-            FeederCongCapacity (float): feeder congestion capacity, in kWh
-            FeederPkDemandCapacity (float): feeder peak demand, in kWh
-            Q_max_retail (float): substation limit, in kWh
-            Q_max_DSO (float): can change when the demand bid is higher than the original DSO limit
-            maxPuLoading (float): maximum pu loading factor
-            TOC_dict (dict): configuration parameters for transformer
+        Args:
+            retail_obj (RetailMarket): Retail market object providing feeder constraints
+                and RT buyer curve context.
 
         Returns:
-            supply_curve_RT (curve): substation supply curve for real-time market clearing
+            Curve: RT substation supply curve in retail-price space.
         """
 
         FeederCongCapacity = retail_obj.FeederCongCapacity
@@ -572,21 +600,16 @@ class DSOMarket:
     def substation_supply_curve_DA(self, retail_obj):
         """ Function used to generate the DA supply curves for each substation
 
-        Args:
+        Build DA supply curves sent from DSO to a retail market.
 
-        Variables:
-            FeederCongPrice (float): feeder congestion price, in $/kWh
-            FeederPkDemandPrice (float): feeder peak demand price, in $/kWh
-            FeederCongCapacity (float): feeder congestion capacity, in kWh
-            FeederPkDemandCapacity (float): feeder peak demand, in kWh
-            Q_max_retail (float): substation limit, in kWh
-            Q_max_DSO (float): can change when the demand bid is higher than the original DSO limit
-            maxPuLoading (float): maximum pu loading factor
-            TOC_dict (dict): configuration parameters for transformer
+        Args:
+            retail_obj (RetailMarket): Retail market object providing feeder constraints
+                and DA buyer curve context.
 
         Returns:
-            supply_curve_DA (list): a collection of substation supply curves for day-ahead market clearing
+            dict[int, Curve]: Hour-indexed DA substation supply curves.
         """
+
         FeederCongCapacity = retail_obj.FeederCongCapacity
         FeederPkDemandCapacity = retail_obj.FeederPkDemandCapacity
         Q_max_retail = retail_obj.Q_max
@@ -632,25 +655,38 @@ class DSOMarket:
 
     def supply_curve(self, Prclear, FeederCongCapacity, FeederPkDemandCapacity, num_samples, Q_max, maxPuLoading,
                      TOC_dict):
-        """ An internal shared function called by substation_supply_curve_RT and substation_supply_curve_DA functions
-        to generate the supply curve when considering the transformer degradation
+        """ An internal shared function called by substation_supply_curve_RT 
+        and substation_supply_curve_DA functions to generate the supply curve 
+        when considering the transformer degradation
+
+        Create a supply curve with transformer-degradation adder.
+
+        Used by RT/DA substation supply-curve builders when degradation is enabled.
+
+        Build a retail supply curve with optional transformer owning-cost adder.
+
+        This helper is used by both RT and DA substation supply-curve builders when
+        transformer degradation is enabled. It first forms a piecewise baseline
+        price curve (using feeder capacity thresholds), then adds a per-kW owning-cost
+        component derived from :meth:`generate_TOC`.
 
         Args:
-            Prclear (float): retail price overted from wholesale price obtained from trial wholesale node clearing, in $/kWh
-            FeederCongCapacity (float): feeder congestion capacity, in kWh
-            FeederPkDemandCapacity (float): feeder peak demand, in kWh
-            num_samples (int): number of sampling points
-            Q_max (float): substation limit, in kWh
-            maxPuLoading (float): maximum pu loading factor
-            TOC_dict (dict): configuration parameters for transformer
-
-        Variables:
-            FeederCongPrice (float): feeder congestion price, in $/kWh
-            FeederPkDemandPrice (float): feeder peak demand price, in $/kWh
+            Prclear (float): Base retail clearing price in $/kWh.
+            FeederCongCapacity (float): Feeder congestion threshold (quantity axis).
+            FeederPkDemandCapacity (float): Feeder peak-demand threshold (quantity axis).
+            num_samples (int): Number of curve sample points.
+            Q_max (float): Substation quantity limit used for curve scaling.
+            maxPuLoading (float): Maximum per-unit loading considered for TOC.
+            TOC_dict (dict): Transformer owning-cost configuration parameters.
 
         Returns:
-            SupplyQuantities (list): quantity sampling of the supply curve, in kWh
-            SupplyPrices (list): prices sampling of the supply curve, in $/kWh
+            tuple[np.ndarray, list[float]]:
+                - SupplyQuantities: sampled quantities from 0 to ``Q_max * maxPuLoading``.
+                - SupplyPrices: sampled prices in $/kWh after adding degradation adder.
+
+        Notes:
+            - ``self.dollarsPerKW`` is updated as a side effect.
+            - ``generate_TOC(60, ...)`` is used, so the adder is computed on a 60-minute basis.
         """
         FeederCongPrice = Prclear
         FeederPkDemandPrice = Prclear
@@ -684,17 +720,19 @@ class DSOMarket:
         return SupplyQuantities, SupplyPrices
 
     def generate_TOC(self, costInterval, maxPuLoad, num_samples, TOC_dict):
-        """ Function used to calculate the total owning cost of transformer
+        """ Compute transformer total owning cost (TOC) of transformer over 
+        sampled loading points.
 
         Args:
-            costInterval (int): interval for calculating the cost, in minutes
-            maxPuLoad (float): maximum pu loading factor
-            num_samples (int): number of sampling points
-            TOC_dict (dict): configuration parameters for transformer
+            costInterval (int): Cost accumulation interval in minutes.
+            maxPuLoad (float): Maximum per-unit loading factor.
+            num_samples (int): Number of sampled loading points.
+            TOC_dict (dict): Transformer thermal/economic parameters.
 
         Returns:
-            DollarsForPlot (list): price axis of unit owning cost, in $/kWh
-            LoadsForPlot (list): quantity axis of unit owing cost, in kWh
+            tuple[list[float], list[float]]:
+                - DollarsForPlot: Cost values over sampled loading points.
+                - LoadsForPlot: Per-unit loading points used for plotting.
         """
         # Import TOC dictionary
         OperatingPeriod = TOC_dict['OperatingPeriod']
@@ -776,10 +814,11 @@ class DSOMarket:
         return DollarsForPlot, LoadsForPlot
 
     def set_ref_load(self, ref_load):
-        """ Set the reference (ercot) load based on provided load by a csv file after base-case, complex number
+        """ Set reference ERCOT load from a complex-power string based on 
+        provided load by a csv file after base case.
 
-            Args:
-                ref_load (str): total load of substation
+        Args:
+            ref_load (str): Total substation load value.
         """
         val = parse_kw(ref_load)
         self.total_load = val
@@ -787,14 +826,15 @@ class DSOMarket:
     def set_total_load(self, total_load):
         """ Set the residential load based on provided load by GLD, complex number
 
-            Args:
-                total_load (str): total load of substation
+        Args:
+            total_load (str): Total substation load value.
         """
         val = parse_kw(total_load)
         self.total_load = val
 
     def set_ind_load(self, industrial_load):
-        """ Set the industrial load based on provided load by a csv file after base-case, complex number
+        """ Set the industrial load based on provided load by a csv file after 
+        base-case, complex number
 
         Args:
             industrial_load (str): industrial load of substation
@@ -803,27 +843,35 @@ class DSOMarket:
         self.ind_load = val
 
     def set_ind_load_da(self, industrial_load_da):
-        """ Set the ercot ind load for the next 24-hours provided load by a csv file after base-case, complex number
+        """ Set the ercot ind load for the next 24-hours provided load by a csv 
+        file after base-case, complex number.
 
-            Args:
-                industrial_load_da (24 x 1 array of double): industry load values for the next day ahead are given in MW
+        Set day-ahead industrial load profile (MW) for the DA horizon.
+
+        Args:
+            industrial_load_da (str (24 x 1 array of double)): JSON-encoded 
+            array of industrial load values in MW.
         """
         temp = json.loads(industrial_load_da)
         self.ind_load_da = np.array(temp) * 1000.0
 
     def set_ref_load_da(self, ref_load_da):
-        """ Set the ercot load for the next 24-hours provided load by a csv file after base-case, complex number
+        """ Set the ercot load for the next 24-hours provided load by a csv file
+        after base-case, complex number
 
-            Args:
-                ref_load_da (24 x 1 array of double): ercot load values for the next day ahead
+        Args:
+            ref_load_da (str (24 x 1 array of double)): JSON-encoded array 
+            of ercot load values for the next day ahead.
         """
         self.ref_load_da = json.loads(ref_load_da)
 
     def set_lmp_da(self, val):
         """ Set the lmp for day ahead
 
-            Args:
-                val (array of double): lmp for the day ahead
+        Args:
+            val (array of double): JSON-encoded RT LMP payload for the day 
+            ahead.
+
         """
         self.lmp_da = json.loads(val)
 
@@ -836,33 +884,55 @@ class DSOMarket:
         self.lmp_rt = json.loads(val)
 
     def set_cleared_q_da(self, val):
-        """ Set the clear quantity for day ahead
+        """Set cleared day-ahead quantities.
 
-            Args:
-                val (double): lmp for the bus/substation
+        Args:
+            val (str): JSON-encoded array of DA cleared quantities (lmp for the 
+            bus/substation).
         """
         self.cleared_q_da = json.loads(val)
 
     def set_cleared_q_rt(self, val):
-        """ Set the clear quantity for real time
+        """Set cleared real-time quantity.
 
-            Args:
-                val (double): lmp for the bus/substation
+        Args:
+            val (str): JSON-encoded RT cleared quantity (lmp for the bus/substation).
         """
         self.cleared_q_rt = json.loads(val)
 
     def test_function(self):
         """ Test function with the only purpose of returning the name of the object
 
+        Returns:
+            str: The name of the market object (debug helper).
         """
+
         return self.name
 
 
 def test():
+    """Run an ad hoc smoke test for DSOMarket RT/DA clearing workflows.
+
+    This helper constructs sample DSO/retail objects, submits representative bids,
+    executes clearing, and prints/plots outputs for manual inspection.
+    """
+    
     import matplotlib.pyplot as plt
     from .retail_market import RetailMarket
 
     def test_dso_clearing_RT():
+        """    Validate real-time (RT) DSO clearing behavior on sample bids.
+
+        Run a representative real-time (RT) DSO + retail clearing scenario.
+
+        Typical checks:
+        - RT bid cleaning and aggregation succeed,
+        - RT clearing returns finite price and quantity,
+        - outputs are within configured market bounds.
+
+        Returns:
+            None.
+        """
         # Dictionary for DSO, Retail agent and TOC calculation
         dso_dict = {
             'windowLength': 48,
@@ -1022,6 +1092,18 @@ def test():
     # plt.show()
 
     def test_dso_clearing_DA():
+        """    Validate day-ahead (DA) DSO clearing behavior over the DA horizon.
+        
+        Run a representative day-ahead (DA) DSO + retail clearing scenario.
+
+        Typical checks:
+        - DA bid cleaning and interval aggregation succeed,
+        - interval-by-interval clearing completes,
+        - cleared DA price/quantity arrays are dimensionally consistent.
+
+        Returns:
+            None.
+        """
         # Dictionary for DSO, Retail agent and TOC calculation
 
         dso_dict = {

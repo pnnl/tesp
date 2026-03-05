@@ -1,10 +1,21 @@
 # Copyright (c) 2017-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: substation.py
-"""Manages the simple_auction and hvac agents for the te30 and sgip1 examples
+"""Substation federate loop for legacy TESP auction/HVAC examples.
 
-Public Functions:
-    :substation_loop: initializes and runs the agents
+This module runs a HELICS-coupled substation controller that coordinates:
+- one ``simple_auction`` market object,
+- multiple ``hvac`` controller agents,
+- bid collection and aggregation,
+- market clearing and thermostat setpoint updates,
+- auction/controller metrics export.
+
+The implementation is primarily used by TE30/SGIP1-style workflows.
+
+Entry point:
+    ``substation_loop(configfile, metrics_root, helicsConfig, hour_stop=48, 
+        flag='WithMarket')``
+
 
 Todo:
     * Getting an overflow error when killing process - investigate whether that happens if simulation runs to completion
@@ -12,6 +23,11 @@ Todo:
     * Allow multiple markets per substation, e.g., 5-minute and day-ahead for the DSO+T study
 
 """
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Note: the doc-strings in this file were either written in full or modified by
+# an AI-assistant trained on the TESP codebase, and specifically this file. 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 import json
 import helics
@@ -24,18 +40,33 @@ from .bench_profile import bench_profile
 
 @bench_profile
 def substation_loop(configfile, metrics_root, helicsConfig, hour_stop=48, flag='WithMarket'):
-    """ Helper function that initializes and runs the agents
+    """Run the HELICS substation loop for auction and HVAC controller coordination.
 
-    Reads configfile. Writes *auction_metrics_root_metrics.json* and
-    *controller_metrics_root_metrics.json* upon completion.
+    The function loads agent configuration, initializes HELICS subscriptions and
+    publications, advances simulation time, and performs periodic actions:
+    bid collection, bid aggregation, market clearing, and controller adjustment.
+    At completion, it writes auction and controller metrics JSON files.
 
     Args:
-        configfile (str): fully qualified path to the JSON agent configuration file
-        metrics_root (str): base name of the case for metrics output
-        hour_stop (float): number of hours to simulation
-        flag (str): WithMarket or NoMarket to use the simple_auction, or not
-        helicsConfig:
+        configfile (str): Path to the substation agent configuration JSON.
+        metrics_root (str): Case/experiment name used in output metric filenames.
+        helicsConfig (str): Path to the HELICS federate configuration file.
+        hour_stop (float, optional): Simulation duration in hours. Defaults to 48.
+        flag (str, optional): ``'WithMarket'`` to enable clearing, ``'NoMarket'``
+            to disable market effects while still running controllers.
+
+    Returns:
+        None.
+
+    Outputs:
+        Writes:
+        - ``auction_{metrics_root}_metrics.json``
+        - ``controller_{metrics_root}_metrics.json``
     """
+
+    # -------------------------------------------------------------------------
+    # 1) Runtime banner and market-enable switch
+    # -------------------------------------------------------------------------
     print('starting HELICS substation loop', configfile, metrics_root, hour_stop, flag, flush=True)
     print('##,tnow,tclear,ClearType,ClearQ,ClearP,BuyCount,BuyUnresp,BuyResp,' +
           'SellCount,SellUnresp,SellResp,MargQ,MargFrac,LMP,RefLoad,' +
@@ -44,6 +75,11 @@ def substation_loop(configfile, metrics_root, helicsConfig, hour_stop=48, flag='
     if flag == 'NoMarket':
         bWantMarket = False
         print('Disabled the market', flush=True)
+
+    # -------------------------------------------------------------------------
+    # 2) Time initialization and configuration load
+    # -------------------------------------------------------------------------
+
     time_stop = int(hour_stop * 3600)  # simulation time in seconds
     StartTime = '2013-07-01 00:00:00 -0800'
     time_fmt = '%Y-%m-%d %H:%M:%S %z'
@@ -58,6 +94,10 @@ def substation_loop(configfile, metrics_root, helicsConfig, hour_stop=48, flag='
     market_row = diction['markets'][market_key]
     unit = market_row['unit']
 
+    # -------------------------------------------------------------------------
+    # 3) Metrics schema initialization (auction + controller)
+    # -------------------------------------------------------------------------
+
     auction_meta = {'clearing_price': {'units': 'USD', 'index': 0},
                     'clearing_type': {'units': '[0..5]=[Null,Fail,Price,Exact,Seller,Buyer]', 'index': 1},
                     'consumer_surplus': {'units': 'USD', 'index': 2},
@@ -66,6 +106,10 @@ def substation_loop(configfile, metrics_root, helicsConfig, hour_stop=48, flag='
     controller_meta = {'bid_price': {'units': 'USD', 'index': 0}, 'bid_quantity': {'units': unit, 'index': 1}}
     auction_metrics = {'Metadata': auction_meta, 'StartTime': StartTime}
     controller_metrics = {'Metadata': controller_meta, 'StartTime': StartTime}
+    
+    # -------------------------------------------------------------------------
+    # 4) Auction object setup and HELICS federate creation
+    # -------------------------------------------------------------------------
 
     aucObj = simple_auction(market_row, market_key)
 
@@ -110,6 +154,10 @@ def substation_loop(configfile, metrics_root, helicsConfig, hour_stop=48, flag='
     pubUnresp = helics.helicsFederateGetPublication(hFed, sub_federate + '/unresponsive_mw')
     pubAucPrice = helics.helicsFederateGetPublication(hFed, sub_federate + '/clear_price')
 
+    # -------------------------------------------------------------------------
+    # 5) Controller object creation and HELICS endpoint mapping
+    # -------------------------------------------------------------------------
+
     pubSubMeters = set()
     hvacObjs = {}
     hvac_keys = list(diction['controllers'].keys())
@@ -137,7 +185,9 @@ def substation_loop(configfile, metrics_root, helicsConfig, hour_stop=48, flag='
             pubMtrPrice[ctl] = helics.helicsFederateGetPublication(hFed, mtrPubTopic + '/price')
             pubMtrMonthly[ctl] = helics.helicsFederateGetPublication(hFed, mtrPubTopic + '/monthly_fee')
 
-    # ==================== Time step looping under HELICS ===========================
+    # -------------------------------------------------------------------------
+    # 6) HELICS execution mode and schedule trigger initialization
+    # -------------------------------------------------------------------------
 
     helics.helicsFederateEnterExecutingMode(hFed)
     aucObj.initAuction()
@@ -151,9 +201,21 @@ def substation_loop(configfile, metrics_root, helicsConfig, hour_stop=48, flag='
     tnext_clear = period  # clear the market with LMP
     tnext_adjust = period  # + dt   # controllers adjust setpoints based on their bid and clearing
 
+
+    # -------------------------------------------------------------------------
+    # 7) Main simulation loop
+    #    A) Time request + inbound HELICS updates
+    #    B) Controller schedule/basepoint updates
+    #    C) Bid collection window
+    #    D) Bid aggregation/publication window
+    #    E) Market clearing window
+    #    F) Controller setpoint adjustment window
+    # -------------------------------------------------------------------------
+
     time_granted = 0
     time_last = 0
     while time_granted < time_stop:
+        # A) time synchronization and inbound values
         nextHELICSTime = int(min([tnext_bid, tnext_agg, tnext_clear, tnext_adjust, time_stop]))
         time_granted = int(helics.helicsFederateRequestTime(hFed, nextHELICSTime))
         time_delta = time_granted - time_last
@@ -187,6 +249,7 @@ def substation_loop(configfile, metrics_root, helicsConfig, hour_stop=48, flag='
                 obj.set_hvac_state_from_helics(value)
                 # print('state ', value, flush=True)
 
+        # B) update thermostat schedules and one-time defaults
         # set the time-of-day schedule
         for key, obj in hvacObjs.items():
             if obj.change_basepoint(hour_of_day, day_of_week):
@@ -201,6 +264,7 @@ def substation_loop(configfile, metrics_root, helicsConfig, hour_stop=48, flag='
             bSetDefaults = False
             # print('  SET DEFAULTS', flush=True)
 
+        # C) collect controller bids
         if time_granted >= tnext_bid:
             aucObj.clear_bids()
             time_key = str(int(tnext_clear))
@@ -214,6 +278,7 @@ def substation_loop(configfile, metrics_root, helicsConfig, hour_stop=48, flag='
             tnext_bid += period
             # print('  COLLECT BIDS', flush=True)
 
+        # D) aggregate bids and publish to TSO
         if time_granted >= tnext_agg:
             aucObj.aggregate_bids()
             helics.helicsPublicationPublishDouble(pubUnresp, aucObj.agg_unresp)
@@ -224,6 +289,7 @@ def substation_loop(configfile, metrics_root, helicsConfig, hour_stop=48, flag='
             tnext_agg += period
             # print('  AGGREGATE BIDS', flush=True)
 
+       # E) clear market and record auction metrics
         if time_granted >= tnext_clear:
             if bWantMarket:
                 aucObj.clear_market(tnext_clear, time_granted)
@@ -238,6 +304,7 @@ def substation_loop(configfile, metrics_root, helicsConfig, hour_stop=48, flag='
             tnext_clear += period
             # print('  CLEARED MARKET', flush=True)
 
+        # F) apply clearing feedback to controllers/meters
         if time_granted >= tnext_adjust:
             if bWantMarket:
                 for key, obj in hvacObjs.items():
@@ -248,8 +315,9 @@ def substation_loop(configfile, metrics_root, helicsConfig, hour_stop=48, flag='
             tnext_adjust += period
             # print('  ADJUSTED', flush=True)
 
-    # ==================== Finalize the metrics output ===========================
-
+    # -------------------------------------------------------------------------
+    # 8) Finalization: write metrics and destroy HELICS federate
+    # -------------------------------------------------------------------------
     print('writing metrics', flush=True)
     auction_op = open('auction_' + metrics_root + '_metrics.json', 'w')
     controller_op = open('controller_' + metrics_root + '_metrics.json', 'w')
