@@ -14,28 +14,30 @@
 #     - Event models: learned from historical meter/sensor data
 # ============================================================================
 
-from typing import Dict, List, Optional, Tuple, Callable
+from typing import Any, Dict, List, Optional, Tuple, Callable
 from data_types import (
-    ContinuousDataPoint, EventDefinition, QuantilePoint,
-    UncertaintyEnvelope
+    ContinuousDataPoint,
+    EventDefinition,
+    QuantilePoint,
+    UncertaintyEnvelope,
 )
-from enums_and_constants import ForecastParadigm, StreamType
+from enums_and_constants import DeviceType, ForecastParadigm, StreamType
 
 
 class UncertaintyModel:
     """Models how forecast uncertainty grows with lead time.
-    
+
     Supports three functional forms:
     - SATURATING_EXP: σ(τ) = σ_∞ · (1 - e^{-τ/τ_c})
     - POWER_LAW: σ(τ) = min(σ_∞, σ_0 + α·τ^β)
     - EMPIRICAL: σ(τ) interpolated from a lookup table
-    
+
     Args:
         model_type: One of 'saturating_exp', 'power_law', 'empirical'.
         params: Dictionary of model parameters.
             EXTERNAL: Must be calibrated from historical forecast
             verification data or set to reasonable defaults.
-            
+
             For saturating_exp:
                 sigma_inf: Climatological std dev (maximum uncertainty).
                 tau_c: Correlation time constant (seconds).
@@ -54,11 +56,11 @@ class UncertaintyModel:
 
     def sigma_at(self, lead_time: float) -> float:
         """Compute forecast standard deviation at a given lead time.
-        
+
         Args:
             lead_time: Time from forecast issue to forecast valid time
                 (seconds).
-        
+
         Returns:
             Standard deviation of the forecast error at this lead time.
         """
@@ -67,10 +69,10 @@ class UncertaintyModel:
 
 class ContinuousForecast:
     """Forecast of a continuously-varying quantity (temperature, price, etc.).
-    
+
     Provides point forecasts with horizon-dependent uncertainty envelopes
     at each timestep across the forecast horizon.
-    
+
     Args:
         variable_name: What is being forecasted (e.g., 'outdoor_air_temp').
         unit: Physical unit (e.g., '°F', '$/kWh').
@@ -86,7 +88,7 @@ class ContinuousForecast:
         variable_name: str,
         unit: str,
         uncertainty_model: UncertaintyModel,
-        series: Optional[List[ContinuousDataPoint]] = None
+        series: Optional[List[ContinuousDataPoint]] = None,
     ):
         self._variable_name = variable_name
         self._unit = unit
@@ -95,20 +97,20 @@ class ContinuousForecast:
 
     def update(self, new_series: List[ContinuousDataPoint]) -> None:
         """Replace the forecast series with updated data.
-        
+
         Args:
             new_series: New forecast data points.
-                EXTERNAL: From weather service update, new price 
+                EXTERNAL: From weather service update, new price
                 forecast, or informational market clear.
         """
         raise NotImplementedError
 
     def get_at(self, timestamp: float) -> ContinuousDataPoint:
         """Interpolate or look up the forecast at a specific time.
-        
+
         Args:
             timestamp: Simulation time to query.
-        
+
         Returns:
             ContinuousDataPoint with value, sigma, and quantiles
             at the requested time.
@@ -116,19 +118,16 @@ class ContinuousForecast:
         raise NotImplementedError
 
     def get_series(
-        self,
-        t_start: float,
-        t_end: float,
-        resolution: Optional[float] = None
+        self, t_start: float, t_end: float, resolution: Optional[float] = None
     ) -> List[ContinuousDataPoint]:
         """Return forecast series over an interval.
-        
+
         Args:
             t_start: Start of the interval.
             t_end: End of the interval.
             resolution: Optional resampling interval (seconds).
                 If None, returns data at native resolution.
-        
+
         Returns:
             List of ContinuousDataPoint covering the interval.
         """
@@ -137,16 +136,16 @@ class ContinuousForecast:
 
 class EventForecast:
     """Forecast of discrete random events (showers, EV arrivals, etc.).
-    
+
     Uses an intensity function λ(t) and per-event energy distributions
     to produce cumulative energy draw distributions over the forecast
     horizon. Supports Bayesian conditioning on observed events.
-    
+
     Args:
         event_types: List of event type definitions.
             EXTERNAL: Learned from historical data (meter, flow sensors).
         intensity_function: Time series of event intensity λ(t) in
-            events/hour. 
+            events/hour.
             EXTERNAL: Learned from historical patterns.
         daily_expected_count: Expected number of events per day.
         daily_expected_energy: Expected total energy from events per day.
@@ -157,7 +156,7 @@ class EventForecast:
         event_types: List[EventDefinition],
         intensity_function: Optional[List[Tuple[float, float]]] = None,
         daily_expected_count: float = 0.0,
-        daily_expected_energy: float = 0.0
+        daily_expected_energy: float = 0.0,
     ):
         self._event_types = event_types
         self._intensity_function = intensity_function or []
@@ -167,35 +166,33 @@ class EventForecast:
 
     def get_intensity_at(self, timestamp: float) -> float:
         """Get event intensity (events/hour) at a specific time.
-        
+
         Args:
             timestamp: Simulation time to query.
-        
+
         Returns:
             λ(t) in events per hour.
         """
         raise NotImplementedError
 
     def get_cumulative_energy_distribution(
-        self,
-        t_start: float,
-        t_end: float
+        self, t_start: float, t_end: float
     ) -> QuantilePoint:
         """Compute the distribution of cumulative energy drawn by events
         over a time interval.
-        
+
         This is the core output of the event forecast: not "when will
         events happen?" but "how much total energy will events consume
         between t_start and t_end?"
-        
+
         The distribution is computed analytically (compound Poisson)
         or by Monte Carlo sampling from the intensity function and
         per-event energy distributions.
-        
+
         Args:
             t_start: Start of interval.
             t_end: End of interval.
-        
+
         Returns:
             QuantilePoint with expected value, variance, and quantiles
             of total energy drawn.
@@ -203,21 +200,18 @@ class EventForecast:
         raise NotImplementedError
 
     def condition_on_observation(
-        self,
-        event_type: str,
-        timestamp: float,
-        energy: float
+        self, event_type: str, timestamp: float, energy: float
     ) -> None:
         """Update the forecast by conditioning on an observed event.
-        
+
         When an event is observed (e.g., a shower is detected by a
         flow sensor), this method updates the remaining intensity
         function and cumulative distributions using Bayesian updating.
-        
+
         For example, observing a first morning shower shifts the
         distribution of the second shower's timing and reduces
         overall uncertainty in the daily energy budget.
-        
+
         Args:
             event_type: Type of observed event (e.g., 'shower').
             timestamp: When the event occurred.
@@ -228,7 +222,7 @@ class EventForecast:
 
     def reset_observations(self) -> None:
         """Clear observed events (e.g., at the start of a new day).
-        
+
         Resets the conditioning state so the forecast reverts to
         the prior daily pattern.
         """
@@ -237,10 +231,10 @@ class EventForecast:
 
 class ConstraintStream:
     """A hard constraint that the agent must not violate.
-    
+
     Constraints may be continuous (apply at all times) or deadline-based
     (must be satisfied by a specific time).
-    
+
     Args:
         constraint_id: Unique identifier for this constraint.
         variable: What variable is constrained (e.g., 'soc', 'tank_temp').
@@ -260,7 +254,7 @@ class ConstraintStream:
         constraint_type: str,
         continuous: bool = False,
         deadline: Optional[float] = None,
-        required_value: float = 0.0
+        required_value: float = 0.0,
     ):
         self._constraint_id = constraint_id
         self._variable = variable
@@ -271,28 +265,24 @@ class ConstraintStream:
 
     def is_feasible(self, value_at_time: float, timestamp: float) -> bool:
         """Check if a given value satisfies this constraint at a given time.
-        
+
         Args:
             value_at_time: The current or projected value of the
                 constrained variable.
             timestamp: The time at which to check.
-        
+
         Returns:
             True if the constraint is satisfied.
         """
         raise NotImplementedError
 
-    def feasibility_margin(
-        self,
-        value_at_time: float,
-        timestamp: float
-    ) -> float:
+    def feasibility_margin(self, value_at_time: float, timestamp: float) -> float:
         """How much slack exists at a given time.
-        
+
         Args:
             value_at_time: Current or projected value.
             timestamp: Time of evaluation.
-        
+
         Returns:
             Positive = feasible with room. Negative = violated.
         """
@@ -301,14 +291,14 @@ class ConstraintStream:
 
 class DataStreamManager:
     """Central registry and access point for all exogenous data streams.
-    
-    Owns all forecast, schedule, and constraint streams. Provides 
+
+    Owns all forecast, schedule, and constraint streams. Provides
     queries to agent functions that need forward-looking information.
-    
+
     All data content in the streams must be provided by external sources.
     This manager handles storage, interpolation, and bundled access,
     but does not generate forecasts.
-    
+
     Args:
         device_type: The device type this manager serves. Determines
             which streams are expected to be registered.
@@ -322,12 +312,10 @@ class DataStreamManager:
         self._schedules: Dict[str, ContinuousForecast] = {}
 
     def register_continuous_stream(
-        self,
-        stream_id: str,
-        forecast: ContinuousForecast
+        self, stream_id: str, forecast: ContinuousForecast
     ) -> None:
         """Register a continuous-process forecast stream.
-        
+
         Args:
             stream_id: Unique identifier (e.g., 'outdoor_air_temp').
             forecast: The ContinuousForecast object.
@@ -336,13 +324,9 @@ class DataStreamManager:
         """
         raise NotImplementedError
 
-    def register_event_stream(
-        self,
-        stream_id: str,
-        forecast: EventForecast
-    ) -> None:
+    def register_event_stream(self, stream_id: str, forecast: EventForecast) -> None:
         """Register an event-process forecast stream.
-        
+
         Args:
             stream_id: Unique identifier (e.g., 'hot_water_draw').
             forecast: The EventForecast object.
@@ -351,13 +335,9 @@ class DataStreamManager:
         """
         raise NotImplementedError
 
-    def register_constraint(
-        self,
-        stream_id: str,
-        constraint: ConstraintStream
-    ) -> None:
+    def register_constraint(self, stream_id: str, constraint: ConstraintStream) -> None:
         """Register a constraint stream.
-        
+
         Args:
             stream_id: Unique identifier (e.g., 'ev_departure_soc').
             constraint: The ConstraintStream object.
@@ -365,13 +345,9 @@ class DataStreamManager:
         """
         raise NotImplementedError
 
-    def register_schedule(
-        self,
-        stream_id: str,
-        schedule: ContinuousForecast
-    ) -> None:
+    def register_schedule(self, stream_id: str, schedule: ContinuousForecast) -> None:
         """Register a customer schedule stream.
-        
+
         Args:
             stream_id: Unique identifier (e.g., 'hvac_setpoint_schedule').
             schedule: Represented as a ContinuousForecast with very low
@@ -382,11 +358,11 @@ class DataStreamManager:
 
     def update_stream(self, stream_id: str, new_data: Any) -> None:
         """Push new data to an existing stream.
-        
+
         Called when external data is refreshed (e.g., new weather
         forecast, informational market clear updates price forecast,
         customer changes thermostat schedule).
-        
+
         Args:
             stream_id: Which stream to update.
             new_data: The new data. Format depends on stream type.
@@ -397,10 +373,10 @@ class DataStreamManager:
 
     def get_continuous(self, stream_id: str) -> Optional[ContinuousForecast]:
         """Retrieve a continuous forecast stream by ID.
-        
+
         Args:
             stream_id: Stream identifier.
-        
+
         Returns:
             The ContinuousForecast, or None if not registered.
         """
@@ -419,35 +395,29 @@ class DataStreamManager:
         raise NotImplementedError
 
     def get_all_constraints(
-        self,
-        t_start: float,
-        t_end: float
+        self, t_start: float, t_end: float
     ) -> List[ConstraintStream]:
         """Get all constraints active over a time interval.
-        
+
         Args:
             t_start: Start of interval.
             t_end: End of interval.
-        
+
         Returns:
             List of ConstraintStream objects active in the interval.
         """
         raise NotImplementedError
 
-    def get_forecast_bundle(
-        self,
-        t_start: float,
-        t_end: float
-    ) -> Dict[str, Any]:
+    def get_forecast_bundle(self, t_start: float, t_end: float) -> Dict[str, Any]:
         """Package all forecast streams for a time interval.
-        
+
         Returns a dictionary of stream_id -> forecast series, suitable
         for passing to the planning optimizer.
-        
+
         Args:
             t_start: Start of planning horizon.
             t_end: End of planning horizon.
-        
+
         Returns:
             Dictionary mapping stream IDs to their data over the interval.
         """
