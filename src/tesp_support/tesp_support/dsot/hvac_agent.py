@@ -103,6 +103,17 @@ class HVACDSOT:  # TODO: update class name
         self.slider = float(hvac_dict['slider_setting'])
         self.cooling_participating = hvac_dict['cooling_participating']
         self.heating_participating = hvac_dict['heating_participating']
+
+        # preference/isoelastic bid settings
+        self.use_isoelastic_bid_curve = bool(hvac_dict.get('use_isoelastic_bid_curve', True))
+        self.customer_preference = float(np.clip(hvac_dict.get('customer_preference', 0.5), 0.0, 1.0))
+        self.isoelastic_eps_min = float(hvac_dict.get('isoelastic_eps_min', 0.05))
+        self.isoelastic_eps_max = float(hvac_dict.get('isoelastic_eps_max', 2.5))
+        self.isoelastic_gamma = float(hvac_dict.get('isoelastic_gamma', 1.0))
+        self.amenity_price_adder_max = float(hvac_dict.get('amenity_price_adder_max', 0.03))
+        self.rt_bid_points = max(4, int(hvac_dict.get('rt_bid_points', 4)))
+        self.da_bid_points = max(4, int(hvac_dict.get('da_bid_points', 4)))
+
         # Initialize self.participating to True
         # The variable is modified later based on the active thermostat mode
         self.participating = True
@@ -1772,30 +1783,46 @@ class HVACDSOT:  # TODO: update class name
 
         delta_DA_price = max(self.price_forecast) - min(self.price_forecast)
         for t in self.TIME:
-            CurveSlope[t] = (delta_DA_price / (0 - self.hvac_kw) * (1 + self.ProfitMargin_slope / 100))
-            yIntercept[t] = (self.price_forecast[t] - CurveSlope[t] * Quantity[t])
-            BID[t][0][Q] = 0
-            BID[t][1][Q] = Quantity[t]
-            BID[t][2][Q] = Quantity[t]
-            BID[t][3][Q] = self.hvac_kw
+            if self.use_isoelastic_bid_curve:
+                q_min = 0.0
+                q_max = float(max(0.0, self.hvac_kw))
+                q_ref = float(np.clip(Quantity[t], q_min, q_max))
+                desired_t = self.temp_desired_48hour_cool[t] if self.thermostat_mode == 'Cooling' \
+                    else self.temp_desired_48hour_heat[t]
+                comfort_err = abs(self.temp_room[t] - desired_t)
+                comfort_norm = min(1.0, comfort_err / max(self.deadband, 0.1))
+                amenity_adder = (1.0 - self.customer_preference) * self.amenity_price_adder_max * comfort_norm
 
-            BID[t][0][P] = 0 * CurveSlope[t] + yIntercept[t] + (self.ProfitMargin_intercept / 100) * delta_DA_price
-            BID[t][1][P] = Quantity[t] * CurveSlope[t] + yIntercept[t] + (
-                    self.ProfitMargin_intercept / 100) * delta_DA_price
-            BID[t][2][P] = Quantity[t] * CurveSlope[t] + yIntercept[t] - (
-                    self.ProfitMargin_intercept / 100) * delta_DA_price
-            BID[t][3][P] = self.hvac_kw * CurveSlope[t] + yIntercept[t] - (
-                    self.ProfitMargin_intercept / 100) * delta_DA_price
+                BID[t] = self._build_isoelastic_bid_points(
+                    q_min=q_min,
+                    q_ref=q_ref,
+                    q_max=q_max,
+                    p_ref=max(self.price_forecast[t], 1.0e-4),
+                    amenity_adder=amenity_adder,
+                    n_points=self.da_bid_points
+                )
+            else:
+                CurveSlope[t] = (delta_DA_price / (0 - self.hvac_kw) * (1 + self.ProfitMargin_slope / 100))
+                yIntercept[t] = (self.price_forecast[t] - CurveSlope[t] * Quantity[t])
+                BID[t][0][Q] = 0
+                BID[t][1][Q] = Quantity[t]
+                BID[t][2][Q] = Quantity[t]
+                BID[t][3][Q] = self.hvac_kw
 
-            for i in range(4):
-                if BID[t][i][Q] > self.hvac_kw:
-                    BID[t][i][Q] = self.hvac_kw
-                if BID[t][i][Q] < 0:
-                    BID[t][i][Q] = 0
-                if BID[t][i][P] > self.price_cap:
-                    BID[t][i][P] = self.price_cap
-                if BID[t][i][P] < 0:
-                    BID[t][i][P] = 0
+                BID[t][0][P] = 0 * CurveSlope[t] + yIntercept[t] + (self.ProfitMargin_intercept / 100) * delta_DA_price
+                BID[t][1][P] = Quantity[t] * CurveSlope[t] + yIntercept[t] + (self.ProfitMargin_intercept / 100) * delta_DA_price
+                BID[t][2][P] = Quantity[t] * CurveSlope[t] + yIntercept[t] - (self.ProfitMargin_intercept / 100) * delta_DA_price
+                BID[t][3][P] = self.hvac_kw * CurveSlope[t] + yIntercept[t] - (self.ProfitMargin_intercept / 100) * delta_DA_price
+
+                for i in range(4):
+                    if BID[t][i][Q] > self.hvac_kw:
+                        BID[t][i][Q] = self.hvac_kw
+                    if BID[t][i][Q] < 0:
+                        BID[t][i][Q] = 0
+                    if BID[t][i][P] > self.price_cap:
+                        BID[t][i][P] = self.price_cap
+                    if BID[t][i][P] < 0:
+                        BID[t][i][P] = 0
 
         self.bid_da = BID
         self.RT_minute_count_interpolation = float(0.0)

@@ -10,8 +10,45 @@ import subprocess
 from os import getcwd, path, environ
 from copy import deepcopy
 from enum import IntEnum
-
 import numpy as np
+
+def preference_to_elasticity(pref, eps_min=0.05, eps_max=2.50, gamma=1.0):
+    """Map customer preference in [0,1] to isoelastic epsilon.
+    pref=0 -> amenity-first (low elasticity), pref=1 -> finance-first (high elasticity).
+    """
+    p = float(np.clip(pref, 0.0, 1.0))
+    return eps_min + (p ** gamma) * (eps_max - eps_min)
+
+
+def build_isoelastic_bid_points(
+    preference,
+    q_min_kw,
+    q_ref_kw,
+    q_max_kw,
+    p_ref,
+    price_cap,
+    n_points=8,
+    amenity_adder=0.0,
+    eps_min=0.05,
+    eps_max=2.50,
+    gamma=1.0,
+    p_floor=1.0e-4,
+):
+    """Create bid as [[quantity, price], ...] using q(p)=q_ref*((p_eff/p_ref)^(-epsilon))."""
+    epsilon = preference_to_elasticity(preference, eps_min, eps_max, gamma)
+
+    # Demand curve convention: high->low price, low->high quantity
+    prices = np.linspace(price_cap, p_floor, n_points)
+    p_eff = np.maximum(prices + amenity_adder, p_floor)
+
+    q = q_ref_kw * (p_eff / max(p_ref, p_floor)) ** (-epsilon)
+    q = np.clip(q, q_min_kw, q_max_kw)
+
+    # Ensure monotone nondecreasing quantities as price decreases
+    q = np.maximum.accumulate(q)
+
+    return [[float(qi), float(pi)] for qi, pi in zip(q, prices)]
+
 
 from ..api.helpers import HelicsMsg
 
@@ -116,6 +153,8 @@ while sleep 120; do
   PROCESS_2_STATUS=$?
   ps aux | grep helics_broker | grep -q -v grep
   PROCESS_3_STATUS=$?
+  ps aux | grep fncs_broker | grep -q -v grep
+  PROCESS_4_STATUS=$?
   # If the greps above find anything, they exit with 0 status
   # If all are not 0, then we are done with the main background processes, so the container can end
   if [ $PROCESS_1_STATUS -ne 0 ] && [ $PROCESS_2_STATUS -ne 0 ] && [ $PROCESS_3_STATUS -ne 0 ]; then
@@ -733,14 +772,16 @@ class Curve:
 
         Args:
             identity (str): identifies whether the bid is collected from a "Buyer" or "Seller"
-            bid_curve ([list]): a nested list with dimension (m, 2), with m equals 2 to 4
-
+            bid_curve ([list]): a nested list with dimension (m, 2), m >= 2
         """
-        bid_curve = np.array(bid_curve)
+        bid_curve = np.array(bid_curve, dtype=float)
         if np.size(bid_curve) == 0:  # do not add bid if empty
             return
         else:
-            bid_curve = curve_bid_sorting(identity, bid_curve)
+            bid_curve, _, _ = curve_bid_sorting(identity, bid_curve)
+
+        if bid_curve.shape[0] == 0:
+            return
 
         if bid_curve[-1][1] < 0:  # if the last element is negative
             if bid_curve[0][1] < 0:  # do not add bid if all prices are negative
@@ -754,18 +795,15 @@ class Curve:
                         bid_curve.append([(bid_curve_orig[idx - 1][1] * bid_curve_orig[idx][0] -
                                            bid_curve_orig[idx - 1][0] * bid_curve_orig[idx][1]) /
                                           (bid_curve_orig[idx - 1][1] - bid_curve_orig[idx][1]), 0])
-                        bid_curve = np.array(bid_curve)
+                        bid_curve = np.array(bid_curve, dtype=float)
                         break
                     else:
                         bid_curve.append(bid_curve_orig[idx])
 
         if bid_curve[0][1] > self.price_cap:  # if the first element is more than price cap
-            # print('U inside cut-off price cap...')
-            # print(bid_curve)
             if bid_curve[-1][1] > self.price_cap:  # do not add bid if all prices are above price cap
                 return
             else:
-                # cut-off prices above price cap points in bid
                 bid_curve_orig = deepcopy(bid_curve)
                 bid_curve = []
                 for idx in range(-1, -len(bid_curve_orig) - 1, -1):
@@ -774,19 +812,16 @@ class Curve:
                                               bid_curve_orig[idx][0] * bid_curve_orig[idx + 1][1] +
                                               self.price_cap * (bid_curve_orig[idx][0] - bid_curve_orig[idx + 1][0])) /
                                              (bid_curve_orig[idx][1] - bid_curve_orig[idx + 1][1]), self.price_cap])
-                        bid_curve = np.array(bid_curve)
+                        bid_curve = np.array(bid_curve, dtype=float)
                         break
                     else:
                         bid_curve.insert(0, bid_curve_orig[idx])
-            # print(bid_curve)
             bid_curve = deepcopy(bid_curve)
+
         if bid_curve[-1][1] < self.L_price_cap:  # if the last element is less than L price cap
-            # print('L inside cut-off price cap...')
-            # print(bid_curve)
             if bid_curve[0][1] < self.L_price_cap:  # do not add bid if all prices are below L price cap
                 return
             else:
-                # cut-off prices below L price cap points in bid
                 bid_curve_orig = deepcopy(bid_curve)
                 bid_curve = []
                 for idx in range(len(bid_curve_orig)):
@@ -795,33 +830,41 @@ class Curve:
                                            bid_curve_orig[idx][0] * bid_curve_orig[idx - 1][1] +
                                            self.L_price_cap * (bid_curve_orig[idx][0] - bid_curve_orig[idx - 1][0])) /
                                           (bid_curve_orig[idx][1] - bid_curve_orig[idx - 1][1]), self.L_price_cap])
-                        bid_curve = np.array(bid_curve)
+                        bid_curve = np.array(bid_curve, dtype=float)
                         break
                     else:
                         bid_curve.append(bid_curve_orig[idx])
-            # print(bid_curve)
+
         # Adding two points representing the two extreme price cases
         if bid_curve[0][1] < self.price_cap:
             bid_curve = np.insert(bid_curve, [0], [[bid_curve[0][0], self.price_cap]], axis=0)
         if bid_curve[-1][1] > self.L_price_cap:
             bid_curve = np.append(bid_curve, [[bid_curve[-1][0], self.L_price_cap]], axis=0)
 
-        # Divide the curve into len(bid_curve)-1 segments for generating the sampling
-        for idx in range(len(bid_curve) - 1):
-            if bid_curve[idx, 1] == bid_curve[idx + 1, 1]:
-                pass
-            else:
-                segment_start = int((self.price_cap - bid_curve[idx][1]) * (
-                        self.num_samples / (self.price_cap - self.L_price_cap)))
-                segment_end = int((self.price_cap - bid_curve[idx + 1][1]) * (
-                        self.num_samples / (self.price_cap - self.L_price_cap)))
-                len_segment = segment_end - segment_start
-                # print('bid curve ...')
-                # print(bid_curve)
-                # print(self.price_cap)
-                self.quantities[segment_start:segment_end] = np.add(self.quantities[segment_start:segment_end],
-                                                                    np.linspace(bid_curve[idx][0],
-                                                                                bid_curve[idx + 1][0], len_segment))
+        # Robust interpolation on market price samples (works for 2/4/8+ points)
+        p_curve = np.asarray(bid_curve[:, 1], dtype=float)
+        q_curve = np.asarray(bid_curve[:, 0], dtype=float)
+
+        order = np.argsort(p_curve, kind='mergesort')  # ascending for np.interp
+        p_sorted = p_curve[order]
+        q_sorted = q_curve[order]
+
+        p_unique, idx_unique = np.unique(p_sorted, return_index=True)
+        q_unique = q_sorted[idx_unique]
+
+        if p_unique.size == 1:
+            q_at_prices = np.full(self.num_samples, q_unique[0], dtype=float)
+        else:
+            q_at_prices = np.interp(
+                self.prices,
+                p_unique,
+                q_unique,
+                left=q_unique[0],
+                right=q_unique[-1]
+            )
+
+        self.quantities = np.add(self.quantities, q_at_prices)
+
         if len(set(self.quantities)) > 1:
             self.uncontrollable_only = False
 
@@ -848,47 +891,42 @@ class Curve:
 
 
 def curve_bid_sorting(identity, bid_curve):
-    """ Sorting the 4-point curve bid primarily on prices and secondarily on quantities
-
-    For "Buyer", the bid prices are ordered descendingly and bid quantities are ordered ascendingly;
-    For "Seller", both the bid prices and the bid quantities are ordered descendingly;
+    """Sort bid points and return monotone/segment metadata.
 
     Args:
-        identity (str): identifies whether the bid is collected from a "Buyer" or "Seller"
-        bid_curve ([list]): unsorted curve bid
+        identity (str): 'Buyer' or 'Seller'
+        bid_curve (ndarray|list): [[q, p], ...]
 
-    Outputs:
-        sorted_bid_curve ([list]): sorted curve bid
-
+    Returns:
+        tuple: (sorted_curve, idx_start, idx_end)
     """
-    idx_start = 0
-    value = bid_curve[0, 1]
-    sorted_bid_curve = np.empty((0, 2))
-    bid_curve = bid_curve[bid_curve[:, 1].argsort()[::-1]]
-    for i in range(len(bid_curve)):
-        if i == 0:
-            pass
-        elif i == len(bid_curve) - 1:
-            idx_end = len(bid_curve)
-            segment = bid_curve[idx_start: idx_end]
-            if identity == 'Buyer':
-                sorted_bid_curve = np.append(sorted_bid_curve, segment[segment[:, 0].argsort()], axis=0)
-            else:
-                sorted_bid_curve = np.append(sorted_bid_curve, segment[segment[:, 0].argsort()[::-1]], axis=0)
-        else:
-            if bid_curve[i, 1] == value:
-                pass
-            else:
-                idx_end = i
-                segment = bid_curve[idx_start: idx_end]
-                if identity == 'Buyer':
-                    sorted_bid_curve = np.append(sorted_bid_curve, segment[segment[:, 0].argsort()], axis=0)
-                else:
-                    sorted_bid_curve = np.append(sorted_bid_curve, segment[segment[:, 0].argsort()[::-1]], axis=0)
-                value = bid_curve[i, 0]
-                idx_start = i
+    arr = np.asarray(bid_curve, dtype=float)
+    if arr.ndim != 2 or arr.shape[1] < 2 or arr.shape[0] == 0:
+        empty = np.zeros((0, 2), dtype=float)
+        return empty, np.array([], dtype=int), np.array([], dtype=int)
 
-    return sorted_bid_curve
+    # Demand convention: Buyer sorted by descending price, Seller ascending price
+    if identity == 'Buyer':
+        order = np.argsort(-arr[:, 1], kind='mergesort')
+    else:
+        order = np.argsort(arr[:, 1], kind='mergesort')
+
+    arr = arr[order, :2]
+
+    # Segment boundaries by price value (NOT quantity)
+    starts, ends = [], []
+    start = 0
+    value = arr[0, 1]
+    for i in range(1, len(arr)):
+        if arr[i, 1] != value:
+            starts.append(start)
+            ends.append(i)
+            start = i
+            value = arr[i, 1]
+    starts.append(start)
+    ends.append(len(arr))
+
+    return arr, np.asarray(starts, dtype=int), np.asarray(ends, dtype=int)
 
 
 def get_intersect(a1, a2, b1, b2):
@@ -903,31 +941,68 @@ def get_intersect(a1, a2, b1, b2):
 
 
 def resample_curve(x_vec, y_vec, min_q, max_q, num_samples):
-    new_q = np.linspace(min_q, max_q, num_samples)
-    new_p = []
-    for val in new_q:
-        new_p.append(np.interp(val, x_vec, y_vec))
-    return new_q, new_p
+    """Resample y(x) on a uniform quantity grid."""
+    x, y = _sorted_unique_xy(x_vec, y_vec)
+
+    if num_samples <= 1:
+        x_new = np.array([float(min_q)])
+    else:
+        x_new = np.linspace(float(min_q), float(max_q), int(num_samples))
+
+    y_new = np.interp(x_new, x, y, left=y[0], right=y[-1])
+    return list(x_new), list(y_new)
 
 
 def resample_curve_for_price_only(x_vec_1, x_vec_2, y_vec_2):
-    new_p_2 = []
-    for val in x_vec_1:
-        new_p_2.append(np.interp(val, x_vec_2, y_vec_2))
-    return new_p_2
+    """Evaluate seller price curve y2(x2) at x1 points."""
+    x1 = np.asarray(x_vec_1, dtype=float).reshape(-1)
+    x2, y2 = _sorted_unique_xy(x_vec_2, y_vec_2)
+    y_new = np.interp(x1, x2, y2, left=y2[0], right=y2[-1])
+    return list(y_new)
 
 
-def resample_curve_for_market(x_vec_1, y_vec_1, x_vec_2, y_vec_2):  # , min_q, max_q, num_samples):
-    flat_list = [item for elem in [x_vec_1, x_vec_2] for item in elem]
-    x = np.array(flat_list)
-    x = np.sort(x)
-    x = np.unique(x)
-    new_p_1 = []
-    new_p_2 = []
-    for val in x:
-        new_p_1.append(np.interp(val, x_vec_1, y_vec_1))
-        new_p_2.append(np.interp(val, x_vec_2, y_vec_2))
-    return x, new_p_1, new_p_2
+def resample_curve_for_market(x_vec_1, y_vec_1, x_vec_2, y_vec_2):
+    """Resample buyer/seller prices on a common quantity grid."""
+    x1, y1 = _sorted_unique_xy(x_vec_1, y_vec_1)
+    x2, y2 = _sorted_unique_xy(x_vec_2, y_vec_2)
+
+    min_q = max(np.min(x1), np.min(x2))
+    max_q = min(np.max(x1), np.max(x2))
+    if max_q < min_q:
+        # no overlap; return minimal safe vectors
+        x = np.array([min_q, min_q + 1e-9])
+        return list(x), [float(y1[0]), float(y1[0])], [float(y2[0]), float(y2[0])]
+
+    n = max(len(x1), len(x2), 2)
+    x = np.linspace(min_q, max_q, n)
+    by = np.interp(x, x1, y1, left=y1[0], right=y1[-1])
+    sy = np.interp(x, x2, y2, left=y2[0], right=y2[-1])
+    return list(x), list(by), list(sy)
+
+
+def _sorted_unique_xy(x_vec, y_vec):
+    """Return x,y sorted by x (ascending) with unique x for stable interpolation."""
+    x = np.asarray(x_vec, dtype=float).reshape(-1)
+    y = np.asarray(y_vec, dtype=float).reshape(-1)
+    if x.size == 0 or y.size == 0:
+        return np.array([0.0, 1.0]), np.array([0.0, 0.0])
+
+    n = min(x.size, y.size)
+    x = x[:n]
+    y = y[:n]
+
+    order = np.argsort(x, kind='mergesort')
+    x = x[order]
+    y = y[order]
+
+    xu, idx = np.unique(x, return_index=True)
+    yu = y[idx]
+
+    if xu.size == 1:
+        xu = np.array([xu[0], xu[0] + 1e-9])
+        yu = np.array([yu[0], yu[0]])
+
+    return xu, yu
 
 
 def test():

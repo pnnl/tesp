@@ -164,6 +164,9 @@ class EVDSOT:
         self.bid_rt = [[0., 0.], [0., 0.], [0., 0.], [0., 0.]]
         self.bid_da = [[[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]] for _ in range(self.windowLength)]
 
+        # New EV preference strategy: just charge to target SOC before departure.
+        self.charge_by_departure = True
+
         # optimization
         self.TIME = range(0, self.windowLength)
 
@@ -214,123 +217,120 @@ class EVDSOT:
         """
         return self.name
 
-    def inform_bid(self, price):
-        """ Set the cleared_price attribute
-
-        Args:
-            price (float): cleared price in $/kWh
-        """
-        self.RTprice = price
-
-    def bid_accepted(self, current_time):
-        """ Update the P and Q settings if the last bid was accepted
-
-        Returns:
-            bool: True if the inverter settings changed, False if not.
-        """
-        self.RT_gridlabd_set_P(current_time)
-        return self.RT_flag
-
-    def set_price_forecast(self, forecasted_price):
-        """ Set the f_DA attribute
-
-        Args:
-            forecasted_price (float x 48): cleared price in $/kWh
-        """
-        self.f_DA = deepcopy(forecasted_price)
-
-    def DA_cleared_price(self, price):
-        """ Set the DA_cleared_price attribute
-
-        Args:
-            price (float): cleared price in $/kWh
-        """
-        # TODO: THis is not used, do we need it?
-        self.prev_clr_Quantity = list()
-        self.prev_clr_Price = list()
-        self.prev_clr_Price = deepcopy(price)
-        self.BindingObjFunc = bool(True)
-        for i in range(len(self.prev_clr_Price)):
-            self.prev_clr_Quantity.append(self.from_P_to_Q_battery(self.bid_da[i], self.prev_clr_Price[i]))
-        self.prev_clr_Price.pop(0)
-        self.prev_clr_Quantity.pop(0)
-        self.prev_clr_Price.append(0.0)
-        self.prev_clr_Quantity.append(0.0)
-
-    def formulate_bid_da(self):
-        """ Formulate 4 points of P and Q bids for the DA market
-
-        Function calls "DA_optimal_quantities" to obtain the optimal quantities
-        for the DA market. With the quantities, the 4 point bids are formulated.
-
-        Before returning the BID the function resets "RT_state_maintain_flag"
-        which, if RT_state_maintain is TRUE, the battery will be forced to keep its
-        state (i.e., charging or discharging).
-
-        Returns:
-            BID (float) (((1,2)X4) X windowLength): store last DA market bids
-        """
-        #        Quantity = self.DA_optimal_quantities()
-        Quantity = deepcopy(self.optimized_Quantity)
-
+    def _build_vertical_bid(self, q_value, p_ref):
+        """Build an inelastic 4-point bid at fixed quantity."""
+        q = float(max(0.0, min(self.Rc, q_value)))
+        p_hi = float(max(self.f_DA))
+        p_lo = float(min(self.f_DA))
+        p_mid = float(p_ref)
         P = self.P
         Q = self.Q
+
+        bid = [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]]
+        bid[0][Q] = q
+        bid[1][Q] = q
+        bid[2][Q] = q
+        bid[3][Q] = q
+        bid[0][P] = p_hi
+        bid[1][P] = p_mid
+        bid[2][P] = p_mid
+        bid[3][P] = p_lo
+        return bid
+
+    def _required_charge_profile_da(self):
+        """Compute DA hourly charging (kW) needed to reach departure SOC."""
+        qty = [0.0] * self.windowLength
+
+        if len(self.trans_hours) == 0 or len(self.home_depart_hours) == 0:
+            return qty
+
+        next_depart = int(self.home_depart_hours[0])
+        if next_depart <= 0:
+            return qty
+
+        slots = [h for h in self.trans_hours if 0 <= h < next_depart]
+        if len(slots) == 0:
+            return qty
+
+        # energy needed before departure
+        e_need = max(0.0, float(self.home_depart_soc - self.Cinit))
+        e_rem = e_need
+
+        for i, h in enumerate(slots):
+            slots_left = len(slots) - i
+            if slots_left <= 0:
+                break
+            q_req = e_rem / slots_left  # kWh over 1 hour -> kW avg
+            q_req = max(0.0, min(self.Rc, q_req))
+            qty[h] = q_req
+            e_rem = max(0.0, e_rem - q_req)
+
+        return qty
+
+    def _required_charge_rt(self):
+        """Compute RT charging setpoint (kW) to stay on departure-SOC trajectory."""
+        # no transactive participation in this current hour
+        if 0 in self.non_trans_hours:
+            return 0.0
+
+        if len(self.home_depart_hours) == 0:
+            return 0.0
+
+        next_depart = int(self.home_depart_hours[0])
+        if next_depart <= 0:
+            return 0.0
+
+        # transactive full-hour slots up to departure, including hour 0 if present
+        slots = [h for h in self.trans_hours if 0 <= h < next_depart]
+        if len(slots) == 0:
+            return 0.0
+
+        # remaining fraction of current hour (5-min RT updates)
+        frac_now = max(0.0, (60.0 - self.RT_minute_count_interpolation) / 60.0)
+        horizon_h = max(1e-6, (len(slots) - 1) + frac_now)
+
+        e_need = max(0.0, float(self.home_depart_soc - self.Cinit))
+        q_req = e_need / horizon_h
+        return max(0.0, min(self.Rc, q_req))
+
+    def formulate_bid_da(self):
+        """Formulate DA bid with charge-by-departure strategy."""
+        if not self.charge_by_departure:
+            # ...existing code...
+            Quantity = deepcopy(self.optimized_Quantity)
+            # ...existing code...
+
+        Quantity = self._required_charge_profile_da()
+
         TIME = range(0, self.windowLength)
-        CurveSlope = [0] * len(TIME)
-        yIntercept = [-1] * len(TIME)
         BID = [[[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]] for _ in TIME]
-        deltaf_DA = max(self.f_DA) - min(self.f_DA)
 
         for t in TIME:
-            if self.slider != 0:
-                # check if non transactive hours: make an inflexible straight vertical line bid
-                if t in self.non_trans_hours:
-                    BID[t][0][Q] = Quantity[t]
-                    BID[t][1][Q] = Quantity[t]
-                    BID[t][2][Q] = Quantity[t]
-                    BID[t][3][Q] = Quantity[t]
-
-                    BID[t][0][P] = max(self.f_DA)
-                    BID[t][1][P] = self.f_DA[t]
-                    BID[t][2][P] = self.f_DA[t]
-                    BID[t][3][P] = min(self.f_DA)
-                else:
-                    # Remains same in all hours of the window
-                    CurveSlope[t] = ((max(self.f_DA) - min(self.f_DA)) / (-self.Rd - self.Rc)) / self.slider
-                    # Is different for each hour of the window
-                    yIntercept[t] = self.f_DA[t] - CurveSlope[t] * Quantity[t]
-
-                    BID[t][0][Q] = -self.Rd
-                    BID[t][1][Q] = Quantity[t]
-                    BID[t][2][Q] = Quantity[t]
-                    BID[t][3][Q] = self.Rc
-
-                    BID[t][0][P] = -self.Rd * CurveSlope[t] + yIntercept[t] + self.batteryLifeDegFactor * (
-                            1 + self.profit_margin)
-                    BID[t][1][P] = Quantity[t] * CurveSlope[t] + yIntercept[t] + self.batteryLifeDegFactor * (
-                            1 + self.profit_margin)
-                    BID[t][2][P] = Quantity[t] * CurveSlope[t] + yIntercept[t] - self.batteryLifeDegFactor * (
-                            1 + self.profit_margin)
-                    BID[t][3][P] = self.Rc * CurveSlope[t] + yIntercept[t] - self.batteryLifeDegFactor * (
-                            1 + self.profit_margin)
+            # non-transactive: must be zero
+            if t in self.non_trans_hours:
+                BID[t] = self._build_vertical_bid(0.0, self.f_DA[t])
             else:
-                # if slider is 0: inflexible straight vertical bid
-                BID[t][0][Q] = Quantity[t]
-                BID[t][1][Q] = Quantity[t]
-                BID[t][2][Q] = Quantity[t]
-                BID[t][3][Q] = Quantity[t]
-
-                BID[t][0][P] = max(self.f_DA)
-                BID[t][1][P] = self.f_DA[t]
-                BID[t][2][P] = self.f_DA[t]
-                BID[t][3][P] = min(self.f_DA)
+                BID[t] = self._build_vertical_bid(Quantity[t], self.f_DA[t])
 
         self.bid_da = deepcopy(BID)
-
         self.RT_state_maintain_flag = 0
         self.RT_minute_count_interpolation = float(0.0)
-
         return self.bid_da
+
+    def formulate_bid_rt(self):
+        """Formulate RT bid with charge-by-departure strategy."""
+        if not self.charge_by_departure:
+            # ...existing code...
+            P = self.P
+            Q = self.Q
+            BID = deepcopy(self.bid_da[0])
+            # ...existing code...
+
+        q_rt = self._required_charge_rt()
+        self.bid_rt = self._build_vertical_bid(q_rt, self.f_DA[0])
+
+        self.RT_minute_count_interpolation = self.RT_minute_count_interpolation + 5.0
+        return self.bid_rt
 
     def obj_rule(self, m):
         if self.new_opt:

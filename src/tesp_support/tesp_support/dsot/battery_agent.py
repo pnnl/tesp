@@ -179,6 +179,62 @@ class BatteryDSOT:
         """ Test function with the only purpose of returning the name of the object
         """
         return self.name
+    
+    def _normalize_bid_points(self, bid_points):
+        """Normalize bid points into a monotone [Q, P] curve.
+
+        - accepts variable number of points (>=2 recommended)
+        - removes invalid points
+        - sorts by quantity ascending
+        - enforces nondecreasing quantity
+        - enforces nonincreasing price
+        """
+        if bid_points is None:
+            return [[0.0, max(self.f_DA)], [0.0, min(self.f_DA)]]
+
+        pts = []
+        for pt in bid_points:
+            if pt is None or len(pt) < 2:
+                continue
+            q = float(pt[self.Q])
+            p = float(pt[self.P])
+            if isnan(q) or isnan(p):
+                continue
+            pts.append([q, p])
+
+        if len(pts) < 2:
+            return [[0.0, max(self.f_DA)], [0.0, min(self.f_DA)]]
+
+        pts.sort(key=lambda x: x[0])
+
+        q = np.array([x[0] for x in pts], dtype=float)
+        p = np.array([x[1] for x in pts], dtype=float)
+
+        q = np.maximum.accumulate(q)
+        for i in range(1, len(p)):
+            if p[i] > p[i - 1]:
+                p[i] = p[i - 1]
+
+        return [[float(qi), float(pi)] for qi, pi in zip(q, p)]
+
+    def _price_from_quantity(self, bid_points, quantity):
+        """Evaluate piecewise-linear price P(Q) on normalized points."""
+        pts = self._normalize_bid_points(bid_points)
+
+        if quantity <= pts[0][0]:
+            return float(pts[0][1])
+        if quantity >= pts[-1][0]:
+            return float(pts[-1][1])
+
+        for i in range(len(pts) - 1):
+            q1, p1 = pts[i]
+            q2, p2 = pts[i + 1]
+            if q1 <= quantity <= q2:
+                if q2 == q1:
+                    return float(min(p1, p2))
+                return float(p1 + (quantity - q1) * (p2 - p1) / (q2 - q1))
+
+        return float(pts[-1][1])
 
     def inform_bid(self, price):
         """ Set the cleared_price attribute
@@ -435,64 +491,33 @@ class BatteryDSOT:
         return self.bid_rt
 
     def RT_fix_four_points_range(self, BID, Ql, Qu):
-        """ Verify feasible range of RT bid
+        """Clamp bid quantity range for any number of bid points.
 
         Args:
-            BID (float) ((1,2)X4): 4 point bid
-            Ql:
-            Qu:
+            BID (list): bid points [[Q, P], ...]
+            Ql (float): lower quantity limit
+            Qu (float): upper quantity limit
 
         Returns:
-            BIDr (float) ((1,2)X4): 4 point bid only the feasible range
+            list: bid points with quantities clamped to [Ql, Qu]
         """
-        P = self.P
-        Q = self.Q
-        temp = 0
-        m = float('nan')
-        try:
-            m = (BID[0][P] - BID[1][P]) / (BID[0][Q] - BID[1][Q])  # y = m*x + b
-        except Exception:
-            try:
-                m = (BID[2][P] - BID[3][P]) / (BID[2][Q] - BID[3][Q])  # y = m*x + b
-            except Exception:
-                temp = 1
+        pts = self._normalize_bid_points(BID)
 
-        if isnan(m) and temp == 0:
-            try:
-                m = (BID[2][P] - BID[3][P]) / (BID[2][Q] - BID[3][Q])  # y = m*x + b
-            except Exception:
-                temp = 1
+        if Ql > Qu:
+            Ql, Qu = Qu, Ql
 
-        if isnan(m):
-            temp = 1
+        BIDr = []
+        for q, _ in pts:
+            q_new = min(max(q, Ql), Qu)
+            p_new = self._price_from_quantity(pts, q_new)
+            BIDr.append([float(q_new), float(p_new)])
 
-        if temp == 0:
-            b0 = BID[0][P] - BID[0][Q] * m
-            b1 = BID[3][P] - BID[3][Q] * m
+        # Keep quantity monotone after clamping
+        q_arr = np.array([x[0] for x in BIDr], dtype=float)
+        p_arr = np.array([x[1] for x in BIDr], dtype=float)
+        q_arr = np.maximum.accumulate(q_arr)
 
-            BIDr = deepcopy(BID)
-
-            flag = [1] * len(BID)
-            for n in range(0, len(BID)):
-                if Ql <= BID[n][Q] <= Qu:
-                    flag[n] = 0
-                else:
-                    if BID[n][Q] > Qu:
-                        BIDr[n][Q] = Qu
-                    elif BID[n][Q] < Ql:
-                        BIDr[n][Q] = Ql
-            if sum(flag) == 0:
-                # when flags are set to zero the fix function has passed the test
-                pass
-            else:
-                BIDr[0][P] = m * BIDr[0][Q] + b0
-                BIDr[1][P] = m * BIDr[1][Q] + b0
-                BIDr[2][P] = m * BIDr[2][Q] + b1
-                BIDr[3][P] = m * BIDr[3][Q] + b1
-        else:
-            BIDr = BID
-
-        return BIDr
+        return [[float(qi), float(pi)] for qi, pi in zip(q_arr, p_arr)]
 
     def RT_gridlabd_set_P(self, sim_time):
         """ Update variables for battery output "inverter"
@@ -548,53 +573,40 @@ class BatteryDSOT:
                     format(self.name, sim_time, self.Cinit, self.Cmin, self.Cmax))
 
     def from_P_to_Q_battery(self, BID, PRICE):
-        """ Convert the 4 point bids to a quantity with the known price
+        """Convert a bid curve to quantity at a known price.
 
         Args:
-            BID (float) ((1,2)X4): 4 point bid
+            BID (list): bid points [[Q, P], ...]
             PRICE (float): cleared price in $/kWh
 
         Returns:
-            _quantity (float): active power (-) charging (+) discharging
+            float: active power (-) charging, (+) discharging
         """
-        P = self.P
-        Q = self.Q
-        temp = 0
-        m = float('nan')
-        try:
-            m = (BID[0][P] - BID[1][P]) / (BID[0][Q] - BID[1][Q])  # y = m*x + b
-        except Exception:
-            try:
-                m = (BID[2][P] - BID[3][P]) / (BID[2][Q] - BID[3][Q])  # y = m*x + b
-            except Exception:
-                temp = 1
+        pts = self._normalize_bid_points(BID)
+        qs = [x[0] for x in pts]
+        ps = [x[1] for x in pts]
 
-        if isnan(m) and temp == 0:
-            try:
-                m = (BID[2][P] - BID[3][P]) / (BID[2][Q] - BID[3][Q])  # y = m*x + b
-            except Exception:
-                temp = 1
+        if isnan(float(PRICE)):
+            return -qs[0]
 
-        if isnan(m):
-            temp = 1
-
-        if temp == 0:
-            if PRICE >= BID[0][P]:  # battery at maximum discharge
-                _quantity = -BID[0][Q]
-            elif PRICE <= BID[3][P]:  # battery at maximum charging
-                _quantity = -BID[3][Q]
-            elif BID[2][P] <= PRICE <= BID[1][P]:  # battery at deadband
-                _quantity = -BID[2][Q]
-            elif BID[1][P] <= PRICE <= BID[0][P]:  # first curve
-                b = BID[1][P] - BID[1][Q] * m
-                _quantity = -1 * ((PRICE - b) / m)
-            else:
-                b = BID[3][P] - BID[3][Q] * m
-                _quantity = -1 * ((PRICE - b) / m)
+        # P(Q) is normalized to nonincreasing with Q
+        if PRICE >= ps[0]:
+            quantity = qs[0]
+        elif PRICE <= ps[-1]:
+            quantity = qs[-1]
         else:
-            _quantity = -BID[1][Q]
+            quantity = qs[0]
+            for i in range(len(pts) - 1):
+                q1, p1 = pts[i]
+                q2, p2 = pts[i + 1]
+                if p1 >= PRICE >= p2:
+                    if p1 == p2:
+                        quantity = 0.5 * (q1 + q2)
+                    else:
+                        quantity = q1 + (PRICE - p1) * (q2 - q1) / (p2 - p1)
+                    break
 
-        return _quantity
+        return -float(quantity)
 
 
 def test():
