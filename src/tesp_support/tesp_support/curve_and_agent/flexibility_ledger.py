@@ -114,7 +114,18 @@ class FlexibilityLedger:
             cleared_price: Expected price (for economic calculations).
             penalty_model_id: Reference to applicable penalty model.
         """
-        raise NotImplementedError
+        self._commitments = [
+            c for c in self._commitments if c.market_id != market_id]
+        self._commitments.append(EconomicCommitment(
+            market_id=market_id,
+            market_type=market_type,
+            product_type=product_type,
+            quantity=quantity,
+            interval=interval,
+            status=CommitmentStatus.TENTATIVE,
+            cleared_price=cleared_price,
+            penalty_model_id=penalty_model_id,
+        ))
 
     def update_advisory(
         self,
@@ -145,7 +156,20 @@ class FlexibilityLedger:
             marginal_nv: Marginal net value ($/kW).
             marginal_pen: Marginal penalty ($/kW).
         """
-        raise NotImplementedError
+        self._commitments = [
+            c for c in self._commitments if c.market_id != market_id]
+        self._commitments.append(EconomicCommitment(
+            market_id=market_id,
+            quantity=quantity,
+            interval=interval,
+            status=CommitmentStatus.ADVISORY,
+            confidence=confidence,
+            cleared_price=cleared_price,
+            penalty_model_id=penalty_model_id,
+            iteration=iteration,
+            marginal_nv=marginal_nv,
+            marginal_pen=marginal_pen,
+        ))
 
     def book_firm(
         self,
@@ -169,7 +193,18 @@ class FlexibilityLedger:
             marginal_nv: Marginal net value at cleared price.
             marginal_pen: Marginal penalty rate.
         """
-        raise NotImplementedError
+        self._commitments = [
+            c for c in self._commitments if c.market_id != market_id]
+        self._commitments.append(EconomicCommitment(
+            market_id=market_id,
+            quantity=quantity,
+            interval=interval,
+            status=CommitmentStatus.FIRM,
+            cleared_price=cleared_price,
+            penalty_model_id=penalty_model_id,
+            marginal_nv=marginal_nv,
+            marginal_pen=marginal_pen,
+        ))
 
     def release(self, market_id: str) -> None:
         """Release a commitment after reconciliation.
@@ -177,7 +212,8 @@ class FlexibilityLedger:
         Args:
             market_id: ID of the market to release.
         """
-        raise NotImplementedError
+        self._commitments = [
+            c for c in self._commitments if c.market_id != market_id]
 
     def hard_available(
         self,
@@ -194,7 +230,10 @@ class FlexibilityLedger:
         Returns:
             (Q_min_avail, Q_max_avail) in kW.
         """
-        raise NotImplementedError
+        committed = 0.0
+        for c in self._overlapping(time_interval, excluding):
+            committed += c.quantity
+        return (self._Q_min, self._Q_max - committed)
 
     def expected_available(
         self,
@@ -210,7 +249,15 @@ class FlexibilityLedger:
         Returns:
             (Q_min_avail, Q_max_avail) in kW.
         """
-        raise NotImplementedError
+        weighted = 0.0
+        for c in self._overlapping(time_interval, excluding):
+            if c.status == CommitmentStatus.FIRM:
+                weighted += c.quantity
+            elif c.status == CommitmentStatus.ADVISORY:
+                weighted += c.quantity * c.confidence
+            elif c.status == CommitmentStatus.TENTATIVE:
+                weighted += c.quantity * self._tentative_weight
+        return (self._Q_min, self._Q_max - weighted)
 
     def economic_available(
         self,
@@ -230,7 +277,32 @@ class FlexibilityLedger:
         Returns:
             EconomicEnvelope with hard availability plus displacement options.
         """
-        raise NotImplementedError
+        _, hard_max = self.hard_available(time_interval, excluding)
+        hard_min = self._Q_min
+
+        blocks = []
+        for c in self._overlapping(time_interval, excluding):
+            if c.status in (CommitmentStatus.ADVISORY, CommitmentStatus.TENTATIVE):
+                disp_cost = c.marginal_pen - c.marginal_nv
+                net_gain = candidate_value - disp_cost
+                if net_gain > 0:
+                    blocks.append(DisplaceableBlock(
+                        source_market=c.market_id,
+                        source_status=c.status,
+                        quantity=c.quantity,
+                        displacement_cost=disp_cost,
+                        net_gain=net_gain,
+                    ))
+        blocks.sort(key=lambda b: b.displacement_cost)
+        total_disp = sum(b.quantity for b in blocks)
+
+        return EconomicEnvelope(
+            hard_Q_min_avail=hard_min,
+            hard_Q_max_avail=hard_max,
+            displaceable_blocks=blocks,
+            total_displaceable=total_disp,
+            soft_Q_max_avail=hard_max + total_disp,
+        )
 
     def get_commitments_overlapping(
         self,
@@ -244,4 +316,20 @@ class FlexibilityLedger:
         Returns:
             List of overlapping EconomicCommitment records.
         """
-        raise NotImplementedError
+        return self._overlapping(time_interval)
+
+    def _overlapping(
+        self,
+        time_interval: Tuple[float, float],
+        excluding: Optional[str] = None
+    ) -> List[EconomicCommitment]:
+        """Internal: commitments overlapping interval, optionally excluding one."""
+        t_start, t_end = time_interval
+        result = []
+        for c in self._commitments:
+            if excluding and c.market_id == excluding:
+                continue
+            c_start, c_end = c.interval
+            if c_start < t_end and c_end > t_start:
+                result.append(c)
+        return result

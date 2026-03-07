@@ -106,17 +106,14 @@ class TestPreferenceCurveConstructor:
 
 
 class TestEpsilon:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_epsilon_at_k0(self, inelastic_curve):
         """k=0 → ε ≈ 0 (perfectly inelastic)."""
         assert inelastic_curve.epsilon == pytest.approx(0.0, abs=0.01)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_epsilon_at_k1(self, elastic_curve):
         """k=1 → ε = ε_max = 5.0."""
         assert elastic_curve.epsilon == pytest.approx(5.0)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_epsilon_at_k05(self, mid_curve):
         """k=0.5 → ε = 2.5 (assuming linear mapping k·ε_max)."""
         assert mid_curve.epsilon == pytest.approx(2.5)
@@ -128,7 +125,6 @@ class TestEpsilon:
 
 
 class TestEvaluate:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_evaluate_at_reference_price(self, mid_curve):
         """Q(P_0) = Q_0 for any k (anchor property).
 
@@ -137,7 +133,6 @@ class TestEvaluate:
         result = mid_curve.evaluate(price=0.10)
         assert result == pytest.approx(5.0)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_evaluate_high_price_elastic(self, elastic_curve):
         """At 2× reference price, elastic customer consumes much less.
 
@@ -146,7 +141,6 @@ class TestEvaluate:
         result = elastic_curve.evaluate(price=0.20)
         assert result == pytest.approx(5.0 / 32.0, rel=1e-3)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_evaluate_low_price_elastic(self, elastic_curve):
         """At half reference price, elastic customer wants much more.
 
@@ -155,7 +149,6 @@ class TestEvaluate:
         result = elastic_curve.evaluate(price=0.05)
         assert result == pytest.approx(160.0, rel=1e-3)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_evaluate_inelastic_ignores_price(self, inelastic_curve):
         """k=0, ε≈0 → Q(P) ≈ Q_0 regardless of price.
 
@@ -164,7 +157,6 @@ class TestEvaluate:
         result = inelastic_curve.evaluate(price=0.20)
         assert result == pytest.approx(5.0, abs=0.1)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_evaluate_mid_elasticity(self, mid_curve):
         """k=0.5, ε=2.5 → moderate response.
 
@@ -181,7 +173,6 @@ class TestEvaluate:
 
 
 class TestEvaluateWithBounds:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_clamps_to_Q_max(self, elastic_curve):
         """Very low price → huge demand, should be clamped to Q_max.
 
@@ -191,7 +182,6 @@ class TestEvaluateWithBounds:
         result = elastic_curve.evaluate_with_bounds(price=0.01, Q_min=0.0, Q_max=10.0)
         assert result == pytest.approx(10.0)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_clamps_to_Q_min(self, elastic_curve):
         """Very high price → near-zero demand, clamped to Q_min.
 
@@ -201,7 +191,6 @@ class TestEvaluateWithBounds:
         result = elastic_curve.evaluate_with_bounds(price=1.0, Q_min=1.0, Q_max=10.0)
         assert result == pytest.approx(1.0)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_within_bounds_unchanged(self, mid_curve):
         """When raw Q is within bounds, no clamping.
 
@@ -217,26 +206,22 @@ class TestEvaluateWithBounds:
 
 
 class TestAmenityCost:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_zero_at_preferred(self, mid_curve):
         """No cost when operating at preferred point."""
         cost = mid_curve.get_amenity_cost(Q_actual=5.0, Q_preferred=5.0)
         assert cost == pytest.approx(0.0)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_positive_when_deviating(self, mid_curve):
         """Deviation from preferred → positive cost."""
         cost = mid_curve.get_amenity_cost(Q_actual=3.0, Q_preferred=5.0)
         assert cost > 0.0
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_increases_with_deviation(self, mid_curve):
         """Larger deviation → higher cost."""
         cost_small = mid_curve.get_amenity_cost(Q_actual=4.0, Q_preferred=5.0)
         cost_large = mid_curve.get_amenity_cost(Q_actual=2.0, Q_preferred=5.0)
         assert cost_large > cost_small
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_inelastic_customer_higher_cost(self, inelastic_curve, elastic_curve):
         """k=0 (comfort-focused) → higher amenity cost than k=1 (financial)."""
         cost_inelastic = inelastic_curve.get_amenity_cost(Q_actual=3.0, Q_preferred=5.0)
@@ -250,19 +235,16 @@ class TestAmenityCost:
 
 
 class TestBatteryCurve:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_charges_at_low_price(self, battery_curve):
         """Low price → positive Q (charge)."""
         result = battery_curve.evaluate(price=0.05)
         assert result > 0.0
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_discharges_at_high_price(self, battery_curve):
         """High price → negative Q (discharge)."""
         result = battery_curve.evaluate(price=0.25)
         assert result < 0.0
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_near_zero_at_threshold(self, battery_curve):
         """Near the degradation-adjusted threshold, Q ≈ 0.
 
@@ -279,7 +261,6 @@ class TestBatteryCurve:
 
 
 class TestSampleBidCurve:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_returns_correct_count(self, mid_curve):
         points = mid_curve.sample_bid_curve(
             price_min=0.01,
@@ -290,7 +271,6 @@ class TestSampleBidCurve:
         )
         assert len(points) == 10
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_monotonic_decreasing(self, mid_curve):
         """Higher price → lower quantity (demand law)."""
         points = mid_curve.sample_bid_curve(
@@ -304,7 +284,6 @@ class TestSampleBidCurve:
             if points[i].price > points[i + 1].price:
                 assert points[i].quantity <= points[i + 1].quantity
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_within_bounds(self, mid_curve):
         """All quantities within [Q_min, Q_max]."""
         points = mid_curve.sample_bid_curve(
@@ -317,7 +296,6 @@ class TestSampleBidCurve:
         for pt in points:
             assert 1.0 <= pt.quantity <= 8.0
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_returns_bid_points(self, mid_curve):
         """Each element should be a BidPoint."""
         from data_types import BidPoint

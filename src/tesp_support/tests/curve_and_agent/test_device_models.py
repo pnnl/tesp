@@ -90,7 +90,6 @@ class TestHVACModelConstructor:
 
 
 class TestHVACPredictTemperature:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_free_floating_temp_rise(
         self, hvac_model, hvac_cooling_state, simple_outdoor_forecast
     ):
@@ -123,7 +122,6 @@ class TestHVACPredictTemperature:
         # First-order: ≈ 72.64, but coupling will modify slightly
         assert final_temp == pytest.approx(72.64, abs=0.5)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_cooling_holds_temp(
         self, hvac_model, hvac_cooling_state, simple_outdoor_forecast
     ):
@@ -149,7 +147,6 @@ class TestHVACPredictTemperature:
 
 
 class TestHVACFlexibility:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_flexibility_range(
         self, hvac_model, hvac_cooling_state, simple_outdoor_forecast
     ):
@@ -169,7 +166,6 @@ class TestHVACFlexibility:
 
 
 class TestHVACPowerSetpointRoundtrip:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_roundtrip(self, hvac_model, hvac_cooling_state):
         """power_to_setpoint → setpoint_to_power should approximate identity."""
         target_kw = 3.0
@@ -216,7 +212,6 @@ def wh_state_hot():
 
 
 class TestWaterHeaterModel:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_standby_temperature_drop(self, wh_model, wh_state_hot):
         """Element off, no draw → tank cools via standby losses.
 
@@ -246,7 +241,6 @@ class TestWaterHeaterModel:
         assert final_upper < 130.0
         assert final_upper > 128.0  # shouldn't drop drastically in 1 hr
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_flexibility_range(self, wh_model, wh_state_hot):
         """Q_min=0 (element off), Q_max=element_power (4.5 kW)."""
         from data_types import QuantilePoint, ContinuousDataPoint
@@ -290,7 +284,6 @@ def ev_charging_state():
 
 
 class TestEVChargerModel:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_predict_soc_charging(self, ev_model, ev_charging_state):
         """Charge at 7.2 kW for 1 hour: linear SOC increase.
 
@@ -312,7 +305,6 @@ class TestEVChargerModel:
         expected_soc = 0.30 + (7.2 * 0.90 * 1.0) / 60.0
         assert final_soc == pytest.approx(expected_soc, rel=0.02)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_flexibility_must_depart(self, ev_model, ev_charging_state):
         """Tight departure constraint forces high Q_min.
 
@@ -335,7 +327,6 @@ class TestEVChargerModel:
         # Q_min should be elevated (must charge aggressively)
         assert flex.Q_min > 0.0
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_no_flexibility_unplugged(self, ev_model):
         """No vehicle → zero flexibility."""
         unplugged = EVChargerState(vehicle_plugged_in=False)
@@ -388,7 +379,6 @@ class TestBatteryModelConstructor:
 
 
 class TestBatteryPredictSOC:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_charging_soc_increases(self, battery_model, battery_mid_soc):
         """Charge at 5 kW for 1 hour.
 
@@ -409,7 +399,6 @@ class TestBatteryPredictSOC:
         expected = 0.50 + (5.0 * charge_eff * 1.0) / 13.5
         assert final_soc == pytest.approx(min(expected, 0.95), rel=0.02)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_discharging_soc_decreases(self, battery_model, battery_mid_soc):
         """Discharge at -5 kW for 1 hour.
 
@@ -430,7 +419,6 @@ class TestBatteryPredictSOC:
 
 
 class TestBatteryFlexibility:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_bidirectional_envelope(self, battery_model, battery_mid_soc):
         """Battery has negative Q_min (discharge) and positive Q_max (charge)."""
         flex = battery_model.estimate_flexibility(
@@ -446,7 +434,6 @@ class TestBatteryFlexibility:
 
 
 class TestBatteryDegradation:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_degradation_cost_positive(self, battery_model, battery_mid_soc):
         """Marginal degradation cost should be positive for any cycling."""
         cost = battery_model.marginal_degradation_cost(
@@ -455,7 +442,6 @@ class TestBatteryDegradation:
         )
         assert cost > 0.0
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_degradation_increases_with_power(self, battery_model, battery_mid_soc):
         """Higher C-rate → higher stress → higher degradation cost."""
         cost_low = battery_model.marginal_degradation_cost(
@@ -468,7 +454,6 @@ class TestBatteryDegradation:
         )
         assert cost_high > cost_low
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_base_degradation_cost_order_of_magnitude(
         self, battery_model, battery_mid_soc
     ):
@@ -486,7 +471,6 @@ class TestBatteryDegradation:
 
 
 class TestBatteryThresholds:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_charge_below_discharge(self, battery_model, battery_mid_soc):
         """Charge threshold < discharge threshold (dead band for degradation).
 
@@ -506,7 +490,6 @@ class TestBatteryThresholds:
 
 
 class TestBatteryDegradationTracking:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_update_increases_cumulative(self, battery_model, battery_mid_soc):
         """After tracking 1 kWh throughput, cumulative should increase.
 
@@ -526,7 +509,6 @@ class TestBatteryDegradationTracking:
         assert cost > 0.0
         assert battery_model._cumulative_throughput_kwh == before + 1.0
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_cost_scales_with_throughput(self, battery_model, battery_mid_soc):
         """Twice the throughput ≈ twice the degradation cost."""
         cost_1 = battery_model.update_degradation_tracking(
@@ -554,7 +536,6 @@ class TestBatteryDegradationTracking:
 
 
 class TestBatteryBudgetUtilization:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_initial_rate(self, battery_model):
         """Before any cycling, budget utilization should be defined.
 
@@ -563,7 +544,6 @@ class TestBatteryBudgetUtilization:
         rate = battery_model.budget_utilization_rate
         assert isinstance(rate, float)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_rate_increases_after_heavy_cycling(self, battery_model, battery_mid_soc):
         """Heavy cycling should push utilization rate above baseline."""
         battery_model.update_degradation_tracking(
@@ -583,7 +563,6 @@ class TestBatteryBudgetUtilization:
 
 
 class TestWaterHeaterActiveHeating:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_element_raises_temperature(self, wh_model, wh_state_hot):
         """Element on at full power (4.5 kW) heats the tank.
 
@@ -611,7 +590,6 @@ class TestWaterHeaterActiveHeating:
         final_upper = trajectory[-1][1]
         assert final_upper > 120.0
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_draw_cools_tank(self, wh_model, wh_state_hot):
         """Hot water draw brings cold inlet water into the tank, cooling it.
 
@@ -635,7 +613,6 @@ class TestWaterHeaterActiveHeating:
 
 
 class TestWaterHeaterPowerToSetpoint:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_full_power_high_setpoint(self, wh_model, wh_state_hot):
         """At full element power, setpoint should be at or above current temp."""
         sp = wh_model.power_to_setpoint(
@@ -645,7 +622,6 @@ class TestWaterHeaterPowerToSetpoint:
         )
         assert sp >= wh_state_hot.tank_temp_upper
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_zero_power_low_setpoint(self, wh_model, wh_state_hot):
         """At zero power, setpoint is well below current temp (element stays off)."""
         sp = wh_model.power_to_setpoint(
@@ -662,7 +638,6 @@ class TestWaterHeaterPowerToSetpoint:
 
 
 class TestEVChargerTaper:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_taper_reduces_effective_power(self, ev_model):
         """Above soc_at_max_taper, actual charge rate tapers down.
 
@@ -689,7 +664,6 @@ class TestEVChargerTaper:
 
 
 class TestEVPowerToCommand:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_within_limits(self, ev_model, ev_charging_state):
         """Requesting 5 kW (within range) should return ~5 kW."""
         cmd = ev_model.power_to_command(
@@ -698,7 +672,6 @@ class TestEVPowerToCommand:
         )
         assert cmd == pytest.approx(5.0, abs=0.5)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_clamped_to_max(self, ev_model, ev_charging_state):
         """Requesting 20 kW (above max 7.2) should clamp to max_charge_rate."""
         cmd = ev_model.power_to_command(
@@ -707,7 +680,6 @@ class TestEVPowerToCommand:
         )
         assert cmd == pytest.approx(7.2, abs=0.1)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_below_minimum_goes_to_zero(self, ev_model, ev_charging_state):
         """Requesting 0.5 kW (below min 1.0) should snap to 0 (off)."""
         cmd = ev_model.power_to_command(
@@ -716,7 +688,6 @@ class TestEVPowerToCommand:
         )
         assert cmd == pytest.approx(0.0, abs=0.1)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_unplugged_returns_zero(self, ev_model):
         """No vehicle plugged in → command is 0 regardless of request."""
         unplugged = EVChargerState(vehicle_plugged_in=False)

@@ -64,7 +64,35 @@ class UncertaintyModel:
         Returns:
             Standard deviation of the forecast error at this lead time.
         """
-        raise NotImplementedError
+        import math
+
+        if self._model_type == "saturating_exp":
+            sigma_inf = self._params["sigma_inf"]
+            tau_c = self._params["tau_c"]
+            return sigma_inf * (1.0 - math.exp(-lead_time / tau_c))
+
+        elif self._model_type == "power_law":
+            sigma_0 = self._params["sigma_0"]
+            alpha = self._params["alpha"]
+            beta = self._params["beta"]
+            sigma_inf = self._params["sigma_inf"]
+            return min(sigma_inf, sigma_0 + alpha * (lead_time ** beta))
+
+        elif self._model_type == "empirical":
+            table = self._params["lead_time_sigma_table"]
+            if lead_time <= table[0][0]:
+                return table[0][1]
+            if lead_time >= table[-1][0]:
+                return table[-1][1]
+            for i in range(len(table) - 1):
+                t0, s0 = table[i]
+                t1, s1 = table[i + 1]
+                if t0 <= lead_time <= t1:
+                    f = (lead_time - t0) / (t1 - t0)
+                    return s0 + f * (s1 - s0)
+            return table[-1][1]
+
+        return 0.0
 
 
 class ContinuousForecast:
@@ -103,7 +131,7 @@ class ContinuousForecast:
                 EXTERNAL: From weather service update, new price
                 forecast, or informational market clear.
         """
-        raise NotImplementedError
+        self._series = list(new_series)
 
     def get_at(self, timestamp: float) -> ContinuousDataPoint:
         """Interpolate or look up the forecast at a specific time.
@@ -115,7 +143,34 @@ class ContinuousForecast:
             ContinuousDataPoint with value, sigma, and quantiles
             at the requested time.
         """
-        raise NotImplementedError
+        if not self._series:
+            return ContinuousDataPoint(timestamp=timestamp)
+        if len(self._series) == 1:
+            sigma = self._uncertainty_model.sigma_at(abs(timestamp - self._series[0].timestamp))
+            return ContinuousDataPoint(
+                timestamp=timestamp, value=self._series[0].value, sigma=sigma)
+        # Clamp to endpoints
+        if timestamp <= self._series[0].timestamp:
+            sigma = self._uncertainty_model.sigma_at(0.0)
+            return ContinuousDataPoint(
+                timestamp=timestamp, value=self._series[0].value, sigma=sigma)
+        if timestamp >= self._series[-1].timestamp:
+            lead = timestamp - self._series[0].timestamp
+            sigma = self._uncertainty_model.sigma_at(lead)
+            return ContinuousDataPoint(
+                timestamp=timestamp, value=self._series[-1].value, sigma=sigma)
+        # Linear interpolation
+        for i in range(len(self._series) - 1):
+            t0 = self._series[i].timestamp
+            t1 = self._series[i + 1].timestamp
+            if t0 <= timestamp <= t1:
+                f = (timestamp - t0) / (t1 - t0) if t1 != t0 else 0.0
+                val = self._series[i].value + f * (self._series[i + 1].value - self._series[i].value)
+                lead = timestamp - self._series[0].timestamp
+                sigma = self._uncertainty_model.sigma_at(lead)
+                return ContinuousDataPoint(
+                    timestamp=timestamp, value=val, sigma=sigma)
+        return ContinuousDataPoint(timestamp=timestamp)
 
     def get_series(
         self, t_start: float, t_end: float, resolution: Optional[float] = None
@@ -131,7 +186,16 @@ class ContinuousForecast:
         Returns:
             List of ContinuousDataPoint covering the interval.
         """
-        raise NotImplementedError
+        if resolution is not None:
+            result = []
+            t = t_start
+            while t <= t_end + 1e-9:
+                result.append(self.get_at(t))
+                t += resolution
+            return result
+        # Native resolution: return points within range
+        return [self.get_at(pt.timestamp) for pt in self._series
+                if t_start <= pt.timestamp <= t_end]
 
 
 class EventForecast:
@@ -173,7 +237,19 @@ class EventForecast:
         Returns:
             λ(t) in events per hour.
         """
-        raise NotImplementedError
+        if not self._intensity_function:
+            return 0.0
+        if timestamp <= self._intensity_function[0][0]:
+            return self._intensity_function[0][1]
+        if timestamp >= self._intensity_function[-1][0]:
+            return self._intensity_function[-1][1]
+        for i in range(len(self._intensity_function) - 1):
+            t0, v0 = self._intensity_function[i]
+            t1, v1 = self._intensity_function[i + 1]
+            if t0 <= timestamp <= t1:
+                f = (timestamp - t0) / (t1 - t0) if t1 != t0 else 0.0
+                return v0 + f * (v1 - v0)
+        return self._intensity_function[-1][1]
 
     def get_cumulative_energy_distribution(
         self, t_start: float, t_end: float
@@ -197,7 +273,52 @@ class EventForecast:
             QuantilePoint with expected value, variance, and quantiles
             of total energy drawn.
         """
-        raise NotImplementedError
+        # Integrate intensity via trapezoidal rule to get expected event count
+        n_steps = max(1, int((t_end - t_start) / 60.0))  # 1-minute steps
+        dt = (t_end - t_start) / n_steps
+        total_lambda = 0.0
+        prev_lam = self.get_intensity_at(t_start)
+        for i in range(1, n_steps + 1):
+            t = t_start + i * dt
+            cur_lam = self.get_intensity_at(t)
+            total_lambda += (prev_lam + cur_lam) / 2.0 * (dt / 3600.0)  # events
+            prev_lam = cur_lam
+
+        # Scale by daily_expected_count if the raw integral diverges
+        if self._daily_expected_count > 0 and self._intensity_function:
+            raw_daily = self._integrate_full_day()
+            if raw_daily > 0:
+                total_lambda *= self._daily_expected_count / raw_daily
+
+        # Subtract observed events in this window
+        observed_energy = sum(
+            ev["energy"] for ev in self._observed_events
+            if t_start <= ev["timestamp"] <= t_end
+        )
+        observed_count = sum(
+            1 for ev in self._observed_events
+            if t_start <= ev["timestamp"] <= t_end
+        )
+        remaining_lambda = max(0.0, total_lambda - observed_count)
+
+        # Average energy per event
+        if self._event_types:
+            mean_energy = sum(e.energy_mean for e in self._event_types) / len(self._event_types)
+            var_energy = sum(e.energy_std ** 2 for e in self._event_types) / len(self._event_types)
+        else:
+            mean_energy = self._daily_expected_energy / max(1.0, self._daily_expected_count)
+            var_energy = 0.0
+
+        # Compound Poisson: E[S] = λ·μ, Var[S] = λ·(σ² + μ²)
+        expected_remaining = remaining_lambda * mean_energy
+        variance = remaining_lambda * (var_energy + mean_energy ** 2)
+
+        expected_total = expected_remaining + observed_energy
+
+        return QuantilePoint(
+            expected=expected_total,
+            variance=variance,
+        )
 
     def condition_on_observation(
         self, event_type: str, timestamp: float, energy: float
@@ -218,7 +339,11 @@ class EventForecast:
             energy: Energy consumed by the event (kWh).
                 SOURCE: From real-time metering/sensing.
         """
-        raise NotImplementedError
+        self._observed_events.append({
+            "event_type": event_type,
+            "timestamp": timestamp,
+            "energy": energy,
+        })
 
     def reset_observations(self) -> None:
         """Clear observed events (e.g., at the start of a new day).
@@ -226,7 +351,18 @@ class EventForecast:
         Resets the conditioning state so the forecast reverts to
         the prior daily pattern.
         """
-        raise NotImplementedError
+        self._observed_events = []
+
+    def _integrate_full_day(self) -> float:
+        """Integrate the raw intensity function over a full day (0..86400)."""
+        if not self._intensity_function:
+            return 0.0
+        total = 0.0
+        for i in range(len(self._intensity_function) - 1):
+            t0, v0 = self._intensity_function[i]
+            t1, v1 = self._intensity_function[i + 1]
+            total += (v0 + v1) / 2.0 * ((t1 - t0) / 3600.0)
+        return total
 
 
 class ConstraintStream:
@@ -274,7 +410,17 @@ class ConstraintStream:
         Returns:
             True if the constraint is satisfied.
         """
-        raise NotImplementedError
+        if self._constraint_type == "by_time":
+            if self._deadline is not None and timestamp < self._deadline:
+                return True
+            return value_at_time >= self._required_value
+        elif self._constraint_type == "minimum":
+            return value_at_time >= self._required_value
+        elif self._constraint_type == "maximum":
+            return value_at_time <= self._required_value
+        elif self._constraint_type == "equality":
+            return abs(value_at_time - self._required_value) < 1e-9
+        return True
 
     def feasibility_margin(self, value_at_time: float, timestamp: float) -> float:
         """How much slack exists at a given time.
@@ -286,7 +432,13 @@ class ConstraintStream:
         Returns:
             Positive = feasible with room. Negative = violated.
         """
-        raise NotImplementedError
+        if self._constraint_type in ("minimum", "by_time"):
+            return value_at_time - self._required_value
+        elif self._constraint_type == "maximum":
+            return self._required_value - value_at_time
+        elif self._constraint_type == "equality":
+            return -abs(value_at_time - self._required_value)
+        return 0.0
 
 
 class DataStreamManager:
@@ -322,7 +474,7 @@ class DataStreamManager:
                 EXTERNAL: The forecast content must be populated
                 from an external source (weather API, price model).
         """
-        raise NotImplementedError
+        self._continuous_streams[stream_id] = forecast
 
     def register_event_stream(self, stream_id: str, forecast: EventForecast) -> None:
         """Register an event-process forecast stream.
@@ -333,7 +485,7 @@ class DataStreamManager:
                 EXTERNAL: Intensity functions and event distributions
                 must be learned from historical data.
         """
-        raise NotImplementedError
+        self._event_streams[stream_id] = forecast
 
     def register_constraint(self, stream_id: str, constraint: ConstraintStream) -> None:
         """Register a constraint stream.
@@ -343,7 +495,7 @@ class DataStreamManager:
             constraint: The ConstraintStream object.
                 EXTERNAL: Constraint values come from customer input.
         """
-        raise NotImplementedError
+        self._constraint_streams[stream_id] = constraint
 
     def register_schedule(self, stream_id: str, schedule: ContinuousForecast) -> None:
         """Register a customer schedule stream.
@@ -354,7 +506,7 @@ class DataStreamManager:
                 uncertainty (customer-declared values).
                 EXTERNAL: From customer's thermostat program, EV app, etc.
         """
-        raise NotImplementedError
+        self._schedules[stream_id] = schedule
 
     def update_stream(self, stream_id: str, new_data: Any) -> None:
         """Push new data to an existing stream.
@@ -369,7 +521,12 @@ class DataStreamManager:
                 EXTERNAL: The caller is responsible for providing
                 data in the correct format.
         """
-        raise NotImplementedError
+        if stream_id in self._continuous_streams:
+            self._continuous_streams[stream_id].update(new_data)
+        elif stream_id in self._schedules:
+            self._schedules[stream_id].update(new_data)
+        else:
+            raise KeyError(f"Stream '{stream_id}' not registered")
 
     def get_continuous(self, stream_id: str) -> Optional[ContinuousForecast]:
         """Retrieve a continuous forecast stream by ID.
@@ -380,19 +537,19 @@ class DataStreamManager:
         Returns:
             The ContinuousForecast, or None if not registered.
         """
-        raise NotImplementedError
+        return self._continuous_streams.get(stream_id)
 
     def get_event(self, stream_id: str) -> Optional[EventForecast]:
         """Retrieve an event forecast stream by ID."""
-        raise NotImplementedError
+        return self._event_streams.get(stream_id)
 
     def get_constraint(self, stream_id: str) -> Optional[ConstraintStream]:
         """Retrieve a constraint stream by ID."""
-        raise NotImplementedError
+        return self._constraint_streams.get(stream_id)
 
     def get_schedule(self, stream_id: str) -> Optional[ContinuousForecast]:
         """Retrieve a schedule stream by ID."""
-        raise NotImplementedError
+        return self._schedules.get(stream_id)
 
     def get_all_constraints(
         self, t_start: float, t_end: float
@@ -406,7 +563,15 @@ class DataStreamManager:
         Returns:
             List of ConstraintStream objects active in the interval.
         """
-        raise NotImplementedError
+        result = []
+        for c in self._constraint_streams.values():
+            if c._continuous:
+                result.append(c)
+            elif c._deadline is not None and t_start <= c._deadline <= t_end:
+                result.append(c)
+            elif c._deadline is not None and c._deadline >= t_start:
+                result.append(c)
+        return result
 
     def get_forecast_bundle(self, t_start: float, t_end: float) -> Dict[str, Any]:
         """Package all forecast streams for a time interval.
@@ -421,4 +586,9 @@ class DataStreamManager:
         Returns:
             Dictionary mapping stream IDs to their data over the interval.
         """
-        raise NotImplementedError
+        bundle: Dict[str, Any] = {}
+        for sid, forecast in self._continuous_streams.items():
+            bundle[sid] = forecast.get_series(t_start, t_end)
+        for sid, schedule in self._schedules.items():
+            bundle[sid] = schedule.get_series(t_start, t_end)
+        return bundle

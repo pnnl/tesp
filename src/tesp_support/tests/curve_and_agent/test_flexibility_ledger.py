@@ -56,7 +56,6 @@ class TestFlexibilityLedgerConstructor:
 
 
 class TestHoldTentative:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_tentative_recorded(self, load_ledger):
         """Tentative hold should appear in commitments list."""
         load_ledger.hold_tentative(
@@ -70,7 +69,6 @@ class TestHoldTentative:
         assert len(overlapping) == 1
         assert overlapping[0].quantity == 3.0
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_tentative_replaces_same_market(self, load_ledger):
         """Second tentative for same market_id replaces the first."""
         load_ledger.hold_tentative(
@@ -93,7 +91,6 @@ class TestHoldTentative:
 
 
 class TestUpdateAdvisory:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_advisory_recorded(self, load_ledger):
         load_ledger.hold_tentative(
             market_id="RT_100",
@@ -117,7 +114,6 @@ class TestUpdateAdvisory:
 
 
 class TestBookFirmAndRelease:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_firm_then_release(self, load_ledger):
         load_ledger.book_firm(
             market_id="RT_100",
@@ -140,14 +136,12 @@ class TestBookFirmAndRelease:
 
 
 class TestHardAvailable:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_empty_ledger(self, load_ledger):
         """No commitments → full device range available."""
         q_min, q_max = load_ledger.hard_available((0.0, 300.0))
         assert q_min == 0.0
         assert q_max == 10.0
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_single_firm_commitment(self, load_ledger):
         """Firm 6 kW commitment → only 4 kW available.
 
@@ -163,7 +157,6 @@ class TestHardAvailable:
         q_min, q_max = load_ledger.hard_available((100.0, 400.0))
         assert q_max == pytest.approx(4.0, abs=0.1)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_excluding_market(self, load_ledger):
         """Excluding own market restores its capacity.
 
@@ -180,7 +173,6 @@ class TestHardAvailable:
         q_min, q_max = load_ledger.hard_available((100.0, 400.0), excluding="RT_100")
         assert q_max == pytest.approx(10.0, abs=0.1)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_battery_bidirectional(self, battery_ledger):
         """Battery with firm 3 kW charge → discharge still available.
 
@@ -205,7 +197,6 @@ class TestHardAvailable:
 
 
 class TestExpectedAvailable:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_firm_fully_deducted(self, load_ledger):
         """Firm commitments count at 100%."""
         load_ledger.book_firm(
@@ -218,7 +209,6 @@ class TestExpectedAvailable:
         q_min, q_max = load_ledger.expected_available((100.0, 400.0))
         assert q_max == pytest.approx(4.0, abs=0.1)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_advisory_weighted_by_confidence(self, load_ledger):
         """Advisory at confidence=0.7, 4 kW → deducts 0.7×4 = 2.8 kW.
 
@@ -236,7 +226,6 @@ class TestExpectedAvailable:
         q_min, q_max = load_ledger.expected_available((0.0, 3600.0))
         assert q_max == pytest.approx(7.2, abs=0.3)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_tentative_at_baseline_weight(self, load_ledger):
         """Tentative 5 kW at baseline weight 0.4 → deducts 2.0 kW.
 
@@ -259,7 +248,6 @@ class TestExpectedAvailable:
 
 
 class TestEconomicAvailable:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_displaceable_block(self, load_ledger):
         """Advisory commitment is displaceable if candidate value > displacement cost.
 
@@ -287,7 +275,6 @@ class TestEconomicAvailable:
         assert envelope.total_displaceable > 0.0
         assert envelope.soft_Q_max_avail > envelope.hard_Q_max_avail
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_no_displacement_when_too_expensive(self, load_ledger):
         """If candidate value < displacement cost, no blocks offered."""
         load_ledger.book_firm(
@@ -313,7 +300,6 @@ class TestEconomicAvailable:
 
 
 class TestNonOverlappingIntervals:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_commitment_outside_query(self, load_ledger):
         """Commitment for [100,400] doesn't affect query for [500,800]."""
         load_ledger.book_firm(

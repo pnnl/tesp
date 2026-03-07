@@ -63,7 +63,85 @@ class DispatchOptimizer:
             DispatchSolution with optimal Q, per-market allocation,
             displacement chain, and total net value.
         """
-        raise NotImplementedError
+        # Sum committed quantities as a starting point
+        total_committed = sum(e.committed_qty for e in economics.values())
+
+        # Amenity cost gradient pulls Q toward Q_0
+        Q_0 = preference_curve._Q_0
+
+        # Simple analytical approach for ≤2 products:
+        # Objective = Σ (marginal_value × min(Q_alloc, committed)) 
+        #           - Σ penalty(committed, actual)
+        #           - amenity_weight × (Q - Q_0)^2
+        #
+        # For a single product: Q* = committed (minimizes penalty)
+        # For multiple products: Q* = total_committed
+        # Then amenity_weight pulls toward Q_0
+
+        if amenity_weight > 0 and len(economics) <= 2:
+            # Balance: penalty gradient vs amenity gradient
+            # d(amenity)/dQ = 2 * amenity_weight * (Q - Q_0)
+            # At committed: penalty gradient ~ -max(marginal_pen)
+            # Optimal: shift from committed toward Q_0
+            # Q* = (sum_marginal_pen * committed + amenity_weight * Q_0) 
+            #      / (sum_marginal_pen + amenity_weight)
+            # simplified weighted average
+            total_pen_weight = sum(
+                e.marginal_penalty_zero for e in economics.values()
+            )
+            if total_pen_weight + amenity_weight > 0:
+                Q_star = (
+                    total_pen_weight * total_committed
+                    + amenity_weight * Q_0
+                ) / (total_pen_weight + amenity_weight)
+            else:
+                Q_star = total_committed
+        else:
+            Q_star = total_committed
+
+        # Clamp to physical bounds
+        Q_star = max(Q_min, min(Q_max, Q_star))
+
+        # Allocate Q across markets (priority: higher marginal_value first)
+        sorted_markets = sorted(
+            economics.items(),
+            key=lambda kv: kv[1].marginal_value_full,
+            reverse=True,
+        )
+        remaining = Q_star
+        allocation = {}
+        displacement_chain = {}
+        for mid, econ in sorted_markets:
+            alloc = min(remaining, econ.committed_qty)
+            alloc = max(0.0, alloc)
+            allocation[mid] = alloc
+            remaining -= alloc
+
+        # Compute total net value
+        total_nv = 0.0
+        for mid, econ in economics.items():
+            actual = allocation.get(mid, 0.0)
+            if econ.net_value_fn is not None:
+                total_nv += econ.net_value_fn(actual)
+            else:
+                # revenue - penalty approximation
+                total_nv += econ.cleared_price * actual
+        # Subtract amenity cost
+        total_nv -= amenity_weight * (Q_star - Q_0) ** 2
+
+        binding = []
+        if Q_star <= Q_min + 1e-9:
+            binding.append("Q_min")
+        if Q_star >= Q_max - 1e-9:
+            binding.append("Q_max")
+
+        return DispatchSolution(
+            Q=Q_star,
+            allocation=allocation,
+            displacement_chain=displacement_chain,
+            total_net_value=total_nv,
+            binding_constraints=binding,
+        )
 
 
 class DeliveryValueCalculator:
@@ -108,4 +186,42 @@ class DeliveryValueCalculator:
         Returns:
             DeliveryEconomics with revenue, penalty, and net value functions.
         """
-        raise NotImplementedError
+        interval_hours = interval_duration / 3600.0
+
+        # Revenue function: price × actual_qty × interval_hours
+        def revenue_fn(actual_qty: float) -> float:
+            return cleared_price * actual_qty * interval_hours
+
+        # Penalty function: delegate to penalty model
+        def penalty_fn(actual_qty: float) -> float:
+            return penalty_model.compute_penalty(
+                committed_qty=committed_qty,
+                actual_qty=actual_qty,
+                cleared_price=cleared_price,
+                interval_duration=interval_duration,
+            )
+
+        # Net value = revenue - penalty
+        def net_value_fn(actual_qty: float) -> float:
+            return revenue_fn(actual_qty) - penalty_fn(actual_qty)
+
+        # Marginal value at full delivery = cleared_price - degradation
+        marginal_value_full = cleared_price - degradation_cost
+
+        # Marginal penalty at zero delivery
+        marginal_penalty_zero = penalty_model.marginal_penalty(
+            committed_qty=committed_qty,
+            cleared_price=cleared_price,
+            interval_duration=interval_duration,
+        )
+
+        return DeliveryEconomics(
+            market_id=market_id,
+            committed_qty=committed_qty,
+            cleared_price=cleared_price,
+            revenue_fn=revenue_fn,
+            penalty_fn=penalty_fn,
+            net_value_fn=net_value_fn,
+            marginal_value_full=marginal_value_full,
+            marginal_penalty_zero=marginal_penalty_zero,
+        )

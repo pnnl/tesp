@@ -42,7 +42,18 @@ class SupplyCurve:
         Returns:
             Supply quantity available at that price (kW).
         """
-        raise NotImplementedError
+        if not self.points:
+            return 0.0
+        if price <= self.points[0].price:
+            return self.points[0].quantity
+        if price >= self.points[-1].price:
+            return self.points[-1].quantity
+        for i in range(len(self.points) - 1):
+            p0, p1 = self.points[i], self.points[i + 1]
+            if p0.price <= price <= p1.price:
+                f = (price - p0.price) / (p1.price - p0.price)
+                return p0.quantity + f * (p1.quantity - p0.quantity)
+        return self.points[-1].quantity
 
     def get_price_at_quantity(self, quantity: float) -> float:
         """Interpolate price at a given supply quantity.
@@ -53,7 +64,18 @@ class SupplyCurve:
         Returns:
             Marginal price at that quantity ($/kWh).
         """
-        raise NotImplementedError
+        if not self.points:
+            return 0.0
+        if quantity <= self.points[0].quantity:
+            return self.points[0].price
+        if quantity >= self.points[-1].quantity:
+            return self.points[-1].price
+        for i in range(len(self.points) - 1):
+            p0, p1 = self.points[i], self.points[i + 1]
+            if p0.quantity <= quantity <= p1.quantity:
+                f = (quantity - p0.quantity) / (p1.quantity - p0.quantity)
+                return p0.price + f * (p1.price - p0.price)
+        return self.points[-1].price
 
 
 class DSOInflexibleLoadBid:
@@ -112,6 +134,9 @@ class DSOLoadEstimationEngine:
 
     def __init__(self, feeder_id: str):
         self._feeder_id = feeder_id
+        self._correction_factor = 1.0
+        self._last_predicted_inflexible = None
+        self._last_timestamp = 0.0
 
     def estimate_inflexible_load(
         self,
@@ -144,7 +169,24 @@ class DSOLoadEstimationEngine:
         Returns:
             DSOInflexibleLoadBid with the computed quantity.
         """
-        raise NotImplementedError
+        net_load = total_load_forecast - flexible_committed - btm_solar_forecast
+        losses = net_load * loss_factor
+        q_inflexible = total_load_forecast - flexible_committed + losses - btm_solar_forecast
+        # Apply correction factor from metering feedback
+        q_inflexible *= self._correction_factor
+        self._last_predicted_inflexible = q_inflexible
+
+        return DSOInflexibleLoadBid(
+            feeder_id=self._feeder_id,
+            quantity=q_inflexible,
+            interval=interval,
+            components={
+                "total_forecast": total_load_forecast,
+                "flexible": flexible_committed,
+                "solar": btm_solar_forecast,
+                "losses": losses,
+            },
+        )
 
     def update_with_metering(
         self,
@@ -164,7 +206,13 @@ class DSOLoadEstimationEngine:
                 INTERNAL: From MO's metering of device agents.
             timestamp: Measurement time.
         """
-        raise NotImplementedError
+        actual_inflexible = substation_load_actual - flexible_actual
+        if not hasattr(self, '_correction_factor'):
+            self._correction_factor = 1.0
+            self._last_predicted_inflexible = None
+        if self._last_predicted_inflexible is not None and self._last_predicted_inflexible > 0:
+            self._correction_factor = actual_inflexible / self._last_predicted_inflexible
+        self._last_timestamp = timestamp
 
 
 class MarketOperator:
@@ -216,7 +264,7 @@ class MarketOperator:
                 data, transmission charges, capacity allocations, and
                 any local generation resources.
         """
-        raise NotImplementedError
+        self._supply_curve = supply_curve
 
     def submit_agent_bid(
         self,
@@ -235,7 +283,8 @@ class MarketOperator:
         Returns:
             True if bid accepted.
         """
-        raise NotImplementedError
+        self._agent_bids[agent_id] = bid
+        return True
 
     def submit_dso_inflexible_bid(
         self,
@@ -252,7 +301,8 @@ class MarketOperator:
         Returns:
             True if accepted.
         """
-        raise NotImplementedError
+        self._dso_bids[feeder_id] = bid
+        return True
 
     def aggregate_demand(self) -> List[BidPoint]:
         """Aggregate all demand bids into a single demand curve.
@@ -270,7 +320,46 @@ class MarketOperator:
             List of BidPoint representing aggregate demand,
             ordered by decreasing price.
         """
-        raise NotImplementedError
+        # Collect all unique price levels from agent bids
+        price_set = set()
+        for bid in self._agent_bids.values():
+            for pt in bid.points:
+                price_set.add(pt.price)
+        if not price_set:
+            price_set.add(0.0)
+        prices = sorted(price_set, reverse=True)
+
+        # Total inflexible demand (vertical component)
+        inflexible_total = sum(b.quantity for b in self._dso_bids.values())
+
+        agg = []
+        for price in prices:
+            flexible_total = 0.0
+            for bid in self._agent_bids.values():
+                flexible_total += self._interpolate_bid(bid, price)
+            agg.append(BidPoint(
+                price=price,
+                quantity=flexible_total + inflexible_total,
+            ))
+        return agg
+
+    @staticmethod
+    def _interpolate_bid(bid: BidCurve, price: float) -> float:
+        """Interpolate a single agent bid curve at a given price."""
+        pts = bid.points
+        if not pts:
+            return 0.0
+        # Points ordered by decreasing price
+        if price >= pts[0].price:
+            return pts[0].quantity
+        if price <= pts[-1].price:
+            return pts[-1].quantity
+        for i in range(len(pts) - 1):
+            p0, p1 = pts[i], pts[i + 1]
+            if p0.price >= price >= p1.price:
+                f = (p0.price - price) / (p0.price - p1.price)
+                return p0.quantity + f * (p1.quantity - p0.quantity)
+        return pts[-1].quantity
 
     def clear_market(self) -> ClearingResult:
         """Clear the market by intersecting aggregate demand with supply.
@@ -288,7 +377,68 @@ class MarketOperator:
             ClearingResult with clearing price, quantities, and
             iteration type.
         """
-        raise NotImplementedError
+        self._current_iteration += 1
+        iteration_type = self.determine_iteration_type()
+
+        demand_curve = self.aggregate_demand()
+        if not demand_curve or self._supply_curve is None:
+            result = ClearingResult(
+                iteration=self._current_iteration,
+                iteration_type=iteration_type,
+            )
+            self._clearing_history.append(result)
+            return result
+
+        # Find intersection: sweep price levels
+        # Demand decreases with price, supply increases with price
+        # Find where supply >= demand
+        cleared_price = 0.0
+        cleared_qty = 0.0
+
+        # Sample at demand curve prices + supply curve prices
+        price_levels = sorted(
+            set(pt.price for pt in demand_curve) |
+            set(pt.price for pt in self._supply_curve.points),
+            reverse=True,
+        )
+
+        prev_excess = None
+        prev_price = None
+        for price in price_levels:
+            supply_q = self._supply_curve.get_supply_at_price(price)
+            # Interpolate demand at this price
+            demand_q = 0.0
+            inflexible = sum(b.quantity for b in self._dso_bids.values())
+            flexible = sum(
+                self._interpolate_bid(bid, price)
+                for bid in self._agent_bids.values()
+            )
+            demand_q = inflexible + flexible
+
+            excess = supply_q - demand_q  # positive = oversupply
+            if excess >= 0:
+                cleared_price = price
+                cleared_qty = demand_q
+                break
+            prev_excess = excess
+            prev_price = price
+
+        if cleared_price == 0.0 and price_levels:
+            # Supply never catches up — use highest supply point
+            cleared_price = price_levels[-1]
+            cleared_qty = self._supply_curve.get_supply_at_price(cleared_price)
+
+        result = ClearingResult(
+            cleared_price=cleared_price,
+            cleared_quantity=cleared_qty,
+            iteration=self._current_iteration,
+            iteration_type=iteration_type,
+            aggregate_demand=cleared_qty,
+            aggregate_supply=self._supply_curve.get_supply_at_price(cleared_price),
+        )
+        self._clearing_history.append(result)
+        self._last_clearing = result
+        return result
 
     def get_agent_clearing(
         self,
@@ -308,7 +458,19 @@ class MarketOperator:
         Returns:
             ClearingResult specific to this agent.
         """
-        raise NotImplementedError
+        bid = self._agent_bids.get(agent_id)
+        if bid is None:
+            return ClearingResult(
+                cleared_price=clearing_price,
+                cleared_quantity=0.0,
+            )
+        qty = self._interpolate_bid(bid, clearing_price)
+        return ClearingResult(
+            cleared_price=clearing_price,
+            cleared_quantity=qty,
+            iteration=self._current_iteration,
+            iteration_type=self.determine_iteration_type(),
+        )
 
     def propagate_results(self) -> Dict[str, ClearingResult]:
         """Propagate clearing results to all participants.
@@ -319,7 +481,15 @@ class MarketOperator:
         Returns:
             Dictionary mapping agent_id to their ClearingResult.
         """
-        raise NotImplementedError
+        if not self._clearing_history:
+            return {}
+        last = self._clearing_history[-1]
+        results = {}
+        for agent_id in self._agent_bids:
+            results[agent_id] = self.get_agent_clearing(
+                agent_id, last.cleared_price
+            )
+        return results
 
     def get_total_flexible_committed(self) -> float:
         """Get the total flexible load committed by all agents.
@@ -331,7 +501,13 @@ class MarketOperator:
         Returns:
             Sum of all agent cleared quantities (kW).
         """
-        raise NotImplementedError
+        if not self._clearing_history:
+            return 0.0
+        last = self._clearing_history[-1]
+        total = 0.0
+        for agent_id, bid in self._agent_bids.items():
+            total += self._interpolate_bid(bid, last.cleared_price)
+        return total
 
     def determine_iteration_type(self) -> IterationType:
         """Determine if the current iteration is informational or binding.
@@ -343,7 +519,17 @@ class MarketOperator:
         Returns:
             IterationType.INFORMATIONAL or IterationType.BINDING.
         """
-        raise NotImplementedError
+        if self._iteration_protocol == "fixed_count":
+            if self._current_iteration <= self._n_informational:
+                return IterationType.INFORMATIONAL
+            return IterationType.BINDING
+        # convergence protocol: check if prices converged
+        if len(self._clearing_history) >= 2:
+            last = self._clearing_history[-1]
+            prev = self._clearing_history[-2]
+            if abs(last.cleared_price - prev.cleared_price) < 0.001:
+                return IterationType.BINDING
+        return IterationType.INFORMATIONAL
 
     def step(self, current_time: float) -> Optional[Dict[str, ClearingResult]]:
         """Execute one MO timestep.
@@ -358,4 +544,7 @@ class MarketOperator:
         Returns:
             Per-agent ClearingResults if a clearing occurred, None otherwise.
         """
-        raise NotImplementedError
+        if current_time < self._timing_params.t_clear:
+            return None
+        result = self.clear_market()
+        return self.propagate_results()

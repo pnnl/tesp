@@ -79,7 +79,25 @@ class PriceForecastService:
                 'external', 'historical').
             iteration: Iteration number (for informational clears).
         """
-        raise NotImplementedError
+        key = (market_type, interval)
+        if key in self._forecasts:
+            fc = self._forecasts[key]
+            fc.history.append((iteration, price))
+            fc.price_estimate = price
+            fc.confidence = confidence
+            fc.source = source
+            fc.iteration = iteration
+        else:
+            fc = PriceForecast(
+                market_type=market_type,
+                interval=interval,
+                price_estimate=price,
+                confidence=confidence,
+                source=source,
+                iteration=iteration,
+            )
+            fc.history.append((iteration, price))
+            self._forecasts[key] = fc
 
     def get_forecast(
         self,
@@ -95,7 +113,7 @@ class PriceForecastService:
         Returns:
             PriceForecast or None if no forecast exists.
         """
-        raise NotImplementedError
+        return self._forecasts.get((market_type, interval))
 
     def get_price(
         self,
@@ -113,7 +131,10 @@ class PriceForecastService:
         Returns:
             Price estimate or default.
         """
-        raise NotImplementedError
+        fc = self.get_forecast(market_type, interval)
+        if fc is not None:
+            return fc.price_estimate
+        return default
 
     def get_trajectory(
         self,
@@ -136,4 +157,12 @@ class PriceForecastService:
         Returns:
             List of (interval, price_estimate) tuples.
         """
-        raise NotImplementedError
+        result = []
+        t = t_start
+        while t < t_end:
+            interval = (t, t + resolution)
+            fc = self.get_forecast(market_type, interval)
+            if fc is not None:
+                result.append((interval, fc.price_estimate))
+            t += resolution
+        return result

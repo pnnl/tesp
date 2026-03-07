@@ -48,29 +48,24 @@ class TestSupplyCurveConstructor:
 
 
 class TestSupplyAtPrice:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_exact_point(self, simple_supply):
         """At $0.10, supply = 50 kW."""
         assert simple_supply.get_supply_at_price(0.10) == pytest.approx(50.0)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_interpolated(self, simple_supply):
         """At $0.075 (midpoint of $0.05 and $0.10), supply = 25 kW."""
         assert simple_supply.get_supply_at_price(0.075) == pytest.approx(25.0, abs=1.0)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_below_minimum(self, simple_supply):
         """At price below minimum, supply = 0."""
         assert simple_supply.get_supply_at_price(0.01) == pytest.approx(0.0, abs=0.1)
 
 
 class TestPriceAtQuantity:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_exact_quantity(self, simple_supply):
         """At 50 kW, price = $0.10."""
         assert simple_supply.get_price_at_quantity(50.0) == pytest.approx(0.10)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_interpolated_quantity(self, simple_supply):
         """At 75 kW (midpoint of 50..100): price = (0.10+0.20)/2 = $0.15."""
         assert simple_supply.get_price_at_quantity(75.0) == pytest.approx(
@@ -106,7 +101,6 @@ def load_engine():
 
 
 class TestDSOLoadEstimation:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_inflexible_load_calculation(self, load_engine):
         """Q_inflex = total - flexible + losses - solar.
 
@@ -127,7 +121,6 @@ class TestDSOLoadEstimation:
 
 
 class TestDSOLoadEngineMetering:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_update_with_metering(self, load_engine):
         """update_with_metering should not raise (stores internal state)."""
         load_engine.update_with_metering(
@@ -180,7 +173,6 @@ class TestMarketOperatorConstructor:
 
 
 class TestSubmitBids:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_submit_agent_bid(self, market_operator):
         bid = BidCurve(
             points=[
@@ -192,12 +184,10 @@ class TestSubmitBids:
         accepted = market_operator.submit_agent_bid("agent_1", bid)
         assert accepted is True
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_submit_supply_curve(self, market_operator, simple_supply):
         market_operator.set_supply_curve(simple_supply)
         assert market_operator._supply_curve is not None
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_submit_dso_bid(self, market_operator):
         dso_bid = DSOInflexibleLoadBid(
             feeder_id="feeder_1",
@@ -214,7 +204,6 @@ class TestSubmitBids:
 
 
 class TestAggregateDemand:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_single_agent_plus_inflexible(self, market_operator):
         """One elastic agent (5 kW @ $0.15, 0 kW @ $0.05) + 200 kW inflexible.
 
@@ -249,7 +238,6 @@ class TestAggregateDemand:
 
 
 class TestClearMarket:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_simple_clearing(self, market_operator, simple_supply):
         """Supply meets demand at intersection.
 
@@ -285,13 +273,11 @@ class TestClearMarket:
 
 
 class TestIterationProtocol:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_fixed_count_informational(self, market_operator):
         """Iterations 1 and 2 are informational (n_informational=2)."""
         market_operator._current_iteration = 1
         assert market_operator.determine_iteration_type() == IterationType.INFORMATIONAL
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_fixed_count_binding(self, market_operator):
         """Iteration 3 is binding (n_informational=2)."""
         market_operator._current_iteration = 3
@@ -299,7 +285,6 @@ class TestIterationProtocol:
 
 
 class TestTotalFlexibleCommitted:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_sum_of_cleared(self, market_operator, simple_supply):
         """After clearing, total_flexible_committed sums agent cleared quantities."""
         market_operator.set_supply_curve(simple_supply)
@@ -328,7 +313,6 @@ class TestTotalFlexibleCommitted:
 
 
 class TestGetAgentClearing:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_agent_cleared_at_price(self, market_operator, simple_supply):
         """After clearing, get_agent_clearing returns agent-specific result.
 
@@ -359,7 +343,6 @@ class TestGetAgentClearing:
         assert agent_result.cleared_price == pytest.approx(result.cleared_price)
         assert agent_result.cleared_quantity >= 0.0
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_nonexistent_agent(self, market_operator, simple_supply):
         """Querying a non-participating agent should handle gracefully."""
         market_operator.set_supply_curve(simple_supply)
@@ -378,7 +361,6 @@ class TestGetAgentClearing:
 
 
 class TestPropagateResults:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_returns_all_agents(self, market_operator, simple_supply):
         """propagate_results returns a dict with entry per agent."""
         market_operator.set_supply_curve(simple_supply)
@@ -413,7 +395,6 @@ class TestPropagateResults:
             results["agent_2"].cleared_price
         )
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_quantities_sum_to_total_flexible(self, market_operator, simple_supply):
         """Sum of all agent cleared quantities = total flexible committed."""
         market_operator.set_supply_curve(simple_supply)
@@ -444,7 +425,6 @@ class TestPropagateResults:
 
 
 class TestMarketOperatorStep:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_step_at_clearing_time(self, market_operator, simple_supply):
         """step() at the right time triggers a clearing."""
         market_operator.set_supply_curve(simple_supply)
@@ -467,7 +447,6 @@ class TestMarketOperatorStep:
         assert results is not None
         assert "agent_1" in results
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_step_before_clearing_time(self, market_operator):
         """step() before clearing time returns None."""
         results = market_operator.step(current_time=0.0)
@@ -480,7 +459,6 @@ class TestMarketOperatorStep:
 
 
 class TestDSOLoadEngineImpact:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_metering_improves_estimate(self, load_engine):
         """Metering data should allow the engine to correct its model.
 

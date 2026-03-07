@@ -43,7 +43,6 @@ class TestPriceForecastServiceConstructor:
 
 
 class TestUpdateAndRetrieve:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_update_creates_entry(self, service):
         service.update(
             market_type=RT,
@@ -58,7 +57,6 @@ class TestUpdateAndRetrieve:
         assert fc.price_estimate == pytest.approx(0.10)
         assert fc.confidence == pytest.approx(0.5)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_update_overwrites(self, service):
         """Second update for same market/interval overwrites price."""
         service.update(
@@ -81,13 +79,11 @@ class TestUpdateAndRetrieve:
         assert fc.price_estimate == pytest.approx(0.12)
         assert fc.confidence == pytest.approx(0.8)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_get_nonexistent_returns_none(self, service):
         assert service.get_forecast(DA, (0.0, 3600.0)) is None
 
 
 class TestGetPrice:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_returns_estimate(self, service):
         service.update(
             market_type=RT,
@@ -100,7 +96,6 @@ class TestGetPrice:
         p = service.get_price(RT, (0.0, 300.0))
         assert p == pytest.approx(0.10)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_returns_default_when_missing(self, service):
         p = service.get_price(RT, (0.0, 300.0), default=0.05)
         assert p == pytest.approx(0.05)
@@ -112,7 +107,6 @@ class TestGetPrice:
 
 
 class TestGetTrajectory:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_hourly_trajectory(self, service):
         """Load 4 hours of hourly prices, retrieve trajectory.
 
@@ -140,7 +134,6 @@ class TestGetTrajectory:
         for i, (interval, price) in enumerate(traj):
             assert price == pytest.approx(prices[i])
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_partial_trajectory(self, service):
         """Query a sub-range returns only overlapping intervals."""
         for i in range(4):
@@ -167,7 +160,6 @@ class TestGetTrajectory:
 
 
 class TestHistoryTracking:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_history_accumulates(self, service):
         """Multiple updates → history shows convergence."""
         for i in range(3):

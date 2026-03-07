@@ -82,4 +82,159 @@ class PlanningOptimizer:
             PlanningResult with optimal schedule, V_stored (for batteries),
             expected costs and revenues.
         """
-        raise NotImplementedError
+        n_intervals = int(planning_horizon / interval_duration)
+        ih = interval_duration / 3600.0  # interval in hours
+
+        if self._device_type == "battery" and degradation_model is not None:
+            return self._solve_battery(
+                current_state, price_trajectory, n_intervals, ih,
+                degradation_model, soc_reserve, customer_preference_k,
+            )
+        else:
+            return self._solve_generic(
+                current_state, price_trajectory, weather_forecasts,
+                n_intervals, ih, interval_duration, customer_preference_k,
+            )
+
+    def _solve_battery(
+        self,
+        state, price_trajectory, n_intervals, ih,
+        degradation_model, soc_reserve, k,
+    ) -> PlanningResult:
+        """Greedy forward-pass battery scheduling with V_stored."""
+        import math
+
+        capacity = state.energy_capacity
+        eta = math.sqrt(state.round_trip_efficiency)
+        soc = state.soc
+        soc_min = max(state.soc_min_bms, soc_reserve)
+        soc_max = state.soc_max_bms
+        max_charge = state.max_charge_rate
+        max_discharge = state.max_discharge_rate
+
+        # Sort intervals by price to find charge/discharge opportunities
+        prices = []
+        for i in range(min(n_intervals, len(price_trajectory))):
+            interval, price = price_trajectory[i]
+            prices.append(price)
+
+        if not prices:
+            return PlanningResult()
+
+        avg_price = sum(prices) / len(prices)
+        price_range = max(prices) - min(prices)
+
+        # Compute marginal degradation at current state
+        deg_cost = degradation_model.marginal_degradation_cost(state, max_charge)
+        # Round-trip loss cost
+        loss_cost = (1.0 - state.round_trip_efficiency) * avg_price
+
+        intervals = []
+        v_stored_list = []
+        total_cost = 0.0
+        total_revenue = 0.0
+        cycles_consumed = 0.0
+
+        for i in range(min(n_intervals, len(price_trajectory))):
+            t_interval, price = price_trajectory[i]
+            t_start, t_end = t_interval
+
+            # Decision: charge if price < avg - threshold, discharge if > avg + threshold
+            threshold = (deg_cost + loss_cost) / 2.0  # break-even spread
+            if price_range < threshold * 2:
+                # No profitable arbitrage
+                power = 0.0
+            elif price < avg_price - threshold:
+                # Charge: limited by max rate and SOC headroom
+                soc_room = (soc_max - soc) * capacity
+                max_energy = soc_room / eta
+                power = min(max_charge, max_energy / ih) if max_energy > 0 else 0.0
+            elif price > avg_price + threshold:
+                # Discharge: limited by max rate and available SOC
+                soc_avail = (soc - soc_min) * capacity
+                max_energy = soc_avail * eta
+                power = -min(max_discharge, max_energy / ih) if max_energy > 0 else 0.0
+            else:
+                power = 0.0
+
+            # Update SOC
+            if power >= 0:
+                energy_stored = power * eta * ih
+            else:
+                energy_stored = power / eta * ih
+            new_soc = soc + energy_stored / capacity
+            new_soc = max(soc_min, min(soc_max, new_soc))
+            actual_delta = (new_soc - soc) * capacity
+            soc = new_soc
+
+            # Track costs/revenue
+            if power > 0:
+                cost = price * power * ih
+                total_cost += cost
+            elif power < 0:
+                rev = price * abs(power) * ih
+                total_revenue += rev
+
+            # Cycles consumed
+            cycles_consumed += abs(actual_delta) / (capacity * 2.0)
+
+            # V_stored: shadow price of SOC ~ expected future price benefit
+            # Simple heuristic: V_stored = future max price × η - deg_cost
+            future_prices = prices[i + 1:] if i + 1 < len(prices) else [avg_price]
+            v_stored = max(future_prices) * eta - deg_cost if future_prices else 0.0
+            v_stored_list.append((soc, v_stored))
+
+            intervals.append((t_start, t_end, power, 0.0))
+
+        return PlanningResult(
+            intervals=intervals,
+            V_stored=v_stored_list,
+            total_cost=total_cost,
+            total_revenue=total_revenue,
+            cycles_consumed=cycles_consumed,
+        )
+
+    def _solve_generic(
+        self,
+        state, price_trajectory, weather_forecasts,
+        n_intervals, ih, interval_duration, k,
+    ) -> PlanningResult:
+        """Generic (HVAC/WH) planning: shift load away from high-price intervals."""
+        prices = []
+        for i in range(min(n_intervals, len(price_trajectory))):
+            _, price = price_trajectory[i]
+            prices.append(price)
+
+        if not prices:
+            return PlanningResult()
+
+        avg_price = sum(prices) / len(prices)
+
+        intervals = []
+        total_cost = 0.0
+        total_revenue = 0.0
+
+        for i in range(min(n_intervals, len(price_trajectory))):
+            t_interval, price = price_trajectory[i]
+            t_start, t_end = t_interval
+
+            # Pre-condition: run more when price is low, less when high
+            # Base load = 1.0 (normalized), adjust by price ratio
+            if avg_price > 0:
+                ratio = price / avg_price
+                # Low price → power > base, high price → power < base
+                power = max(0.0, 1.0 + (1.0 - k) * (1.0 - ratio))
+            else:
+                power = 1.0
+
+            cost = price * power * ih
+            total_cost += cost
+            intervals.append((t_start, t_end, power, 0.0))
+
+        return PlanningResult(
+            intervals=intervals,
+            V_stored=[],
+            total_cost=total_cost,
+            total_revenue=total_revenue,
+            cycles_consumed=0.0,
+        )

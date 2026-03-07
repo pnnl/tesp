@@ -10,6 +10,7 @@
 #           read from or write to GridLAB-D.
 # ============================================================================
 
+import math
 from typing import Dict, List, Optional, Tuple
 from data_types import (
     HVACState, WaterHeaterState, EVChargerState, BatteryState,
@@ -17,6 +18,31 @@ from data_types import (
     QuantilePoint
 )
 from enums_and_constants import DeviceType
+
+# Unit conversion
+_KW_TO_BTU_HR = 3412.14
+_WATER_LB_PER_GAL = 8.34  # lb/gal, specific heat ≈ 1 Btu/(lb·°F)
+
+
+def _interp_forecast(forecast: Optional[List[ContinuousDataPoint]],
+                     time_offset: float,
+                     default: float = 0.0) -> float:
+    """Linearly interpolate a forecast list at the given time offset."""
+    if not forecast:
+        return default
+    if len(forecast) == 1:
+        return forecast[0].value
+    # clamp to range
+    if time_offset <= forecast[0].timestamp:
+        return forecast[0].value
+    if time_offset >= forecast[-1].timestamp:
+        return forecast[-1].value
+    for i in range(len(forecast) - 1):
+        t0, t1 = forecast[i].timestamp, forecast[i + 1].timestamp
+        if t0 <= time_offset <= t1:
+            f = (time_offset - t0) / (t1 - t0) if t1 != t0 else 0.0
+            return forecast[i].value + f * (forecast[i + 1].value - forecast[i].value)
+    return forecast[-1].value
 
 
 class HVACModel:
@@ -83,7 +109,39 @@ class HVACModel:
         Returns:
             List of (time_offset_seconds, predicted_indoor_temp_F).
         """
-        raise NotImplementedError
+        Ca = state.air_mass
+        Cm = state.thermal_mass
+        UA_env = state.UA_envelope
+        UA_mass = state.UA_mass
+
+        if state.hvac_mode == "cooling":
+            Qhvac = -hvac_power_kw * state.cooling_COP * _KW_TO_BTU_HR
+        elif state.hvac_mode == "heating":
+            Qhvac = hvac_power_kw * state.heating_COP * _KW_TO_BTU_HR
+        else:
+            Qhvac = 0.0
+
+        Ta = state.indoor_air_temp
+        Tm = state.thermal_mass_temp
+        dt_hr = timestep_seconds / 3600.0
+        n_steps = int(duration_seconds / timestep_seconds)
+        trajectory: List[Tuple[float, float]] = []
+
+        for i in range(n_steps):
+            t = (i + 1) * timestep_seconds
+            To = _interp_forecast(outdoor_temp_forecast, t, state.outdoor_air_temp)
+            Qsolar = _interp_forecast(solar_gain_forecast, t, state.solar_gain)
+            Qint = _interp_forecast(internal_gain_forecast, t, state.internal_gain)
+
+            dTa_dt = (UA_env * (To - Ta) + UA_mass * (Tm - Ta)
+                      + Qhvac + Qsolar + Qint) / Ca
+            dTm_dt = UA_mass * (Ta - Tm) / Cm
+
+            Ta += dTa_dt * dt_hr
+            Tm += dTm_dt * dt_hr
+            trajectory.append((t, Ta))
+
+        return trajectory
 
     def estimate_flexibility(
         self,
@@ -120,7 +178,27 @@ class HVACModel:
             FlexibilityEnvelope with Q_min, Q_max, Q_baseline, and
             confidence-level variants.
         """
-        raise NotImplementedError
+        setpoint = setpoint_schedule[0].value if setpoint_schedule else state.thermostat_setpoint
+        is_cooling = state.hvac_mode == "cooling"
+        COP = state.cooling_COP if is_cooling else state.heating_COP
+        rated_cap = state.rated_cooling_capacity if is_cooling else state.rated_heating_capacity
+
+        Q_max_kw = rated_cap / COP / _KW_TO_BTU_HR
+        Q_min = 0.0
+
+        To = state.outdoor_air_temp
+        if outdoor_temp_forecast:
+            To = outdoor_temp_forecast[0].value
+
+        Q_baseline = self.setpoint_to_power(setpoint, state, To, interval_duration)
+
+        return FlexibilityEnvelope(
+            Q_min=Q_min,
+            Q_max=Q_max_kw,
+            Q_baseline=Q_baseline,
+            interval_start=0.0,
+            interval_end=interval_duration,
+        )
 
     def power_to_setpoint(
         self,
@@ -150,7 +228,22 @@ class HVACModel:
             Thermostat setpoint (°F) that would result in approximately
             the target power consumption over the interval.
         """
-        raise NotImplementedError
+        is_cooling = state.hvac_mode == "cooling"
+        COP = state.cooling_COP if is_cooling else state.heating_COP
+        Ca = state.air_mass
+        UA_env = state.UA_envelope
+        ih = interval_duration / 3600.0  # interval in hours
+        Ta = state.indoor_air_temp
+        To = outdoor_temp
+
+        denom = UA_env + Ca / ih
+        if is_cooling:
+            sp = (UA_env * To + Ca * Ta / ih
+                  - target_power_kw * COP * _KW_TO_BTU_HR) / denom
+        else:
+            sp = (target_power_kw * COP * _KW_TO_BTU_HR
+                  + UA_env * To + Ca * Ta / ih) / denom
+        return sp
 
     def setpoint_to_power(
         self,
@@ -174,7 +267,22 @@ class HVACModel:
         Returns:
             Expected average power consumption (kW).
         """
-        raise NotImplementedError
+        is_cooling = state.hvac_mode == "cooling"
+        COP = state.cooling_COP if is_cooling else state.heating_COP
+        Ca = state.air_mass
+        UA_env = state.UA_envelope
+        ih = interval_duration / 3600.0
+        Ta = state.indoor_air_temp
+
+        if is_cooling:
+            Q_total = UA_env * (outdoor_temp - setpoint) + Ca * (Ta - setpoint) / ih
+        else:
+            Q_total = UA_env * (setpoint - outdoor_temp) + Ca * (setpoint - Ta) / ih
+
+        rated_cap = state.rated_cooling_capacity if is_cooling else state.rated_heating_capacity
+        P = max(0.0, Q_total) / (COP * _KW_TO_BTU_HR)
+        P = min(P, rated_cap / COP / _KW_TO_BTU_HR)
+        return P
 
 
 class WaterHeaterModel:
@@ -218,7 +326,47 @@ class WaterHeaterModel:
         Returns:
             List of (time_offset, upper_temp, lower_temp) tuples.
         """
-        raise NotImplementedError
+        vol_upper = state.tank_volume / 2.0
+        vol_lower = state.tank_volume / 2.0
+        mass_upper = vol_upper * _WATER_LB_PER_GAL  # Btu/°F
+        mass_lower = vol_lower * _WATER_LB_PER_GAL
+        UA_mixing = 10.0  # Btu/hr·°F between zones
+
+        T_upper = state.tank_temp_upper
+        T_lower = state.tank_temp_lower
+        T_inlet = state.inlet_water_temp
+        if inlet_temp_forecast is not None:
+            T_inlet = inlet_temp_forecast.value
+
+        total_draw_gal = draw_forecast.expected if draw_forecast else 0.0
+        draw_rate_gph = total_draw_gal / (duration_seconds / 3600.0)
+
+        Q_element = element_power_kw * _KW_TO_BTU_HR
+
+        trajectory: List[Tuple[float, float, float]] = []
+        n_steps = int(duration_seconds / timestep_seconds)
+        dt_hr = timestep_seconds / 3600.0
+
+        for i in range(n_steps):
+            t = (i + 1) * timestep_seconds
+
+            Q_loss_upper = state.tank_UA * 0.5 * (T_upper - ambient_temp)
+            Q_loss_lower = state.tank_UA * 0.5 * (T_lower - ambient_temp)
+            Q_mixing = UA_mixing * (T_upper - T_lower)
+
+            gal_this_step = draw_rate_gph * dt_hr
+            if gal_this_step > 0 and vol_lower > 0:
+                draw_frac = min(gal_this_step / vol_lower, 1.0)
+                T_lower = T_lower * (1.0 - draw_frac) + T_inlet * draw_frac
+
+            dT_upper = (Q_element - Q_loss_upper - Q_mixing) / mass_upper * dt_hr
+            dT_lower = (Q_mixing - Q_loss_lower) / mass_lower * dt_hr
+
+            T_upper += dT_upper
+            T_lower += dT_lower
+            trajectory.append((t, T_upper, T_lower))
+
+        return trajectory
 
     def estimate_flexibility(
         self,
@@ -251,7 +399,21 @@ class WaterHeaterModel:
         Returns:
             FlexibilityEnvelope.
         """
-        raise NotImplementedError
+        Q_min = 0.0
+        max_temp = state.thermostat_setpoint + 10.0
+        Q_max = 0.0 if state.tank_temp_upper >= max_temp else state.element_power
+
+        avg_temp = (state.tank_temp_upper + state.tank_temp_lower) / 2.0
+        standby_loss = state.tank_UA * (avg_temp - ambient_temp)
+        Q_baseline = max(0.0, min(standby_loss / _KW_TO_BTU_HR, Q_max))
+
+        return FlexibilityEnvelope(
+            Q_min=Q_min,
+            Q_max=Q_max,
+            Q_baseline=Q_baseline,
+            interval_start=0.0,
+            interval_end=interval_duration,
+        )
 
     def power_to_setpoint(
         self,
@@ -272,7 +434,15 @@ class WaterHeaterModel:
         Returns:
             Tank thermostat setpoint (°F).
         """
-        raise NotImplementedError
+        if target_power_kw >= state.element_power * 0.95:
+            return state.tank_temp_upper + 5.0
+        elif target_power_kw <= 0:
+            return state.tank_temp_lower - 30.0
+        else:
+            frac = target_power_kw / state.element_power
+            low_sp = state.tank_temp_lower - 30.0
+            high_sp = state.tank_temp_upper + 5.0
+            return low_sp + frac * (high_sp - low_sp)
 
 
 class EVChargerModel:
@@ -304,7 +474,34 @@ class EVChargerModel:
         Returns:
             List of (time_offset_seconds, predicted_soc).
         """
-        raise NotImplementedError
+        if not state.vehicle_plugged_in:
+            return [(0.0, state.soc)]
+
+        soc = state.soc
+        capacity = state.battery_capacity
+        efficiency = state.charger_efficiency
+        max_rate = state.max_charge_rate
+        taper_soc = state.soc_at_max_taper
+
+        trajectory: List[Tuple[float, float]] = []
+        n_steps = int(duration_seconds / timestep_seconds)
+        dt_hr = timestep_seconds / 3600.0
+
+        for i in range(n_steps):
+            t = (i + 1) * timestep_seconds
+            if soc >= taper_soc:
+                taper_factor = max(0.0, (1.0 - soc) / (1.0 - taper_soc))
+                effective_max = max_rate * taper_factor
+            else:
+                effective_max = max_rate
+
+            actual_power = max(0.0, min(charge_power_kw, effective_max))
+            dc_power = actual_power * efficiency
+            delta_soc = dc_power * dt_hr / capacity
+            soc = min(1.0, soc + delta_soc)
+            trajectory.append((t, soc))
+
+        return trajectory
 
     def estimate_flexibility(
         self,
@@ -337,7 +534,43 @@ class EVChargerModel:
         Returns:
             FlexibilityEnvelope. Q_min = 0 if no vehicle plugged in.
         """
-        raise NotImplementedError
+        if not state.vehicle_plugged_in:
+            return FlexibilityEnvelope(
+                Q_min=0.0, Q_max=0.0, Q_baseline=0.0,
+                interval_start=0.0, interval_end=interval_duration)
+
+        max_rate = state.max_charge_rate
+        if state.soc >= state.soc_at_max_taper:
+            taper = max(0.0, (1.0 - state.soc) / (1.0 - state.soc_at_max_taper))
+            Q_max = max_rate * taper
+        else:
+            Q_max = max_rate
+
+        Q_min = 0.0
+        if (departure_constraint is not None
+                and time_until_departure is not None
+                and time_until_departure > 0):
+            _, target_soc = departure_constraint
+            soc_needed = target_soc - state.soc
+            if soc_needed > 0:
+                energy_needed = soc_needed * state.battery_capacity / state.charger_efficiency
+                min_power = energy_needed / (time_until_departure / 3600.0)
+                Q_min = min(min_power, Q_max)
+
+        soc_gap = preferred_soc - state.soc
+        if soc_gap > 0:
+            energy = soc_gap * state.battery_capacity / state.charger_efficiency
+            if time_until_departure and time_until_departure > 0:
+                Q_baseline = min(energy / (time_until_departure / 3600.0), Q_max)
+            else:
+                Q_baseline = min(energy / (interval_duration / 3600.0), Q_max)
+        else:
+            Q_baseline = 0.0
+        Q_baseline = max(Q_baseline, Q_min)
+
+        return FlexibilityEnvelope(
+            Q_min=Q_min, Q_max=Q_max, Q_baseline=Q_baseline,
+            interval_start=0.0, interval_end=interval_duration)
 
     def power_to_command(
         self,
@@ -358,7 +591,19 @@ class EVChargerModel:
             Actual charge rate to command (kW). May differ from
             target due to BMS limits.
         """
-        raise NotImplementedError
+        if not state.vehicle_plugged_in:
+            return 0.0
+
+        if state.soc >= state.soc_at_max_taper:
+            taper = max(0.0, (1.0 - state.soc) / (1.0 - state.soc_at_max_taper))
+            effective_max = state.max_charge_rate * taper
+        else:
+            effective_max = state.max_charge_rate
+
+        command = max(0.0, min(target_power_kw, effective_max))
+        if 0 < command < state.min_charge_rate:
+            command = 0.0
+        return command
 
 
 class BatteryModel:
@@ -398,6 +643,7 @@ class BatteryModel:
         self._wohler_exponent = wohler_exponent
         self._cumulative_throughput_kwh: float = 0.0
         self._cumulative_degradation_cost: float = 0.0
+        self._energy_capacity: float = 13.5  # default; updated from state
 
     def predict_soc(
         self,
@@ -419,7 +665,26 @@ class BatteryModel:
         Returns:
             List of (time_offset_seconds, predicted_soc).
         """
-        raise NotImplementedError
+        self._energy_capacity = state.energy_capacity
+        soc = state.soc
+        capacity = state.energy_capacity
+        eta = math.sqrt(state.round_trip_efficiency)
+
+        trajectory: List[Tuple[float, float]] = []
+        n_steps = int(duration_seconds / timestep_seconds)
+        dt_hr = timestep_seconds / 3600.0
+
+        for i in range(n_steps):
+            t = (i + 1) * timestep_seconds
+            if power_kw >= 0:
+                energy_stored = power_kw * eta * dt_hr
+            else:
+                energy_stored = power_kw / eta * dt_hr
+            soc += energy_stored / capacity
+            soc = max(state.soc_min_bms, min(state.soc_max_bms, soc))
+            trajectory.append((t, soc))
+
+        return trajectory
 
     def estimate_flexibility(
         self,
@@ -447,7 +712,39 @@ class BatteryModel:
         Returns:
             FlexibilityEnvelope. Q_min < 0 (discharge), Q_max > 0 (charge).
         """
-        raise NotImplementedError
+        self._energy_capacity = state.energy_capacity
+        eta = math.sqrt(state.round_trip_efficiency)
+        ih = interval_duration / 3600.0
+        capacity = state.energy_capacity
+
+        dischargeable = (state.soc - soc_reserve) * capacity
+        if dischargeable > 0:
+            max_discharge = min(state.max_discharge_rate,
+                                dischargeable / ih * eta)
+        else:
+            max_discharge = 0.0
+        Q_min = -max_discharge
+
+        chargeable = (state.soc_max_bms - state.soc) * capacity
+        if chargeable > 0:
+            max_charge = min(state.max_charge_rate,
+                             chargeable / (ih * eta))
+        else:
+            max_charge = 0.0
+        Q_max = max_charge
+
+        if abs(state.soc - soc_preferred) < 0.01:
+            Q_baseline = 0.0
+        elif state.soc < soc_preferred:
+            needed = (soc_preferred - state.soc) * capacity
+            Q_baseline = min(Q_max, needed / (ih * eta))
+        else:
+            excess = (state.soc - soc_preferred) * capacity
+            Q_baseline = max(Q_min, -(excess * eta / ih))
+
+        return FlexibilityEnvelope(
+            Q_min=Q_min, Q_max=Q_max, Q_baseline=Q_baseline,
+            interval_start=0.0, interval_end=interval_duration)
 
     def marginal_degradation_cost(
         self,
@@ -470,7 +767,17 @@ class BatteryModel:
         Returns:
             Marginal degradation cost ($/kWh of throughput).
         """
-        raise NotImplementedError
+        self._energy_capacity = state.energy_capacity
+        capacity = state.energy_capacity
+        lifetime_throughput = self._rated_cycles * self._rated_dod * capacity * 2.0
+        base_cost = self._replacement_cost / lifetime_throughput
+
+        soc_stress = 1.0 + 2.0 * (state.soc - 0.5) ** 2
+        c_rate = abs(power_kw) / capacity
+        crate_stress = 1.0 + 0.5 * c_rate
+        temp_stress = 1.0 + 0.05 * abs(state.cell_temperature - 25.0)
+
+        return base_cost * soc_stress * crate_stress * temp_stress
 
     def compute_charge_discharge_thresholds(
         self,
@@ -495,7 +802,9 @@ class BatteryModel:
         Returns:
             (charge_threshold, discharge_threshold) in $/kWh.
         """
-        raise NotImplementedError
+        charge_threshold = V_stored - degradation_cost
+        discharge_threshold = V_stored + degradation_cost
+        return (charge_threshold, discharge_threshold)
 
     def update_degradation_tracking(
         self,
@@ -520,7 +829,20 @@ class BatteryModel:
         Returns:
             Degradation cost incurred in this period ($).
         """
-        raise NotImplementedError
+        capacity = self._energy_capacity
+        lifetime_throughput = self._rated_cycles * self._rated_dod * capacity * 2.0
+        base_cost_per_kwh = self._replacement_cost / lifetime_throughput
+
+        soc_stress = 1.0 + 2.0 * (avg_soc - 0.5) ** 2
+        c_rate = avg_power_kw / capacity
+        crate_stress = 1.0 + 0.5 * c_rate
+        temp_stress = 1.0 + 0.05 * abs(avg_temperature - 25.0)
+
+        cost = base_cost_per_kwh * soc_stress * crate_stress * temp_stress * throughput_kwh
+
+        self._cumulative_throughput_kwh += throughput_kwh
+        self._cumulative_degradation_cost += cost
+        return cost
 
     @property
     def budget_utilization_rate(self) -> float:
@@ -532,4 +854,10 @@ class BatteryModel:
         Returns:
             Budget utilization ratio.
         """
-        raise NotImplementedError
+        if self._cumulative_throughput_kwh == 0.0:
+            return 0.0
+        capacity = self._energy_capacity
+        lifetime_throughput = self._rated_cycles * self._rated_dod * capacity * 2.0
+        base_cost_per_kwh = self._replacement_cost / lifetime_throughput
+        actual_rate = self._cumulative_degradation_cost / self._cumulative_throughput_kwh
+        return actual_rate / base_cost_per_kwh

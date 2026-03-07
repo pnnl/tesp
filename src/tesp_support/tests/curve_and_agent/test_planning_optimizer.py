@@ -102,7 +102,6 @@ class TestBatteryPlannerConstructor:
 
 
 class TestBatteryFlatPrices:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_no_cycling_incentive(self, battery_planner, battery_state, flat_prices):
         """Flat prices → optimal schedule has minimal cycling.
 
@@ -130,7 +129,6 @@ class TestBatteryFlatPrices:
 
 
 class TestBatteryTOUArbitrage:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_charges_off_peak_discharges_on_peak(
         self, battery_planner, battery_state, tou_prices
     ):
@@ -159,7 +157,6 @@ class TestBatteryTOUArbitrage:
 
 
 class TestBatteryVStored:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_v_stored_monotonicity(self, battery_planner, battery_state, tou_prices):
         """V_stored should generally decrease as SOC approaches target.
 
@@ -190,7 +187,6 @@ class TestBatteryVStored:
 
 
 class TestHVACPlanning:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_pre_cool_before_peak(self, hvac_planner, tou_prices):
         """HVAC should pre-cool during off-peak to reduce on-peak load."""
         hvac_state = HVACState(

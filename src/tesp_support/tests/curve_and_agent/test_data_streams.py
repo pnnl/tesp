@@ -66,12 +66,10 @@ def empirical_model():
 
 
 class TestUncertaintyModelSaturatingExp:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_zero_lead_time(self, saturating_exp_model):
         """At τ=0: σ = 5.0·(1 - e^0) = 5.0·0 = 0.0."""
         assert saturating_exp_model.sigma_at(0.0) == pytest.approx(0.0, abs=1e-9)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_one_time_constant(self, saturating_exp_model):
         """At τ=τ_c=7200: σ = 5.0·(1 - e^{-1}) = 5.0·0.6321 ≈ 3.161."""
         expected = 5.0 * (1 - math.exp(-1))
@@ -79,19 +77,16 @@ class TestUncertaintyModelSaturatingExp:
             expected, rel=1e-3
         )
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_large_lead_time_saturates(self, saturating_exp_model):
         """At τ >> τ_c, σ → σ_∞ = 5.0."""
         assert saturating_exp_model.sigma_at(100000.0) == pytest.approx(5.0, abs=0.01)
 
 
 class TestUncertaintyModelPowerLaw:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_zero_lead_time(self, power_law_model):
         """At τ=0: σ = min(6.0, 0.5 + 0.001·0^0.7) = 0.5."""
         assert power_law_model.sigma_at(0.0) == pytest.approx(0.5, abs=1e-9)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_mid_lead_time(self, power_law_model):
         """At τ=3600: σ = min(6.0, 0.5 + 0.001·3600^0.7).
         3600^0.7 ≈ 308.61 → σ ≈ 0.5 + 0.309 = 0.809."""
@@ -99,19 +94,16 @@ class TestUncertaintyModelPowerLaw:
         expected = min(6.0, raw)
         assert power_law_model.sigma_at(3600.0) == pytest.approx(expected, rel=0.02)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_cap_at_sigma_inf(self, power_law_model):
         """At very large τ, σ should not exceed σ_∞ = 6.0."""
         assert power_law_model.sigma_at(1e8) <= 6.0 + 1e-6
 
 
 class TestUncertaintyModelEmpirical:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_exact_table_point(self, empirical_model):
         """At τ=3600: σ = 2.0 (exact table entry)."""
         assert empirical_model.sigma_at(3600.0) == pytest.approx(2.0, abs=0.01)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_interpolation_midpoint(self, empirical_model):
         """At τ=5400 (midpoint of 3600..7200): σ = (2.0+3.5)/2 = 2.75."""
         assert empirical_model.sigma_at(5400.0) == pytest.approx(2.75, abs=0.1)
@@ -147,13 +139,11 @@ class TestContinuousForecastConstructor:
 
 
 class TestContinuousForecastGetAt:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_exact_timestamp(self, temp_forecast):
         """Querying at an exact data point returns that value."""
         pt = temp_forecast.get_at(3600.0)
         assert pt.value == pytest.approx(75.0, abs=0.01)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_interpolated_timestamp(self, temp_forecast):
         """At t=1800 (midpoint of 0..3600): value ≈ (72+75)/2 = 73.5."""
         pt = temp_forecast.get_at(1800.0)
@@ -161,7 +151,6 @@ class TestContinuousForecastGetAt:
 
 
 class TestContinuousForecastUpdate:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_update_replaces_series(self, temp_forecast):
         """After update(), get_at uses the new series."""
         new_series = [
@@ -174,13 +163,11 @@ class TestContinuousForecastUpdate:
 
 
 class TestContinuousForecastGetSeries:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_full_horizon(self, temp_forecast):
         """get_series over the full horizon should return all points."""
         result = temp_forecast.get_series(0.0, 10800.0)
         assert len(result) >= 4
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_resampled_resolution(self, temp_forecast):
         """Requesting 1800s resolution over [0, 7200] → 5 points."""
         result = temp_forecast.get_series(0.0, 7200.0, resolution=1800.0)
@@ -233,13 +220,11 @@ class TestEventForecastConstructor:
 
 
 class TestEventForecastIntensity:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_peak_intensity(self, shower_forecast):
         """At 6 AM (21600s), intensity = 0.5 events/hr."""
         lam = shower_forecast.get_intensity_at(21600.0)
         assert lam == pytest.approx(0.5, abs=0.01)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_zero_intensity(self, shower_forecast):
         """At midnight, intensity = 0."""
         lam = shower_forecast.get_intensity_at(0.0)
@@ -247,7 +232,6 @@ class TestEventForecastIntensity:
 
 
 class TestEventForecastCumulativeEnergy:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_morning_window(self, shower_forecast):
         """6-8 AM: intensity peaks → most energy in this window.
         Expected ≈ integral of λ(t) × energy_per_event over [21600, 28800].
@@ -257,7 +241,6 @@ class TestEventForecastCumulativeEnergy:
         assert dist.expected > 0.0
         assert dist.expected == pytest.approx(1.5, abs=1.0)  # loose bound — Poisson
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_full_day_energy(self, shower_forecast):
         """The full-day distribution expected value ≈ daily_expected_energy."""
         dist = shower_forecast.get_cumulative_energy_distribution(0.0, 86400.0)
@@ -265,7 +248,6 @@ class TestEventForecastCumulativeEnergy:
 
 
 class TestEventForecastConditioning:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_condition_reduces_remaining(self, shower_forecast):
         """Observing morning shower → remaining expected energy decreases."""
         before = shower_forecast.get_cumulative_energy_distribution(0.0, 86400.0)
@@ -274,7 +256,6 @@ class TestEventForecastConditioning:
         # After observing 3 kWh in the morning, remaining < total
         assert after.expected < before.expected
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_reset_restores_prior(self, shower_forecast):
         """After reset, forecast returns to unconditional prior."""
         shower_forecast.condition_on_observation("shower", 25200.0, 3.0)
@@ -321,40 +302,33 @@ class TestConstraintStreamConstructor:
 
 
 class TestConstraintStreamFeasibility:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_continuous_min_satisfied(self, continuous_min_temp):
         """Tank at 120°F ≥ 110°F → feasible."""
         assert continuous_min_temp.is_feasible(120.0, 0.0) is True
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_continuous_min_violated(self, continuous_min_temp):
         """Tank at 105°F < 110°F → infeasible."""
         assert continuous_min_temp.is_feasible(105.0, 0.0) is False
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_by_time_before_deadline(self, min_soc_constraint):
         """Before deadline, any SOC is feasible (deadline not reached)."""
         assert min_soc_constraint.is_feasible(0.30, 0.0) is True
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_by_time_at_deadline_satisfied(self, min_soc_constraint):
         """At deadline, SOC=0.85 ≥ 0.80 → feasible."""
         assert min_soc_constraint.is_feasible(0.85, 50400.0) is True
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_by_time_at_deadline_violated(self, min_soc_constraint):
         """At deadline, SOC=0.60 < 0.80 → infeasible."""
         assert min_soc_constraint.is_feasible(0.60, 50400.0) is False
 
 
 class TestConstraintStreamMargin:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_positive_margin(self, continuous_min_temp):
         """120 - 110 = 10°F margin (positive=feasible with room)."""
         margin = continuous_min_temp.feasibility_margin(120.0, 0.0)
         assert margin == pytest.approx(10.0, abs=0.1)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_negative_margin(self, continuous_min_temp):
         """105 - 110 = -5°F margin (negative=violated)."""
         margin = continuous_min_temp.feasibility_margin(105.0, 0.0)
@@ -380,32 +354,27 @@ class TestDataStreamManagerConstructor:
 
 
 class TestDataStreamManagerRegistration:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_register_continuous(self, stream_manager, temp_forecast):
         stream_manager.register_continuous_stream("outdoor_air_temp", temp_forecast)
         result = stream_manager.get_continuous("outdoor_air_temp")
         assert result is not None
         assert result._variable_name == "outdoor_air_temp"
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_register_event(self, stream_manager, shower_forecast):
         stream_manager.register_event_stream("hot_water_draw", shower_forecast)
         result = stream_manager.get_event("hot_water_draw")
         assert result is not None
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_register_constraint(self, stream_manager, min_soc_constraint):
         stream_manager.register_constraint("ev_departure_soc", min_soc_constraint)
         result = stream_manager.get_constraint("ev_departure_soc")
         assert result is not None
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_get_nonexistent_returns_none(self, stream_manager):
         assert stream_manager.get_continuous("nonexistent") is None
 
 
 class TestDataStreamManagerBundle:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_forecast_bundle(self, stream_manager, temp_forecast):
         stream_manager.register_continuous_stream("outdoor_air_temp", temp_forecast)
         bundle = stream_manager.get_forecast_bundle(0.0, 10800.0)
@@ -413,7 +382,6 @@ class TestDataStreamManagerBundle:
 
 
 class TestDataStreamManagerConstraints:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_get_all_constraints_overlapping(
         self, stream_manager, min_soc_constraint, continuous_min_temp
     ):
@@ -426,7 +394,6 @@ class TestDataStreamManagerConstraints:
 
 
 class TestDataStreamManagerSchedule:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_register_and_get_schedule(self, stream_manager, saturating_exp_model):
         """Register a setpoint schedule and retrieve it."""
         schedule = ContinuousForecast(
@@ -443,14 +410,12 @@ class TestDataStreamManagerSchedule:
         assert result is not None
         assert result._variable_name == "hvac_setpoint"
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_get_schedule_nonexistent(self, stream_manager):
         """Getting a non-registered schedule returns None."""
         assert stream_manager.get_schedule("no_such_schedule") is None
 
 
 class TestDataStreamManagerUpdateStream:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_update_continuous_stream(self, stream_manager, temp_forecast):
         """After update_stream, the forecast reflects new data."""
         stream_manager.register_continuous_stream("outdoor_air_temp", temp_forecast)
@@ -463,7 +428,6 @@ class TestDataStreamManagerUpdateStream:
         pt = forecast.get_at(0.0)
         assert pt.value == pytest.approx(60.0, abs=0.5)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_update_nonexistent_raises_or_noop(self, stream_manager):
         """Updating a non-registered stream should raise or be harmless."""
         # Implementor may raise KeyError or silently ignore

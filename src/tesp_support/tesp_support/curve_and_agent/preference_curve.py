@@ -5,6 +5,7 @@
 #          isoelastic demand curve. This module is device-type-agnostic.
 # ============================================================================
 
+import math
 from typing import Optional, Tuple
 from data_types import BidPoint, FlexibilityEnvelope
 from enums_and_constants import DeviceType
@@ -74,7 +75,7 @@ class PreferenceCurve:
         Returns:
             Elasticity parameter ε.
         """
-        raise NotImplementedError
+        return self._k * self._epsilon_max
 
     def evaluate(self, price: float) -> float:
         """Evaluate the preference curve at a given price.
@@ -89,7 +90,29 @@ class PreferenceCurve:
         Returns:
             Desired power quantity (kW).
         """
-        raise NotImplementedError
+        eps = self.epsilon
+
+        if self._device_type == DeviceType.BATTERY:
+            P_threshold = self._P_0
+            if P_threshold <= 0:
+                P_threshold = 1e-9
+            if price <= 0:
+                price = 1e-9
+            ratio = price / P_threshold
+            if eps == 0:
+                return 0.0
+            r_eps = ratio ** eps
+            return self._Q_0 * (1.0 - r_eps) / (1.0 + r_eps)
+
+        # Standard isoelastic: Q(P) = Q_0 * (P / P_0)^{-eps}
+        if price <= 0:
+            price = 1e-9
+        if self._P_0 <= 0:
+            return self._Q_0
+        ratio = price / self._P_0
+        if eps == 0:
+            return self._Q_0
+        return self._Q_0 * (ratio ** (-eps))
 
     def evaluate_with_bounds(
         self,
@@ -109,7 +132,8 @@ class PreferenceCurve:
         Returns:
             Desired power, clamped to [Q_min, Q_max].
         """
-        raise NotImplementedError
+        q = self.evaluate(price)
+        return max(Q_min, min(Q_max, q))
 
     def get_amenity_cost(
         self,
@@ -132,7 +156,9 @@ class PreferenceCurve:
         Returns:
             Amenity cost in $ for this timestep.
         """
-        raise NotImplementedError
+        deviation = Q_actual - Q_preferred
+        k_factor = max(1.0 - self._k, 0.01)
+        return k_factor * self._P_0 * deviation * deviation
 
     def sample_bid_curve(
         self,
@@ -163,4 +189,13 @@ class PreferenceCurve:
         Returns:
             List of BidPoint (price, quantity) pairs.
         """
-        raise NotImplementedError
+        prices = []
+        for i in range(n_points):
+            p = price_max - (price_max - price_min) * i / max(n_points - 1, 1)
+            prices.append(p)
+
+        points = []
+        for p in prices:
+            q = self.evaluate_with_bounds(p, Q_min, Q_max)
+            points.append(BidPoint(price=p, quantity=q))
+        return points

@@ -65,7 +65,6 @@ def _make_delivery(market_id, committed, price, marginal_val=None, marginal_pen=
 
 
 class TestDispatchSingleProduct:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_single_energy_delivery(self, optimizer, comfort_curve):
         """One energy delivery: committed 4 kW, price $0.12/kWh.
 
@@ -87,7 +86,6 @@ class TestDispatchSingleProduct:
 
 
 class TestDispatchTwoProducts:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_energy_plus_regulation(self, optimizer, comfort_curve):
         """Two products: energy at 4 kW + reg-up reserve of 2 kW.
 
@@ -110,7 +108,6 @@ class TestDispatchTwoProducts:
 
 
 class TestDispatchAmenityEffect:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_high_amenity_weight_biases_toward_comfort(self, optimizer):
         """High amenity weight -> Q* closer to Q_0 of preference curve.
 
@@ -143,7 +140,6 @@ class TestDispatchAmenityEffect:
 
 
 class TestDeliveryValueCalculator:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_energy_product(self, value_calculator):
         """Energy delivery: revenue = price x quantity x duration_hours.
 
@@ -169,7 +165,6 @@ class TestDeliveryValueCalculator:
         assert econ.cleared_price == pytest.approx(0.12)
         assert econ.committed_qty == pytest.approx(5.0)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_regulation_product(self, value_calculator):
         """Regulation product: capacity payment (not energy).
 
@@ -196,7 +191,6 @@ class TestDeliveryValueCalculator:
         assert econ.committed_qty == pytest.approx(2.0)
         assert econ.cleared_price == pytest.approx(0.05)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_degradation_included(self, value_calculator):
         """With nonzero degradation_cost, marginal values shift.
 

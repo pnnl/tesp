@@ -96,7 +96,6 @@ class TestPenaltyModelConstructor:
 
 
 class TestProportionalFixed:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_no_shortfall(self, proportional_fixed):
         """Full delivery → zero penalty.
 
@@ -110,7 +109,6 @@ class TestProportionalFixed:
         )
         assert penalty == pytest.approx(0.0)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_full_shortfall(self, proportional_fixed):
         """Zero delivery → maximum penalty.
 
@@ -127,7 +125,6 @@ class TestProportionalFixed:
         expected = 0.50 * 10.0 * (300.0 / 3600.0)  # $0.4167
         assert penalty == pytest.approx(expected, rel=1e-3)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_partial_shortfall(self, proportional_fixed):
         """Partial delivery.
 
@@ -144,7 +141,6 @@ class TestProportionalFixed:
         expected = 0.50 * 3.0 * (300.0 / 3600.0)
         assert penalty == pytest.approx(expected, rel=1e-3)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_over_delivery_no_penalty(self, proportional_fixed):
         """Actual > committed → no penalty (no negative penalty)."""
         penalty = proportional_fixed.compute_penalty(
@@ -162,7 +158,6 @@ class TestProportionalFixed:
 
 
 class TestProportionalMultiplier:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_multiplier_mode(self, proportional_multiplier):
         """Penalty rate = multiplier × cleared_price = 2 × 0.10 = $0.20/kWh.
 
@@ -188,7 +183,6 @@ class TestProportionalMultiplier:
 
 
 class TestTiered:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_small_shortfall_tier1(self, tiered_penalty):
         """5% shortfall → entirely in tier 1 (rate $0.25/kWh).
 
@@ -205,7 +199,6 @@ class TestTiered:
         expected = 0.25 * 0.5 * (300.0 / 3600.0)
         assert penalty == pytest.approx(expected, rel=1e-2)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_medium_shortfall_two_tiers(self, tiered_penalty):
         """20% shortfall → spans tier 1 (0–10%) and tier 2 (10–30%).
 
@@ -226,7 +219,6 @@ class TestTiered:
         expected = 0.25 * tier1_kwh + 0.50 * tier2_kwh
         assert penalty == pytest.approx(expected, rel=1e-2)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_large_shortfall_all_tiers(self, tiered_penalty):
         """50% shortfall → spans all 3 tiers.
 
@@ -254,7 +246,6 @@ class TestTiered:
 
 
 class TestCompound:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_compound_with_shortfall(self, compound_penalty):
         """COMPOUND: fixed $10 + proportional.
 
@@ -273,7 +264,6 @@ class TestCompound:
         expected = 10.0 + 0.30 * shortfall_kwh
         assert penalty == pytest.approx(expected, rel=1e-2)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_compound_no_shortfall(self, compound_penalty):
         """No shortfall → no penalty (fixed only applies when there IS shortfall)."""
         penalty = compound_penalty.compute_penalty(
@@ -291,7 +281,6 @@ class TestCompound:
 
 
 class TestMarginalPenalty:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_marginal_proportional_fixed(self, proportional_fixed):
         """Marginal penalty at first kW = base_rate × (interval/3600).
 
@@ -306,7 +295,6 @@ class TestMarginalPenalty:
         expected = 0.50 * (300.0 / 3600.0)
         assert m == pytest.approx(expected, rel=1e-3)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_marginal_tiered_first_tier(self, tiered_penalty):
         """First kW of shortfall hits tier 1 rate ($0.25/kWh).
 
@@ -320,7 +308,6 @@ class TestMarginalPenalty:
         expected = 0.25 * (300.0 / 3600.0)
         assert m == pytest.approx(expected, rel=1e-3)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_marginal_compound(self, compound_penalty):
         """COMPOUND marginal = proportional rate per kWh of shortfall.
 
@@ -357,7 +344,6 @@ def scored_penalty():
 
 
 class TestScored:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_perfect_delivery(self, scored_penalty):
         """Score=1.0 (perfect) → penalty = 0."""
         penalty = scored_penalty.compute_penalty(
@@ -368,7 +354,6 @@ class TestScored:
         )
         assert penalty == pytest.approx(0.0)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_total_failure(self, scored_penalty):
         """Score=0 (zero delivery) → maximum penalty.
 
@@ -386,7 +371,6 @@ class TestScored:
         expected = 5.00 * (1.0**2) * energy  # $4.167
         assert penalty == pytest.approx(expected, rel=0.05)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_half_delivery_quadratic(self, scored_penalty):
         """Score=0.5 → penalty = max × (0.5)^2 × energy.
 

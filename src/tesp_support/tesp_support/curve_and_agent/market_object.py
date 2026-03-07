@@ -14,6 +14,41 @@ from enums_and_constants import (
     CommitmentStatus
 )
 
+# Legal transitions: map from current phase to set of allowed next phases
+_LEGAL_TRANSITIONS = {
+    MarketPhase.INACTIVE: {MarketPhase.ACTIVE},
+    MarketPhase.ACTIVE: {MarketPhase.NEGOTIATION},
+    MarketPhase.NEGOTIATION: {MarketPhase.MARKET_LEAD},
+    MarketPhase.MARKET_LEAD: {MarketPhase.ASSESSMENT},
+    MarketPhase.ASSESSMENT: {MarketPhase.ACTIVE, MarketPhase.DELIVERY_LEAD},
+    MarketPhase.DELIVERY_LEAD: {MarketPhase.DELIVERY},
+    MarketPhase.DELIVERY: {MarketPhase.RECONCILE},
+    MarketPhase.RECONCILE: {MarketPhase.EXPIRED},
+    MarketPhase.EXPIRED: set(),
+}
+
+# Map phase to the timing param that triggers the *next* phase transition
+_PHASE_TO_NEXT_TIME = {
+    MarketPhase.INACTIVE: 't_activate',
+    MarketPhase.ACTIVE: 't_negotiate',
+    MarketPhase.NEGOTIATION: 't_market_lead',
+    MarketPhase.MARKET_LEAD: 't_clear',
+    MarketPhase.ASSESSMENT: 't_delivery_start',
+    MarketPhase.DELIVERY_LEAD: 't_delivery_start',
+    MarketPhase.DELIVERY: 't_delivery_end',
+    MarketPhase.RECONCILE: 't_reconcile_end',
+}
+
+_PHASE_TO_NEXT_PHASE = {
+    MarketPhase.INACTIVE: MarketPhase.ACTIVE,
+    MarketPhase.ACTIVE: MarketPhase.NEGOTIATION,
+    MarketPhase.NEGOTIATION: MarketPhase.MARKET_LEAD,
+    MarketPhase.MARKET_LEAD: MarketPhase.ASSESSMENT,
+    MarketPhase.DELIVERY_LEAD: MarketPhase.DELIVERY,
+    MarketPhase.DELIVERY: MarketPhase.RECONCILE,
+    MarketPhase.RECONCILE: MarketPhase.EXPIRED,
+}
+
 
 class MarketObject:
     """State machine and data container for one market cycle.
@@ -104,7 +139,12 @@ class MarketObject:
             ValueError: If the transition is not legal from the 
                 current phase.
         """
-        raise NotImplementedError
+        allowed = _LEGAL_TRANSITIONS.get(self.current_phase, set())
+        if new_phase not in allowed:
+            raise ValueError(
+                f"Illegal transition from {self.current_phase.name} "
+                f"to {new_phase.name}")
+        self.current_phase = new_phase
 
     def get_next_event_time(self, current_time: float) -> Optional[float]:
         """Compute when the next state transition should occur.
@@ -118,7 +158,12 @@ class MarketObject:
         Returns:
             Time of next transition, or None if in terminal state.
         """
-        raise NotImplementedError
+        if self.current_phase == MarketPhase.EXPIRED:
+            return None
+        attr = _PHASE_TO_NEXT_TIME.get(self.current_phase)
+        if attr is None:
+            return None
+        return getattr(self.timing_params, attr)
 
     def should_transition(self, current_time: float) -> Optional[MarketPhase]:
         """Check if a transition should occur at the current time.
@@ -129,7 +174,13 @@ class MarketObject:
         Returns:
             Target phase if a transition should occur, None otherwise.
         """
-        raise NotImplementedError
+        if self.current_phase == MarketPhase.EXPIRED:
+            return None
+        next_time = self.get_next_event_time(current_time)
+        if next_time is not None and current_time >= next_time:
+            next_phase = _PHASE_TO_NEXT_PHASE.get(self.current_phase)
+            return next_phase
+        return None
 
     def is_informational_iteration(self, clearing_result: ClearingResult) -> bool:
         """Determine if a clearing result is informational or binding.
@@ -143,4 +194,9 @@ class MarketObject:
         Returns:
             True if this is an informational iteration.
         """
-        raise NotImplementedError
+        if self.iteration_protocol == "mo_signaled":
+            return clearing_result.iteration_type == IterationType.INFORMATIONAL
+        elif self.iteration_protocol == "fixed_count":
+            n = self.n_informational_planned or 0
+            return self.current_iteration <= n
+        return False

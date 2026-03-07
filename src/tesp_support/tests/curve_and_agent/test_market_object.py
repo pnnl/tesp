@@ -107,18 +107,15 @@ class TestMarketObjectConstructor:
 class TestLegalTransitions:
     """The canonical forward path through the state machine."""
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_inactive_to_active(self, rt_market):
         rt_market.transition_to(MarketPhase.ACTIVE)
         assert rt_market.current_phase == MarketPhase.ACTIVE
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_active_to_negotiation(self, rt_market):
         rt_market.transition_to(MarketPhase.ACTIVE)
         rt_market.transition_to(MarketPhase.NEGOTIATION)
         assert rt_market.current_phase == MarketPhase.NEGOTIATION
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_full_forward_path(self, rt_market):
         """Walk the entire non-looping path to EXPIRED."""
         phases = [
@@ -137,7 +134,6 @@ class TestLegalTransitions:
 
 
 class TestInformationalLoop:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_assessment_loops_to_active(self, rt_market):
         """ASSESSMENT → ACTIVE is the informational loop-back."""
         rt_market.transition_to(MarketPhase.ACTIVE)
@@ -150,13 +146,11 @@ class TestInformationalLoop:
 
 
 class TestIllegalTransitions:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_inactive_to_delivery(self, rt_market):
         """Cannot jump from INACTIVE to DELIVERY."""
         with pytest.raises(ValueError):
             rt_market.transition_to(MarketPhase.DELIVERY)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_expired_to_anything(self, rt_market):
         """EXPIRED is terminal — no transitions out."""
         for phase in [
@@ -174,7 +168,6 @@ class TestIllegalTransitions:
         with pytest.raises(ValueError):
             rt_market.transition_to(MarketPhase.ACTIVE)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_active_to_delivery_lead(self, rt_market):
         """Cannot skip NEGOTIATION → MARKET_LEAD → ASSESSMENT."""
         rt_market.transition_to(MarketPhase.ACTIVE)
@@ -188,14 +181,12 @@ class TestIllegalTransitions:
 
 
 class TestGetNextEventTime:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_inactive_next_event(self, rt_market):
         """INACTIVE → next event is the market open time."""
         t = rt_market.get_next_event_time(current_time=900.0)
         assert t is not None
         assert isinstance(t, float)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_expired_no_next(self, rt_market):
         """EXPIRED → returns None."""
         for phase in [
@@ -218,7 +209,6 @@ class TestGetNextEventTime:
 
 
 class TestIterationProtocol:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_mo_signaled_informational(self, rt_market):
         """MO-signaled: ClearingResult with INFORMATIONAL → is_informational=True."""
         result = ClearingResult(
@@ -228,7 +218,6 @@ class TestIterationProtocol:
         )
         assert rt_market.is_informational_iteration(result) is True
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_mo_signaled_binding(self, rt_market):
         result = ClearingResult(
             cleared_price=0.12,
@@ -237,7 +226,6 @@ class TestIterationProtocol:
         )
         assert rt_market.is_informational_iteration(result) is False
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_fixed_count_first_n_informational(self, da_market_fixed_count):
         """Fixed count (n=3): iterations 1-3 are informational."""
         da_market_fixed_count.current_iteration = 2
@@ -248,7 +236,6 @@ class TestIterationProtocol:
         )
         assert da_market_fixed_count.is_informational_iteration(result) is True
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_fixed_count_last_is_binding(self, da_market_fixed_count):
         """Fixed count (n=3): iteration 4 is binding."""
         da_market_fixed_count.current_iteration = 4
@@ -266,7 +253,6 @@ class TestIterationProtocol:
 
 
 class TestShouldTransition:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_inactive_at_activate_time(self, rt_market):
         """At t_activate, should suggest ACTIVE transition.
 
@@ -276,13 +262,11 @@ class TestShouldTransition:
         target = rt_market.should_transition(current_time=0.0)
         assert target == MarketPhase.ACTIVE
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_inactive_before_activate(self, rt_market):
         """Well before t_activate, no transition recommended."""
         target = rt_market.should_transition(current_time=-100.0)
         assert target is None
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_active_at_negotiate_time(self, rt_market):
         """At t_negotiate, ACTIVE -> NEGOTIATION.
 
@@ -292,7 +276,6 @@ class TestShouldTransition:
         target = rt_market.should_transition(current_time=60.0)
         assert target == MarketPhase.NEGOTIATION
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_delivery_at_delivery_end(self, rt_market):
         """At t_delivery_end, DELIVERY -> RECONCILE.
 
@@ -310,7 +293,6 @@ class TestShouldTransition:
         target = rt_market.should_transition(current_time=425.0)
         assert target == MarketPhase.RECONCILE
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_expired_returns_none(self, rt_market):
         """EXPIRED is terminal — should_transition always returns None."""
         for phase in [
@@ -333,14 +315,12 @@ class TestShouldTransition:
 
 
 class TestGetNextEventTimeMidLifecycle:
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_active_next_event(self, rt_market):
         """In ACTIVE phase, next event is t_negotiate=60.0."""
         rt_market.transition_to(MarketPhase.ACTIVE)
         t = rt_market.get_next_event_time(current_time=10.0)
         assert t == pytest.approx(60.0, abs=1.0)
 
-    @pytest.mark.xfail(raises=NotImplementedError)
     def test_delivery_next_event(self, rt_market):
         """In DELIVERY phase, next event is t_delivery_end=425.0."""
         for phase in [

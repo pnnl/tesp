@@ -72,7 +72,53 @@ class PenaltyModel:
         Returns:
             Penalty cost ($).
         """
-        raise NotImplementedError
+        shortfall = max(0.0, committed_qty - actual_qty)
+        if shortfall <= 0.0:
+            return 0.0
+
+        interval_hours = interval_duration / 3600.0
+
+        if self._structure_type == PenaltyStructureType.PROPORTIONAL:
+            ref = self._params.get("rate_reference", "fixed")
+            if ref == "cleared_price_multiple":
+                rate = self._params["multiplier"] * cleared_price
+            else:
+                rate = self._params.get("base_rate", self._params.get("rate", 0.0))
+            return rate * shortfall * interval_hours
+
+        elif self._structure_type == PenaltyStructureType.TIERED:
+            tiers = self._params["tiers"]
+            total_cost = 0.0
+            remaining_shortfall = shortfall
+            for i, (threshold, rate) in enumerate(tiers):
+                tier_start = threshold * committed_qty
+                if i + 1 < len(tiers):
+                    tier_end = tiers[i + 1][0] * committed_qty
+                else:
+                    tier_end = committed_qty
+                tier_width = tier_end - tier_start
+                kw_in_tier = min(remaining_shortfall, tier_width)
+                if kw_in_tier <= 0:
+                    break
+                total_cost += rate * kw_in_tier * interval_hours
+                remaining_shortfall -= kw_in_tier
+            return total_cost
+
+        elif self._structure_type == PenaltyStructureType.SCORED:
+            score = actual_qty / committed_qty if committed_qty > 0 else 1.0
+            score = max(0.0, min(1.0, score))
+            max_penalty = self._params["max_penalty"]
+            exponent = self._params["exponent"]
+            energy = committed_qty * interval_hours
+            return max_penalty * ((1.0 - score) ** exponent) * energy
+
+        elif self._structure_type == PenaltyStructureType.COMPOUND:
+            fixed = self._params["fixed_penalty"]
+            prop_rate = self._params["proportional_rate"]
+            energy_shortfall = shortfall * interval_hours
+            return fixed + prop_rate * energy_shortfall
+
+        return 0.0
 
     def marginal_penalty(
         self,
@@ -93,4 +139,26 @@ class PenaltyModel:
         Returns:
             Marginal penalty rate ($/kW).
         """
-        raise NotImplementedError
+        interval_hours = interval_duration / 3600.0
+
+        if self._structure_type == PenaltyStructureType.PROPORTIONAL:
+            ref = self._params.get("rate_reference", "fixed")
+            if ref == "cleared_price_multiple":
+                rate = self._params["multiplier"] * cleared_price
+            else:
+                rate = self._params.get("base_rate", self._params.get("rate", 0.0))
+            return rate * interval_hours
+
+        elif self._structure_type == PenaltyStructureType.TIERED:
+            tiers = self._params["tiers"]
+            return tiers[0][1] * interval_hours
+
+        elif self._structure_type == PenaltyStructureType.SCORED:
+            max_penalty = self._params["max_penalty"]
+            exponent = self._params["exponent"]
+            return max_penalty * exponent * interval_hours
+
+        elif self._structure_type == PenaltyStructureType.COMPOUND:
+            return self._params["proportional_rate"] * interval_hours
+
+        return 0.0
