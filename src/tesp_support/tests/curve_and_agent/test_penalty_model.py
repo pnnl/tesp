@@ -167,12 +167,8 @@ class TestProportionalMultiplier:
         """Penalty rate = multiplier × cleared_price = 2 × 0.10 = $0.20/kWh.
 
         committed=10, actual=5, shortfall=5 kW
-        energy_shortfall = 5 × (300/3600) = 0.6944 kWh
-        penalty = 0.20 × 0.6944 = $0.1389
-
-        Wait — need to recalculate. shortfall = 5 kW over 300 s.
-        energy = 5 * 300/3600 = 0.41667 kWh
-        penalty = 0.20 * 0.41667 = $0.08333
+        energy_shortfall = 5 × (300/3600) = 0.41667 kWh
+        penalty = 0.20 × 0.41667 = $0.08333
         """
         penalty = proportional_multiplier.compute_penalty(
             committed_qty=10.0,
@@ -323,3 +319,86 @@ class TestMarginalPenalty:
         )
         expected = 0.25 * (300.0 / 3600.0)
         assert m == pytest.approx(expected, rel=1e-3)
+
+    @pytest.mark.xfail(raises=NotImplementedError)
+    def test_marginal_compound(self, compound_penalty):
+        """COMPOUND marginal = proportional rate per kWh of shortfall.
+
+        The fixed component doesn't affect marginal (it's constant w.r.t. shortfall).
+        marginal ≈ proportional_rate × (interval/3600) = 0.30 × (300/3600) = $0.025.
+        """
+        m = compound_penalty.marginal_penalty(
+            committed_qty=10.0,
+            cleared_price=0.10,
+            interval_duration=300.0,
+        )
+        expected = 0.30 * (300.0 / 3600.0)
+        assert m == pytest.approx(expected, rel=0.1)
+
+
+# ===================================================================
+# compute_penalty() — SCORED
+# ===================================================================
+
+
+@pytest.fixture
+def scored_penalty():
+    """SCORED penalty: performance-score-based penalty model.
+
+    Score from 0 (total failure) to 1 (perfect delivery).
+    Penalty = max_penalty × (1 - score)^exponent × (interval/3600).
+    max_penalty = $5.00/kWh, exponent = 2.0 (quadratic).
+    """
+    return PenaltyModel(
+        market_type=MarketType.RT_ENERGY,
+        structure_type=PenaltyStructureType.SCORED,
+        params={"max_penalty": 5.00, "exponent": 2.0},
+    )
+
+
+class TestScored:
+    @pytest.mark.xfail(raises=NotImplementedError)
+    def test_perfect_delivery(self, scored_penalty):
+        """Score=1.0 (perfect) → penalty = 0."""
+        penalty = scored_penalty.compute_penalty(
+            committed_qty=10.0,
+            actual_qty=10.0,
+            cleared_price=0.10,
+            interval_duration=300.0,
+        )
+        assert penalty == pytest.approx(0.0)
+
+    @pytest.mark.xfail(raises=NotImplementedError)
+    def test_total_failure(self, scored_penalty):
+        """Score=0 (zero delivery) → maximum penalty.
+
+        score = actual/committed = 0/10 = 0.
+        penalty = max_penalty × (1-0)^2 × energy = 5.0 × 1.0 × (10 × 300/3600)
+               = 5.0 × 0.8333 = $4.167.
+        """
+        penalty = scored_penalty.compute_penalty(
+            committed_qty=10.0,
+            actual_qty=0.0,
+            cleared_price=0.10,
+            interval_duration=300.0,
+        )
+        energy = 10.0 * (300.0 / 3600.0)
+        expected = 5.00 * (1.0**2) * energy  # $4.167
+        assert penalty == pytest.approx(expected, rel=0.05)
+
+    @pytest.mark.xfail(raises=NotImplementedError)
+    def test_half_delivery_quadratic(self, scored_penalty):
+        """Score=0.5 → penalty = max × (0.5)^2 × energy.
+
+        committed=10, actual=5 → score = 0.5.
+        penalty = 5.00 × 0.25 × (10 × 300/3600) = 1.25 × 0.8333 = $1.042.
+        """
+        penalty = scored_penalty.compute_penalty(
+            committed_qty=10.0,
+            actual_qty=5.0,
+            cleared_price=0.10,
+            interval_duration=300.0,
+        )
+        energy = 10.0 * (300.0 / 3600.0)
+        expected = 5.00 * (0.5**2) * energy
+        assert penalty == pytest.approx(expected, rel=0.05)

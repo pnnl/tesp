@@ -94,7 +94,7 @@ class TestUncertaintyModelPowerLaw:
     @pytest.mark.xfail(raises=NotImplementedError)
     def test_mid_lead_time(self, power_law_model):
         """At τ=3600: σ = min(6.0, 0.5 + 0.001·3600^0.7).
-        3600^0.7 ≈ 389.15 → σ ≈ 0.5 + 0.389 = 0.889."""
+        3600^0.7 ≈ 308.61 → σ ≈ 0.5 + 0.309 = 0.809."""
         raw = 0.5 + 0.001 * (3600.0**0.7)
         expected = min(6.0, raw)
         assert power_law_model.sigma_at(3600.0) == pytest.approx(expected, rel=0.02)
@@ -423,3 +423,51 @@ class TestDataStreamManagerConstraints:
         constraints = stream_manager.get_all_constraints(48000.0, 52000.0)
         # Both should be returned (continuous always active, by_time near deadline)
         assert len(constraints) >= 1
+
+
+class TestDataStreamManagerSchedule:
+    @pytest.mark.xfail(raises=NotImplementedError)
+    def test_register_and_get_schedule(self, stream_manager, saturating_exp_model):
+        """Register a setpoint schedule and retrieve it."""
+        schedule = ContinuousForecast(
+            variable_name="hvac_setpoint",
+            unit="°F",
+            uncertainty_model=saturating_exp_model,
+            series=[
+                ContinuousDataPoint(timestamp=0.0, value=72.0),
+                ContinuousDataPoint(timestamp=3600.0, value=70.0),
+            ],
+        )
+        stream_manager.register_schedule("setpoint_sched", schedule)
+        result = stream_manager.get_schedule("setpoint_sched")
+        assert result is not None
+        assert result._variable_name == "hvac_setpoint"
+
+    @pytest.mark.xfail(raises=NotImplementedError)
+    def test_get_schedule_nonexistent(self, stream_manager):
+        """Getting a non-registered schedule returns None."""
+        assert stream_manager.get_schedule("no_such_schedule") is None
+
+
+class TestDataStreamManagerUpdateStream:
+    @pytest.mark.xfail(raises=NotImplementedError)
+    def test_update_continuous_stream(self, stream_manager, temp_forecast):
+        """After update_stream, the forecast reflects new data."""
+        stream_manager.register_continuous_stream("outdoor_air_temp", temp_forecast)
+        new_series = [
+            ContinuousDataPoint(timestamp=0.0, value=60.0),
+            ContinuousDataPoint(timestamp=3600.0, value=62.0),
+        ]
+        stream_manager.update_stream("outdoor_air_temp", new_series)
+        forecast = stream_manager.get_continuous("outdoor_air_temp")
+        pt = forecast.get_at(0.0)
+        assert pt.value == pytest.approx(60.0, abs=0.5)
+
+    @pytest.mark.xfail(raises=NotImplementedError)
+    def test_update_nonexistent_raises_or_noop(self, stream_manager):
+        """Updating a non-registered stream should raise or be harmless."""
+        # Implementor may raise KeyError or silently ignore
+        try:
+            stream_manager.update_stream("nonexistent", [])
+        except (KeyError, ValueError):
+            pass  # either is acceptable

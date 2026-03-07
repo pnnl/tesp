@@ -168,3 +168,65 @@ class TestDeliveryValueCalculator:
         assert isinstance(econ, DeliveryEconomics)
         assert econ.cleared_price == pytest.approx(0.12)
         assert econ.committed_qty == pytest.approx(5.0)
+
+    @pytest.mark.xfail(raises=NotImplementedError)
+    def test_regulation_product(self, value_calculator):
+        """Regulation product: capacity payment (not energy).
+
+        Price=$0.05/kW, committed=2 kW, interval=300s.
+        Revenue for regulation is capacity-based, but the calculator
+        should still produce a valid DeliveryEconomics.
+        """
+        from penalty_model import PenaltyModel
+
+        pen = PenaltyModel(
+            market_type=ProductType.REGULATION_UP,
+            structure_type=PenaltyStructureType.PROPORTIONAL,
+            params={"rate": 0.30},
+        )
+        econ = value_calculator.compute(
+            market_id="REG_100",
+            product_type="regulation_up",
+            committed_qty=2.0,
+            cleared_price=0.05,
+            penalty_model=pen,
+            interval_duration=300.0,
+        )
+        assert isinstance(econ, DeliveryEconomics)
+        assert econ.committed_qty == pytest.approx(2.0)
+        assert econ.cleared_price == pytest.approx(0.05)
+
+    @pytest.mark.xfail(raises=NotImplementedError)
+    def test_degradation_included(self, value_calculator):
+        """With nonzero degradation_cost, marginal values shift.
+
+        Degradation cost reduces net value: the calculator should
+        account for it in the marginal_value_full or net_value_fn.
+        """
+        from penalty_model import PenaltyModel
+
+        pen = PenaltyModel(
+            market_type=ProductType.ENERGY_BASE,
+            structure_type=PenaltyStructureType.PROPORTIONAL,
+            params={"rate": 0.50},
+        )
+        econ_no_deg = value_calculator.compute(
+            market_id="RT_100",
+            product_type="energy",
+            committed_qty=5.0,
+            cleared_price=0.12,
+            penalty_model=pen,
+            interval_duration=300.0,
+            degradation_cost=0.0,
+        )
+        econ_with_deg = value_calculator.compute(
+            market_id="RT_100",
+            product_type="energy",
+            committed_qty=5.0,
+            cleared_price=0.12,
+            penalty_model=pen,
+            interval_duration=300.0,
+            degradation_cost=0.05,
+        )
+        # With degradation, marginal value should be lower
+        assert econ_with_deg.marginal_value_full <= econ_no_deg.marginal_value_full

@@ -3,14 +3,14 @@
 """Tests for market_object.py — Market state machine.
 
 Ground truth for the 9-phase market lifecycle:
-  INACTIVE → ACTIVE → NEGOTIATION → INFORMATIONAL_CLEAR →
-  ASSESSMENT → [loop back to NEGOTIATION or forward to] →
-  BINDING_CLEAR → DELIVERY_LEAD → DELIVERY → RECONCILE → EXPIRED
+  INACTIVE → ACTIVE → NEGOTIATION → MARKET_LEAD →
+  ASSESSMENT → [loop back to ACTIVE or forward to] →
+  DELIVERY_LEAD → DELIVERY → RECONCILE → EXPIRED
 
 Key properties:
   - Only legal transitions are allowed
-  - Informational loop: ASSESSMENT → NEGOTIATION (iterates)
-  - Binding cuts the loop: ASSESSMENT → BINDING_CLEAR
+  - Informational loop: ASSESSMENT → ACTIVE (iterates)
+  - Binding cuts the loop: ASSESSMENT → DELIVERY_LEAD
   - Terminal state: EXPIRED (no transitions out)
 """
 
@@ -138,15 +138,15 @@ class TestLegalTransitions:
 
 class TestInformationalLoop:
     @pytest.mark.xfail(raises=NotImplementedError)
-    def test_assessment_loops_to_negotiation(self, rt_market):
-        """ASSESSMENT → NEGOTIATION is the informational loop-back."""
+    def test_assessment_loops_to_active(self, rt_market):
+        """ASSESSMENT → ACTIVE is the informational loop-back."""
         rt_market.transition_to(MarketPhase.ACTIVE)
         rt_market.transition_to(MarketPhase.NEGOTIATION)
         rt_market.transition_to(MarketPhase.MARKET_LEAD)
         rt_market.transition_to(MarketPhase.ASSESSMENT)
         # Loop back for another informational round
-        rt_market.transition_to(MarketPhase.NEGOTIATION)
-        assert rt_market.current_phase == MarketPhase.NEGOTIATION
+        rt_market.transition_to(MarketPhase.ACTIVE)
+        assert rt_market.current_phase == MarketPhase.ACTIVE
 
 
 class TestIllegalTransitions:
@@ -258,3 +258,99 @@ class TestIterationProtocol:
             iteration_type=IterationType.INFORMATIONAL,
         )
         assert da_market_fixed_count.is_informational_iteration(result) is False
+
+
+# ===================================================================
+# should_transition() Tests
+# ===================================================================
+
+
+class TestShouldTransition:
+    @pytest.mark.xfail(raises=NotImplementedError)
+    def test_inactive_at_activate_time(self, rt_market):
+        """At t_activate, should suggest ACTIVE transition.
+
+        rt_timing has t_activate=0.0. Querying at t=0.0 should
+        recommend transitioning from INACTIVE to ACTIVE.
+        """
+        target = rt_market.should_transition(current_time=0.0)
+        assert target == MarketPhase.ACTIVE
+
+    @pytest.mark.xfail(raises=NotImplementedError)
+    def test_inactive_before_activate(self, rt_market):
+        """Well before t_activate, no transition recommended."""
+        target = rt_market.should_transition(current_time=-100.0)
+        assert target is None
+
+    @pytest.mark.xfail(raises=NotImplementedError)
+    def test_active_at_negotiate_time(self, rt_market):
+        """At t_negotiate, ACTIVE -> NEGOTIATION.
+
+        rt_timing has t_negotiate=60.0.
+        """
+        rt_market.transition_to(MarketPhase.ACTIVE)
+        target = rt_market.should_transition(current_time=60.0)
+        assert target == MarketPhase.NEGOTIATION
+
+    @pytest.mark.xfail(raises=NotImplementedError)
+    def test_delivery_at_delivery_end(self, rt_market):
+        """At t_delivery_end, DELIVERY -> RECONCILE.
+
+        rt_timing has t_delivery_end=425.0.
+        """
+        for phase in [
+            MarketPhase.ACTIVE,
+            MarketPhase.NEGOTIATION,
+            MarketPhase.MARKET_LEAD,
+            MarketPhase.ASSESSMENT,
+            MarketPhase.DELIVERY_LEAD,
+            MarketPhase.DELIVERY,
+        ]:
+            rt_market.transition_to(phase)
+        target = rt_market.should_transition(current_time=425.0)
+        assert target == MarketPhase.RECONCILE
+
+    @pytest.mark.xfail(raises=NotImplementedError)
+    def test_expired_returns_none(self, rt_market):
+        """EXPIRED is terminal — should_transition always returns None."""
+        for phase in [
+            MarketPhase.ACTIVE,
+            MarketPhase.NEGOTIATION,
+            MarketPhase.MARKET_LEAD,
+            MarketPhase.ASSESSMENT,
+            MarketPhase.DELIVERY_LEAD,
+            MarketPhase.DELIVERY,
+            MarketPhase.RECONCILE,
+            MarketPhase.EXPIRED,
+        ]:
+            rt_market.transition_to(phase)
+        assert rt_market.should_transition(current_time=99999.0) is None
+
+
+# ===================================================================
+# get_next_event_time — mid-lifecycle tests
+# ===================================================================
+
+
+class TestGetNextEventTimeMidLifecycle:
+    @pytest.mark.xfail(raises=NotImplementedError)
+    def test_active_next_event(self, rt_market):
+        """In ACTIVE phase, next event is t_negotiate=60.0."""
+        rt_market.transition_to(MarketPhase.ACTIVE)
+        t = rt_market.get_next_event_time(current_time=10.0)
+        assert t == pytest.approx(60.0, abs=1.0)
+
+    @pytest.mark.xfail(raises=NotImplementedError)
+    def test_delivery_next_event(self, rt_market):
+        """In DELIVERY phase, next event is t_delivery_end=425.0."""
+        for phase in [
+            MarketPhase.ACTIVE,
+            MarketPhase.NEGOTIATION,
+            MarketPhase.MARKET_LEAD,
+            MarketPhase.ASSESSMENT,
+            MarketPhase.DELIVERY_LEAD,
+            MarketPhase.DELIVERY,
+        ]:
+            rt_market.transition_to(phase)
+        t = rt_market.get_next_event_time(current_time=200.0)
+        assert t == pytest.approx(425.0, abs=1.0)

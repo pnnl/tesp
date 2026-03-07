@@ -503,3 +503,225 @@ class TestBatteryThresholds:
         assert charge_th < discharge_th
         # Dead band width ≈ 2 × degradation_cost
         assert discharge_th - charge_th == pytest.approx(2 * deg_cost, rel=0.2)
+
+
+class TestBatteryDegradationTracking:
+    @pytest.mark.xfail(raises=NotImplementedError)
+    def test_update_increases_cumulative(self, battery_model, battery_mid_soc):
+        """After tracking 1 kWh throughput, cumulative should increase.
+
+        throughput=1 kWh, avg_soc=0.50, power=3 kW, temp=25°C, 1200s.
+        Base cost ≈ replacement / (rated_cycles × rated_dod × capacity × 2)
+             = 10000 / (5000 × 0.80 × 13.5 × 2) ≈ $0.0926/kWh
+        Degradation cost ≈ $0.09 (moderate stress).
+        """
+        before = battery_model._cumulative_throughput_kwh
+        cost = battery_model.update_degradation_tracking(
+            throughput_kwh=1.0,
+            avg_soc=0.50,
+            avg_power_kw=3.0,
+            avg_temperature=25.0,
+            duration_seconds=1200.0,
+        )
+        assert cost > 0.0
+        assert battery_model._cumulative_throughput_kwh == before + 1.0
+
+    @pytest.mark.xfail(raises=NotImplementedError)
+    def test_cost_scales_with_throughput(self, battery_model, battery_mid_soc):
+        """Twice the throughput ≈ twice the degradation cost."""
+        cost_1 = battery_model.update_degradation_tracking(
+            throughput_kwh=1.0,
+            avg_soc=0.50,
+            avg_power_kw=3.0,
+            avg_temperature=25.0,
+            duration_seconds=1200.0,
+        )
+        # Reset for a fair comparison — use a fresh model
+        model2 = BatteryModel(
+            replacement_cost=10000.0,
+            rated_cycles=5000,
+            rated_dod=0.80,
+            wohler_exponent=1.5,
+        )
+        cost_2 = model2.update_degradation_tracking(
+            throughput_kwh=2.0,
+            avg_soc=0.50,
+            avg_power_kw=3.0,
+            avg_temperature=25.0,
+            duration_seconds=2400.0,
+        )
+        assert cost_2 == pytest.approx(2 * cost_1, rel=0.1)
+
+
+class TestBatteryBudgetUtilization:
+    @pytest.mark.xfail(raises=NotImplementedError)
+    def test_initial_rate(self, battery_model):
+        """Before any cycling, budget utilization should be defined.
+
+        With zero throughput, rate could be 0.0 or a sentinel.
+        """
+        rate = battery_model.budget_utilization_rate
+        assert isinstance(rate, float)
+
+    @pytest.mark.xfail(raises=NotImplementedError)
+    def test_rate_increases_after_heavy_cycling(self, battery_model, battery_mid_soc):
+        """Heavy cycling should push utilization rate above baseline."""
+        battery_model.update_degradation_tracking(
+            throughput_kwh=50.0,
+            avg_soc=0.50,
+            avg_power_kw=5.0,
+            avg_temperature=35.0,  # elevated temp = more stress
+            duration_seconds=36000.0,
+        )
+        rate = battery_model.budget_utilization_rate
+        assert rate > 0.0
+
+
+# ===================================================================
+# Water Heater — additional scenario tests
+# ===================================================================
+
+
+class TestWaterHeaterActiveHeating:
+    @pytest.mark.xfail(raises=NotImplementedError)
+    def test_element_raises_temperature(self, wh_model, wh_state_hot):
+        """Element on at full power (4.5 kW) heats the tank.
+
+        Element thermal output = 4.5 kW × 3412 Btu/kW = 15354 Btu/hr.
+        Tank thermal mass = 50 gal × 8.34 lb/gal = 417 Btu/°F.
+        dT/dt ≈ (15354 - 116) / 417 ≈ 36.5 °F/hr (net of standby loss).
+        After 5 min: ΔT ≈ 36.5 × (5/60) ≈ 3.04 °F.
+        """
+        from data_types import QuantilePoint
+
+        # Start from a cool tank to see clear heating
+        import dataclasses
+
+        cool_state = dataclasses.replace(
+            wh_state_hot, tank_temp_upper=120.0, tank_temp_lower=115.0
+        )
+        trajectory = wh_model.predict_tank_temperature(
+            state=cool_state,
+            element_power_kw=4.5,
+            draw_forecast=QuantilePoint(expected=0.0),
+            inlet_temp_forecast=None,
+            ambient_temp=72.0,
+            duration_seconds=300.0,
+        )
+        final_upper = trajectory[-1][1]
+        assert final_upper > 120.0
+
+    @pytest.mark.xfail(raises=NotImplementedError)
+    def test_draw_cools_tank(self, wh_model, wh_state_hot):
+        """Hot water draw brings cold inlet water into the tank, cooling it.
+
+        A 2 gal/min draw over 5 min = 10 gal of 60°F water into a
+        50-gal tank at 130°F.
+        Rough mixing: (40×130 + 10×60) / 50 = (5200 + 600)/50 = 116°F lower zone.
+        """
+        from data_types import QuantilePoint
+
+        trajectory = wh_model.predict_tank_temperature(
+            state=wh_state_hot,
+            element_power_kw=0.0,
+            draw_forecast=QuantilePoint(expected=10.0),  # 10 gal draw
+            inlet_temp_forecast=None,
+            ambient_temp=72.0,
+            duration_seconds=300.0,
+        )
+        # Lower zone should drop significantly
+        final_lower = trajectory[-1][2]
+        assert final_lower < 125.0  # started at 125
+
+
+class TestWaterHeaterPowerToSetpoint:
+    @pytest.mark.xfail(raises=NotImplementedError)
+    def test_full_power_high_setpoint(self, wh_model, wh_state_hot):
+        """At full element power, setpoint should be at or above current temp."""
+        sp = wh_model.power_to_setpoint(
+            target_power_kw=4.5,
+            state=wh_state_hot,
+            interval_duration=300.0,
+        )
+        assert sp >= wh_state_hot.tank_temp_upper
+
+    @pytest.mark.xfail(raises=NotImplementedError)
+    def test_zero_power_low_setpoint(self, wh_model, wh_state_hot):
+        """At zero power, setpoint is well below current temp (element stays off)."""
+        sp = wh_model.power_to_setpoint(
+            target_power_kw=0.0,
+            state=wh_state_hot,
+            interval_duration=300.0,
+        )
+        assert sp < wh_state_hot.tank_temp_upper
+
+
+# ===================================================================
+# EV Charger — additional scenario tests
+# ===================================================================
+
+
+class TestEVChargerTaper:
+    @pytest.mark.xfail(raises=NotImplementedError)
+    def test_taper_reduces_effective_power(self, ev_model):
+        """Above soc_at_max_taper, actual charge rate tapers down.
+
+        SOC=0.90 is well above taper point (0.80).
+        Even requesting 7.2 kW, the BMS should limit actual power.
+        """
+        high_soc_state = EVChargerState(
+            soc=0.90,
+            battery_capacity=60.0,
+            max_charge_rate=7.2,
+            charger_efficiency=0.90,
+            vehicle_plugged_in=True,
+            soc_at_max_taper=0.80,
+        )
+        trajectory = ev_model.predict_soc(
+            state=high_soc_state,
+            charge_power_kw=7.2,
+            duration_seconds=3600.0,
+        )
+        # SOC should increase, but by less than the untapered 0.108
+        delta_soc = trajectory[-1][1] - 0.90
+        untapered_delta = (7.2 * 0.90 * 1.0) / 60.0  # 0.108
+        assert 0.0 < delta_soc < untapered_delta
+
+
+class TestEVPowerToCommand:
+    @pytest.mark.xfail(raises=NotImplementedError)
+    def test_within_limits(self, ev_model, ev_charging_state):
+        """Requesting 5 kW (within range) should return ~5 kW."""
+        cmd = ev_model.power_to_command(
+            target_power_kw=5.0,
+            state=ev_charging_state,
+        )
+        assert cmd == pytest.approx(5.0, abs=0.5)
+
+    @pytest.mark.xfail(raises=NotImplementedError)
+    def test_clamped_to_max(self, ev_model, ev_charging_state):
+        """Requesting 20 kW (above max 7.2) should clamp to max_charge_rate."""
+        cmd = ev_model.power_to_command(
+            target_power_kw=20.0,
+            state=ev_charging_state,
+        )
+        assert cmd == pytest.approx(7.2, abs=0.1)
+
+    @pytest.mark.xfail(raises=NotImplementedError)
+    def test_below_minimum_goes_to_zero(self, ev_model, ev_charging_state):
+        """Requesting 0.5 kW (below min 1.0) should snap to 0 (off)."""
+        cmd = ev_model.power_to_command(
+            target_power_kw=0.5,
+            state=ev_charging_state,
+        )
+        assert cmd == pytest.approx(0.0, abs=0.1)
+
+    @pytest.mark.xfail(raises=NotImplementedError)
+    def test_unplugged_returns_zero(self, ev_model):
+        """No vehicle plugged in → command is 0 regardless of request."""
+        unplugged = EVChargerState(vehicle_plugged_in=False)
+        cmd = ev_model.power_to_command(
+            target_power_kw=5.0,
+            state=unplugged,
+        )
+        assert cmd == pytest.approx(0.0)

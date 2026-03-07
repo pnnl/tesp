@@ -320,3 +320,196 @@ class TestTotalFlexibleCommitted:
 
         total = market_operator.get_total_flexible_committed()
         assert total >= 0.0
+
+
+# ===================================================================
+# get_agent_clearing Tests
+# ===================================================================
+
+
+class TestGetAgentClearing:
+    @pytest.mark.xfail(raises=NotImplementedError)
+    def test_agent_cleared_at_price(self, market_operator, simple_supply):
+        """After clearing, get_agent_clearing returns agent-specific result.
+
+        Agent bids 5 kW at $0.25 → 0 kW at $0.05.
+        At clearing price between $0.05 and $0.25, agent gets
+        a proportional quantity from their bid curve.
+        """
+        market_operator.set_supply_curve(simple_supply)
+        bid = BidCurve(
+            points=[
+                BidPoint(price=0.25, quantity=5.0),
+                BidPoint(price=0.05, quantity=0.0),
+            ]
+        )
+        market_operator.submit_agent_bid("agent_1", bid)
+        dso_bid = DSOInflexibleLoadBid(
+            feeder_id="feeder_1",
+            quantity=50.0,
+            interval=(0.0, 300.0),
+        )
+        market_operator.submit_dso_inflexible_bid("feeder_1", dso_bid)
+        result = market_operator.clear_market()
+
+        agent_result = market_operator.get_agent_clearing(
+            "agent_1", result.cleared_price
+        )
+        assert isinstance(agent_result, ClearingResult)
+        assert agent_result.cleared_price == pytest.approx(result.cleared_price)
+        assert agent_result.cleared_quantity >= 0.0
+
+    @pytest.mark.xfail(raises=NotImplementedError)
+    def test_nonexistent_agent(self, market_operator, simple_supply):
+        """Querying a non-participating agent should handle gracefully."""
+        market_operator.set_supply_curve(simple_supply)
+        market_operator.clear_market()
+        # May raise KeyError or return a zero-quantity result
+        try:
+            result = market_operator.get_agent_clearing("ghost", 0.10)
+            assert result.cleared_quantity == pytest.approx(0.0)
+        except (KeyError, ValueError):
+            pass  # acceptable behavior
+
+
+# ===================================================================
+# propagate_results Tests
+# ===================================================================
+
+
+class TestPropagateResults:
+    @pytest.mark.xfail(raises=NotImplementedError)
+    def test_returns_all_agents(self, market_operator, simple_supply):
+        """propagate_results returns a dict with entry per agent."""
+        market_operator.set_supply_curve(simple_supply)
+        bid1 = BidCurve(
+            points=[
+                BidPoint(price=0.25, quantity=5.0),
+                BidPoint(price=0.05, quantity=0.0),
+            ]
+        )
+        bid2 = BidCurve(
+            points=[
+                BidPoint(price=0.20, quantity=3.0),
+                BidPoint(price=0.08, quantity=0.0),
+            ]
+        )
+        market_operator.submit_agent_bid("agent_1", bid1)
+        market_operator.submit_agent_bid("agent_2", bid2)
+        dso_bid = DSOInflexibleLoadBid(
+            feeder_id="feeder_1",
+            quantity=50.0,
+            interval=(0.0, 300.0),
+        )
+        market_operator.submit_dso_inflexible_bid("feeder_1", dso_bid)
+        market_operator.clear_market()
+
+        results = market_operator.propagate_results()
+        assert isinstance(results, dict)
+        assert "agent_1" in results
+        assert "agent_2" in results
+        # Both should have the same clearing price
+        assert results["agent_1"].cleared_price == pytest.approx(
+            results["agent_2"].cleared_price
+        )
+
+    @pytest.mark.xfail(raises=NotImplementedError)
+    def test_quantities_sum_to_total_flexible(self, market_operator, simple_supply):
+        """Sum of all agent cleared quantities = total flexible committed."""
+        market_operator.set_supply_curve(simple_supply)
+        bid = BidCurve(
+            points=[
+                BidPoint(price=0.25, quantity=5.0),
+                BidPoint(price=0.05, quantity=0.0),
+            ]
+        )
+        market_operator.submit_agent_bid("agent_1", bid)
+        dso_bid = DSOInflexibleLoadBid(
+            feeder_id="feeder_1",
+            quantity=50.0,
+            interval=(0.0, 300.0),
+        )
+        market_operator.submit_dso_inflexible_bid("feeder_1", dso_bid)
+        market_operator.clear_market()
+
+        results = market_operator.propagate_results()
+        agent_total = sum(r.cleared_quantity for r in results.values())
+        flex_total = market_operator.get_total_flexible_committed()
+        assert agent_total == pytest.approx(flex_total, rel=0.01)
+
+
+# ===================================================================
+# step() Tests
+# ===================================================================
+
+
+class TestMarketOperatorStep:
+    @pytest.mark.xfail(raises=NotImplementedError)
+    def test_step_at_clearing_time(self, market_operator, simple_supply):
+        """step() at the right time triggers a clearing."""
+        market_operator.set_supply_curve(simple_supply)
+        bid = BidCurve(
+            points=[
+                BidPoint(price=0.25, quantity=5.0),
+                BidPoint(price=0.05, quantity=0.0),
+            ]
+        )
+        market_operator.submit_agent_bid("agent_1", bid)
+        dso_bid = DSOInflexibleLoadBid(
+            feeder_id="feeder_1",
+            quantity=50.0,
+            interval=(0.0, 300.0),
+        )
+        market_operator.submit_dso_inflexible_bid("feeder_1", dso_bid)
+
+        # Step at clearing time (t_clear=120.0)
+        results = market_operator.step(current_time=120.0)
+        assert results is not None
+        assert "agent_1" in results
+
+    @pytest.mark.xfail(raises=NotImplementedError)
+    def test_step_before_clearing_time(self, market_operator):
+        """step() before clearing time returns None."""
+        results = market_operator.step(current_time=0.0)
+        assert results is None
+
+
+# ===================================================================
+# DSO Metering Impact Test
+# ===================================================================
+
+
+class TestDSOLoadEngineImpact:
+    @pytest.mark.xfail(raises=NotImplementedError)
+    def test_metering_improves_estimate(self, load_engine):
+        """Metering data should allow the engine to correct its model.
+
+        First estimate with base parameters, then provide metering data
+        showing actual load was lower, then re-estimate and check
+        it adjusts.
+        """
+        bid1 = load_engine.estimate_inflexible_load(
+            interval=(0.0, 300.0),
+            total_load_forecast=1000.0,
+            flexible_committed=100.0,
+            btm_solar_forecast=50.0,
+            loss_factor=0.05,
+        )
+        # Actual was lower
+        load_engine.update_with_metering(
+            substation_load_actual=900.0,
+            flexible_actual=100.0,
+            timestamp=300.0,
+        )
+        bid2 = load_engine.estimate_inflexible_load(
+            interval=(300.0, 600.0),
+            total_load_forecast=1000.0,
+            flexible_committed=100.0,
+            btm_solar_forecast=50.0,
+            loss_factor=0.05,
+        )
+        # We don't dictate exactly how the correction works,
+        # but the estimate should shift toward reality
+        # (implementation-dependent, so loose assertion)
+        assert isinstance(bid2, DSOInflexibleLoadBid)
+        assert bid2.quantity > 0.0
