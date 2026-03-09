@@ -205,7 +205,7 @@ class CommandArbiter:
             )
             Q_min = envelope.Q_min
             Q_max = envelope.Q_max
-        except (AttributeError, NotImplementedError):
+        except (AttributeError, NotImplementedError, TypeError):
             Q_min = 0.0
             Q_max = 10.0
 

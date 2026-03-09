@@ -389,9 +389,9 @@ class MarketOperator:
             self._clearing_history.append(result)
             return result
 
-        # Find intersection: sweep price levels
-        # Demand decreases with price, supply increases with price
-        # Find where supply >= demand
+        # Find intersection: sweep price levels LOW → HIGH.
+        # Demand decreases with price, supply increases with price.
+        # The clearing price is the lowest price where supply >= demand.
         cleared_price = 0.0
         cleared_qty = 0.0
 
@@ -399,7 +399,6 @@ class MarketOperator:
         price_levels = sorted(
             set(pt.price for pt in demand_curve)
             | set(pt.price for pt in self._supply_curve.points),
-            reverse=True,
         )
 
         prev_excess = None
@@ -407,7 +406,6 @@ class MarketOperator:
         for price in price_levels:
             supply_q = self._supply_curve.get_supply_at_price(price)
             # Interpolate demand at this price
-            demand_q = 0.0
             inflexible = sum(b.quantity for b in self._dso_bids.values())
             flexible = sum(
                 self._interpolate_bid(bid, price) for bid in self._agent_bids.values()
@@ -416,8 +414,23 @@ class MarketOperator:
 
             excess = supply_q - demand_q  # positive = oversupply
             if excess >= 0:
-                cleared_price = price
-                cleared_qty = demand_q
+                # Interpolate between previous (undersupplied) and this price
+                if (
+                    prev_excess is not None
+                    and prev_price is not None
+                    and prev_excess < 0
+                ):
+                    frac = -prev_excess / (excess - prev_excess)
+                    cleared_price = prev_price + frac * (price - prev_price)
+                else:
+                    cleared_price = price
+                # Recompute demand at the interpolated clearing price
+                inflexible = sum(b.quantity for b in self._dso_bids.values())
+                flexible = sum(
+                    self._interpolate_bid(bid, cleared_price)
+                    for bid in self._agent_bids.values()
+                )
+                cleared_qty = inflexible + flexible
                 break
             prev_excess = excess
             prev_price = price
