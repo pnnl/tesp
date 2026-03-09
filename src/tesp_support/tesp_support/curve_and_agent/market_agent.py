@@ -19,10 +19,10 @@ from enums_and_constants import MarketType
 class MarketCommunicationInterface:
     """Abstract interface for submitting bids to and receiving results
     from a Market Operator.
-    
+
     Each market the agent participates in gets its own instance of
     this interface.
-    
+
     Args:
         transport: The communication transport object.
             EXTERNAL: Provided by the simulation harness.
@@ -32,77 +32,85 @@ class MarketCommunicationInterface:
         market_type: Type of market this interface connects to.
     """
 
-    def __init__(
-        self,
-        transport: Any,
-        agent_id: str,
-        market_type: MarketType
-    ):
+    def __init__(self, transport: Any, agent_id: str, market_type: MarketType):
         self._transport = transport
         self._agent_id = agent_id
         self._market_type = market_type
         self._on_clear_callback: Optional[Callable] = None
 
-    def submit_bid(
-        self,
-        bid: BidCurve,
-        market_id: str,
-        interval_id: str
-    ) -> bool:
+    def submit_bid(self, bid: BidCurve, market_id: str, interval_id: str) -> bool:
         """Submit a bid curve to the Market Operator.
-        
+
         Args:
             bid: The price-quantity bid curve.
                 INTERNAL: From bid formulation (F4).
             market_id: ID of the specific market cycle.
             interval_id: ID of the delivery interval.
-        
+
         Returns:
             True if submission was acknowledged by MO.
         """
-        raise NotImplementedError
+        return bool(
+            self._transport.submit(
+                agent_id=self._agent_id,
+                market_type=self._market_type,
+                bid=bid,
+                market_id=market_id,
+                interval_id=interval_id,
+            )
+        )
 
     def receive_clear(self, market_id: str) -> Optional[ClearingResult]:
         """Receive a clearing result from the Market Operator.
-        
+
         This may be blocking (poll) or non-blocking (check for
         available results). Behavior depends on the transport.
-        
+
         Args:
             market_id: ID of the market cycle to check for results.
-        
+
         Returns:
             ClearingResult if available, None otherwise.
         """
-        raise NotImplementedError
+        result = self._transport.receive(
+            agent_id=self._agent_id,
+            market_id=market_id,
+        )
+        if result is not None and self._on_clear_callback is not None:
+            self._on_clear_callback(result)
+        return result
 
     def submit_reconciliation(
-        self,
-        market_id: str,
-        settlement: SettlementRecord
+        self, market_id: str, settlement: SettlementRecord
     ) -> bool:
         """Submit reconciliation/settlement data to the MO.
-        
+
         Args:
             market_id: ID of the market cycle.
             settlement: Settlement record with performance data.
                 INTERNAL: From reconciliation function (F13).
-        
+
         Returns:
             True if accepted by MO.
         """
-        raise NotImplementedError
+        return bool(
+            self._transport.submit(
+                agent_id=self._agent_id,
+                market_type=self._market_type,
+                settlement=settlement,
+                market_id=market_id,
+            )
+        )
 
     def register_clear_callback(
-        self,
-        callback: Callable[[ClearingResult], None]
+        self, callback: Callable[[ClearingResult], None]
     ) -> None:
         """Register a callback to be invoked when a clearing result arrives.
-        
+
         For event-driven architectures. The callback is invoked with
         the ClearingResult as its argument.
-        
+
         Args:
             callback: Function to call on clearing result arrival.
         """
-        raise NotImplementedError
+        self._on_clear_callback = callback

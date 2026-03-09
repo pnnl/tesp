@@ -1010,3 +1010,166 @@ The rationale is that after an informational clear, the agent must re-observe de
 9. **`test_flexibility_ledger.py`:** Missing test for **multiple overlapping commitments** at different statuses (e.g., firm DA + advisory RT + tentative regulation in the same interval).
 
 10. **`test_price_forecast_service.py`:** Missing test for the `source` field tracking — different sources (informational_clear vs. external) are never verified.
+
+---
+
+## Addendum A (March 6, 2026): New Test Files
+
+This addendum extends the original analysis to newly added suites:
+
+- `test_command_arbiter.py`
+- `test_device_agent.py`
+- `test_gridlabd_interface.py`
+- `test_market_agent.py`
+
+### Addendum Summary
+
+| Test File | # Tests | Pass Now | xfail (stub) | Design Alignment | Notes |
+|---|---|---|---|---|---|
+| `test_command_arbiter.py` | 31 | 8 | 23 | High | API and sequence expectations match arbiter design |
+| `test_device_agent.py` | 87 | 8 | 79 | High | Broad orchestration coverage; added explicit phase-transition expectations |
+| `test_gridlabd_interface.py` | 38 | 4 | 34 | High | Correctly enforces typed read/write boundary to GridLAB-D |
+| `test_market_agent.py` | 24 | 5 | 19 | High | Communication contract matches class diagram |
+
+### A.1 `test_command_arbiter.py`
+
+Functionality under test:
+
+- `DeliveryRecord` data holder
+- `CommandArbiter.register_delivery`
+- `CommandArbiter.deregister_delivery`
+- `CommandArbiter.update_signals`
+- `CommandArbiter.resolve_and_actuate`
+
+Inputs and expected outputs:
+
+- Delivery registration inputs: `market_id`, market metadata, `committed_qty`, `cleared_price`, `penalty_model`, `interval`
+	- Expected: insertion/update in `_active_deliveries`, overwrite on repeated `market_id`
+- Signal update inputs: dict with keys such as `regulation_signal`, `reserve_activated`
+	- Expected: accepted and stored for dispatch-time use
+- Resolution inputs: current device state, preference curve, amenity weight, current time
+	- Expected: one physical command path, per-market `FulfillmentRecord` map, actuation call through GridLAB-D interface
+
+Design check:
+
+- Matches `CommandArbiter`/`DeliveryRecord` signatures and multi-market sequence flow in `class_diagram_core.plantuml` and `sequence_multi_market.plantuml`.
+
+### A.2 `test_device_agent.py`
+
+Functionality under test:
+
+- Construction and dependency wiring (`DeviceAgent.__init__`)
+- Device model factory (`_create_device_model`)
+- Lifecycle setup (`initialize`, `register_market`, `spawn_market_cycle`)
+- Core functions F1/F2/F3/F4/F7/F8/F12/F13
+- Phase handlers and `step()` orchestration
+- Advisory convergence/confidence helpers
+
+Inputs and expected outputs:
+
+- Factory inputs: `DeviceType`
+	- Expected: correct model class (`HVACModel`, `WaterHeaterModel`, `EVChargerModel`, `BatteryModel`)
+- F1 input: none (uses injected GridLAB-D interface)
+	- Expected: typed state dataclass + state cache update
+- F2 input: state, interval duration
+	- Expected: `FlexibilityEnvelope` with valid bounds
+- F3 input: flexibility
+	- Expected: `PreferenceCurve` anchored to baseline
+- F4 input: market object, flexibility, preference
+	- Expected: populated `BidCurve` with descending prices
+- F7 input: price + curve/bid
+	- Expected: scalar target power consistent with demand response
+- F8 input: target power + state
+	- Expected: `DeviceCommand`
+- Assessment handler input: informational vs binding clear
+	- Expected: informational loop to `ACTIVE`; binding path to `DELIVERY_LEAD`
+
+Design check:
+
+- Aligns with `DeviceAgent` contract and state-machine sequencing in `class_diagram_core.plantuml`, `state_machine_market.plantuml`, and sequence diagrams.
+
+### A.3 `test_gridlabd_interface.py`
+
+Functionality under test:
+
+- `GridLABDInterface` constructor
+- `read_hvac_state`, `read_water_heater_state`, `read_ev_charger_state`, `read_battery_state`, `read_simulation_time`
+- `write_hvac_command`, `write_water_heater_command`, `write_ev_charger_command`, `write_battery_command`
+
+Inputs and expected outputs:
+
+- Read path input: injected transport/connection values
+	- Expected: typed state dataclasses with physically valid ranges
+- Write path input: `DeviceCommand`
+	- Expected: transport write side effects + boolean success result
+- Battery write sign convention
+	- Expected: explicit conversion handling between agent and GridLAB-D conventions
+
+Design check:
+
+- Correctly enforces the “only module touching GridLAB-D” boundary described in the class diagram notes.
+
+### A.4 `test_market_agent.py`
+
+Functionality under test:
+
+- `MarketCommunicationInterface` constructor
+- `submit_bid`
+- `receive_clear`
+- `submit_reconciliation`
+- `register_clear_callback`
+
+Inputs and expected outputs:
+
+- Bid submission input: `BidCurve`, `market_id`, `interval_id`
+	- Expected: forwarded transport call + ack boolean
+- Receive clear input: `market_id`
+	- Expected: `Optional[ClearingResult]`
+- Reconciliation input: `SettlementRecord`
+	- Expected: forwarded transport call + ack boolean
+- Callback input: callable
+	- Expected: stored/replaced callback and invocation on clear reception
+
+Design check:
+
+- Matches class diagram signatures for market communication methods.
+
+### A.5 Fixes Applied to Tests
+
+1. Updated `test_device_agent.py` assessment-phase expectations:
+	 - `test_informational_stores_advisory` now asserts `ASSESSMENT -> ACTIVE`.
+	 - Renamed `test_binding_transitions_to_delivery` to `test_binding_transitions_to_delivery_lead` and added assertion for `ASSESSMENT -> DELIVERY_LEAD`.
+
+2. Updated `test_market_agent.py` callback behavior test:
+	 - `test_callback_invoked_on_clear` now injects a real clearing result via mocked transport and asserts callback invocation (`assert_called_once_with`).
+
+These fixes make the tests more explicit and closer to the intended design semantics while preserving current xfail gating for unimplemented methods.
+
+## Addendum B (March 6, 2026): Requirement-to-Test Traceability Matrix
+
+### B.1 Requirement-to-Test Traceability Matrix (Core Hardened Suites)
+
+| Requirement ID | Design Source | Requirement Statement | Primary Tests | Notes |
+|---|---|---|---|---|
+| R-MARKET-STATE-001 | `state_machine_market.plantuml` | Informational assessment transitions back to `ACTIVE`. | `test_device_agent.py::TestHandleAssessment::test_informational_stores_advisory` | Ensures informational loop behavior, not delivery progression. |
+| R-MARKET-STATE-002 | `state_machine_market.plantuml` | Binding assessment transitions to `DELIVERY_LEAD`. | `test_device_agent.py::TestHandleAssessment::test_binding_transitions_to_delivery_lead` | Guards state-machine decision branch for binding clears. |
+| R-DELIVERY-REGISTER-001 | `sequence_rt_bidding.plantuml`, `sequence_multi_market.plantuml` | At delivery start, market commitment is registered with command arbiter. | `test_device_agent.py::TestHandleDeliveryStart::test_registers_delivery` | Verifies orchestration hand-off into shared dispatch layer. |
+| R-DELIVERY-TICK-001 | `sequence_multi_market.plantuml` | During delivery ticks, agent observes state and delegates resolve/actuate to arbiter. | `test_device_agent.py::TestHandleDeliveryTick::test_observes_and_dispatches` | Validates F1 + dispatch path invocation at each timestep. |
+| R-RECONCILE-REPORT-001 | `state_machine_market.plantuml`, `sequence_rt_bidding.plantuml` | Reconciliation computes settlement and submits it to market comm layer. | `test_device_agent.py::TestHandleReconcile::test_computes_settlement` | Confirms settlement reporting path is exercised. |
+| R-MO-COMMS-001 | `class_diagram_core.plantuml` | `submit_bid` forwards bid payload to transport and returns acknowledgment contract. | `test_market_agent.py::TestSubmitBid::test_bid_forwarded_to_transport`, `test_market_agent.py::TestSubmitBid::test_successful_submission` | Transport boundary contract. |
+| R-MO-COMMS-002 | `class_diagram_core.plantuml` | `receive_clear` forwards receive call and returns optional `ClearingResult`. | `test_market_agent.py::TestReceiveClear::test_returns_clearing_result_when_available`, `test_market_agent.py::TestReceiveClear::test_returns_none_when_no_result` | Covers present/absent clear scenarios. |
+| R-MO-COMMS-003 | `class_diagram_core.plantuml` | Reconciliation forwarding sends settlement record over transport. | `test_market_agent.py::TestSubmitReconciliation::test_settlement_forwarded` | Confirms outbound reconciliation channel usage. |
+| R-MO-COMMS-004 | `class_diagram_core.plantuml` | Clear callback registration stores callback and may invoke synchronously on clear. | `test_market_agent.py::TestRegisterClearCallback::test_stores_callback`, `test_market_agent.py::TestRegisterClearCallback::test_callback_invoked_on_clear` | Async-safe assertion style allows sync or deferred dispatch. |
+| R-ARBITER-REGISTRY-001 | `sequence_multi_market.plantuml` | Arbiter registers and deregisters per-market active deliveries safely. | `test_command_arbiter.py::TestRegisterDelivery::test_adds_to_active_deliveries`, `test_command_arbiter.py::TestDeregisterDelivery::test_deregister_nonexistent_is_safe` | Includes no-op safety for unknown deregistration. |
+| R-ARBITER-SIGNALS-001 | `sequence_multi_market.plantuml` | Arbiter accepts external signals (regulation/reserve) without state corruption. | `test_command_arbiter.py::TestUpdateSignals::test_accepts_regulation_signal`, `test_command_arbiter.py::TestUpdateSignals::test_accepts_multiple_signals` | Signal-update contract hardened to explicit return expectations. |
+| R-ARBITER-DISPATCH-001 | `sequence_multi_market.plantuml` | Arbiter resolves dispatch, actuates once, and returns fulfillment map. | `test_command_arbiter.py::TestResolveAndActuate::test_returns_fulfillment_dict`, `test_command_arbiter.py::TestResolveAndActuate::test_actuates_device` | Enforces actuation side effect + return structure. |
+| R-GLD-BOUNDARY-READ-001 | `class_diagram_core.plantuml` | Interface read methods return typed dataclasses with physically valid ranges. | `test_gridlabd_interface.py::TestReadHVACState::*`, `test_gridlabd_interface.py::TestReadBatteryState::*` | Boundary validation for state ingestion. |
+| R-GLD-BOUNDARY-WRITE-001 | `class_diagram_core.plantuml` | Interface write methods convert command to explicit connection write calls. | `test_gridlabd_interface.py::TestWriteHVACCommand::test_cooling_setpoint_write`, `test_gridlabd_interface.py::TestWriteBatteryCommand::test_discharge_command` | Hardened to require direct `set_value` call path. |
+
+### B.2 Mutation Testing Status
+
+Mutation testing is intentionally deferred for this scenario.
+
+- Current focus is requirement traceability plus targeted `pytest` validation.
+- This avoids low-signal mutation results in suites that are currently `xfail`-heavy.
+- Revisit mutation testing later only after more core stubs are implemented and promoted to normal assertions.

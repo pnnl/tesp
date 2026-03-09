@@ -76,7 +76,7 @@ class UncertaintyModel:
             alpha = self._params["alpha"]
             beta = self._params["beta"]
             sigma_inf = self._params["sigma_inf"]
-            return min(sigma_inf, sigma_0 + alpha * (lead_time ** beta))
+            return min(sigma_inf, sigma_0 + alpha * (lead_time**beta))
 
         elif self._model_type == "empirical":
             table = self._params["lead_time_sigma_table"]
@@ -146,30 +146,36 @@ class ContinuousForecast:
         if not self._series:
             return ContinuousDataPoint(timestamp=timestamp)
         if len(self._series) == 1:
-            sigma = self._uncertainty_model.sigma_at(abs(timestamp - self._series[0].timestamp))
+            sigma = self._uncertainty_model.sigma_at(
+                abs(timestamp - self._series[0].timestamp)
+            )
             return ContinuousDataPoint(
-                timestamp=timestamp, value=self._series[0].value, sigma=sigma)
+                timestamp=timestamp, value=self._series[0].value, sigma=sigma
+            )
         # Clamp to endpoints
         if timestamp <= self._series[0].timestamp:
             sigma = self._uncertainty_model.sigma_at(0.0)
             return ContinuousDataPoint(
-                timestamp=timestamp, value=self._series[0].value, sigma=sigma)
+                timestamp=timestamp, value=self._series[0].value, sigma=sigma
+            )
         if timestamp >= self._series[-1].timestamp:
             lead = timestamp - self._series[0].timestamp
             sigma = self._uncertainty_model.sigma_at(lead)
             return ContinuousDataPoint(
-                timestamp=timestamp, value=self._series[-1].value, sigma=sigma)
+                timestamp=timestamp, value=self._series[-1].value, sigma=sigma
+            )
         # Linear interpolation
         for i in range(len(self._series) - 1):
             t0 = self._series[i].timestamp
             t1 = self._series[i + 1].timestamp
             if t0 <= timestamp <= t1:
                 f = (timestamp - t0) / (t1 - t0) if t1 != t0 else 0.0
-                val = self._series[i].value + f * (self._series[i + 1].value - self._series[i].value)
+                val = self._series[i].value + f * (
+                    self._series[i + 1].value - self._series[i].value
+                )
                 lead = timestamp - self._series[0].timestamp
                 sigma = self._uncertainty_model.sigma_at(lead)
-                return ContinuousDataPoint(
-                    timestamp=timestamp, value=val, sigma=sigma)
+                return ContinuousDataPoint(timestamp=timestamp, value=val, sigma=sigma)
         return ContinuousDataPoint(timestamp=timestamp)
 
     def get_series(
@@ -194,8 +200,11 @@ class ContinuousForecast:
                 t += resolution
             return result
         # Native resolution: return points within range
-        return [self.get_at(pt.timestamp) for pt in self._series
-                if t_start <= pt.timestamp <= t_end]
+        return [
+            self.get_at(pt.timestamp)
+            for pt in self._series
+            if t_start <= pt.timestamp <= t_end
+        ]
 
 
 class EventForecast:
@@ -292,26 +301,32 @@ class EventForecast:
 
         # Subtract observed events in this window
         observed_energy = sum(
-            ev["energy"] for ev in self._observed_events
+            ev["energy"]
+            for ev in self._observed_events
             if t_start <= ev["timestamp"] <= t_end
         )
         observed_count = sum(
-            1 for ev in self._observed_events
-            if t_start <= ev["timestamp"] <= t_end
+            1 for ev in self._observed_events if t_start <= ev["timestamp"] <= t_end
         )
         remaining_lambda = max(0.0, total_lambda - observed_count)
 
         # Average energy per event
         if self._event_types:
-            mean_energy = sum(e.energy_mean for e in self._event_types) / len(self._event_types)
-            var_energy = sum(e.energy_std ** 2 for e in self._event_types) / len(self._event_types)
+            mean_energy = sum(e.energy_mean for e in self._event_types) / len(
+                self._event_types
+            )
+            var_energy = sum(e.energy_std**2 for e in self._event_types) / len(
+                self._event_types
+            )
         else:
-            mean_energy = self._daily_expected_energy / max(1.0, self._daily_expected_count)
+            mean_energy = self._daily_expected_energy / max(
+                1.0, self._daily_expected_count
+            )
             var_energy = 0.0
 
         # Compound Poisson: E[S] = λ·μ, Var[S] = λ·(σ² + μ²)
         expected_remaining = remaining_lambda * mean_energy
-        variance = remaining_lambda * (var_energy + mean_energy ** 2)
+        variance = remaining_lambda * (var_energy + mean_energy**2)
 
         expected_total = expected_remaining + observed_energy
 
@@ -339,11 +354,13 @@ class EventForecast:
             energy: Energy consumed by the event (kWh).
                 SOURCE: From real-time metering/sensing.
         """
-        self._observed_events.append({
-            "event_type": event_type,
-            "timestamp": timestamp,
-            "energy": energy,
-        })
+        self._observed_events.append(
+            {
+                "event_type": event_type,
+                "timestamp": timestamp,
+                "energy": energy,
+            }
+        )
 
     def reset_observations(self) -> None:
         """Clear observed events (e.g., at the start of a new day).

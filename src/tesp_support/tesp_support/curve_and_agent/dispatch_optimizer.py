@@ -9,23 +9,21 @@
 # ============================================================================
 
 from typing import Dict, List, Optional, Tuple
-from data_types import (
-    DeliveryEconomics, DispatchSolution, FlexibilityEnvelope
-)
+from data_types import DeliveryEconomics, DispatchSolution, FlexibilityEnvelope
 from preference_curve import PreferenceCurve
 
 
 class DispatchOptimizer:
     """Solves the per-timestep dispatch optimization.
-    
+
     Maximizes:
         Σ revenue_m(Q_m) - Σ penalty_m(committed_m, actual_m) - C_amenity(Q)
-    
+
     Subject to:
         Q_min ≤ Q ≤ Q_max
         Regulation and reserve capacity constraints
         Signal-following constraints for regulation
-    
+
     For ≤2 simultaneous products: solved analytically.
     For 3+ products: solved as LP/QP.
     """
@@ -37,10 +35,10 @@ class DispatchOptimizer:
         Q_max: float,
         preference_curve: PreferenceCurve,
         amenity_weight: float,
-        current_signals: Optional[Dict[str, float]] = None
+        current_signals: Optional[Dict[str, float]] = None,
     ) -> DispatchSolution:
         """Solve the dispatch optimization for the current timestep.
-        
+
         Args:
             economics: Per-market delivery economics.
                 INTERNAL: From DeliveryValueCalculator (F15).
@@ -58,7 +56,7 @@ class DispatchOptimizer:
                 Keys: 'regulation_signal' (float, -1 to +1),
                       'reserve_activated' (bool as float).
                 EXTERNAL: From MO or ISO signal feed.
-        
+
         Returns:
             DispatchSolution with optimal Q, per-market allocation,
             displacement chain, and total net value.
@@ -70,7 +68,7 @@ class DispatchOptimizer:
         Q_0 = preference_curve._Q_0
 
         # Simple analytical approach for ≤2 products:
-        # Objective = Σ (marginal_value × min(Q_alloc, committed)) 
+        # Objective = Σ (marginal_value × min(Q_alloc, committed))
         #           - Σ penalty(committed, actual)
         #           - amenity_weight × (Q - Q_0)^2
         #
@@ -83,17 +81,14 @@ class DispatchOptimizer:
             # d(amenity)/dQ = 2 * amenity_weight * (Q - Q_0)
             # At committed: penalty gradient ~ -max(marginal_pen)
             # Optimal: shift from committed toward Q_0
-            # Q* = (sum_marginal_pen * committed + amenity_weight * Q_0) 
+            # Q* = (sum_marginal_pen * committed + amenity_weight * Q_0)
             #      / (sum_marginal_pen + amenity_weight)
             # simplified weighted average
-            total_pen_weight = sum(
-                e.marginal_penalty_zero for e in economics.values()
-            )
+            total_pen_weight = sum(e.marginal_penalty_zero for e in economics.values())
             if total_pen_weight + amenity_weight > 0:
-                Q_star = (
-                    total_pen_weight * total_committed
-                    + amenity_weight * Q_0
-                ) / (total_pen_weight + amenity_weight)
+                Q_star = (total_pen_weight * total_committed + amenity_weight * Q_0) / (
+                    total_pen_weight + amenity_weight
+                )
             else:
                 Q_star = total_committed
         else:
@@ -147,7 +142,7 @@ class DispatchOptimizer:
 class DeliveryValueCalculator:
     """Computes per-delivery economic profiles for the dispatch optimizer
     (Agent Function F15).
-    
+
     Normalizes the heterogeneous economics of different product types
     (energy, regulation, reserve) into a common DeliveryEconomics
     representation.
@@ -159,13 +154,13 @@ class DeliveryValueCalculator:
         product_type: str,
         committed_qty: float,
         cleared_price: float,
-        penalty_model: 'PenaltyModel',
+        penalty_model: "PenaltyModel",
         interval_duration: float,
         signals: Optional[Dict[str, float]] = None,
-        degradation_cost: float = 0.0
+        degradation_cost: float = 0.0,
     ) -> DeliveryEconomics:
         """Compute delivery economics for one active delivery.
-        
+
         Args:
             market_id: ID of the market.
             product_type: Energy, regulation, or reserve.
@@ -182,7 +177,7 @@ class DeliveryValueCalculator:
                 EXTERNAL: From MO or ISO.
             degradation_cost: For batteries, marginal degradation cost.
                 INTERNAL: From BatteryModel.marginal_degradation_cost().
-        
+
         Returns:
             DeliveryEconomics with revenue, penalty, and net value functions.
         """

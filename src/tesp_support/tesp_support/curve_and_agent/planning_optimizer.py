@@ -16,19 +16,19 @@ from device_models import BatteryModel
 
 class PlanningOptimizer:
     """Multi-interval schedule optimization for a planning horizon.
-    
+
     Solves a trajectory optimization that determines when the device
     should consume more or less power based on forecasted prices,
     weather, and constraints. For batteries, produces the marginal
     value of stored energy (V_stored) at each interval.
-    
+
     The optimization:
-        Maximize: Σ_t [revenue(P_market[t], Q[t]) 
-                       - cost(Q[t]) 
-                       - degradation(Q[t]) 
+        Maximize: Σ_t [revenue(P_market[t], Q[t])
+                       - cost(Q[t])
+                       - degradation(Q[t])
                        - amenity_penalty(state[t])]
         Subject to: state dynamics, physical limits, constraints
-    
+
     Args:
         device_model: Device-specific physics model.
             INTERNAL: One of HVACModel, WaterHeaterModel, etc.
@@ -49,10 +49,10 @@ class PlanningOptimizer:
         planning_horizon: float,
         customer_preference_k: float,
         degradation_model: Optional[BatteryModel] = None,
-        soc_reserve: float = 0.0
+        soc_reserve: float = 0.0,
     ) -> PlanningResult:
         """Solve the multi-interval planning optimization.
-        
+
         Args:
             current_state: Current device state.
                 INTERNAL: From F1 (state observation).
@@ -77,7 +77,7 @@ class PlanningOptimizer:
             soc_reserve: For batteries, minimum SOC reserve (fraction).
                 INTERNAL: From constraint stream.
                 EXTERNAL origin: Customer setting + dynamic outage risk.
-        
+
         Returns:
             PlanningResult with optimal schedule, V_stored (for batteries),
             expected costs and revenues.
@@ -87,19 +87,34 @@ class PlanningOptimizer:
 
         if self._device_type == "battery" and degradation_model is not None:
             return self._solve_battery(
-                current_state, price_trajectory, n_intervals, ih,
-                degradation_model, soc_reserve, customer_preference_k,
+                current_state,
+                price_trajectory,
+                n_intervals,
+                ih,
+                degradation_model,
+                soc_reserve,
+                customer_preference_k,
             )
         else:
             return self._solve_generic(
-                current_state, price_trajectory, weather_forecasts,
-                n_intervals, ih, interval_duration, customer_preference_k,
+                current_state,
+                price_trajectory,
+                weather_forecasts,
+                n_intervals,
+                ih,
+                interval_duration,
+                customer_preference_k,
             )
 
     def _solve_battery(
         self,
-        state, price_trajectory, n_intervals, ih,
-        degradation_model, soc_reserve, k,
+        state,
+        price_trajectory,
+        n_intervals,
+        ih,
+        degradation_model,
+        soc_reserve,
+        k,
     ) -> PlanningResult:
         """Greedy forward-pass battery scheduling with V_stored."""
         import math
@@ -180,7 +195,7 @@ class PlanningOptimizer:
 
             # V_stored: shadow price of SOC ~ expected future price benefit
             # Simple heuristic: V_stored = future max price × η - deg_cost
-            future_prices = prices[i + 1:] if i + 1 < len(prices) else [avg_price]
+            future_prices = prices[i + 1 :] if i + 1 < len(prices) else [avg_price]
             v_stored = max(future_prices) * eta - deg_cost if future_prices else 0.0
             v_stored_list.append((soc, v_stored))
 
@@ -196,8 +211,13 @@ class PlanningOptimizer:
 
     def _solve_generic(
         self,
-        state, price_trajectory, weather_forecasts,
-        n_intervals, ih, interval_duration, k,
+        state,
+        price_trajectory,
+        weather_forecasts,
+        n_intervals,
+        ih,
+        interval_duration,
+        k,
     ) -> PlanningResult:
         """Generic (HVAC/WH) planning: shift load away from high-price intervals."""
         prices = []

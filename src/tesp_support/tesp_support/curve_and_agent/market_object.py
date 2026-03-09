@@ -6,12 +6,20 @@
 
 from typing import Dict, List, Optional, Any, Tuple
 from data_types import (
-    BidCurve, ClearingResult, AdvisoryRecord, SettlementRecord,
-    PerformanceEntry, MarketTimingParams, DeviceCommand
+    BidCurve,
+    ClearingResult,
+    AdvisoryRecord,
+    SettlementRecord,
+    PerformanceEntry,
+    MarketTimingParams,
+    DeviceCommand,
 )
 from enums_and_constants import (
-    MarketType, MarketPhase, OperatingMode, IterationType,
-    CommitmentStatus
+    MarketType,
+    MarketPhase,
+    OperatingMode,
+    IterationType,
+    CommitmentStatus,
 )
 
 # Legal transitions: map from current phase to set of allowed next phases
@@ -29,14 +37,14 @@ _LEGAL_TRANSITIONS = {
 
 # Map phase to the timing param that triggers the *next* phase transition
 _PHASE_TO_NEXT_TIME = {
-    MarketPhase.INACTIVE: 't_activate',
-    MarketPhase.ACTIVE: 't_negotiate',
-    MarketPhase.NEGOTIATION: 't_market_lead',
-    MarketPhase.MARKET_LEAD: 't_clear',
-    MarketPhase.ASSESSMENT: 't_delivery_start',
-    MarketPhase.DELIVERY_LEAD: 't_delivery_start',
-    MarketPhase.DELIVERY: 't_delivery_end',
-    MarketPhase.RECONCILE: 't_reconcile_end',
+    MarketPhase.INACTIVE: "t_activate",
+    MarketPhase.ACTIVE: "t_negotiate",
+    MarketPhase.NEGOTIATION: "t_market_lead",
+    MarketPhase.MARKET_LEAD: "t_clear",
+    MarketPhase.ASSESSMENT: "t_delivery_start",
+    MarketPhase.DELIVERY_LEAD: "t_delivery_start",
+    MarketPhase.DELIVERY: "t_delivery_end",
+    MarketPhase.RECONCILE: "t_reconcile_end",
 }
 
 _PHASE_TO_NEXT_PHASE = {
@@ -52,16 +60,16 @@ _PHASE_TO_NEXT_PHASE = {
 
 class MarketObject:
     """State machine and data container for one market cycle.
-    
+
     Each market product the agent participates in is represented by
     a MarketObject instance. The object tracks its own state machine
     (INACTIVE → ACTIVE → ... → EXPIRED) independently of other
     market objects.
-    
+
     For cyclic markets (RT energy every 5 minutes), a new MarketObject
     is created for each cycle. Multiple MarketObjects for the same
     market type may be alive simultaneously in different phases.
-    
+
     Args:
         market_id: Unique identifier for this market cycle.
             Format suggestion: "{market_type}_{clearing_time}".
@@ -87,7 +95,7 @@ class MarketObject:
         timing_params: MarketTimingParams,
         operating_mode: OperatingMode = OperatingMode.BIDDING,
         iteration_protocol: str = "mo_signaled",
-        n_informational_planned: Optional[int] = None
+        n_informational_planned: Optional[int] = None,
     ):
         self.market_id = market_id
         self.market_type = market_type
@@ -128,33 +136,33 @@ class MarketObject:
 
     def transition_to(self, new_phase: MarketPhase) -> None:
         """Execute a state transition.
-        
+
         Validates that the transition is legal per the state machine
         definition, then updates current_phase.
-        
+
         Args:
             new_phase: The target phase.
-        
+
         Raises:
-            ValueError: If the transition is not legal from the 
+            ValueError: If the transition is not legal from the
                 current phase.
         """
         allowed = _LEGAL_TRANSITIONS.get(self.current_phase, set())
         if new_phase not in allowed:
             raise ValueError(
-                f"Illegal transition from {self.current_phase.name} "
-                f"to {new_phase.name}")
+                f"Illegal transition from {self.current_phase.name} to {new_phase.name}"
+            )
         self.current_phase = new_phase
 
     def get_next_event_time(self, current_time: float) -> Optional[float]:
         """Compute when the next state transition should occur.
-        
+
         Based on current_phase and timing_params, returns the
         simulation time at which the next transition should fire.
-        
+
         Args:
             current_time: Current simulation time.
-        
+
         Returns:
             Time of next transition, or None if in terminal state.
         """
@@ -167,10 +175,10 @@ class MarketObject:
 
     def should_transition(self, current_time: float) -> Optional[MarketPhase]:
         """Check if a transition should occur at the current time.
-        
+
         Args:
             current_time: Current simulation time.
-        
+
         Returns:
             Target phase if a transition should occur, None otherwise.
         """
@@ -184,13 +192,13 @@ class MarketObject:
 
     def is_informational_iteration(self, clearing_result: ClearingResult) -> bool:
         """Determine if a clearing result is informational or binding.
-        
+
         Uses the configured iteration_protocol to make the determination.
-        
+
         Args:
             clearing_result: The clearing result from the MO.
                 INTERNAL: From market communication interface (F5).
-        
+
         Returns:
             True if this is an informational iteration.
         """
