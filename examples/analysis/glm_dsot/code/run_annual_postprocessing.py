@@ -2,6 +2,7 @@ import json
 import os
 from datetime import datetime
 from os.path import dirname, abspath, isdir
+from pathlib import Path
 import shutil
 import numpy as np
 
@@ -12,25 +13,35 @@ import tesp_support.dsot.plots as pt
 import tesp_support.dsot.dso_quadratic_curves as qc
 import tesp_support.dsot.dso_rate_making as rm
 import tesp_support.dsot.dso_helper_functions as hf
+from build_actual_da_q import reconstruct_actual_da_quantities
+from calibrate_q_bid_forecast_correction import calibrate_q_bid_forecast_correction
 
 
-""" This script runs key postprocessing functions that warrant execution after every simulation run.  
-It has the following elements:
+"""Run annual DSOT postprocessing for one or more cases.
 
-    0. Setup - establish locations and meta data files etc.
-    1. Postprocessing that is required per DSO (and can be parallelized)
-    2. Postprocessing that is required across all DSOs and is desired for every run
-    3. Postprocessing that is needed over the entire year (and will likely need be executed on Constance).
-    4. Postprocessing that compares cases (and will likely need to be executed on Constance).
+High-level workflow:
+
+1. Resolve paths and metadata.
+2. Determine which annual products are missing for each case.
+3. Run annual aggregation and analysis utilities (energy, amenity, load/LMP stats, etc.).
+4. Recompute retail/DSO cash-flow outputs and summary files.
+5. Produce comparison-style plots and metadata distributions.
+
+Notes:
+- The function can process multiple cases in sequence.
+- The current implementation intentionally repeats each case twice to support
+    a "generate then square-up" style workflow used by downstream billing logic.
 """
 
 
 # --------------- Select folder locations for different cases -----------------
-"""To run_annual_postprocessing.py, first finish simulating each month for each 
-case. Then, move all case folders to datapath. Suggested datapath is to create 
-the subfolder: $TESPDIR/examples/analysis/dsot/data/post_processing
-Finally, specify the directories of the cases you want to postprocess, adding
-each to the case_list below. 
+"""Setup guidance.
+
+Before running this script:
+1. Complete all monthly simulations for each target case.
+2. Place the case folders under a shared annual post-processing directory,
+   typically: $TESPDIR/examples/analysis/dsot/data/post_processing
+3. Update the paths and case_list definitions below.
 """
 
 hayden = False
@@ -51,11 +62,11 @@ else:
     subscription_path = os.path.join(datapath, 'sub') # duplicate the 'rob-don' folder and rename to 'sub'
     metadata_path = os.path.expandvars('$TESPDIR/examples/analysis/dsot/data') 
 
-# ------------------- Select case_path to post process ------------------------
+# ------------------- Select system-case definition ---------------------------
 system_case = "8_hi_system_case_config.json"
 
-# Add cases to case list, in order of dependencies, if any
-# Note, do not add the base case to the case_list
+# Add non-base cases to process, in dependency order if needed.
+# Do not include the base case in this list.
 case_list = [
     DSOT_path,
     TOU_path,
@@ -63,30 +74,49 @@ case_list = [
     subscription_path
 ]
 
+# -------- Optional integrated Q-bid correction calibration --------
+# Optional helper chain:
+#   1) build actual_da_q.csv from DA_Q_forecast.csv + DA_Q_error.csv
+#   2) calibrate Q_gain, t_65, t_65_2, and DC_change_Q_DA
+#
+# Keep disabled by default to preserve existing run behavior.
+integrate_q_bid_calibration = False
+qbid_temperature_csv = ''  # e.g. C:/path/to/temperature_hourly.csv or weather.dat
+qbid_temperature_csv_template = None  # e.g. C:/path/to/DSO_{dso}/weather.dat
+qbid_temperature_column = 'temperature'  # weather.dat uses 'temperature'
+qbid_temperature_column_template = None
+qbid_temperature_unit = 'C'  # set to 'F' if source temperature is already Fahrenheit
+qbid_min_samples = 72
+qbid_include_diagnostics = True
+qbid_drop_total = True
+qbid_actual_output_file = 'actual_da_q.csv'
+qbid_calibration_output_file = 'Q_bid_forecast_correction_calibrated.json'
+
 def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_path : str, run_base: bool):
-    """This function loops through the run_annual_postprocessing script to 
-    generate the required metrics files for each case being studied, then 
-    square up any revenues and expenses and generates final cash flow statements.
+    """Execute annual postprocessing for a list of cases.
+
+    The function checks for expected annual artifacts and computes only missing
+    outputs where possible. It also reruns selected financial steps to align
+    revenues/expenses and regenerate case-level summary products.
 
 
     Args:
-        case_list (list): a list of the paths to each case that is NOT the base
-            case being post processed
-        base_case_path (str): the path to the base case folder (Flat)
-        demand_case_path (str): the path to the demand case folder (TOU)
-        run_base (bool): whether to run the base case first. Set to true for
-            first run. Subsequent runs can set to false.
+        case_list (list): Paths to non-base cases to process.
+        base_case_path (str): Path to the base-case folder (typically Flat).
+        demand_case_path (str): Path to the demand reference case (typically TOU).
+        run_base (bool): If True, prepend the base case for processing.
 
-    Raises:
-        Exception: _description_
+    Returns:
+        None
     """
 
-    # Process the base case first
+    # Optionally process the base case first.
     if run_base:
         case_list.insert(0, str(base_case_path))
     else: 
         pass
-    # Run each case once to generate required files, once to square up 
+    # Repeat each case: first pass generates artifacts; second pass supports
+    # revenue/expense reconciliation logic.
     case_list = np.repeat(case_list, 2)  
     
     for case_path in case_list:
@@ -143,21 +173,20 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
         if not os.path.isfile(os.path.join(case_path, 'Customer_CSF_Summary.csv')):
             customer_cfs = True
         else:
-            customer_cfs = True
+            customer_cfs = False
 
         if not os.path.isfile(os.path.join(case_path, 'DSO_CSF_Summary.csv')):
             dso_cfs = True
         else:
-            dso_cfs = True
+            dso_cfs = False
 
-        # Set True if you want to automatically determine start and end days of 
-        # the month (versus manually set them).
+        # If True, derive first/last analysis day from each monthly simulation.
+        # If False, use the fixed day values below.
         determine_days = False
         
-        # First day in the simulation that data to be analyzed. Run-in days 
-        # before this are discarded.
+        # First simulation day to analyze (run-in days before this are dropped).
         first_data_day = 4  
-        # Number of days at the end of the simulation to be discarded
+        # Number of trailing simulation days to discard.
         discard_end_days = 1  
 
         config_path = dirname(abspath(__file__))
@@ -179,7 +208,7 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
         month_def = []
         rate_scenario = None
 
-        # Determine the rate scenario to investigate
+        # Determine the case/rate scenario label.
         if case_path == flat_path:
             case_name = 'Flat'
             rate_scenario = "flat"
@@ -199,13 +228,14 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
         print('---------------Postprocessing ' + str(case_name), 'Case ----------------')
 
 
-        #  Month, path of month data, first day of real data, last day of real data + 1
+        # Monthly definitions:
+        # [month_name, month_path, first_analysis_day, end_day_plus_one]
         if case_path == TOU_path:
             month_def = [
                 ['Jan', case_path + '/8_2016_01_pv_bt_fl_ev', 4, 31],
                 ['Feb', case_path + '/8_2016_02_pv_bt_fl_ev', 4, 32],
-                ['March', case_path + '/8_2016_03_pv_bt_fl_ev', 5, 33],   #Start and end a day later due to sim issues
-                ['April', case_path + '/8_2016_04_pv_bt_fl_ev', 6, 35],   #Start and end two days later due to sim issues
+                ['March', case_path + '/8_2016_03_pv_bt_fl_ev', 5, 33],   # Shifted by one day due to simulation issues.
+                ['April', case_path + '/8_2016_04_pv_bt_fl_ev', 6, 35],   # Shifted by two days due to simulation issues.
                 ['May', case_path + '/8_2016_05_pv_bt_fl_ev', 4, 33],
                 ['June', case_path + '/8_2016_06_pv_bt_fl_ev', 4, 33],
                 ['July', case_path + '/8_2016_07_pv_bt_fl_ev', 4, 33],
@@ -232,7 +262,7 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
             ]
 
 
-        # Verify and implement actual number of simulation days.
+        # Verify and apply actual monthly simulation day counts.
         total_sim_days = 0
         generate_case_config = ''
         if not os.path.isfile(os.path.join(case_path, 'generate_case_config.json')):
@@ -244,8 +274,8 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
             num_sim_days = (datetime.strptime(generate_case_config['EndTime'], '%Y-%m-%d %H:%M:%S') -
                             datetime.strptime(generate_case_config['StartTime'], '%Y-%m-%d %H:%M:%S')).days
 
-            # Start at day 'n' after first few days are discarded.  
-            # Assumes that simulation runs to end of month with 'm' extra days at the end.
+            # Start from day n after dropping run-in days.
+            # Assumes each monthly run includes extra trailing days.
             if determine_days:
                 month[2] = first_data_day
                 month[3] = num_sim_days - discard_end_days + 1
@@ -259,13 +289,13 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
         agent_prefix = '/DSO_'
         GLD_prefix = '/Substation_'
 
-        # Check if there is a plots folder - create if not.
+        # Ensure plot output directory exists.
         check_folder = isdir(case_path + '/plots')
         if not check_folder:
             os.makedirs(case_path + '/plots')
 
-        # STEP 3 -- ANNUAL AGGREGATION AND ANALYSIS FUNCTIONS ------------------
-        # (to be run once all month aggregation is complete)
+        # STEP 3 -- Annual aggregation and analysis
+        # (run after monthly outputs are available)
 
         # --------------- AGGREGATE ANNUAL ENERGY SUMMARIES  -------------------
         for dso_num in dso_range:
@@ -292,29 +322,76 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
                 print('Annual Customer amenity impact aggregation complete: DSO ' + str(dso_num))
                 pt.toc()
 
-        # --------------- AGGREGATE ANNUAL DSO LOADS and FIND QMAX  ------------
-        if load_stats:  # Finds Q_max amongst other things.
+        # --------------- Aggregate annual DSO loads and compute Qmax ----------
+        if load_stats:  # Also computes additional summary statistics.
             pt.dso_load_stats(dso_range, month_def, case_path, metadata_path, True)
 
-        # --------- AGGREGATE ANNUAL LMPS LOADS for FORECASTER RETUNING  -------
+        # --------- Aggregate annual LMP/load data for forecaster retuning -----
         if annual_lmps:
             for dso_num in dso_range:
                 pt.dso_lmp_stats(month_def, case_path, renew_forecast_file, dso_range)
                 pt.plot_lmp_stats(case_path, case_path, dso_num, 7)
 
         if gen_stats:
-            # Annual LMP needs to be run once to ensure that the annual opf file is created
+            # Annual LMP processing must run at least once so the annual OPF file exists.
             # TODO: Check if this means a separate run is needed for gen_stats
             # before metrics flags that follow it.
             GenAMES_df = pt.generation_statistics(case_path, config_path, system_case, total_day_range, False)
+
+        if integrate_q_bid_calibration:
+            print('Integrated Q-bid calibration enabled; preparing actual and calibrated coefficient files')
+            try:
+                baseline_csv = Path(case_path) / 'DA_Q_forecast.csv'
+                da_error_csv = Path(case_path) / 'DA_Q_error.csv'
+                if not baseline_csv.is_file() or not da_error_csv.is_file():
+                    print('Skipping integrated Q-bid calibration: DA_Q_forecast.csv and/or DA_Q_error.csv missing')
+                elif not qbid_temperature_csv and not qbid_temperature_csv_template:
+                    print('Skipping integrated Q-bid calibration: qbid_temperature_csv and qbid_temperature_csv_template are not configured')
+                else:
+                    actual_csv = reconstruct_actual_da_quantities(
+                        case_path=Path(case_path),
+                        forecast_file='DA_Q_forecast.csv',
+                        error_file='DA_Q_error.csv',
+                        output_file=qbid_actual_output_file,
+                        drop_total=qbid_drop_total,
+                    )
+
+                    temperature_csv = None
+                    if qbid_temperature_csv:
+                        temperature_csv = Path(os.path.expandvars(qbid_temperature_csv))
+
+                    temperature_csv_template = None
+                    if qbid_temperature_csv_template:
+                        temperature_csv_template = os.path.expandvars(qbid_temperature_csv_template)
+
+                    output_json = Path(case_path) / qbid_calibration_output_file
+
+                    _, fit_results = calibrate_q_bid_forecast_correction(
+                        baseline_csv=baseline_csv,
+                        actual_csv=actual_csv,
+                        temperature_csv=temperature_csv,
+                        temperature_csv_template=temperature_csv_template,
+                        temperature_column=qbid_temperature_column,
+                        temperature_column_template=qbid_temperature_column_template,
+                        temperature_unit=qbid_temperature_unit,
+                        dsos=dso_range,
+                        min_samples=qbid_min_samples,
+                        include_diagnostics=qbid_include_diagnostics,
+                        output=output_json,
+                    )
+                    print(
+                        f'Integrated Q-bid calibration complete for {len(fit_results)} DSO(s); '
+                        f'output: {output_json}'
+                    )
+            except Exception as ex:
+                print(f'Integrated Q-bid calibration failed: {ex}')
 
         if train_lmps:
             obj = qc.DSO_LMPs_vs_Q(case_path)
             obj.multiple_fit_calls()
             obj.make_json_out()
 
-        # --------------- DETERMINE WHOLESALE PURCHASES  -----------------------
-        # dso_num = '1'
+        # --------------- Determine wholesale purchases -------------------------
         if wholesale:
             for dso_num in dso_range:
                 qmax_df = pd.read_csv(case_path + '/Qmax.csv', index_col=[0])
@@ -324,13 +401,13 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
                 os.chdir(case_path)
                 with open('DSO' + str(dso_num) + '_Market_Purchases.json', 'w') as f:
                     json.dump(Market_Purchases, f, indent=2)
-        # TODO: Make month usage consistent 'Mar' versus 'March'
-        # --------------- DETERMINE RETAIL BILLING  ----------------------------
-        # Run Customer billing code to determine revenues
-        # Run DSO cash flow to determine total DSO expense = total DSO required revenue.
-        # Run Customer billing code to determine revenues and iterate tariffs to match expenses
-        # Run final DSO cash flow with final customer revenues.
-        #  TODO: break DSO CFS into two parts and execute first part here to have required revenue ready.
+        # TODO: Make month naming consistent ('Mar' vs 'March').
+        # --------------- Determine retail billing and reconciliation -----------
+        # Workflow summary:
+        # 1) Run customer billing to estimate revenues.
+        # 2) Run DSO cash-flow to estimate required revenue.
+        # 3) Re-run billing/cash-flow as needed to reconcile surplus error.
+        # TODO: Split DSO CFS into staged components for clearer dependency order (prep required revenue first).
         if retail:
             dso_df = None
             for dso_num in dso_range:
@@ -358,8 +435,8 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
                     if GLD_metadata['billingmeters'][each]['tariff_class'] is None:
                         raise Exception('Tariff class was not successfully determined for meter ' + each)
 
-                # Placeholder code to add whether a customer is participating or not.
-                # TODO: this should be done in prepare case and read in as part of GLD meter metadata.
+                # Placeholder: add participation status to customer metadata.
+                # TODO: Move this to case preparation and load directly from GLD metadata.
                 agent_file_name = 'Substation_' + str(dso_num) + '_agent_dict.json'
                 agent_metadata = pt.load_json(month_def[0][1] + agent_prefix + str(dso_num), agent_file_name)
 
@@ -369,7 +446,7 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
                 dso_scaling_factor = DSOmetadata['DSO_' + str(dso_num)]['scaling_factor']
 
                 trans_cost_balance_method = None
-                include_RT = False   # Do (or do not) include RT cost correction component in customer billing.
+                include_RT = False   # Include/exclude RT cost correction in customer billing.
                 DSO_Cash_Flows, DSO_Revenues_and_Energy_Sales, tariff, surplus_err = rm.DSO_rate_making(
                     case_path,
                     demand_case_path,
@@ -384,7 +461,7 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
                     include_RT
                 )
 
-                # Example of getting an annual customer bill in dictionary form:
+                # Example: generate an annual customer bill dictionary for one meter.
                 customer = list(GLD_metadata['billingmeters'].keys())[0]
                 cust_bill_file = case_path + '/bill_dso_' + str(dso_num) + '_data.h5'
                 cust_bills = pd.read_hdf(cust_bill_file, key='cust_bill_data', mode='r')
@@ -405,8 +482,8 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
                 with open('DSO' + str(dso_num) + '_Customer_Metadata.json', 'w') as f:
                     json.dump(GLD_metadata, f, indent=2)
 
-        # --------------- DETERMINE CASHFLOW STATEMENTS  -----------------------
-        # Run final DSO cash flow with final customer revenues.
+        # --------------- Determine customer/DSO cash-flow summaries ------------
+        # Run final cash-flow summaries with current case revenue outputs.
 
         if customer_cfs:
             # dso_range = [1]
@@ -458,13 +535,12 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
                     json.dump(Expenses_dict_list[i], f, indent=2)
                 i += 1
 
-        # 5. Automated calculation of valuation work-flow:
-        #       c. Rerun annual customer billing to square up revenue
+        # 5) Automated valuation workflow hook.
+        #    c) Re-run annual customer billing to reconcile revenue, if needed.
 
-        # STEP 4 -- COMPARISON BETWEEN CASES OF ANNUAL RESULTS -----------------
-        # (to be run once all cases complete)
-        # TODO: Comparison analysis to be completed:
-        # 1. Slider settings plots
+        # STEP 4 -- Cross-case annual comparison outputs
+        # (intended to run once all target cases complete)
+        # TODO: Complete comparison analysis additions (for example slider settings).
         stats = True
         if stats:
             bill = True

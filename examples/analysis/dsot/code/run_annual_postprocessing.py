@@ -233,7 +233,7 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
             logger.info('No Quadratic Curves found, running train_lmps')
             train_lmps = True
         else:
-            train_lmps = True
+            train_lmps = False
 
         if not os.path.isfile(os.path.join(case_path, 'DSO1_Market_Purchases.json')):
             logger.info('No Market Purchases found, running wholesale')
