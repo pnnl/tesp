@@ -95,7 +95,7 @@ def is_hhmm_valid(time):
     return True
 
 
-def get_dist(mean, var):
+def get_dist(mean, var, rng=None):
     """ Get a random number from a distribution given mean and %variability
 
     Args:
@@ -104,5 +104,8 @@ def get_dist(mean, var):
     Returns:
         float: one random entry from distribution
     """
-    dev = (1 - var / 100) + np.random.uniform(0, 1) * var / 100 * 2
+    if rng is None:
+        dev = (1 - var / 100) + np.random.uniform(0, 1) * var / 100 * 2
+    else:
+        dev = (1 - var / 100) + rng.uniform(0, 1) * var / 100 * 2
     return mean * dev

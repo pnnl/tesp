@@ -70,8 +70,11 @@ class all_but_one_level(object):
         return log_record.levelno != 11
 
 
-def randomize_skew(value, skew_max):
-    sk = value * random.randn()
+def randomize_skew(value, skew_max, rng=None):
+    if rng is None:
+        sk = value * random.randn()
+    else:
+        sk = value * rng.standard_normal()
     if sk < -skew_max:
         sk = -skew_max
     elif sk > skew_max:
@@ -79,19 +82,19 @@ def randomize_skew(value, skew_max):
     return sk
 
 
-def randomize_commercial_skew():
+def randomize_commercial_skew(rng=None):
     commercial_skew_max = 5400
     commercial_skew_std = 1800
-    return randomize_skew(commercial_skew_std, commercial_skew_max)
+    return randomize_skew(commercial_skew_std, commercial_skew_max, rng=rng)
 
 
-def randomize_residential_skew(wh_skew=False):
+def randomize_residential_skew(wh_skew=False, rng=None):
     residential_skew_max = 8100
     residential_skew_std = 2700
     if wh_skew:
-        return randomize_skew(3*residential_skew_std, 6*residential_skew_max)
+        return randomize_skew(3*residential_skew_std, 6*residential_skew_max, rng=rng)
     else:
-        return randomize_skew(residential_skew_std, residential_skew_max)
+        return randomize_skew(residential_skew_std, residential_skew_max, rng=rng)
 
 
 def get_run_solver(name:str, pyo, model, solver, params=None):
@@ -144,12 +147,19 @@ def get_run_solver(name:str, pyo, model, solver, params=None):
     return results
 
 
-def random_norm_trunc(dist_array):
+def random_norm_trunc(dist_array, rng=None):
     if 'standard_deviation' in dist_array:
         dist_array['std'] = dist_array['standard_deviation']
+    kwargs = {
+        'loc': dist_array['mean'],
+        'scale': dist_array['std'],
+        'size': 1
+    }
+    if rng is not None:
+        kwargs['random_state'] = rng
     return truncnorm.rvs((dist_array['min'] - dist_array['mean']) / dist_array['std'],
                          (dist_array['max'] - dist_array['mean']) / dist_array['std'],
-                         loc=dist_array['mean'], scale=dist_array['std'], size=1)[0]
+                         **kwargs)[0]
     # return np.random.uniform(dist_array['min'], dist_array['max'])
 
 

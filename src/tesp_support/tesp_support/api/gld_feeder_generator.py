@@ -137,7 +137,6 @@ from .time_helpers import is_hhmm_valid, subtract_hhmm_secs, add_hhmm_secs
 from .entity import assign_defaults
 from .recs_gld_house_parameters import get_RECS_jsons
 
-rng = np.random.default_rng(7)
 position = None
 extra_billing_meters = set()
 comm_bldgs_pop = {}
@@ -150,6 +149,8 @@ class Config:
         # Assign default values to those not defined in config file
         self.keys = list(assign_defaults(self, config).keys())
         self.glm = GLMModifier()
+        self.rng = np.random.default_rng(self.seed)
+        self.glm.rng = self.rng
         self.mdl = self.glm.glm
         self.base = self.glm.defaults
         self.res_bld = Residential_Build(self)
@@ -158,9 +159,6 @@ class Config:
         self.batt = Battery(self)
         self.ev = Electric_Vehicle(self)
         self.glm.defaults.metrics_interval = self.metrics_interval
-
-        global rng
-        rng = np.random.default_rng(self.seed)
 
     def preamble(self) -> None:
         """ Add required modules, objects, includes, defines, and sets required
@@ -363,7 +361,7 @@ class Config:
             base = self.pos_data[basenode]
         except KeyError:
             base = self.pos[basenode]
-        self.pos[newnode] = [base[0] + rng.uniform(2,7), base[1] + rng.uniform(2,7)]
+        self.pos[newnode] = [base[0] + self.rng.uniform(2, 7), base[1] + self.rng.uniform(2, 7)]
 
 class Residential_Build:
     def __init__(self, config: Config):
@@ -440,7 +438,7 @@ class Residential_Build:
                 cBin = row
                 break
         tbl = self.config.base.conditionalHeatingBinProb[bldg][cBin]
-        rand_heat = rng.uniform(0, 1)
+        rand_heat = self.config.rng.uniform(0, 1)
         total = 0
         for col in range(len(tbl)):
             total += tbl[col]
@@ -726,13 +724,13 @@ class Residential_Build:
             income = self.config.income_level[inc_lev]
             if bldg == 0:  # SF
                 bldg_type = 'single_family'  # pick single_family_detached values for floor_area
-                if (rng.uniform(0, 1) >
+                if (self.config.rng.uniform(0, 1) >
                         self.num_stories[self.config.state][self.config.res_dso_type][income][bldg_type][vint]['one_story']):
                     stories = 2  # all SF homes which are not single story are 2 stories
-                if rng.uniform(0, 1) <= \
+                if self.config.rng.uniform(0, 1) <= \
                         self.high_ceilings[self.config.state][self.config.res_dso_type][income][bldg_type][vint]:
                     ceiling_height = 10  # all SF homes that have high ceilings are 10 ft
-                ceiling_height += int(rng.integers(0, 2))
+                ceiling_height += int(self.config.rng.integers(0, 2))
             elif bldg == 1:  # apartments
                 bldg_type = 'apartments'  # then pick apartment_2_4_units for floor area
             elif bldg == 2:  # mh
@@ -743,9 +741,9 @@ class Residential_Build:
             # creating distribution array for floor_area
             for ind in ['min', 'max', 'mean', 'standard_deviation']:
                 fa_array[ind] = self.floor_area[self.config.state][self.config.res_dso_type][income][bldg_type][ind]
-            floor_area = random_norm_trunc(fa_array)  # truncated normal distribution
+            floor_area = random_norm_trunc(fa_array, rng=self.config.rng)  # truncated normal distribution
             floor_area = (1 + lg_v_sm) * floor_area  # adjustment depends on whether nhouses rounded up or down
-            fa_rand = rng.uniform(0, 1)
+            fa_rand = self.config.rng.uniform(0, 1)
             if floor_area > fa_array['max']:
                 floor_area = fa_array['max'] - (fa_rand * 200)
             elif floor_area < fa_array['min']:
@@ -753,17 +751,17 @@ class Residential_Build:
 
             # Define residential skew and scalar for schedule files
             scalar1 = 324.9 / 8907 * floor_area ** 0.442
-            scalar2 = 0.6 + 0.4 * rng.uniform(0, 1)
-            scalar3 = 0.6 + 0.4 * rng.uniform(0, 1)
+            scalar2 = 0.6 + 0.4 * self.config.rng.uniform(0, 1)
+            scalar3 = 0.6 + 0.4 * self.config.rng.uniform(0, 1)
             resp_scalar = scalar1 * scalar2
             unresp_scalar = scalar1 * scalar3
-            skew_value = self.glm.randomize_residential_skew()
+            skew_value = self.glm.randomize_residential_skew(rng=self.config.rng)
 
             # Define aspect ratio, ewf, ecf, eff, wwr
             if bldg == 0:  # SF homes
                 # min, max, mean, std
                 dist_array = self.aspect_ratio['single_family']
-                aspect_ratio = random_norm_trunc(dist_array)
+                aspect_ratio = random_norm_trunc(dist_array, rng=self.config.rng)
                 # Exterior wall and ceiling and floor fraction
                 # single family detatched house has all exterior walls, ceiling, and floor
                 ewf = 1.0  # exterior wall fraction
@@ -774,7 +772,7 @@ class Residential_Build:
             elif bldg == 1:  # APT
                 # min, max, mean, std
                 dist_array = self.aspect_ratio['apartments']
-                aspect_ratio = random_norm_trunc(dist_array)
+                aspect_ratio = random_norm_trunc(dist_array, rng=self.config.rng)
                 # window wall ratio
                 wwr = (self.window_wall_ratio['apartments']['mean'])
                 # Two type of apts assumed, total 2 levels each:
@@ -785,14 +783,14 @@ class Residential_Build:
                     self.config.res_dso_type][income]['apartment_2_4_units']
                 large_apt_pct = self.housing_type[self.config.state][
                     self.config.res_dso_type][income]['apartment_5_units']
-                if rng.uniform(0, 1) < small_apt_pct / (small_apt_pct + large_apt_pct):
+                if self.config.rng.uniform(0, 1) < small_apt_pct / (small_apt_pct + large_apt_pct):
                     # 2-level small apt (8 units):
                     # All 4 upper units are identical and all 4 lower units are identical
                     # So, only two types of units: upper and lower (50% chances of each)
                     # all units have 50% walls exterior
                     ewf = 0.5
                     # for 50% units: has exterior floor but not ceiling
-                    if rng.uniform(0, 1) < 0.5:
+                    if self.config.rng.uniform(0, 1) < 0.5:
                         ecf = 0.0
                         eff = 1.0
                     else:  # for other 50% units: has exterior ceiling but not floor
@@ -802,19 +800,19 @@ class Residential_Build:
                     # 2-level large 16 units apts:
                     # There are 4 type of units: 4 corner bottom floor, 4 corner upper,
                     # 4 middle upper, and 4 middle lower floor units. Each unit type has 25% chance
-                    if rng.uniform(0, 1) < 0.25:  # 4 corner bottom floor units
+                    if self.config.rng.uniform(0, 1) < 0.25:  # 4 corner bottom floor units
                         ewf = 0.5
                         ecf = 0.0
                         eff = 1.0
-                    elif rng.uniform(0, 1) < 0.5:  # 4 corner upper floor units
+                    elif self.config.rng.uniform(0, 1) < 0.5:  # 4 corner upper floor units
                         ewf = 0.5
                         ecf = 1.0
                         eff = 0.0
-                    elif rng.uniform(0, 1) < 0.75:  # 4 middle bottom floor units
+                    elif self.config.rng.uniform(0, 1) < 0.75:  # 4 middle bottom floor units
                         ewf = aspect_ratio / (1.0 + aspect_ratio) / 2.0
                         ecf = 0.0
                         eff = 1.0
-                    else:  # rng.uniform(0, 1) < 1  # 4 middle upper floor units
+                    else:  # self.config.rng.uniform(0, 1) < 1  # 4 middle upper floor units
                         ewf = aspect_ratio / (1.0 + aspect_ratio) / 2.0
                         ecf = 1.0
                         eff = 0.0
@@ -823,37 +821,37 @@ class Residential_Build:
                 wwr = (self.window_wall_ratio['mobile_home']['mean'])  # window wall ratio
                 if floor_area <= 1080:  # Single wide
                     aspect_ratio = random_norm_trunc(
-                        self.aspect_ratio['mobile_home_single_wide'])
+                        self.aspect_ratio['mobile_home_single_wide'], rng=self.config.rng)
                 else:  # double wide
                     aspect_ratio = random_norm_trunc(
-                        self.aspect_ratio['mobile_home_double_wide'])
+                        self.aspect_ratio['mobile_home_double_wide'], rng=self.config.rng)
                 # A detatched MH has all walls exterior, has a ceiling and a floor
                 ewf = 1.0  # exterior wall fraction
                 ecf = 1.0  # exterior ceiling fraction
                 eff = 1.0  # exterior floor fraction
 
-            oversize = random_norm_trunc(self.hvac_oversize)  # hvac_oversize factor
-            wetc = random_norm_trunc(self.window_shading)  # window_exterior_transmission_coefficient
+            oversize = random_norm_trunc(self.hvac_oversize, rng=self.config.rng)  # hvac_oversize factor
+            wetc = random_norm_trunc(self.window_shading, rng=self.config.rng)  # window_exterior_transmission_coefficient
 
             tiProps = Residential_Build.selectThermalProperties(self, bldg, ti)
             # Rceiling(roof), Rwall, Rfloor, WindowLayers, WindowGlass, Glazing,
             # WindowFrame, Rdoor, AirInfil, COPhi, COPlo
-            Rroof = tiProps[0] * (0.8 + 0.4 * rng.uniform(0, 1))
-            Rwall = tiProps[1] * (0.8 + 0.4 * rng.uniform(0, 1))
-            Rfloor = tiProps[2] * (0.8 + 0.4 * rng.uniform(0, 1))
+            Rroof = tiProps[0] * (0.8 + 0.4 * self.config.rng.uniform(0, 1))
+            Rwall = tiProps[1] * (0.8 + 0.4 * self.config.rng.uniform(0, 1))
+            Rfloor = tiProps[2] * (0.8 + 0.4 * self.config.rng.uniform(0, 1))
             glazing_layers = int(tiProps[3])
             glass_type = int(tiProps[4])
             glazing_treatment = int(tiProps[5])
             window_frame = int(tiProps[6])
-            Rdoor = tiProps[7] * (0.8 + 0.4 * rng.uniform(0, 1))
-            airchange = tiProps[8] * (0.8 + 0.4 * rng.uniform(0, 1))
-            init_temp = 68 + 4 * rng.uniform(0, 1)
-            mass_floor = 2.5 + 1.5 * rng.uniform(0, 1)
+            Rdoor = tiProps[7] * (0.8 + 0.4 * self.config.rng.uniform(0, 1))
+            airchange = tiProps[8] * (0.8 + 0.4 * self.config.rng.uniform(0, 1))
+            init_temp = 68 + 4 * self.config.rng.uniform(0, 1)
+            mass_floor = 2.5 + 1.5 * self.config.rng.uniform(0, 1)
             mass_solar_gain_frac = 0.5
             mass_int_gain_frac = 0.5
 
             # COP: pick any one year value randomly from the bin in cop_lookup
-            h_COP = c_COP = rng.choice(self.config.base.cop_lookup[ti]) * (0.9 + rng.uniform(0, 1) * 0.2)
+            h_COP = c_COP = self.config.rng.choice(self.config.base.cop_lookup[ti]) * (0.9 + self.config.rng.uniform(0, 1) * 0.2)
             # +- 10% of mean value
 
             # Set housing parameters
@@ -887,8 +885,8 @@ class Residential_Build:
                     "window_wall_ratio": '{:.2f}'.format(wwr),
                     "breaker_amps": "1000",
                     "hvac_breaker_rating": "1000"}
-            heat_rand = rng.uniform(0, 1)
-            cool_rand = rng.uniform(0, 1)
+            heat_rand = self.config.rng.uniform(0, 1)
+            cool_rand = self.config.rng.uniform(0, 1)
             house_fuel_type = 'electric'
             heat_pump_prob = self.space_heating_type[self.config.state][
                                 self.config.res_dso_type][income][bldg_type][vint]['gas_heating'] + \
@@ -937,10 +935,10 @@ class Residential_Build:
                 params["heating_setpoint"] = "60.0"
             else:
                 # Randomly choose cooling and heating setpoints within bins
-                cooling_bin, heating_bin = self.selectSetpointBins(bldg, rng.uniform(0, 1))
+                cooling_bin, heating_bin = self.selectSetpointBins(bldg, self.config.rng.uniform(0, 1))
                 # Adjust separation to account for deadband
-                cooling_set = float(cooling_bin[3] + rng.random() * (cooling_bin[2] - cooling_bin[3]))
-                heating_set = float(heating_bin[3] + rng.random() * (heating_bin[2] - heating_bin[3]))
+                cooling_set = float(cooling_bin[3] + self.config.rng.random() * (cooling_bin[2] - cooling_bin[3]))
+                heating_set = float(heating_bin[3] + self.config.rng.random() * (heating_bin[2] - heating_bin[3]))
                 params["cooling_setpoint"] = np.round(cooling_set)
                 params["heating_setpoint"] = np.round(heating_set)
 
@@ -972,20 +970,20 @@ class Residential_Build:
             properties = self.water_heating_fuel[self.config.state][self.config.res_dso_type][income][bldg_type]
             if house_fuel_type == 'gas':
                 # percentage of homes with gas space heating but electric water heaters
-                if rng.uniform(0, 1) <= properties['sh_gas']['electric']:
+                if self.config.rng.uniform(0, 1) <= properties['sh_gas']['electric']:
                     wh_fuel_type = 'electric'
             elif house_fuel_type == 'electric':
                 # percentage of homes with both electric space and water heating
-                if rng.uniform(0, 1) <= properties['sh_electric']['electric']:
+                if self.config.rng.uniform(0, 1) <= properties['sh_electric']['electric']:
                     wh_fuel_type = 'electric'
 
             if wh_fuel_type == 'electric':  # if the water heater fuel type is electric, install wh
-                heat_element = 3.0 + 0.5 * int(rng.integers(1, 6))  # numpy integers (lo, hi) returns lo..(hi-1)
-                tank_set = 110 + 16 * rng.uniform(0, 1)
-                therm_dead = 1  # 4 + 4 * rng.uniform(0, 1)
-                tank_UA = 2 + 2 * rng.uniform(0, 1)
-                water_sch = np.ceil(self.config.base.waterHeaterScheduleNumber * rng.uniform(0, 1))
-                water_var = 0.95 + rng.uniform(0, 1) * 0.1  # +/-5% variability
+                heat_element = 3.0 + 0.5 * int(self.config.rng.integers(1, 6))  # numpy integers (lo, hi) returns lo..(hi-1)
+                tank_set = 110 + 16 * self.config.rng.uniform(0, 1)
+                therm_dead = 1  # 4 + 4 * self.config.rng.uniform(0, 1)
+                tank_UA = 2 + 2 * self.config.rng.uniform(0, 1)
+                water_sch = np.ceil(self.config.base.waterHeaterScheduleNumber * self.config.rng.uniform(0, 1))
+                water_var = 0.95 + self.config.rng.uniform(0, 1) * 0.1  # +/-5% variability
                 wh_demand_type = 'large_'
 
                 # Water heater sizing based on floor area of house
@@ -1004,9 +1002,9 @@ class Residential_Build:
                 else:
                     size_array = range(wh_data['tank_size']['5_plus_people']['min'],
                                     wh_data['tank_size']['5_plus_people']['max'] + 1, 10)
-                wh_size = rng.choice(size_array)
+                wh_size = self.config.rng.choice(size_array)
                 wh_demand_str = wh_demand_type + '{:.0f}'.format(water_sch) + '*' + '{:.2f}'.format(water_var)
-                wh_skew_value = randomize_residential_skew(True)
+                wh_skew_value = randomize_residential_skew(True, rng=self.config.rng)
 
                 if self.config.water_heater_model == "MULTILAYER":
                     params = {"parent": hsename,
@@ -1302,7 +1300,7 @@ class Commercial_Build:
 
         # Check floor area is sensible for building type (as in DSOT)
         if floor_area < 1000:
-            floor_area = 10000. * (0.5 + 1. * rng.random())
+            floor_area = 10000. * (0.5 + 1. * self.config.rng.random())
 
         # Setup default commercial building parameter dictionary, to be modified
         # depending on commercial building type ("comm_type")
@@ -1354,37 +1352,37 @@ class Commercial_Build:
         else:
             bldg_specs = self.building_model_specifics[comm_type] 
             # Randomly determine the age (year of construction) of the building
-            bldg['aspect_ratio'] = bldg_specs["aspect_ratio"] * rng.normal(1, 0.01)
-            bldg['window_wall_ratio'] = bldg_specs["window-wall_ratio"] * rng.normal(1, 0.2)
+            bldg['aspect_ratio'] = bldg_specs["aspect_ratio"] * self.config.rng.normal(1, 0.01)
+            bldg['window_wall_ratio'] = bldg_specs["window-wall_ratio"] * self.config.rng.normal(1, 0.2)
             wall_area = (bldg_specs['ceiling_height'] * 2 *
                          math.sqrt(bldg['floor_area'] / bldg['number_of_stories'] /
                                    bldg['aspect_ratio']) * (bldg['aspect_ratio'] + 1))
             ratio = wall_area * (1 - bldg['window_wall_ratio']) / bldg['floor_area']
             age = Commercial_Build.normalize_dict_prob('vintage', bldg_specs['vintage'])
-            age_bin = Commercial_Build.rand_bin_select(age, rng.uniform(0, 1))
-            bldg['age'] = Commercial_Build.sub_bin_select(age_bin, 'vintage', rng.uniform(0, 1))
+            age_bin = Commercial_Build.rand_bin_select(age, self.config.rng.uniform(0, 1))
+            bldg['age'] = Commercial_Build.sub_bin_select(age_bin, 'vintage', self.config.rng.uniform(0, 1))
 
             roof_construction_insulation = Commercial_Build.normalize_dict_prob('roof_construction_insulation', bldg_specs['roof_construction_insulation'])
-            bldg['roof_type'] = Commercial_Build.rand_bin_select(roof_construction_insulation, rng.uniform(0, 1))
+            bldg['roof_type'] = Commercial_Build.rand_bin_select(roof_construction_insulation, self.config.rng.uniform(0, 1))
             wall_construction = Commercial_Build.normalize_dict_prob('wall_construction', bldg_specs['wall_construction'])
-            bldg['wall_type'] = Commercial_Build.rand_bin_select(wall_construction, rng.uniform(0, 1))
+            bldg['wall_type'] = Commercial_Build.rand_bin_select(wall_construction, self.config.rng.uniform(0, 1))
             # TODO: Confirm whether we should be using these calculated values 
             # or the building specific overwrites
             bldg['Rroof'] = 1 / Commercial_Build.find_envelope_prop(bldg['roof_type'], bldg['age'],
                                                                     self.general['thermal_integrity'],
-                                                                    self.config.climate) * 1.3 * rng.normal(1, 0.1)
+                                                                    self.config.climate) * 1.3 * self.config.rng.normal(1, 0.1)
             bldg['Rwall'] = 1 / Commercial_Build.find_envelope_prop(bldg['wall_type'], bldg['age'],
                                                                     self.general['thermal_integrity'],
-                                                                    self.config.climate) * 1.3 * rng.normal(1, 0.1)
+                                                                    self.config.climate) * 1.3 * self.config.rng.normal(1, 0.1)
             bldg['Rwindows'] = 1 / (Commercial_Build.find_envelope_prop('u_windows', bldg['age'],
                                                     self.general['thermal_integrity'],
-                                                    self.config.climate) * 1.15 * rng.normal(1, 0.05))
+                                                    self.config.climate) * 1.15 * self.config.rng.normal(1, 0.05))
             bldg['glazing_shgc'] = Commercial_Build.find_envelope_prop('window_SHGC', bldg['age'],
                                                     self.general['thermal_integrity'],
-                                                    self.config.climate) * 1.15 * rng.normal(1, 0.05)
+                                                    self.config.climate) * 1.15 * self.config.rng.normal(1, 0.05)
             # Unused in DSOT
-            # if bldg_specs['fraction_awnings'] > rng.uniform(0, 1):
-            #     bldg['window_exterior_transmission_coefficient'] = rng.normal(0.5, 0.1)
+            # if bldg_specs['fraction_awnings'] > self.config.rng.uniform(0, 1):
+            #     bldg['window_exterior_transmission_coefficient'] = self.config.rng.normal(0.5, 0.1)
             # else:
             #     bldg['window_exterior_transmission_coefficient'] = 1
             
@@ -1392,22 +1390,22 @@ class Commercial_Build:
             bldg['Rdoors'] = 3. # Value from previous study
             bldg['no_of_doors'] = 3 # Value from previous study
 
-            bldg['init_temp'] = 68. + 4. * rng.uniform(0, 1)
+            bldg['init_temp'] = 68. + 4. * self.config.rng.uniform(0, 1)
 
-            bldg['thermal_mass_per_floor_area'] = (0.9 * rng.normal(self.general['interior_mass']['mean'], 0.2) + 0.5 
+            bldg['thermal_mass_per_floor_area'] = (0.9 * self.config.rng.normal(self.general['interior_mass']['mean'], 0.2) + 0.5 
                                                 * ratio * self.general['wall_thermal_mass'][str(bldg['age'])])
             bldg['airchange_per_hour']= bldg_specs['ventilation_requirements']['air_change_per_hour']
-            bldg['COP_A'] = self.general['HVAC']['COP'][str(bldg['age'])] * rng.normal(1, 0.05)
+            bldg['COP_A'] = self.general['HVAC']['COP'][str(bldg['age'])] * self.config.rng.normal(1, 0.05)
             # Determine heating system type of building
             bldg['heat_type'] = 'GAS'
-            if rng.uniform(0, 1) <= bldg_specs['primary_electric_heating'][self.config.utility_type]:
-                if rng.integers(0, 2) == bldg_specs['electric_heating_system_type']['HEAT_PUMP']:
+            if self.config.rng.uniform(0, 1) <= bldg_specs['primary_electric_heating'][self.config.utility_type]:
+                if self.config.rng.integers(0, 2) == bldg_specs['electric_heating_system_type']['HEAT_PUMP']:
                     bldg['heat_type'] = 'HEAT_PUMP'
                 else:
                     bldg['heat_type'] = 'RESISTANCE'
 
             #  HVAC oversizing factor
-            bldg['os_rand'] = rng.normal(self.general['HVAC']['oversizing_factor']['mean'],
+            bldg['os_rand'] = self.config.rng.normal(self.general['HVAC']['oversizing_factor']['mean'],
                                             self.general['HVAC']['oversizing_factor']['std_dev'])
             bldg['os_rand'] = min(self.general['HVAC']['oversizing_factor']['upper_bound'], max(bldg['os_rand'],
                                 self.general['HVAC']['oversizing_factor']['lower_bound']))
@@ -1416,19 +1414,19 @@ class Commercial_Build:
             #  their number of zones. Single-zone buildings will keep the base
             #  power ZIPload schedule adjustments below.
             # randomize 10# then convert W/sf -> kW
-            adj_lights = (bldg_specs['internal_heat_gains']['lighting'] * (0.9 + 0.1 * rng.random()) 
+            adj_lights = (bldg_specs['internal_heat_gains']['lighting'] * (0.9 + 0.1 * self.config.rng.random()) 
                             * bldg['floor_area'] / 1000.0)
-            adj_plugs = (bldg_specs['internal_heat_gains']['MEL'] * (0.9 + 0.2 * rng.random())
+            adj_plugs = (bldg_specs['internal_heat_gains']['MEL'] * (0.9 + 0.2 * self.config.rng.random())
                                     * bldg['floor_area'] / 1000.)
             adj_refrig = (bldg_specs['internal_heat_gains']['large_refrigeration'] *
-                            (0.9 + 0.2 * rng.random()) * bldg['floor_area'] / 1000.0)
+                            (0.9 + 0.2 * self.config.rng.random()) * bldg['floor_area'] / 1000.0)
             occ_load = 73  # Assumes 73 watts / occupant from Caney Fork study
-            adj_occ = (bldg_specs['internal_heat_gains']['occupancy'] * occ_load * (0.9 + 0.1 * rng.random()) 
+            adj_occ = (bldg_specs['internal_heat_gains']['occupancy'] * occ_load * (0.9 + 0.1 * self.config.rng.random()) 
                             * bldg['floor_area'] / 1000.0)
             # Set gas water heating to zero
-            adj_gas = 1 # (0.9 + 0.2 * rng.random())
+            adj_gas = 1 # (0.9 + 0.2 * self.config.rng.random())
             # Set exterior lighting to zero as plug and light parameters capture all of CBECS loads.
-            adj_ext = 1 # (0.9 + 0.1 * rng.random()) * bldg['floor_area'] / 1000.
+            adj_ext = 1 # (0.9 + 0.1 * self.config.rng.random()) * bldg['floor_area'] / 1000.
             int_gains = adj_lights + adj_plugs + adj_occ + adj_gas
            
             bldg['adj_lights'] = adj_lights
@@ -1442,7 +1440,7 @@ class Commercial_Build:
             if comm_type == 'lodging':
                 bldg['skew_value'] = 0
             else: 
-                bldg['skew_value'] = self.glm.randomize_commercial_skew()
+                bldg['skew_value'] = self.glm.randomize_commercial_skew(rng=self.config.rng)
             
             if comm_type == 'lodging':
                 bldg['base_schedule'] = 'alwaysocc'
@@ -1472,9 +1470,9 @@ class Commercial_Build:
                 bldg['Rfloor'] = 46.
                 bldg['Rdoors'] = 3.
                 #int_gains = 3.6  # W/sf # Unused in DSOT
-                tot_bldg_area = 20000. * (0.5 + 1. * rng.random())
+                tot_bldg_area = 20000. * (0.5 + 1. * self.config.rng.random())
                 bldg['floor_area'] = tot_bldg_area / 6.
-                bldg['thermal_mass_per_floor_area'] = 3.9 * (0.8 + 0.4 * rng.random())  # +/- 20#
+                bldg['thermal_mass_per_floor_area'] = 3.9 * (0.8 + 0.4 * self.config.rng.random())  # +/- 20#
                 bldg['exterior_ceiling_fraction'] = 1.
                 bldg['aspect_ratio'] = 1.28301275561855
                 total_depth = math.sqrt(tot_bldg_area / bldg['aspect_ratio'])
@@ -1507,7 +1505,7 @@ class Commercial_Build:
                     #bldg['interior_exterior_wall_ratio'] = (bldg['floor_area'] + bldg['no_of_doors'] * 20.) \
                     #      / (bldg['ceiling_height'] * 2. * (w + d)) - 1. + bldg[
                     #      'window_wall_ratio'] * bldg['exterior_wall_fraction']
-                    bldg['init_temp'] = 68. + 4. * rng.uniform(0, 1)
+                    bldg['init_temp'] = 68. + 4. * self.config.rng.uniform(0, 1)
 
                     bldg['adj_lights'] = adj_lights * bldg['floor_area'] / tot_bldg_area
                     bldg['adj_plugs'] = adj_plugs * bldg['floor_area'] / tot_bldg_area
@@ -1530,7 +1528,7 @@ class Commercial_Build:
                 bldg['Rdoors'] = 3.0
                 #int_gains = 3.24  # W/sf
                 bldg['no_of_stories'] = 1
-                tot_bldg_area = 40000. * (0.5 * rng.random() + 0.5)
+                tot_bldg_area = 40000. * (0.5 * self.config.rng.random() + 0.5)
                 for floor in range(1, 4):
                     bldg['aspect_ratio'] = 1.5
                     total_depth = math.sqrt(tot_bldg_area / (3. * bldg['aspect_ratio']))
@@ -1563,14 +1561,14 @@ class Commercial_Build:
                             bldg['exterior_floor_fraction'] = w / (2. * (w + d)) / (
                                         bldg['floor_area'] / (tot_bldg_area / 3.))
 
-                        # bldg['thermal_mass_per_floor_area'] = 3.9 * (0.5 + 1. * rng.random()) # Unused in DSOT
+                        # bldg['thermal_mass_per_floor_area'] = 3.9 * (0.5 + 1. * self.config.rng.random()) # Unused in DSOT
                         # bldg['interior_exterior_wall_ratio'] = bldg['floor_area'] / (bldg['ceiling_height'] * 2. * (w + d)) - 1. \
                         #     + bldg['window_wall_ratio'] * bldg['exterior_wall_fraction'] # Unused in DSOT
                         bldg['interior_exterior_wall_ratio'] = 1
 
                         # Round to zero, presumably the exterior doors are treated like windows
                         bldg['no_of_doors'] = 0.1
-                        bldg['init_temp'] = 68. + 4. * rng.uniform(0, 1)
+                        bldg['init_temp'] = 68. + 4. * self.config.rng.uniform(0, 1)
 
                         bldg['adj_lights'] = adj_lights * bldg['floor_area'] / tot_bldg_area
                         bldg['adj_plugs'] = adj_plugs * bldg['floor_area'] / tot_bldg_area
@@ -1598,11 +1596,11 @@ class Commercial_Build:
         bldg_types = Commercial_Build.normalize_dict_prob(dso_type, self.general['building_type'][dso_type])
         i = 0
         while i < num_bldgs:
-            bldg_type = Commercial_Build.rand_bin_select(bldg_types, rng.uniform(0, 1))
+            bldg_type = Commercial_Build.rand_bin_select(bldg_types, self.config.rng.uniform(0, 1))
             if bldg_type not in ['large_office']:
                 area = Commercial_Build.normalize_dict_prob(bldg_type, self.building_model_specifics[bldg_type]['total_area'])
-                bldg_area_bin = Commercial_Build.rand_bin_select(area, rng.uniform(0, 1))
-                bldg_area = Commercial_Build.sub_bin_select(bldg_area_bin, 'total_area', rng.uniform(0, 1))
+                bldg_area_bin = Commercial_Build.rand_bin_select(area, self.config.rng.uniform(0, 1))
+                bldg_area = Commercial_Build.sub_bin_select(bldg_area_bin, 'total_area', self.config.rng.uniform(0, 1))
                 bldgs['bldg_' + str(i + 1)] = [bldg_type, bldg_area]
                 i += 1
         return bldgs
@@ -1768,15 +1766,21 @@ class Battery:
             None
         """
 
-        if rng.uniform(0, 1) <= batt_prob and rng.uniform(0, 1) < sol_prob:
-            battery_capacity = batt_num*get_dist(self.config.batt.capacity['mean'],
-                                        self.config.batt.capacity['deviation_range_per']) * 1000
-            max_charge_rate = get_dist(self.config.batt.rated_charging_power['mean'],
-                                       self.config.batt.rated_charging_power['deviation_range_per']) * 1000
+        if self.config.rng.uniform(0, 1) <= batt_prob and self.config.rng.uniform(0, 1) < sol_prob:
+            battery_capacity = batt_num * get_dist(
+                self.config.batt.capacity['mean'],
+                self.config.batt.capacity['deviation_range_per'],
+                rng=self.config.rng) * 1000
+            max_charge_rate = get_dist(
+                self.config.batt.rated_charging_power['mean'],
+                self.config.batt.rated_charging_power['deviation_range_per'],
+                rng=self.config.rng) * 1000
             max_discharge_rate = max_charge_rate
             inverter_efficiency = self.config.batt.inv_efficiency / 100
-            charging_loss = get_dist(self.config.batt.rated_charging_loss['mean'],
-                                     self.config.batt.rated_charging_loss['deviation_range_per']) / 100
+            charging_loss = get_dist(
+                self.config.batt.rated_charging_loss['mean'],
+                self.config.batt.rated_charging_loss['deviation_range_per'],
+                rng=self.config.rng) / 100
             discharging_loss = charging_loss
             round_trip_efficiency = charging_loss * discharging_loss
             rated_power = max(max_charge_rate, max_discharge_rate)
@@ -1856,7 +1860,7 @@ class Solar:
             None
         """
 
-        if rng.uniform(0, 1) <= solar_prob:
+        if self.config.rng.uniform(0, 1) <= solar_prob:
             num_panel = np.floor(floor_area / 175)
             inverter_undersizing = 1.0
             inv_power = num_panel * 350 * inverter_undersizing
@@ -1942,14 +1946,14 @@ class Electric_Vehicle:
         Returns:
             None
         """
-        if rng.uniform(0, 1) <= ev_prob:
+        if self.config.rng.uniform(0, 1) <= ev_prob:
             # Select an ev model:
-            ev_name = Electric_Vehicle.selectEVmodel(self.config.ev.sale_probability, rng.uniform(0, 1))
+            ev_name = Electric_Vehicle.selectEVmodel(self.config.ev.sale_probability, self.config.rng.uniform(0, 1))
             ev_range = self.config.ev.range_miles[ev_name]
             ev_mileage = self.config.ev.miles_per_kWh[ev_name]
             ev_charge_eff = self.config.ev.charging_efficiency
             # Check if level 1 charger is used or level 2
-            if rng.uniform(0, 1) <= self.config.ev.level_1_usage:
+            if self.config.rng.uniform(0, 1) <= self.config.ev.level_1_usage:
                 ev_max_charge = self.config.ev.level_1_max_power_kW
                 volt_conf = 'IS110'  # for level 1 charger, 110 V is good
             else:
@@ -2044,7 +2048,7 @@ class Electric_Vehicle:
         """
 
         while True:
-            mile_ind = rng.integers(0, len(self.config.ev_dr_metadata['TRPMILES']))
+            mile_ind = self.config.rng.integers(0, len(self.config.ev_dr_metadata['TRPMILES']))
             daily_miles = self.config.ev_dr_metadata['TRPMILES'].iloc[mile_ind]
             if ev_range * 0.0 < daily_miles < ev_range * (1 - self.config.ev_reserved_soc / 100):
                 break
@@ -2453,10 +2457,10 @@ class Feeder:
                         lg_v_sm = tkva / avg_house - nhouse
                         # > 0 if we rounded down the number of houses
                         # Get the income level for the dso_type and state
-                        inc_lev = self.config.res_bld.selectIncomeLevel(dso_income_pct, rng.uniform(0, 1))
+                        inc_lev = self.config.res_bld.selectIncomeLevel(dso_income_pct, self.config.rng.uniform(0, 1))
                         # Get the vintage table for dso_type, state, and income level
                         dsoThermalPct = self.config.res_bld.getDsoThermalTable(self.config.income_level[inc_lev])
-                        bldg, ti = self.config.res_bld.selectResidentialBuilding(dsoThermalPct, rng.uniform(0, 1))
+                        bldg, ti = self.config.res_bld.selectResidentialBuilding(dsoThermalPct, self.config.rng.uniform(0, 1))
                         if bldg == 0:
                             total_sf += nhouse
                         elif bldg == 1:

@@ -98,36 +98,36 @@ class TespMonitorJSON:
             pycall = 'python3'
 
         if config["messenger"] == 'FNCS':
-            # write a YAML for the solution monitor
-            yamlstr = """name: """ + mtr_federate + """
-    time_delta: """ + str(config['AgentPrep']['HVAC']['MarketClearingPeriod']) + """s
-    broker: tcp://localhost:""" + str(config['port']) + """
-    aggregate_sub: true
-    values:
-    TPV_""" + dso_num + """:
-        topic: """ """pypower/lmp_da""" + dso_num + """
-        default: 0
-        type: double
-        list: false
-    LMP_""" + dso_num + """:
-        topic: """  """pypower/lmp_rt_""" + dso_num + """
-        default: 0
-        type: double
-        list: false
-    clear_price:
-        topic: """ """/pypower/cleared_q_rt_ """ + dso_num + """
-        default: 0
-        type: double
-        list: false
-    distribution_load:
-        topic: """  """/gldSubstation_ """ + dso_num + """
-        default: 0
-        type: complex
-        list: false
-    """
-            
-            for dso_num in range (1,9):
+            for dso_num in range(1,9):
                 dso_num = str(dso_num)
+                # write a YAML for the solution monitor
+                yamlstr = """name: """ + mtr_federate + """
+        time_delta: """ + str(config['AgentPrep']['HVAC']['MarketClearingPeriod']) + """s
+        broker: tcp://localhost:""" + str(config['port']) + """
+        aggregate_sub: true
+        values:
+        TPV_""" + dso_num + """:
+            topic: """ """pypower/lmp_da""" + dso_num + """
+            default: 0
+            type: double
+            list: false
+        LMP_""" + dso_num + """:
+            topic: """  """pypower/lmp_rt_""" + dso_num + """
+            default: 0
+            type: double
+            list: false
+        clear_price:
+            topic: """ """/pypower/cleared_q_rt_ """ + dso_num + """
+            default: 0
+            type: double
+            list: false
+        distribution_load:
+            topic: """  """/gldSubstation_ """ + dso_num + """
+            default: 0
+            type: complex
+            list: false
+        """
+            
                 monitor_gui_file = "monitor.json" # GUI launcher config
                 monitor_fed_file = f"DSO_{dso_num}_monitor_fncs.yaml"  # federate config
 

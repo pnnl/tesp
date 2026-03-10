@@ -41,6 +41,7 @@ class GLMModifier:
         self.model = GLMModel()
         self.glm = self.model.glm
         self.defaults = Defaults
+        self.rng = None
         self.extra_billing_meters = set()
         assign_defaults(self.defaults, feeder_entities_path)
 
@@ -359,7 +360,8 @@ class GLMModifier:
                 return row
         return 999999
 
-    def randomize_residential_skew(self, skew_std: float|None = None, skew_abs_max: float|None = None) -> float:
+    def randomize_residential_skew(self, skew_std: float|None = None, skew_abs_max: float|None = None,
+                                   rng: np.random.Generator|None = None) -> float:
         """Returns a random value used to diversify the residential loads being
         defined with schedule skew. Uses two parameters found in
         feeder defaults.json that can optionally be defined by the caller
@@ -374,9 +376,10 @@ class GLMModifier:
             skew_std = self.defaults.residential_skew_std
         if skew_abs_max is None:
             skew_abs_max = self.defaults.residential_skew_max
-        return self.randomize_skew(skew_std, skew_abs_max)
+        return self.randomize_skew(skew_std, skew_abs_max, rng=rng)
 
-    def randomize_commercial_skew(self, skew_std: float|None = None, skew_abs_max: float|None = None, ) -> float:
+    def randomize_commercial_skew(self, skew_std: float|None = None, skew_abs_max: float|None = None,
+                                  rng: np.random.Generator|None = None) -> float:
         """Returns a random value used to diversify the commercial loads being
         defined with schedule skew. Uses two parameters found in
         feeder defaults.json that can optionally be defined by the caller
@@ -391,10 +394,9 @@ class GLMModifier:
             skew_std = self.defaults.commercial_skew_std
         if skew_abs_max is None:
             skew_abs_max = self.defaults.commercial_skew_max
-        return self.randomize_skew(skew_std, skew_abs_max)
+        return self.randomize_skew(skew_std, skew_abs_max, rng=rng)
 
-    @staticmethod
-    def randomize_skew(stdev: float, skew_abs_max: float) -> float:
+    def randomize_skew(self, stdev: float, skew_abs_max: float, rng: np.random.Generator|None = None) -> float:
         """Samples a normal distribution to find a schedule skew value given
         a standard deviation and an absolute maximum deviation.
 
@@ -405,7 +407,11 @@ class GLMModifier:
         Returns:
             float: Randomized skew value
         """
-        sk = stdev * np.random.randn()
+        local_rng = rng if rng is not None else self.rng
+        if local_rng is None:
+            sk = stdev * np.random.randn()
+        else:
+            sk = stdev * local_rng.standard_normal()
         if sk < -skew_abs_max:
             sk = -skew_abs_max
         elif sk > skew_abs_max:
