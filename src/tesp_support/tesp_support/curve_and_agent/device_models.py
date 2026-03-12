@@ -417,13 +417,30 @@ class WaterHeaterModel:
         Returns:
             FlexibilityEnvelope.
         """
-        Q_min = 0.0
         max_temp = state.thermostat_setpoint + 10.0
         Q_max = 0.0 if state.tank_temp_upper >= max_temp else state.element_power
 
         avg_temp = (state.tank_temp_upper + state.tank_temp_lower) / 2.0
         standby_loss = state.tank_UA * (avg_temp - ambient_temp)
-        Q_baseline = max(0.0, min(standby_loss / _KW_TO_BTU_HR, Q_max))
+        Q_standby = standby_loss / _KW_TO_BTU_HR
+
+        # --- Draw-forecast contribution (design: draws parameter) ---
+        # Convert expected draw energy (kWh) to the extra heating power
+        # needed to reheat the drawn-in cold water over this interval.
+        draw_kw = 0.0
+        draw_guard_kw = 0.0
+        if draw_forecast is not None and draw_forecast.expected > 0:
+            interval_hr = interval_duration / 3600.0
+            draw_kw = draw_forecast.expected / max(interval_hr, 1e-6)
+            # Conservative guard: 95th-percentile draw → higher Q_min
+            import math
+
+            sigma = math.sqrt(max(draw_forecast.variance, 0.0))
+            draw_p95 = draw_forecast.expected + 1.645 * sigma
+            draw_guard_kw = draw_p95 / max(interval_hr, 1e-6)
+
+        Q_baseline = max(0.0, min(Q_standby + draw_kw, Q_max))
+        Q_min = max(0.0, min(draw_guard_kw, Q_max))
 
         return FlexibilityEnvelope(
             Q_min=Q_min,

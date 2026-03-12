@@ -12,6 +12,7 @@ from enums_and_constants import (
     MarketPhase,
     OperatingMode,
     IterationType,
+    ProductType,
 )
 from data_types import (
     BidCurve,
@@ -213,6 +214,7 @@ class DeviceAgent:
             market_id=market_id,
             market_type=market_type,
             timing_params=timing,
+            clearing_time=clearing_time,
             operating_mode=mode,
             iteration_protocol=protocol,
             n_informational_planned=n_info,
@@ -270,13 +272,148 @@ class DeviceAgent:
             FlexibilityEnvelope with feasible power range and
             confidence-level variants.
         """
-        try:
+        from data_types import ContinuousDataPoint
+
+        if self._device_type in (DeviceType.HVAC_AC_ONLY, DeviceType.HVAC_HEAT_PUMP):
+            # Gather forecasts from DataStreamManager; fall back to
+            # current state values when streams aren't registered.
+            outdoor_stream = self._data_streams.get_continuous("outdoor_air_temp")
+            if outdoor_stream:
+                outdoor_forecast = outdoor_stream.get_series(0.0, interval_duration)
+            else:
+                outdoor_forecast = [
+                    ContinuousDataPoint(
+                        value=state.outdoor_air_temp,
+                    )
+                ]
+
+            solar_stream = self._data_streams.get_continuous("solar_gain")
+            if solar_stream:
+                solar_forecast = solar_stream.get_series(0.0, interval_duration)
+            else:
+                solar_forecast = [
+                    ContinuousDataPoint(
+                        value=getattr(state, "solar_gain", 0.0),
+                    )
+                ]
+
+            internal_stream = self._data_streams.get_continuous("internal_gain")
+            if internal_stream:
+                internal_forecast = internal_stream.get_series(0.0, interval_duration)
+            else:
+                internal_forecast = [
+                    ContinuousDataPoint(
+                        value=getattr(state, "internal_gain", 0.0),
+                    )
+                ]
+
+            setpoint_sched = self._data_streams.get_schedule("hvac_setpoint_schedule")
+            if setpoint_sched:
+                setpoint_schedule = setpoint_sched.get_series(0.0, interval_duration)
+            else:
+                setpoint_schedule = [
+                    ContinuousDataPoint(
+                        value=state.thermostat_setpoint,
+                    )
+                ]
+
             envelope = self._device_model.estimate_flexibility(
-                state=state, interval_duration=interval_duration
+                state=state,
+                outdoor_temp_forecast=outdoor_forecast,
+                solar_gain_forecast=solar_forecast,
+                internal_gain_forecast=internal_forecast,
+                setpoint_schedule=setpoint_schedule,
+                interval_duration=interval_duration,
             )
-        except TypeError:
-            # Some device models need additional args; fallback
-            envelope = FlexibilityEnvelope(Q_min=0.0, Q_max=5.0, Q_baseline=3.0)
+
+        elif self._device_type == DeviceType.WATER_HEATER:
+            # Gather water heater-specific data from DataStreamManager
+            draw_stream = self._data_streams.get_event("hot_water_draw")
+            if draw_stream:
+                draw_forecast = draw_stream.get_cumulative_energy_distribution(
+                    0.0, interval_duration
+                )
+            else:
+                from data_types import QuantilePoint
+
+                draw_forecast = QuantilePoint(expected=0.0, variance=0.0)
+
+            inlet_stream = self._data_streams.get_continuous("inlet_water_temp")
+            if inlet_stream:
+                inlet_temp_forecast = inlet_stream.get_at(0.0)
+            else:
+                inlet_temp_forecast = None
+
+            # Ambient temperature around the tank (typically indoor temp)
+            ambient_temp = getattr(state, "ambient_temp", 70.0)
+
+            # Minimum tank temperature from constraint stream
+            tank_constraint = self._data_streams.get_constraint("tank_temp_minimum")
+            if tank_constraint:
+                min_tank_temp = tank_constraint._required_value
+            else:
+                min_tank_temp = 120.0  # default Legionella prevention
+
+            envelope = self._device_model.estimate_flexibility(
+                state=state,
+                draw_forecast=draw_forecast,
+                inlet_temp_forecast=inlet_temp_forecast,
+                ambient_temp=ambient_temp,
+                min_tank_temp=min_tank_temp,
+                interval_duration=interval_duration,
+            )
+
+        elif self._device_type == DeviceType.EV_CHARGER:
+            # Gather EV-specific data from DataStreamManager
+            dep_constraint = self._data_streams.get_constraint("ev_departure_soc")
+            if dep_constraint and dep_constraint._deadline is not None:
+                departure_constraint = (
+                    dep_constraint._deadline,
+                    dep_constraint._required_value,
+                )
+                time_until_departure = dep_constraint._deadline  # relative to now
+            else:
+                departure_constraint = None
+                time_until_departure = None
+
+            pref_sched = self._data_streams.get_schedule("ev_preferred_soc")
+            if pref_sched:
+                preferred_soc = pref_sched.get_at(0.0).value
+            else:
+                preferred_soc = 0.90  # default
+
+            envelope = self._device_model.estimate_flexibility(
+                state=state,
+                departure_constraint=departure_constraint,
+                preferred_soc=preferred_soc,
+                interval_duration=interval_duration,
+                time_until_departure=time_until_departure,
+            )
+
+        elif self._device_type == DeviceType.BATTERY:
+            # Gather battery-specific data from DataStreamManager
+            reserve_constraint = self._data_streams.get_constraint("soc_reserve")
+            if reserve_constraint:
+                soc_reserve = reserve_constraint._required_value
+            else:
+                soc_reserve = 0.20  # default
+
+            pref_sched = self._data_streams.get_schedule("battery_preferred_soc")
+            if pref_sched:
+                soc_preferred = pref_sched.get_at(0.0).value
+            else:
+                soc_preferred = 0.80  # default
+
+            envelope = self._device_model.estimate_flexibility(
+                state=state,
+                soc_reserve=soc_reserve,
+                soc_preferred=soc_preferred,
+                interval_duration=interval_duration,
+            )
+
+        else:
+            raise ValueError(f"Unsupported device type: {self._device_type}")
+
         self._current_flexibility = envelope
         return envelope
 
@@ -587,6 +724,20 @@ class DeviceAgent:
                 interval_id=f"int_{market_obj.market_id}",
             )
 
+        # F6: record tentative commitment for this negotiation round.
+        if self._flexibility_ledger is not None:
+            timing = market_obj.timing_params
+            qty = 0.0
+            if bid.points:
+                qty = max(pt.quantity for pt in bid.points)
+            self._flexibility_ledger.hold_tentative(
+                market_id=market_obj.market_id,
+                market_type=market_obj.market_type,
+                product_type=ProductType.ENERGY_BASE,
+                quantity=qty,
+                interval=(timing.t_delivery_start, timing.t_delivery_end),
+            )
+
     def _handle_market_lead(self, market_obj: MarketObject) -> None:
         """Execute Market Lead phase logic.
 
@@ -636,6 +787,20 @@ class DeviceAgent:
             )
             market_obj.advisory_history.append(advisory)
             market_obj.latest_advisory = advisory
+
+            # F6: update advisory commitment on the flexibility ledger.
+            if self._flexibility_ledger is not None:
+                timing = market_obj.timing_params
+                confidence = self._compute_confidence(market_obj.advisory_history)
+                self._flexibility_ledger.update_advisory(
+                    market_id=market_obj.market_id,
+                    quantity=Q_proj,
+                    interval=(timing.t_delivery_start, timing.t_delivery_end),
+                    confidence=confidence,
+                    cleared_price=clearing_result.cleared_price,
+                    penalty_model_id="",
+                    iteration=clearing_result.iteration,
+                )
 
             # Update price forecast
             timing = market_obj.timing_params
@@ -689,6 +854,17 @@ class DeviceAgent:
         if state is not None:
             command = self.translate_to_control(Q_target, state)
             market_obj.control_command = command
+
+        # F6: book firm commitment for delivery interval.
+        if self._flexibility_ledger is not None:
+            timing = market_obj.timing_params
+            self._flexibility_ledger.book_firm(
+                market_id=market_obj.market_id,
+                quantity=Q_target,
+                interval=(timing.t_delivery_start, timing.t_delivery_end),
+                cleared_price=clearing_result.cleared_price,
+                penalty_model_id="",
+            )
 
     def _handle_delivery_start(self, market_obj: MarketObject) -> None:
         """Execute logic when a market first enters Delivery.
@@ -810,6 +986,28 @@ class DeviceAgent:
                     self._handle_negotiation(mo)
                 elif new_phase == MarketPhase.MARKET_LEAD:
                     self._handle_market_lead(mo)
+                elif new_phase == MarketPhase.ASSESSMENT:
+                    comm = self._market_comms.get(mo.market_type)
+                    if comm is not None:
+                        result = comm.receive_clear(market_id=mo.market_id)
+                    else:
+                        result = None
+                    if result is None:
+                        result = ClearingResult(market_id=mo.market_id)
+                    self._handle_assessment(mo, result)
+                elif new_phase == MarketPhase.DELIVERY_LEAD:
+                    comm = self._market_comms.get(mo.market_type)
+                    if comm is not None:
+                        result = comm.receive_clear(market_id=mo.market_id)
+                    else:
+                        result = None
+                    if result is None:
+                        result = ClearingResult(
+                            market_id=mo.market_id,
+                            cleared_price=mo.cleared_price,
+                            cleared_quantity=mo.cleared_quantity,
+                        )
+                    self._handle_delivery_lead(mo, result)
                 elif new_phase == MarketPhase.DELIVERY:
                     self._handle_delivery_start(mo)
                 elif new_phase == MarketPhase.RECONCILE:

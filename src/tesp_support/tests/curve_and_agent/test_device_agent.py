@@ -886,6 +886,180 @@ class TestStep:
         hvac_agent.step(current_time=1000.0)
 
 
+class TestDesignContractsStateMachine:
+    """Design-contract tests from state_machine_market + sequence docs.
+
+    These tests intentionally encode required behavior from
+    `design/curve_and_agent/state_machine_market.plantuml` and
+    `design/curve_and_agent/sequence_rt_bidding.plantuml`.
+    """
+
+    def test_step_handles_assessment_transition(
+        self, hvac_agent, mock_market_comm, binding_clearing
+    ):
+        """Design: MARKET_LEAD -> ASSESSMENT must execute assessment logic.
+
+        Ground truth: sequence_rt_bidding.plantuml (binding path) and
+        state_machine_market.plantuml (ASSESSMENT phase behavior).
+        """
+        mo = _make_market_object(market_id="RT_1000")
+        mo.current_phase = MarketPhase.MARKET_LEAD
+        mo.should_transition = MagicMock(return_value=MarketPhase.ASSESSMENT)
+        hvac_agent._market_objects[mo.market_id] = mo
+
+        mock_market_comm.receive_clear = MagicMock(return_value=binding_clearing)
+        hvac_agent._market_comms[mo.market_type] = mock_market_comm
+        hvac_agent._handle_assessment = MagicMock()
+
+        hvac_agent.step(current_time=1000.0)
+
+        mock_market_comm.receive_clear.assert_called_once_with(market_id=mo.market_id)
+        hvac_agent._handle_assessment.assert_called_once_with(mo, binding_clearing)
+
+    def test_step_handles_delivery_lead_transition(
+        self, hvac_agent, mock_market_comm, binding_clearing
+    ):
+        """Design: ASSESSMENT -> DELIVERY_LEAD must execute delivery-lead logic."""
+        mo = _make_market_object(market_id="RT_1001")
+        mo.current_phase = MarketPhase.ASSESSMENT
+        mo.should_transition = MagicMock(return_value=MarketPhase.DELIVERY_LEAD)
+        hvac_agent._market_objects[mo.market_id] = mo
+
+        mock_market_comm.receive_clear = MagicMock(return_value=binding_clearing)
+        hvac_agent._market_comms[mo.market_type] = mock_market_comm
+        hvac_agent._handle_delivery_lead = MagicMock()
+
+        hvac_agent.step(current_time=1000.0)
+
+        mock_market_comm.receive_clear.assert_called_once_with(market_id=mo.market_id)
+        hvac_agent._handle_delivery_lead.assert_called_once_with(mo, binding_clearing)
+
+
+class TestDesignContractsFlexibilityLedger:
+    """Design-contract tests for F6 ledger lifecycle integration.
+
+    Ground truth comes from sequence_rt_bidding.plantuml and
+    state_machine_market.plantuml:
+      - NEGOTIATION: hold_tentative
+      - ASSESSMENT informational: update_advisory
+      - DELIVERY_LEAD binding: book_firm
+    """
+
+    def test_negotiation_records_tentative_commitment(
+        self, hvac_agent, mock_market_comm, rt_timing, proportional_penalty
+    ):
+        hvac_agent.register_market(
+            market_type=MarketType.RT_ENERGY,
+            timing_params=rt_timing,
+            operating_mode=OperatingMode.BIDDING,
+            penalty_model=proportional_penalty,
+            communication=mock_market_comm,
+        )
+        mo = _make_market_object(market_id="RT_1200", timing_params=rt_timing)
+
+        hvac_agent._current_state = HVACState()
+        hvac_agent._current_flexibility = FlexibilityEnvelope(
+            Q_min=0.0, Q_max=5.0, Q_baseline=3.0
+        )
+        hvac_agent._current_preference_curve = PreferenceCurve(
+            device_type=DeviceType.HVAC_AC_ONLY,
+            Q_0=3.0,
+            P_0=0.10,
+            k=0.3,
+        )
+        hvac_agent._flexibility_ledger = MagicMock()
+
+        hvac_agent._handle_negotiation(mo)
+
+        assert hvac_agent._flexibility_ledger.hold_tentative.called
+
+    def test_assessment_informational_updates_advisory_commitment(
+        self, hvac_agent, informational_clearing
+    ):
+        mo = _make_market_object(market_id="RT_1300")
+        mo.current_phase = MarketPhase.ASSESSMENT
+        mo.preference_curve = PreferenceCurve(
+            device_type=DeviceType.HVAC_AC_ONLY,
+            Q_0=3.0,
+            P_0=0.10,
+            k=0.3,
+        )
+        hvac_agent._flexibility_ledger = MagicMock()
+
+        hvac_agent._handle_assessment(mo, informational_clearing)
+
+        assert hvac_agent._flexibility_ledger.update_advisory.called
+
+    def test_delivery_lead_binding_books_firm_commitment(
+        self, hvac_agent, binding_clearing
+    ):
+        mo = _make_market_object(market_id="RT_1400")
+        hvac_agent._current_state = HVACState()
+        hvac_agent._current_preference_curve = PreferenceCurve(
+            device_type=DeviceType.HVAC_AC_ONLY,
+            Q_0=3.0,
+            P_0=0.10,
+            k=0.3,
+        )
+        hvac_agent._flexibility_ledger = MagicMock()
+
+        hvac_agent._handle_delivery_lead(mo, binding_clearing)
+
+        assert hvac_agent._flexibility_ledger.book_firm.called
+
+
+class TestDesignContractsCycleRelativeTiming:
+    """Design-contract tests for cycle-relative timing semantics.
+
+    Ground truth from design docs:
+      - phase times are offsets relative to market clear time
+      - a spawned market cycle should not become ACTIVE until
+        `clearing_time + t_activate`
+    """
+
+    def test_spawned_cycle_does_not_activate_before_cycle_window(
+        self, hvac_agent, mock_market_comm, proportional_penalty
+    ):
+        timing = MarketTimingParams()  # defaults: t_activate=-600, t_clear=0
+        hvac_agent.register_market(
+            market_type=MarketType.RT_ENERGY,
+            timing_params=timing,
+            operating_mode=OperatingMode.BIDDING,
+            penalty_model=proportional_penalty,
+            communication=mock_market_comm,
+        )
+
+        mid = hvac_agent.spawn_market_cycle(
+            market_type=MarketType.RT_ENERGY,
+            clearing_time=3600.0,
+        )
+        mo = hvac_agent._market_objects[mid]
+
+        # If timing is relative to clearing_time, activation is at 3000s.
+        assert mo.should_transition(current_time=0.0) is None
+
+    def test_spawned_cycle_reports_next_event_relative_to_clearing_time(
+        self, hvac_agent, mock_market_comm, proportional_penalty
+    ):
+        timing = MarketTimingParams()  # defaults: t_activate=-600
+        hvac_agent.register_market(
+            market_type=MarketType.RT_ENERGY,
+            timing_params=timing,
+            operating_mode=OperatingMode.BIDDING,
+            penalty_model=proportional_penalty,
+            communication=mock_market_comm,
+        )
+
+        mid = hvac_agent.spawn_market_cycle(
+            market_type=MarketType.RT_ENERGY,
+            clearing_time=3600.0,
+        )
+        mo = hvac_agent._market_objects[mid]
+
+        # Expected next transition time: clearing_time + t_activate.
+        assert mo.get_next_event_time(current_time=0.0) == pytest.approx(3000.0)
+
+
 # ===================================================================
 # Convergence / Confidence Helpers
 # ===================================================================

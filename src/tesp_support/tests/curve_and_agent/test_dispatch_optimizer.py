@@ -134,6 +134,65 @@ class TestDispatchAmenityEffect:
         assert abs(solution.Q - 5.0) < abs(8.0 - 5.0)
 
 
+class TestDispatchBidirectionalBatteryContracts:
+    """Design contracts from sequence_mo_clearing for battery behavior.
+
+    Ground truth: battery commitments/allocations may be negative when
+    discharging (exporting) at high prices.
+    """
+
+    def test_negative_committed_quantity_is_preserved(self, optimizer):
+        """A discharge commitment (negative kW) should remain negative in
+        both Q* and per-market allocation when within bounds."""
+        battery_curve = PreferenceCurve(
+            device_type=DeviceType.BATTERY,
+            Q_0=0.0,
+            P_0=0.10,
+            k=0.8,
+        )
+        economics = {
+            "BAT_RT": _make_delivery(
+                "BAT_RT", committed=-3.0, price=0.30, marginal_pen=0.5
+            ),
+        }
+
+        solution = optimizer.solve(
+            economics=economics,
+            Q_min=-5.0,
+            Q_max=5.0,
+            preference_curve=battery_curve,
+            amenity_weight=0.0,
+        )
+
+        assert solution.Q == pytest.approx(-3.0, abs=0.1)
+        assert solution.allocation["BAT_RT"] == pytest.approx(-3.0, abs=0.1)
+
+    def test_negative_dispatch_respects_q_min_bound(self, optimizer):
+        """If aggregate discharge exceeds physical minimum, Q* should clamp
+        at Q_min (still negative), not collapse to zero."""
+        battery_curve = PreferenceCurve(
+            device_type=DeviceType.BATTERY,
+            Q_0=0.0,
+            P_0=0.10,
+            k=0.8,
+        )
+        economics = {
+            "BAT_RT": _make_delivery(
+                "BAT_RT", committed=-8.0, price=0.40, marginal_pen=1.0
+            ),
+        }
+
+        solution = optimizer.solve(
+            economics=economics,
+            Q_min=-5.0,
+            Q_max=5.0,
+            preference_curve=battery_curve,
+            amenity_weight=0.0,
+        )
+
+        assert solution.Q == pytest.approx(-5.0, abs=0.1)
+
+
 # ===================================================================
 # DeliveryValueCalculator Tests
 # ===================================================================

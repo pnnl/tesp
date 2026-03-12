@@ -107,8 +107,16 @@ class DispatchOptimizer:
         allocation = {}
         displacement_chain = {}
         for mid, econ in sorted_markets:
-            alloc = min(remaining, econ.committed_qty)
-            alloc = max(0.0, alloc)
+            committed = econ.committed_qty
+            if remaining >= 0.0 and committed >= 0.0:
+                alloc = min(remaining, committed)
+            elif remaining <= 0.0 and committed <= 0.0:
+                # Negative commitments represent discharge/export.
+                # Use max() to avoid over-allocating beyond the remaining
+                # negative dispatch magnitude.
+                alloc = max(remaining, committed)
+            else:
+                alloc = 0.0
             allocation[mid] = alloc
             remaining -= alloc
 

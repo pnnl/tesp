@@ -93,6 +93,7 @@ class MarketObject:
         market_id: str,
         market_type: MarketType,
         timing_params: MarketTimingParams,
+        clearing_time: float = 0.0,
         operating_mode: OperatingMode = OperatingMode.BIDDING,
         iteration_protocol: str = "mo_signaled",
         n_informational_planned: Optional[int] = None,
@@ -100,6 +101,7 @@ class MarketObject:
         self.market_id = market_id
         self.market_type = market_type
         self.timing_params = timing_params
+        self.clearing_time = clearing_time
         self.operating_mode = operating_mode
         self.iteration_protocol = iteration_protocol
         self.n_informational_planned = n_informational_planned
@@ -171,7 +173,8 @@ class MarketObject:
         attr = _PHASE_TO_NEXT_TIME.get(self.current_phase)
         if attr is None:
             return None
-        return getattr(self.timing_params, attr)
+        # Timing params are offsets relative to cycle clearing time.
+        return self.clearing_time + getattr(self.timing_params, attr)
 
     def should_transition(self, current_time: float) -> Optional[MarketPhase]:
         """Check if a transition should occur at the current time.

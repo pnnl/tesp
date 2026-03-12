@@ -105,8 +105,8 @@ class TestDSOLoadEstimation:
         """Q_inflex = total - flexible + losses - solar.
 
         total=1000 kW, flexible=100 kW, solar=50 kW, loss_factor=0.05.
-        losses = (1000 - 100 - 50) × 0.05 = 42.5 kW
-        Q_inflex = 1000 - 100 + 42.5 - 50 = 892.5 kW
+        losses = 1000 × 0.05 = 50 kW  (design: losses on gross total)
+        Q_inflex = 1000 - 100 + 50 - 50 = 900 kW
         """
         bid = load_engine.estimate_inflexible_load(
             interval=(0.0, 300.0),
@@ -116,7 +116,7 @@ class TestDSOLoadEstimation:
             loss_factor=0.05,
         )
         assert isinstance(bid, DSOInflexibleLoadBid)
-        assert bid.quantity == pytest.approx(892.5, abs=5.0)
+        assert bid.quantity == pytest.approx(900.0, abs=5.0)
         assert bid.feeder_id == "feeder_1"
 
 

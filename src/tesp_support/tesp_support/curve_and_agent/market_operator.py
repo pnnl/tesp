@@ -169,8 +169,7 @@ class DSOLoadEstimationEngine:
         Returns:
             DSOInflexibleLoadBid with the computed quantity.
         """
-        net_load = total_load_forecast - flexible_committed - btm_solar_forecast
-        losses = net_load * loss_factor
+        losses = total_load_forecast * loss_factor
         q_inflexible = (
             total_load_forecast - flexible_committed + losses - btm_solar_forecast
         )
