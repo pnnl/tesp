@@ -13,8 +13,9 @@ import tesp_support.dsot.plots as pt
 import tesp_support.dsot.dso_quadratic_curves as qc
 import tesp_support.dsot.dso_rate_making as rm
 import tesp_support.dsot.dso_helper_functions as hf
-from build_actual_da_q import reconstruct_actual_da_quantities
+from build_actual_da_q_from_case_outputs import reconstruct_actual_da_quantities
 from calibrate_q_bid_forecast_correction import calibrate_q_bid_forecast_correction
+from calibrate_config import merge_calibration_into_config
 
 
 """Run annual DSOT postprocessing for one or more cases.
@@ -86,11 +87,16 @@ qbid_temperature_csv_template = None  # e.g. C:/path/to/DSO_{dso}/weather.dat
 qbid_temperature_column = 'temperature'  # weather.dat uses 'temperature'
 qbid_temperature_column_template = None
 qbid_temperature_unit = 'C'  # set to 'F' if source temperature is already Fahrenheit
+qbid_auto_discover_weather_dat = True
 qbid_min_samples = 72
 qbid_include_diagnostics = True
 qbid_drop_total = True
 qbid_actual_output_file = 'actual_da_q.csv'
 qbid_calibration_output_file = 'Q_bid_forecast_correction_calibrated.json'
+qbid_auto_merge_to_new_config = False
+qbid_source_config_json5 = '../data/rates_config.json5'
+qbid_output_config_json5 = 'rates_config_calibrated.json5'
+qbid_diff_report_json = 'rates_config_calibration_diff_report.json'
 
 def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_path : str, run_base: bool):
     """Execute annual postprocessing for a list of cases.
@@ -173,12 +179,12 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
         if not os.path.isfile(os.path.join(case_path, 'Customer_CSF_Summary.csv')):
             customer_cfs = True
         else:
-            customer_cfs = False
+            customer_cfs = True
 
         if not os.path.isfile(os.path.join(case_path, 'DSO_CSF_Summary.csv')):
             dso_cfs = True
         else:
-            dso_cfs = False
+            dso_cfs = True
 
         # If True, derive first/last analysis day from each monthly simulation.
         # If False, use the fixed day values below.
@@ -345,9 +351,29 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
                 da_error_csv = Path(case_path) / 'DA_Q_error.csv'
                 if not baseline_csv.is_file() or not da_error_csv.is_file():
                     print('Skipping integrated Q-bid calibration: DA_Q_forecast.csv and/or DA_Q_error.csv missing')
-                elif not qbid_temperature_csv and not qbid_temperature_csv_template:
-                    print('Skipping integrated Q-bid calibration: qbid_temperature_csv and qbid_temperature_csv_template are not configured')
                 else:
+                    temperature_csv_template = None
+                    if qbid_temperature_csv_template:
+                        temperature_csv_template = os.path.expandvars(qbid_temperature_csv_template)
+
+                    # Auto-discover per-DSO weather.dat file layout when no explicit
+                    # temperature source is configured.
+                    if not qbid_temperature_csv and not temperature_csv_template and qbid_auto_discover_weather_dat and dso_range:
+                        candidate_templates = [
+                            str(Path(month_def[0][1]) / 'DSO_{dso}' / 'weather.dat'),
+                            str(Path(month_def[0][1]) / 'weather_Substation_{dso}' / 'weather.dat'),
+                        ]
+                        for candidate in candidate_templates:
+                            probe = Path(candidate.format(dso=dso_range[0]))
+                            if probe.is_file():
+                                temperature_csv_template = candidate
+                                print(f'Auto-discovered weather.dat template: {temperature_csv_template}')
+                                break
+
+                    if not qbid_temperature_csv and not temperature_csv_template:
+                        print('Skipping integrated Q-bid calibration: no temperature source configured or discovered')
+                        continue
+
                     actual_csv = reconstruct_actual_da_quantities(
                         case_path=Path(case_path),
                         forecast_file='DA_Q_forecast.csv',
@@ -359,10 +385,6 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
                     temperature_csv = None
                     if qbid_temperature_csv:
                         temperature_csv = Path(os.path.expandvars(qbid_temperature_csv))
-
-                    temperature_csv_template = None
-                    if qbid_temperature_csv_template:
-                        temperature_csv_template = os.path.expandvars(qbid_temperature_csv_template)
 
                     output_json = Path(case_path) / qbid_calibration_output_file
 
@@ -383,6 +405,19 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
                         f'Integrated Q-bid calibration complete for {len(fit_results)} DSO(s); '
                         f'output: {output_json}'
                     )
+
+                    if qbid_auto_merge_to_new_config:
+                        source_cfg = Path(os.path.expandvars(qbid_source_config_json5))
+                        output_cfg = Path(case_path) / qbid_output_config_json5
+                        diff_report = Path(case_path) / qbid_diff_report_json
+                        merge_calibration_into_config(
+                            source_config_json5=source_cfg,
+                            calibration_json=output_json,
+                            output_config_json5=output_cfg,
+                            report_json=diff_report,
+                        )
+                        print(f'Wrote calibrated config file: {output_cfg}')
+                        print(f'Wrote calibration comparison report: {diff_report}')
             except Exception as ex:
                 print(f'Integrated Q-bid calibration failed: {ex}')
 
@@ -580,8 +615,67 @@ def one_process():
     case_list = []
     case_list.append(str(case))
     run_annual_postprocessing(case_list, base_case_path, demand_case_path, run_base)
+
+
+def base_params_process():
+        """Generate base-case Q-bid forecast-correction parameters.
+
+        -------------------------------------------------------------------------------
+        Note: this function was generated by an AI assistant to reproduce the forecast
+        correction calibration process used in previous iterations of the DSOT analysis.
+        -------------------------------------------------------------------------------      
+        This wrapper runs a base-only annual postprocessing pass focused on
+        producing calibration artifacts for:
+
+        - Q_gain
+        - t_65
+        - t_65_2
+        - DC_change_Q_DA
+
+        Workflow performed by the integrated calibration block:
+
+        1. Reads precomputed forecast files in the base annual case folder:
+             - DA_Q_forecast.csv
+             - DA_Q_error.csv
+        2. Reconstructs actual DA quantity series to:
+             - actual_da_q.csv (configurable via qbid_actual_output_file)
+        3. Loads temperature data from one of the following sources:
+             - qbid_temperature_csv, or
+             - qbid_temperature_csv_template, or
+             - auto-discovered per-DSO weather.dat paths when
+                 qbid_auto_discover_weather_dat is True.
+        4. Calibrates weekday/weekend coefficients per DSO.
+        5. Writes calibration output to:
+             - Q_bid_forecast_correction_calibrated.json
+                 (configurable via qbid_calibration_output_file)
+
+        Prerequisites:
+        - Monthly case postprocessing should already have generated
+            DA_Q_forecast.csv and DA_Q_error.csv for the target base annual folder.
+        - Weather inputs (weather.dat) should be present if relying on
+            auto-discovery.
+
+        Notes:
+        - This wrapper temporarily forces integrate_q_bid_calibration=True and
+            restores its previous value afterwards.
+        - It processes only the base case by calling run_annual_postprocessing
+            with an empty case list and run_base=True.
+        """
+        global integrate_q_bid_calibration
+
+        base_case_path = flat_path
+        demand_case_path = TOU_path
+        run_base = True
+
+        prior_flag = integrate_q_bid_calibration
+        integrate_q_bid_calibration = True
+        try:
+                run_annual_postprocessing([], base_case_path, demand_case_path, run_base)
+        finally:
+                integrate_q_bid_calibration = prior_flag
     
 
 if __name__ == "__main__":
-    batch_process()
+    #batch_process()
     #one_process()
+    base_params_process()

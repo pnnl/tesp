@@ -254,6 +254,7 @@ class Config:
         """
         if hasattr(self, 'residential_meta_file_RECS'):
             if not self.residential_meta_file_RECS:
+                self.residential_meta_file_RECS = "residential_meta_file_RECS.json"
                 get_RECS_jsons(
                     os.path.join(self.data_path, self.residential_meta_file),
                     os.path.join(self.data_path, self.residential_meta_file_RECS),
