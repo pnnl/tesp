@@ -14,6 +14,7 @@ Transactive Energy Simulation Platform (TESP)
    Installing_Building_TESP
    Demonstrations_and_Examples
    Developing_Customizing_TESP
+   curve_and_agent/index
    References
    Archive
 

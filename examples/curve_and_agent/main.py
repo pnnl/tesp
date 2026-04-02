@@ -19,7 +19,7 @@ from data_streams import (
 )
 from device_agent import DeviceAgent
 from penalty_model import PenaltyModel
-from market_communication import MarketCommunicationInterface
+from market_agent import MarketCommunicationInterface
 from market_operator import (
     MarketOperator, SupplyCurve, DSOLoadEstimationEngine, DSOInflexibleLoadBid
 )

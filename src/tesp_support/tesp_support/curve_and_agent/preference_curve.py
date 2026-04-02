@@ -5,6 +5,7 @@
 #          isoelastic demand curve. This module is device-type-agnostic.
 # ============================================================================
 
+import math
 from typing import Optional, Tuple
 from data_types import BidPoint, FlexibilityEnvelope
 from enums_and_constants import DeviceType
@@ -13,20 +14,20 @@ from enums_and_constants import DeviceType
 class PreferenceCurve:
     """Parameterized isoelastic demand curve encoding customer willingness
     to trade amenity for financial benefit.
-    
+
     For standard (load-only) devices:
         Q(P) = Q_0 · (P / P_0)^{-ε}
-    
+
     For bidirectional devices (battery):
         Q(P) = Q_charge_max · (1 - (P/P_threshold)^ε) / (1 + (P/P_threshold)^ε)
-        
+
         This sigmoid crosses Q=0 at P=P_threshold and extends to negative
         quantities (discharge) at high prices.
-    
+
     The elasticity ε is derived from the customer preference factor k:
         k=0 → ε≈0 (perfectly inelastic, tracks amenity regardless of price)
         k=1 → ε=ε_max (highly elastic, aggressively responds to price)
-    
+
     Args:
         k: Customer preference factor (0=amenity, 1=financial).
             EXTERNAL: Provided as a customer setting/input.
@@ -55,7 +56,7 @@ class PreferenceCurve:
         epsilon_max: float = 5.0,
         device_type: DeviceType = DeviceType.HVAC_AC_ONLY,
         Q_discharge_max: float = 0.0,
-        degradation_cost: float = 0.0
+        degradation_cost: float = 0.0,
     ):
         self._k = k
         self._P_0 = P_0
@@ -68,71 +69,87 @@ class PreferenceCurve:
     @property
     def epsilon(self) -> float:
         """Compute the elasticity parameter from customer preference k.
-        
+
         The mapping k → ε can be linear, exponential, or logistic.
-        
+
         Returns:
             Elasticity parameter ε.
         """
-        raise NotImplementedError
+        return self._k * self._epsilon_max
 
     def evaluate(self, price: float) -> float:
         """Evaluate the preference curve at a given price.
-        
+
         For standard devices: returns desired power consumption (kW).
-        For batteries: returns desired power (positive=charge, 
+        For batteries: returns desired power (positive=charge,
             negative=discharge).
-        
+
         Args:
             price: Market price ($/kWh).
-        
+
         Returns:
             Desired power quantity (kW).
         """
-        raise NotImplementedError
+        eps = self.epsilon
 
-    def evaluate_with_bounds(
-        self,
-        price: float,
-        Q_min: float,
-        Q_max: float
-    ) -> float:
+        if self._device_type == DeviceType.BATTERY:
+            P_threshold = self._P_0
+            if P_threshold <= 0:
+                P_threshold = 1e-9
+            if price <= 0:
+                price = 1e-9
+            ratio = price / P_threshold
+            if eps == 0:
+                return 0.0
+            r_eps = ratio**eps
+            return self._Q_0 * (1.0 - r_eps) / (1.0 + r_eps)
+
+        # Standard isoelastic: Q(P) = Q_0 * (P / P_0)^{-eps}
+        if price <= 0:
+            price = 1e-9
+        if self._P_0 <= 0:
+            return self._Q_0
+        ratio = price / self._P_0
+        if eps == 0:
+            return self._Q_0
+        return self._Q_0 * (ratio ** (-eps))
+
+    def evaluate_with_bounds(self, price: float, Q_min: float, Q_max: float) -> float:
         """Evaluate the preference curve, clamped to feasible bounds.
-        
+
         Args:
             price: Market price ($/kWh).
             Q_min: Minimum feasible power (kW).
                 INTERNAL: From FlexibilityEnvelope.
             Q_max: Maximum feasible power (kW).
                 INTERNAL: From FlexibilityEnvelope.
-        
+
         Returns:
             Desired power, clamped to [Q_min, Q_max].
         """
-        raise NotImplementedError
+        q = self.evaluate(price)
+        return max(Q_min, min(Q_max, q))
 
-    def get_amenity_cost(
-        self,
-        Q_actual: float,
-        Q_preferred: float
-    ) -> float:
+    def get_amenity_cost(self, Q_actual: float, Q_preferred: float) -> float:
         """Compute the amenity cost of operating at Q_actual instead of
         Q_preferred.
-        
+
         This is the "discomfort cost" that enters the dispatch optimizer
         objective function. It is scaled by the customer preference k:
         k→0: high amenity cost (comfort-focused customer)
         k→1: low amenity cost (financially-focused customer)
-        
+
         Args:
             Q_actual: Actual operating point (kW).
             Q_preferred: Customer's preferred operating point (kW).
                 INTERNAL: From FlexibilityEnvelope.Q_baseline.
-        
+
         Returns:
             Amenity cost in $ for this timestep.
         """
-        raise NotImplementedError
+        deviation = Q_actual - Q_preferred
+        k_factor = max(1.0 - self._k, 0.01)
+        return k_factor * self._P_0 * deviation * deviation
 
     def sample_bid_curve(
         self,
@@ -141,10 +158,10 @@ class PreferenceCurve:
         n_points: int,
         Q_min: float,
         Q_max: float,
-        price_focus: Optional[float] = None
+        price_focus: Optional[float] = None,
     ) -> list:
         """Sample the preference curve at N price points to create a bid curve.
-        
+
         Args:
             price_min: Minimum price to sample ($/kWh).
                 INTERNAL: From market parameters.
@@ -159,8 +176,17 @@ class PreferenceCurve:
                 this price for better resolution. Used when an advisory
                 price from an informational iteration is available.
                 INTERNAL: From AdvisoryRecord.cleared_price.
-        
+
         Returns:
             List of BidPoint (price, quantity) pairs.
         """
-        raise NotImplementedError
+        prices = []
+        for i in range(n_points):
+            p = price_max - (price_max - price_min) * i / max(n_points - 1, 1)
+            prices.append(p)
+
+        points = []
+        for p in prices:
+            q = self.evaluate_with_bounds(p, Q_min, Q_max)
+            points.append(BidPoint(price=p, quantity=q))
+        return points
