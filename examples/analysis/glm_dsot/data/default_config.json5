@@ -182,7 +182,7 @@
     "inverter",
     "regulator",
     "substation",
-    "evchagerdet"
+    "evcharger_det"
   ],
   "metrics_interval": 300,
   "metrics_interim": 7200,

@@ -196,7 +196,7 @@
   // *** Gridlabd metrics
   // Setting metrics_interval to 0 turns off metrics
   // Removes all metrics collector and writer in the glm files
-  "metrics_interval": 0,
+  "metrics_interval": 300,
   "metrics": [
     "house",
     "waterheater",
@@ -207,7 +207,7 @@
     "inverter",
     "regulator",
     "substation",
-    "evchagerdet"
+    "evcharger_det"
   ],
   "metrics_interim": 7200,
   "metrics_filename": "${METRICS_FILE}",
