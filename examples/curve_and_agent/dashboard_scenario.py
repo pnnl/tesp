@@ -212,7 +212,7 @@ def _create_water_heater_data_streams():
             variable="tank_temp",
             constraint_type="minimum",
             continuous=True,
-            required_value=120.0,
+            required_value=110.0,
         ),
     )
     dsm.register_continuous_stream(
@@ -733,6 +733,11 @@ def run_simulation():
         if wh_r and wh_r.cleared_quantity > 0.5:
             connection._props["waterheater_1#UTTemp"] = min(
                 140.0, connection._props["waterheater_1#UTTemp"] + 0.6
+            )
+            # Lower zone warms via mixing with heated upper zone
+            connection._props["waterheater_1#LTTemp"] = min(
+                connection._props["waterheater_1#UTTemp"],
+                connection._props["waterheater_1#LTTemp"] + 0.3,
             )
         else:
             connection._props["waterheater_1#UTTemp"] = max(

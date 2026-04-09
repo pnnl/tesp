@@ -425,22 +425,29 @@ class WaterHeaterModel:
         Q_standby = standby_loss / _KW_TO_BTU_HR
 
         # --- Draw-forecast contribution (design: draws parameter) ---
-        # Convert expected draw energy (kWh) to the extra heating power
-        # needed to reheat the drawn-in cold water over this interval.
+        interval_hr = max(interval_duration / 3600.0, 1e-6)
+
+        # Q_baseline: standby losses + expected draw power
         draw_kw = 0.0
-        draw_guard_kw = 0.0
         if draw_forecast is not None and draw_forecast.expected > 0:
-            interval_hr = interval_duration / 3600.0
-            draw_kw = draw_forecast.expected / max(interval_hr, 1e-6)
-            # Conservative guard: 95th-percentile draw → higher Q_min
-            import math
-
-            sigma = math.sqrt(max(draw_forecast.variance, 0.0))
-            draw_p95 = draw_forecast.expected + 1.645 * sigma
-            draw_guard_kw = draw_p95 / max(interval_hr, 1e-6)
-
+            draw_kw = draw_forecast.expected / interval_hr
         Q_baseline = max(0.0, min(Q_standby + draw_kw, Q_max))
-        Q_min = max(0.0, min(draw_guard_kw, Q_max))
+
+        # Q_min: thermal energy balance — minimum power to keep the
+        # average tank temperature above min_tank_temp at end of
+        # interval, accounting for draws + standby losses offset by
+        # the tank's stored thermal energy above the minimum.
+        tank_mass_btu_f = state.tank_volume * _WATER_LB_PER_GAL
+        thermal_buffer_btu = tank_mass_btu_f * max(avg_temp - min_tank_temp, 0.0)
+        loss_btu = standby_loss * interval_hr
+
+        draw_safety_btu = 0.0
+        if draw_forecast is not None and draw_forecast.expected > 0:
+            sigma = math.sqrt(max(draw_forecast.variance, 0.0))
+            draw_safety_btu = (draw_forecast.expected + sigma) * _KW_TO_BTU_HR
+
+        shortfall_btu = draw_safety_btu + loss_btu - thermal_buffer_btu
+        Q_min = max(0.0, min(shortfall_btu / (interval_hr * _KW_TO_BTU_HR), Q_max))
 
         return FlexibilityEnvelope(
             Q_min=Q_min,

@@ -2480,6 +2480,42 @@ class TestWaterHeaterModelUsesDrawForecast:
         assert env.Q_baseline <= env.Q_max + 0.001
         assert env.Q_min <= env.Q_max + 0.001
 
+    def test_thermal_buffer_lowers_q_min(self, model, state):
+        """When tank is well above min_tank_temp, thermal buffer absorbs
+        draws and Q_min should be lower than when tank is near minimum."""
+        draw = QuantilePoint(expected=0.5, variance=0.5)
+        # Warm tank: large thermal buffer → low Q_min
+        env_warm = model.estimate_flexibility(
+            state=state,  # T_avg=126, min=110 → 16°F buffer
+            draw_forecast=draw,
+            inlet_temp_forecast=None,
+            ambient_temp=70.0,
+            min_tank_temp=110.0,
+            interval_duration=300.0,
+        )
+        # Cool tank: small thermal buffer → higher Q_min
+        cool_state = WaterHeaterState(
+            tank_temp_upper=113.0,
+            tank_temp_lower=111.0,
+            thermostat_setpoint=130.0,
+            element_on=False,
+            power_draw=0.0,
+            tank_volume=50.0,
+            tank_UA=2.0,
+            element_power=4.5,
+            inlet_water_temp=62.0,
+            current_draw_rate=0.0,
+        )
+        env_cool = model.estimate_flexibility(
+            state=cool_state,  # T_avg=112, min=110 → 2°F buffer
+            draw_forecast=draw,
+            inlet_temp_forecast=None,
+            ambient_temp=70.0,
+            min_tank_temp=110.0,
+            interval_duration=300.0,
+        )
+        assert env_cool.Q_min > env_warm.Q_min
+
 
 class TestEventForecastConditionOnObservation:
     """Contract: condition_on_observation must reduce remaining expected
