@@ -51,6 +51,21 @@ class HVACState:
             SOURCE: GridLAB-D house object, derived from climate.
         internal_gain: Current internal heat gain from occupants,
             appliances, etc. (Btu/hr).
+        humidity: Current relative humidity (fraction 0.0–1.0).
+            Used for latent load fraction calculation.
+        deadband: Thermostat deadband width (°F). Temperature must
+            deviate this far from setpoint before toggling HVAC on/off.
+        heating_system_type: Type of heating system ('HEAT_PUMP' or
+            'ELECTRIC'). Determines whether heating participates in
+            market bidding.
+        mass_internal_gain_fraction: Fraction of internal gains
+            absorbed by thermal mass (dimensionless, typically 0.5).
+        mass_solar_gain_fraction: Fraction of solar gains absorbed
+            by thermal mass (dimensionless, typically 0.5).
+        solar_heatgain_factor: Product of window area, glazing
+            transmittance, and exterior transmission coefficient
+            (sq ft, dimensionless combined). Converts incident solar
+            flux density to total solar heat gain.
     """
     indoor_air_temp: float = 72.0
     outdoor_air_temp: float = 85.0
@@ -70,6 +85,12 @@ class HVACState:
     has_heat_pump: bool = False
     solar_gain: float = 0.0
     internal_gain: float = 0.0
+    humidity: float = 0.5
+    deadband: float = 2.0
+    heating_system_type: str = "HEAT_PUMP"
+    mass_internal_gain_fraction: float = 0.5
+    mass_solar_gain_fraction: float = 0.5
+    solar_heatgain_factor: float = 40.0
 
 
 @dataclass

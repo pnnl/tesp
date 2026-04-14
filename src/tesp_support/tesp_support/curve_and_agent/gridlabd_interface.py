@@ -127,6 +127,8 @@ class GridLABDInterface:
         else:
             setpoint = self._get_float("cooling_setpoint", 72.0)
 
+        heating_type = self._get_str("heating_system_type", "HEAT_PUMP").upper()
+
         return HVACState(
             indoor_air_temp=self._get_float("air_temperature", 72.0),
             outdoor_air_temp=self._get_float("outdoor_temperature", 85.0),
@@ -143,9 +145,15 @@ class GridLABDInterface:
             heating_COP=self._get_float("heating_COP", 3.0),
             rated_cooling_capacity=self._get_float("design_cooling_capacity", 36000.0),
             rated_heating_capacity=self._get_float("design_heating_capacity", 36000.0),
-            has_heat_pump="HEAT" in mode_str and "AUX" not in mode_str,
+            has_heat_pump="HEAT_PUMP" in heating_type,
             solar_gain=self._get_float("solar_heatgain", 0.0),
             internal_gain=self._get_float("internal_heatgain", 0.0),
+            humidity=self._get_float("humidity", 0.5),
+            deadband=self._get_float("thermostat_deadband", 2.0),
+            heating_system_type=heating_type,
+            mass_internal_gain_fraction=self._get_float("mass_internal_gain_fraction", 0.5),
+            mass_solar_gain_fraction=self._get_float("mass_solar_gain_fraction", 0.5),
+            solar_heatgain_factor=self._get_float("solar_heatgain_factor", 40.0),
         )
 
     def read_water_heater_state(self) -> WaterHeaterState:

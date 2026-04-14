@@ -5,7 +5,7 @@
 #          class that external code interacts with.
 # ============================================================================
 
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, List, Optional, Any
 from enums_and_constants import (
     DeviceType,
     MarketType,
@@ -240,6 +240,8 @@ class DeviceAgent:
         """
         if self._device_type in (DeviceType.HVAC_AC_ONLY, DeviceType.HVAC_HEAT_PUMP):
             state = self._gridlabd.read_hvac_state()
+            # Sync internal temperature tracking from GridLAB-D ground truth
+            self._device_model.sync_from_gridlabd(state)
         elif self._device_type == DeviceType.WATER_HEATER:
             state = self._gridlabd.read_water_heater_state()
         elif self._device_type == DeviceType.EV_CHARGER:
@@ -854,6 +856,20 @@ class DeviceAgent:
         if state is not None:
             command = self.translate_to_control(Q_target, state)
             market_obj.control_command = command
+
+            # Update internal temperature prediction for HVAC devices
+            if self._device_type in (
+                DeviceType.HVAC_AC_ONLY,
+                DeviceType.HVAC_HEAT_PUMP,
+            ):
+                timing = market_obj.timing_params
+                interval_dur = timing.t_delivery_end - timing.t_delivery_start
+                self._device_model.update_internal_state(
+                    state=state,
+                    target_setpoint=command.setpoint,
+                    outdoor_temp=getattr(state, "outdoor_air_temp", 85.0),
+                    duration_seconds=interval_dur,
+                )
 
         # F6: book firm commitment for delivery interval.
         if self._flexibility_ledger is not None:
