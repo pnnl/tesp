@@ -24,8 +24,8 @@ import math
 
 import pytest
 
-from enums_and_constants import DeviceType
-from data_types import (
+from tesp_support.curve_and_agent.enums_and_constants import DeviceType
+from tesp_support.curve_and_agent.data_types import (
     HVACState,
     WaterHeaterState,
     EVChargerState,
@@ -33,7 +33,7 @@ from data_types import (
     FlexibilityEnvelope,
     ContinuousDataPoint,
 )
-from device_models import HVACModel, WaterHeaterModel, EVChargerModel, BatteryModel
+from tesp_support.curve_and_agent.device_models import HVACModel, WaterHeaterModel, EVChargerModel, BatteryModel
 
 
 # ===================================================================
@@ -225,7 +225,7 @@ class TestWaterHeaterModel:
         dT/dt = -116 / 417 ≈ -0.278 °F/hr
         After 1 hour: T ≈ 130 - 0.278 = 129.72 °F
         """
-        from data_types import QuantilePoint
+        from tesp_support.curve_and_agent.data_types import QuantilePoint
 
         trajectory = wh_model.predict_tank_temperature(
             state=wh_state_hot,
@@ -243,7 +243,7 @@ class TestWaterHeaterModel:
 
     def test_flexibility_range(self, wh_model, wh_state_hot):
         """Q_min=0 (element off), Q_max=element_power (4.5 kW)."""
-        from data_types import QuantilePoint, ContinuousDataPoint
+        from tesp_support.curve_and_agent.data_types import QuantilePoint, ContinuousDataPoint
 
         flex = wh_model.estimate_flexibility(
             state=wh_state_hot,
@@ -571,7 +571,7 @@ class TestWaterHeaterActiveHeating:
         dT/dt ≈ (15354 - 116) / 417 ≈ 36.5 °F/hr (net of standby loss).
         After 5 min: ΔT ≈ 36.5 × (5/60) ≈ 3.04 °F.
         """
-        from data_types import QuantilePoint
+        from tesp_support.curve_and_agent.data_types import QuantilePoint
 
         # Start from a cool tank to see clear heating
         import dataclasses
@@ -597,7 +597,7 @@ class TestWaterHeaterActiveHeating:
         50-gal tank at 130°F.
         Rough mixing: (40×130 + 10×60) / 50 = (5200 + 600)/50 = 116°F lower zone.
         """
-        from data_types import QuantilePoint
+        from tesp_support.curve_and_agent.data_types import QuantilePoint
 
         trajectory = wh_model.predict_tank_temperature(
             state=wh_state_hot,

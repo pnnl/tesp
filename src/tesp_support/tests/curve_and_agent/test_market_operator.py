@@ -12,12 +12,12 @@ Ground truth:
 
 import pytest
 
-from data_types import BidCurve, BidPoint, ClearingResult, MarketTimingParams
-from enums_and_constants import MarketType, IterationType
+from tesp_support.curve_and_agent.data_types import BidCurve, BidPoint, ClearingResult, MarketTimingParams
+from tesp_support.curve_and_agent.enums_and_constants import MarketType, IterationType
 
 RT = MarketType.RT_ENERGY
 
-from market_operator import (
+from tesp_support.curve_and_agent.market_operator import (
     SupplyCurve,
     DSOInflexibleLoadBid,
     DSOLoadEstimationEngine,

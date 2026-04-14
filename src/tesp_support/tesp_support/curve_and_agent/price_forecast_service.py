@@ -5,8 +5,8 @@
 # ============================================================================
 
 from typing import Dict, List, Optional, Tuple
-from data_types import ContinuousDataPoint
-from enums_and_constants import MarketType
+from .data_types import ContinuousDataPoint
+from .enums_and_constants import MarketType
 
 
 class PriceForecast:

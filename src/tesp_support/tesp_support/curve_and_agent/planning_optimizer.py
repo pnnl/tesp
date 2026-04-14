@@ -9,14 +9,14 @@
 # ============================================================================
 
 from typing import Dict, List, Optional, Tuple
-from data_types import (
+from .data_types import (
     PlanningResult,
     FlexibilityEnvelope,
     ContinuousDataPoint,
     HVACState,
 )
-from data_streams import ConstraintStream
-from device_models import BatteryModel, HVACModel, _KW_TO_BTU_HR
+from .data_streams import ConstraintStream
+from .device_models import BatteryModel, HVACModel, _KW_TO_BTU_HR, _interp_forecast
 
 
 class PlanningOptimizer:
@@ -347,8 +347,6 @@ class PlanningOptimizer:
         for i in range(n_intervals):
             t_offset = i * interval_duration
             if weather_forecasts and "outdoor_air_temp" in weather_forecasts:
-                from device_models import _interp_forecast
-
                 To = _interp_forecast(
                     weather_forecasts["outdoor_air_temp"],
                     t_offset,
@@ -382,8 +380,6 @@ class PlanningOptimizer:
         for i in range(n_intervals):
             t_offset = i * interval_duration
             if weather_forecasts and "solar_irradiance" in weather_forecasts:
-                from device_models import _interp_forecast
-
                 sg = _interp_forecast(
                     weather_forecasts["solar_irradiance"],
                     t_offset,

@@ -15,13 +15,13 @@
 # ============================================================================
 
 from typing import Any, Dict, List, Optional, Tuple, Callable
-from data_types import (
+from .data_types import (
     ContinuousDataPoint,
     EventDefinition,
     QuantilePoint,
     UncertaintyEnvelope,
 )
-from enums_and_constants import DeviceType, ForecastParadigm, StreamType
+from .enums_and_constants import DeviceType, ForecastParadigm, StreamType
 
 
 class UncertaintyModel:

@@ -10,7 +10,7 @@
 # ============================================================================
 
 from typing import Dict, Optional, List, Tuple, Callable
-from enums_and_constants import PenaltyStructureType, MarketType
+from .enums_and_constants import PenaltyStructureType, MarketType
 
 
 class PenaltyModel:

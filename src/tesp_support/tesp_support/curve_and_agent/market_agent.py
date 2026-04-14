@@ -12,8 +12,8 @@
 # ============================================================================
 
 from typing import Any, Optional, Callable
-from data_types import BidCurve, ClearingResult, SettlementRecord
-from enums_and_constants import MarketType
+from .data_types import BidCurve, ClearingResult, SettlementRecord
+from .enums_and_constants import MarketType
 
 
 class MarketCommunicationInterface:

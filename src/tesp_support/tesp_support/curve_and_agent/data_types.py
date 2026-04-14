@@ -6,7 +6,7 @@
 
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Callable, Tuple, Any
-from enums_and_constants import (
+from .enums_and_constants import (
     MarketType, MarketPhase, OperatingMode, IterationType,
     CommitmentStatus, DeviceType, ProductType, ForecastParadigm,
     StreamType, PenaltyStructureType

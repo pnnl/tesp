@@ -24,8 +24,8 @@ Testing strategy:
 import pytest
 from unittest.mock import MagicMock, patch, PropertyMock
 
-from device_agent import DeviceAgent
-from data_types import (
+from tesp_support.curve_and_agent.device_agent import DeviceAgent
+from tesp_support.curve_and_agent.data_types import (
     HVACState,
     WaterHeaterState,
     EVChargerState,
@@ -40,18 +40,18 @@ from data_types import (
     SettlementRecord,
     AdvisoryRecord,
 )
-from enums_and_constants import (
+from tesp_support.curve_and_agent.enums_and_constants import (
     DeviceType,
     MarketType,
     MarketPhase,
     OperatingMode,
     IterationType,
 )
-from market_object import MarketObject
-from penalty_model import PenaltyModel
-from enums_and_constants import PenaltyStructureType
-from preference_curve import PreferenceCurve
-from data_streams import DataStreamManager
+from tesp_support.curve_and_agent.market_object import MarketObject
+from tesp_support.curve_and_agent.penalty_model import PenaltyModel
+from tesp_support.curve_and_agent.enums_and_constants import PenaltyStructureType
+from tesp_support.curve_and_agent.preference_curve import PreferenceCurve
+from tesp_support.curve_and_agent.data_streams import DataStreamManager
 
 
 # ===================================================================
@@ -272,7 +272,7 @@ class TestCreateDeviceModel:
     """
 
     def test_hvac_creates_hvac_model(self, mock_gridlabd, mock_data_streams):
-        from device_models import HVACModel
+        from tesp_support.curve_and_agent.device_models import HVACModel
 
         agent = DeviceAgent(
             agent_id="test",
@@ -284,7 +284,7 @@ class TestCreateDeviceModel:
         assert isinstance(agent._device_model, HVACModel)
 
     def test_battery_creates_battery_model(self, mock_gridlabd, mock_data_streams):
-        from device_models import BatteryModel
+        from tesp_support.curve_and_agent.device_models import BatteryModel
 
         agent = DeviceAgent(
             agent_id="test",
@@ -296,7 +296,7 @@ class TestCreateDeviceModel:
         assert isinstance(agent._device_model, BatteryModel)
 
     def test_wh_creates_wh_model(self, mock_gridlabd, mock_data_streams):
-        from device_models import WaterHeaterModel
+        from tesp_support.curve_and_agent.device_models import WaterHeaterModel
 
         agent = DeviceAgent(
             agent_id="test",
@@ -308,7 +308,7 @@ class TestCreateDeviceModel:
         assert isinstance(agent._device_model, WaterHeaterModel)
 
     def test_ev_creates_ev_model(self, mock_gridlabd, mock_data_streams):
-        from device_models import EVChargerModel
+        from tesp_support.curve_and_agent.device_models import EVChargerModel
 
         agent = DeviceAgent(
             agent_id="test",

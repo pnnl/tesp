@@ -16,19 +16,19 @@ Key properties:
 
 import pytest
 
-from enums_and_constants import (
+from tesp_support.curve_and_agent.enums_and_constants import (
     MarketType,
     MarketPhase,
     OperatingMode,
     IterationType,
 )
-from data_types import (
+from tesp_support.curve_and_agent.data_types import (
     BidCurve,
     ClearingResult,
     MarketTimingParams,
     BidPoint,
 )
-from market_object import MarketObject
+from tesp_support.curve_and_agent.market_object import MarketObject
 
 RT = MarketType.RT_ENERGY
 DA = MarketType.DA_ENERGY

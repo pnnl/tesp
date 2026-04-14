@@ -24,8 +24,8 @@ Amenity cost:
 
 import pytest
 
-from enums_and_constants import DeviceType
-from preference_curve import PreferenceCurve
+from tesp_support.curve_and_agent.enums_and_constants import DeviceType
+from tesp_support.curve_and_agent.preference_curve import PreferenceCurve
 
 
 # ===================================================================
@@ -298,7 +298,7 @@ class TestSampleBidCurve:
 
     def test_returns_bid_points(self, mid_curve):
         """Each element should be a BidPoint."""
-        from data_types import BidPoint
+        from tesp_support.curve_and_agent.data_types import BidPoint
 
         points = mid_curve.sample_bid_curve(
             price_min=0.01,

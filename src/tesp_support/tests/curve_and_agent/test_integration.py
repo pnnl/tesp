@@ -38,7 +38,7 @@ import random
 
 import pytest
 
-from enums_and_constants import (
+from tesp_support.curve_and_agent.enums_and_constants import (
     DeviceType,
     MarketType,
     MarketPhase,
@@ -46,7 +46,7 @@ from enums_and_constants import (
     IterationType,
     PenaltyStructureType,
 )
-from data_types import (
+from tesp_support.curve_and_agent.data_types import (
     BidCurve,
     BidPoint,
     ClearingResult,
@@ -58,21 +58,21 @@ from data_types import (
     FulfillmentRecord,
     HVACState,
 )
-from gridlabd_interface import GridLABDInterface
-from data_streams import (
+from tesp_support.curve_and_agent.gridlabd_interface import GridLABDInterface
+from tesp_support.curve_and_agent.data_streams import (
     DataStreamManager,
     ContinuousForecast,
     EventForecast,
     ConstraintStream,
     UncertaintyModel,
 )
-from data_types import EventDefinition, QuantilePoint, WaterHeaterState
-from device_agent import DeviceAgent
-from device_models import WaterHeaterModel
-from market_agent import MarketCommunicationInterface
-from market_operator import MarketOperator, SupplyCurve, DSOLoadEstimationEngine
-from penalty_model import PenaltyModel
-from preference_curve import PreferenceCurve
+from tesp_support.curve_and_agent.data_types import EventDefinition, QuantilePoint, WaterHeaterState
+from tesp_support.curve_and_agent.device_agent import DeviceAgent
+from tesp_support.curve_and_agent.device_models import WaterHeaterModel
+from tesp_support.curve_and_agent.market_agent import MarketCommunicationInterface
+from tesp_support.curve_and_agent.market_operator import MarketOperator, SupplyCurve, DSOLoadEstimationEngine
+from tesp_support.curve_and_agent.penalty_model import PenaltyModel
+from tesp_support.curve_and_agent.preference_curve import PreferenceCurve
 
 
 # =====================================================================
@@ -679,7 +679,7 @@ class TestAggregateDemandHorizontalSum:
         )
         mo.set_supply_curve(_make_supply())
         inflex_qty = 200.0
-        from market_operator import DSOInflexibleLoadBid
+        from tesp_support.curve_and_agent.market_operator import DSOInflexibleLoadBid
 
         dso_bid = DSOInflexibleLoadBid(
             feeder_id="feeder_1",
@@ -722,7 +722,7 @@ class TestAggregateDemandHorizontalSum:
             n_informational=0,
         )
         mo.set_supply_curve(_make_supply())
-        from market_operator import DSOInflexibleLoadBid
+        from tesp_support.curve_and_agent.market_operator import DSOInflexibleLoadBid
 
         dso_bid = DSOInflexibleLoadBid(
             feeder_id="feeder_1",
@@ -775,7 +775,7 @@ class TestSetpointResponseToPrice:
             n_informational=0,
         )
         mo.set_supply_curve(_make_supply())
-        from market_operator import DSOInflexibleLoadBid
+        from tesp_support.curve_and_agent.market_operator import DSOInflexibleLoadBid
 
         dso_bid = DSOInflexibleLoadBid(
             feeder_id="feeder_1",
@@ -816,7 +816,7 @@ class TestSetpointResponseToPrice:
             n_informational=0,
         )
         mo.set_supply_curve(_make_supply())
-        from market_operator import DSOInflexibleLoadBid
+        from tesp_support.curve_and_agent.market_operator import DSOInflexibleLoadBid
 
         # Very low inflexible demand → low clearing price
         dso_bid = DSOInflexibleLoadBid(
@@ -869,7 +869,7 @@ class TestIterationProtocol:
             n_informational=2,
         )
         mo.set_supply_curve(_make_supply())
-        from market_operator import DSOInflexibleLoadBid
+        from tesp_support.curve_and_agent.market_operator import DSOInflexibleLoadBid
 
         dso_bid = DSOInflexibleLoadBid(
             feeder_id="feeder_1",
@@ -909,7 +909,7 @@ class TestIterationProtocol:
             n_informational=0,
         )
         mo.set_supply_curve(_make_supply())
-        from market_operator import DSOInflexibleLoadBid
+        from tesp_support.curve_and_agent.market_operator import DSOInflexibleLoadBid
 
         dso_bid = DSOInflexibleLoadBid(
             feeder_id="feeder_1",
@@ -950,7 +950,7 @@ class TestDeliveryFulfillment:
             n_informational=0,
         )
         mo.set_supply_curve(_make_supply())
-        from market_operator import DSOInflexibleLoadBid
+        from tesp_support.curve_and_agent.market_operator import DSOInflexibleLoadBid
 
         dso_bid = DSOInflexibleLoadBid(
             feeder_id="feeder_1",
@@ -1023,7 +1023,7 @@ class TestPopulationLevelBehaviors:
             n_informational=0,
         )
         mo.set_supply_curve(_make_supply())
-        from market_operator import DSOInflexibleLoadBid
+        from tesp_support.curve_and_agent.market_operator import DSOInflexibleLoadBid
 
         # High inflexible demand to push price up
         dso_bid = DSOInflexibleLoadBid(
@@ -1259,7 +1259,7 @@ class TestMultiAgentReproducibility:
                 n_informational=0,
             )
             mo.set_supply_curve(_make_supply())
-            from market_operator import DSOInflexibleLoadBid
+            from tesp_support.curve_and_agent.market_operator import DSOInflexibleLoadBid
 
             dso_bid = DSOInflexibleLoadBid(
                 feeder_id="feeder_1",
@@ -1677,7 +1677,7 @@ class TestWaterHeaterRTCycle:
             n_informational=0,
         )
         self.mo.set_supply_curve(_make_supply())
-        from market_operator import DSOInflexibleLoadBid
+        from tesp_support.curve_and_agent.market_operator import DSOInflexibleLoadBid
 
         dso_bid = DSOInflexibleLoadBid(
             feeder_id="feeder_1",
@@ -1699,7 +1699,7 @@ class TestWaterHeaterRTCycle:
         )
 
     def test_state_is_water_heater(self):
-        from data_types import WaterHeaterState
+        from tesp_support.curve_and_agent.data_types import WaterHeaterState
 
         assert isinstance(self.state, WaterHeaterState)
 
@@ -1720,7 +1720,7 @@ class TestWaterHeaterRTCycle:
         assert q >= self.flex.Q_min - 0.5
 
     def test_translate_to_control_returns_command(self):
-        from data_types import DeviceCommand
+        from tesp_support.curve_and_agent.data_types import DeviceCommand
 
         cmd = self.agent.translate_to_control(2.0, self.state)
         assert isinstance(cmd, DeviceCommand)
@@ -1794,7 +1794,7 @@ class TestEVChargerRTCycle:
             n_informational=0,
         )
         self.mo.set_supply_curve(_make_supply())
-        from market_operator import DSOInflexibleLoadBid
+        from tesp_support.curve_and_agent.market_operator import DSOInflexibleLoadBid
 
         dso_bid = DSOInflexibleLoadBid(
             feeder_id="feeder_1",
@@ -1816,7 +1816,7 @@ class TestEVChargerRTCycle:
         )
 
     def test_state_is_ev_charger(self):
-        from data_types import EVChargerState
+        from tesp_support.curve_and_agent.data_types import EVChargerState
 
         assert isinstance(self.state, EVChargerState)
 
@@ -1840,7 +1840,7 @@ class TestEVChargerRTCycle:
         assert isinstance(q, float)
 
     def test_translate_to_control_returns_command(self):
-        from data_types import DeviceCommand
+        from tesp_support.curve_and_agent.data_types import DeviceCommand
 
         cmd = self.agent.translate_to_control(3.0, self.state)
         assert isinstance(cmd, DeviceCommand)
@@ -1914,7 +1914,7 @@ class TestBatteryRTCycle:
             n_informational=0,
         )
         self.mo.set_supply_curve(_make_supply())
-        from market_operator import DSOInflexibleLoadBid
+        from tesp_support.curve_and_agent.market_operator import DSOInflexibleLoadBid
 
         dso_bid = DSOInflexibleLoadBid(
             feeder_id="feeder_1",
@@ -1938,7 +1938,7 @@ class TestBatteryRTCycle:
         )
 
     def test_state_is_battery(self):
-        from data_types import BatteryState
+        from tesp_support.curve_and_agent.data_types import BatteryState
 
         assert isinstance(self.state, BatteryState)
 
@@ -1960,7 +1960,7 @@ class TestBatteryRTCycle:
         assert isinstance(q, float)
 
     def test_translate_to_control_returns_command(self):
-        from data_types import DeviceCommand
+        from tesp_support.curve_and_agent.data_types import DeviceCommand
 
         cmd = self.agent.translate_to_control(-2.0, self.state)
         assert isinstance(cmd, DeviceCommand)
@@ -2030,7 +2030,7 @@ class TestHVACHeatPumpRTCycle:
             n_informational=0,
         )
         self.mo.set_supply_curve(_make_supply())
-        from market_operator import DSOInflexibleLoadBid
+        from tesp_support.curve_and_agent.market_operator import DSOInflexibleLoadBid
 
         dso_bid = DSOInflexibleLoadBid(
             feeder_id="feeder_1",
@@ -2091,7 +2091,7 @@ class TestMixedDeviceTypesMarket:
             n_informational=0,
         )
         self.mo.set_supply_curve(_make_supply())
-        from market_operator import DSOInflexibleLoadBid
+        from tesp_support.curve_and_agent.market_operator import DSOInflexibleLoadBid
 
         dso_bid = DSOInflexibleLoadBid(
             feeder_id="feeder_1",
@@ -2180,7 +2180,7 @@ class TestDAMarketAllDeviceTypes:
             n_informational=1,
         )
         mo.set_supply_curve(_make_supply())
-        from market_operator import DSOInflexibleLoadBid
+        from tesp_support.curve_and_agent.market_operator import DSOInflexibleLoadBid
 
         dso_bid = DSOInflexibleLoadBid(
             feeder_id="feeder_1",

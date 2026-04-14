@@ -7,8 +7,8 @@
 
 import math
 from typing import Optional, Tuple
-from data_types import BidPoint, FlexibilityEnvelope
-from enums_and_constants import DeviceType
+from .data_types import BidPoint, FlexibilityEnvelope
+from .enums_and_constants import DeviceType
 
 
 class PreferenceCurve:

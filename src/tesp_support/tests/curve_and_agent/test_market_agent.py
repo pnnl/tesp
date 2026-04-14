@@ -19,14 +19,14 @@ Testing strategy:
 import pytest
 from unittest.mock import MagicMock
 
-from market_agent import MarketCommunicationInterface
-from data_types import (
+from tesp_support.curve_and_agent.market_agent import MarketCommunicationInterface
+from tesp_support.curve_and_agent.data_types import (
     BidPoint,
     BidCurve,
     ClearingResult,
     SettlementRecord,
 )
-from enums_and_constants import MarketType, IterationType
+from tesp_support.curve_and_agent.enums_and_constants import MarketType, IterationType
 
 
 # ===================================================================

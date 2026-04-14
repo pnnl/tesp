@@ -10,9 +10,9 @@ Ground truth for three-tier availability queries:
 
 import pytest
 
-from enums_and_constants import CommitmentStatus, MarketType, ProductType
-from data_types import EconomicCommitment, FlexibilityEnvelope
-from flexibility_ledger import FlexibilityLedger, EconomicEnvelope
+from tesp_support.curve_and_agent.enums_and_constants import CommitmentStatus, MarketType, ProductType
+from tesp_support.curve_and_agent.data_types import EconomicCommitment, FlexibilityEnvelope
+from tesp_support.curve_and_agent.flexibility_ledger import FlexibilityLedger, EconomicEnvelope
 
 RT = MarketType.RT_ENERGY
 

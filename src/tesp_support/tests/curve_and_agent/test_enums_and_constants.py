@@ -9,7 +9,7 @@ enum changes.
 
 import pytest
 
-from enums_and_constants import (
+from tesp_support.curve_and_agent.enums_and_constants import (
     MarketType,
     MarketPhase,
     OperatingMode,

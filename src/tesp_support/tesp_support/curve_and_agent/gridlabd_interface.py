@@ -20,14 +20,14 @@
 # ============================================================================
 
 from typing import Any, Optional
-from data_types import (
+from .data_types import (
     HVACState,
     WaterHeaterState,
     EVChargerState,
     BatteryState,
     DeviceCommand,
 )
-from enums_and_constants import DeviceType
+from .enums_and_constants import DeviceType
 
 
 class GridLABDInterface:

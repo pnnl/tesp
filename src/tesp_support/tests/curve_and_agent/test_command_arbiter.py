@@ -23,8 +23,8 @@ Testing strategy:
 import pytest
 from unittest.mock import MagicMock, patch
 
-from command_arbiter import CommandArbiter, DeliveryRecord
-from data_types import (
+from tesp_support.curve_and_agent.command_arbiter import CommandArbiter, DeliveryRecord
+from tesp_support.curve_and_agent.data_types import (
     DeviceCommand,
     DispatchSolution,
     FulfillmentRecord,
@@ -32,10 +32,10 @@ from data_types import (
     FlexibilityEnvelope,
     HVACState,
 )
-from dispatch_optimizer import DispatchOptimizer, DeliveryValueCalculator
-from preference_curve import PreferenceCurve
-from penalty_model import PenaltyModel
-from enums_and_constants import (
+from tesp_support.curve_and_agent.dispatch_optimizer import DispatchOptimizer, DeliveryValueCalculator
+from tesp_support.curve_and_agent.preference_curve import PreferenceCurve
+from tesp_support.curve_and_agent.penalty_model import PenaltyModel
+from tesp_support.curve_and_agent.enums_and_constants import (
     DeviceType,
     MarketType,
     ProductType,

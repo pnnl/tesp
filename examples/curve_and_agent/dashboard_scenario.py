@@ -20,37 +20,37 @@ Produces dashboard_scenario.html with:
 
 import math
 import random
-import sys, os
+import os
 
-sys.path.insert(
-    0, os.path.join(os.path.dirname(__file__), "tesp_support", "curve_and_agent")
-)
-
-from enums_and_constants import (
+from tesp_support.curve_and_agent.enums_and_constants import (
     DeviceType,
     MarketType,
     OperatingMode,
     PenaltyStructureType,
 )
-from data_types import (
+from tesp_support.curve_and_agent.data_types import (
     BidPoint,
     ClearingResult,
     EventDefinition,
     FlexibilityEnvelope,
     MarketTimingParams,
 )
-from data_streams import (
+from tesp_support.curve_and_agent.data_streams import (
     ContinuousForecast,
     ConstraintStream,
     DataStreamManager,
     EventForecast,
     UncertaintyModel,
 )
-from gridlabd_interface import GridLABDInterface
-from device_agent import DeviceAgent
-from market_agent import MarketCommunicationInterface
-from market_operator import MarketOperator, SupplyCurve, DSOLoadEstimationEngine
-from penalty_model import PenaltyModel
+from tesp_support.curve_and_agent.gridlabd_interface import GridLABDInterface
+from tesp_support.curve_and_agent.device_agent import DeviceAgent
+from tesp_support.curve_and_agent.market_agent import MarketCommunicationInterface
+from tesp_support.curve_and_agent.market_operator import (
+    MarketOperator,
+    SupplyCurve,
+    DSOLoadEstimationEngine,
+)
+from tesp_support.curve_and_agent.penalty_model import PenaltyModel
 
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots

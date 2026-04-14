@@ -6,8 +6,8 @@
 # ============================================================================
 
 from typing import Dict, List, Optional, Tuple
-from data_types import EconomicCommitment, FlexibilityEnvelope
-from enums_and_constants import CommitmentStatus, MarketType, ProductType
+from .data_types import EconomicCommitment, FlexibilityEnvelope
+from .enums_and_constants import CommitmentStatus, MarketType, ProductType
 
 
 class DisplaceableBlock:
