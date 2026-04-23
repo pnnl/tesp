@@ -93,7 +93,8 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num,
 
     meter_df = pd.DataFrame(month,
                             index=[meter, variable],
-                            columns=['sum'])
+                            columns=['sum'],
+                            dtype=float)
 
     # Create dataframe for transactive customer data.
     trans = []
@@ -117,7 +118,8 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num,
 
     trans_df = pd.DataFrame(month,
                             index=[trans, variable],
-                            columns=['sum'])
+                            columns=['sum'],
+                            dtype=float)
 
     # Create empty dataframe structure for total energy summation
     month = []
@@ -148,16 +150,17 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num,
 
     energysum_df = pd.DataFrame(month,
                                 index=[loads, variable],
-                                columns=['sum'])
+                                columns=['sum'],
+                                dtype=float)
 
     # load meter data for each day
     for day in day_range:
         # Label columns of data frame by actual calendar date (not simulation day)
         date = get_date(dir_path, dso_num, str(day))
         day_name = date.strftime("%m-%d")
-        meter_df[day_name] = [0] * len(meter_df)
-        trans_df[day_name] = [0] * len(trans_df)
-        energysum_df[day_name] = [0] * len(energysum_df)
+        meter_df[day_name] = 0.0
+        trans_df[day_name] = 0.0
+        energysum_df[day_name] = 0.0
 
         # Load in transactive customer Q data, real-time price data, and DA cleared price
         filename = dir_path + '/DSO_' + dso_num + '/Retail_Quantities.h5'
@@ -182,22 +185,39 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num,
         RThourprice = RT_price_df[' LMP' + dso_num].resample('h').mean() / 1000
         RThourcongestionprice = RT_retail_df['congestion_surcharge_RT'].resample('h').mean() / 1000
         RThourcleartype = RT_retail_df['clear_type_rt'].resample('h').mean() / 1000
-        for each in metadata['billingmeters']:
+        #for each in metadata['billingmeters']:
+        for each in meter_data_df.index.get_level_values('name').unique():
             # Calculate standard customer energy consumption metrics used for all customers (including baseline)
             # temp = meter_data_df[meter_data_df['name'].str.contains(each)]
-            temp = meter_data_df.xs(each, level=1)[['real_power_avg', 'date']]
+            try:
+                temp = meter_data_df.xs(each, level=1)[['real_power_avg', 'date']]
+            except KeyError as e:
+                print("name not found:", repr(each))
+                raise
             meter_df.loc[(each, 'kw-hr'), day_name] = temp.loc[:, 'real_power_avg'].sum() / 1000 / 12
             meter_df.loc[(each, 'avg_load'), day_name] = temp.loc[:, 'real_power_avg'].mean() / 1000
             # TODO: changed from fixed window to moving window.  Need to check if this is OK.
             # find average max power over a 15 minute moving window (=3 * 5 minute intervals).
             windowsize = 3
             max_kw = temp['real_power_avg'].rolling(window=windowsize).mean().max() / 1000
-            meter_df.loc[(each, 'max_kw'), day_name] = max(meter_df.loc[(each, 'max_kw'), day_name], max_kw)
-            if meter_df.loc[(each, 'max_kw'), day_name] != 0:
-                meter_df.loc[(each, 'load_factor'), day_name] = meter_df.loc[(each, 'avg_load'), day_name] / \
-                                                                meter_df.loc[(each, 'max_kw'), day_name]
+            idx = (each, 'max_kw')
+
+            # ensure row/col exist
+            if idx not in meter_df.index:
+                meter_df.loc[idx, :] = 0.0
+            if day_name not in meter_df.columns:
+                meter_df[day_name] = 0.0
+
+            # safe update
+            meter_df.loc[idx, day_name] = max(meter_df.loc[idx, day_name], max_kw)
+
+            # load factor
+            if meter_df.loc[idx, day_name] != 0:
+                meter_df.loc[(each, 'load_factor'), day_name] = (
+                    meter_df.loc[(each, 'avg_load'), day_name] / meter_df.loc[idx, day_name]
+                )
             else:
-                meter_df.loc[(each, 'load_factor'), day_name] = 0
+                meter_df.loc[(each, 'load_factor'), day_name] = 0.0
             
             # Calculate each consumer's time-of-use-related consumption metrics, if applicable
             if rate_scenario in ["time-of-use", "TOU"]:

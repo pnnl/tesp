@@ -1038,6 +1038,7 @@ class Residential_Build:
                             "tank_setpoint": '{:.1f}'.format(tank_set - 5.0)}
                 self.mdl.waterheater.add(whname, params)
                 self.glm.add_metrics_collector(hsename, "house")
+                self.glm.add_metrics_collector(whname, "waterheater")
 
             # ------------------------------------------------------------------
             # Add solar, storage, and EVs
@@ -1112,7 +1113,8 @@ class Residential_Build:
                 batt_num = 1 # one battery per household
                 self.config.batt.add_batt(prob_batt, batt_num, prob_solar, mtrname1, batt_m_name, batt_name, batt_i_name, phs, v_nom)
 
-            if self.config.case_type['ev']:
+            # DSOT pv-only case adds evs as well
+            if self.config.case_type['pv'] or self.config.case_type['ev']:
                 self.config.ev.add_ev(prob_ev, hsename)
 
 class Commercial_Build:
@@ -1243,7 +1245,7 @@ class Commercial_Build:
             batt_num = int(math.floor(bldg['floor_area'] / 10000) + 1)
             self.config.batt.add_batt(self.config.storage_deployment, batt_num, 1, mtr, f'{mtr}_batmtr', f'{mtr}_bat', f'{mtr}_batinv', phases, 120.0)
 
-        if self.config.case_type['ev']:
+        if self.config.case_type['pv'] or self.config.case_type['ev']:
             self.config.ev.add_ev(self.config.ev_deployment, name)
 
 

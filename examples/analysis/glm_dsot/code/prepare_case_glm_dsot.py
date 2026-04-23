@@ -62,7 +62,6 @@ import tesp_support.dsot.helpers_dsot as helpers
 import tesp_support.dsot.case_merge as cm
 import tesp_support.dsot.glm_dictionary as gd
 import tesp_support.api.gld_feeder_generator as gld_feeder
-import tesp_support.dsot.tesp_monitor as monitor
 
 
 # Configuration settings for the experimental case
@@ -651,7 +650,12 @@ def prepare_case(case:str):
             
         if config["monitor"]:
             # Write the monitor.json or monitor.yaml file used in the monitor GUI
+            import tesp_support.dsot.tesp_monitor as monitor
             monitor.TespMonitorJSON.write_monitor(config, caseName)
+
+        if config["dashboard"]:
+            import tesp_dashboard as dashboard
+            dashboard.write_dashboard(caseName)
         
     if config["messenger"] == 'HELICS':
         tso.write_file(caseName + '/tso_h.json')
