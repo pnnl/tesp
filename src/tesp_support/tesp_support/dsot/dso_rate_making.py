@@ -19,7 +19,7 @@ from .plots import load_da_retail_price, customer_meta_data, load_json, load_age
 
 
 def read_meters(metadata, dir_path, folder_prefix, dso_num,
-                day_range, SF, dso_data_path, rate_scenario=None):
+                day_range, SF, dso_data_path, rate_scenario=None, ):
     """ Determines the total energy consumed and max power consumption for all meters within a
     DSO for a series of days. Also collects information on day ahead and real time quantities
     consumed by transactive customers. Creates summation of these statistics by customer class.
@@ -156,6 +156,8 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num,
         meter_df[day_name] = [0] * len(meter_df)
         trans_df[day_name] = [0] * len(trans_df)
         energysum_df[day_name] = [0] * len(energysum_df)
+
+        dir_path = os.path.join(dir_path, 'mult_0.5') #SA-521
 
         # Load in transactive customer Q data, real-time price data, and DA cleared price
         filename = dir_path + '/DSO_' + dso_num + '/Retail_Quantities.h5'
@@ -705,6 +707,7 @@ def calculate_consumer_bills(
     num_ind_cust,
     rate_scenario,
     include_RT = True,
+    bl_demand_df_multiplier = 1.0,
 ):
     """Calculates the consumers' bills for the four different scenarios considered in 
     the Rates Analysis work.
@@ -856,12 +859,13 @@ def calculate_consumer_bills(
 
             # For the subscription rate, load the month's hourly baseline demand
             # profile and the month's hourly demand profile
+            parent_path = os.path.dirname(case_path) #SA:521
             bl_demand_df = pd.read_hdf(
                 os.path.join(
                     base_path,
                     [
                         p
-                        for p in os.listdir(case_path)
+                        for p in os.listdir(parent_path) #SA:521
                         if len(p) > 10
                         if p[7:9] == month_map[m]
                     ][0],
@@ -871,12 +875,18 @@ def calculate_consumer_bills(
                 key="demand",
                 mode="r",
             )
+            #SA: Add a multiplier to the baseline demand 
+            print("bl_demand_df_before_multiplier", bl_demand_df.head(), flush=True)
+            bl_demand_df = bl_demand_df * float(bl_demand_df_multiplier)
+
+            print("bl_demand_df_after_multiplier", bl_demand_df.head(), flush=True)
+        
             demand_df = pd.read_hdf(
                 os.path.join(
-                    case_path,
+                    parent_path, #SA:521
                     [
                         p
-                        for p in os.listdir(case_path)
+                        for p in os.listdir(parent_path) #SA:521
                         if len(p) > 10
                         if p[7:9] == month_map[m]
                     ][0],
@@ -1480,6 +1490,7 @@ def calculate_tariff_prices(
     rate_scenario,
     trans_cost_balance_method=None,
     include_RT = True,
+    bl_demand_df_multiplier=1.0,
 ):
     """Determines the prices that ensure enough revenue is collected to recover the 
     DSO's expenses.
@@ -1865,7 +1876,8 @@ def calculate_tariff_prices(
         ) / (sf * total_consumption_flat_rc + total_consumption_flat_i)
     elif rate_scenario == "subscription":
         # Load in necessary data for the time-of-use rate
-        tou_params = load_json(case_path, "time_of_use_parameters.json", False)
+        parent_path = os.path.dirname(case_path) #SA:521
+        tou_params = load_json(parent_path, "time_of_use_parameters.json", False)
 
         # Create a mapping between month name and month number
         month_map = {
@@ -1929,13 +1941,17 @@ def calculate_tariff_prices(
             # Load in and combine the hourly baseline demand profiles and the hourly 
             # demand profiles for each month in the season being considered
             for m in seasons_dict[s]:
-                if m == seasons_dict[s][0]:
+                 
+                print("Base Path: ", os.path.join(
+                    base_case_path,))
+                if m == seasons_dict[s][0]: 
+                    parent_path = os.path.dirname(case_path) #SA:521
                     bl_demand_df[s] = pd.read_hdf(
                         os.path.join(
                             base_case_path,
                             [
                                 p
-                                for p in os.listdir(case_path)
+                                for p in os.listdir(parent_path) #SA:521
                                 if len(p)>10
                                     if p[7:9] == month_map[m]
                             ][0],
@@ -1948,10 +1964,10 @@ def calculate_tariff_prices(
                     )
                     demand_df[s] = pd.read_hdf(
                         os.path.join(
-                            case_path,
+                            parent_path, #SA:521
                             [
                                 p
-                                for p in os.listdir(case_path)
+                                for p in os.listdir(parent_path) #SA:521
                                 if len(p)>10
                                     if p[7:9] == month_map[m]
                             ][0],
@@ -1962,6 +1978,7 @@ def calculate_tariff_prices(
                         mode="r",
                     )
                 else:
+                    parent_path = os.path.dirname(case_path) #SA:521
                     bl_demand_df[s] = pd.concat(
                         [
                             bl_demand_df[s],
@@ -1970,7 +1987,7 @@ def calculate_tariff_prices(
                                     base_case_path,
                                     [
                                         p
-                                        for p in os.listdir(case_path)
+                                        for p in os.listdir(parent_path) #SA:521
                                         if len(p) > 10
                                             if p[7:9] == month_map[m]
                                     ][0],
@@ -1989,10 +2006,10 @@ def calculate_tariff_prices(
                             demand_df[s],
                             pd.read_hdf(
                                 os.path.join(
-                                    case_path,
+                                    parent_path, #SA:521
                                     [
                                         p
-                                        for p in os.listdir(case_path)
+                                        for p in os.listdir(parent_path) #SA:521
                                         if len(p) > 10
                                             if p[7:9] == month_map[m]
                                     ][0],
@@ -3030,6 +3047,7 @@ def DSO_rate_making(
         rate_scenario=None,
         trans_cost_balance_method=None,
         include_RT = True,
+        bl_demand_df_multiplier=1.0, #SA
 ):
     """ Main function to call for calculating the customer energy consumption, monthly bills, and tariff adjustments to
     ensure revenue matches expenses.  Saves meter and bill dataframes to a hdf5 file.
@@ -3070,6 +3088,7 @@ def DSO_rate_making(
     default_config = load_json(tariff_path, 'default_case_config.json')
     tariff['DSO_'+ str(dso_num)]['transactive_LMP_multiplier'] = default_config['MarketPrep']['DSO']['dso_retail_scaling']
 
+
     energy_file = case + '/energy_dso_' + str(dso_num) + '_data.h5'
     trans_file = case + '/transactive_dso_' + str(dso_num) + '_data.h5'
     year_meter_df = pd.read_hdf(energy_file, key='energy_data', mode='r')
@@ -3103,7 +3122,8 @@ def DSO_rate_making(
         industrial_file,
         rate_scenario,
         trans_cost_balance_method,
-        include_RT
+        include_RT,
+        bl_demand_df_multiplier = bl_demand_df_multiplier, #SA
     )
 
     # Update the price datasets accordingly
@@ -3126,7 +3146,8 @@ def DSO_rate_making(
     elif rate_scenario == "subscription":
         # Update the variables
         tariff["DSO_" + str(dso_num)]["flat_rate"] = prices["flat_rate"]
-        tou_params = load_json(case, "time_of_use_parameters.json", False)
+        parent_path = parent_path = os.path.dirname(case) #SA:521
+        tou_params = load_json(parent_path, "time_of_use_parameters.json", False) #SA:521
         for m in tou_params["DSO_" + str(dso_num)].keys():
             tou_params["DSO_" + str(dso_num)][m]["price"] = prices[
                 "subscription_rate_" + tou_params["DSO_" + str(dso_num)][m]["season"]
@@ -3169,7 +3190,8 @@ def DSO_rate_making(
         dso_scaling_factor,
         num_indust_cust,
         rate_scenario,
-        include_RT
+        include_RT,
+        bl_demand_df_multiplier, #SA
     )
 
     # Need to save files to hdf5 format.

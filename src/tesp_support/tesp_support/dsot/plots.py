@@ -532,6 +532,8 @@ def load_agent_data(dir_path, folder_prefix, dso_num, day_num, agent_name):
         agent_meta_df : dataframe of system metadata
         agent_df: dataframe of agent timeseries data
         """
+    
+    # dir_path = os.path.join(dir_path, 'mult0.5') #SA-525 
 
     if agent_name in ['bill', 'energy', 'amenity']:
         os.chdir(dir_path)

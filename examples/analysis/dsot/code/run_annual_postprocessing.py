@@ -43,13 +43,21 @@ if hayden:
     subscription_path = 'C:/Users/reev057/DSOT-DATA/Rates/Subscription'
     metadata_path = 'C:/Users/reev057/PycharmProjects/TESP_Public/examples/analysis/dsot/data'
 else:
-    datapath = os.path.expandvars('$TESPDIR/examples/analysis/dsot/data/post_processing') 
-    flat_path = os.path.join(datapath, 'Flat')
-    DSOT_path = os.path.join(datapath, 'DSOT')
-    TOU_path = os.path.join(datapath, 'TOU')
-    transactive_path = os.path.join(datapath, 'rob-don')
-    subscription_path = os.path.join(datapath, 'sub') # duplicate the 'rob-don' folder and rename to 'sub'
-    metadata_path = os.path.expandvars('$TESPDIR/examples/analysis/dsot/data') 
+    # datapath = os.path.expandvars('$TESPDIR/examples/analysis/dsot/data/post_processing')
+    # flat_path = os.path.join(datapath, 'Flat')
+    # DSOT_path = os.path.join(datapath, 'DSOT')
+    # TOU_path = os.path.join(datapath, 'TOU')
+    # transactive_path = os.path.join(datapath, 'rob-don')
+    # subscription_path = os.path.join(datapath, 'sub') # duplicate the 'rob-don' folder and rename to 'sub'
+    # metadata_path = os.path.expandvars('$TESPDIR/examples/analysis/dsot/data')
+
+    flat_path = 'C:/Rate Ananlysis Work/Rates_Scenario/flat-rate/post' #SA: flat
+    DSOT_path = 'C:/Users/reev057/DSOT-DATA/Rates/DSOT' #SA: Dynamic DE
+    TOU_path = 'C:/Users/reev057/DSOT-DATA/Rates/TOU' #SA: TOU
+    transactive_path = 'C:/Users/reev057/DSOT-DATA/Rates/Transactive' # Dynamic DE+C
+    subscription_path = 'C:/Rate Ananlysis Work/Rates_Scenario/Subscription/post' # block and swing
+    metadata_path = 'C:/Rate Ananlysis Work/tesp/examples/analysis/dsot/data8/data' #SA: system config, rate designs, etc.
+
 
 # ------------------- Select case_path to post process ------------------------
 system_case = "8_hi_system_case_config.json"
@@ -62,7 +70,7 @@ case_list.append(TOU_path)
 case_list.append(transactive_path)
 case_list.append(subscription_path)
 
-def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_path : str, run_base: bool):
+def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_path : str, run_base: bool, bl_mult: float, input_case_path: str, output_case_path: str): #SA-521
     """This function loops through the run_annual_postprocessing script to 
     generate the required metrics files for each case being studied, then 
     square up any revenues and expenses and generates final cash flow statements.
@@ -89,62 +97,69 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
     # case_list = np.repeat(case_list, 2)
     
     for case_path in case_list:
+        # #SA-521 START
+        # input_case_path = input_case_path
+        # case_path = input_case_path   # ONLY for writing outputs
+
+        write_case_path = output_case_path
+        # #SA-521 END
+
         #  STEP 0 -- Determine which metrics to post-process
 
-        if not os.path.isfile(os.path.join(case_path, 'energy_dso_1_data.h5')):
+        if not os.path.isfile(os.path.join(output_case_path, 'energy_dso_1_data.h5')):
             print('No annual energy files found, running annual_energy...')
             annual_energy = True
         else: 
             annual_energy = False
 
-        if not os.path.isfile(os.path.join(case_path, 'amenity_dso_1_data.h5')):
+        if not os.path.isfile(os.path.join(output_case_path, 'amenity_dso_1_data.h5')):
             print('No amenity data found, running annual_amenity...')
             annual_amenity = True
         else:
             annual_amenity = False
 
-        if not os.path.isfile(os.path.join(case_path, 'DSO_load_stats.csv')):
+        if not os.path.isfile(os.path.join(output_case_path, 'DSO_load_stats.csv')):
             print('No load stats found, running load_stats...')
             load_stats = True
         else:
             load_stats = False
 
-        if not os.path.isfile(os.path.join(case_path, 'Annual_DA_LMP_stats.csv')):
+        if not os.path.isfile(os.path.join(output_case_path, 'Annual_DA_LMP_stats.csv')):
             print("No annual LMP stats found, running annual_lmps")
             annual_lmps = True
         else:
             annual_lmps = False
 
-        if not os.path.isfile(os.path.join(case_path, 'generator_statistics_AMES.csv')):
+        if not os.path.isfile(os.path.join(output_case_path, 'generator_statistics_AMES.csv')):
             print('No AMES generator stats found, running gen_stats')
             gen_stats = True
         else:
             gen_stats = False
 
-        if not os.path.isfile(os.path.join(case_path, 'DSO_quadratic_curves.json')):
+        if not os.path.isfile(os.path.join(output_case_path, 'DSO_quadratic_curves.json')):
             print('No Quadratic Curves found, running train_lmps')
             train_lmps = True
         else:
             train_lmps = True
 
-        if not os.path.isfile(os.path.join(case_path, 'DSO1_Market_Purchases.json')):
+        if not os.path.isfile(os.path.join(output_case_path, 'DSO1_Market_Purchases.json')):
             print('No Market Purchases found, running wholesale')
             wholesale = True
         else:
             wholesale = False
 
-        if not os.path.isfile(os.path.join(case_path, 'DSO1_Cash_Flows.json')):
+        if not os.path.isfile(os.path.join(output_case_path, 'DSO1_Cash_Flows.json')):
             retail = True
         else:
             # Keep retail turned on for now to square up revenue with re-run
             retail = True
 
-        if not os.path.isfile(os.path.join(case_path, 'Customer_CSF_Summary.csv')):
+        if not os.path.isfile(os.path.join(output_case_path, 'Customer_CSF_Summary.csv')):
             customer_cfs = True
         else:
             customer_cfs = True
 
-        if not os.path.isfile(os.path.join(case_path, 'DSO_CSF_Summary.csv')):
+        if not os.path.isfile(os.path.join(output_case_path, 'DSO_CSF_Summary.csv')):
             dso_cfs = True
         else:
             dso_cfs = True
@@ -168,11 +183,11 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
 
         # DSO range for 8 node case.  (for 200 node case we will need to 
         # determine active DSOs from metadata file).
-        dso_range = []
-        for DSO in DSOmetadata.keys():
-            if 'DSO' in DSO:
-                if DSOmetadata[DSO]['used']:
-                    dso_range.append(int(DSO.split('_')[-1]))
+        dso_range = [1] #[]
+        # for DSO in DSOmetadata.keys():
+        #     if 'DSO' in DSO:
+        #         if DSOmetadata[DSO]['used']:
+        #             dso_range.append(int(DSO.split('_')[-1]))
 
         case_name = ''
         month_def = []
@@ -234,9 +249,9 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
         # Verify and implement actual number of simulation days.
         total_sim_days = 0
         generate_case_config = ''
-        if not os.path.isfile(os.path.join(case_path, 'generate_case_config.json')):
+        if not os.path.isfile(os.path.join(output_case_path, 'generate_case_config.json')):
                 print('Copying generate_case_config.json to annual case folder')
-                shutil.copy2(os.path.join(case_path, '8_2016_01_pv_bt_fl_ev/generate_case_config.json'), os.path.join(case_path, 'generate_case_config.json'))
+                shutil.copy2(os.path.join(case_path, '8_2016_01_pv_bt_fl_ev/generate_case_config.json'), os.path.join(output_case_path, 'generate_case_config.json'))
 
         for month in month_def:
             generate_case_config = pt.load_json(month[1], 'generate_case_config.json')
@@ -259,9 +274,9 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
         GLD_prefix = '/Substation_'
 
         # Check if there is a plots folder - create if not.
-        check_folder = isdir(case_path + '/plots')
+        check_folder = isdir(output_case_path + '/plots')
         if not check_folder:
-            os.makedirs(case_path + '/plots')
+            os.makedirs(output_case_path + '/plots')
 
         # STEP 3 -- ANNUAL AGGREGATION AND ANALYSIS FUNCTIONS ------------------
         # (to be run once all month aggregation is complete)
@@ -274,31 +289,33 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
                 pt.tic()
                 year_meter_df, year_energysum_df, year_trans_sum_df = \
                     rm.annual_energy(month_def, GLD_prefix, str(dso_num), GLD_metadata)
-                os.chdir(case_path)
-                year_meter_df.to_hdf('energy_dso_' + str(dso_num) + '_data.h5', key='energy_data')
-                year_energysum_df.to_hdf('energy_dso_' + str(dso_num) + '_data.h5', key='energy_sums')
-                year_trans_sum_df.to_hdf('transactive_dso_' + str(dso_num) + '_data.h5', key='trans_data')
+                # os.chdir(case_path)
+                os.chdir(write_case_path) #SA-521
+                year_meter_df.to_hdf(os.path.join(write_case_path,'energy_dso_' + str(dso_num) + '_data.h5'), key='energy_data')#SA-521
+                year_energysum_df.to_hdf(os.path.join(write_case_path, 'energy_dso_' + str(dso_num) + '_data.h5'), key='energy_sums')#SA-521
+                year_trans_sum_df.to_hdf(os.path.join(write_case_path, 'transactive_dso_' + str(dso_num) + '_data.h5'), key='trans_data')#SA-521
                 print('Annual Customer Energy billing aggregation complete: DSO ' + str(dso_num))
                 pt.toc()
 
             # --------------- AGGREGATE ANNUAL AMENITY SCORES  -----------------
             if annual_amenity:
                 annual_amenity_df = pt.annual_amenity(GLD_metadata, month_def, GLD_prefix, str(dso_num))
-                os.chdir(case_path)
+                # os.chdir(case_path)
+                os.chdir(write_case_path) #SA-521
                 pt.tic()
-                annual_amenity_df.to_hdf('amenity_dso_' + str(dso_num) + '_data.h5', key='amenity_data')
-                annual_amenity_df.to_csv(path_or_buf=case_path + '/amenity_dso_' + str(dso_num) + '_data.csv')
+                annual_amenity_df.to_hdf(os.path.join(write_case_path, 'amenity_dso_' + str(dso_num) + '_data.h5'), key='amenity_data') #SA-521
+                annual_amenity_df.to_csv(path_or_buf=os.path.join(write_case_path, 'amenity_dso_' + str(dso_num) + '_data.csv'))#SA-521
                 print('Annual Customer amenity impact aggregation complete: DSO ' + str(dso_num))
                 pt.toc()
 
         # --------------- AGGREGATE ANNUAL DSO LOADS and FIND QMAX  ------------
         if load_stats:  # Finds Q_max amongst other things.
-            pt.dso_load_stats(dso_range, month_def, case_path, metadata_path, True)
+            pt.dso_load_stats(dso_range, month_def, output_case_path, metadata_path, True)
 
         # --------- AGGREGATE ANNUAL LMPS LOADS for FORECASTER RETUNING  -------
         if annual_lmps:
             for dso_num in dso_range:
-                pt.dso_lmp_stats(month_def, case_path, renew_forecast_file, dso_range)
+                pt.dso_lmp_stats(month_def, output_case_path, renew_forecast_file, dso_range)
 
                 # Plot comparison of simulation wholesale prices to actual market data
                 # pt.plot_lmp_stats(case_path, case_path, dso_num, 7)
@@ -307,10 +324,10 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
             # Annual LMP needs to be run once to ensure that the annual opf file is created
             # TODO: Check if this means a separate run is needed for gen_stats
             # before metrics flags that follow it.
-            GenAMES_df = pt.generation_statistics(case_path, config_path, system_case, total_day_range, False)
+            GenAMES_df = pt.generation_statistics(output_case_path, config_path, system_case, total_day_range, False)
 
         if train_lmps:
-            obj = qc.DSO_LMPs_vs_Q(case_path)
+            obj = qc.DSO_LMPs_vs_Q(output_case_path)
             obj.multiple_fit_calls()
             obj.make_json_out()
 
@@ -320,11 +337,11 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
         # dso_num = '1'
         if wholesale:
             for dso_num in dso_range:
-                qmax_df = pd.read_csv(case_path + '/Qmax.csv', index_col=[0])
+                qmax_df = pd.read_csv(output_case_path + '/Qmax.csv', index_col=[0])
                 time_of_system_peak = datetime.fromisoformat(qmax_df.loc['DSO_Total', 'Time of Peak'])
-                Market_Purchases = ep.Wh_Energy_Purchases(case_path, str(dso_num), True)
+                Market_Purchases = ep.Wh_Energy_Purchases(output_case_path, str(dso_num), True)
                 print(Market_Purchases)
-                os.chdir(case_path)
+                os.chdir(output_case_path)
                 with open('DSO' + str(dso_num) + '_Market_Purchases.json', 'w') as f:
                     json.dump(Market_Purchases, f, indent=2)
 
@@ -374,8 +391,14 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
 
                 trans_cost_balance_method = None
                 include_RT = False   # Do (or do not) include RT cost correction component in customer billing.
+
+                print("START multiplier:", bl_mult) #SA-521
+                print("write_case_path:", write_case_path)#SA-521
+                print("Before writing HDF")#SA-521
+                print("Before DSO_rate_making")#SA-521
+
                 DSO_Cash_Flows, DSO_Revenues_and_Energy_Sales, tariff, surplus_err = rm.DSO_rate_making(
-                    case_path,
+                    output_case_path,
                     demand_case_path,
                     dso_num,
                     GLD_metadata,
@@ -385,21 +408,22 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
                     case_name,
                     rate_scenario,
                     trans_cost_balance_method,
-                    include_RT
+                    include_RT,
+                    bl_demand_df_multiplier = bl_mult, #SA
                 )
 
                 # Example of getting an annual customer bill in dictionary form:
                 customer = list(GLD_metadata['billingmeters'].keys())[0]
-                cust_bill_file = case_path + '/bill_dso_' + str(dso_num) + '_data.h5'
+                cust_bill_file = output_case_path + '/bill_dso_' + str(dso_num) + '_data.h5'
                 cust_bills = pd.read_hdf(cust_bill_file, key='cust_bill_data', mode='r')
-                cust_energy = pd.read_hdf(case_path + '/energy_dso_' + str(dso_num) + '_data.h5', key='energy_data', mode='r')
+                cust_energy = pd.read_hdf(output_case_path + '/energy_dso_' + str(dso_num) + '_data.h5', key='energy_data', mode='r') #SA-521
                 customer_bill = rm.get_cust_bill(customer, cust_bills, GLD_metadata, cust_energy, rate_scenario)
                 print(customer_bill)
 
                 print("DSO " + str(dso_num) + ": Surplus error = " + str(surplus_err) + "%")
                 pt.toc()
 
-                os.chdir(case_path)
+                os.chdir(output_case_path)
                 with open('DSO' + str(dso_num) + '_Cash_Flows.json', 'w') as f:
                     json.dump(DSO_Cash_Flows, f, indent=2)
                 with open('DSO' + str(dso_num) + '_Revenues_and_Energy_Sales.json', 'w') as f:
@@ -416,11 +440,11 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
             # dso_range = [1]
             create_customer_df = True
             if create_customer_df:
-                customer_df = hf.get_customer_df(dso_range, case_path, metadata_path, rate_scenario)
-                customer_df.to_hdf(case_path + '/Master_Customer_Dataframe.h5', key='customer_data')
-                customer_df.to_csv(path_or_buf=case_path + '/Master_Customer_Dataframe.csv')
+                customer_df = hf.get_customer_df(dso_range, output_case_path, metadata_path, rate_scenario, bl_demand_df_multiplier = bl_mult) #SA-521
+                customer_df.to_hdf(output_case_path + '/Master_Customer_Dataframe.h5', key='customer_data')
+                customer_df.to_csv(path_or_buf=output_case_path + '/Master_Customer_Dataframe.csv')
             else:
-                customer_df = pd.read_hdf(case_path + '/Master_Customer_Dataframe.h5', key='customer_data', mode='r')
+                customer_df = pd.read_hdf(output_case_path + '/Master_Customer_Dataframe.h5', key='customer_data', mode='r')
 
             main_variables = ['dso', 'tariff_class', 'building_type', 'cust_participating', 'cooling', 'heating', 'income_level']
             variables_combs = [['tariff_class', 'cust_participating'],
@@ -433,7 +457,7 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
             ]
 
             customer_mean_df = hf.get_mean_for_diff_groups(customer_df, main_variables, variables_combs, cfs_start_position=25)
-            customer_mean_df.to_csv(path_or_buf=case_path + '/Customer_CFS_Summary.csv')
+            customer_mean_df.to_csv(path_or_buf=output_case_path + '/Customer_CFS_Summary.csv')
 
         if dso_cfs:
             (
@@ -446,14 +470,14 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
                 dso_range,
                 generate_case_config,
                 DSOmetadata,
-                case_path,
+                output_case_path,
                 base_case_path,
                 rate_scenario,
             )
 
-            DSO_df.to_csv(path_or_buf=case_path + '/DSO_CFS_Summary.csv')
+            DSO_df.to_csv(path_or_buf=output_case_path + '/DSO_CFS_Summary.csv')
 
-            os.chdir(case_path)
+            os.chdir(output_case_path)
             i = 0
             for dso_num in dso_range:
                 with open('DSO' + str(dso_num) + '_Capital_Costs.json', 'w') as f:
@@ -472,7 +496,7 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
         stats = True
         if stats:
             bill = True
-            rci_df = pt.RCI_analysis(dso_range, month_def[0][1], case_path, metadata_path, dso_metadata_file, bill)
+            rci_df = pt.RCI_analysis(dso_range, month_def[0][1], output_case_path, metadata_path, dso_metadata_file, bill)
             params = [
                 # ['houses', 'SINGLE_FAMILY', 'cooling_COP'],
                 ['billingmeters', 'commercial', 'sqft'],
@@ -489,7 +513,7 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
 
             for para in params:
                 pt.metadata_dist_plots(system=para[0], sys_class=para[1], variable=para[2], dso_range=dso_range,
-                                    case=month_def[0][1], data_path=case_path, metadata_path=metadata_path,
+                                    case=month_def[0][1], data_path=output_case_path, metadata_path=metadata_path,
                                     agent_prefix=agent_prefix)
 
 def batch_process():
@@ -500,15 +524,37 @@ def batch_process():
 
 def one_process():
     # Select case to post-process
-    case = flat_path
+    case = subscription_path #flat_path
 
     base_case_path = flat_path
     demand_case_path = flat_path
     run_base = False
-    case_list = []
-    case_list.append(str(case))
-    run_annual_postprocessing(case_list, base_case_path, demand_case_path, run_base)
+
+    # case_list = []
+    # case_list.append(str(case))
+    # run_annual_postprocessing(case_list, base_case_path, demand_case_path, run_base)
+
+    #SA-521 START
+    bl_mult_list = ['5'] #[0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2]
     
+    for bl_mult in bl_mult_list:
+        input_case_path = subscription_path
+        output_case_path = os.path.join(subscription_path, f"mult{bl_mult}")
+        os.makedirs(output_case_path, exist_ok=True)
+        # copy ONLY if needed minimal structure (optional safe)
+        # but DO NOT copy simulation inputs
+        case_list = [input_case_path]
+        run_annual_postprocessing(
+        case_list=[subscription_path],  
+        base_case_path=flat_path,
+        demand_case_path=flat_path,
+        run_base=run_base,
+        bl_mult=bl_mult,
+        input_case_path=subscription_path,
+        output_case_path=output_case_path
+        )
+    #SA-521 END
+
 
 if __name__ == "__main__":
     # batch_process()

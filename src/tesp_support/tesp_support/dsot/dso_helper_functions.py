@@ -12,6 +12,7 @@ import tesp_support.dsot.plots as pt
 import tesp_support.dsot.dso_rate_making as rm
 import tesp_support.dsot.customer_CFS as ccfs
 import tesp_support.dsot.dso_CFS as cfs
+import os
 
 # get rid of the burn-in days
 
@@ -303,7 +304,7 @@ def labor_network_admin_increase(group, hourly_rate, metadata_general, metadata_
     return labor_Lev1Fte, labor_Fte, Lev1_labor_cost, LeaderRatio, labor_cost, LeaderLevel
 
 
-def get_customer_df(dso_range, case_path, metadata_path, rate_scenario):
+def get_customer_df(dso_range, case_path, metadata_path, rate_scenario, bl_demand_df_multiplier = 1.0): #SA-521
     customer_df = pd.DataFrame([])
     for dso_num in dso_range:
         GLD_metadata = pt.load_json(case_path, 'DSO' + str(dso_num) + '_Customer_Metadata.json')
