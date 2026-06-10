@@ -502,6 +502,11 @@ def load_retail_data(dir_path, folder_prefix, dso_num, day_num, agent_name):
 
     # Reduce data frame to the 10am day ahead clearance and the 24-hours for the next day.
     bid_time = date - timedelta(hours=14) - timedelta(seconds=30)
+    if bid_time not in retail_data_df.index:
+        print(f'WARNING load_retail_data: bid_time {bid_time} not found in retail data for day {day_num} '
+              '(simulation may have stopped before the day-ahead market cleared). '
+              'Skipping day.')
+        return None, retail_index_df
     retail_data_df = retail_data_df.loc[bid_time]
     # retail_data_df = retail_data_df.loc[(retail_data_df['j'] >= 14) & (retail_data_df['j'] <= 37)]
 

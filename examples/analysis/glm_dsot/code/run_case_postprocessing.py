@@ -100,6 +100,8 @@ def post_process():
             for day_number in day_range:
                 retail_data_df, retail_index_df = \
                     pt.load_retail_data(case_path, agent_prefix, str(dso_number), str(day_number), 'retail_site')
+                if retail_data_df is None:
+                    print(f'  Skipping day {day_number}: day-ahead market data not available (incomplete simulation day).')
             print('Retail agent data processing complete: DSO ' + str(dso_number) + ', Month ' + month_name)
             pt.toc()
 

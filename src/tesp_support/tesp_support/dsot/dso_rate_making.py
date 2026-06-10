@@ -164,7 +164,13 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num,
 
         # Load in transactive customer Q data, real-time price data, and DA cleared price
         filename = dir_path + '/DSO_' + dso_num + '/Retail_Quantities.h5'
-        cust_trans_df = pd.read_hdf(filename, key='/index' + str(day), mode='r')
+        try:
+            cust_trans_df = pd.read_hdf(filename, key='/index' + str(day), mode='r')
+        except KeyError:
+            logger.warning('read_meters: Retail_Quantities.h5 has no entry for day %s '
+                           '(day-ahead data was not written, likely an incomplete simulation day). '
+                           'Skipping day.', day)
+            continue
         # DSO agent retail values are used for congestion and AMES price LMPs used for quantity billing.
         RT_price_df = load_ames_data(dir_path, range(int(day), int(day) + 1))
         RT_retail_df, RT_bid_df = load_agent_data(dir_path, '/DSO_', dso_num, str(day), 'retail_market')
