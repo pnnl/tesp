@@ -18,15 +18,15 @@ Testing strategy:
 import pytest
 from unittest.mock import MagicMock
 
-from gridlabd_interface import GridLABDInterface
-from data_types import (
+from tesp_support.curve_and_agent.gridlabd_interface import GridLABDInterface
+from tesp_support.curve_and_agent.data_types import (
     HVACState,
     WaterHeaterState,
     EVChargerState,
     BatteryState,
     DeviceCommand,
 )
-from enums_and_constants import DeviceType
+from tesp_support.curve_and_agent.enums_and_constants import DeviceType
 
 
 # ===================================================================

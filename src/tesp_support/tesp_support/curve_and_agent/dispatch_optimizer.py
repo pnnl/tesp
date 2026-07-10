@@ -9,8 +9,8 @@
 # ============================================================================
 
 from typing import Dict, List, Optional, Tuple
-from data_types import DeliveryEconomics, DispatchSolution, FlexibilityEnvelope
-from preference_curve import PreferenceCurve
+from .data_types import DeliveryEconomics, DispatchSolution, FlexibilityEnvelope
+from .preference_curve import PreferenceCurve
 
 
 class DispatchOptimizer:

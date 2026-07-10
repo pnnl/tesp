@@ -13,9 +13,9 @@ Ground truth for:
 import math
 import pytest
 
-from enums_and_constants import DeviceType
-from data_types import ContinuousDataPoint, EventDefinition, QuantilePoint
-from data_streams import (
+from tesp_support.curve_and_agent.enums_and_constants import DeviceType
+from tesp_support.curve_and_agent.data_types import ContinuousDataPoint, EventDefinition, QuantilePoint
+from tesp_support.curve_and_agent.data_streams import (
     UncertaintyModel,
     ContinuousForecast,
     EventForecast,

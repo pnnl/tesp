@@ -7,24 +7,9 @@ market configurations, bid curves, and other data structures used across
 test files.
 """
 
-import sys
-from pathlib import Path
-
 import pytest
 
-# ---------------------------------------------------------------------------
-# The curve_and_agent modules use bare imports (e.g., "from enums_and_constants
-# import ...") rather than relative imports.  Add the package directory to
-# sys.path so pytest can discover them without installing the package.
-# ---------------------------------------------------------------------------
-_CURVE_AGENT_DIR = str(
-    Path(__file__).resolve().parents[2] / "tesp_support" / "curve_and_agent"
-)
-if _CURVE_AGENT_DIR not in sys.path:
-    sys.path.insert(0, _CURVE_AGENT_DIR)
-
-# Now the modules are importable by their bare names.
-from enums_and_constants import (  # noqa: E402
+from tesp_support.curve_and_agent.enums_and_constants import (
     MarketType,
     MarketPhase,
     OperatingMode,
@@ -36,7 +21,7 @@ from enums_and_constants import (  # noqa: E402
     StreamType,
     PenaltyStructureType,
 )
-from data_types import (  # noqa: E402
+from tesp_support.curve_and_agent.data_types import (
     HVACState,
     WaterHeaterState,
     EVChargerState,

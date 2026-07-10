@@ -10,8 +10,8 @@ Ground truth:
 
 import pytest
 
-from enums_and_constants import MarketType
-from price_forecast_service import PriceForecastService, PriceForecast
+from tesp_support.curve_and_agent.enums_and_constants import MarketType
+from tesp_support.curve_and_agent.price_forecast_service import PriceForecastService, PriceForecast
 
 RT = MarketType.RT_ENERGY
 DA = MarketType.DA_ENERGY

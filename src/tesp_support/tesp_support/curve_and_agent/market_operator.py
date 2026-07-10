@@ -12,8 +12,8 @@
 # ============================================================================
 
 from typing import Dict, List, Optional, Tuple, Any
-from data_types import BidCurve, ClearingResult, BidPoint, MarketTimingParams
-from enums_and_constants import MarketType, IterationType
+from .data_types import BidCurve, ClearingResult, BidPoint, MarketTimingParams
+from .enums_and_constants import MarketType, IterationType
 
 
 class SupplyCurve:

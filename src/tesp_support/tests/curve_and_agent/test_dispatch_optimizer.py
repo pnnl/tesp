@@ -10,15 +10,15 @@ Ground truth:
 
 import pytest
 
-from data_types import (
+from tesp_support.curve_and_agent.data_types import (
     DeliveryEconomics,
     DispatchSolution,
     FlexibilityEnvelope,
     BidPoint,
 )
-from dispatch_optimizer import DispatchOptimizer, DeliveryValueCalculator
-from preference_curve import PreferenceCurve
-from enums_and_constants import DeviceType, ProductType, PenaltyStructureType
+from tesp_support.curve_and_agent.dispatch_optimizer import DispatchOptimizer, DeliveryValueCalculator
+from tesp_support.curve_and_agent.preference_curve import PreferenceCurve
+from tesp_support.curve_and_agent.enums_and_constants import DeviceType, ProductType, PenaltyStructureType
 
 
 # ===================================================================
@@ -205,7 +205,7 @@ class TestDeliveryValueCalculator:
         Price=$0.12/kWh, committed=5 kW, interval=300s (5 min=1/12 hr).
         Revenue = 0.12 x 5 x (300/3600) = $0.05.
         """
-        from penalty_model import PenaltyModel
+        from tesp_support.curve_and_agent.penalty_model import PenaltyModel
 
         pen = PenaltyModel(
             market_type=ProductType.ENERGY_BASE,
@@ -231,7 +231,7 @@ class TestDeliveryValueCalculator:
         Revenue for regulation is capacity-based, but the calculator
         should still produce a valid DeliveryEconomics.
         """
-        from penalty_model import PenaltyModel
+        from tesp_support.curve_and_agent.penalty_model import PenaltyModel
 
         pen = PenaltyModel(
             market_type=ProductType.REGULATION_UP,
@@ -256,7 +256,7 @@ class TestDeliveryValueCalculator:
         Degradation cost reduces net value: the calculator should
         account for it in the marginal_value_full or net_value_fn.
         """
-        from penalty_model import PenaltyModel
+        from tesp_support.curve_and_agent.penalty_model import PenaltyModel
 
         pen = PenaltyModel(
             market_type=ProductType.ENERGY_BASE,
