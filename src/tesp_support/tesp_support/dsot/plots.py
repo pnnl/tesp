@@ -11,6 +11,7 @@ import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import pyjson5
 import seaborn as sns
 import bisect
 import re
@@ -46,6 +47,22 @@ def tic():
     toc(False)
 
 
+def _load_json_fp(fp, path):
+    """Load a JSON or JSON5 file object, dispatching on the file extension.
+
+    .json5 files are parsed with pyjson5 (supports comments, trailing commas,
+    unquoted keys, etc.); everything else is parsed with stdlib json.
+
+    Args:
+        fp: open file object
+        path (str): file path (used only for extension detection)
+    Returns:
+        parsed Python object
+    """
+    if str(path).endswith('.json5'):
+        return pyjson5.load(fp)
+    return json.load(fp)
+
 def load_json(dir_path, file_name, use_cache=True):
     """ Utility to open Json files.
     Args:
@@ -57,6 +74,11 @@ def load_json(dir_path, file_name, use_cache=True):
     Returns:
         output: json file contents
     """
+    # Dispatch on extension: .json5 files are parsed with pyjson5 (supports comments,
+    # trailing commas, etc.); plain .json files use the stdlib json module.
+    def _load(fp):
+        return _load_json_fp(fp, file_name)
+
     name = os.path.join(dir_path, file_name)
     if use_cache:
         try:
@@ -64,11 +86,11 @@ def load_json(dir_path, file_name, use_cache=True):
             return cache
         except Exception:
             with open(name) as json_file:
-                cache_output[name] = json.load(json_file)
+                cache_output[name] = _load(json_file)
         return cache_output[name]
     else:
         with open(name) as json_file:
-            output = json.load(json_file)
+            output = _load(json_file)
         return output
 
 
@@ -217,15 +239,34 @@ def load_gen_data(dir_path, gen_name, day_range):
             # Reduce raw data to day range of interest and reshape/flatten
             data_df = data_df.loc[start_time:stop_time, :]
 
+            if data_df.empty:
+                raise ValueError(
+                    f'load_gen_data: no {gen_name} data found for day range {list(day_range)} '
+                    f'(simulation may not have written DA market results for this period).'
+                )
+
             #Issue with da_gen with missing data entries.
             if gen_name in ['da_gen']:
-                idx = pd.MultiIndex.from_product([data_df.index.unique(level=0), data_df.index.unique(level=1)])
-                missing_values = len(idx.difference(data_df.index))
+                # da_gen stores ONE row per (daily_clearing_timestamp, generator) with 24
+                # columns (the 24 committed delivery-hour quantities).  The reshape below
+                # flattens this to len(day_range) × generators × 24 values to match the
+                # gen_data_df index.
+                #
+                # Build the full expected index: one clearing timestamp per day crossed
+                # with dso_list.  The reindex is performed unconditionally (not guarded by
+                # missing_values > 0) so that months where timestamps match but some days
+                # are absent are still padded to the correct size, and months where the
+                # timestamps don't match are replaced with zeros at the correct size.
+                expected_clearing_timestamps = [
+                    sim_start + timedelta(days=d - 1)
+                    for d in day_range
+                ]
+                full_idx = pd.MultiIndex.from_product([expected_clearing_timestamps, dso_list])
+                missing_values = len(full_idx.difference(data_df.index))
                 if missing_values != 0:
-                    data_df.index.difference(idx)
-                    data_df = data_df.reindex(idx, fill_value=0.0)
                     print('WARNING: '+ str(missing_values) +' index values missing from ' + filename + ' located in ' + dir_path + \
                           '. Missing values replaced with zero.')
+                data_df = data_df.reindex(full_idx, fill_value=0.0)
 
             frame_size = len(data_df) * len(data_df.columns)
             test = np.reshape(data_df.values, frame_size)
@@ -501,6 +542,10 @@ def load_retail_data(dir_path, folder_prefix, dso_num, day_num, agent_name):
     retail_data_df = pd.read_hdf(filename, key='/metrics_df2', mode='r')
 
     # Reduce data frame to the 10am day ahead clearance and the 24-hours for the next day.
+    # The day-ahead market clears at 10 AM, which produces a record at (date - 14h - 30s) in the
+    # retail HDF5 file (14 hours before midnight of the next day, offset by the 30-second GLD
+    # timestep).  If the simulation stopped before reaching that time, this timestamp will be
+    # absent from the index; return (None, retail_index_df) so callers can skip the day gracefully.
     bid_time = date - timedelta(hours=14) - timedelta(seconds=30)
     if bid_time not in retail_data_df.index:
         print(f'WARNING load_retail_data: bid_time {bid_time} not found in retail data for day {day_num} '
@@ -615,6 +660,12 @@ def load_system_data(dir_path, folder_prefix, dso_num, day_num, system_name):
         system_meta_df : dataframe of system metadata
         system_df: dataframe of system timeseries data
         """
+    # daily_index=True is the current production format: each simulation day is stored as a
+    # separate HDF5 key '/index{day_num}' within the file.  The legacy single-index format
+    # (daily_index=False) is retained for backward compatibility but is no longer used in
+    # normal runs.  When daily_index=True, a missing key means the simulation did not write
+    # data for that day (e.g. an incomplete run); pd.read_hdf will raise KeyError which the
+    # caller is responsible for catching and handling (typically by skipping the day).
     daily_index = True
     os.chdir(dir_path + folder_prefix + dso_num)
     hdf5filenames = [f for f in os.listdir('.') if f.endswith('.h5') and system_name in f]
@@ -624,18 +675,15 @@ def load_system_data(dir_path, folder_prefix, dso_num, day_num, system_name):
     list(store.keys())
     system_meta_df = pd.read_hdf(filename, key='/Metadata', mode='r')
     if daily_index:
-        try:
-            system_df = pd.read_hdf(hdf5filenames[0], key='/index' + day_num, mode='r')
-        except KeyError:
-            print(f'file name {hdf5filenames[0]} key index{day_num} not found')
-            pass
+        # Raises KeyError if this day was not written (incomplete simulation). Caller must handle.
+        system_df = pd.read_hdf(hdf5filenames[0], key='/index' + day_num, mode='r')
     # ----- The code below was used for when there was one index with multiple days
     else:
         try:
             system_df = pd.read_hdf(hdf5filenames[0], key='/index1', mode='r')
         except KeyError:
             print(f'file name {hdf5filenames[0]} key index{day_num} not found')
-            pass
+            raise
         start_time = (int(day_num) - 1) * 300 * 288
         end_time = start_time + 300 * (288 - 1)
         system_df = system_df[system_df['time'] >= start_time]
@@ -648,10 +696,7 @@ def load_system_data(dir_path, folder_prefix, dso_num, day_num, system_name):
         # system_df['date'] = system_df['date'].apply(pd.to_datetime)
         # system_df = system_df.set_index(['date'])
         # system_df = system_df.loc[start_time:stop_time]
-    try:
-        return system_meta_df, system_df
-    except UnboundLocalError:
-        print(print(f'file name {hdf5filenames[0]} key index{day_num} not found'))
+    return system_meta_df, system_df
 
 def load_surcharge_data(dir_path, gen_name, day_range):
 
@@ -1102,7 +1147,7 @@ def DSO_loadprofiles(dso_num, dso_range, day_range, case, dso_metadata_file, met
 
     # Load DSO MetaData
     with open(dso_metadata_file) as json_file:
-        DSOmetadata = json.load(json_file)
+        DSOmetadata = _load_json_fp(json_file, dso_metadata_file)
 
     for dso in dso_range:
         # Calculate expected scaling factor
@@ -1357,10 +1402,25 @@ def bldg_load_stack(dso, day_range, case, agent_prefix, gld_prefix, metadata_pat
         stop_time = start_time + timedelta(days=1) - timedelta(minutes=5)
         ercot_load = ercot_df.loc[start_time:stop_time, ['Bus' + str(dso)]] / scale_target * 1e6
 
-        meta_df, bldg_df = load_system_data(case, gld_prefix, str(dso), str(day), 'billing_meter')
+        # Load per-meter 5-min real power for building-type disaggregation.
+        # Skip the day if:
+        #   - KeyError: HDF5 key absent (simulation never wrote this day).
+        #   - Row-count mismatch: key present but fewer rows than a full day (simulation stopped
+        #     mid-day after GridLAB-D started writing but before completing all 288 timesteps).
+        try:
+            meta_df, bldg_df = load_system_data(case, gld_prefix, str(dso), str(day), 'billing_meter')
+        except KeyError:
+            print(f'WARNING bldg_load_stack: day {day} billing_meter data key not found in HDF5 '
+                  f'(incomplete simulation day). Skipping day.')
+            continue
 
-        # Load in substation curve
-        substation_meta_df, substation_df = load_system_data(case, '/Substation_', str(dso), str(day), 'substation')
+        # Load substation total load for the same day (used as the reference curve in plots).
+        try:
+            substation_meta_df, substation_df = load_system_data(case, '/Substation_', str(dso), str(day), 'substation')
+        except KeyError:
+            print(f'WARNING bldg_load_stack: day {day} substation data key not found in HDF5 '
+                  f'(incomplete simulation day). Skipping day.')
+            continue
 
         replace_key = {}
         for meter in metadata['billingmeters']:
@@ -1369,6 +1429,10 @@ def bldg_load_stack(dso, day_range, case, agent_prefix, gld_prefix, metadata_pat
         bldg_df = bldg_df.replace({'name': replace_key})
 
         temp = bldg_df.groupby(['time', 'name'])[['real_power_avg']].sum().unstack()
+        if len(temp) != len(ercot_load):
+            print(f'WARNING bldg_load_stack: day {day} billing_meter data has {len(temp)} rows '
+                  f'but expected {len(ercot_load)} (incomplete simulation day). Skipping day.')
+            continue
         temp = temp.set_index(ercot_load.index)
         temp.columns = temp.columns.droplevel()
 
@@ -1381,8 +1445,11 @@ def bldg_load_stack(dso, day_range, case, agent_prefix, gld_prefix, metadata_pat
             bldg_loads_df.loc[(slice(temp.index[0], temp.index[-1]), 'dso' + str(dso)), col] = \
                 temp[col].values * scale_target / 1e6
 
+        # Use [:len(temp)] slice on substation values as a safety measure: the substation HDF5
+        # file is written independently of billing_meter, so in edge cases it could have a
+        # slightly different row count.  Truncating to len(temp) prevents a length-mismatch error.
         bldg_loads_df.loc[(slice(temp.index[0], temp.index[-1]), 'dso' + str(dso)), 'Substation'] = \
-            substation_df['real_power_avg'].values * scale_target / 1e6
+            substation_df['real_power_avg'].values[:len(temp)] * scale_target / 1e6
 
         bldg_loads_df.loc[(slice(temp.index[0], temp.index[-1]), 'dso' + str(dso)), 'Industrial'] = \
             indust_df.loc[start_time:stop_time, ['Bus' + str(dso)]].values
@@ -1463,7 +1530,9 @@ def bldg_stack_plot(dso_range, day_range, case, metadata_path):
     stop_time = sim_start + timedelta(days=day_range[-1]) - timedelta(minutes=5)
     temp = temp.loc[start_time:stop_time, :]
     if temp.index[-1] < stop_time:
-        raise Exception('DER stack plot data not available for ' + str(stop_time) + ".")
+        print(f'WARNING bldg_stack_plot: building stack data ends at {temp.index[-1]}, '
+              f'which is before the configured end time {stop_time} '
+              f'(incomplete simulation run). Plot will cover available data only.')
 
     # Aggregate all small-load meters (convention: names ending in '_mtr_sm') into one category.
     small_load_cols = [col for col in temp.columns if isinstance(col, str) and col.endswith('_mtr_sm')]
@@ -1591,8 +1660,24 @@ def der_load_stack(dso, day_range, case, gld_prefix, metadata_path):
         stop_time = start_time + timedelta(days=1) - timedelta(minutes=5)
         ercot_load = ercot_df.loc[start_time:stop_time, ['Bus' + str(dso)]] / scale_target * 1e6
 
-        meta_df, house_df = load_system_data(case, gld_prefix, str(dso), str(day), 'house')
+        # Load aggregated house data for this day.  Two incomplete-day conditions require a skip:
+        #   1. KeyError  – the HDF5 key '/index{day}' was never written (simulation ended before
+        #      GridLAB-D produced output for this day at all).
+        #   2. Row-count mismatch – the key exists but has fewer rows than the full-day ERCOT
+        #      reference (288 × 5-min intervals).  Attempting set_index with mismatched lengths
+        #      raises ValueError, so we catch it here before it occurs.
+        # In either case the day is skipped; the DER output DataFrame retains zeros for that day.
+        try:
+            meta_df, house_df = load_system_data(case, gld_prefix, str(dso), str(day), 'house')
+        except KeyError:
+            print(f'WARNING der_load_stack: day {day} house data key not found in HDF5 '
+                  f'(incomplete simulation day). Skipping day.')
+            continue
         house_df = house_df.groupby('time').sum()
+        if len(house_df) != len(ercot_load):
+            print(f'WARNING der_load_stack: day {day} house data has {len(house_df)} rows '
+                  f'but expected {len(ercot_load)} (incomplete simulation day). Skipping day.')
+            continue
         house_df = house_df.set_index(ercot_load.index)
         der_loads_df.loc[(slice(house_df.index[0], house_df.index[-1]), 'dso' + str(dso)), 'Plug Loads'] = \
             (house_df['total_load_avg'].values - house_df['hvac_load_avg'].values -
@@ -1604,40 +1689,52 @@ def der_load_stack(dso, day_range, case, gld_prefix, metadata_path):
         der_loads_df.loc[(slice(house_df.index[0], house_df.index[-1]), 'dso' + str(dso)), 'WH Loads'] = \
             house_df['waterheater_load_avg'].values * scale_target / 1e3
 
+        # Battery and PV both live in the inverter HDF5 file, filtered by name.
+        # The length check guards against a partial last day: if fewer rows than the full-day
+        # ERCOT reference are present the data is silently omitted (zeros remain in der_loads_df).
         if battery_case:
             meta_df, battery_df = load_system_data(case, gld_prefix, str(dso), str(day), 'inverter')
             battery_df = battery_df[battery_df['name'].str.contains('bat')]
             battery_df = battery_df.groupby('time').sum()
-            battery_df = battery_df.set_index(ercot_load.index)
-            der_loads_df.loc[(slice(battery_df.index[0], battery_df.index[-1]), 'dso' + str(dso)), 'Battery'] = \
-                battery_df['real_power_avg'].values * scale_target / 1e6
+            if len(battery_df) == len(ercot_load):
+                battery_df = battery_df.set_index(ercot_load.index)
+                der_loads_df.loc[(slice(battery_df.index[0], battery_df.index[-1]), 'dso' + str(dso)), 'Battery'] = \
+                    battery_df['real_power_avg'].values * scale_target / 1e6
         if pv_case:
             meta_df, inverter_df = load_system_data(case, gld_prefix, str(dso), str(day), 'inverter')
             inverter_df = inverter_df[inverter_df['name'].str.contains('solinv')]
             inverter_df = inverter_df.groupby('time').sum()
-            inverter_df = inverter_df.set_index(ercot_load.index)
-            der_loads_df.loc[(slice(inverter_df.index[0], inverter_df.index[-1]), 'dso' + str(dso)), 'PV'] = \
-                inverter_df['real_power_avg'].values * scale_target / 1e6
+            if len(inverter_df) == len(ercot_load):
+                inverter_df = inverter_df.set_index(ercot_load.index)
+                der_loads_df.loc[(slice(inverter_df.index[0], inverter_df.index[-1]), 'dso' + str(dso)), 'PV'] = \
+                    inverter_df['real_power_avg'].values * scale_target / 1e6
 
-        try:  # EV data may not exist in all cases
+        # EV charger data is optional: not all cases include EVs, so an IndexError (no matching
+        # HDF5 file) or TypeError (None returned) is expected and silently skipped.
+        # A length mismatch for a partial day is also guarded by the len() check.
+        try:
             meta_df, ev_df = load_system_data(case, gld_prefix, str(dso), str(day), 'evcharger_det')
             ev_df = ev_df.groupby('time').sum()
-            ev_df = ev_df.set_index(ercot_load.index)
-            der_loads_df.loc[(slice(ev_df.index[0], ev_df.index[-1]), 'dso' + str(dso)), 'EV'] = \
-                ev_df['charge_rate_avg'].values * scale_target / 1e6
+            if len(ev_df) == len(ercot_load):
+                ev_df = ev_df.set_index(ercot_load.index)
+                der_loads_df.loc[(slice(ev_df.index[0], ev_df.index[-1]), 'dso' + str(dso)), 'EV'] = \
+                    ev_df['charge_rate_avg'].values * scale_target / 1e6
 
-            # EV power appears in house total load; subtract once so plug load stays net-of-EV.
-            der_loads_df.loc[(slice(house_df.index[0], house_df.index[-1]), 'dso' + str(dso)), 'Plug Loads'] -= \
-                der_loads_df.loc[(slice(ev_df.index[0], ev_df.index[-1]), 'dso' + str(dso)), 'EV']
-        except TypeError:
+                # EV power is already included in house total_load_avg, so subtract it from
+                # Plug Loads to avoid double-counting.
+                der_loads_df.loc[(slice(house_df.index[0], house_df.index[-1]), 'dso' + str(dso)), 'Plug Loads'] -= \
+                    der_loads_df.loc[(slice(ev_df.index[0], ev_df.index[-1]), 'dso' + str(dso)), 'EV']
+        except (TypeError, IndexError):
             print(f"Could not load system data for case {case}, gld_prefix {gld_prefix}, dso {dso}, day {day}, evcharger_det")
 
-        # Load in substation curve
+        # Substation real power is used as the total-load reference curve in the stacked plot.
+        # Length check is applied for the same partial-day reason as house/battery/PV above.
         substation_meta_df, substation_df = load_system_data(case, gld_prefix, str(dso), str(day),
                                                              'substation')
-        substation_df = substation_df.set_index(ercot_load.index)
-        der_loads_df.loc[(slice(substation_df.index[0], substation_df.index[-1]), 'dso' + str(dso)), 'Substation'] = \
-            substation_df['real_power_avg'].values * scale_target / 1e6
+        if len(substation_df) == len(ercot_load):
+            substation_df = substation_df.set_index(ercot_load.index)
+            der_loads_df.loc[(slice(substation_df.index[0], substation_df.index[-1]), 'dso' + str(dso)), 'Substation'] = \
+                substation_df['real_power_avg'].values * scale_target / 1e6
 
     der_loads_df.to_hdf(case + gld_prefix + str(dso) + '/DER_profiles.h5', key='DER_Profiles')
     der_loads_df.to_csv(path_or_buf=case + gld_prefix + str(dso) + '/DERstack_data.csv')
@@ -1663,8 +1760,15 @@ def der_stack_plot(dso_range, day_range, metadata_path, case, comp=None, plot_re
     # Load ERCOT load profile data
     ercot_metadata_file = os.path.join(metadata_path, config['refLoadMn'][5].split('/')[-1])
     sim_start = datetime.strptime(config['StartTime'], '%Y-%m-%d %H:%M:%S')
+    # Load ERCOT reference load and AMES real-time price data.
+    # ercot_df spans the full configured day_range, but ames_rt_df only covers the days
+    # the simulation actually produced output for.  Trim both to the shorter length so
+    # set_index does not raise a length-mismatch ValueError when the run was incomplete.
     ercot_df = load_ercot_data(ercot_metadata_file, sim_start, day_range)
     ames_rt_df = load_ames_data(case, day_range)
+    min_len = min(len(ercot_df), len(ames_rt_df))
+    ercot_df = ercot_df.iloc[:min_len]
+    ames_rt_df = ames_rt_df.iloc[:min_len]
     ames_rt_df = ames_rt_df.set_index(ercot_df.index)
 
     if config['case_type']['bt'] == 1:
@@ -1702,7 +1806,9 @@ def der_stack_plot(dso_range, day_range, metadata_path, case, comp=None, plot_re
     stop_time = sim_start + timedelta(days=day_range[-1]) - timedelta(minutes=5)
     temp = temp.loc[start_time:stop_time, :]
     if temp.index[-1] < stop_time:
-        raise Exception('DER stack plot data not available for ' + str(stop_time) + ".")
+        print(f'WARNING der_stack_plot: DER stack data ends at {temp.index[-1]}, '
+              f'which is before the configured end time {stop_time} '
+              f'(incomplete simulation run). Plot will cover available data only.')
 
     if comp is not None:
         compare_df = pd.read_csv(comp + '/der_stack_data_allDSOs.csv', index_col='time', parse_dates=True)
@@ -2078,10 +2184,25 @@ def dso_market_plot(dso_range, day, case, dso_metadata_file, ercot_dir, comp_cas
     for dso in dso_range:
         scale_target = DSOmetadata['DSO_' + str(dso)]['scaling_factor']
 
-        # Load substation values
-        temp_df = get_day_df(str(dso), 'substation', None, 'real_power_avg', day, case, '/DSO_', '/Substation_')
+        # Load substation real power for this DSO and day.
+        # Two distinct incomplete-day conditions are handled here:
+        #   1. KeyError: the HDF5 key for this day is entirely absent (simulation never wrote it).
+        #   2. Length mismatch: the HDF5 key exists but has fewer rows than a full day (simulation
+        #      stopped mid-day after GridLAB-D began writing but before completing 288 timesteps).
+        # In both cases the entire dso_market_plot call is aborted via return (all DSOs share
+        # the same day so there is no value in plotting a partial day for some and not others).
+        try:
+            temp_df = get_day_df(str(dso), 'substation', None, 'real_power_avg', day, case, '/DSO_', '/Substation_')
+        except KeyError:
+            print(f'WARNING dso_market_plot: day {day} substation data key not found in HDF5 '
+                  f'(incomplete simulation day). Skipping day.')
+            return
         temp_df = temp_df.rename(columns={'real_power_avg': 'DSO ' + str(dso)})
         indust_df = indust_df.rename(columns={'Bus' + str(dso): 'DSO ' + str(dso)})
+        if len(temp_df) != len(indust_df):
+            print(f'WARNING dso_market_plot: day {day} substation data has {len(temp_df)} rows '
+                  f'but expected {len(indust_df)} (incomplete simulation day). Skipping day.')
+            return
         if dso == dso_range[0]:
             indust_df = indust_df.set_index(temp_df.index)
             substation_df = temp_df.mul(scale_target / 1e6).add(indust_df[['DSO ' + str(dso)]])
@@ -4169,10 +4290,10 @@ def transmission_statistics(metadata_file_path, case_config_path, data_path, day
 
     # Load case config metadata to get generator metadata
     with open(case_config_path) as json_file:
-        config_data = json.load(json_file)
+        config_data = _load_json_fp(json_file, case_config_path)
 
     with open(metadata_file_path) as json_file:
-        dso_metadata = json.load(json_file)
+        dso_metadata = _load_json_fp(json_file, metadata_file_path)
 
     # Only open results file if true.
     if sim_results:
@@ -4544,8 +4665,25 @@ def amenity_loss(gld_metadata, dir_path, folder_prefix, dso_num, day_range):
         date = get_date(dir_path, dso_num, str(day))
         day_name = date.strftime("%m-%d")
         amenity_df[day_name] = 0.0
-        # Load meter data and index it based on time and name.
-        house_meta_df, house_df = load_system_data(dir_path, folder_prefix, dso_num, str(day), 'house')
+        # Load per-house 5-min data for comfort-metric calculations.
+        # Two incomplete-day guards:
+        #   1. KeyError: HDF5 key '/index{day}' absent (simulation never reached this day).
+        #   2. Timestep count < 288: the key exists but the day is partial (simulation stopped
+        #      mid-day).  A partial house_df would have fewer rows than the schedule lists built
+        #      from the agent dictionary (which are always full-day, 288-entry lists), causing a
+        #      shape-mismatch ValueError when the schedule list is subtracted from temp_df.
+        try:
+            house_meta_df, house_df = load_system_data(dir_path, folder_prefix, dso_num, str(day), 'house')
+        except KeyError:
+            print(f'WARNING amenity_loss: day {day} house data key not found in HDF5 '
+                  f'(incomplete simulation day). Skipping day.')
+            continue
+        expected_timesteps = 288  # 288 × 5-min intervals = one full day
+        unique_times = house_df['time'].nunique() if 'time' in house_df.columns else len(house_df)
+        if unique_times < expected_timesteps:
+            print(f'WARNING amenity_loss: day {day} house data has {unique_times} timesteps '
+                  f'but expected {expected_timesteps} (incomplete simulation day). Skipping day.')
+            continue
         house_df = house_df.set_index(['time', 'name'])
         dead_band = 1
         # Start calculating
@@ -4584,24 +4722,27 @@ def amenity_loss(gld_metadata, dir_path, folder_prefix, dso_num, day_range):
                             'heat_weekday': None, 'heat_weekend': None,
                             'wh_Tdesired': None}
             if schedules['cool_weekday'] is not None:
+                # Schedules from the agent dictionary are always full-day (288-entry) lists.
+                # Truncate to n = len(temp_df) so arithmetic works correctly for any partial day
+                # that passed the timestep check above (e.g. if the check threshold is relaxed
+                # in future).  For complete days n == 288 and the slice is a no-op.
+                n = len(temp_df)
                 if date.weekday() < 5:
-                    temp_df['cool_setpoint_excursion'] = temp_df['air_temperature_setpoint_cooling'] - schedules[
-                        'cool_weekday']
-                    temp_df['heat_setpoint_excursion'] = temp_df['air_temperature_setpoint_heating'] - schedules[
-                        'heat_weekday']
-                    temp_df['cool_excursion'] = temp_df['air_temperature_avg'] - [x + dead_band for x in
-                                                                                  schedules['cool_weekday']]
-                    temp_df['heat_excursion'] = [x - dead_band for x in schedules['heat_weekday']] - temp_df[
-                        'air_temperature_avg']
+                    cool_sched = schedules['cool_weekday'][:n]
+                    heat_sched = schedules['heat_weekday'][:n]
                 else:
-                    temp_df['cool_setpoint_excursion'] = temp_df['air_temperature_setpoint_cooling'] - schedules[
-                        'cool_weekend']
-                    temp_df['heat_setpoint_excursion'] = temp_df['air_temperature_setpoint_heating'] - schedules[
-                        'heat_weekend']
-                    temp_df['cool_excursion'] = temp_df['air_temperature_avg'] - [x + dead_band for x in
-                                                                                  schedules['cool_weekend']]
-                    temp_df['heat_excursion'] = [x - dead_band for x in schedules['heat_weekend']] - temp_df[
-                        'air_temperature_avg']
+                    cool_sched = schedules['cool_weekend'][:n]
+                    heat_sched = schedules['heat_weekend'][:n]
+                if date.weekday() < 5:
+                    temp_df['cool_setpoint_excursion'] = temp_df['air_temperature_setpoint_cooling'].values - cool_sched
+                    temp_df['heat_setpoint_excursion'] = temp_df['air_temperature_setpoint_heating'].values - heat_sched
+                    temp_df['cool_excursion'] = temp_df['air_temperature_avg'].values - [x + dead_band for x in cool_sched]
+                    temp_df['heat_excursion'] = [x - dead_band for x in heat_sched] - temp_df['air_temperature_avg'].values
+                else:
+                    temp_df['cool_setpoint_excursion'] = temp_df['air_temperature_setpoint_cooling'].values - cool_sched
+                    temp_df['heat_setpoint_excursion'] = temp_df['air_temperature_setpoint_heating'].values - heat_sched
+                    temp_df['cool_excursion'] = temp_df['air_temperature_avg'].values - [x + dead_band for x in cool_sched]
+                    temp_df['heat_excursion'] = [x - dead_band for x in heat_sched] - temp_df['air_temperature_avg'].values
                 cool_setpoint_ex_sum = temp_df.loc[
                                            temp_df['cool_setpoint_excursion'] > 0, 'cool_setpoint_excursion'].sum() / 12
                 heat_setpoint_ex_sum = temp_df.loc[

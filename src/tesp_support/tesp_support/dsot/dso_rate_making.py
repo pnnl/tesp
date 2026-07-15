@@ -1,9 +1,55 @@
 # Copyright (c) 2021-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: DSO_rate_making.py
+# @author: reev057
 """
-@author: reev057
+DSO rate-making and billing calculations for the DSOT rates analysis.
+
+This module implements the two-stage DSO billing workflow:
+
+Stage 1 -- Monthly (called once per month during co-simulation postprocessing)
+    read_meters()  →  energy_metrics_data.h5 / transactive_metrics_data.h5
+    Written to: <monthly_path>/Substation_<N>/
+
+Stage 2 -- Annual (called by run_annual_postprocessing.py after all months complete)
+    annual_energy()  →  reads monthly energy_metrics_data.h5 files and
+                        produces annual energy_dso_<N>_data.h5 in the case folder.
+    DSO_rate_making()  →  reads annual energy HDF5 files, calculates cost-recovery
+                          tariff prices, computes individual customer bills, and
+                          writes bill HDF5/CSV files back to the case folder.
+
+Rate scenarios supported
+------------------------
+  "flat"         -- Uniform volumetric rate; non-participating customers only.
+  "time-of-use"  -- Seasonal peak/off-peak rates; requires time_of_use_parameters.json.
+  "subscription" -- Block-purchase rate with net deviation charge; requires
+                    per-meter demand profiles from base_case monthly folders.
+  "transactive"  -- Day-ahead + real-time LMP-based pricing with volumetric
+                    distribution charge for participating customers.
+  "dsot"         -- DSO+T transactive rate (similar to transactive).
+  None           -- Defaults to DSO+T (same as "dsot").
+
+Key required input files (per case folder)
+------------------------------------------
+  energy_dso_<N>_data.h5           -- Annual per-meter energy (from annual_energy())
+  transactive_dso_<N>_data.h5      -- Annual transactive cleared quantities
+  generate_case_config.json        -- Simulation config (provides indLoad path)
+  rate_case_values_<scenario>.json -- Tariff structure (read from tariff_path)
+  default_case_config.json         -- Simulation defaults (provides LMP multiplier)
+  DSO_CFS_Summary.csv              -- DSO expenses (optional; defaults to 1e10)
+  Annual_DA_LMP_Load_data.csv      -- Annual DA LMP series (transactive/dsot/subscription)
+  time_of_use_parameters.json      -- TOU period definitions (TOU/subscription only)
+
+Key output files written per call to DSO_rate_making()
+------------------------------------------------------
+  bill_dso_<N>_data.h5             -- Customer bill DataFrame (keys: cust_bill_data,
+                                      bill_sum_data)
+  cust_bill_dso_<N>_data.csv       -- Per-meter bill CSV
+  billsum_dso_<N>_data.csv         -- Sectoral bill summary CSV
+  rate_case_values_<scenario>.json -- Updated tariff with cost-recovery prices
+  time_of_use_parameters.json      -- Updated TOU/subscription prices (TOU/sub only)
 """
+
 import json
 import os
 import sys
@@ -22,24 +68,60 @@ logger = logging.getLogger(__name__)
 
 def read_meters(metadata, dir_path, folder_prefix, dso_num,
                 day_range, SF, dso_data_path, rate_scenario=None):
-    """ Determines the total energy consumed and max power consumption for all meters within a
-    DSO for a series of days. Also collects information on day ahead and real time quantities
-    consumed by transactive customers. Creates summation of these statistics by customer class.
+    """Compute per-meter energy and transactive metrics for a monthly day range.
+
+    This is the **monthly postprocessing** entry point. It reads raw GridLAB-D
+    HDF5 files for each simulation day, aggregates energy consumption and
+    day-ahead/real-time quantities, and writes the results to HDF5 files inside
+    the GLD Substation subfolder. These files are later consumed by
+    annual_energy() during annual postprocessing.
+
     Args:
-        metadata (dict): metadata structure for the DSO to be analyzed
-        dir_path (str): directory path for the case to be analyzed
-        folder_prefix (str): prefix of GLD folder name (e.g. '/TE_base_s')
-        dso_num (str): number of the DSO folder to be opened
-        day_range (list): range of days to be summed (for example a month).
-        SF (float): Scaling factor to scale GLD results to TSO scale (e.g. 1743)
-        dso_data_path (str): A str specifying the directory in which the time-of-use rate
-        rate_scenario (str): A str specifying the rate scenario under investigation (e.g.
-        flat, time-of-use or TOU, subscription, or transactive), defaults to None.
+        metadata (dict): GLD billing-meter metadata dictionary
+            (from Substation_<N>_glm_dict.json). Must have `tariff_class`
+            and `cust_participating` populated on each meter entry before
+            this function is called.
+        dir_path (str): Absolute path to the monthly simulation case folder
+            (e.g. `<case>/8_rnd_2016_01_pv_bt_fl_ev`).
+        folder_prefix (str): Substation subfolder prefix, e.g. `'/Substation_'`.
+        dso_num (str): DSO/bus number as a string (e.g. `'1'`).
+        day_range (list): 1-based simulation day indices to process
+            (e.g. `range(4, 32)` for a January run excluding run-in days).
+        SF (float): Scaling factor that converts simulated GLD load to the
+            full DSO customer population (e.g. 1743).
+        dso_data_path (str): Relative path (from `dir_path`'s parent) to the
+            shared metadata directory containing bulk industrial load CSVs and
+            TOU parameter JSON files. The function prefixes `'../'` to this
+            value when building file paths, so it must be a path fragment
+            relative to one level above `dir_path`.
+        rate_scenario (str, optional): Rate scenario string -- `'flat'`,
+            `'time-of-use'` (or `'TOU'`), `'subscription'`,
+            `'transactive'`, or `'dsot'`. Controls which additional
+            TOU-period metrics are computed. Defaults to None.
+
     Returns:
-        meter_df: dataframe of energy consumption and max 15 minute power consumption for each month and total
-        energysum_df: dataframe of energy consumption summations by customer class (residential, commercial, and industrial)
-        saves the two dataframe above to an h5 file in the dir_path
-        """
+        meter_df (pd.DataFrame): Per-meter monthly energy metrics with a
+            MultiIndex `(meter_name, variable)`; columns are calendar dates
+            plus `'sum'`.
+        energysum_df (pd.DataFrame): Sectoral energy totals with MultiIndex
+            `(load_type, variable)`; load_types are `residential`,
+            `commercial`, `industrial`, `total`.
+
+    Side effects:
+        Writes to `dir_path + folder_prefix + dso_num`:
+          - `energy_metrics_data.h5`      (keys: `energy_data`, `energy_sums`)
+          - `transactive_metrics_data.h5` (key:  `trans_data`)
+
+    Notes:
+        - Days for which `Retail_Quantities.h5` has no key, or for which
+          DA-LMP data is unavailable, are silently skipped with a logged warning.
+        - The industrial bulk load file path is resolved as
+          `os.path.join('../' + dso_data_path, <filename>)`. This is a
+          relative construction that requires the user's working directory to
+          be one level above `dso_data_path`. If the working directory has
+          changed (e.g. after prior `os.chdir` calls), this path may not
+          resolve correctly.
+    """
 
     # Load in bulk industrial loads
     case_config = load_json(dir_path, 'generate_case_config.json')
@@ -162,7 +244,9 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num,
         trans_df[day_name] = 0.0
         energysum_df[day_name] = 0.0
 
-        # Load in transactive customer Q data, real-time price data, and DA cleared price
+        # Load transactive customer cleared-quantity data written by load_retail_data().
+        # This file is written once per day at the 10 AM day-ahead clearing (bid_time = date - 14h - 30s).
+        # If the simulation stopped before that market cleared, the key will be absent and we skip the day.
         filename = dir_path + '/DSO_' + dso_num + '/Retail_Quantities.h5'
         try:
             cust_trans_df = pd.read_hdf(filename, key='/index' + str(day), mode='r')
@@ -175,7 +259,16 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num,
         RT_price_df = load_ames_data(dir_path, range(int(day), int(day) + 1))
         RT_retail_df, RT_bid_df = load_agent_data(dir_path, '/DSO_', dso_num, str(day), 'retail_market')
         RT_retail_df = RT_retail_df.droplevel(level=1)
-        DA_price_df = load_gen_data(dir_path, 'da_lmp', range(int(day), int(day) + 1))
+        # DA LMP data is also written at the 10 AM day-ahead clearing. If that clearance did not happen
+        # (e.g. simulation stopped at 9:55 AM on the last day), load_gen_data raises ValueError because
+        # the time slice is empty. Skip the day in that case.
+        try:
+            DA_price_df = load_gen_data(dir_path, 'da_lmp', range(int(day), int(day) + 1))
+        except (ValueError, KeyError) as e:
+            logger.warning('read_meters: could not load da_lmp data for day %s '
+                           '(day-ahead market may not have cleared, likely an incomplete simulation day). '
+                           'Skipping day. Reason: %s', day, e)
+            continue
         DA_price_df = DA_price_df.unstack(level=1)
         DA_price_df.columns = DA_price_df.columns.droplevel()
         DA_retail_df = load_da_retail_price(dir_path, '/DSO_', dso_num, str(day))
@@ -202,7 +295,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num,
                 raise
             meter_df.loc[(each, 'kw-hr'), day_name] = temp.loc[:, 'real_power_avg'].sum() / 1000 / 12
             meter_df.loc[(each, 'avg_load'), day_name] = temp.loc[:, 'real_power_avg'].mean() / 1000
-            # TODO: changed from fixed window to moving window.  Need to check if this is OK.
+            # TODO: changed from fixed window to moving window. Need to check if this is OK.
             # find average max power over a 15 minute moving window (=3 * 5 minute intervals).
             windowsize = 3
             max_kw = temp['real_power_avg'].rolling(window=windowsize).mean().max() / 1000
@@ -389,16 +482,43 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num,
 
 
 def annual_energy(month_list, folder_prefix, dso_num, metadata):
-    """ Creates a dataframe of monthly energy consumption values and annual sum based on monthly h5 files.
+    """Aggregate monthly per-meter energy HDF5 files into a single annual DataFrame.
+
+    This is the **annual postprocessing** counterpart to `read_meters()`.
+    For each month in `month_list` it reads the `energy_metrics_data.h5`
+    and `transactive_metrics_data.h5` files produced by the monthly
+    `read_meters()` call and combines the monthly `'sum'` columns into a
+    single DataFrame where each column is one calendar month.
+
+    After concatenation, annual totals are computed:
+    - `'kw-hr'` and transactive quantities are summed across all months.
+    - `'max_kw'` is the maximum over all months (peak demand).
+    - `'avg_load'` is the mean over all months.
+    - `'load_factor'` is recomputed from the annual avg_load / max_kw.
+
     Args:
-        month_list (list): list of lists.  Each sub list has month name (str), directory path (str)
-        folder_prefix (str): prefix of GLD folder name (e.g. '/TE_base_s')
-        dso_num (str): number of the DSO folder to be opened
-        metadata (dict): metadata of GridLAB-D model entities
+        month_list (list): List of per-month descriptors. Each entry is a list
+            with at least two elements:
+              - [0] month_name (str): Short label (e.g. `'Jan'`), used as the
+                column name in the output DataFrames.
+              - [1] month_path (str): Absolute path to the monthly simulation
+                folder that contains the Substation subfolder.
+        folder_prefix (str): GLD Substation subfolder prefix (e.g.
+            `'/Substation_'`).
+        dso_num (str): DSO number as a string (e.g. `'1'`).
+        metadata (dict): GLD billing-meter metadata used only to recompute
+            `'load_factor'` for each meter.
+
     Returns:
-        year_meter_df: dataframe of energy consumption and max 15 minute power consumption for each month and total
-        year_energysum_df: dataframe of energy consumption summations by customer class (res., commercial, and indust)
-        """
+        year_meter_df (pd.DataFrame): Annual per-meter energy with one column
+            per month plus a `'sum'` column.
+        year_energysum_df (pd.DataFrame): Annual sectoral energy totals.
+        year_trans_sum_df (pd.DataFrame): Annual transactive quantities.
+
+    Required files (per month entry in month_list):
+        `<month_path>/Substation_<N>/energy_metrics_data.h5`
+        `<month_path>/Substation_<N>/transactive_metrics_data.h5`
+    """
 
     for i in range(len(month_list)):
         filename = (month_list[i][1] + folder_prefix + dso_num + '/energy_metrics_data.h5')
@@ -458,27 +578,48 @@ def create_demand_profiles_for_each_meter(
     Returns:
         demand_df (pandas.DataFrame): Monthly hourly demand data for each meter.
     """
-    # Iterate through the days to access the demand data
+    # Iterate through the days to accumulate per-meter 5-minute demand data.
+    # start_index / end_index are tracked dynamically rather than assuming day_range[0] and
+    # day_range[-1] are present: if the simulation stopped early, those final days will have
+    # no HDF5 key and are skipped, so the index bounds must reflect the last day actually loaded.
     demand_dict = {}
+    start_index = None
+    end_index = None
     for day in day_range:
-        # Load the meter data from the specified day
-        _, meter_data_df = load_system_data(
-            dir_path, "/Substation_", str(dso_num), str(day), "billing_meter"
-        )
+        # Load the meter data from the specified day.
+        # Raises KeyError if the simulation did not write data for this day (incomplete run).
+        try:
+            _, meter_data_df = load_system_data(
+                dir_path, "/Substation_", str(dso_num), str(day), "billing_meter"
+            )
+        except KeyError:
+            logger.warning('create_demand_profiles_for_each_meter: billing_meter HDF5 key not found '
+                           'for day %s (incomplete simulation day). Skipping day.', day)
+            continue
         meter_data_df["date"] = meter_data_df["date"].str.replace("CST", "", regex=True)
         meter_data_df["date"] = meter_data_df["date"].str.replace("CDT", "", regex=True)
         meter_data_df["date"] = pd.to_datetime(meter_data_df["date"])
         meter_data_df = meter_data_df.set_index(["time", "name"])
 
-        # Identify the start and end indices, for use in the DataFrame
-        if day == day_range[0]:
+        # Record the calendar date range of loaded data.
+        # start_index is set only on the first successfully loaded day.
+        # end_index is updated every day so it always reflects the last successfully loaded day.
+        if start_index is None:
             start_index = meter_data_df["date"].iloc[0].date()
-        if day == day_range[-1]:
-            end_index = meter_data_df["date"].iloc[-1].date()
+        end_index = meter_data_df["date"].iloc[-1].date()
 
-        # Distribute demand data from meter_data_df to demand_df
+        # Accumulate each meter's real_power_avg readings into demand_dict.
+        # On the first loaded day (meter not yet in dict) the list is initialised;
+        # on subsequent days the values are extended.
         for meter in meter_data_df.index.get_level_values("name").unique():
-            if day == day_range[0]:
+            if start_index == meter_data_df["date"].iloc[0].date() and day == day_range[0]:
+                demand_dict[meter] = list(
+                    meter_data_df.loc[
+                        meter_data_df.index.get_level_values("name") == meter,
+                        "real_power_avg",
+                    ].values
+                )
+            elif meter not in demand_dict:
                 demand_dict[meter] = list(
                     meter_data_df.loc[
                         meter_data_df.index.get_level_values("name") == meter,
@@ -495,21 +636,12 @@ def create_demand_profiles_for_each_meter(
                     )
                 )
 
-    # Identify the timestamp index that will be used in the time-series demand DataFrame
-    index = pd.date_range(
-        start=start_index,
-        end=end_index,
-        freq="5min",
-        inclusive="left",
-    )
-    # For some reason had another day in November
-    if not (len(index) == len(demand_dict[meter])):
-        index = pd.date_range(
-            start=start_index,
-            end=(end_index + pd.Timedelta(days=1)),
-            freq="5min",
-            inclusive="left",
-        )
+    # Build the timestamp index directly from the number of accumulated data points.
+    # Using start_index + periods avoids a length mismatch that occurs when the simulation
+    # stopped mid-day: end_index is a calendar date so a date-range would always span full
+    # days, but demand_dict may contain fewer than 288 entries for the last (partial) day.
+    n_steps = len(demand_dict[next(iter(demand_dict))])
+    index = pd.date_range(start=start_index, periods=n_steps, freq="5min")
 
     # for debug
     # print(f"dso_num {dso_num}, index {len(index)}, demand_dict {len(demand_dict[meter])}", flush=True)
@@ -610,8 +742,10 @@ def create_baseline_demand_profiles_for_each_meter(
         )
 
         # Create the baseline demand DataFrame
+        # Trim to demand_df length in case bl_demand_data covers more whole days than
+        # demand_df (which may end mid-day after an incomplete simulation run).
         bl_demand_df = pd.DataFrame(
-            data=bl_demand_data,
+            data=bl_demand_data[:len(demand_df)],
             columns=demand_data_by_weekday_and_hour.columns.tolist(),
         )
         bl_demand_df.set_index(demand_df.index, inplace=True)
@@ -678,8 +812,10 @@ def create_baseline_demand_profiles_for_each_meter(
                 )
 
         # Create the baseline demand DataFrame
+        # Trim to demand_df length in case bl_demand_data covers more whole days than
+        # demand_df (which may end mid-day after an incomplete simulation run).
         bl_demand_df = pd.DataFrame(
-            data=bl_demand_data,
+            data=bl_demand_data[:len(demand_df)],
             columns=demand_data_by_weekday_and_hour.columns.tolist(),
         )
         bl_demand_df.set_index(demand_df.index, inplace=True)
@@ -693,8 +829,10 @@ def create_baseline_demand_profiles_for_each_meter(
             bl_demand_data.extend(demand_data_by_hour.values.tolist())
 
         # Create the baseline demand DataFrame
+        # Trim to demand_df length in case bl_demand_data covers more whole days than
+        # demand_df (which may end mid-day after an incomplete simulation run).
         bl_demand_df = pd.DataFrame(
-            data=bl_demand_data,
+            data=bl_demand_data[:len(demand_df)],
             columns=demand_data_by_hour.columns.tolist(),
         )
         bl_demand_df.set_index(demand_df.index, inplace=True)
@@ -734,28 +872,79 @@ def calculate_consumer_bills(
     rate_scenario,
     include_RT = True,
 ):
-    """Calculates the consumers' bills for the four different scenarios considered in 
-    the Rates Analysis work.
+    """Compute per-meter and per-sector consumer bills given solved tariff prices.
+
+    This function is called after `calculate_tariff_prices()` has determined
+    the cost-recovery tariff prices and updated the `tariff` dictionary. It
+    iterates over every billing meter and applies the appropriate rate schedule
+    depending on whether the customer is participating (transactive / TOU /
+    subscription) or non-participating (flat rate).
+
+    **Billing logic by rate scenario:**
+
+    - `'flat'`:         All customers pay flat rate regardless of participation.
+    - `'time-of-use'`:  Participating customers pay TOU period prices; non-participating
+                          customers pay the flat rate.
+    - `'subscription'`: Participating customers pay a block TOU energy charge on their
+                          baseline demand plus a net deviation charge (actual vs baseline)
+                          priced at the real-time DA LMP + adder.
+    - `'transactive'` / `'dsot'`:  Participating customers pay DA/RT LMP-based charges
+                          plus a volumetric distribution charge; non-participating pay flat.
+
+    Industrial loads are always calculated separately using the bulk industrial
+    load totals from `energy_sum_df` rather than per-meter data.
+
+    **Column naming dependency:**
+    `meter_df`, `trans_df`, and `energy_sum_df` are expected to have
+    3-character month-name columns (`'Jan'`, `'Feb'`, `'Mar'`, etc.),
+    because `calculate_tariff_prices()` renames them in-place before this
+    function is called. `tou_params` season/period keys must match these
+    3-char names.
+
+    **Subscription directory mapping:**
+    For the subscription rate, per-meter hourly demand profiles are loaded
+    from monthly subfolders inside `case_path` and `base_path`. The
+    function discovers these subfolders by listing `case_path` and matching
+    entries whose 4th `_`-delimited token is a 2-digit month number
+    (e.g. `8_rnd_2016_01_pv_bt_fl_ev` → token `'01'`). The matching
+    subfolder must also exist inside `base_path`.
+
     Args:
-        case_path (str): A string specifying the directory path of the case being analyzed.
-        base_path (str): A string specifying the directory path of the reference case (containing baseline demand).
-        metadata (dict): A dictionary containing the metadata structure of the DSO.
-        meter_df (pandas.DataFrame): DataFrame containing consumers' consumption information.
-        trans_df (pandas.DataFrame): DataFrame containing consumers' transactive consumption
-        information.
-        energy_sum_df (pandas.DataFrame): DataFrame containing consumption information for 
-        each consumer class.
-        tariff (dict): A dictionary of pertinant tariff information. Includes information 
-        for the volumetric rates (i.e., flat and time-of-use).
-        dso_num (str): A string specifying the number of the DSo being considered.
-        sf (float): Scaling factor to scale the GridLAB-D results to TSO scale.
-        num_ind_cust (int): Number of industrial consumers.
-        rate_scenario (str): A str specifying the rate scenario under investigation: flat,
-        time-of-use, subscription, transactive, or dsot.
+        case_path (str): Absolute path to the annual case folder. Used to
+            read `time_of_use_parameters.json`,
+            `Annual_DA_LMP_Load_data.csv`, and monthly demand profiles.
+        base_path (str): Absolute path to the demand-reference case folder.
+            Required only for the subscription rate (baseline demand).
+        metadata (dict): GLD billing-meter metadata with `tariff_class`,
+            `cust_participating`, `building_type`, etc. populated.
+        meter_df (pd.DataFrame): Annual per-meter energy DataFrame with
+            3-char month columns (already renamed by `calculate_tariff_prices`).
+        trans_df (pd.DataFrame): Annual transactive DataFrame (same column format).
+        energy_sum_df (pd.DataFrame): Annual sectoral energy totals (same format).
+        tariff (dict): Tariff structure with cost-recovery prices already
+            written in by `DSO_rate_making()`.
+        dso_num (str): DSO number as a string (e.g. `'1'`).
+        sf (float): Customer scaling factor for sectoral bill summation.
+        num_ind_cust (int): Number of industrial customers at this DSO node.
+        rate_scenario (str): One of `'flat'`, `'time-of-use'`,
+            `'subscription'`, `'transactive'`, or `'dsot'`.
+        include_RT (bool): If True, real-time energy charges are applied to
+            participating customers. Defaults to True.
+
     Returns:
-        bill_df (pandas.DataFrame): DataFrame containing bill information for each meter.
-        billsum_df (pandas.DataFrame): DataFrame containing bill information for each 
-        load sector.
+        bill_df (pd.DataFrame): Per-meter bill components with MultiIndex
+            `(meter_name, bill_component)`; columns are 3-char months plus
+            `'sum'` and `'volatility'`.
+        billsum_df (pd.DataFrame): Sectoral bill totals with MultiIndex
+            `(load_type, bill_component)`.
+
+    Required external files:
+        - `time_of_use_parameters.json`           (case_path; TOU and subscription)
+        - `Annual_DA_LMP_Load_data.csv`           (case_path; subscription)
+        - `Substation_<N>_baseline_demand_by_meter.h5`  (base_path monthly subfolders;
+                                                            subscription only)
+        - `Substation_<N>_demand_by_meter.h5`     (case_path monthly subfolders;
+                                                     subscription only)
     """
 
     # Load in necessary data for the defined rate scenario
@@ -1511,30 +1700,81 @@ def calculate_tariff_prices(
     trans_cost_balance_method=None,
     include_RT = True,
 ):
-    """Determines the prices that ensure enough revenue is collected to recover the 
-    DSO's expenses.
+    """Solve for the tariff prices that allow the DSO to recover its annual expenses.
+
+    This function implements a closed-form cost-recovery solve for each rate
+    scenario. The general approach is:
+
+    1. Read the DSO's total annual expenses from `DSO_CFS_Summary.csv` via
+       `get_total_dso_costs()`. If the file does not yet exist (first-pass
+       postprocessing), a large placeholder value (`1e10`) is used, and the
+       user must re-run after `DSO_CFS_Summary.csv` is produced.
+
+    2. Compute the revenue that fixed charges, demand charges, and any
+       previously-known energy charges would already recover.
+
+    3. Solve algebraically for the remaining volumetric (or fixed) price that
+       closes the gap between projected revenue and expenses.
+
+    The solved prices are returned in the `prices` dict and must be written
+    back into the `tariff` structure by the user (`DSO_rate_making`).
+
+    **Important side effect -- DataFrame column rename:**
+    `meter_df`, `energy_sum_df`, and `trans_df` are renamed *in-place*
+    so that their month-column names are truncated to 3 characters
+    (e.g. `'March'` → `'Mar'`, `'August'` → `'Aug'`). Because
+    DataFrames are passed by reference, the user's objects are also renamed.
+    `calculate_consumer_bills()` therefore receives already-renamed columns
+    and must use the 3-char names when looking up `tou_params`.
+    (TODO: remove this side effect once month names are standardised upstream.)
+
     Args:
-        case_path (str): A string specifying the directory path of the case being analyzed.
-        base_case_path (str): A string specifying the directory path of the base_case being used as a reference.
-        metadata (dict): A dictionary containing the metadata structure of the DSO.
-        meter_df (pandas.DataFrame): DataFrame containing consumers' consumption information.
-        trans_df (pandas.DataFrame): DataFrame containing consumers' transactive consumption
-        information.
-        energy_sum_df (pandas.DataFrame): DataFrame containing consumption information for 
-        each consumer class.
-        tariff (dict): A dictionary of pertinant tariff information. Includes information 
-        for the volumetric rates (i.e., flat and time-of-use).
-        dso_num (str): A string specifying the number of the DSO being considered.
-        sf (float): Scaling factor to scale the GridLAB-D results to TSO scale.
-        num_ind_cust (int): Number of industrial consumers.
-        industrial_file (str): File path to the bulk industrial loads.
-        rate_scenario (str): A str specifying the rate scenario under investigation: flat,
-        time-of-use, subscription, transactive, or dsot.
-        trans_cost_balance_method (str): A str indicating the cost component of the 
-        transactive rate that will be adjusted to recover all unmet costs.
+        case_path (str): Absolute path to the annual case folder. Used to
+            read `DSO_CFS_Summary.csv`, `time_of_use_parameters.json`,
+            `Annual_DA_LMP_Load_data.csv`, and monthly subfolder demand
+            profiles (subscription rate).
+        base_case_path (str): Absolute path to the demand-reference case folder.
+            Required only for the subscription rate, where per-meter baseline
+            demand profiles are loaded from monthly subfolders here.
+        metadata (dict): GLD billing-meter metadata with `tariff_class` and
+            `cust_participating` populated on every meter entry.
+        meter_df (pd.DataFrame): Annual per-meter energy DataFrame produced by
+            `annual_energy()`. **Mutated in-place** (column rename).
+        trans_df (pd.DataFrame): Annual transactive DataFrame from
+            `annual_energy()`. **Mutated in-place** (column rename).
+        energy_sum_df (pd.DataFrame): Annual sectoral energy totals from
+            `annual_energy()`. **Mutated in-place** (column rename).
+        tariff (dict): Loaded tariff structure (`rate_case_values_*.json`).
+            Read-only inside this function; prices are returned separately.
+        dso_num (str): DSO number as a string (e.g. `'1'`).
+        sf (float): Customer scaling factor (simulated-to-actual ratio).
+        num_ind_cust (int): Number of industrial customers at this DSO node.
+        industrial_file (str): Absolute path to the bulk industrial load CSV.
+        rate_scenario (str): One of `'flat'`, `'time-of-use'`,
+            `'subscription'`, `'transactive'`, or `'dsot'`.
+        trans_cost_balance_method (str, optional): For transactive/dsot rates,
+            controls which charge component absorbs residual cost.
+            `None` or `'volumetric'` adjusts the volumetric distribution
+            rate; `'fixed'` adjusts the connection charge. Defaults to None.
+        include_RT (bool): If True, real-time energy charges contribute to
+            revenue in the transactive/dsot solve. Defaults to True.
+
     Returns:
-        prices (dict): A dictionary containing the prices that need to be calculated for 
-        each of the rates considered in the rate scenario.
+        prices (dict): Solved price components, keyed by scenario:
+            - `'flat_rate'`                   for flat/TOU/subscription/transactive/dsot
+            - `'tou_rate_<season>'`            for TOU (one key per season)
+            - `'subscription_rate_<season>'`  for subscription
+            - `'transactive_volumetric_rate'` or `'transactive_fixed_charge'`
+            - `'dsot_volumetric_rate'`
+        dso_expenses (float or dict): Total DSO expenses used in the solve;
+            a dict keyed by season for TOU and subscription rate scenarios.
+
+    Required external files:
+        - `DSO_CFS_Summary.csv`              (case_path; optional, defaults to 1e10)
+        - `time_of_use_parameters.json`      (case_path; TOU and subscription)
+        - `Annual_DA_LMP_Load_data.csv`      (case_path; transactive, dsot, subscription)
+        - `Substation_<N>_demand_by_meter.h5`  (subscription; per-month in case_path and
+                                                   base_case_path subfolders)
     """
 
     # Determine the months under consideration
@@ -2541,7 +2781,7 @@ def calculate_tariff_prices(
             )
             / 1000
         )
-        # TODO: need to fix scaling for when there will be industrial customers in GLD.  The fixed industrial load
+        # TODO: need to fix scaling for when there will be industrial customers in GLD. The fixed industrial load
         #  includes the scaling factor effect but this is adding to any GLD load that does not.
         indust_df = load_indust_data(industrial_file, range(1, 2)) * 1000
         rev_DA_energy_charge_trans_i += (
@@ -2902,20 +3142,42 @@ def calculate_tariff_prices(
 
 
 def get_total_dso_costs(case_path, dso_num, rate_scenario, seasons_dict=None):
-    """Sets the DSO's expenses according to the rate scenario being considered. Uses an
-    arbitrarily selected large value (that attempts to still be a similar order of 
-    magnitude as the DSO's expected expenses) if the DSO CFS results have not been 
-    calculated and stored.
+    """Read the DSO's annual expenses from the CFS summary CSV.
+
+    This function provides the required-revenue target used by
+    `calculate_tariff_prices()` to solve for cost-recovery prices. It reads
+    capital and operating expenses from `DSO_CFS_Summary.csv`, which is
+    produced by the `dso_cfs` step in `run_annual_postprocessing.py`.
+
+    **Two-pass dependency:** On the first postprocessing pass,
+    `DSO_CFS_Summary.csv` does not yet exist, so this function returns a
+    large placeholder (`1e10` dollars) and logs a warning. The first-pass
+    rates are therefore approximate. On the second pass, the file exists and
+    real expenses are used, producing accurate cost-recovery prices.
+
+    For TOU and subscription scenarios, expenses are split by season using the
+    `seasons_dict` argument, because each season has a separate price.
+
     Args:
-        case_path (str): A string specifying the directory path of the case being analyzed.
-        dso_num (str):  A string specifying the number of the DSo being considered.
-        rate_scenario (str): A str specifying the rate scenario under investigation: flat,
-        time-of-use, subscription, or transactive.
-        seasons_dict (dict): A dict specifying the seasons being considered and their 
-        constituent months. Defaults to None.
+        case_path (str): Absolute path to the annual case folder containing
+            `DSO_CFS_Summary.csv`.
+        dso_num (str): DSO number as a string (e.g. `'1'`). Used to select
+            the `'DSO_<N>'` column from the CSV.
+        rate_scenario (str): Rate scenario string; determines whether expenses
+            are returned as a scalar (flat/transactive/dsot) or a
+            season-keyed dict (time-of-use/subscription).
+        seasons_dict (dict, optional): For TOU and subscription rates, a dict
+            mapping season labels to lists of 3-char month names (e.g.
+            `{'summer': ['Jun', 'Jul', 'Aug'], 'winter': [...]}`).
+            Required when rate_scenario is `'time-of-use'` or
+            `'subscription'`. Defaults to None.
+
     Returns:
-        dso_expenses (float/dict): The DSO's total expenses, provided as a float, or the 
-        seasonal expenses, provided as a dict.
+        dso_expenses (float or dict): Total DSO annual expenses in dollars.
+            - float: for flat, transactive, and dsot scenarios.
+            - dict keyed by season label: for TOU and subscription.
+            Returns `1e10` (or `1e10 / num_seasons` per season) when the
+            CFS summary file is not available.
     """
 
     # Try to read in the DSO CFS summary data
@@ -2998,7 +3260,7 @@ def get_total_dso_costs(case_path, dso_num, rate_scenario, seasons_dict=None):
     # Customer participation:
     # Need to determine if a customer is participating in transactive program or not
     # If not then their bill is calculated using the baseline equations and tariffs (I assume that is not safe to assume
-    # that I can just pull the baseline values.  Better to recalculate)
+    # that I can just pull the baseline values. Better to recalculate)
     # Need to recalculate change in flat tariff for fixed customers similiar to baseline case.
 
     # Need to calculate the DA and Realtime price structure
@@ -3008,8 +3270,8 @@ def get_total_dso_costs(case_path, dso_num, rate_scenario, seasons_dict=None):
     # LMP_da is the cleared price determined at 10 am as found in the dso_market 86400 file?
     # DMP_da = Retail_rate_da - LMP_da
     # D comes from tariff (needs to be assumed and then calculated to true up revenue).
-    # Delta_D = to be determined peanut buttering of DMP_da charges as rebate.  Over year sum of DMP and Delta_D
-    # should offset.  Offset should only go to folks on the feeder/substation affected.
+    # Delta_D = to be determined peanut buttering of DMP_da charges as rebate. Over year sum of DMP and Delta_D
+    # should offset. Offset should only go to folks on the feeder/substation affected.
 
     # RT price structure is:
     # RTP = A_rt + LMP_rt / 1000 + DMP_rt + D + Delta_D +Risk
@@ -3022,10 +3284,10 @@ def get_total_dso_costs(case_path, dso_num, rate_scenario, seasons_dict=None):
     #           Over year sum of DMP and Delta_D
     # should offset
     # Risk = ????? average flat risk premium [$/kWh] for customers not making binding bids in day-ahead market.
-    #   Will be set in tariff dictionary.  Since it is flat it will not affect agent behavior.
+    #   Will be set in tariff dictionary. Since it is flat it will not affect agent behavior.
 
     # Calculation of DA and RT energy consumption at each 5 minute interval:
-    # Q_da = sum of each agents day ahead commitment at 10 am.  Where does this come from ???????????
+    # Q_da = sum of each agents day ahead commitment at 10 am. Where does this come from ???????????
     # ###^^^^^ are these values hourly or 5 minute?
     # Q_rt = Meter_rt - Q_da
 
@@ -3067,64 +3329,143 @@ def DSO_rate_making(
         trans_cost_balance_method=None,
         include_RT = True,
 ):
-    """ Main function to call for calculating the customer energy consumption, monthly bills, and tariff adjustments to
-    ensure revenue matches expenses.  Saves meter and bill dataframes to a hdf5 file.
+    """Compute cost-recovery tariff prices and customer bills for one DSO.
+
+    This is the **primary annual billing entry point**. It orchestrates the
+    full rate-making workflow in two steps:
+
+    Step 1 -- `calculate_tariff_prices()`
+        Solves for the volumetric (or fixed) price component that ensures the
+        DSO recovers its total annual expenses. The solved prices are written
+        back into the `tariff` dict and persisted to disk at
+        `tariff_path/rate_case_values_<scenario>.json`.
+
+    Step 2 -- `calculate_consumer_bills()`
+        Applies the updated tariff prices to every billing meter to produce
+        per-customer and per-sector bill DataFrames. Bills are written to
+        HDF5 and CSV files in the `case` folder.
+
+    The `surplus` return value is the percentage difference between actual
+    revenue (sum of all bills) and the DSO's required expenses. A non-zero
+    surplus on the first pass is expected and is eliminated by the two-pass
+    workflow in `run_annual_postprocessing.py`. After the second pass,
+    surplus should be near zero.
+
     Args:
-        case (str): directory path for the case to be analyzed
-        base_case (str): directory path for the base case containing baseline demand values
-        dso_num (str): number of the DSO folder to be opened
-        metadata:
-        tariff_path:
-        dso_scaling_factor (float): multiplier on customer bills to reflect the total number of customers in the DSO
-        num_indust_cust (int): number of industrial customers
-        case_name (str): name of the case ('MR-BAU', 'MR-Batt', 'MR-Flex', 'MR-BAU', 'MR-Batt', 'MR-Flex')
-        rate_scenario (str): A str specifying the rate scenario under investigation: flat,
-        time-of-use, subscription, or transactive. If None, this function defaults to DSO+T.
-        trans_cost_balance_method (str): A str indicating the cost component of the transactive 
-        rate that will be adjusted to recover all unmet costs.
+        case (str): Absolute path to the annual case folder. This is the folder
+            that contains `energy_dso_<N>_data.h5`,
+            `transactive_dso_<N>_data.h5`, and `generate_case_config.json`.
+        base_case (str): Absolute path to the demand-reference case folder.
+            For non-subscription rates this is unused inside `calculate_tariff_prices`
+            but is forwarded to `calculate_consumer_bills` (where it is only
+            needed for the subscription scenario). Typically `TOU_path` or
+            `flat_path` for the base case itself.
+        dso_num (int or str): DSO/bus number. Converted to str internally;
+            must correspond to a key in the loaded tariff dict (e.g. `'DSO_1'`).
+        metadata (dict): GLD billing-meter metadata dictionary
+            (from `Substation_<N>_glm_dict.json`) with `tariff_class` and
+            `cust_participating` populated on each meter entry.
+        tariff_path (str): Absolute path to the shared metadata/tariff directory.
+            The function loads from here:
+              - `rate_case_values_<scenario>.json`  -- tariff structure
+              - `default_case_config.json`          -- LMP multiplier setting
+            And reads from `case/generate_case_config.json` the filename of
+            the bulk industrial load CSV, which it resolves under `tariff_path`.
+        dso_scaling_factor (float): Ratio of actual DSO customers to simulated
+            GLD customers. Bills are scaled by this factor when aggregating to
+            sector totals.
+        num_indust_cust (int): Number of industrial customers at this DSO node;
+            used to scale the industrial fixed-charge total.
+        case_name (str, optional): Case label for DSO+T legacy scenarios
+            (e.g. `'MR-BAU'`). When non-empty, the tariff file is named
+            `rate_case_values_<case_name>.json`; when empty (default),
+            `rate_scenario` drives the filename.
+        rate_scenario (str, optional): Rate scenario string. One of
+            `'flat'`, `'time-of-use'`, `'subscription'`,
+            `'transactive'`, `'dsot'`, or `None` (defaults to DSO+T).
+        trans_cost_balance_method (str, optional): For transactive/dsot rates,
+            selects which charge absorbs residual cost: `None` or
+            `'volumetric'` adjusts `transactive_dist_rate`; `'fixed'`
+            adjusts `transactive_connection_charge`. Defaults to None.
+        include_RT (bool): If True, real-time energy charges are included in
+            participating-customer bills. Set False to exclude RT corrections.
+            Defaults to True.
+
     Returns:
-        meter_df : dataframe of energy consumption and max 15 minute power consumption for each month and total
-        bill_df : dataframe of monthly and total bill for each house broken out by each element (energy, demand,
-        connection, and total bill)
-        tariff: Updated dictionary of tariff structure with rates adjusted to ensure revenue meets expenses
-        surplus: dollar value difference between dso revenue and expenses.  When converged should be tiny (e.g. 1e-12)
-        """
+        DSO_Cash_Flows (dict): Nested revenue summary dict with flat/TOU/
+            subscription/transactive/DSO+T line items.
+        DSO_Revenues_and_Energy_Sales (dict): Detailed revenue and energy-sold
+            summary including per-class breakdowns and effective cost.
+        tariff (dict): Updated tariff structure with solved cost-recovery prices
+            (same object that was loaded from `rate_case_values_*.json`;
+            also written back to disk at `tariff_path`).
+        surplus (float): Revenue surplus as a percentage of required expenses:
+            `(actual_revenue - required_expenses) / required_expenses * 100`.
+            Ideally near zero after the second pass.
+
+    Files read:
+        `case/energy_dso_<N>_data.h5`
+        `case/transactive_dso_<N>_data.h5`
+        `case/generate_case_config.json`
+        `tariff_path/rate_case_values_<scenario>.json`
+        `tariff_path/default_case_config.json`
+        `tariff_path/<industrial_load_filename>`
+
+    Files written:
+        `case/bill_dso_<N>_data.h5`            (keys: cust_bill_data, bill_sum_data)
+        `case/cust_bill_dso_<N>_data.csv`
+        `case/billsum_dso_<N>_data.csv`
+        `tariff_path/rate_case_values_<scenario>.json`  (updated prices)
+        `case/time_of_use_parameters.json`     (TOU and subscription only)
+    """
 
     counter_factual = False
 
-    # Specify the Tariff file name for DSO+T-related scenarios
+    # ------------------------------------------------------------------ #
+    # STEP 1 -- Load tariff structure and annual energy data              #
+    # ------------------------------------------------------------------ #
+
+    # Tariff filename: for DSO+T legacy cases use case_name; for the Rates
+    # Analysis scenarios use rate_scenario. When case_name is empty and
+    # rate_scenario is set, the Rates Analysis filename convention applies.
     file_name = 'rate_case_values_' + case_name + '.json'
-    
-    # Specify the Tariff file name for scenarios related to the rates scenarios project
     if (rate_scenario is not None) and (case_name == ""):
         file_name = "rate_case_values_" + rate_scenario + ".json"
 
-    # Load Tariff structure
+    # Load the tariff structure (flat rates, demand charges, connection charges,
+    # TOU multipliers, tier thresholds, etc.) from the shared tariff_path.
     tariff = load_json(tariff_path, file_name, False)
 
-    # Load in transactive A values from simulation settings to ensure consistency
+    # Override the transactive LMP multiplier with the value from the simulation
+    # configuration to ensure consistency between billing and the simulation.
     default_config = load_json(tariff_path, 'default_case_config.json')
     tariff['DSO_'+ str(dso_num)]['transactive_LMP_multiplier'] = default_config['MarketPrep']['DSO']['dso_retail_scaling']
 
+    # Load the annual per-meter energy and transactive data produced by annual_energy().
     energy_file = case + '/energy_dso_' + str(dso_num) + '_data.h5'
     trans_file = case + '/transactive_dso_' + str(dso_num) + '_data.h5'
     year_meter_df = pd.read_hdf(energy_file, key='energy_data', mode='r')
     year_energysum_df = pd.read_hdf(energy_file, key='energy_sums', mode='r')
     year_trans_df = pd.read_hdf(trans_file, key='trans_data', mode='r')
 
-    # Specify the file path of the bulk industrial loads
+    # Resolve the bulk industrial load file from the case config.
+    # The indLoad key contains the simulation-time path; only the filename
+    # portion (index 5) is used, resolved under tariff_path.
     case_config = load_json(case, "generate_case_config.json")
     industrial_file = os.path.join(tariff_path, case_config["indLoad"][5].split("/")[-1])
 
-    # Check the value of the transactive cost balance method flag
     if trans_cost_balance_method not in [None, "volumetric", "fixed"]:
         raise ValueError(
             f"{trans_cost_balance_method} is not a supported cost balance method "
             + "for the transactive rate. Please try again."
         )
 
-    # Calculate the prices the ensure enough revenue is collected to recover the
-    # DSO's expenses in the Rate Scenario analysis
+    # ------------------------------------------------------------------ #
+    # STEP 2 -- Solve for cost-recovery prices                            #
+    # Note: calculate_tariff_prices renames month columns in year_meter_df,#
+    # year_energysum_df, and year_trans_df in-place (e.g. 'March' → 'Mar').#
+    # All downstream code must use the 3-char names after this call.     #
+    # ------------------------------------------------------------------ #
     prices, dso_expenses = calculate_tariff_prices(
         case,
         base_case,
@@ -3142,13 +3483,18 @@ def DSO_rate_making(
         include_RT
     )
 
-    # Update the price datasets accordingly
+    # ------------------------------------------------------------------ #
+    # STEP 3 -- Write solved prices back into the tariff dict and to disk  #
+    # The tariff dict is updated in-place so that calculate_consumer_bills  #
+    # uses the cost-recovery prices rather than any prior stale values.   #
+    # The updated file is written to tariff_path so subsequent runs can    #
+    # read it back (important for the two-pass reconciliation workflow).  #
+    # ------------------------------------------------------------------ #
     if rate_scenario == "flat":
-        # Update the variables
         tariff["DSO_" + str(dso_num)]["flat_rate"] = prices["flat_rate"]
     elif rate_scenario == "time-of-use":
-        # Update the variables
         tariff["DSO_" + str(dso_num)]["flat_rate"] = prices["flat_rate"]
+        # NOTE: data_path below is assigned but not used; retained for future reference.
         data_path = os.path.expandvars('$TESPDIR/examples/analysis/dsot/data')
         tou_params = load_json(case, "time_of_use_parameters.json", False)
         for m in tou_params["DSO_" + str(dso_num)].keys():
@@ -3160,7 +3506,6 @@ def DSO_rate_making(
         with open(os.path.join(case, "time_of_use_parameters.json"), "w") as fp:
             json.dump(tou_params, fp)
     elif rate_scenario == "subscription":
-        # Update the variables
         tariff["DSO_" + str(dso_num)]["flat_rate"] = prices["flat_rate"]
         tou_params = load_json(case, "time_of_use_parameters.json", False)
         for m in tou_params["DSO_" + str(dso_num)].keys():
@@ -3172,7 +3517,6 @@ def DSO_rate_making(
         with open(os.path.join(case, "time_of_use_parameters.json"), "w") as fp:
             json.dump(tou_params, fp)
     elif rate_scenario == "transactive":
-        # Update the variables
         tariff["DSO_" + str(dso_num)]["flat_rate"] = prices["flat_rate"]
         if trans_cost_balance_method in [None, "volumetric"]:
             tariff["DSO_" + str(dso_num)]["transactive_dist_rate"] = prices[
@@ -3186,13 +3530,16 @@ def DSO_rate_making(
             #     "base_connection_charge"
             # ] = prices["transactive_fixed_charge"]
     elif rate_scenario == "dsot":
-        # Update the variables
         tariff["DSO_" + str(dso_num)]["flat_rate"] = prices["flat_rate"]
         tariff["DSO_" + str(dso_num)]["transactive_dist_rate"] = prices[
             "dsot_volumetric_rate"
         ]
 
-    # Calculate consumer bills in the Rate Scenario analysis
+    # ------------------------------------------------------------------ #
+    # STEP 4 -- Compute per-meter and sectoral consumer bills              #
+    # Uses the now-updated tariff prices. year_meter_df column names are  #
+    # already 3-char month abbreviations (mutated by calculate_tariff_prices).
+    # ------------------------------------------------------------------ #
     cust_bill_df, billsum_df = calculate_consumer_bills(
         case,
         base_case,
@@ -3208,17 +3555,24 @@ def DSO_rate_making(
         include_RT
     )
 
-    # Need to save files to hdf5 format.
-    # os.chdir(case)
+    # ------------------------------------------------------------------ #
+    # STEP 5 -- Persist bill DataFrames and updated tariff to disk        #
+    # ------------------------------------------------------------------ #
     cust_bill_df.to_hdf(os.path.join(case, 'bill_dso_' + str(dso_num) + '_data.h5'), key='cust_bill_data')
     billsum_df.to_hdf(os.path.join(case, 'bill_dso_' + str(dso_num) + '_data.h5'), key='bill_sum_data')
     cust_bill_df.to_csv(os.path.join(case, 'cust_bill_dso_' + str(dso_num) + '_data.csv'))
     billsum_df.to_csv(os.path.join(case, 'billsum_dso_' + str(dso_num) + '_data.csv'))
 
+    # Write the updated tariff (with solved prices) back to disk so the next
+    # postprocessing pass reads the reconciled values.
     with open(os.path.join(tariff_path, file_name), "w") as out_file:
         json.dump(tariff, out_file, indent=2)
 
-    # create dictionary of summed values from billsum_df
+    # ------------------------------------------------------------------ #
+    # STEP 6 -- Build revenue and cash-flow summary dicts                 #
+    # ------------------------------------------------------------------ #
+    # bs_dict: flat dict of (sector, bill_component) -> annual sum value.
+    # All monetary values are divided by 1000 to convert $ → $k.
     bs_dict = billsum_df["sum"].to_dict()
 
     # Initialize the DSO_Revenues_and_Energy_Sales and DSO_Cash_Flows dicts
@@ -3485,17 +3839,46 @@ def DSO_rate_making(
     return DSO_Cash_Flows, DSO_Revenues_and_Energy_Sales, tariff, surplus
 
 def get_cust_bill(cust, bill_df, bill_metadata, energy_df, rate_scenario):
-    """ Populates dictionary of individual customer's annual bill.
+    """Build an annual bill summary dictionary for a single billing meter.
+
+    Extracts the annual (`'sum'` column) bill components from `bill_df` for
+    the specified customer and packages them into a nested dict that is easier
+    to inspect and serialize than the raw DataFrame. The dict always contains
+    flat-rate fields; scenario-specific fields (TOU, subscription, transactive,
+    DSO+T) are added when `rate_scenario` matches.
+
+    This function is typically called once per DSO after `DSO_rate_making()`
+    to generate a representative sample bill for diagnostic output. It does
+    not write any files.
+
     Args:
-        cust (str): customer name (meter name from GLD dictionary)
-        bill_df (dataframe): dataframe of annual and monthly customer bills
-        bill_metadata (dict): dictionary of GLD metadata including tarrif and building type for each meter
-        energy_df
-        rate_scenario (str): A str specifying the rate scenario under investigation: flat,
-        time-of-use, subscription, or transactive. If None, this function defaults to DSO+T.
+        cust (str): Billing meter name (must be a key in
+            `bill_metadata['billingmeters']` and an index level in
+            `bill_df`).
+        bill_df (pd.DataFrame): Per-meter bill DataFrame returned by
+            `calculate_consumer_bills()` (or read from
+            `bill_dso_<N>_data.h5`, key `'cust_bill_data'`).
+        bill_metadata (dict): GLD billing-meter metadata with
+            `building_type` and `tariff_class` populated for each meter.
+        energy_df (pd.DataFrame): Annual per-meter energy DataFrame returned
+            by `annual_energy()` (or read from `energy_dso_<N>_data.h5`,
+            key `'energy_data'`).
+        rate_scenario (str): Rate scenario string (`'flat'`, `'time-of-use'`,
+            `'subscription'`, `'transactive'`, `'dsot'`, or `None`).
+
     Returns:
-        customer_annual_bill (dict): dictionary of customers annual energy bill
-        """
+        customer_annual_bill (dict): Nested bill summary containing:
+            - `BillsFix`: flat-rate energy, demand, and connection charges
+            - `EnergyQuantity`: total annual kW-hr
+            - `MaxLoad`: annual peak demand (kW)
+            - `LoadFactor`: annual load factor
+            - `BlendedRate`: effective $/kW-hr across all charges
+            - `RateDesign`: the rate_scenario string
+            - `CustomerType`: building_type and tariff_class
+            - `Volatility`: monthly bill volatility (max-min)/mean
+            - Additional scenario-specific keys (e.g. `BillsTOU`,
+              `BillsSubscription`, `BillsTransactive`)
+    """
 
     # TODO: Generalize this format - e.g. average rate - inclusion of transactive and subscription etc...
 
