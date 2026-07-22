@@ -6,7 +6,7 @@ The DSO+T analysis was performed using the [TESP repo](https://github.com/pnnl/t
 
     $TESPDIR/tesp/examples/analysis/dsot/
 
-The subdirectory `code` contains the scripts required to build and run the cases, and `data` contains the metadata those scripts utilize. 
+The subdirectory `code` contains the scripts required to build and run the cases, and `data` contains the metadata those scripts utilize (requires `./dsotData.sh` to populate the data files). 
 
 You, however, are now in:
 
@@ -14,125 +14,251 @@ You, however, are now in:
 
 Why?
 
-## glm_dsot
+## glm_dsot vs dsot
 
-`glm_dsot` is the new anaylsis folder for running DSO+T-like analyses, currently focused on investigating new rate sceanarios and pilot utility demand-response programs. This updated DSO+T workflow is the result of the following improvements:
+`glm_dsot` is the new anaylsis folder for running DSO+T-like analyses, currently focused on investigating new rate sceanarios and pilot utility demand-response programs. This updated DSO+T workflow incorporates the following new APIs and features:
 
 ### GLMModifier
 
-`GLMModifier` is an API that allows the user to read a base (unpopulated) feeder model (.glm) into memory and then modify it and write it back out to disk. This is the critical difference between DSO+T and glm_dsot. DSO+T built its feeders by painstakingly modifying the base feeder model with serial print-statements rather than using the parent-child hierarchy of GridLAB-D. In a DSO+T case, a house might look like this:
+`GLMModifier` is an API that allows the user to read a base (unpopulated) feeder model (.glm) into memory and then modify it and write it back out to disk. This is the critical difference between *DSO+T* and *glm_dsot*. DSO+T built its feeders by painstakingly modifying the base feeder model with serial print-statements to nest objects within their parent's definitions. GLMModifier allows us to make use of the parent-child hierarchy of GridLAB-D in a very useful way. In a DSO+T case, a house might look like this:
 
-        object house {
-            name R4_12_47_1_tn_1_Low_hse_1;
-            parent R4_12_47_1_tn_1_mhse_1;
-            groupid MOBILE_HOME;
+    object house {
+        name R4_12_47_1_tn_1_Low_hse_1;
+        parent R4_12_47_1_tn_1_mhse_1;
+        groupid MOBILE_HOME;
+        schedule_skew 2120;
+        floor_area 1850;
+        number_of_stories 1;
+        ceiling_height 8;
+        over_sizing_factor 0.1936;
+        Rroof 26.00;
+        Rwall 10.62;
+        Rfloor 20.33;
+        glazing_layers 2;
+        glass_type 2;
+        glazing_treatment 1;
+        window_frame 2;
+        Rdoors 2.75;
+        airchange_per_hour 0.76;
+        cooling_COP 4.1;
+        air_temperature 69.95;
+        mass_temperature 69.95;
+        total_thermal_mass_per_floor_area 3.783;
+        mass_solar_gain_fraction 0.5;
+        mass_internal_gain_fraction 0.5;
+        aspect_ratio 2.16;
+        exterior_wall_fraction 1.00;
+        exterior_floor_fraction 1.00;
+        exterior_ceiling_fraction 1.00;
+        window_exterior_transmission_coefficient 0.47;
+        window_wall_ratio 0.15;
+        breaker_amps 1000;
+        hvac_breaker_rating 1000;
+        heating_system_type RESISTANCE;
+        cooling_system_type ELECTRIC;
+        motor_model BASIC;
+        motor_efficiency GOOD;
+        cooling_setpoint 80.0;
+        heating_setpoint 60.0;
+        object ZIPload { // responsive
             schedule_skew 2120;
-            floor_area 1850;
-            number_of_stories 1;
-            ceiling_height 8;
-            over_sizing_factor 0.1936;
-            Rroof 26.00;
-            Rwall 10.62;
-            Rfloor 20.33;
-            glazing_layers 2;
-            glass_type 2;
-            glazing_treatment 1;
-            window_frame 2;
-            Rdoors 2.75;
-            airchange_per_hour 0.76;
-            cooling_COP 4.1;
-            air_temperature 69.95;
-            mass_temperature 69.95;
-            total_thermal_mass_per_floor_area 3.783;
-            mass_solar_gain_fraction 0.5;
-            mass_internal_gain_fraction 0.5;
-            aspect_ratio 2.16;
-            exterior_wall_fraction 1.00;
-            exterior_floor_fraction 1.00;
-            exterior_ceiling_fraction 1.00;
-            window_exterior_transmission_coefficient 0.47;
-            window_wall_ratio 0.15;
-            breaker_amps 1000;
-            hvac_breaker_rating 1000;
-            heating_system_type RESISTANCE;
-            cooling_system_type ELECTRIC;
-            motor_model BASIC;
-            motor_efficiency GOOD;
-            cooling_setpoint 80.0;
-            heating_setpoint 60.0;
-            object ZIPload { // responsive
-                schedule_skew 2120;
-                base_power responsive_loads*0.96;
-                heatgain_fraction 0.90;
-                impedance_pf 1.00;
-                current_pf 1.00;
-                power_pf 1.00;
-                impedance_fraction 0.20;
-                current_fraction 0.40;
-                power_fraction 0.40;
-            };
-            object ZIPload { // unresponsive
-                schedule_skew 2120;
-                base_power unresponsive_loads*0.86;
-                heatgain_fraction 0.90;
-                impedance_pf 1.00;
-                current_pf 1.00;
-                power_pf 1.00;
-                impedance_fraction 0.20;
-                current_fraction 0.40;
-                power_fraction 0.40;
-            };
-            object waterheater {
-                name R4_12_47_1_tn_1_wh_1;
-                schedule_skew -5385;
-                heating_element_capacity 4.5 kW;
-                thermostat_deadband 1.0;
-                location INSIDE;
-                tank_diameter 1.5;
-                tank_UA 2.5;
-                water_demand small_1*0.99;
-                tank_volume 50;
-                waterheater_model MULTILAYER;
-                discrete_step_size 60.0;
-                lower_tank_setpoint 115.9;
-                upper_tank_setpoint 125.9;
-                T_mixing_valve 120.9;
-                object metrics_collector {
-                interval 300;
-                };
-            };
+            base_power responsive_loads*0.96;
+            heatgain_fraction 0.90;
+            impedance_pf 1.00;
+            current_pf 1.00;
+            power_pf 1.00;
+            impedance_fraction 0.20;
+            current_fraction 0.40;
+            power_fraction 0.40;
+        };
+        object ZIPload { // unresponsive
+            schedule_skew 2120;
+            base_power unresponsive_loads*0.86;
+            heatgain_fraction 0.90;
+            impedance_pf 1.00;
+            current_pf 1.00;
+            power_pf 1.00;
+            impedance_fraction 0.20;
+            current_fraction 0.40;
+            power_fraction 0.40;
+        };
+        object waterheater {
+            name R4_12_47_1_tn_1_wh_1;
+            schedule_skew -5385;
+            heating_element_capacity 4.5 kW;
+            thermostat_deadband 1.0;
+            location INSIDE;
+            tank_diameter 1.5;
+            tank_UA 2.5;
+            water_demand small_1*0.99;
+            tank_volume 50;
+            waterheater_model MULTILAYER;
+            discrete_step_size 60.0;
+            lower_tank_setpoint 115.9;
+            upper_tank_setpoint 125.9;
+            T_mixing_valve 120.9;
             object metrics_collector {
-                interval 300;
+            interval 300;
             };
+        };
+        object metrics_collector {
+            interval 300;
+        };
+    }
+
+Where the water heater, responsive, and unresponsive loads are nested within the house definition, directly attached to the house object by being in the same object definition. The `metrics_collector` object is also nested within the house definition. This structure is the basis upon which the entirety of DSOT operates (dropping the + in DSO+T from here on). 
+
+**From preparing a case to populating a feeder to post-processing, every element of DSOT assumes that the GLM model files are built using these nested object definitions, the result of serial print statements added to the base glm**.
+
+However, `GLMModifier` is incredibly powerful, and allows us to not only to more easily build our feeder models, but also verify parent/child hierarchies and make changes to the model without risk of breaking them. Using this API allows for a much more robust workflow from start to finish. To use `GLMModifier`, however, nearly every script that builds or post-processes a case in DSOT had to be updated. Let's walk through those changes. But first, let's compare a house object in a GLMModifier-created model file:
+
+    object house {
+        name R4_12_47_1_tn_1_Upper_hs_1;
+        parent R4_12_47_1_tn_1_hsmtr_1;
+        groupid SINGLE_FAMILY;
+        schedule_skew 1985;
+        floor_area 4742;
+        number_of_stories 1;
+        ceiling_height 10;
+        over_sizing_factor 0.3;
+        Rroof 54.48;
+        Rwall 22.51;
+        Rfloor 29.68;
+        glazing_layers 3;
+        glass_type 2;
+        glazing_treatment 2;
+        window_frame 4;
+        Rdoors 11.39;
+        airchange_per_hour 0.29;
+        cooling_COP 4.1;
+        air_temperature 70.01;
+        mass_temperature 70.01;
+        total_thermal_mass_per_floor_area 2.616;
+        mass_solar_gain_fraction 0.5;
+        mass_internal_gain_fraction 0.5;
+        aspect_ratio 1.08;
+        exterior_wall_fraction 1.00;
+        exterior_floor_fraction 1.00;
+        exterior_ceiling_fraction 1.00;
+        window_exterior_transmission_coefficient 0.59;
+        window_wall_ratio 0.15;
+        breaker_amps 1000;
+        hvac_breaker_rating 1000;
+        heating_system_type RESISTANCE;
+        cooling_system_type ELECTRIC;
+        motor_model BASIC;
+        motor_efficiency GOOD;
+        cooling_setpoint 80.0;
+        heating_setpoint 60.0;
         }
 
-Where the water heater, responsive, and unresponsive loads are nested within the house definition, directly attached to the house object by being in the same object definition. The `metrics_collector` object is also nested within the house definition. This structure is the basis upon which the entirety of DSOT operates (dropping the + from here on). 
+A single definition. Just the house. But what about its water heater or DER or metrics collectors? Those are all later in the file. GLMModifier model files are organized by object type. All the houses will be grouped together. Later, all the water heaters, later still, all the metrics collectors. Below are all the children of our example house, `R4_12_47_1_tn_1_Upper_hs_1`, distributed throughout the rest of the .glm.
 
-**From preparing a case to populating a feeder to post-processing, every element of DSOT assumes that the GLM model files are built using these nested object definitions, the result of serial print statements on the base glm**.
 
-However, `GLMModifier` is incredibly powerful, and allows us to not only to more easily build our feeder models, but also verify parent/child hierarchies and make changes to the model without breaking them. Using this API allows for a much more robust workflow from start to finish. To use `GLMModifier`, however, nearly every script that builds or post-processes a case in DSOT had to be updated. Let's walk through those changes.
+    object ZIPload {
+        name R4_12_47_1_tn_1_Upper_hs_1_responsive;
+        parent R4_12_47_1_tn_1_Upper_hs_1;
+        schedule_skew 1985;
+        base_power responsive_loads * 0.99;
+        heatgain_fraction 0.90;
+        impedance_pf 1.00;
+        current_pf 1.00;
+        power_pf 1.00;
+        impedance_fraction 0.20;
+        current_fraction 0.40;
+        power_fraction 0.40;
+        }
+
+        object ZIPload {
+        name R4_12_47_1_tn_1_Upper_hs_1_unresponsive;
+        parent R4_12_47_1_tn_1_Upper_hs_1;
+        schedule_skew 1985;
+        base_power unresponsive_loads * 1.50;
+        heatgain_fraction 0.90;
+        impedance_pf 1.00;
+        current_pf 1.00;
+        power_pf 1.00;
+        impedance_fraction 0.20;
+        current_fraction 0.40;
+        power_fraction 0.40;
+        }
+
+    ...
+
+    object evcharger_det {
+        name R4_12_47_1_tn_1_Upper_hs_1_TeslaM3_chgr_1;
+        parent R4_12_47_1_tn_1_Upper_hs_1;
+        configuration IS220;
+        breaker_amps 1000;
+        battery_SOC 100.0;
+        travel_distance 44.0;
+        arrival_at_work 1315;
+        duration_at_work 1;
+        arrival_at_home 1345;
+        duration_at_home 82799;  // (secs);
+        work_charging_available FALSE;
+        maximum_charge_rate 11500.0;
+        mileage_efficiency 3.846;
+        mileage_classification 220;
+        charging_efficiency 0.9;
+        }
+    
+    ...
+
+    object waterheater {
+        name R4_12_47_1_tn_1_Upper_hs_1_wh;
+        parent R4_12_47_1_tn_1_Upper_hs_1;
+        schedule_skew -14391;
+        heating_element_capacity 4.5 kW;
+        thermostat_deadband 1.0;
+        location INSIDE;
+        heat_mode ELECTRIC;
+        tank_diameter 1.5;
+        tank_UA 2.9;
+        water_demand large_2*0.96;
+        tank_volume 75;
+        waterheater_model MULTILAYER;
+        discrete_step_size 60.0;
+        lower_tank_setpoint 105.1;
+        upper_tank_setpoint 115.1;
+        T_mixing_valve 110.1;
+        }
+    
+    ...
+
+    object metrics_collector {
+        name mc_R4_12_47_1_tn_1_Upper_hs_1;
+        parent R4_12_47_1_tn_1_Upper_hs_1;
+        interval 300;
+        }
+
+
+How do we use the new GLMModifier to populate our feeder model? We use the feeder generator API, just as with DSOT. Only this API has also had a significant update.
 
 ### Feeder Generator
 
-The backbone of DSOT, the feeder generator module, `gld_residential_feeder.py`, takes a model `[feeder].glm`, identifies existing transformers on the feeder with downstream load, determines how many houses each transformer can support based on the average house load in kVA, and adds that many houses and small ZIPloads. This module also adds commercial buildings and ZIP loads based on identified commercial loads. The newly populated feeder is saved as a separate .glm, which can be used for subsequent analysis in GridLAB-D.
+The backbone of DSOT, the feeder generator module, `gld_residential_feeder.py`, takes a model `[feeder].glm`, identifies existing transformers on the feeder with downstream load, determines how many houses each transformer can support based on the average house load in kVA (set in the config), and adds that many houses and small ZIPloads. This module also adds commercial buildings and ZIP loads based on identified commercial loads. The newly populated feeder is saved as a separate .glm, which can be used for subsequent analysis using GridLAB-D and HELICS/FNCS.
 
-The `gld_feeder_generator.py` is an updated feeder generator script that combines the functionality of the `residential_feeder_glm.py`, the `commercial_feeder_glm.py`, and the `copperplate_feeder_glm.py` into one.
+The `gld_feeder_generator.py` is an updated feeder generator script that combines the functionality of the
+*  `residential_feeder_glm.py`,
+* `commercial_feeder_glm.py`, and
+* `copperplate_feeder_glm.py` into one.
 
-This updated feeder generator model, as its name suggests, randomly generates a population of houses and DER on the feeder. Because this is an updated script from the three disparate feeder generators of DSOT, the resulting populated feeders **cannot be identical to a DSOT run**. Even if the functionality were reproduced *exactly*, they would differ due to the random calls within the script. The new `gld_residential_feeder.py`, as an aside, is also not an exact reproduction. During its creation, processes were streamlined, functions and parameter assignments were validated, and other minor improvements were made to its functionality to be more human-understandable. 
+This updated feeder generator model, as its name suggests, randomly generates a population of houses and DER on the feeder. Because this is an updated script from the three disparate feeder generators of DSOT, the resulting populated feeders **cannot be identical to a DSOT run**. Even if the functionality were reproduced *exactly*, they would differ due to the random calls within the script. The new `gld_residential_feeder.py`, is also not an exact reproduction anyway. During its creation, processes were streamlined, functions and parameter assignments were validated, and other minor improvements were made to its functionality to be more human-understandable. 
 
 ### glm_dictionary
 
-First, it's worth noting that while the main scripts required to generate and run a case are in the `glm_dsot/code` folder, all the APIs those scripts call live in either `tesp/src/tesp_support/tesp_support/api` or `tesp/src/tesp_support/tesp_support/dsot`. The API folder contain non-case specific TESP APIs, whereas the DSOT folder are case specific to DSOT runs. The `glm_dict` function lives within the DSOT API folder.
+First, it's worth noting that while the main scripts required to generate and run a case are in the `glm_dsot/code` folder, all the APIs those scripts call still live in either `tesp/src/tesp_support/tesp_support/api` or `tesp/src/tesp_support/tesp_support/dsot`. The API folder contain non-case specific TESP APIs, whereas the DSOT folder contain APIs that are specific to DSOT runs. The `glm_dict` function lives within the DSOT API folder.
 
-DSOT used `glm_dict()`, which again relied on the case models being constructed with nested parent/child definitions. This function was re-written to utilize `GLMModifier` and to be compatible with the new feeder generator. The updated function is called `glm_diction()`, and it writes the JSON metadata file with the feeder information, used for post-processing. 
+DSOT used `glm_dict()`, which again relied on the case models being constructed with nested parent/child definitions. This function was re-written to utilize `GLMModifier` and to be compatible with the new feeder generator. The updated function is called `glm_diction()`, and it writes the JSON metadata file with the feeder information, used for post-processing. Both `glm_dict()` and `glm_diction()` are defined in `glm_dictionary.py`, if you would like to compare the functions.
 
 ### case_merge
 
-`glm_merge()` is the updated version of `merge_glm()`, updated for the same reason. This function combines the three output feeders from the feeder generator into one per DSO. Feeder 1, Feeder 2, and copperplate feeder are the result of feeder generator before `merge_glm()` combines those into Substation_N.glm and adds the substation node.
+`glm_merge()` is the updated version of `merge_glm()`, updated for the same reason. This function combines the three output feeders from the feeder generator into one per DSO. Feeder 1, Feeder 2, and copperplate feeder are created by feeder generator before `merge_glm()` combines those into a *Substation_N.glm* and adds the substation node.
 
 ### Prepare Case
 
-`prepare_case_glm_dsot.py` is the script that prepares an entire 8-DSO case for analysis. It calls feeder generator, creates the glm dictionary, and merges the individual feeder outputs, organized into folders by Substation or DSO number. This file is in the main working directory `examples/analysis/glm_dsot/code`. The original was in `dsot/code` and called simply `prepare_case.py`.
+`prepare_case_glm_dsot.py` is the new script that prepares an entire 8-DSO case for analysis. It calls feeder generator, creates the glm dictionary, and merges the individual feeder outputs, organized into folders by Substation or DSO number. This file is in the main working directory `examples/analysis/glm_dsot/code`. The original was in `dsot/code` and called simply `prepare_case.py`.
 
 
 ### The Config Files
@@ -141,8 +267,7 @@ The new glm_dsot workflow uses two main config files, a **case config** describi
 
 ### The Metadata Files
 
-For the moment, glm_dsot and dsot runs essentially share all the same metadata files. Those therefore still live in the `dsot/data` folder, rather than in `glm_dsot/data`. Scripts that prepare and post-process cases expect those files to be in the dsot folder. If a glm_dsot release happend without dsot, then that should change. Otherwise, if glm_dsot and dsot folders both exist in `examples/analysis`, we'll keep it this way to preserve backwards compatability.
-
+For the moment, glm_dsot and dsot runs essentially share all the same metadata files. Those therefore still live in the `dsot/data` folder, rather than in `glm_dsot/data`. Scripts that prepare and post-process cases expect those files to be in the dsot folder. If a glm_dsot release happens without dsot, then that will change. Otherwise, if glm_dsot and dsot folders both exist in `examples/analysis`, we'll keep it this way to preserve backwards compatability.
 
 # How to Setup a Case
 
@@ -161,37 +286,27 @@ When you `pip list` after this, you should have a file path next to `tesp_suppor
 
 Then navigate back to `tesp/examples/analysis/glm_dsot/code`:
 
-These are the main files to edit in order to generate new runs:
+These are the main files used to generate new runs:
 
-- `rates_config.json5`
+- `rates_config.json5` (or your analysis config name)
 - `prepare_case_glm_dsot.py`
 - `generate_case.py`
 
 
-Note that TESP expects python3, so any python scripts are run like:
+Note that TESP expects python3 on linux, so any python scripts are run like:
 
     python3 prepare_case_glm_dsot.py
 
 The main APIs behind tesp, running the market, the agents, the substations, are located within
 `TESP/src/tesp_support/tesp_support/dsot`
 
-Now, the feeder generator API, `gld_residential_feeder.py`, takes a model `[feeder].glm` (GridLAB-D readable format), identifies existing transformers on the feeder with downstream load, determines how many houses each transformer can support based on the average house load in kVA, and adds that many houses and small ZIPloads. This module also adds commercial buildings and ZIP loads based on identified commercial loads. The newly populated feeder is saved as a separate .glm, which can be used for subsequent analysis in GridLAB-D.
-
-The `gld_feeder_generator.py` is an updated feeder generator that combines 
-the functionality of the `residential_feeder_glm.py`, the `commercial_feeder_glm.py`, 
-and the `copperplate_feeder_glm.py`.
-
 Before proceeding, please be sure you have successfully installed TESP.
 
 ## Quick Run (standalone feeder, not DSOT-style)
 
-To quickly generate a feeder from the default taxonomy feeder, simply run the following command from the `tesp` directory. This will read in the default configuration file ([feeder_config.json5](https://github.com/pnnl/tesp/blob/main/examples/capabilities/feeder-generator/feeder_config.json5)), which specifies the default taxonomy feeder, user-defined feeder attributes, and required metadata files, and then generate a populated feeder based on that information.::
-
-    python3 tesp/design/feeder_generator/gld_residential_feeder.py
-
+If you wish to populate a single feeder, a non-DSOT case, you would run `feeder_demo.py` from `tesp/examples/capabilities/feeder-generator`. Your config file in that case is [feeder_config.json5](https://github.com/pnnl/tesp/blob/main/examples/capabilities/feeder-generator/feeder_config.json5), located in the same directory. An important part of setting up your config is specifying the backbone taxonomy feeder you wish to populate. 
 
 This will result in a populated feeder model named "*test.glm*" unless otherwise specified, in the same directory as the input feeder. The console will also print out the number of houses, commercial buildings, and DERs added to the feeder.
-
 
 ## Understanding and Customizing the Feeder Generator
 
@@ -287,7 +402,7 @@ This class pulls everything together to read the input feeder (`readBackboneMode
 
 ### Populating your Feeder Model
 
-To run the feeder generator, the `Config` class must first be initialized with the user-defined config file, after which `Feeder` reads that config, as such.::
+To run the feeder generator, the `Config` class is first initialized with the user-defined config file, after which `Feeder` reads that config, as such.::
 
     def _test1():
     config = Config("./feeder_config.json5")
@@ -298,19 +413,13 @@ To run the feeder generator, the `Config` class must first be initialized with t
         _test1()
 
 
-#### Non-DSOT Case
-
-`feeder_demo.py` in `tesp\examples\capbilities\feeder-generator` will do this for you using the default `feeder_config.json5`, which will output a populated feeder called `test.glm`.
-
-#### DSOT Case
-
 `prepare_case_dsot.py` will do this for you using your case config (i.e., `rates_config.json5`). To prep multiple months at once, use `generate_case.py` like:
 
     python3 generate_case.py 3 5
 
-Where `arg[1]` is exclusive, `arg[2]` is inclusive. That would generate April and May cases.
+Where `arg[1]` is exclusive, `arg[2]` is inclusive. That would generate April and May cases. In DSOT, `generate_case.py` had to be manually edited to assign the months you wished to generate. It now takes that range as arguments and you should no longer need to edit this file.
 
-The `Feeder` class has two options, "full", or "copperplate", specifying whether to populate a full-order feeder with both residential and commercial buildings, or a simplified copperplate feeder model that has limited commercial buildings. DSOT runs use "full".
+The `Feeder` class has two options, "full", or "copperplate", specifying whether to populate a full-order feeder with both residential and commercial buildings, or a simplified copperplate feeder model that has limited commercial buildings. DSOT runs use "full", and this is the default.
 
 Below is a sample output to console from running `feeder_demo.py` or similar.::
 
@@ -354,9 +463,7 @@ An example test case with the user-defined IEEE-123.glm test feeder will yield t
 
 # How to Run a Case
 
-Once your case folder(s) have been created, to start, stop, and clean up
-run files, the following commands can be run from the terminal [For windows 
-users, in mobaxterm (rather than VSCode, as sometimes they don't queue 
+Once your case folder(s) have been created, to start, stop, and clean up run files, the following commands can be run from the terminal [For windows users, in mobaxterm (rather than VSCode, as sometimes they don't queue 
 correctly)]. From the desired case folder:
 
 - `./run.sh` : runs a run
@@ -372,6 +479,14 @@ From command line:
         cat *.log | grep -i err
         cat */*.log | grep -i err
 
+ - Find all the errors and which files they belong to:
+
+        grep -iHr "Error" .
+	
+- To search for other errors:
+
+        grep -i erro * 
+
 - Check processes with `htop`.
 
    - If very little computing power is being used, likely no runs are active. This also shows each process. Can be sorted by user, time, CPU%, etc.
@@ -382,7 +497,7 @@ From command line:
 
 - Check `opf.csv` and `pf.csv` file sizes.
 
-   - Refresh case file directory and check size of `opf.csv` and `pf.csv`. These should be growing in size as things are written.
+   - Refresh case file directory and check size of `opf.csv` and `pf.csv`. These should be growing in size as data is written.
 
 - Check `tso.log`.
 
@@ -410,20 +525,21 @@ From command line:
 
 - Address already in use:
 
-   - Are you already running something? Make sure it's finished, i.e., don't try to postprocess and run something new at the same time.
+   - Are you already running something? Make sure it's finished, i.e., don't try to postprocess and run something new at the same time. Sometimes your run may finish, but schedule server is still active. A `./kill.sh` from the case folder will clean that up.
 
 - Infeasible solution/ No RT starting point:
 
-   - `genPowerLevel` needs to be adjusted in `8_hi_system_config.json`
+   - `genPowerLevel` needs to be adjusted in your case config file.
 
       - Defines the initial power output for generators when running the very first timestep. This allows them to be put in such a state that, when respecting ramp rates, they can reach a reasonable dispatch.
 
-      - 0.6 - 0.7 usually works, for high-demand months, might need to go up to 0.85. Low-demand months might need to go to 0.45.
+      - 0.6 - 0.7 usually works, for high-demand months, might need to go up to 0.85. Low-demand months might need to go to 0.45. 
+
+      - 0.45 - 0.5 might be the range to use for a base case (i.e., pv = 1, ev, fl, and bt = 0).
 
 - Prepare case or generate case fails:
 
-   - Did you update RECS parameters? If so, remember to re-run `recs_gld_house_parameters.py`
-
+   - Did you update RECS parameter or change the location of your study? If so, remember to re-run `recs_gld_house_parameters.py`
 
 # How to run Post-Processing
 
@@ -431,11 +547,135 @@ You can post-process just one month, or an entire year. However, to post-process
 
 ## Monthly Case Post-Processing
 
-At the end of each simulation (monthly run) automated post-processing is run on the results: `run_case_postprocessing.py`. The purpose of this initial analysis is to generate summary data and initial review plots (saved in the `/plots` folder within the month case folder) so not all data needs to be transferred prior to the annual analysis and review. This step enables parallel processing. 
+At the end of each simulation (monthly run) automated post-processing is run on the results: `run_case_postprocessing.py`. The purpose of this initial analysis is to generate summary data and initial review plots (saved in the `../plots` folder within the month case folder) so not all data needs to be transferred prior to the annual analysis and review. This step enables parallel processing. 
 
-Post-processing can be run either through the shell script, `./postprocesss.sh` or with the command:
+Post-processing can be run either through the shell script, `./postprocesss.sh` or with the command below. Note that the `&` is optional, it just prevents the output from being printed to console. Either way, *postprocessing.log* will keep a record of the process.
 
     python3 ../run_case_postprocessing.py > postprocessing.log&
+
+### Workflow
+
+1. Loads `generate_case_config.json` from the current working directory.
+2. Resolves paths for:
+   - monthly case folder (`caseName`)
+   - metadata directory (`data_path`)
+3. Builds active DSO list from population metadata.
+4. Runs DSO-level jobs (parallelized with Joblib):
+   - meter/retail preprocessing
+   - amenity calculations
+   - DER/building load stack data
+   - daily market plots
+   - demand profile creation (scenario-dependent)
+5. Runs month-level aggregate products:
+   - RCI analysis
+   - generation/load profiles and stats
+   - stack plot aggregation
+   - forecast statistics
+
+Note that if your run did not complete successfully, post-processing may not work. 
+
+### Functions:
+
+- `read_meters`
+- `calc_amenity`
+- `pop_stats`
+- `gen_plots`
+- `der_stack_plots`
+- `bldg_stack_plots`
+- `forecast_plots`
+- `create_baseline_demand_profiles`
+- `create_demand_profiles`
+
+### Expected monthly outputs
+
+Outputs are written in the monthly `case_path` (and `case_path/plots`), including:
+- Meter/billing HDF products (via `read_meters`)
+- Amenity HDF/CSV products (via `calc_amenity`)
+- DSO load stack artifacts/plots (DER and building)
+- Daily market/forecast plots and summary stats
+- Population/RCI statistics
+- Generation/AMES summary products
+- Demand profile artifacts (when enabled)
+
+
+## Annual Post-Processing
+
+Once you have post-processed all the month cases in a year, you can run the annual post-processing.
+
+    python3 run_annual_postprocessing.py
+
+This requires a folder for the post-processing results. In the data directory (../examples/analysis/glm_dsot/data), create a directory for those results, i.e.,
+
+    ../examples/analysis/glm_dsot/data/post-processing/Flat
+
+For a flat, base case run.
+
+### Workflow
+1. Configures scenario folders (`Flat`, `DSOT`, `TOU`, `rob-don`, `sub`).
+2. Loads:
+   - `rates_config.json5`
+   - `<nodes>_<scenario>_system_config.json5`
+3. Builds active DSO list from population metadata.
+4. Defines month folder mapping (`month_def`) for each case.
+5. For each case (two-pass execution):
+   - annual energy aggregation
+   - annual amenity aggregation
+   - load/Qmax stats
+   - annual LMP/load stats
+   - generator statistics
+   - optional Q-bid calibration
+   - LMP-vs-load quadratic curve training
+   - wholesale purchases
+   - retail billing and reconciliation
+   - customer and DSO cash-flow summaries
+   - RCI and metadata distribution plots
+
+Each case is processed twice:
+- **Pass 1:** build missing annual artifacts.
+- **Pass 2:** rerun retail/cash-flow reconciliation with existing aggregates.
+
+### Options
+
+- `batch_process()` – all configured scenarios + base.
+- `one_process(case_path)` – one case.
+- `base_params_process()` – base-case run with Q-bid calibration forced on.
+    * If enabled (`integrate_q_bid_calibration=True`), the script:
+        1. Builds annual `DA_Q_forecast.csv` and `DA_Q_error.csv` from monthly files.
+        2. Reconstructs `actual_da_q.csv`.
+        3. Calibrates correction coefficients by DSO.
+        4. Writes calibrated JSON and optional merged config/diff report.
+
+### Expected Outputs
+
+### Aggregation
+- `energy_dso_<N>_data.h5`
+- `transactive_dso_<N>_data.h5`
+- `amenity_dso_<N>_data.h5`
+- `amenity_dso_<N>_data.csv`
+- `DSO_load_stats.csv`
+- `Qmax.csv`
+- `Annual_DA_LMP_stats.csv`
+- `generator_statistics_AMES.csv`
+- `DSO_quadratic_curves.json`
+
+### Financial
+- `DSO<N>_Market_Purchases.json`
+- `DSO<N>_Cash_Flows.json`
+- `DSO<N>_Revenues_and_Energy_Sales.json`
+- `DSO<N>_Customer_<meter>_Bill.json`
+- `DSO<N>_Customer_Metadata.json`
+- `Master_Customer_Dataframe.h5`
+- `Master_Customer_Dataframe.csv`
+- `Customer_CFS_Summary.csv`
+- `DSO_CFS_Summary.csv`
+- `DSO<N>_Capital_Costs.json`
+- `DSO<N>_Expenses.json`
+
+### Calibration (when enabled)
+- `actual_da_q.csv`
+- `Q_bid_forecast_correction_calibrated.json`
+- `rates_config_calibrated.json5` (optional merge output)
+- `rates_config_calibration_diff_report.json` (optional)
 
 ## Case Comparison and Reporting Exhibit Generation
 
@@ -453,17 +693,3 @@ The example script `plotting.py` shows example use of the plotting functions to 
 - Check identical date ranges and time periods of evaluation between cases (for example in `DSO_Total_Loads.csv`).
 
 - Check that DSO revenues equal expenses (capital and operating) within cases in `DSO_CFS_summary.csv`.
-
-## Move run files over to a sharefolder (FOR PNNL USERS ONLY):
-
-If you would like to share your results with your team or access the run files from your PC:
-
-1. Navigate to the folder one directory above the run folder you would like to move
-
-2. `sudo mount -t cifs //pnnlfs09.pnl.gov/sharedata37_op$/DSOT  /mnt/dsot -o username=[USER]`
-
-3. `sudo cp -r [run_folder] /mnt/dsot/run_outputs/Rates_Scenario/.`
-
-*Note instructions will change based on mount location, folder, and target directory.*
-
-If choosing to delete run folders to clear up room, do so from the mobaxterm terminal rather than VSCode to ensure they are cleared from the disk.

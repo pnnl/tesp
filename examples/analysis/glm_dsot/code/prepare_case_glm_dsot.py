@@ -653,10 +653,6 @@ def prepare_case(case:str):
             import tesp_support.dsot.tesp_monitor as monitor
             monitor.TespMonitorJSON.write_monitor(config, caseName)
 
-        if config["dashboard"]:
-            import tesp_dashboard as dashboard
-            dashboard.write_dashboard(caseName)
-        
     if config["messenger"] == 'HELICS':
         tso.write_file(caseName + '/tso_h.json')
     elif config["messenger"] == 'FNCS':

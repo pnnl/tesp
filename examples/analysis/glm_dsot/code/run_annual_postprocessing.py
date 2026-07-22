@@ -193,6 +193,76 @@ qbid_source_config_json5 = '../data/rates_config.json5'    # config file to upda
 qbid_output_config_json5 = 'rates_config_calibrated.json5' # merged output config
 qbid_diff_report_json = 'rates_config_calibration_diff_report.json'  # change report
 
+
+def _find_da_q_datetime_column(columns):
+    """Return the most likely timestamp column name, if present."""
+    lowered = {str(col).strip().lower(): col for col in columns}
+    for candidate in ('date_time', 'datetime', 'timestamp', 'time'):
+        if candidate in lowered:
+            return lowered[candidate]
+    return None
+
+
+def _build_annual_da_q_file(month_def, case_path, filename):
+    """Concatenate monthly DA_Q CSVs into one annual CSV in case_path."""
+    annual_path = Path(case_path) / filename
+    if annual_path.is_file():
+        return annual_path
+
+    monthly_frames = []
+    missing_files = []
+
+    for month in month_def:
+        month_name = month[0]
+        month_path = Path(month[1])
+        monthly_file = month_path / filename
+
+        if not monthly_file.is_file():
+            missing_files.append(str(monthly_file))
+            continue
+
+        month_df = pd.read_csv(monthly_file)
+        if month_df.empty:
+            print(f'Warning: {monthly_file} is empty; skipping')
+            continue
+
+        monthly_frames.append(month_df)
+
+    if missing_files:
+        print(f'Cannot build annual {filename}: missing {len(missing_files)} monthly file(s)')
+        for missing_file in missing_files:
+            print(f'  missing: {missing_file}')
+        return annual_path
+
+    if not monthly_frames:
+        print(f'Cannot build annual {filename}: no monthly data found')
+        return annual_path
+
+    annual_df = pd.concat(monthly_frames, ignore_index=True)
+
+    dt_col = _find_da_q_datetime_column(annual_df.columns)
+    if dt_col is not None:
+        annual_df[dt_col] = pd.to_datetime(annual_df[dt_col], errors='coerce')
+        bad_rows = annual_df[dt_col].isna().sum()
+        if bad_rows:
+            print(f'Warning: dropping {bad_rows} row(s) with invalid timestamps while building {filename}')
+            annual_df = annual_df.dropna(subset=[dt_col])
+
+        annual_df = annual_df.sort_values(dt_col).drop_duplicates(subset=[dt_col], keep='last')
+        annual_df[dt_col] = annual_df[dt_col].dt.strftime('%Y-%m-%d %H:%M:%S')
+
+    annual_df.to_csv(annual_path, index=False)
+    print(f'Built annual {filename} from {len(monthly_frames)} monthly file(s): {annual_path}')
+    return annual_path
+
+
+def _ensure_annual_da_q_inputs(month_def, case_path):
+    """Build annual DA_Q_forecast.csv and DA_Q_error.csv if missing."""
+    forecast_csv = _build_annual_da_q_file(month_def, case_path, 'DA_Q_forecast.csv')
+    error_csv = _build_annual_da_q_file(month_def, case_path, 'DA_Q_error.csv')
+    return forecast_csv, error_csv
+
+
 def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_path : str, run_base: bool):
     """Execute annual postprocessing for a list of cases.
 
@@ -236,14 +306,14 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
         # that the billing reconciliation re-runs on every pass.            
         # ------------------------------------------------------------------ 
 
-        if not os.path.isfile(os.path.join(case_path, 'energy_dso_1_data.h5')):
-            print('No annual energy files found, running annual_energy...')
+        if not os.path.isfile(os.path.join(case_path, 'energy_dso_8_data.h5')):
+            print('No or incomplete annual energy files found, running annual_energy...')
             annual_energy = True
         else: 
             annual_energy = False
 
-        if not os.path.isfile(os.path.join(case_path, 'amenity_dso_1_data.h5')):
-            print('No amenity data found, running annual_amenity...')
+        if not os.path.isfile(os.path.join(case_path, 'amenity_dso_8_data.h5')):
+            print('No or incomplete amenity data found, running annual_amenity...')
             annual_amenity = True
         else:
             annual_amenity = False
@@ -312,7 +382,7 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
         with open(system_config_path, 'r', encoding='utf-8') as json5_file:
             system_config = pyjson5.load(json5_file)
 
-        renew_forecast_file = metadata_path + "/" + system_config['genForecastHr'][5].split('/')[-1]
+        renew_forecast_file = DSOT_metadata_path + "/" + system_config['genForecastHr'][5].split('/')[-1]
         # Load RECS-based DSO population metadata to identify which DSO nodes
         # are active in this network configuration.
         dso_metadata_file = case_config['population_file_RECS']
@@ -469,11 +539,11 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
         if not check_folder:
             os.makedirs(case_path + '/plots')
 
-        # ------------------------------------------------------------------ #
-        # STEP 1 -- Annual aggregation and analysis                           #
-        # All steps in this section read already-completed monthly outputs    #
-        # and write annual summary files into case_path.                     #
-        # ------------------------------------------------------------------ #
+        # ------------------------------------------------------------------
+        # STEP 1 -- Annual aggregation and analysis                          
+        # All steps in this section read already-completed monthly outputs   
+        # and write annual summary files into case_path.                    
+        # ------------------------------------------------------------------
 
         # --------------- AGGREGATE ANNUAL ENERGY SUMMARIES  -------------------
         # Load the GLD billing-meter dictionary (maps meter names to building
@@ -527,7 +597,8 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
             # total dispatch, cost). Requires the annual OPF file, which is
             # produced as a side-effect of annual_lmps; run that step first if
             # generator_statistics_AMES.csv is missing.
-            GenAMES_df = pt.generation_statistics(case_path, config_path, system_config_file, total_day_range, False)
+            #GenAMES_df = pt.generation_statistics(case_path, config_path, system_config_file, total_day_range, False)
+            GenAMES_df = pt.generation_statistics(case_path, metadata_path, system_config_file, total_day_range, False)
 
         if integrate_q_bid_calibration:
             # Reconstruct the actual DA quantity series and fit correction
@@ -537,10 +608,10 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
             # conditions. See the qbid_* settings at the top of this file.
             print('Integrated Q-bid calibration enabled; preparing actual and calibrated coefficient files')
             try:
-                baseline_csv = Path(case_path) / 'DA_Q_forecast.csv'
-                da_error_csv = Path(case_path) / 'DA_Q_error.csv'
+                baseline_csv, da_error_csv = _ensure_annual_da_q_inputs(month_def, case_path)
+
                 if not baseline_csv.is_file() or not da_error_csv.is_file():
-                    print('Skipping integrated Q-bid calibration: DA_Q_forecast.csv and/or DA_Q_error.csv missing')
+                    print('Skipping integrated Q-bid calibration: annual DA_Q_forecast.csv and/or DA_Q_error.csv could not be built')
                 else:
                     temperature_csv_template = None
                     if qbid_temperature_csv_template:
@@ -712,7 +783,7 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
                     demand_case_path,
                     dso_num,
                     GLD_metadata,
-                    metadata_path,
+                    DSOT_metadata_path,
                     dso_scaling_factor,
                     num_ind_cust,
                     case_name,
@@ -754,7 +825,7 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
             # faster when only the summary statistics need to be regenerated.
             create_customer_df = True
             if create_customer_df:
-                customer_df = hf.get_customer_df(dso_range, case_path, metadata_path, rate_scenario)
+                customer_df = hf.get_customer_df(dso_range, case_path, DSOT_metadata_path, rate_scenario)
                 customer_df.to_hdf(case_path + '/Master_Customer_Dataframe.h5', key='customer_data')
                 customer_df.to_csv(path_or_buf=case_path + '/Master_Customer_Dataframe.csv')
             else:
@@ -822,7 +893,7 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
         # RCI_analysis: computes income-weighted bill distributions by customer
         # class (residential, commercial, industrial) across all active DSOs.
         bill = True
-        rci_df = pt.RCI_analysis(dso_range, month_def[0][1], case_path, metadata_path, dso_metadata_file, bill)
+        rci_df = pt.RCI_analysis(dso_range, month_def[0][1], case_path, DSOT_metadata_path, dso_metadata_file, bill)
 
         # params: list of [metadata_system, customer_class, attribute] tuples
         # that drive metadata_dist_plots. Each entry produces one histogram
@@ -844,7 +915,7 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
 
         for para in params:
             pt.metadata_dist_plots(system=para[0], sys_class=para[1], variable=para[2], dso_range=dso_range,
-                                case=month_def[0][1], data_path=case_path, metadata_path=metadata_path,
+                                case=month_def[0][1], data_path=case_path, metadata_path=DSOT_metadata_path,
                                 agent_prefix=agent_prefix)
 
 def batch_process():
