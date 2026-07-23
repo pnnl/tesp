@@ -64,9 +64,7 @@ class TespMonitorJSON:
 
     * DSO_[dso_num]_monitor_[helics/fncs].json: configuration data for the 
        solution monitor GUI
-    * monitor.json: HELICS subscriptions and time step for the solution 
-        monitor GUI
-    * monitor.yaml: FNCS subscriptions and time step for the solution 
+    * monitor.json: HELICS or FNCS subscriptions and time step for the solution 
         monitor GUI
 
     Returns:
@@ -75,8 +73,9 @@ class TespMonitorJSON:
 
     def write_monitor(config, caseName):
         """
-        Writes either monitor.json or monitor.yaml depending on whether messenger
-        is HELICS or FNCS.
+        Writes GUI config monitor.json and individual DSO configs
+        DSO_[dso_num]_monitor_[helics/fncs].[json/yaml] depending on whether 
+        messenger is HELICS or FNCS.
         
         Args:
             config (dict): Configuration
@@ -109,36 +108,36 @@ class TespMonitorJSON:
         TPV_""" + dso_num + """:
             topic: """ """pypower/lmp_da""" + dso_num + """
             default: 0
-            type: double
+            type: string
             list: false
         LMP_""" + dso_num + """:
             topic: """  """pypower/lmp_rt_""" + dso_num + """
             default: 0
-            type: double
+            type: string
             list: false
         clear_price:
             topic: """ """/pypower/cleared_q_rt_ """ + dso_num + """
             default: 0
-            type: double
+            type: string
             list: false
         distribution_load:
             topic: """  """/gldSubstation_ """ + dso_num + """
             default: 0
-            type: complex
+            type: string
             list: false
         """
             
-                monitor_gui_file = "monitor.json" # GUI launcher config
+                
                 monitor_fed_file = f"DSO_{dso_num}_monitor_fncs.yaml"  # federate config
-
                 op = open(os.path.join(caseName, monitor_fed_file), 'w')
                 print(yamlstr, file=op)
                 op.close()
 
             cmds = {'time_stop': seconds,
                     'yaml_delta': int(config['AgentPrep']['HVAC']['MarketClearingPeriod']),
-                    'helics_config': 'DSO_1_monitor_helics.json'}
+                    'fncs_config': 'DSO_1_monitor_fncs.yaml'}
             
+            monitor_gui_file = "monitor.json" # GUI launcher config
             op = open(caseName + monitor_gui_file, 'w')
             json.dump(cmds, op, indent=2)
             op.close()

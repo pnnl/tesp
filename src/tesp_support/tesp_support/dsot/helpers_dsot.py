@@ -279,6 +279,18 @@ def write_dsot_management_script(master_file, case_path, config=None, system_con
             outfile.write('(exec python3 -c "import tesp_support.api.tso_psst as tesp;'
                           'tesp.tso_psst_loop(\'./%s\')" &> %s/tso.log &)\n'
                           % (master_file, out_path))
+            outfile.write('\n# Watch tso.log for CRITICAL errors; kill the simulation if one is found\n')
+            outfile.write('(\n')
+            outfile.write('  tso_log=%s/tso.log\n' % out_path)
+            outfile.write('  while [ ! -f "$tso_log" ]; do sleep 300; done\n')
+            outfile.write('  tail -n 0 -f "$tso_log" | while IFS= read -r line; do\n')
+            outfile.write('    if echo "$line" | grep -q "CRITICAL"; then\n')
+            outfile.write('      echo "[log-watcher] CRITICAL error: $line" >&2\n')
+            outfile.write('      bash ./kill.sh\n')
+            outfile.write('      break\n')
+            outfile.write('    fi\n')
+            outfile.write('  done\n')
+            outfile.write(') &\n')
             for plyr in range(len(players)):
                 player = system_config[players[plyr]]
                 if player[6] or player[7]:
@@ -419,6 +431,7 @@ def write_dsot_management_script_f(master_file, case_path, config=None, system_c
                 outfile.write('start /b cmd /c python -c "import tesp_support.original.tso_psst_f as tesp;'
                               'tesp.tso_psst_loop_f(\'./%s\')" ^> %s\\tso.log 2^>^&1\n'
                               % (master_file, out_path))
+                outfile.write('start /b powershell -NoProfile -ExecutionPolicy Bypass -File watch_tso_log.ps1\n')
 
                 for plyr in range(len(players)):
                     player = system_config[players[plyr]]
@@ -433,6 +446,30 @@ def write_dsot_management_script_f(master_file, case_path, config=None, system_c
             outfile.write('taskkill /F /IM fncs_broker.exe\n')
             outfile.write('taskkill /F /IM python.exe\n')
             outfile.write('taskkill /F /IM gridlabd.exe\n')
+
+        with open(out_folder + '/watch_tso_log.ps1', 'w') as outfile:
+            outfile.write('$log = ".\\tso.log"\n')
+            outfile.write('$deadline = (Get-Date).AddSeconds(30)\n')
+            outfile.write('while (-not (Test-Path $log)) {\n')
+            outfile.write('    if ((Get-Date) -gt $deadline) { exit 0 }\n')
+            outfile.write('    Start-Sleep -Seconds 300\n')
+            outfile.write('}\n')
+            outfile.write('$fs = [IO.File]::Open($log, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::ReadWrite)\n')
+            outfile.write('$fs.Seek(0, [IO.SeekOrigin]::End) | Out-Null\n')
+            outfile.write('$sr = [IO.StreamReader]::new($fs)\n')
+            outfile.write('while ($true) {\n')
+            outfile.write('    $line = $sr.ReadLine()\n')
+            outfile.write('    if ($null -ne $line) {\n')
+            outfile.write('        if ($line -match "CRITICAL") {\n')
+            outfile.write('            Write-Host "[log-watcher] CRITICAL error: $line" -ForegroundColor Red\n')
+            outfile.write('            & .\\kill.bat\n')
+            outfile.write('            $sr.Close(); $fs.Close()\n')
+            outfile.write('            exit 1\n')
+            outfile.write('        }\n')
+            outfile.write('    } else {\n')
+            outfile.write('        Start-Sleep -Milliseconds 250\n')
+            outfile.write('    }\n')
+            outfile.write('}\n')
 
         with open(out_folder + '/clean.bat', 'w') as outfile:
             outfile.write('del ' + out_path + '\\*.log /s\n')
@@ -519,6 +556,18 @@ def write_dsot_management_script_f(master_file, case_path, config=None, system_c
                               '&& exec python3 -c "import tesp_support.original.tso_psst_f as tesp;'
                               'tesp.tso_psst_loop_f(\'./%s\')" &> %s/tso.log &)\n'
                               % (master_file, out_path))
+                outfile.write('\n# Watch tso.log for CRITICAL errors; kill the simulation if one is found\n')
+                outfile.write('(\n')
+                outfile.write('  tso_log=%s/tso.log\n' % out_path)
+                outfile.write('  while [ ! -f "$tso_log" ]; do sleep 300; done\n')
+                outfile.write('  tail -n 0 -f "$tso_log" | while IFS= read -r line; do\n')
+                outfile.write('    if echo "$line" | grep -q "CRITICAL"; then\n')
+                outfile.write('      echo "[log-watcher] CRITICAL error: $line" >&2\n')
+                outfile.write('      bash ./kill.sh\n')
+                outfile.write('      break\n')
+                outfile.write('    fi\n')
+                outfile.write('  done\n')
+                outfile.write(') &\n')
                 for plyr in range(len(players)):
                     player = system_config[players[plyr]]
                     if player[6] or player[7]:
