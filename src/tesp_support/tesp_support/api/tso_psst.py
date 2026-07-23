@@ -254,6 +254,8 @@ def tso_psst_loop(casename):
         else:
             status = False
             if len(da_lmps) == 0:
+                log.critical(f'DA solve status: {outcomes}')
+                log.critical(f'Model file: {data}')
                 log.critical('ERROR - No DA starting point')
                 sys.exit("No DA starting point")
             else:

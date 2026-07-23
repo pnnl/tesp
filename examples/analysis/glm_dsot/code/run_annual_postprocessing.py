@@ -177,7 +177,7 @@ qbid_auto_discover_weather_dat = True   # looks in DSO_<N>/weather.dat and varia
 
 qbid_temperature_column = 'temperature'    # column name in the temperature file
 qbid_temperature_column_template = None    # per-DSO column name override (rarely needed)
-qbid_temperature_unit = 'C'                # 'C' for Celsius; set 'F' if already Fahrenheit
+qbid_temperature_unit = 'F'                # 'C' for Celsius; set 'F' if already Fahrenheit
 qbid_min_samples = 72                      # minimum hourly samples required for a valid fit
 qbid_include_diagnostics = True            # write residual/diagnostic columns to output
 qbid_drop_total = True                     # exclude the aggregate 'total' row from DA-Q
@@ -189,7 +189,7 @@ qbid_calibration_output_file = 'Q_bid_forecast_correction_calibrated.json'
 # Optional: merge calibrated coefficients into a new rates_config.json5 file.
 # Set qbid_auto_merge_to_new_config=True to activate this step.
 qbid_auto_merge_to_new_config = True
-qbid_source_config_json5 = '../data/rates_config.json5'    # config file to update
+qbid_source_config_json5 = 'rates_config.json5'    # config file to update
 qbid_output_config_json5 = 'rates_config_calibrated.json5' # merged output config
 qbid_diff_report_json = 'rates_config_calibration_diff_report.json'  # change report
 
@@ -254,6 +254,35 @@ def _build_annual_da_q_file(month_def, case_path, filename):
     annual_df.to_csv(annual_path, index=False)
     print(f'Built annual {filename} from {len(monthly_frames)} monthly file(s): {annual_path}')
     return annual_path
+
+def _build_annual_weather_files(month_def, case_path, dso_range,
+                                weather_subdir_template):
+    """Concatenate monthly weather.dat files into one annual file per DSO.
+
+    weather_subdir_template: e.g. 'weather_Substation_{dso}' or 'DSO_{dso}',
+    relative to each monthly folder.
+
+    Returns a path template (with {dso}) to the annual per-DSO files, or None
+    if the monthly weather files can't be found.
+    """
+    out_dir = Path(case_path) / 'annual_weather'
+    out_dir.mkdir(parents=True, exist_ok=True)
+    annual_template = str(out_dir / 'weather_dso_{dso}.csv')
+
+    for dso in dso_range:
+        frames = []
+        for month in month_def:
+            wf = Path(month[1]) / weather_subdir_template.format(dso=dso) / 'weather.dat'
+            if not wf.is_file():
+                print(f'  missing weather file: {wf}')
+                return None
+            wdf = pd.read_csv(wf, index_col=0, parse_dates=True)
+            frames.append(wdf)
+        annual = pd.concat(frames)
+        annual = annual[~annual.index.duplicated(keep='last')].sort_index()
+        annual.to_csv(Path(annual_template.format(dso=dso)))
+    print(f'Built annual weather for {len(dso_range)} DSO(s) -> {annual_template}')
+    return annual_template
 
 
 def _ensure_annual_da_q_inputs(month_def, case_path):
@@ -617,19 +646,21 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
                     if qbid_temperature_csv_template:
                         temperature_csv_template = os.path.expandvars(qbid_temperature_csv_template)
 
-                    # Auto-discover per-DSO weather.dat file layout when no explicit
-                    # temperature source is configured.
+                    # Gathers all per-DSO weather.dat files across the entire year
                     if not qbid_temperature_csv and not temperature_csv_template and qbid_auto_discover_weather_dat and dso_range:
-                        candidate_templates = [
-                            str(Path(month_def[0][1]) / 'DSO_{dso}' / 'weather.dat'),
-                            str(Path(month_def[0][1]) / 'weather_Substation_{dso}' / 'weather.dat'),
-                        ]
-                        for candidate in candidate_templates:
-                            probe = Path(candidate.format(dso=dso_range[0]))
+                        subdir_candidates = ['DSO_{dso}', 'weather_Substation_{dso}']
+                        chosen_subdir = None
+                        for sub in subdir_candidates:
+                            probe = Path(month_def[0][1]) / sub.format(dso=dso_range[0]) / 'weather.dat'
                             if probe.is_file():
-                                temperature_csv_template = candidate
-                                print(f'Auto-discovered weather.dat template: {temperature_csv_template}')
+                                chosen_subdir = sub
                                 break
+                        if chosen_subdir is not None:
+                            temperature_csv_template = _build_annual_weather_files(
+                                month_def, case_path, dso_range, chosen_subdir
+                            )
+                            if temperature_csv_template:
+                                print(f'Using annual weather template: {temperature_csv_template}')
 
                     if not qbid_temperature_csv and not temperature_csv_template:
                         print('Skipping integrated Q-bid calibration: no temperature source configured or discovered')
@@ -667,7 +698,7 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
                         )
 
                         if qbid_auto_merge_to_new_config:
-                            source_cfg = Path(os.path.expandvars(qbid_source_config_json5))
+                            source_cfg = Path(os.path.join(os.path.expandvars('$TESPDIR/examples/analysis/glm_dsot/data/'), qbid_source_config_json5))
                             output_cfg = Path(case_path) / qbid_output_config_json5
                             diff_report = Path(case_path) / qbid_diff_report_json
                             merge_calibration_into_config(

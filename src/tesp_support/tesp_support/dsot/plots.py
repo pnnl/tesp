@@ -247,26 +247,13 @@ def load_gen_data(dir_path, gen_name, day_range):
 
             #Issue with da_gen with missing data entries.
             if gen_name in ['da_gen']:
-                # da_gen stores ONE row per (daily_clearing_timestamp, generator) with 24
-                # columns (the 24 committed delivery-hour quantities).  The reshape below
-                # flattens this to len(day_range) × generators × 24 values to match the
-                # gen_data_df index.
-                #
-                # Build the full expected index: one clearing timestamp per day crossed
-                # with dso_list.  The reindex is performed unconditionally (not guarded by
-                # missing_values > 0) so that months where timestamps match but some days
-                # are absent are still padded to the correct size, and months where the
-                # timestamps don't match are replaced with zeros at the correct size.
-                expected_clearing_timestamps = [
-                    sim_start + timedelta(days=d - 1)
-                    for d in day_range
-                ]
-                full_idx = pd.MultiIndex.from_product([expected_clearing_timestamps, dso_list])
-                missing_values = len(full_idx.difference(data_df.index))
+                idx = pd.MultiIndex.from_product([data_df.index.unique(level=0), data_df.index.unique(level=1)])
+                missing_values = len(idx.difference(data_df.index))
                 if missing_values != 0:
+                    data_df.index.difference(idx)
+                    data_df = data_df.reindex(idx, fill_value=0.0)
                     print('WARNING: '+ str(missing_values) +' index values missing from ' + filename + ' located in ' + dir_path + \
                           '. Missing values replaced with zero.')
-                data_df = data_df.reindex(full_idx, fill_value=0.0)
 
             frame_size = len(data_df) * len(data_df.columns)
             test = np.reshape(data_df.values, frame_size)

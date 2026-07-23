@@ -84,6 +84,7 @@ class TespMonitorJSON:
         mtr_federate = "monitor"
         casePath = os.path.expandvars("$TESPDIR/examples/analysis/glm_dsot/code/")
         casePath = os.path.join(casePath, caseName)
+        monitor_gui_file = "monitor.json" # GUI launcher config
         StartTime = config['StartTime']
         EndTime = config['EndTime']
         time_fmt = '%Y-%m-%d %H:%M:%S'
@@ -97,55 +98,47 @@ class TespMonitorJSON:
             pycall = 'python3'
 
         if config["messenger"] == 'FNCS':
-            for dso_num in range(1,9):
+            market_period = int(config['AgentPrep']['HVAC']['MarketClearingPeriod'])
+            for dso_num in range(1, 9):
                 dso_num = str(dso_num)
-                # write a YAML for the solution monitor
-                yamlstr = """name: """ + mtr_federate + """
-        time_delta: """ + str(config['AgentPrep']['HVAC']['MarketClearingPeriod']) + """s
-        broker: tcp://localhost:""" + str(config['port']) + """
-        aggregate_sub: true
-        values:
-        TPV_""" + dso_num + """:
-            topic: """ """pypower/lmp_da""" + dso_num + """
-            default: 0
-            type: string
-            list: false
-        LMP_""" + dso_num + """:
-            topic: """  """pypower/lmp_rt_""" + dso_num + """
-            default: 0
-            type: string
-            list: false
-        clear_price:
-            topic: """ """/pypower/cleared_q_rt_ """ + dso_num + """
-            default: 0
-            type: string
-            list: false
-        distribution_load:
-            topic: """  """/gldSubstation_ """ + dso_num + """
-            default: 0
-            type: string
-            list: false
-        """
-            
-                
+                # write a YAML for the solution monitor federate
+                yamlstr = f"""name: {mtr_federate}
+time_delta: {market_period}s
+broker: tcp://localhost:{config['port']}
+aggregate_sub: true
+values:
+  lmp_da:
+    topic: pypower/lmp_da_{dso_num}
+    default: 0
+    type: string
+    list: false
+  lmp_rt:
+    topic: pypower/lmp_rt_{dso_num}
+    default: 0
+    type: string
+    list: false
+  clear_price:
+    topic: pypower/cleared_q_rt_{dso_num}
+    default: 0
+    type: string
+    list: false
+  distribution_load:
+    topic: gldSubstation_{dso_num}/gld_load
+    default: 0
+    type: string
+    list: false
+"""
                 monitor_fed_file = f"DSO_{dso_num}_monitor_fncs.yaml"  # federate config
-                op = open(os.path.join(caseName, monitor_fed_file), 'w')
-                print(yamlstr, file=op)
-                op.close()
+                with open(os.path.join(caseName, monitor_fed_file), 'w') as op:
+                    print(yamlstr, file=op)
 
             cmds = {'time_stop': seconds,
-                    'yaml_delta': int(config['AgentPrep']['HVAC']['MarketClearingPeriod']),
+                    'yaml_delta': market_period,
                     'fncs_config': 'DSO_1_monitor_fncs.yaml'}
             
-            monitor_gui_file = "monitor.json" # GUI launcher config
-            op = open(caseName + monitor_gui_file, 'w')
-            json.dump(cmds, op, indent=2)
-            op.close()
-
         elif config["messenger"] == 'HELICS':
             for dso_num in range(1,9):
                 dso_num = str(dso_num)
-                monitor_gui_file = "monitor.json" # GUI launcher config
                 monitor_fed_file = f"DSO_{dso_num}_monitor_helics.json"  # federate config
                 # Write HELICS federate config for the monitor
                 ppc = HelicsMsg(mtr_federate, config['AgentPrep']['HVAC']['MarketClearingPeriod'])
@@ -159,8 +152,8 @@ class TespMonitorJSON:
                 'yaml_delta': int(config['AgentPrep']['HVAC']['MarketClearingPeriod']),
                 'helics_config': 'DSO_1_monitor_helics.json'}
 
-            with open(os.path.join(caseName, monitor_gui_file), 'w') as op:
-                json.dump(cmds, op, indent=2)    
+        with open(os.path.join(caseName, monitor_gui_file), 'w') as op:
+            json.dump(cmds, op, indent=2)    
 
 class TespMonitorGUI:
     """ Manages a GUI with 4 plotted variables, and buttons to stop the monitor
@@ -243,6 +236,8 @@ class TespMonitorGUI:
         self.top = self.root.winfo_toplevel()
         self.top.rowconfigure(0, weight=1)
         self.top.columnconfigure(0, weight=1)
+
+        print("Select `monitor.json` file for both HELICS and FNCS cases. Defaults to tracking DSO_1. Edit `monitor.json` to desired DSO to track another.")
 
         ttk.Style().configure('TButton', foreground='blue')
         self.btn0 = ttk.Button(self.root, text='Open...', command=self.OpenConfig)
@@ -362,20 +357,15 @@ class TespMonitorGUI:
         
         ext = os.path.splitext(fname)[1].lower()
 
-        if ext == ".json":
-            self.HELICS = True
-
-        elif ext in [".yaml", ".yml"]:
-            self.HELICS = False
-
         with open(fname) as lp:
             cfg = json.loads(lp.read())
 
-        if self.HELICS:
+        try:
             self.msg_config = cfg['helics_config']
-
-        else:
+            self.HELICS = True
+        except KeyError:
             self.msg_config = cfg['fncs_config']
+            self.HELICS = False
 
         self.time_stop = int(cfg['time_stop'])
         self.yaml_delta = int(cfg['yaml_delta'])
@@ -463,133 +453,202 @@ class TespMonitorGUI:
         Args:
           i (int): the animation frame number
         """
+        print(f'update_plots_f entered, frame {i}', flush=True)
+        import ast
+
+        artists = self.ln0da, self.ln1rt, self.ln2auc, self.ln2lmp, self.ln3fncs, self.ln3gld
         # print ('.', end='', flush=True)
         # print ('frame', i, 'of', self.nsteps, flush=True)
-        artists = self.ln0da, self.ln1rt, self.ln2auc, self.ln2lmp, self.ln3fncs, self.ln3gld
-        bRedraw = False
-        while self.time_granted <= self.time_stop:  # time in seconds
+        if not self.bFNCSactive:
+            return artists
+        
+        bRedraw = True
+
+        # request time only up to next plotting instant, e.g. (i+1)*self.yaml_delta
+        request_time = min(self.time_stop, (i + 1) * self.yaml_delta)
+        # find the time value and index into the time (X) array
+        self.time_granted = int(fncs.time_request(request_time))
+        self.root.update()
+
+        # Debugging: if your GUI exits too soon, check time request against granted
+        print(f'time requested: {request_time}. time granted: {self.time_granted}. time stop: {self.time_stop}')
+        v_da = 0.0
+        v_da_24 = 0.0
+        v_rt = 0.0
+        v_clear = 0.0
+        v_load = 0.0
+            
+        # i goes from 0 to self.nsteps - 1
+        if self.time_granted >= self.time_stop:
+            if self.bFNCSactive:
+                print('time granted >= time_stop: finalizing HELICS', flush=True)
+                self.kill_all()
+            return artists
+        
+        while request_time < self.time_stop:  # time in seconds
+            self.time_granted = int(fncs.time_request(request_time))
+            events = fncs.get_events()
+            self.root.update()
+            #print(f'time requested: {request_time}. time granted: {self.time_granted}')
             try:
-                # find the time value and index into the time (X) array
-                self.time_granted = fncs.time_request(self.time_stop)
-                events = fncs.get_events()
-                self.root.update()
                 idx = int(self.time_granted / self.yaml_delta)
                 if idx <= self.idxlast:
-                    continue
+                    return artists
                 self.idxlast = idx
+
                 h = float(self.time_granted / 3600.0)
                 self.hrs.append(h)
 
                 # find the newest Y values
-                v0 = 0.0
-                v1 = 0.0
-                v2auc = 0.0
-                v2lmp = 0.0
-                v3 = 0.0
                 for topic in events:
                     value = fncs.get_value(topic)
-                    if topic == 'power_A':
-                        v1 = 3.0 * float(value.strip('+ degFkW')) / 1000.0
-                    elif topic == 'TPV_7':
-                        v0 = float(value.strip('+ degFkW')) / 133000.0
+                    if topic == 'lmp_da':
+                        v_da = value
+                    elif topic == 'lmp_rt':
+                        v_rt = value
                     elif topic == 'clear_price':
-                        v2auc = float(value.strip('+ degFkW'))
-                    elif topic == 'LMP_7':
-                        v2lmp = float(value.strip('+ degFkW'))
-                    elif topic == 'electric_demand_power':
-                        v1 = float(value.strip('+ degFkW'))  # already in kW
+                        v_clear = value
                     elif topic == 'distribution_load':
-                        v3 = parse_kw(value)
-                        self.gld_load = v3
-                # expand the Y axis limits if necessary, keeping a 10% padding around the range
-                if v0 < self.y0damin or v0 > self.y0damax:
-                    self.y0damin, self.y0damax = self.expand_limits(v0, self.y0damin, self.y0damax)
-                    self.ax[0].set_ylim(self.y0damin, self.y0damax)
-                    bRedraw = True
-                if v1 < self.y1rtmin or v1 > self.y1rtmax:
-                    self.y1rtmin, self.y1rtmax = self.expand_limits(v1, self.y1rtmin, self.y1rtmax)
-                    self.ax[1].set_ylim(self.y1rtmin, self.y1rtmax)
-                    bRedraw = True
-                if v2auc > v2lmp:
-                    v2max = v2auc
-                    v2min = v2lmp
-                else:
-                    v2max = v2lmp
-                    v2min = v2auc
-                if v2min < self.y2min or v2max > self.y2max:
-                    self.y2min, self.y2max = self.expand_limits(v2min, self.y2min, self.y2max)
-                    self.y2min, self.y2max = self.expand_limits(v2max, self.y2min, self.y2max)
-                    self.ax[2].set_ylim(self.y2min, self.y2max)
-                    bRedraw = True
-                if v3 < self.y3min or v3 > self.y3max:
-                    self.y3min, self.y3max = self.expand_limits(v3, self.y3min, self.y3max)
-                    self.ax[3].set_ylim(self.y3min, self.y3max)
-                    bRedraw = True
+                        v_load = value
+
                 # update the Y axis data to draw
-                self.y0da.append(v0)  # Vpu
-                self.y1rt.append(v1)  # school kW
-                self.y2auc.append(v2auc)  # price
-                self.y2lmp.append(v2lmp)  # LMP
-                self.y3fncs.append(v3)  # this feeder load from FNCS (could be zero if no update)
-                self.y3gld.append(self.gld_load)  # most recent feeder load from FNCS
-                self.ln0da.set_data(self.hrs, self.y0da)
+                # If there is no change in value, HELICS does not update
+                # Only show changes in plots
+
+                # DA LMP: 24-value array plotted against da_hrs 
+                if v_da != 0.0:
+                    v_da_24 = list(map(float, ast.literal_eval(v_da)))
+                    self.y0da.extend(v_da_24)
+                    self.da_hrs.extend(h + k for k in range(len(v_da_24)))
+                    # expand the Y axis limits if necessary, keeping a 10% padding
+                    if min(v_da_24) < self.y0damin or max(v_da_24) > self.y0damax:
+                        self.y0damin, self.y0damax = self.expand_limits(min(v_da_24), self.y0damin, self.y0damax)
+                        self.y0damin, self.y0damax = self.expand_limits(max(v_da_24), self.y0damin, self.y0damax)
+                        self.ax[0].set_ylim(self.y0damin, self.y0damax)
+                        bRedraw = True
+
+                # RT LMP: single value
+                if v_rt != 0.0:
+                    v_rt_fl = float(ast.literal_eval(v_rt)[0])
+                    self.y1rt.append(v_rt_fl)
+                    if v_rt_fl < self.y1rtmin or v_rt_fl > self.y1rtmax:
+                        self.y1rtmin, self.y1rtmax = self.expand_limits(v_rt_fl, self.y1rtmin, self.y1rtmax)
+                        self.ax[1].set_ylim(self.y1rtmin, self.y1rtmax)
+                        bRedraw = True
+                else:
+                    self.y1rt.append(self.y1rt[-1])
+
+                # Clearing price / LMP: single value
+                if v_clear != 0.0:
+                    v_clear_fl = float(v_clear)
+                    self.y2auc.append(v_clear_fl)
+                    self.y2lmp.append(v_clear_fl)
+                    if v_clear_fl < self.y2min or v_clear_fl > self.y2max:
+                        self.y2min, self.y2max = self.expand_limits(v_clear_fl, self.y2min, self.y2max)
+                        self.ax[2].set_ylim(self.y2min, self.y2max)
+                        bRedraw = True
+                else:
+                    self.y2auc.append(self.y2auc[-1])
+                    self.y2lmp.append(self.y2lmp[-1])
+
+                # Feeder load: single value in kW
+                if v_load != 0.0:
+                    v_load_fl = ast.literal_eval(v_load)
+                    v_load_real = v_load_fl[0]
+                    v_load_kW = v_load_real / 1.0e3
+                    self.gld_load = v_load_kW
+                    self.y3fncs.append(v_load_kW)   # feeder load from FNCS (could be zero if no update)
+                    self.y3gld.append(self.gld_load)  # most recent feeder load from FNCS
+                    if v_load_kW < self.y3min or v_load_kW > self.y3max:
+                        self.y3min, self.y3max = self.expand_limits(v_load_kW, self.y3min, self.y3max)
+                        self.ax[3].set_ylim(self.y3min, self.y3max)
+                        bRedraw = True
+                else:
+                    self.gld_load = 0.0
+                    self.y3fncs.append(self.y3fncs[-1])
+                    self.y3gld.append(self.y3gld[-1])
+
+                # update the plotted data
+                self.ln0da.set_data(self.da_hrs, self.y0da)
                 self.ln1rt.set_data(self.hrs, self.y1rt)
                 self.ln2auc.set_data(self.hrs, self.y2auc)
                 self.ln2lmp.set_data(self.hrs, self.y2lmp)
                 self.ln3fncs.set_data(self.hrs, self.y3fncs)
                 self.ln3gld.set_data(self.hrs, self.y3gld)
+                    
                 if bRedraw:
                     self.fig.canvas.draw()
-            except Exception:
-                # print('exception frame', i, 'of', self.nsteps, flush=True)
-                pass
+                    bRedraw = False
+
+            except Exception as e:
+                print("Exception in update_plots:", repr(e), flush=True)
+
             return artists
-        if self.bFNCSSactive:
+    
+        if self.bFNCSactive:
             print('finalizing FNCS', flush=True)
-            # fncs.finalize()
+            fncs.finalize()
             self.kill_all()
         return artists
     
     def launch_all_f(self):
-        """ Launches the simulators, initializes FNCS and starts the animated plots
+        """ Launches the simulators, initializes FNCS and starts the animated
+            plots.
+
+        This mirrors launch_all() for HELICS, but uses the FNCS calls
+        appropriate for the FNCS messenger. Unlike HELICS, FNCS resolves its
+        subscriptions from the YAML config (FNCS_CONFIG_FILE) rather than from
+        stored input handles, so the topics are matched by name later in
+        update_plots_f().
         """
+        import socket, time
         self.root.update()
-        print('launching all simulators', flush=True)
         self.pids = []
-        for row in self.commands:
-            procargs = row['args']
-            if sys.platform == 'win32':
-                if procargs[0] == 'python3':
-                    procargs[0] = 'python'  # python3 not defined on Windows
-            procenv = os.environ.copy()
-            if 'env' in row:
-                for var in row['env']:
-                    procenv[var[0]] = var[1]
-            logfd = None
-            if 'log' in row:
-                logfd = open(row['log'], 'w')
-            try:
-                proc = subprocess.Popen(procargs, env=procenv, stdout=logfd, cwd = os.getcwd())
-            except FileNotFoundError:
-                #print(f'procargs = {procargs}, env = {procenv}, stdout = {logfd}')
-                print(f"Couldn't find proc for {row}")
-                proc = "tcp://localhost:5570" 
-            if "broker" in procargs[0]:
-                self.broker = proc
 
-            self.pids.append(self.broker)
-            
-        print('launched', len(self.pids), 'simulators', flush=True)
+        # Make sure nothing else is running (most relevant when debugging)
+        subprocess.run(["pkill", "-f", "fncs_broker"], stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL, check=False)
+        time.sleep(5)
+
+        # Start the run
+        print('Launching simulation using run.sh', flush=True)
+        proc = subprocess.Popen(['bash', './run.sh'], stdout=open('run.log', 'w'))
+        self.pids.append(proc)
+        self.broker = proc
         self.root.update()
 
+        # Wait for the FNCS federation to start up
+        time.sleep(60)
+        print('Connecting to the broker')
+
+        def wait_port(host, port, timeout):
+            t0 = time.time()
+            while time.time() - t0 < timeout:
+                try:
+                    with socket.create_connection((host, port), timeout=1):
+                        print("Connected.")
+                        return True
+                except OSError:
+                    time.sleep(0.2)
+            return False
+
+        # Make sure we're connected. FNCS default broker port is 5570;
+        # adjust if your run.sh starts fncs_broker on a different port.
+        if not wait_port("127.0.0.1", 5570, 120):
+            raise RuntimeError("Broker did not open port 5570")
+        self.root.update()
+
+        # Initialize tesp_monitor as a FNCS federate
+        print("Creating FNCS monitor federate from:", self.msg_config, flush=True)
         os.environ["FNCS_CONFIG_FILE"] = self.msg_config
+        os.environ["FNCS_FATAL"] = "NO"
         fncs.initialize()
         self.bFNCSactive = True
         print('FNCS initialized', flush=True)
-        
+
         # Updates when the market clears (yaml_delta)
         self.nsteps = int(self.time_stop / self.yaml_delta)
-        print('Number of time steps -> ' + str(self.nsteps), flush=True)
+        print('Simulation number of time steps: ' + str(self.nsteps), flush=True)
         self.idxlast = -1
         self.time_granted = 0
         self.btn2['state'] = tk.NORMAL
@@ -597,8 +656,9 @@ class TespMonitorGUI:
         self.btn0['state'] = tk.DISABLED
 
         self.reset_plot()
-        ani = animation.FuncAnimation(self.fig, self.update_plots_f, frames=self.nsteps,
-                                      blit=True, repeat=False, interval=0)
+
+        self.ani = animation.FuncAnimation(self.fig, self.update_plots_f, frames=self.nsteps,
+                                    blit=True, repeat=False, interval=0)
         self.fig.canvas.draw()
 
     def update_plots(self, i):
@@ -652,7 +712,6 @@ class TespMonitorGUI:
             self.root.update()
             #print(f'time requested: {request_time}. time granted: {self.time_granted}')
             try:
-                
                 idx = int(self.time_granted / self.yaml_delta)
                 if idx <= self.idxlast:
                     return artists
@@ -684,6 +743,8 @@ class TespMonitorGUI:
                 # update the Y axis data to draw
                 # If there is no change in value, HELICS does not update
                 # Only show changes in plots
+                
+                # DA LMP: 24-value array plotted against da_hrs 
                 if v_da != 0.0:
                     v_da_24 = list(map(float, ast.literal_eval(v_da)))
                     self.y0da.extend(v_da_24)
@@ -698,6 +759,7 @@ class TespMonitorGUI:
                 #     self.da_hrs = self.hrs
                 #     self.y0da.append(self.y0da[-1])
                 
+                # RT LMP: single value
                 if v_rt != 0.0:
                     v_rt_fl = float(ast.literal_eval(v_rt)[0])
                     self.y1rt.append(v_rt_fl)
@@ -707,7 +769,8 @@ class TespMonitorGUI:
                         bRedraw = True
                 else: 
                     self.y1rt.append(self.y1rt[-1])
-                
+
+                # Clearing price / LMP: single value
                 if v_clear != 0.0:
                     v_clear_fl = float(v_clear)
                     self.y2auc.append(v_clear_fl)
@@ -719,7 +782,8 @@ class TespMonitorGUI:
                 else: 
                     self.y2auc.append(self.y2auc[-1])
                     self.y2lmp.append(self.y2lmp[-1]) 
-                
+
+                # Feeder load: single value in kW
                 if v_load != 0:
                     # Handle substation load as both a string and complex value
                     v_load_fl = ast.literal_eval(sub_load)
@@ -741,6 +805,7 @@ class TespMonitorGUI:
                     self.y3fncs.append(self.y3fncs[-1]) 
                     self.y3gld.append(self.y3gld[-1])
 
+                # update the plotted data
                 self.ln0da.set_data(self.da_hrs, self.y0da)
                 self.ln1rt.set_data(self.hrs, self.y1rt)
                 self.ln2auc.set_data(self.hrs, self.y2auc)
@@ -850,7 +915,7 @@ class TespMonitorGUI:
         self.btn0['state'] = tk.DISABLED
 
         self.reset_plot()
-        ani = animation.FuncAnimation(self.fig, self.update_plots, frames=self.nsteps,
+        self.ani = animation.FuncAnimation(self.fig, self.update_plots, frames=self.nsteps,
                                       blit=True, repeat=False, interval=0)
         self.fig.canvas.draw()
 
