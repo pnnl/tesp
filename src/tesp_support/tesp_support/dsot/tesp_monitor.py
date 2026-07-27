@@ -123,7 +123,7 @@ values:
     type: string
     list: false
   distribution_load:
-    topic: gldSubstation_{dso_num}/gld_load
+    topic: gldSubstation_{dso_num}/distribution_load
     default: 0
     type: string
     list: false
@@ -453,7 +453,6 @@ class TespMonitorGUI:
         Args:
           i (int): the animation frame number
         """
-        print(f'update_plots_f entered, frame {i}', flush=True)
         import ast
 
         artists = self.ln0da, self.ln1rt, self.ln2auc, self.ln2lmp, self.ln3fncs, self.ln3gld
@@ -465,9 +464,11 @@ class TespMonitorGUI:
         bRedraw = True
 
         # request time only up to next plotting instant, e.g. (i+1)*self.yaml_delta
-        request_time = min(self.time_stop, (i + 1) * self.yaml_delta)
+        #request_time = min(self.time_stop, (i + 1) * self.yaml_delta)
+        request_time = min(self.time_stop, self.time_granted + self.yaml_delta)
         # find the time value and index into the time (X) array
         self.time_granted = int(fncs.time_request(request_time))
+        events = fncs.get_events()
         self.root.update()
 
         # Debugging: if your GUI exits too soon, check time request against granted
@@ -481,116 +482,139 @@ class TespMonitorGUI:
         # i goes from 0 to self.nsteps - 1
         if self.time_granted >= self.time_stop:
             if self.bFNCSactive:
-                print('time granted >= time_stop: finalizing HELICS', flush=True)
+                print('time granted >= time_stop: finalizing FNCS', flush=True)
                 self.kill_all()
             return artists
-        
-        while request_time < self.time_stop:  # time in seconds
-            self.time_granted = int(fncs.time_request(request_time))
-            events = fncs.get_events()
-            self.root.update()
-            #print(f'time requested: {request_time}. time granted: {self.time_granted}')
-            try:
-                idx = int(self.time_granted / self.yaml_delta)
-                if idx <= self.idxlast:
-                    return artists
-                self.idxlast = idx
 
-                h = float(self.time_granted / 3600.0)
-                self.hrs.append(h)
+        try:
+            idx = int(self.time_granted / self.yaml_delta)
+            if idx <= self.idxlast:
+                print('  --> skipped by idx guard', flush=True)
+                return artists
+            self.idxlast = idx
 
-                # find the newest Y values
-                for topic in events:
-                    value = fncs.get_value(topic)
-                    if topic == 'lmp_da':
-                        v_da = value
-                    elif topic == 'lmp_rt':
-                        v_rt = value
-                    elif topic == 'clear_price':
-                        v_clear = value
-                    elif topic == 'distribution_load':
-                        v_load = value
+            h = float(self.time_granted / 3600.0)
+            self.hrs.append(h)
 
-                # update the Y axis data to draw
-                # If there is no change in value, HELICS does not update
-                # Only show changes in plots
+            # find the newest Y values
+            for topic in events:
+                value = fncs.get_value(topic)
+                #print(f'  topic={topic!r}  type={type(topic)}  value={fncs.get_value(topic)!r}', flush=True)
+                if topic == 'lmp_da':
+                    v_da = value
+                    print(f"frame {i}, {h} hours, "f"v_da={v_da}", flush=True)
+                elif topic == 'lmp_rt':
+                    v_rt = value
+                    print(f"frame {i}, {h} hours, "f"v_rt={v_rt}", flush=True)
+                elif topic == 'clear_price':
+                    v_clear = value
+                    print(f"frame {i}, {h} hours, "f"v_clear={v_clear}", flush=True)
+                elif topic == 'distribution_load':
+                    v_load = value
+                    print(f"frame {i}, {h} hours, "f"v_load={parse_kw(v_load)} kW", flush=True)
 
-                # DA LMP: 24-value array plotted against da_hrs 
-                if v_da != 0.0:
-                    v_da_24 = list(map(float, ast.literal_eval(v_da)))
-                    self.y0da.extend(v_da_24)
-                    self.da_hrs.extend(h + k for k in range(len(v_da_24)))
-                    # expand the Y axis limits if necessary, keeping a 10% padding
-                    if min(v_da_24) < self.y0damin or max(v_da_24) > self.y0damax:
-                        self.y0damin, self.y0damax = self.expand_limits(min(v_da_24), self.y0damin, self.y0damax)
-                        self.y0damin, self.y0damax = self.expand_limits(max(v_da_24), self.y0damin, self.y0damax)
-                        self.ax[0].set_ylim(self.y0damin, self.y0damax)
-                        bRedraw = True
+            # update the Y axis data to draw
+            # If there is no change in value, HELICS does not update
+            # Only show changes in plots
 
-                # RT LMP: single value
-                if v_rt != 0.0:
-                    v_rt_fl = float(ast.literal_eval(v_rt)[0])
-                    self.y1rt.append(v_rt_fl)
-                    if v_rt_fl < self.y1rtmin or v_rt_fl > self.y1rtmax:
-                        self.y1rtmin, self.y1rtmax = self.expand_limits(v_rt_fl, self.y1rtmin, self.y1rtmax)
-                        self.ax[1].set_ylim(self.y1rtmin, self.y1rtmax)
-                        bRedraw = True
-                else:
-                    self.y1rt.append(self.y1rt[-1])
+            # DA LMP: 24-value array plotted against da_hrs 
+            if v_da != 0.0:
+                v_da_24 = list(map(float, ast.literal_eval(v_da)))
+                self.y0da.extend(v_da_24)
+                self.da_hrs.extend(h + k for k in range(len(v_da_24)))
+                # expand the Y axis limits if necessary, keeping a 10% padding
+                if min(v_da_24) < self.y0damin or max(v_da_24) > self.y0damax:
+                    self.y0damin, self.y0damax = self.expand_limits(min(v_da_24), self.y0damin, self.y0damax)
+                    self.y0damin, self.y0damax = self.expand_limits(max(v_da_24), self.y0damin, self.y0damax)
+                    self.ax[0].set_ylim(self.y0damin, self.y0damax)
+                    bRedraw = True
 
-                # Clearing price / LMP: single value
-                if v_clear != 0.0:
-                    v_clear_fl = float(v_clear)
-                    self.y2auc.append(v_clear_fl)
-                    self.y2lmp.append(v_clear_fl)
-                    if v_clear_fl < self.y2min or v_clear_fl > self.y2max:
-                        self.y2min, self.y2max = self.expand_limits(v_clear_fl, self.y2min, self.y2max)
-                        self.ax[2].set_ylim(self.y2min, self.y2max)
-                        bRedraw = True
-                else:
-                    self.y2auc.append(self.y2auc[-1])
-                    self.y2lmp.append(self.y2lmp[-1])
+            # RT LMP: single value
+            if v_rt != 0.0:
+                #v_rt_fl = float(ast.literal_eval(v_rt)[0])
+                v_rt_fl = float(v_rt) 
+                self.y1rt.append(v_rt_fl)
+                if v_rt_fl < self.y1rtmin or v_rt_fl > self.y1rtmax:
+                    self.y1rtmin, self.y1rtmax = self.expand_limits(v_rt_fl, self.y1rtmin, self.y1rtmax)
+                    self.ax[1].set_ylim(self.y1rtmin, self.y1rtmax)
+                    bRedraw = True
+            else:
+                self.y1rt.append(self.y1rt[-1])
 
-                # Feeder load: single value in kW
-                if v_load != 0.0:
-                    v_load_fl = ast.literal_eval(v_load)
-                    v_load_real = v_load_fl[0]
-                    v_load_kW = v_load_real / 1.0e3
-                    self.gld_load = v_load_kW
-                    self.y3fncs.append(v_load_kW)   # feeder load from FNCS (could be zero if no update)
-                    self.y3gld.append(self.gld_load)  # most recent feeder load from FNCS
-                    if v_load_kW < self.y3min or v_load_kW > self.y3max:
-                        self.y3min, self.y3max = self.expand_limits(v_load_kW, self.y3min, self.y3max)
-                        self.ax[3].set_ylim(self.y3min, self.y3max)
-                        bRedraw = True
-                else:
-                    self.gld_load = 0.0
-                    self.y3fncs.append(self.y3fncs[-1])
-                    self.y3gld.append(self.y3gld[-1])
+            # Clearing price / LMP: single value
+            if v_clear != 0.0:
+                v_clear_fl = float(v_clear)
+                self.y2auc.append(v_clear_fl)
+                self.y2lmp.append(v_clear_fl)
+                if v_clear_fl < self.y2min or v_clear_fl > self.y2max:
+                    self.y2min, self.y2max = self.expand_limits(v_clear_fl, self.y2min, self.y2max)
+                    self.ax[2].set_ylim(self.y2min, self.y2max)
+                    bRedraw = True
+            else:
+                self.y2auc.append(self.y2auc[-1])
+                self.y2lmp.append(self.y2lmp[-1])
 
-                # update the plotted data
-                self.ln0da.set_data(self.da_hrs, self.y0da)
-                self.ln1rt.set_data(self.hrs, self.y1rt)
-                self.ln2auc.set_data(self.hrs, self.y2auc)
-                self.ln2lmp.set_data(self.hrs, self.y2lmp)
-                self.ln3fncs.set_data(self.hrs, self.y3fncs)
-                self.ln3gld.set_data(self.hrs, self.y3gld)
-                    
-                if bRedraw:
-                    self.fig.canvas.draw()
-                    bRedraw = False
+            # Feeder load: single value in kW
+            if v_load != 0.0:
+                v_load_kW = parse_kw(v_load) # FNCS delivers e.g. '+2.01327e+06-654171j VA'
+                self.gld_load = v_load_kW
+                self.y3fncs.append(v_load_kW)
+                self.y3gld.append(self.gld_load)
+                if v_load_kW < self.y3min or v_load_kW > self.y3max:
+                    self.y3min, self.y3max = self.expand_limits(v_load_kW, self.y3min, self.y3max)
+                    self.ax[3].set_ylim(self.y3min, self.y3max)
+                    bRedraw = True
+            else:
+                self.gld_load = 0.0
+                self.y3fncs.append(self.y3fncs[-1])
+                self.y3gld.append(self.y3gld[-1])
 
-            except Exception as e:
-                print("Exception in update_plots:", repr(e), flush=True)
+            # update the plotted data
+            self.ln0da.set_data(self.da_hrs, self.y0da)
+            self.ln1rt.set_data(self.hrs, self.y1rt)
+            self.ln2auc.set_data(self.hrs, self.y2auc)
+            self.ln2lmp.set_data(self.hrs, self.y2lmp)
+            self.ln3fncs.set_data(self.hrs, self.y3fncs)
+            self.ln3gld.set_data(self.hrs, self.y3gld)
+                
+            if bRedraw:
+                self.fig.canvas.draw()
+                bRedraw = False
 
-            return artists
-    
-        if self.bFNCSactive:
-            print('finalizing FNCS', flush=True)
-            fncs.finalize()
-            self.kill_all()
+        except Exception as e:
+            print("Exception in update_plots_f:", repr(e), flush=True)
+
         return artists
-    
+
+    def _make_patched_runscript(self):
+        import re, tempfile
+        """Copy run.sh to a temp script with the fncs_broker federate count
+        bumped by 1 to include this monitor. Returns the temp path."""
+        with open('run.sh') as f:
+            text = f.read()
+
+        def bump(m):
+            n = int(m.group('n'))
+            return f"{m.group('pre')}{n + 1}{m.group('post')}"
+
+        # matches: fncs_broker 30   (any surrounding text preserved)
+        patched, count = re.subn(
+            r'(?P<pre>fncs_broker\s+)(?P<n>\d+)(?P<post>)',
+            bump, text)
+
+        if count == 0:
+            raise RuntimeError("Could not find 'fncs_broker N' in run.sh")
+        if count > 1:
+            print(f'WARNING: patched {count} fncs_broker lines', flush=True)
+
+        fd, path = tempfile.mkstemp(prefix='run_monitor_', suffix='.sh', dir='.')
+        with os.fdopen(fd, 'w') as f:
+            f.write(patched)
+        os.chmod(path, 0o755)
+
+        return path
+        
+   
     def launch_all_f(self):
         """ Launches the simulators, initializes FNCS and starts the animated
             plots.
@@ -610,9 +634,11 @@ class TespMonitorGUI:
                     stderr=subprocess.DEVNULL, check=False)
         time.sleep(5)
 
-        # Start the run
+        # Start the run; Increase broker count for FNCS (not needed for HELICS)
+        run_script = self._make_patched_runscript()
         print('Launching simulation using run.sh', flush=True)
-        proc = subprocess.Popen(['bash', './run.sh'], stdout=open('run.log', 'w'))
+        proc = subprocess.Popen(['bash', run_script], stdout=open('run.log', 'w'))
+        #proc = subprocess.Popen(['bash', './run.sh'], stdout=open('run.log', 'w'))
         self.pids.append(proc)
         self.broker = proc
         self.root.update()
@@ -707,121 +733,122 @@ class TespMonitorGUI:
             return artists
         
         #while self.time_granted <= self.time_stop    
-        while request_time < self.time_stop:
-            self.time_granted = int(helics.helicsFederateRequestTime(self.hFed, request_time))
-            self.root.update()
+        #while request_time < self.time_stop:
+        #    self.time_granted = int(helics.helicsFederateRequestTime(self.hFed, request_time))
+        #    self.root.update()
             #print(f'time requested: {request_time}. time granted: {self.time_granted}')
-            try:
-                idx = int(self.time_granted / self.yaml_delta)
-                if idx <= self.idxlast:
-                    return artists
-                self.idxlast = idx
+        try:
+            idx = int(self.time_granted / self.yaml_delta)
+            if idx <= self.idxlast:
+                print('  --> skipped by idx guard', flush=True)
+                return artists
+            self.idxlast = idx
 
-                h = float(self.time_granted / 3600.0)
-                self.hrs.append(h)
-                
-                # find the newest Y values
-                if self.sub_lmp_da and helics.helicsInputIsUpdated(self.sub_lmp_da):
-                    v_da = helics.helicsInputGetString(self.sub_lmp_da)
-                    print(f"frame {i}, {h} hours, "f"v_da={v_da}", flush=True)
-                if self.sub_lmp_rt and helics.helicsInputIsUpdated(self.sub_lmp_rt):
-                    v_rt = helics.helicsInputGetString(self.sub_lmp_rt)
-                    print(f"frame {i}, {h} hours, "f"v_rt={v_rt}", flush=True)
-                if self.sub_cleared_q_rt and helics.helicsInputIsUpdated(self.sub_cleared_q_rt):
-                    v_clear = helics.helicsInputGetString(self.sub_cleared_q_rt)
-                    print(f"frame {i}, {h} hours, "f"v_clear={v_clear}", flush=True)
-                if self.sub_gld_load and helics.helicsInputIsUpdated(self.sub_gld_load):
-                   v_load = helics.helicsInputGetString(self.sub_gld_load)
-                   print(f"frame {i}, {h} hours, "f"v_load={v_load}", flush=True)
-                   sub_load = v_load
-
-
-                # Debugging: Note that this will print many 0s when values do not change
-                #print(f"frame {i}, time {self.time_granted}, "f"v_da={v_da}, v_rt={v_rt}, v_clear={v_clear}, v_load={v_load}", flush=True)
-
-
-                # update the Y axis data to draw
-                # If there is no change in value, HELICS does not update
-                # Only show changes in plots
-                
-                # DA LMP: 24-value array plotted against da_hrs 
-                if v_da != 0.0:
-                    v_da_24 = list(map(float, ast.literal_eval(v_da)))
-                    self.y0da.extend(v_da_24)
-                    self.da_hrs.extend(h + k for k in range(len(v_da_24)))
-                    # expand the Y axis limits if necessary, keeping a 10% padding around the range
-                    if min(v_da_24) < self.y0damin or max(v_da_24) > self.y0damax:
-                        self.y0damin, self.y0damax = self.expand_limits(min(v_da_24), self.y0damin, self.y0damax)
-                        self.y0damin, self.y0damax = self.expand_limits(max(v_da_24), self.y0damin, self.y0damax)
-                        self.ax[0].set_ylim(self.y0damin, self.y0damax)
-                        bRedraw = True
-                # else: 
-                #     self.da_hrs = self.hrs
-                #     self.y0da.append(self.y0da[-1])
-                
-                # RT LMP: single value
-                if v_rt != 0.0:
-                    v_rt_fl = float(ast.literal_eval(v_rt)[0])
-                    self.y1rt.append(v_rt_fl)
-                    if v_rt_fl < self.y1rtmin or v_rt_fl > self.y1rtmax:
-                        self.y1rtmin, self.y1rtmax = self.expand_limits(v_rt_fl, self.y1rtmin, self.y1rtmax)
-                        self.ax[1].set_ylim(self.y1rtmin, self.y1rtmax)
-                        bRedraw = True
-                else: 
-                    self.y1rt.append(self.y1rt[-1])
-
-                # Clearing price / LMP: single value
-                if v_clear != 0.0:
-                    v_clear_fl = float(v_clear)
-                    self.y2auc.append(v_clear_fl)
-                    self.y2lmp.append(v_clear_fl)
-                    if v_clear_fl < self.y2min or v_clear_fl > self.y2max:
-                        self.y2min, self.y2max = self.expand_limits(v_clear_fl, self.y2min, self.y2max)
-                        self.ax[2].set_ylim(self.y2min, self.y2max)
-                        bRedraw = True
-                else: 
-                    self.y2auc.append(self.y2auc[-1])
-                    self.y2lmp.append(self.y2lmp[-1]) 
-
-                # Feeder load: single value in kW
-                if v_load != 0:
-                    # Handle substation load as both a string and complex value
-                    v_load_fl = ast.literal_eval(sub_load)
-                    v_load_real = v_load_fl[0]
-                    #print(f'v_load_real: {v_load_real}, type: {type(v_load_real)}')
-                    v_load_kW = v_load_real / 1.0e3
-                    self.gld_load = v_load_kW
-                    self.y3fncs.append(v_load_kW) # feeder load from HELICS (could be zero if no update)
-                    self.y3gld.append(self.gld_load)  # most recent feeder load from HELICS
-
-                    if v_load_kW < self.y3min or v_load_kW > self.y3max:
-                        self.y3min, self.y3max = self.expand_limits(v_load_kW, self.y3min, self.y3max)
-                        self.ax[3].set_ylim(self.y3min, self.y3max)
-                        bRedraw = True
-                else:
-                    v_load_kW = 0.0
-                    self.gld_load = 0.0
-                    # feeder load from HELICS could be zero if no update
-                    self.y3fncs.append(self.y3fncs[-1]) 
-                    self.y3gld.append(self.y3gld[-1])
-
-                # update the plotted data
-                self.ln0da.set_data(self.da_hrs, self.y0da)
-                self.ln1rt.set_data(self.hrs, self.y1rt)
-                self.ln2auc.set_data(self.hrs, self.y2auc)
-                self.ln2lmp.set_data(self.hrs, self.y2lmp)
-                self.ln3fncs.set_data(self.hrs, self.y3fncs)
-                self.ln3gld.set_data(self.hrs, self.y3gld)
-                
-                if bRedraw:
-                    self.fig.canvas.draw()
-                    bRedraw = False
-
+            h = float(self.time_granted / 3600.0)
+            self.hrs.append(h)
             
-            except Exception as e:
-                print("Exception in update_plots:", repr(e), flush=True)
+            # find the newest Y values
+            if self.sub_lmp_da and helics.helicsInputIsUpdated(self.sub_lmp_da):
+                v_da = helics.helicsInputGetString(self.sub_lmp_da)
+                print(f"frame {i}, {h} hours, "f"v_da={v_da}", flush=True)
+            if self.sub_lmp_rt and helics.helicsInputIsUpdated(self.sub_lmp_rt):
+                v_rt = helics.helicsInputGetString(self.sub_lmp_rt)
+                print(f"frame {i}, {h} hours, "f"v_rt={v_rt}", flush=True)
+            if self.sub_cleared_q_rt and helics.helicsInputIsUpdated(self.sub_cleared_q_rt):
+                v_clear = helics.helicsInputGetString(self.sub_cleared_q_rt)
+                print(f"frame {i}, {h} hours, "f"v_clear={v_clear}", flush=True)
+            if self.sub_gld_load and helics.helicsInputIsUpdated(self.sub_gld_load):
+                v_load = helics.helicsInputGetString(self.sub_gld_load)
+                print(f"frame {i}, {h} hours, "f"v_load={v_load}", flush=True)
+                sub_load = v_load
+
+
+            # Debugging: Note that this will print many 0s when values do not change
+            #print(f"frame {i}, time {self.time_granted}, "f"v_da={v_da}, v_rt={v_rt}, v_clear={v_clear}, v_load={v_load}", flush=True)
+
+
+            # update the Y axis data to draw
+            # If there is no change in value, HELICS does not update
+            # Only show changes in plots
             
-            return artists
+            # DA LMP: 24-value array plotted against da_hrs 
+            if v_da != 0.0:
+                v_da_24 = list(map(float, ast.literal_eval(v_da)))
+                self.y0da.extend(v_da_24)
+                self.da_hrs.extend(h + k for k in range(len(v_da_24)))
+                # expand the Y axis limits if necessary, keeping a 10% padding around the range
+                if min(v_da_24) < self.y0damin or max(v_da_24) > self.y0damax:
+                    self.y0damin, self.y0damax = self.expand_limits(min(v_da_24), self.y0damin, self.y0damax)
+                    self.y0damin, self.y0damax = self.expand_limits(max(v_da_24), self.y0damin, self.y0damax)
+                    self.ax[0].set_ylim(self.y0damin, self.y0damax)
+                    bRedraw = True
+            # else: 
+            #     self.da_hrs = self.hrs
+            #     self.y0da.append(self.y0da[-1])
+            
+            # RT LMP: single value
+            if v_rt != 0.0:
+                v_rt_fl = float(ast.literal_eval(v_rt)[0])
+                self.y1rt.append(v_rt_fl)
+                if v_rt_fl < self.y1rtmin or v_rt_fl > self.y1rtmax:
+                    self.y1rtmin, self.y1rtmax = self.expand_limits(v_rt_fl, self.y1rtmin, self.y1rtmax)
+                    self.ax[1].set_ylim(self.y1rtmin, self.y1rtmax)
+                    bRedraw = True
+            else: 
+                self.y1rt.append(self.y1rt[-1])
+
+            # Clearing price / LMP: single value
+            if v_clear != 0.0:
+                v_clear_fl = float(v_clear)
+                self.y2auc.append(v_clear_fl)
+                self.y2lmp.append(v_clear_fl)
+                if v_clear_fl < self.y2min or v_clear_fl > self.y2max:
+                    self.y2min, self.y2max = self.expand_limits(v_clear_fl, self.y2min, self.y2max)
+                    self.ax[2].set_ylim(self.y2min, self.y2max)
+                    bRedraw = True
+            else: 
+                self.y2auc.append(self.y2auc[-1])
+                self.y2lmp.append(self.y2lmp[-1]) 
+
+            # Feeder load: single value in kW
+            if v_load != 0:
+                # Handle substation load as both a string and complex value
+                v_load_fl = ast.literal_eval(sub_load)
+                v_load_real = v_load_fl[0]
+                #print(f'v_load_real: {v_load_real}, type: {type(v_load_real)}')
+                v_load_kW = v_load_real / 1.0e3
+                self.gld_load = v_load_kW
+                self.y3fncs.append(v_load_kW) # feeder load from HELICS (could be zero if no update)
+                self.y3gld.append(self.gld_load)  # most recent feeder load from HELICS
+
+                if v_load_kW < self.y3min or v_load_kW > self.y3max:
+                    self.y3min, self.y3max = self.expand_limits(v_load_kW, self.y3min, self.y3max)
+                    self.ax[3].set_ylim(self.y3min, self.y3max)
+                    bRedraw = True
+            else:
+                v_load_kW = 0.0
+                self.gld_load = 0.0
+                # feeder load from HELICS could be zero if no update
+                self.y3fncs.append(self.y3fncs[-1]) 
+                self.y3gld.append(self.y3gld[-1])
+
+            # update the plotted data
+            self.ln0da.set_data(self.da_hrs, self.y0da)
+            self.ln1rt.set_data(self.hrs, self.y1rt)
+            self.ln2auc.set_data(self.hrs, self.y2auc)
+            self.ln2lmp.set_data(self.hrs, self.y2lmp)
+            self.ln3fncs.set_data(self.hrs, self.y3fncs)
+            self.ln3gld.set_data(self.hrs, self.y3gld)
+            
+            if bRedraw:
+                self.fig.canvas.draw()
+                bRedraw = False
+
+        
+        except Exception as e:
+            print("Exception in update_plots:", repr(e), flush=True)
+        
+        return artists
 
         
     def launch_all(self):

@@ -1,97 +1,86 @@
 ## How Q-bid Calibration Works
 
-*An AI-agent summary of an AI-agent recreated calibration workflow*
+*A summary of the (reverse-engineered) Q-bid forecast-correction calibration
+workflow, updated after debugging the temperature-unit, data-window, caching,
+and validation issues described at the end of this document.*
 
 ### The Model Being Fitted
 
-Both scripts implement calibration for this correction model (from `tesp_support.dsot.forecasting`):
+The calibration fits this correction model from
+`tesp_support.dsot.forecasting.Forecasting.correcting_Q_forecast_10_AM`:
 
 ```
 new_Q = Q_10_AM * Q_gain
-      + t_65 * t_65_gain
-      + t_65² * t_65_2_gain
+      + t_65    * t_65_gain
+      + t_65²   * t_65_2_gain
       + DC_change_Q_DA
 ```
 
-where `t_65 = |temperature_F - 65|`.
+where `t_65 = |temperature_F - 65|`, coefficients are fit **separately for
+weekdays and weekends**, and each coefficient is stored as a two-element list
+`[weekday, weekend]` to match the runtime indexing.
 
-This is a **linear regression** with four predictors per DSO, fit separately for weekdays and weekends.
+#### What this calibration corrects
+
+`Q_10_AM` — the uncorrected day-ahead quantity — is produced from a **fixed,
+normalized daily load shape scaled by peak load** (`base_run_load` in
+`forecasting.py`). **It contains no temperature dependence whatsoever.**
+
+That has direct consequences for what "good" coefficients look like:
+
+- `Q_gain` and `DC_change_Q_DA` absorb the **level/scale** difference between
+  the flat base shape and realized load.
+- `t_65` and `t_65_2` inject the **entire temperature sensitivity** that the
+  base forecast lacks.
+
+Therefore, **weather-sensitive or high-load DSOs are expected to have large `t_65` and `DC_change_Q_DA` values** as part of this calibration. The legacy
+hand-calibrated values were smaller largely because they appear to have been
+produced on a different (likely per-unit / normalized) scale — do **not** treat
+those old magnitudes as physical bounds.
+
+---
+
+### Prerequisites
+
+Calibration must be run from a **base case with the correction disabled**, so
+that `DA_Q_forecast.csv` is the genuinely *uncorrected* `Q_10_AM`. For the Flat
+case this is guaranteed by case preparation, which collapses
+`Q_bid_forecast_correction` to `{'default': {'correct': False}}` when the `fl`
+correction flag is off. If you calibrate from a run that already applied a
+correction, you are fitting a correction-on-a-correction and the coefficients
+would be invalid.
+
+Required annual inputs (assembled automatically from the 12 monthly case
+folders — see below):
+
+- `DA_Q_forecast.csv` — uncorrected DA quantity per DSO (baseline / `Q_10_AM`)
+- `DA_Q_error.csv` — used to reconstruct realized quantity
+- `weather.dat` per substation for entire year — hourly temperature, **already in °F**
 
 ---
 
-### calibrate_q_bid_forecast_correction.py — Step by Step
+### run_annual_postprocessing.py — the calibration block
 
-#### 1. Load inputs
-```python
-baseline_df = read_timeseries_csv(baseline_csv)    # DA_Q_forecast.csv  → uncorrected Q
-actual_df   = read_timeseries_csv(actual_csv)      # actual_da_q.csv    → realized Q
-temp_df     = read_timeseries_csv(temperature_csv) # weather.dat        → hourly temperature
-```
-All three are aligned to a shared hourly `DatetimeIndex`. Duplicates are collapsed by mean.
+Calibration is driven by `base_params_process()` (or any run with
+`integrate_q_bid_calibration = True`). The block does the following:
 
-#### 2. Identify DSO columns
-```python
-def parse_dso_id(column_name):
-    # Matches: "DSO_1", "DSO 1", "da_q1", "Bus_1"
-    for pattern in DSO_PATTERNS:
-        match = pattern.match(column_name)
-        ...
-```
-This maps column names to integer DSO IDs in both baseline and actual DataFrames. Only DSOs present in **both** files are calibrated.
+#### 1. Assemble annual inputs from 12 monthly runs
+The monthly post-processing produces per-month `DA_Q_forecast.csv` /
+`DA_Q_error.csv`. The annual script concatenates all 12 months into a single
+full-year series (`_ensure_annual_da_q_inputs` / `_build_annual_da_q_file`),
+de-duplicating and sorting on the datetime column.
 
-#### 3. Temperature conversion
-```python
-def to_fahrenheit(series, unit):
-    if unit == "C":
-        return series * 9.0 / 5.0 + 32.0
-```
-Input temperatures are converted to Fahrenheit regardless of source unit, because the model threshold (65°F) is hardcoded.
+!! warning
+    
+    The post-processing script skips rebuilding if the annual file already exists. A stale annual file left over from a previous (broken) run will be silently reused. If you change inputs or logic, delete the stale `DA_Q_forecast.csv`, `DA_Q_error.csv`, `actual_da_q.csv`, and the `annual_weather/` folder in the case directory before re-running. Better yet, delete the entire post-processing folder and then re-run.
 
-#### 4. Build the design matrix and fit — `fit_coefficients()`
-```python
-df["t65"]   = (df["temperature_f"] - 65.0).abs()
-df["t65_2"] = df["t65"] ** 2
+#### 2. Assemble an annual weather series
 
-# Split into weekday (Mon-Fri) and weekend (Sat-Sun)
-weekday_mask = df.index.dayofweek <= 4
-
-# For each subset:
-x = np.column_stack([
-    baseline_q,   # → Q_gain coefficient
-    t65,          # → t_65 coefficient
-    t65_2,        # → t_65_2 coefficient
-    np.ones(n),   # → DC_change_Q_DA (intercept)
-])
-y = actual_q
-
-coeffs, _, _, _ = np.linalg.lstsq(x, y, rcond=None)
-```
-`np.linalg.lstsq` solves the **ordinary least squares** problem — it finds the four coefficients that minimize `sum((actual_Q - predicted_Q)²)` across all hours in that day type.
-
-This produces **two `FitResult` objects per DSO** — one weekday, one weekend — each containing:
-- `gain_q` → `Q_gain`
-- `gain_t65` → `t_65`
-- `gain_t65_2` → `t_65_2`
-- `dc_change` → `DC_change_Q_DA`
-- `rmse` and `n_samples` (diagnostics)
-
-#### 5. Build output JSON
-```python
-payload[f"DSO_{dso}"] = {
-    "correct": True,
-    "Q_gain":          [wkday.gain_q,     wkend.gain_q],
-    "t_65":            [wkday.gain_t65,   wkend.gain_t65],
-    "t_65_2":          [wkday.gain_t65_2, wkend.gain_t65_2],
-    "DC_change_Q_DA":  [wkday.dc_change,  wkend.dc_change],
-}
-```
-Each coefficient is a **two-element list: `[weekday_value, weekend_value]`**, matching the runtime forecasting code's indexing convention.
-
----
+Weather is discovered per substation and stitched into a **full-year** per-DSO
 
 ### calibrate_config.py — Step by Step
 
-This script does **no fitting** — it merges calibration results into an existing config file.
+This script does **no fitting** — it merges calibration results into a new, calibrated config file updated from the case config used for the base run.
 
 #### 1. Locate the block to replace
 ```python
@@ -152,18 +141,21 @@ rates_config.json5 ────────────────────�
                                                         + diff_report.json
 ```
 
-Based on a close read of both scripts, it's slightly more involved than that. Here's the full picture:
 
-### Files produced by calibration that feed back into simulations
 
-#### 1. `rates_config_calibrated.json5` ✅
-Replace `rates_config.json5` in `metadata_path` (`glm_dsot/data/`). This carries the updated `Q_bid_forecast_correction` block with the new per-DSO weekday/weekend coefficients.
+#### Files produced by calibration that feed back into simulations
 
-#### 2. `DSO_quadratic_curves.json` ✅
-This maps quantity bids (MW) to day-ahead prices per DSO. It is written to `case_path` but needs to be placed where the **DSO bidding model** can find it at runtime — check where `tesp_support.dsot.dso_quadratic_curves` reads it from, as it may need to go into `metadata_path` or a per-DSO subfolder rather than the annual case folder.
+1. `rates_config_calibrated.json5` ✅
+    
+    * Example: Replace `rates_config.json5` in `metadata_path` (`glm_dsot/data/`). This carries the updated `Q_bid_forecast_correction` block with the new per-DSO weekday/weekend coefficients.
 
-#### 3. `actual_da_q.csv` ⚠️ intermediate only
-This is an intermediate artifact used only during calibration. It does **not** need to be copied anywhere for the next simulation.
+2. `DSO_quadratic_curves.json` ✅
+
+    * This maps quantity bids (MW) to day-ahead prices per DSO. It is written to `case_path` but needs to be placed where the **DSO bidding model** can find it at runtime. I.e., rename this file to `8_hi_quadratic_curves.json` or similar and place in `../dsot/data`. If changing the name to something else, update the call in the config or prepare case.
+
+3. `actual_da_q.csv` ⚠️ intermediate only
+
+    * This is an intermediate artifact used only during calibration. It does **not** need to be copied anywhere for the next simulation.
 
 ---
 

@@ -84,7 +84,11 @@ class DSO_LMPs_vs_Q:
         # Remove outliers (Retail market has a maximum price of "1000.0",
         # thus after division is equal to "1".)
         for i in range(len(lmps)):
-            df_dsos_lml_q[i] = df_dsos_lml_q[i][df_dsos_lml_q[i]['y'] <= 0.999]
+            df = df_dsos_lml_q[i]
+            # Drop the NaN-flagged missing hours (formerly zero-filled) and any inf.
+            df = df.replace([np.inf, -np.inf], np.nan).dropna(subset=['x', 'y'])
+            # Drop retail price-cap hits (price of 1000 -> 1.0 after /1000).
+            df = df[df['y'] <= 0.999]
 
         return df_dsos_lml_q, lmps, q_lmps
 
@@ -135,7 +139,7 @@ class DSO_LMPs_vs_Q:
         curve_c = np.concatenate((curve_c_weekday, curve_c_weekend), axis=0)
         return curve_c
 
-    def make_json_out(self):
+    def make_json_out(self, rate_scenario=""):
         """ Save the fitted curve to json
         """
         data = {}
@@ -148,7 +152,7 @@ class DSO_LMPs_vs_Q:
             })
 
         # with open(self.config_path+'/DSO_quadratic_curves.json', 'w') as outfile:
-        with open('DSO_quadratic_curves.json', 'w') as outfile:
+        with open(f'quadratic_curves_{rate_scenario}.json', 'w') as outfile:
             json.dump(data, outfile)
 
 

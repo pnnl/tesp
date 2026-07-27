@@ -182,7 +182,7 @@ def customer_meta_data(glm_meta, agent_meta, dso_metadata_path):
         try:
             glm_meta['billingmeters'][meter]['wh_gallons'] = glm_meta['houses'][house]['wh_gallons']
         except KeyError:
-            print(f'{house} has no water heater')
+            #print(f'{house} has no water heater')
             pass
         glm_meta['billingmeters'][meter]['income_level'] = glm_meta['houses'][house]['income_level']
 
@@ -251,9 +251,9 @@ def load_gen_data(dir_path, gen_name, day_range):
                 missing_values = len(idx.difference(data_df.index))
                 if missing_values != 0:
                     data_df.index.difference(idx)
-                    data_df = data_df.reindex(idx, fill_value=0.0)
+                    data_df = data_df.reindex(idx, fill_value=np.nan)
                     print('WARNING: '+ str(missing_values) +' index values missing from ' + filename + ' located in ' + dir_path + \
-                          '. Missing values replaced with zero.')
+                          '. Missing values replaced with NaN.')
 
             frame_size = len(data_df) * len(data_df.columns)
             test = np.reshape(data_df.values, frame_size)
