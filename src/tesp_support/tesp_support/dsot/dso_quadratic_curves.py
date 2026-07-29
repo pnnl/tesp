@@ -104,9 +104,26 @@ class DSO_LMPs_vs_Q:
         """
         x = np.array(self.df_dsos_lml_q[i]['x'][p_time].values)
         y = np.array(self.df_dsos_lml_q[i]['y'][p_time].values)
-        zz = np.polyfit(x, y, self.degree)
-        df_dsos_lml_q = np.array([zz[2], zz[1], zz[0]])
+        #zz = np.polyfit(x, y, self.degree)
+        #df_dsos_lml_q = np.array([zz[2], zz[1], zz[0]])
+        
+        # replace polyfit with non-negative least squares fit
+        from scipy.optimize import nnls 
+        S = x.max() if x.max() > 0 else 1.0
+        xs = x / S
+
+        A = np.column_stack([np.ones_like(xs), xs, xs**2])   # [c, b_s, a_s]
+        coef_s, _ = nnls(A, y) # coef_s >= 0 enforced
+        c, b_s, a_s = coef_s
+
+        # transform scaled coeffs back to raw-x space
+        b = b_s / S
+        a = a_s / (S**2)
+
+        df_dsos_lml_q = np.array([c, b, a])
+
         return df_dsos_lml_q
+
 
     def multiple_fit_calls(self):
         """ Calls the fit model for each scenario

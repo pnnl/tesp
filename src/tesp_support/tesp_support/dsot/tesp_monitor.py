@@ -306,7 +306,7 @@ class TespMonitorGUI:
         self.ax[2].add_line(self.ln2auc)
         self.ax[2].add_line(self.ln2lmp)
         self.ax[2].set_ylabel('[$]')
-        self.ax[2].set_title('LMP and Clearing Price', fontsize=10)
+        self.ax[2].set_title('LMP and Wholesale Clearing Price', fontsize=10)
 
         self.ax[3].clear()
         self.ax[3].add_line(self.ln3fncs)
@@ -502,16 +502,19 @@ class TespMonitorGUI:
                 #print(f'  topic={topic!r}  type={type(topic)}  value={fncs.get_value(topic)!r}', flush=True)
                 if topic == 'lmp_da':
                     v_da = value
-                    print(f"frame {i}, {h} hours, "f"v_da={v_da}", flush=True)
+                    print(f"frame {i}, {h:.2f} hours, "f"v_da={v_da}", flush=True)
                 elif topic == 'lmp_rt':
                     v_rt = value
-                    print(f"frame {i}, {h} hours, "f"v_rt={v_rt}", flush=True)
+                    v_rt_fl = float(ast.literal_eval(v_rt)[0])
+                    print(f"frame {i}, {h:.2f} hours, "f"v_rt={v_rt_fl:.4f}", flush=True)
                 elif topic == 'clear_price':
                     v_clear = value
-                    print(f"frame {i}, {h} hours, "f"v_clear={v_clear}", flush=True)
+                    v_clear_fl = float(v_clear)
+                    print(f"frame {i}, {h:.2f} hours, "f"v_clear={v_clear_fl:.4f}", flush=True)
                 elif topic == 'distribution_load':
                     v_load = value
-                    print(f"frame {i}, {h} hours, "f"v_load={parse_kw(v_load)} kW", flush=True)
+                    v_load_kW = parse_kw(v_load)
+                    print(f"frame {i}, {h:.2f} hours, "f"v_load={v_load_kW} kW", flush=True)
 
             # update the Y axis data to draw
             # If there is no change in value, HELICS does not update
@@ -532,7 +535,6 @@ class TespMonitorGUI:
             # RT LMP: single value
             if v_rt != 0.0:
                 #v_rt_fl = float(ast.literal_eval(v_rt)[0])
-                v_rt_fl = float(v_rt) 
                 self.y1rt.append(v_rt_fl)
                 if v_rt_fl < self.y1rtmin or v_rt_fl > self.y1rtmax:
                     self.y1rtmin, self.y1rtmax = self.expand_limits(v_rt_fl, self.y1rtmin, self.y1rtmax)
@@ -543,7 +545,7 @@ class TespMonitorGUI:
 
             # Clearing price / LMP: single value
             if v_clear != 0.0:
-                v_clear_fl = float(v_clear)
+                #v_clear_fl = float(v_clear)
                 self.y2auc.append(v_clear_fl)
                 self.y2lmp.append(v_clear_fl)
                 if v_clear_fl < self.y2min or v_clear_fl > self.y2max:
@@ -556,7 +558,7 @@ class TespMonitorGUI:
 
             # Feeder load: single value in kW
             if v_load != 0.0:
-                v_load_kW = parse_kw(v_load) # FNCS delivers e.g. '+2.01327e+06-654171j VA'
+                #v_load_kW = parse_kw(v_load) # FNCS delivers e.g. '+2.01327e+06-654171j VA'
                 self.gld_load = v_load_kW
                 self.y3fncs.append(v_load_kW)
                 self.y3gld.append(self.gld_load)
@@ -750,21 +752,24 @@ class TespMonitorGUI:
             # find the newest Y values
             if self.sub_lmp_da and helics.helicsInputIsUpdated(self.sub_lmp_da):
                 v_da = helics.helicsInputGetString(self.sub_lmp_da)
-                print(f"frame {i}, {h} hours, "f"v_da={v_da}", flush=True)
+                print(f"frame {i}, {h:.2f} hours, "f"v_da={v_da}", flush=True)
             if self.sub_lmp_rt and helics.helicsInputIsUpdated(self.sub_lmp_rt):
                 v_rt = helics.helicsInputGetString(self.sub_lmp_rt)
-                print(f"frame {i}, {h} hours, "f"v_rt={v_rt}", flush=True)
+                v_rt_fl = float(ast.literal_eval(v_rt)[0])
+                print(f"frame {i}, {h:.2f} hours, "f"v_rt={v_rt_fl:.4f}", flush=True)
             if self.sub_cleared_q_rt and helics.helicsInputIsUpdated(self.sub_cleared_q_rt):
                 v_clear = helics.helicsInputGetString(self.sub_cleared_q_rt)
-                print(f"frame {i}, {h} hours, "f"v_clear={v_clear}", flush=True)
+                v_clear_fl = float(v_clear)
+                print(f"frame {i}, {h:.2f} hours, "f"v_clear={v_clear_fl:.4f}", flush=True)
             if self.sub_gld_load and helics.helicsInputIsUpdated(self.sub_gld_load):
                 v_load = helics.helicsInputGetString(self.sub_gld_load)
-                print(f"frame {i}, {h} hours, "f"v_load={v_load}", flush=True)
-                sub_load = v_load
+                v_load_kw = parse_kw(v_load)
+                print(f"frame {i}, {h:.2f} hours, "f"v_load={v_load_kw:.4f}", flush=True)
+                #sub_load = v_load
 
 
             # Debugging: Note that this will print many 0s when values do not change
-            #print(f"frame {i}, time {self.time_granted}, "f"v_da={v_da}, v_rt={v_rt}, v_clear={v_clear}, v_load={v_load}", flush=True)
+            #print(f"frame {i}, time {self.time_granted}, "f"v_da={v_da:.4f}, v_rt={v_rt:.4f}, v_clear={v_clear:.4f}, v_load={v_load:.4f}", flush=True)
 
 
             # update the Y axis data to draw
@@ -788,7 +793,7 @@ class TespMonitorGUI:
             
             # RT LMP: single value
             if v_rt != 0.0:
-                v_rt_fl = float(ast.literal_eval(v_rt)[0])
+                #v_rt_fl = float(ast.literal_eval(v_rt)[0])
                 self.y1rt.append(v_rt_fl)
                 if v_rt_fl < self.y1rtmin or v_rt_fl > self.y1rtmax:
                     self.y1rtmin, self.y1rtmax = self.expand_limits(v_rt_fl, self.y1rtmin, self.y1rtmax)
@@ -799,7 +804,7 @@ class TespMonitorGUI:
 
             # Clearing price / LMP: single value
             if v_clear != 0.0:
-                v_clear_fl = float(v_clear)
+                #v_clear_fl = float(v_clear)
                 self.y2auc.append(v_clear_fl)
                 self.y2lmp.append(v_clear_fl)
                 if v_clear_fl < self.y2min or v_clear_fl > self.y2max:
@@ -813,10 +818,11 @@ class TespMonitorGUI:
             # Feeder load: single value in kW
             if v_load != 0:
                 # Handle substation load as both a string and complex value
-                v_load_fl = ast.literal_eval(sub_load)
-                v_load_real = v_load_fl[0]
+                #v_load_fl = ast.literal_eval(sub_load)
+                #v_load_real = v_load_fl[0]
                 #print(f'v_load_real: {v_load_real}, type: {type(v_load_real)}')
-                v_load_kW = v_load_real / 1.0e3
+                #v_load_kW = v_load_real / 1.0e3
+                v_load_kw = parse_kw(v_load)
                 self.gld_load = v_load_kW
                 self.y3fncs.append(v_load_kW) # feeder load from HELICS (could be zero if no update)
                 self.y3gld.append(self.gld_load)  # most recent feeder load from HELICS

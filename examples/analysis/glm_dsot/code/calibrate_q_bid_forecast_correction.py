@@ -161,9 +161,9 @@ def to_fahrenheit(series: pd.Series, unit: str) -> pd.Series:
     raise ValueError(f"Unsupported temperature unit: {unit}. Expected 'F' or 'C'.")
 
 
-# --------------------------------------------------------------------------- #
-# NEW: stable solve (standardize -> ridge -> back-transform)
-# --------------------------------------------------------------------------- #
+# --------------------------------------------------------------------------- 
+# stable solve (standardize -> ridge -> back-transform)
+# --------------------------------------------------------------------------- 
 def _stable_linear_fit(
     features: np.ndarray,      # (n, 3): [baseline_q, t65, t65_2]
     y: np.ndarray,             # (n,)
@@ -182,7 +182,7 @@ def _stable_linear_fit(
     # Guard against zero-variance columns (e.g. constant temperature window).
     sigma_safe = np.where(sigma > 0, sigma, 1.0)
 
-    xs = (features - mu) / sigma_safe          # standardized regressors
+    xs = (features - mu) / sigma_safe           # standardized regressors
     design = np.column_stack([xs, np.ones(n)])  # + intercept column
 
     # Condition number on the standardized design (this is the number that
@@ -311,7 +311,7 @@ def fit_coefficients(
     weekend = _weekend_mask(df.index)
     weekday_mask = ~weekend
 
-    # --- alignment diagnostic: confirm the split matches runtime expectations
+    # Alignment diagnostic: confirm the split matches runtime expectations
     n_wd, n_we = int(weekday_mask.sum()), int(weekend.sum())
     frac_we = n_we / max(len(df), 1)
     log.info("DSO %d day-type split: weekday=%d (%.0f%%), weekend=%d (%.0f%%)",
@@ -324,7 +324,7 @@ def fit_coefficients(
                     "convention -- it may not match correcting_Q_forecast_10_AM.",
                     dso, 100*frac_we)
 
-    # NEW: sanity-check scale consistency between baseline and actual. A large
+    # Sanity-check scale consistency between baseline and actual. A large
     # systematic offset here gets absorbed into DC_change_Q_DA and is a common
     # source of non-physical intercepts.
     base_mean = float(df["baseline_q"].mean())

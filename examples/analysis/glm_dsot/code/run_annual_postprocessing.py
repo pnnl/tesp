@@ -90,6 +90,12 @@ Financial outputs (regenerated on every pass):
 #   rob-don/  -- Transactive / EandC scenario annual case folder
 #   sub/      -- Subscription rate scenario annual case folder
 #
+# Consider adding folder creation:
+# Ensure plots output directory exists.
+# check_folder = isdir(datapath + '/Flat')
+# if not check_folder:
+#    os.makedirs(datapath + '/Flat')
+#
 # Each folder must contain the twelve monthly simulation sub-folders
 # (e.g., 8_2016_01_pv_bt_fl_ev/) before this script can be run.
 #
@@ -310,7 +316,7 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
         None
     """
 
-    # Work on a private copy so the caller's list is not mutated.
+    # Work on a private copy so the list is not mutated.
     case_list = list(case_list)
     # Prepend the base case so it is processed before the comparison cases.
     if run_base:
@@ -626,7 +632,6 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
             # total dispatch, cost). Requires the annual OPF file, which is
             # produced as a side-effect of annual_lmps; run that step first if
             # generator_statistics_AMES.csv is missing.
-            #GenAMES_df = pt.generation_statistics(case_path, config_path, system_config_file, total_day_range, False)
             GenAMES_df = pt.generation_statistics(case_path, metadata_path, system_config_file, total_day_range, False)
 
         if integrate_q_bid_calibration:
@@ -719,7 +724,7 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
             # simulation years. Output: DSO_quadratic_curves.json
             obj = qc.DSO_LMPs_vs_Q(case_path)
             obj.multiple_fit_calls()
-            obj.make_json_out()
+            obj.make_json_out(rate_scenario)
 
         # --------------- Determine wholesale purchases -------------------------
         # Calculates the energy and capacity volumes each DSO purchases from the

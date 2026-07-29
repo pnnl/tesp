@@ -157,15 +157,6 @@ rates_config.json5 ────────────────────�
 
     * This is an intermediate artifact used only during calibration. It does **not** need to be copied anywhere for the next simulation.
 
----
-
-### What you should verify before the next simulation run
-
-| Question | Where to check |
-|---|---|
-| Does the DSO agent read `Q_bid_forecast_correction` from `rates_config.json5` at startup? | `tesp_support.dsot.forecasting` → `correcting_Q_forecast_10_AM` |
-| Does `dso_quadratic_curves` read from `metadata_path`, `case_path`, or a per-DSO subfolder? | `tesp_support.dsot.dso_quadratic_curves` → file open calls |
-| Does `run_case_postprocessing.py` reference `rates_config.json5` by name or by a config key? | It reads `generate_case_config.json` → `data_path`; the rates config path flows from there |
 
 ### Replace or Rename Post-Processing Call 
 
@@ -179,6 +170,5 @@ So if you rename the calibrated file rather than replacing the original, you'll 
 ### Summary checklist
 
 - [ ] Replace `glm_dsot/data/rates_config.json5` with `rates_config_calibrated.json5` (or update the filename reference in both postprocessing scripts)
-- [ ] Confirm `DSO_quadratic_curves.json` destination matches where the DSO agent reads it at runtime
-- [ ] Verify `generate_case_config.json` for the next simulation year still points to the correct `data_path`
+- [ ] Confirm `DSO_quadratic_curves.json` destination matches where the DSO agent reads it at runtime, rename it to match config assignment
 - [ ] Keep `rates_config_calibration_diff_report.json` as an audit record of what changed
