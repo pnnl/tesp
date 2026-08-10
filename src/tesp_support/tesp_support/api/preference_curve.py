@@ -5,10 +5,30 @@
 #          isoelastic demand curve. This module is device-type-agnostic.
 # ============================================================================
 
-import math
-from typing import Optional, Tuple
-from .data_types import BidPoint, FlexibilityEnvelope
-from .enums_and_constants import DeviceType
+from typing import Optional
+from dataclasses import dataclass
+from enum import Enum, auto
+
+class DeviceType(Enum):
+    """Types of physical devices the agent can manage."""
+    HVAC_HEAT_PUMP = auto()
+    HVAC_AC_ONLY = auto()
+    WATER_HEATER = auto()
+    EV_CHARGER = auto()
+    BATTERY = auto()
+
+
+@dataclass
+class BidPoint:
+    """A single point on a price-quantity bid curve.
+    
+    Attributes:
+        price: Price in $/kWh (or $/kW for capacity products).
+        quantity: Power quantity in kW. Positive = consumption (demand),
+            negative = production/export (supply, for battery discharge).
+    """
+    price: float
+    quantity: float
 
 
 class PreferenceCurve:
