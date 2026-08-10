@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2024 Battelle Memorial Institute
+# Copyright (c) 2022-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: glm_dictionary.py
 # tuned to feederGenerator_TSP.m for sequencing of objects and attributes
@@ -17,6 +17,8 @@ Public Functions:
 import os
 import json
 import math
+
+from ..api.helpers import log
 
 
 def ercotMeterName(objname):
@@ -126,6 +128,8 @@ def glm_dict_with_microgrids(name_root, config=None, ercot=False):  # , te30=Fal
     else:
         bulkpowerBus = 'TBD'
     name = ''
+    lastHouse = ''
+    lastBillingMeter = ''
     houses = {}
     waterheaters = {}
     ziploads = {}
@@ -301,7 +305,7 @@ def glm_dict_with_microgrids(name_root, config=None, ercot=False):  # , te30=Fal
                                      'arrival_home': ev_arr_home,
                                      'work_duration': ev_dur_work,
                                      'home_duration': ev_dur_home,
-                                     'miles_per_kwh': ev_mileage,
+                                     'miles_per_kWh': ev_mileage,
                                      'range_miles': ev_range,
                                      'efficiency': ev_charg_eff}
             if inHouses:
@@ -543,12 +547,8 @@ def glm_dict_with_microgrids(name_root, config=None, ercot=False):  # , te30=Fal
                 if bldg in mtr['building_type']:
                     mtr['tariff_class'] = 'residential'
         except KeyError as keyErr:
-            # print('I got a KeyError. Reason - {0}. See: {1}'.format(str(keyErr), format_exc())) # sys.exc_info()[2].tb_)
+            log.debug(f"Got a KeyError. Reason - {keyErr}")
             pass
-        # except:
-        #	print('Cannot find id {0} from {1} in the list of billing meters.'.format(val['billingmeter_id'], key))
-        #	print('System returned error code: {0}.'.format(sys.exc_info()[0]))
-        #	pass
 
     for key, val in inverters.items():
         mtr = billingmeters[val['billingmeter_id']]

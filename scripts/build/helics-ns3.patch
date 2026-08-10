@@ -117,7 +117,7 @@ index 63a930e..670898a 100644
          fi.coreInitString = coreinit;
      }
 diff --git a/model/helics-application.cc b/model/helics-application.cc
-index c6e47e5..b113c97 100644
+index c6e47e5..178697a 100644
 --- a/model/helics-application.cc
 +++ b/model/helics-application.cc
 @@ -138,10 +138,10 @@ void HelicsApplication::SetupFilterApplication (const helics::Filter &filterInst
@@ -133,6 +133,15 @@ index c6e47e5..b113c97 100644
  }
  
  void
+@@ -161,7 +161,7 @@ HelicsApplication::SetFilterName (const std::string &name)
+               return fedName + '/' + src;
+           }
+       });
+-  helics_federate->setFilterOperator (m_filter_id, m_filterOp);
++  m_filter_id.setOperator(m_filterOp);
+   SetEndpointName(name, false);
+ }
+ 
 @@ -171,16 +171,16 @@ HelicsApplication::SetEndpointName (const std::string &name, bool is_global)
    NS_LOG_FUNCTION (this << name << is_global);
    SetName(name);

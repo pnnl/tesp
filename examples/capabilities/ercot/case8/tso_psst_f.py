@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2023 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # file: tso_psst_f.py
 
 import os
@@ -1314,7 +1314,7 @@ def tso_psst_loop_f():
 
             #    tso.print_mod_load(ppc['bus'], ppc['DSO'], gld_load, 'OPF', ts)
             ropf = pp.runopf(ppc, ppopt_market)
-            if ropf['success'] == False:
+            if not ropf['success']:
                 conv_accum = False
             opf_bus = deepcopy(ropf['bus'])
             opf_gen = deepcopy(ropf['gen'])

@@ -6,10 +6,25 @@ import warnings
 import numpy as np
 import pandas as pd
 
-from tesp_support.api.data import feeders_path
+from ..api.data import feeders_path
 
 
 def bin_size_check(sample_data, recs_data, state, housing_dens, inc_lev, binsize, climate_zone, income_str):
+    '''
+    Check bin size and adjust sample data to use census region, climate zone, or combine income levels if below threshold.
+    Args:
+        sample_data (pd.DataFrame): Initial sample data based on state, housing density, and income level.
+        recs_data (pd.DataFrame): Full RECS dataset.   
+        state (str): State postal code.
+        housing_dens (str): Housing density string.
+        inc_lev (str): Income level string.
+        binsize (int): Bin size threshold (acceptable minimum number of RECS samples).
+        climate_zone (int): IECC climate zone to use if bin size threshold is not met.
+        income_str (str): Income level column name in RECS data.
+    Returns:
+        sample_data (pd.DataFrame): Adjusted sample data meeting bin size threshold.
+        total (float): Total population weight of the adjusted sample data.
+    '''
     og_bin_size = len(sample_data)
     print('Bin Size', inc_lev, " ", og_bin_size)
     # Define Census Regions in case sample size is too small for state
@@ -193,6 +208,20 @@ def bin_size_check(sample_data, recs_data, state, housing_dens, inc_lev, binsize
 
 
 def get_residential_metadata(metadata, sample_data, state, hsdens_str, inc_lev, total, wh_shift_per):
+    '''
+    Generate residential metadata distributions from RECS sample data (state, housing density, income level triple).
+    Args:
+        metadata (dict): Dictionary to store generated metadata distributions.
+        sample_data (pd.DataFrame): RECS sample data for specific state, housing density, and income level.
+        state (str): State postal code.
+        hsdens_str (str): Housing density string.
+        inc_lev (str): Income level string.
+        total (float): Total population weight of the sample data.
+        wh_shift_per (float): Percentage of water heaters to shift from gas to electric (direct shift of water heater types to electric).
+    Returns:
+        metadata (dict): Updated metadata dictionary with generated distributions.
+
+    '''
     # Define RECS codebook
     # Define variable strings
     house_type_str = 'TYPEHUQ'
@@ -276,27 +305,27 @@ def get_residential_metadata(metadata, sample_data, state, hsdens_str, inc_lev, 
             metadata['housing_vintage'][state][hsdens_str][inc_lev][h][y] = round(total_dict[h][y] / total, 4)
     
     # Get number of stories by house type and vintage
-    for hc, l in housing_type_consol_dict.items():
+    for hc, htc in housing_type_consol_dict.items():
         metadata['num_stories'][state][hsdens_str][inc_lev][hc] = {}
-        k1 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[0])]
-        k2 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[1])]
+        k1 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(htc[0])]
+        k2 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(htc[1])]
         total_dict_consol[hc] = {}
         for p, y in housing_vintage_dict.items():
             metadata['num_stories'][state][hsdens_str][inc_lev][hc][y] = {}
             if k1==k2:
-                total_dict_consol[hc][y] = total_dict[l[0]][y]
+                total_dict_consol[hc][y] = total_dict[htc[0]][y]
             else:
-                total_dict_consol[hc][y] = total_dict[l[0]][y]+total_dict[l[1]][y]
+                total_dict_consol[hc][y] = total_dict[htc[0]][y]+total_dict[htc[1]][y]
             for n, s in num_stories_dict.items():
                 metadata['num_stories'][state][hsdens_str][inc_lev][hc][y][s] = round(sample_data.loc[((sample_data[house_type_str].isin([k1,k2])) &
                                                                                                     (sample_data[vintage_str] == p) &
                                                                                                    (sample_data[n_stories_str] == n)),
                                                                                                     'NWEIGHT'].sum()/total_dict_consol[hc][y], 4)
     # Get floor_area distribution by house type
-    for hc, l in housing_type_consol_dict.items():
+    for hc, htc in housing_type_consol_dict.items():
         metadata['floor_area'][state][hsdens_str][inc_lev][hc] = {}
-        k1 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[0])]
-        k2 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[1])]
+        k1 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(htc[0])]
+        k2 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(htc[1])]
         # for p, y in housing_vintage_dict.items():
         values = sample_data.loc[(sample_data[house_type_str].isin([k1, k2])), flr_area_str].values
         weighting = sample_data.loc[(sample_data[house_type_str].isin([k1, k2])), 'NWEIGHT'].values
@@ -321,9 +350,9 @@ def get_residential_metadata(metadata, sample_data, state, hsdens_str, inc_lev, 
     #                                                                                          'NWEIGHT'].sum()/sum(total_dict['mobile_home'].values()),4)
 
     # Get distribution for air conditioning for homes with gas or resistance heating by house type
-    for hc, l in housing_type_consol_dict.items():
-        k1 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[0])]
-        k2 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[1])]
+    for hc, htc in housing_type_consol_dict.items():
+        k1 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(htc[0])]
+        k2 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(htc[1])]
         total_gas_res_homes = sample_data.loc[((sample_data[house_type_str].isin([k1,k2])) &
                                                (~sample_data[sh_equip_str].isin([4, 13]))), 'NWEIGHT'].sum()
         metadata['air_conditioning'][state][hsdens_str][inc_lev][hc] = round(sample_data.loc[((sample_data[house_type_str].isin([k1,k2])) &
@@ -332,10 +361,10 @@ def get_residential_metadata(metadata, sample_data, state, hsdens_str, inc_lev, 
                                                                                            'NWEIGHT'].sum()/total_gas_res_homes, 4)
 
     # Get distribution for gas heating by house type and vintage
-    for hc, l in housing_type_consol_dict.items():
+    for hc, htc in housing_type_consol_dict.items():
         metadata['space_heating_type'][state][hsdens_str][inc_lev][hc] = {}
-        k1 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[0])]
-        k2 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[1])]
+        k1 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(htc[0])]
+        k2 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(htc[1])]
         for p, y in housing_vintage_dict.items():
             metadata['space_heating_type'][state][hsdens_str][inc_lev][hc][y] = {}
             # Gas heating defined as all heating that is not electric
@@ -368,9 +397,9 @@ def get_residential_metadata(metadata, sample_data, state, hsdens_str, inc_lev, 
     #                                          (sample_data[wh_fuel_str]==5)),'NWEIGHT'].sum()
     #         metadata['water_heating_type'][state][hsdens_str][inc_lev][h][y]=round((both_gas+both_electric)/total_dict[h][y],4)
 
-    for hc, l in housing_type_consol_dict.items():
-        k1 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[0])]
-        k2 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[1])]
+    for hc, htc in housing_type_consol_dict.items():
+        k1 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(htc[0])]
+        k2 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(htc[1])]
         metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc] = {}
         metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_gas'] = {}
         metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_electric'] = {}
@@ -434,9 +463,9 @@ def get_residential_metadata(metadata, sample_data, state, hsdens_str, inc_lev, 
             metadata['water_heating_fuel'][state][hsdens_str][inc_lev][hc]['sh_electric']['electric'] = 0
 
     # Get distribution for high ceilings by house type and vintage
-    for hc, l in housing_type_consol_dict.items():
-        k1 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[0])]
-        k2 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(l[1])]
+    for hc, htc in housing_type_consol_dict.items():
+        k1 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(htc[0])]
+        k2 = list(housing_type_dict.keys())[list(housing_type_dict.values()).index(htc[1])]
         metadata['high_ceilings'][state][hsdens_str][inc_lev][hc] = {}
         for p, y in housing_vintage_dict.items():
             metadata['high_ceilings'][state][hsdens_str][inc_lev][hc][y] = round(
@@ -491,7 +520,26 @@ def get_residential_metadata(metadata, sample_data, state, hsdens_str, inc_lev, 
 
 def get_RECS_jsons(bldg_in, bldg_out, hvac_out,
                    sample=None, bin_size_thres=100, climate_zone=None, wh_shift=0.0):
+    """
+    Generate residential building metadata and HVAC setpoint JSON files based on RECS data.
 
+    Args:
+        bldg_in (str): Path to input DSOT_residential_parameters_metadata.json file (using some assumptions from DSOT).
+        bldg_out (str): Path to output residential building metadata JSON file.
+        hvac_out (str): Path to output residential HVAC setpoints distribution JSON file.
+        sample (dict): Dictionary specifying states, housing densities, and income levels to sample from RECS data. 
+            If 'housing_density' includes 'No_DSO_Type', then housing density will not be used as a filter when sampling RECS data.
+            Example: {'state': ['CA', 'TX'], 'housing_density': ['U', 'S', 'R'], 'income_level': ['Low', 'Middle']}
+            Example: {'state': ['TX'], 'housing_density': ['No_DSO_Type'], 'income_level': ['Low', 'Middle','Upper']}
+        bin_size_thres (int): Minimum bin size threshold for sampling RECS data.
+            Minimum acceptable count of samples for selected triple - state, housing density, income level.
+        climate_zone (str): IECC climate zone to use if bin size threshold is not met.
+        wh_shift (float): Percentage of water heaters to shift from gas to electric (direct shift of water heater types to electric).
+            Example: 0.1 = 10% shift - subtracts from gas WH distribution and adds to electric WH distribution.
+
+    Returns:
+        None
+    """
 
     # Read RECS data file
     if sample is None:
@@ -592,10 +640,10 @@ def get_RECS_jsons(bldg_in, bldg_out, hvac_out,
     res_metadata['solar_percentage']['Low'] = 0.12
     res_metadata['solar_percentage']['Middle'] = 0.30
     res_metadata['solar_percentage']['Upper'] = 0.58
-    res_metadata['battery_percentage'] = {}
-    res_metadata['battery_percentage']['Low'] = 0.12
-    res_metadata['battery_percentage']['Middle'] = 0.3
-    res_metadata['battery_percentage']['Upper'] = 0.58
+    res_metadata['storage_percentage'] = {}
+    res_metadata['storage_percentage']['Low'] = 0.12
+    res_metadata['storage_percentage']['Middle'] = 0.3
+    res_metadata['storage_percentage']['Upper'] = 0.58
     res_metadata['ev_percentage'] = {}
     res_metadata['ev_percentage']['Low'] = 0.1
     res_metadata['ev_percentage']['Middle'] = 0.3
@@ -607,17 +655,18 @@ def get_RECS_jsons(bldg_in, bldg_out, hvac_out,
         json.dump(hvac_setpoints, outfile, indent=2)
 
 def get_hvac_setpoints(metadata, sample_data, state, hsdens_str, inc_lev, total):
-    """
-    Get the thermostat setpoint probability distributions from RECS data.
-
+    '''
+    Generate HVAC setpoint distributions based on RECS data.
     Args:
-        metadata:
-        sample_data:
-        state:
-        hsdens_str:
-        inc_lev:
-        total:
-    """
+        metadata (dict): Dictionary to store HVAC setpoint distributions.
+        sample_data (DataFrame): Sampled RECS data for specific state, housing density, and income level.
+        state (str): State abbreviation.
+        hsdens_str (str): Housing density string.
+        inc_lev (str): Income level string.
+        total (float): Total population for the sampled data.
+    Returns:
+        metadata (dict): Updated dictionary with HVAC setpoint distributions.
+    '''
     therm_str = 'TYPETHERM'
     tw_str = 'TELLWORK'
     num_tw_str = 'TELLDAYS'

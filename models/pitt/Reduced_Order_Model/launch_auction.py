@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2023 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # file: launch_auction.py
 
 import tesp_support.substation as ss

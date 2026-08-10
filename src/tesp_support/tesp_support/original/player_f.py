@@ -1,11 +1,11 @@
-# Copyright (C) 2021-2023 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # file: player_f.py
 import datetime
 import json
 
 import numpy as np
 
-import tesp_support.original.fncs as fncs
+from ..original import fncs as fncs
 
 
 def load_player_loop_f(casename, keyName):

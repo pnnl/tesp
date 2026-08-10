@@ -1,10 +1,10 @@
-tesp\_support package
-=====================
+PYPI tesp\_support package
+==========================
 
 .. automodule:: tesp_support
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Subpackages
 -----------

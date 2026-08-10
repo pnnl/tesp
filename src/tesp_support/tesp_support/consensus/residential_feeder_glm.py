@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2024 Battelle Memorial Institute
+# Copyright (c) 2022-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: residential_feeder_glm.py
 """Replaces ZIP loads with houses, and optional storage and solar generation.
@@ -41,10 +41,10 @@ import numpy as np
 import pandas as pd
 from math import sqrt
 
-from tesp_support.api.data import feeders_path, weather_path
-from tesp_support.api.helpers import gld_strict_name, random_norm_trunc, randomize_residential_skew
-from tesp_support.api.parse_helpers import parse_kva
-import tesp_support.original.commercial_feeder_glm as comm_FG
+from ..api.data import feeders_path, weather_path
+from ..api.helpers import gld_strict_name, random_norm_trunc, randomize_residential_skew
+from ..api.parse_helpers import parse_kva
+from ..original import commercial_feeder_glm as comm_FG
 
 forERCOT = False
 port = 5570
@@ -725,10 +725,10 @@ def obj(parent, model, line, itr, oidh, octr):
     """
     octr += 1
     # Identify the object type
-    m = re.search('object ([^:{\s]+)[:{\s]', line, re.IGNORECASE)
+    m = re.search(r'object ([^:{\s]+)[:{\s]', line, re.IGNORECASE)
     _type = m.group(1)
     # If the object has an id number, store it
-    n = re.search('object ([^:]+:[^{\s]+)', line, re.IGNORECASE)
+    n = re.search(r'object ([^:]+:[^{\s]+)', line, re.IGNORECASE)
     if n:
         oid = n.group(1)
     line = next(itr)
@@ -739,7 +739,7 @@ def obj(parent, model, line, itr, oidh, octr):
     if parent is not None:
         params['parent'] = parent
     while not oend:
-        m = re.match('\s*(\S+) ([^;{]+)[;{]', line)
+        m = re.match(r'\s*(\S+) ([^;{]+)[;{]', line)
         if m:
             # found a parameter
             param = m.group(1)
@@ -841,10 +841,10 @@ def write_link_class(model, h, t, seg_loads, op, want_metrics=False):
 
 
 # triplex_conductors dict:[name, r, gmr, ampacity]
-triplex_conductors = [['triplex_4/0_aa', 0.48, 0.0158, 1000.0]]
+triplex_conductors = [['triplex_4/0AA', 0.48, 0.0158, 1000.0]]
 
 # triplex_configurations dict:[name, hot, neutral, thickness, diameter]
-triplex_configurations = [['tpx_config', 'triplex_4/0_aa', 'triplex_4/0_aa', 0.08, 0.522]]
+triplex_configurations = [['tpx_config', 'triplex_4/0AA', 'triplex_4/0AA', 0.08, 0.522]]
 
 
 def write_local_triplex_configurations(op):
@@ -2313,7 +2313,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
         lines = []
         line = ip.readline()
         while line != '':
-            while re.match('\s*//', line) or re.match('\s+$', line):
+            while re.match(r'\s*//', line) or re.match(r'\s+$', line):
                 # skip comments and white space
                 line = ip.readline()
             lines.append(line.rstrip())
@@ -2726,6 +2726,8 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
     # (Laurentiu Marinovici 11/18/2019)
     global res_bldg_metadata  # to store residential metadata
     global batt_metadata  # to store battery metadata
+    global ev_metadata  # to store ev model metadata
+    global pv_rating_MW
     global cop_lookup
     global generators  # To store generator metadata
 
@@ -2784,8 +2786,10 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
     if 'AgentName' in config['WeatherPrep']:
         weatherName = config['WeatherPrep']['AgentName']
     dso_type = config['SimulationConfig']['DSO_type']
+    pv_rating_MW = config['SimulationConfig']['rooftop_pv_rating_MW']
     res_bldg_metadata = config['BuildingPrep']['ResBldgMetaData']
     batt_metadata = config['BuildingPrep']['BattMetaData']
+    ev_metadata = config['BuildingPrep']['EvModelMetaData']
     # if not provided in JSON config, use a regional default
     electric_cooling_percentage = res_bldg_metadata['air_conditioning']
     ashrae_zone = config['BuildingPrep']['ASHRAEZone']
@@ -2796,7 +2800,7 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
     try:
         generators = config['SimulationConfig']['dso'][next(iter(config['SimulationConfig']['dso']))]['generators']
         print("Found {} generators in SimulationConfig".format(len(generators)))
-    except:
+    except Exception:
         generators = {}
         print("Found No generators in SimulationConfig")
     # -------- create cop lookup table by vintage bin-----------

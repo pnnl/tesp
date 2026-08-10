@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2019 Battelle Memorial Institute
+# Copyright (c) 2018-2019 Battelle Memorial Institute
 # file: prepare_case_dsot_v1.py
 """ Sets up a simple DSO+T use-case with one feeder
 
@@ -390,8 +390,7 @@ def prepare_case(mastercase):
         [os.remove(os.path.join(os.path.abspath(caseName + '/' + dso_key), fileName)) for fileName in filesToDelete]
 
     # Also create the launch, kill and clean scripts for this case
-    helpers.write_mircogrids_management_script(master_file=mastercase,
-                                               case_path=caseName,
+    helpers.write_mircogrids_management_script(case_path=caseName,
                                                system_config=sys_config,
                                                substation_config=substation_config,
                                                weather_config=weather_config)

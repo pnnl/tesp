@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2023 Battelle Memorial Institute
+# Copyright (c) 2018-2025 Battelle Memorial Institute
 # file: precool.py
 """Classes for NIST TE Challenge 2 example
 
@@ -15,21 +15,22 @@ Public Functions:
     :precooler_loop: Initializes and runs the precooler agents.  
 """
 
-import logging as log
+import logging
 
 try:
     import helics
-except:
+except Exception:
     pass
 try:
-    import tesp_support.original.fncs as fncs
-except:
+    from ..original import fncs as fncs
+except Exception:
     pass
 
 import json
 import math
 
-from tesp_support.api.parse_helpers import parse_number, parse_magnitude_2
+from ..api.helpers import log
+from ..api.parse_helpers import parse_number, parse_magnitude_2
 
 thermalIntegrity = {
     'VERY_LITTLE':
@@ -111,7 +112,7 @@ class precooler:
         Rf = thermalIntegrity[self.ti]['Rfloor']
         Rg = thermalIntegrity[self.ti]['Rwindows']  # g for glazing
         Rd = thermalIntegrity[self.ti]['Rdoors']
-        I = thermalIntegrity[self.ti]['airchange_per_hour']
+        ac_per_hr = thermalIntegrity[self.ti]['airchange_per_hour']
         # some hard-coded GridLAB-D defaults
         aspect = 1.5  # footprint x/y ratio
         A1d = 19.5  # area of one door
@@ -134,7 +135,7 @@ class precooler:
         Aw = (Awt - Ag - Ad) * EWR  # net exterior wall area, taking EWR as 1s
         Vterm = self.sqft * h * VHa
 
-        self.UA = (Ac / Rc) + (Ad / Rd) + (Af / Rf) + (Ag / Rg) + (Aw / Rw) + Vterm * I
+        self.UA = (Ac / Rc) + (Ad / Rd) + (Af / Rf) + (Ag / Rg) + (Aw / Rw) + Vterm * ac_per_hr
         self.CA = 3 * Vterm
         self.HM = hs * (Aw / EWR + Awt * IWR + Ac * self.stories / ECR)
         self.CM = self.sqft * mf - 2 * Vterm
@@ -181,29 +182,29 @@ class precooler:
 
         self.make_etp_model()
 
-    def set_air_temp(self, val):
+    def set_air_temp(self, message: str):
         """ Set the air_temp member variable
 
         Args:
-            val (str): FNCS/HELICS message with temperature in degrees Fahrenheit
+            message (str): Message with temperature in degrees Fahrenheit
         """
-        self.air_temp = parse_number(val)
+        self.air_temp = parse_number(message)
 
-    def set_voltage_f(self, val):
+    def set_voltage_f(self, message: str):
         """ Sets the mtr_v attribute
 
         Args:
-            val (str): FNCS message with meter line-neutral voltage
+            message (str): Message with meter line-neutral voltage
         """
-        self.mtr_v = parse_magnitude_2(val)
+        self.mtr_v = parse_magnitude_2(message)
 
-    def set_voltage(self, val):
+    def set_voltage(self, message: str):
         """ Sets the mtr_v attribute
 
         Args:
-            val (str): HELICS message with meter line-neutral voltage
+            message (str): Message with meter line-neutral voltage
         """
-        self.mtr_v = abs(val)
+        self.mtr_v = abs(message)
 
     def check_setpoint_change(self, hour_of_day, price, time_seconds):
         """ Update the setpoint for time of day and price
@@ -338,11 +339,11 @@ def helics_precool_loop(nhours, metrics_root, dict_root, response, helicsConfig)
             log.debug("HELICS subscription index: " + str(t) + ", key: " + key)
             topic = key.split('/')[1]
             if helics.helicsInputIsUpdated(sub):
-                val = helics.helicsInputGetString(sub)
-                log.debug("at " + str(time_granted) + " " + topic + " " + val)
+                message = helics.helicsInputGetString(sub)
+                log.debug("at " + str(time_granted) + " " + topic + " " + message)
 
                 if topic == 'price':
-                    price = float(val)
+                    price = float(message)
                 else:
                     pair = topic.split('#')
                     houseName = pair[0]
@@ -350,7 +351,7 @@ def helics_precool_loop(nhours, metrics_root, dict_root, response, helicsConfig)
                         cval = helics.helicsInputGetComplex(sub)
                         precoolerObjs[houseName].set_voltage(cval)
                     elif pair[1] == 'Tair':
-                        precoolerObjs[houseName].set_air_temp(val)
+                        precoolerObjs[houseName].set_air_temp(message)
 
         if bSetDeadbands:
             bSetDeadbands = False
@@ -495,7 +496,7 @@ def fncs_precool_loop(nhours, metrics_root, dict_root, response):
                 fncs.publish(key + '_thermostat_deadband', obj.deadband)
                 fncs.publish(key + '_heating_setpoint', '60.0')
 
-        # update all of the house setpoints and collect the temperature deviation metrics
+        # update the house setpoints and collect the temperature deviation metrics
         count_temp_dev = 0
         sum_temp_dev = 0.0
         min_temp_dev = 10000.0
@@ -546,10 +547,9 @@ def precool_loop(nhours, metrics_root, dict_root, response='PriceVoltage', helic
     When *inner_substation_loop* finishes, timing and memory metrics will be printed
     for non-Windows platforms.
     """
-    logger = log.getLogger()
-    logger.setLevel(log.INFO)
-    # logger.setLevel(log.WARNING)
-    # logger.setLevel(log.DEBUG)
+    log = logging.getLogger(__name__)
+    log.setLevel(logging.INFO)
+    # log.setLevel(logging.DEBUG)
 
     if helicsConfig is not None:
         helics_precool_loop(nhours, metrics_root, dict_root, response, helicsConfig)

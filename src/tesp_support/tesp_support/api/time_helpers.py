@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2024 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: time_helpers.py
 """ Utility time functions for use within tesp_support, including new agents.
@@ -90,7 +90,7 @@ def is_hhmm_valid(time):
     """
     hr = np.floor(time / 100)
     mn = time % 100
-    if hr > 23 or hr < 0 or mn < 0 or mn > 59 or type(mn) != int:
+    if hr > 23 or hr < 0 or mn < 0 or mn > 59 or type(mn) is not int:
         return False
     return True
 

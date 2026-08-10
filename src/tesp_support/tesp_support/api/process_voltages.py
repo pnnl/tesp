@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2024 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: process_voltages.py
 """Functions to plot all billing meter voltages from GridLAB-D
@@ -15,7 +15,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Setting up logging
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 def read_voltages_metrics(path, name_root, diction_name=''):
@@ -25,13 +25,13 @@ def read_voltages_metrics(path, name_root, diction_name=''):
     if len(diction_name) > 0:
         try:
             lp = open(diction_name).read()
-        except:
-            logger.error(f'Unable to open voltage metric file {diction_name}')
+        except Exception:
+            log.error(f'Unable to open voltage metric file {diction_name}')
     else:
         try:
             lp = open(glm_dict_path).read()
-        except:
-            logger.error(f'Unable to open voltage metrics file {glm_dict_path}')
+        except Exception:
+            log.error(f'Unable to open voltage metrics file {glm_dict_path}')
     diction = json.loads(lp)
     mtr_keys = list(diction['billingmeters'].keys())
     mtr_keys.sort()

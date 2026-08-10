@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2024 Battelle Memorial Institute
+# Copyright (c) 2022-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: forecasting_dsot_v1.py
 """Class responsible for forecasting 
@@ -21,7 +21,7 @@ import pandas as pd
 import pytz
 
 
-# from tesp_support.api.schedule_client import *
+# from ..api.schedule_client import *
 
 class Forecasting:
     """
@@ -84,7 +84,7 @@ class Forecasting:
         self.fristRun = True
         # data = pd.read_csv("C:\\Users\\sing492\\OneDrive - PNNL\\Documents\\Projects\\TESP_DSOT\\Hvac Debug Ahmad\\Qi_individual.csv",
         #                        index_col=0)
-        # date_rng = pd.date_range(start='7/1/2013', end='7/10/2013', freq='H')
+        # date_rng = pd.date_range(start='7/1/2013', end='7/10/2013', freq='h')
         # df = pd.DataFrame(date_rng, columns=['date'])
         # df['solar_gain'] = data['solar_gain'].tolist()
         # df['internal_gain'] = data['internal_gain'].tolist()
@@ -110,8 +110,8 @@ class Forecasting:
         """ Initialize the data frame for one year
 
         Args:
-            start_time (datetime, str) : time in str format - DD/MM/YYY HH:MT:SS
-            end_time (datetime, str) : time in str format - DD/MM/YYY HH:MT:SS
+            start_time (datetime | str) : time in str format - DD/MM/YYY HH:MT:SS
+            end_time (datetime | str) : time in str format - DD/MM/YYY HH:MT:SS
         """
         # convert start_time and end_time to strings if they are in datetime
         if isinstance(start_time, datetime):
@@ -136,7 +136,7 @@ class Forecasting:
 
         Args:
             filename (str): name of glm file to be loaded
-            schedule_name (str): name of the schedule to be laoded
+            schedule_name (str): name of the schedule to be loaded
         """
         print("Reading and constructing 1 year dataframe for {} schedule from {}".format(schedule_name, filename))
         ip_file = glm.load(filename)
@@ -310,20 +310,20 @@ class Forecasting:
         # self.DA_output = np.array(mean_sch)
         return self.DA_output
 
-    def set_solar_diffuse_forecast(self, fncs_str):
+    def set_solar_diffuse_forecast(self, message: str):
         """ Set the 48 hour solar diffuse forecast
         Args:
             solar_diffuse_forecast ([float x 48]):
         """
-        solar_diffuse_forecast = eval(fncs_str)
+        solar_diffuse_forecast = eval(message)
         self.solar_diffuse_forecast = [float(solar_diffuse_forecast[key]) for key in solar_diffuse_forecast.keys()]
 
-    def set_solar_direct_forecast(self, fncs_str):
+    def set_solar_direct_forecast(self, message: str):
         """ Set the 48 hour solar direct forecast
         Args:
             solar_direct_forecast ([float x 48]):
         """
-        solar_direct_forecast = eval(fncs_str)
+        solar_direct_forecast = eval(message)
         self.solar_direct_forecast = [float(solar_direct_forecast[key]) for key in solar_direct_forecast.keys()]
 
     def get_substation_unresponsive_load_forecast(self, peak_load=7500.0):

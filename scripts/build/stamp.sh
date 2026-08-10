@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2021-2023 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # file: stamp.sh
 
 if [[ -z ${TESPDIR} ]]; then
@@ -10,6 +10,21 @@ if [[ -z ${TESPDIR} ]]; then
 fi
 
 cd "$DOCKER_DIR" || exit
+
+# Support non-interactive/CI mode
+FORCE_NO_PROMPT=0
+while [[ "$1" != "" ]]; do
+    case "$1" in
+        -y|--yes)
+            FORCE_NO_PROMPT=1
+            shift
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
 tesp_ver=$(cat ../tesp_version)
 grid_ver=$(cat ../grid_version)
 
@@ -22,18 +37,22 @@ echo
 echo "    git log --pretty=format:"%h %s" --graph"
 echo
 
-while true; do
-    read -rp "Are you ready to stamp TESP ${tesp_ver} and grid applications ${grid_ver}? " yn
-    case $yn in
-        [Yy]* ) stamp="yes"; break;;
-        [Nn]* ) stamp="no"; break;;
-        * ) echo "Please answer [y]es or [n]o.";;
-    esac
-done
+if [[ $FORCE_NO_PROMPT -eq 1 ]]; then
+  stamp="yes"
+else
+  while true; do
+      read -rp "Are you ready to stamp TESP ${tesp_ver} and grid applications ${grid_ver}? " yn
+      case $yn in
+          [Yy]* ) stamp="yes"; break;;
+          [Nn]* ) stamp="no"; break;;
+          * ) echo "Please answer [y]es or [n]o.";;
+      esac
+  done
 
-if [[ $stamp == "no" ]]; then
-  echo "Exiting grid applications software stamping"
-  exit
+  if [[ $stamp == "no" ]]; then
+    echo "Exiting grid applications software stamping"
+    exit
+  fi
 fi
 
 cd "${REPO_DIR}" || exit
@@ -71,13 +90,17 @@ pip list > "${BUILD_DIR}/tesp_pypi.id"
 
 echo "Stamping TESP $tesp_ver for install"
 cd "${TESPDIR}" || exit
+
+# echo the version for the pypi setup tools
 echo "$tesp_ver" > "src/tesp_support/version"
+echo "__version__ = \"$tesp_ver\"" > "src/tesp_support/tesp_support/_version.py"
 
 # un-comment for final version
 # git tag "v$tesp_ver"
 
 echo "Creating TESP distribution package for pypi"
 cd "${TESPDIR}/src/tesp_support" || exit
+rm -rf dist/ tesp_support.egg-info/
 python3 -m build . > "${BUILD_DIR}/package.log"
 echo "Checking TESP distribution package for pypi"
 twine check dist/*

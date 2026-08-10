@@ -1,15 +1,16 @@
-# Copyright (C) 2021-2023 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # file: helicsshed0.py
 
 import helics as h
 import logging
 
-logger = logging.getLogger(__name__)
-logger.addHandler(logging.StreamHandler())
-logger.setLevel(logging.DEBUG)
+log = logging.getLogger(__name__)
+log.addHandler(logging.StreamHandler())
+log.setLevel(logging.INFO)
+# log.setLevel(logging.DEBUG)
 
 helicsversion = h.helicsGetVersion()
-logger.info("Loadshed0 Federate: HELICS version = {}".format(helicsversion))
+log.info("Loadshed0 Federate: HELICS version = {}".format(helicsversion))
 
 
 def create_federate(deltat=1.0, fedinitstring="--federates=1"):
@@ -31,8 +32,8 @@ def main():
     pubid = h.helicsFederateRegisterGlobalPublication(fed, "loadshed/sw_status", h.helics_data_type_string, "")
     #    subid = h.helicsFederateRegisterSubscription(fed, "gridlabdSimulator1/totalLoad", "")
     endpoint_count = h.helicsFederateGetEndpointCount(fed)
-    logger.info("I have counted a number of {0} endpoints.".format(endpoint_count))
-    logger.info("########################   Entering Execution Mode  ##########################################")
+    log.info("I have counted a number of {0} endpoints.".format(endpoint_count))
+    log.info("########################   Entering Execution Mode  ##########################################")
     h.helicsFederateEnterExecutingMode(fed)
 
     switchings = [[0, 1], [1800, 0], [5400, 1], [16200, 0], [19800, 1]]
@@ -43,12 +44,12 @@ def main():
         val = swt[1]
         while grantedtime < t:
             grantedtime = h.helicsFederateRequestTime(fed, t)
-        logger.info('Switching to ' + str(val) + ' at ' + str(t))
+        log.info('Switching to ' + str(val) + ' at ' + str(t))
         status = h.helicsPublicationPublishString(pubid, str(val))
-    logger.info("Destroying federate")
+    log.info("Destroying federate")
     destroy_federate(fed)
 
 
 if __name__ == "__main__":
     main()
-    logger.info("Done!")
+    log.info("Done!")

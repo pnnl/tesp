@@ -1,13 +1,17 @@
-# Copyright (C) 2017-2023 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # file: dsoStub.py
 
 import json
+import logging
 import helics
-import logging as log
 
 import tesp_support.api.tso_helpers as tso
 from tesp_support.api.parse_helpers import parse_mva
 from tesp_support.api.helpers import HelicsMsg
+
+log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
+# log.setLevel(logging.DEBUG)
 
 
 def dso_make_stub(casename):
@@ -92,11 +96,6 @@ def dso_loop(casename):
     tnext_rt = -30  # start the real time bid
     tnext_da = (10 * 3600) - 15  # start the day ahead bid
     power_factor = 0.57  # roughly 30 deg
-
-    logger = log.getLogger()
-    # logger.setLevel(log.INFO)
-    logger.setLevel(log.WARNING)
-    # logger.setLevel(log.DEBUG)
 
     log.info('Reading configuration...')
     ppc = tso.load_json_case(casename + '.json')

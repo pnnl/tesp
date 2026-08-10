@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2017-2023 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # file: validation_plots.py
 """
 Created on Wednesday Feb 24 14:09:43 2021
@@ -27,7 +27,7 @@ import tesp_support.api.process_gld as pg
 import tesp_support.api.process_eplus as pe
 
 # Setting up logging
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 # Setting up pretty printing, mostly for debugging.
 ppt = pprint.PrettyPrinter(indent=4, )
@@ -49,7 +49,7 @@ def load_pypower_data(data, case, data_path):
         diction = pp.read_pypower_metrics(data_path, f'SGIP1{case}')
         found_data = True
     except:
-        logger.error(f'\tUnable to load PYPOWER data for Case {case}.')
+        log.error(f'\tUnable to load PYPOWER data for Case {case}.')
 
     data[case]['pypower'] = {}
     data[case]['pypower']['found_data'] = found_data
@@ -61,7 +61,7 @@ def load_pypower_data(data, case, data_path):
         data[case]['pypower']['idx_g'] = diction['idx_g']
         data[case]['pypower']['keys_b'] = diction['keys_b']
         data[case]['pypower']['keys_g'] = diction['keys_g']
-        logger.info(f'\tLoaded PYPOWER data for Case {case}.')
+        log.info(f'\tLoaded PYPOWER data for Case {case}.')
     return data
 
 
@@ -83,7 +83,7 @@ def load_gld_data(data, case, data_path):
         diction = pg.read_gld_metrics(data_path, f'SGIP1{case}')
         found_data = True
     except:
-        logger.error(f'\tUnable to load GridLAB-D data for Case {case}.')
+        log.error(f'\tUnable to load GridLAB-D data for Case {case}.')
 
     data[case]['gld'] = {}
     data[case]['gld']['found_data'] = found_data
@@ -94,7 +94,7 @@ def load_gld_data(data, case, data_path):
         data[case]['gld']['idx_h'] = diction['idx_h']
         data[case]['gld']['solar_kw'] = diction['solar_kw']
         data[case]['gld']['battery_kw'] = diction['battery_kw']
-        logger.info(f'\tLoaded GridLAB-D data for Case {case}.')
+        log.info(f'\tLoaded GridLAB-D data for Case {case}.')
     return data
 
 
@@ -115,7 +115,7 @@ def load_energy_plus_data(data, case, data_path):
         diction = pe.read_eplus_metrics(data_path, f'SGIP1{case}', quiet=True)
         found_data = True
     except:
-        logger.error(f'\tUnable to load Energy+ data for Case {case}.')
+        log.error(f'\tUnable to load Energy+ data for Case {case}.')
 
     data[case]['eplus'] = {}
     data[case]['eplus']['found_data'] = found_data
@@ -123,7 +123,7 @@ def load_energy_plus_data(data, case, data_path):
         data[case]['eplus']['hrs'] = diction['hrs']
         data[case]['eplus']['data_e'] = diction['data_e']
         data[case]['eplus']['idx_e'] = diction['idx_e']
-        logger.info(f'\tLoaded Energy+ data for Case {case}.')
+        log.info(f'\tLoaded Energy+ data for Case {case}.')
     return data
 
 
@@ -136,7 +136,7 @@ def load_data(data_path):
         dict: dictionary of nparrays for use in plotting functions
     """
 
-    logger.info('Loading processed metrics data')
+    log.info('Loading processed metrics data')
     data = {}
     cases = ['a', 'b', 'c', 'd', 'e']
     for case in cases:
@@ -188,21 +188,21 @@ def plot_gen_comparison(data, save_path):
                 # ends up being the reference for `plt.savefig()`
                 fig1 = plt.gcf()
                 plt.show()
-                logger.info('\tCompleted plot_gen_comparison.')
+                log.info('\tCompleted plot_gen_comparison.')
                 if save_path != '':
                     save_file = path.join(save_path,
                                           'validation_generator_outputs.png')
 
                     fig1.savefig(save_file, dpi=200)
-                    logger.info(f'\tSaved plot at {save_file}.')
+                    log.info(f'\tSaved plot at {save_file}.')
             else:
-                logger.error('\tMissing PYPOWER data for Case (a); unable to create '
+                log.error('\tMissing PYPOWER data for Case (a); unable to create '
                              'plot_gen_comparison.')
         else:
-            logger.error('\tNo PYPOWER data loaded for Case (a); unable to '
+            log.error('\tNo PYPOWER data loaded for Case (a); unable to '
                          'create plot_gen_comparison.')
     else:
-        logger.error('\tNo data loaded for Case (a); unable to create '
+        log.error('\tNo data loaded for Case (a); unable to create '
                      'plot_gen_comparison.')
 
 
@@ -242,32 +242,32 @@ def plot_transactive_bus_LMP(data, save_path):
                 # ends up being the reference for `plt.savefig()`
                 fig1 = plt.gcf()
                 plt.show()
-                logger.info('\tCompleted plot_transactive_bus_LMP.')
+                log.info('\tCompleted plot_transactive_bus_LMP.')
                 if save_path != '':
                     save_file = path.join(save_path,
                                           'validation_transactive_bus_prices.png')
                     fig1.savefig(save_file, dpi=200)
-                    logger.info(f'\tSaved plot at {save_file}.')
+                    log.info(f'\tSaved plot at {save_file}.')
             else:
-                logger.error('\tMissing PYPOWER data; unable to complete '
+                log.error('\tMissing PYPOWER data; unable to complete '
                              'plot_transactive_bus_LMP.')
                 if not (data['a']['pypower']['found_data']):
-                    logger.error('\t\tMissing data for Case (a)')
+                    log.error('\t\tMissing data for Case (a)')
                 if not (data['b']['pypower']['found_data']):
-                    logger.error('\t\tMissing data for Case (b)')
+                    log.error('\t\tMissing data for Case (b)')
         else:
             if 'pypower' not in data['a'].keys():
-                logger.error('\tNo PYPOWER data loaded for Case (a); unable '
+                log.error('\tNo PYPOWER data loaded for Case (a); unable '
                              'to complete plot_transactive_bus_LMP')
             if 'pypower' not in data['b'].keys():
-                logger.error('\tNo PYPOWER data loaded for Case (b); unable '
+                log.error('\tNo PYPOWER data loaded for Case (b); unable '
                              'to complete plot_transactive_bus_LMP')
     else:
         if 'a' not in data.keys():
-            logger.error('\tNo data loaded for Case (a); unable to complete '
+            log.error('\tNo data loaded for Case (a); unable to complete '
                          'plot_transactive_bus_LMP')
         if 'b' not in data.keys():
-            logger.error('\tNo data loaded for Case (b); unable to complete '
+            log.error('\tNo data loaded for Case (b); unable to complete '
                          'plot_transactive_bus_LMP')
 
 
@@ -313,32 +313,32 @@ def plot_transactive_feeder_load(data, save_path):
                 # ends up being the reference for `plt.savefig()`
                 fig1 = plt.gcf()
                 plt.show()
-                logger.info('\tCompleted plot_transactive_feeder_load.')
+                log.info('\tCompleted plot_transactive_feeder_load.')
                 if save_path != '':
                     save_file = path.join(save_path,
                                           'validation_transactive_bus_loads2.png')
                     fig1.savefig(save_file, dpi=200)
-                    logger.info(f'\tSaved plot at {save_file}.')
+                    log.info(f'\tSaved plot at {save_file}.')
             else:
-                logger.error('\tMissing PYPOWER data; unable to complete '
+                log.error('\tMissing PYPOWER data; unable to complete '
                              'plot_transactive_feeder_load.')
                 if not (data['a']['pypower']['found_data']):
-                    logger.error('\tMissing data for Case (a)')
+                    log.error('\tMissing data for Case (a)')
                 if not (data['b']['pypower']['found_data']):
-                    logger.error('\t\tMissing data for Case (b)')
+                    log.error('\t\tMissing data for Case (b)')
         else:
             if 'pypower' not in data['a'].keys():
-                logger.error('\tNo PYPOWER data loaded for Case (a); unable '
+                log.error('\tNo PYPOWER data loaded for Case (a); unable '
                              'to complete plot_transactive_feeder_load.')
             if 'pypower' not in data['b'].keys():
-                logger.error('\tNo PYPOWER data loaded for Case (b); unable '
+                log.error('\tNo PYPOWER data loaded for Case (b); unable '
                              'to complete plot_transactive_feeder_load.')
     else:
         if 'a' not in data.keys():
-            logger.error('\tNo data loaded for Case (a); unable to complete '
+            log.error('\tNo data loaded for Case (a); unable to complete '
                          'plot_transactive_feeder_load.')
         if 'b' not in data.keys():
-            logger.error('\tNo data loaded for Case (b); unable to complete '
+            log.error('\tNo data loaded for Case (b); unable to complete '
                          'plot_transactive_feeder_load.')
 
 
@@ -393,49 +393,49 @@ def plot_transactive_feeder_load_solar(data, save_path):
                 # ends up being the reference for `plt.savefig()`
                 fig1 = plt.gcf()
                 plt.show()
-                logger.info('\tCompleted plot_transactive_feeder_load_solar.')
+                log.info('\tCompleted plot_transactive_feeder_load_solar.')
                 if save_path != '':
                     save_file = path.join(save_path,
                                           'transactive_feeder_load_solar.png')
                     fig1.savefig(save_file, dpi=200)
-                    logger.info(f'\tSaved plot at {save_file}.')
+                    log.info(f'\tSaved plot at {save_file}.')
             else:
-                logger.error('\tMissing PYPOWER data; unable to complete '
+                log.error('\tMissing PYPOWER data; unable to complete '
                              'plot_transactive_feeder_load_solar')
                 if not (data['b']['pypower']['found_data']):
-                    logger.error('\t\tMissing data for Case (b)')
+                    log.error('\t\tMissing data for Case (b)')
                 if not (data['c']['pypower']['found_data']):
-                    logger.error('\t\tMissing data for Case (c)')
+                    log.error('\t\tMissing data for Case (c)')
                 if not (data['d']['pypower']['found_data']):
-                    logger.error('\t\tMissing data for Case (d)')
+                    log.error('\t\tMissing data for Case (d)')
                 if not (data['e']['pypower']['found_data']):
-                    logger.error('\t\tMissing data for Case (e)')
+                    log.error('\t\tMissing data for Case (e)')
         else:
             if 'pypower' not in data['b'].keys():
-                logger.error('\tNo PYPOWER data loaded for Case (b); unable '
+                log.error('\tNo PYPOWER data loaded for Case (b); unable '
                              'to '
                              'complete plot_transactive_feeder_load_solar.')
             if 'pypower' not in data['c'].keys():
-                logger.error('\tNo PYPOWER data loaded for Case (c); unable '
+                log.error('\tNo PYPOWER data loaded for Case (c); unable '
                              'to complete plot_transactive_feeder_load_solar.')
             if 'pypower' not in data['d'].keys():
-                logger.error('\tNo PYPOWER data loaded for Case (d); unable '
+                log.error('\tNo PYPOWER data loaded for Case (d); unable '
                              'to complete plot_transactive_feeder_load_solar.')
             if 'pypower' not in data['e'].keys():
-                logger.error('\tNo PYPOWER data loaded for Case (e); unable '
+                log.error('\tNo PYPOWER data loaded for Case (e); unable '
                              'to compelte plot_transactive_feeder_load_solar.')
     else:
         if 'b' not in data.keys():
-            logger.error('\tNo data loaded for Case (b); unable to '
+            log.error('\tNo data loaded for Case (b); unable to '
                          'complete plot_transactive_feeder_load_solar.')
         if 'c' not in data.keys():
-            logger.error('\tNo data loaded for Case (c); unable to complete '
+            log.error('\tNo data loaded for Case (c); unable to complete '
                          'plot_transactive_feeder_load_solar.')
         if 'd' not in data.keys():
-            logger.error('\tNo data loaded for Case (d); unable to complete '
+            log.error('\tNo data loaded for Case (d); unable to complete '
                          'plot_transactive_feeder_load_solar.')
         if 'e' not in data.keys():
-            logger.error('\tNo data loaded for Case (e); unable to complete '
+            log.error('\tNo data loaded for Case (e); unable to complete '
                          'plot_transactive_feeder_load_solar.')
 
 
@@ -497,40 +497,40 @@ def plot_avg_indoor_air_temperature(data, save_path):
                 # ends up being the reference for `plt.savefig()`
                 fig1 = plt.gcf()
                 plt.show()
-                logger.info('\tCompleted plot_avg_indoor_air_temperature.')
+                log.info('\tCompleted plot_avg_indoor_air_temperature.')
                 if save_path != '':
                     save_file = path.join(save_path,
                                           'validation_residential_indoor_temperature.png')
                     fig1.savefig(save_file, dpi=200)
-                    logger.info(f'\tSaved plot at {save_file}.')
+                    log.info(f'\tSaved plot at {save_file}.')
             else:
-                logger.error('\tMissing GridLAB-D or PYPOWER data; unable to '
+                log.error('\tMissing GridLAB-D or PYPOWER data; unable to '
                              'complete plot_avg_indoor_air_temperature.')
                 if not (data['a']['gld']['found_data']):
-                    logger.error('\t\tMissing GridLAB-D data for Case (a)')
+                    log.error('\t\tMissing GridLAB-D data for Case (a)')
                 if not (data['b']['gld']['found_data']):
-                    logger.error('\t\tMissing GridLAB-D data for Case (b)')
+                    log.error('\t\tMissing GridLAB-D data for Case (b)')
                 if not (data['b']['pypower']['found_data']):
-                    logger.error('\t\tMissing PYPOWER data for Case (b)')
+                    log.error('\t\tMissing PYPOWER data for Case (b)')
         else:
             if 'gld' not in data['a'].keys():
-                logger.error('\tNo GridLAB-D data loaded for Case (a); '
+                log.error('\tNo GridLAB-D data loaded for Case (a); '
                              'unable to complete '
                              'plot_avg_indoor_air_temperature.')
             if 'gld' not in data['b'].keys():
-                logger.error('\tNo GridLAB-D data loaded for Case (b); '
+                log.error('\tNo GridLAB-D data loaded for Case (b); '
                              'unable to complete '
                              'plot_avg_indoor_air_temperature.')
             if 'pypower' not in data['b'].keys():
-                logger.error('\tNo PYPOWER data loaded for Case (b); '
+                log.error('\tNo PYPOWER data loaded for Case (b); '
                              'unable to complete '
                              'plot_avg_indoor_air_temperature.')
     else:
         if 'a' not in data.keys():
-            logger.error('\tNo data loaded for Case (a); unable to complete '
+            log.error('\tNo data loaded for Case (a); unable to complete '
                          'plot_avg_indoor_air_temperature')
         if 'b' not in data.keys():
-            logger.error('\tNo data loaded for Case (b); unable to comlpete '
+            log.error('\tNo data loaded for Case (b); unable to comlpete '
                          'plot_avg_indoor_air_temperature')
 
 
@@ -579,48 +579,48 @@ def plot_solar_output(data, save_path):
                 # ends up being the reference for `plt.savefig()`
                 fig1 = plt.gcf()
                 plt.show()
-                logger.info('\tCompleted plot_solar_output.')
+                log.info('\tCompleted plot_solar_output.')
                 if save_path != '':
                     save_file = path.join(save_path,
                                           'validation_solar_output.png')
                     fig1.savefig(save_file, dpi=200)
-                    logger.info(f'\tSaved plot at {save_file}.')
+                    log.info(f'\tSaved plot at {save_file}.')
             else:
-                logger.error('\tMissing GridLAB-D data; unable to complete '
+                log.error('\tMissing GridLAB-D data; unable to complete '
                              'plot_solar_output')
                 if not (data['b']['gld']['found_data']):
-                    logger.error('\t\tMissing data for Case (b)')
+                    log.error('\t\tMissing data for Case (b)')
                 if not (data['c']['gld']['found_data']):
-                    logger.error('\t\tMissing data for Case (c)')
+                    log.error('\t\tMissing data for Case (c)')
                 if not (data['d']['gld']['found_data']):
-                    logger.error('\t\tMissing data for Case (d)')
+                    log.error('\t\tMissing data for Case (d)')
                 if not (data['e']['gld']['found_data']):
-                    logger.error('\t\tMissing data for Case (e)')
+                    log.error('\t\tMissing data for Case (e)')
         else:
             if 'gld' not in data['b'].keys():
-                logger.error('\tNo GridLAB-D data loaded for Case (b); unable '
+                log.error('\tNo GridLAB-D data loaded for Case (b); unable '
                              'to complete plot_solar_output')
             if 'gld' not in data['c'].keys():
-                logger.error('\tNo GridLAB-D data loaded for Case (c); unable '
+                log.error('\tNo GridLAB-D data loaded for Case (c); unable '
                              'to complete plot_solar_output.')
             if 'gld' not in data['d'].keys():
-                logger.error('\tNo GridLAB-D data loaded for Case (d); unable '
+                log.error('\tNo GridLAB-D data loaded for Case (d); unable '
                              'to comeplete plot_solar_output.')
             if 'gld' not in data['e'].keys():
-                logger.error('\tNo GridLAB-D data loaded for Case (e); unable '
+                log.error('\tNo GridLAB-D data loaded for Case (e); unable '
                              'to complete plot_solar_output.')
     else:
         if 'b' not in data.keys():
-            logger.error('\tNo data loaded for Case (b); unable to complete '
+            log.error('\tNo data loaded for Case (b); unable to complete '
                          'plot_solar_output;')
         if 'c' not in data.keys():
-            logger.error('\tNo data loaded for Case (c); unable to complete '
+            log.error('\tNo data loaded for Case (c); unable to complete '
                          'plot_solar_output.')
         if 'd' not in data.keys():
-            logger.error('\tNo data loaded for Case (d); unable to complete '
+            log.error('\tNo data loaded for Case (d); unable to complete '
                          'plot_solar_output.')
         if 'e' not in data.keys():
-            logger.error('\tNo data loaded for Case (e); unable to complete '
+            log.error('\tNo data loaded for Case (e); unable to complete '
                          'plot_solar_output.')
 
 
@@ -670,48 +670,48 @@ def plot_ES_output(data, save_path):
                 # ends up being the reference for `plt.savefig()`
                 fig1 = plt.gcf()
                 plt.show()
-                logger.info('\tCompleted plot_ES_output.')
+                log.info('\tCompleted plot_ES_output.')
                 if save_path != '':
                     save_file = path.join(save_path,
                                           'validation_ES_output.png')
                     fig1.savefig(save_file, dpi=200)
-                    logger.info(f'\tSaved plot at {save_file}.')
+                    log.info(f'\tSaved plot at {save_file}.')
             else:
-                logger.error('\tMissing GridLAB-D data; unable to complete '
+                log.error('\tMissing GridLAB-D data; unable to complete '
                              'plot_ES_output')
                 if not (data['b']['gld']['found_data']):
-                    logger.error('\t\tMissing data for Case (b)')
+                    log.error('\t\tMissing data for Case (b)')
                 if not (data['c']['gld']['found_data']):
-                    logger.error('\t\tMissing data for Case (c)')
+                    log.error('\t\tMissing data for Case (c)')
                 if not (data['d']['gld']['found_data']):
-                    logger.error('\t\tMissing data for Case (d)')
+                    log.error('\t\tMissing data for Case (d)')
                 if not (data['e']['gld']['found_data']):
-                    logger.error('\t\tMissing data for Case (e)')
+                    log.error('\t\tMissing data for Case (e)')
         else:
             if 'gld' not in data['b'].keys():
-                logger.error('\tNo GridLAB-D data loaded for Case (b); '
+                log.error('\tNo GridLAB-D data loaded for Case (b); '
                              'unable to complete plot_ES_output.')
             if 'gld' not in data['c'].keys():
-                logger.error('\tNo GridLAB-D data loaded for Case (c); '
+                log.error('\tNo GridLAB-D data loaded for Case (c); '
                              'unable to complete plot_ES_output.')
             if 'gld' not in data['d'].keys():
-                logger.error('\tNo GridLAB-D data loaded for Case (d) '
+                log.error('\tNo GridLAB-D data loaded for Case (d) '
                              'unable to complete plot_ES_output.')
             if 'gld' not in data['e'].keys():
-                logger.error('\tNo GridLAB-D data loaded for Case (e); '
+                log.error('\tNo GridLAB-D data loaded for Case (e); '
                              'unable to complete plot_ES_output.')
     else:
         if 'b' not in data.keys():
-            logger.error('\tNo data loaded for Case (b); unable to complete '
+            log.error('\tNo data loaded for Case (b); unable to complete '
                          'plot_ES_output.')
         if 'c' not in data.keys():
-            logger.error('\tNo data loaded for Case (c); unable to complete '
+            log.error('\tNo data loaded for Case (c); unable to complete '
                          'plot_ES_output.')
         if 'd' not in data.keys():
-            logger.error('\tNo data loaded for Case (d); unable to complete '
+            log.error('\tNo data loaded for Case (d); unable to complete '
                          'plot_ES_output.')
         if 'e' not in data.keys():
-            logger.error('\tNo data loaded for Case (e); unable to complete '
+            log.error('\tNo data loaded for Case (e); unable to complete '
                          'plot_ES_output.')
 
 
@@ -763,38 +763,38 @@ def plot_energy_plus_indoor_temperature(data, save_path):
                 # ends up being the reference for `plt.savefig()`
                 fig1 = plt.gcf()
                 plt.show()
-                logger.info('\tCompleted plot_energy_plus_indoor_temperature.')
+                log.info('\tCompleted plot_energy_plus_indoor_temperature.')
                 if save_path != '':
                     save_file = path.join(save_path,
                                           'validation_commercial_building_indoor_temperature.png')
                     fig1.savefig(save_file, dpi=200)
-                    logger.info(f'\tSaved plot at {save_file}.')
+                    log.info(f'\tSaved plot at {save_file}.')
             else:
-                logger.error('\tMissing Energy+ data; unable to complete '
+                log.error('\tMissing Energy+ data; unable to complete '
                              'plot_energy_plus_indoor_temperature.')
                 if not (data['a']['eplus']['found_data']):
-                    logger.error('\t\tMissing data for Case (a)')
+                    log.error('\t\tMissing data for Case (a)')
                 if not (data['b']['eplus']['found_data']):
-                    logger.error('\t\tMissing data for Case (b)')
+                    log.error('\t\tMissing data for Case (b)')
         else:
             if 'eplus' not in data['a'].keys():
-                logger.error('\tNo Energy+ data loaded for Case (a); unable '
+                log.error('\tNo Energy+ data loaded for Case (a); unable '
                              'to complete '
                              'plot_energy_plus_indoor_temperature.')
             if 'eplus' not in data['b'].keys():
-                logger.error('\tNo Energy+ data loaded for Case (b); unable '
+                log.error('\tNo Energy+ data loaded for Case (b); unable '
                              'to complete '
                              'plot_energy_plus_indoor_temperature.')
             if 'pypower' not in data['b'].keys():
-                logger.error('\tNo PYPOWER data loaded for Case (b); unable '
+                log.error('\tNo PYPOWER data loaded for Case (b); unable '
                              'to complete '
                              'plot_energy_plus_indoor_temperature.')
     else:
         if 'a' not in data.keys():
-            logger.error('\tNo data loaded for Case (a); unable to complete '
+            log.error('\tNo data loaded for Case (a); unable to complete '
                          'plot_energy_plus_indoor_temperature.')
         if 'b' not in data.keys():
-            logger.error('\tNo data loaded for Case (b); unable to complete '
+            log.error('\tNo data loaded for Case (b); unable to complete '
                          'plot_energy_plus_indoor_temperature.')
 
 
@@ -832,37 +832,37 @@ def plot_energy_plus_prices(data, save_path):
                 # ends up being the reference for `plt.savefig()`
                 fig1 = plt.gcf()
                 plt.show()
-                logger.info('\tCompleted plot_energy_plus_prices.')
+                log.info('\tCompleted plot_energy_plus_prices.')
                 if save_path != '':
                     save_file = path.join(save_path,
                                           'validation_commercial_building_prices.png')
                     fig1.savefig(save_file, dpi=200)
-                    logger.info(f'\tSaved plot at {save_file}.')
+                    log.info(f'\tSaved plot at {save_file}.')
             else:
-                logger.error('\tMissing Energy+ data; unable to complete '
+                log.error('\tMissing Energy+ data; unable to complete '
                              'plot_energy_plus_prices.')
                 if not (data['a']['eplus']['found_data']):
-                    logger.error('\t\tMissing data for Case (a)')
+                    log.error('\t\tMissing data for Case (a)')
                 if not (data['b']['eplus']['found_data']):
-                    logger.error('\t\tMissing data for Case (b)')
+                    log.error('\t\tMissing data for Case (b)')
         else:
             if 'eplus' not in data['a'].keys():
-                logger.error('\tNo Energy+ data loaded for Case (a); unable '
+                log.error('\tNo Energy+ data loaded for Case (a); unable '
                              'to complete plot_energy_plus_prices.')
             if 'eplus' not in data['b'].keys():
-                logger.error('\tNo Energy+ data loaded for Case (b); unable '
+                log.error('\tNo Energy+ data loaded for Case (b); unable '
                              'to complete plot_energy_plus_prices.')
     else:
         if 'a' not in data.keys():
-            logger.error('\tNo data loaded for Case (a); unable to complete '
+            log.error('\tNo data loaded for Case (a); unable to complete '
                          'plot_energy_plus_prices.')
         if 'b' not in data.keys():
-            logger.error('\tNo data loaded for Case (b); unable to complete '
+            log.error('\tNo data loaded for Case (b); unable to complete '
                          'plot_energy_plus_prices.')
 
 
 def create_validation_plots(data, save_path):
-    logger.info('Creating plots')
+    log.info('Creating plots')
     plot_gen_comparison(data, save_path)
     plot_transactive_bus_LMP(data, save_path)
     plot_transactive_feeder_load(data, save_path)

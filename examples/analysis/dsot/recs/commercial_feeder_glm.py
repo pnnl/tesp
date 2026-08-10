@@ -1,4 +1,4 @@
-# Copyright (C) 2019-2023 Battelle Memorial Institute
+# Copyright (c) 2019-2025 Battelle Memorial Institute
 # file: commercial_feeder_glm.py
 
 import math
@@ -488,26 +488,23 @@ def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percenta
                 print('  };', file=op)
                 print('}', file=op)
 
-        gld_feeder.Electric_Vehicle.add_ev(ev_metadata, ev_percentage, bldg['zonename'])
-        # ------------ new feeder generator performs same function as below ----
-        # if np.random.uniform(0, 1) <= ev_percentage:
-        #     # first lets select an ev model:
-        #     print(ev_metadata['sale_probability'])
-        #     ev_name = res_FG.selectEVmodel(ev_metadata['sale_probability'], np.random.uniform(0, 1))
-        #     ev_range = ev_metadata['Range_miles'][ev_name]
-        #     ev_mileage = ev_metadata['Miles_per_kWh'][ev_name]
-        #     ev_charge_eff = ev_metadata['charging_efficiency']
-        #     # check if level 1 charger is used or level 2
-        #     if np.random.uniform(0, 1) <= ev_metadata['Level_1_usage']:
-        #         ev_max_charge = ev_metadata['Level_1_max_power_kW']
-        #         volt_conf = 'IS110'  # for level 1 charger, 110 V is good
-        #     else:
-        #         ev_max_charge = ev_metadata['Level_2_max_power_kW'][ev_name]
-        #         volt_conf = 'IS220'  # for level 2 charger, 220 V is must
-        #     # now, let's map a random driving schedule with this vehicle ensuring daily miles
-        #     # doesn't exceed the vehicle range and home duration is enough to charge the vehicle
-        #     drive_sch = res_FG.match_driving_schedule(ev_range, ev_mileage, ev_max_charge)
-        #     # ['daily_miles','home_arr_time','home_duration','work_arr_time','work_duration']
+        if np.random.uniform(0, 1) <= ev_percentage:
+            # first lets select an ev model:
+            ev_name = res_FG.selectEVmodel(ev_metadata['sale_probability'], np.random.uniform(0, 1))
+            ev_range = ev_metadata['range_miles'][ev_name]
+            ev_mileage = ev_metadata['miles_per_kWh'][ev_name]
+            ev_charge_eff = ev_metadata['charging_efficiency']
+            # check if level 1 charger is used or level 2
+            if np.random.uniform(0, 1) <= ev_metadata['level_1_usage']:
+                ev_max_charge = ev_metadata['level_1_max_power_kW']
+                volt_conf = 'IS110'  # for level 1 charger, 110 V is good
+            else:
+                ev_max_charge = ev_metadata['level_2_max_power_kW'][ev_name]
+                volt_conf = 'IS220'  # for level 2 charger, 220 V is must
+            # now, let's map a random driving schedule with this vehicle ensuring daily miles
+            # doesn't exceed the vehicle range and home duration is enough to charge the vehicle
+            drive_sch = res_FG.match_driving_schedule(ev_range, ev_mileage, ev_max_charge)
+            # ['daily_miles','home_arr_time','home_duration','work_arr_time','work_duration']
 
         #     # few sanity checks
         #     if drive_sch['daily_miles'] > ev_range:

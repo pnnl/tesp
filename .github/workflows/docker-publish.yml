@@ -1,0 +1,91 @@
+name: Deploy Docker Image CI
+
+on:
+  push:
+    branches: [ "main", "test-workflow" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    name: Build Docker image
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get version
+        id: version
+        run: echo "VER=$(cat scripts/grid_version | tr -d '\n')" >> $GITHUB_OUTPUT
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver: docker
+
+      - name: Build tesp-ubuntu
+        uses: docker/build-push-action@v5
+        with:
+          context: scripts/docker
+          file: scripts/docker/ubuntu.Dockerfile
+          tags: tesp-ubuntu:tesp_${{ steps.version.outputs.VER }}
+          load: true
+          build-args: |
+            UBUNTU=ubuntu
+            UBUNTU_VERSION=24.04
+
+      - name: Build tesp-library
+        uses: docker/build-push-action@v5
+        with:
+          context: scripts/docker
+          file: scripts/docker/library.Dockerfile
+          tags: tesp-library:tesp_${{ steps.version.outputs.VER }}
+          load: true
+          build-args: |
+            DOCKER_VER=${{ steps.version.outputs.VER }}
+            TAG=${{ steps.version.outputs.VER }}
+            SIM_GID=9002
+            SIM_GRP=runner
+            SIM_UID=1001
+            SIM_USER=worker
+
+      - name: Build tesp-build
+        uses: docker/build-push-action@v5
+        with:
+          context: scripts/build
+          file: scripts/docker/build.Dockerfile
+          tags: tesp-build:tesp_${{ steps.version.outputs.VER }}
+          load: true
+          build-args: |
+            DOCKER_VER=${{ steps.version.outputs.VER }}
+            TAG=${{ steps.version.outputs.VER }}
+            SIM_USER=worker
+            SIM_GRP=runner
+
+      - name: List images
+        run: docker images | grep -E "tesp"
+
+      - name: Smoke test
+        run: |
+          docker run --rm tesp-build:tesp_${{ steps.version.outputs.VER }} \
+            python3 -c "import tesp_support; print('OK')" || exit 1
+
+
+      - name: login to hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # - name: Test
+      #   run: |
+      #     make venv
+      #     source ./venv/bin/activate
+      #     cd scripts
+      #     ./integration_test.sh
+
+      - name: Publish
+        run: |
+          cd scripts/docker
+          ./push-images.sh

@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2024 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: dso_market.py
 """Class that manages the operation of DSO agent
@@ -11,15 +11,15 @@ Generate substation supply curves with and without consideration of the transfor
 
 """
 import json
-import logging as log
 import math
 from copy import deepcopy
 
 import numpy as np
 
-from tesp_support.api.parse_helpers import parse_kw
-from tesp_support.dsot.helpers_dsot import Curve, get_intersect, MarketClearingType
-from tesp_support.api.schedule_client import *
+from ..api.helpers import log
+from ..api.parse_helpers import parse_kw
+from ..dsot.helpers_dsot import Curve, get_intersect, MarketClearingType
+from ..api.schedule_client import DataClient
 
 
 class DSOMarket:
@@ -74,7 +74,7 @@ class DSOMarket:
                 self.curve_a = np.asarray(dso_dict['curve_a'])  # * Q_max_scale * Q_max_scale
                 self.curve_b = np.asarray(dso_dict['curve_b'])  # * Q_max_scale
                 self.curve_c = np.asarray(dso_dict['curve_c'])
-            except:
+            except Exception:
                 quadratic = False
 
         if not quadratic:
@@ -304,7 +304,7 @@ class DSOMarket:
                     self.trial_clear_type_RT = MarketClearingType.CONGESTED
                 else:
                     self.trial_clear_type_RT = MarketClearingType.UNCONGESTED
-            except:
+            except Exception:
                 self.Pwclear_RT, self.trial_cleared_quantity_RT, self.trial_clear_type_RT = \
                     self.trial_wholesale_clearing(self.curve_ws_node[day_of_week][hour_of_day],
                                                   self.curve_DSO_RT, day_of_week, hour_of_day)
@@ -469,7 +469,7 @@ class DSOMarket:
                         trial_clear_type = MarketClearingType.UNCONGESTED
                     return Pwclear, cleared_quantity, trial_clear_type
 
-            log.info("ERROR dso intersection not found (not supposed to happen)." +
+            log.info("Failure dso intersection not found (not supposed to happen)." +
                      " buyer_quantities: " + str(buyer_quantities) +
                      ", buyer_prices: " + str(buyer_prices) +
                      ", seller_prices: " + str(seller_prices))

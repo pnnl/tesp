@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2023 Battelle Memorial Institute
+# Copyright (c) 2018-2025 Battelle Memorial Institute
 # file: residential_feeder_glm.py
 """Replaces ZIP loads with houses, and optional storage and solar generation.
 
@@ -38,9 +38,9 @@ from math import sqrt
 import networkx as nx
 import numpy as np
 
-from tesp_support.api.data import feeders_path, weather_path
-from tesp_support.api.helpers import gld_strict_name, randomize_commercial_skew, randomize_residential_skew
-from tesp_support.api.parse_helpers import parse_kva
+from ..api.data import feeders_path, weather_path
+from ..api.helpers import gld_strict_name, randomize_commercial_skew, randomize_residential_skew
+from ..api.parse_helpers import parse_kva
 
 forERCOT = False
 port = 5570
@@ -692,10 +692,10 @@ def obj(parent, model, line, itr, oidh, octr):
     """
     octr += 1
     # Identify the object type
-    m = re.search('object ([^:{\s]+)[:{\s]', line, re.IGNORECASE)
+    m = re.search(r'object ([^:{\s]+)[:{\s]', line, re.IGNORECASE)
     _type = m.group(1)
     # If the object has an id number, store it
-    n = re.search('object ([^:]+:[^{\s]+)', line, re.IGNORECASE)
+    n = re.search(r'object ([^:]+:[^{\s]+)', line, re.IGNORECASE)
     if n:
         oid = n.group(1)
     line = next(itr)
@@ -706,7 +706,7 @@ def obj(parent, model, line, itr, oidh, octr):
     if parent is not None:
         params['parent'] = parent
     while not oend:
-        m = re.match('\s*(\S+) ([^;{]+)[;{]', line)
+        m = re.match(r'\s*(\S+) ([^;{]+)[;{]', line)
         if m:
             # found a parameter
             param = m.group(1)
@@ -808,10 +808,10 @@ def write_link_class(model, h, t, seg_loads, op, want_metrics=False):
 
 
 # triplex_conductors dict:[name, r, gmr, ampacity]
-triplex_conductors = [['triplex_4/0_aa', 0.48, 0.0158, 1000.0]]
+triplex_conductors = [['triplex_4/0AA', 0.48, 0.0158, 1000.0]]
 
 # triplex_configurations dict:[name, hot, neutral, thickness, diameter]
-triplex_configurations = [['tpx_config', 'triplex_4/0_aa', 'triplex_4/0_aa', 0.08, 0.522]]
+triplex_configurations = [['tpx_config', 'triplex_4/0AA', 'triplex_4/0AA', 0.08, 0.522]]
 
 
 def write_local_triplex_configurations(op):
@@ -1847,7 +1847,7 @@ def write_houses(basenode, op, vnom, bIgnoreThermostatSchedule=True, bWriteServi
         heating_str = 'heating{:.0f}*{:.4f}+{:.2f}'.format(heating_sch, heating_scale, heating_diff)
         # default heating and cooling setpoints are 70 and 75 degrees in GridLAB-D
         # we need more separation to assure no overlaps during transactive simulations
-        if bIgnoreThermostatSchedule == True:
+        if bIgnoreThermostatSchedule:
             print('  cooling_setpoint 80.0;', file=op)
             print('  heating_setpoint 60.0;', file=op)
         else:
@@ -2412,7 +2412,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
         lines = []
         line = ip.readline()
         while line != '':
-            while re.match('\s*//', line) or re.match('\s+$', line):
+            while re.match(r'\s*//', line) or re.match(r'\s+$', line):
                 # skip comments and white space
                 line = ip.readline()
             lines.append(line.rstrip())

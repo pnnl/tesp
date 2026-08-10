@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2023 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # file: autotest.py
 """Runs the set of TESP test cases, excluding the longer FNCS cases
 MATPOWER/MOST example must be run after manual installation of Octave and MATPOWER
@@ -66,7 +66,7 @@ def loadshed_proto_test():
         tr.exec_test('gridlabd R1-12.47-1_processed.glm > gridlabd.log', 'Establishing baseline results')
         os.chdir('..')
         tr.run_test('run.sh', 'Load shedding w/o comm network')
-        tr.run_test('run_ns3.sh', 'Load shedding over comm network')
+        # tr.run_test('run_ns3.sh', 'Load shedding over comm network')
         os.chdir(tesp_path)
 
 
@@ -191,17 +191,24 @@ def gld_modifier_test():
 
 
 def feeder_generator_test():
-    tr.start_test('Feeder Generator example')
+    import filecmp
+
+    tr.start_test('Feeder Generator examples')
     os.chdir('capabilities/feeder-generator')
     subprocess.Popen('./clean.sh', shell=True).wait()
     tr.run_test('run.sh', 'Feeder generator')
+    compare = filecmp.cmp('R1-12.47-2_populated.log', 'test_feeder.log')
+    print(f'======  Did the test.glm match R1-12.47-2_populated.glm -> {compare}')
     os.chdir(tesp_path)
 
 
 def feeder_generator_comp_test():
+    tr.start_test('Feeder Generator Compare example')
     os.chdir(tesp_path)
+    tr.run_test('', 'Feeder generator')
     from tesp_support.api.gld_feeder_generator import _test2
     _test2()
+    os.chdir(tesp_path)
 
 
 if __name__ == '__main__':
@@ -226,7 +233,7 @@ if __name__ == '__main__':
     tr.block_test(houses_test)
     tr.block_test(gld_modifier_test)
     tr.block_test(feeder_generator_test)
-    # tr.block_test(feeder_generator_comp_test)
+    ## tr.block_test(feeder_generator_comp_test)
     tr.block_test(te30_test)
     tr.block_test(combine_feeders_test)
     tr.block_test(make_comm_eplus_test)

@@ -11,8 +11,8 @@ from datetime import timedelta
 import pandas as pd
 
 try:
-    import tesp_support.original.fncs as fncs
-except:
+    from ..original import fncs as fncs
+except Exception:
     pass
 import random
 import numpy

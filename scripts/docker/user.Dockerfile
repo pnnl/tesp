@@ -2,7 +2,7 @@ ARG DOCKER_VER
 ARG TAG=$DOCKER_VER
 
 # Build runtime image
-FROM cosim-build:tesp_$TAG AS cosim-user
+FROM tesp-build:tesp_$TAG AS tesp-user
 
 ARG SIM_GID
 ARG SIM_GRP
@@ -17,7 +17,7 @@ RUN echo "===== Building Example User =====" && \
   echo "<<<< Changing the '${SIM_GID}' group id for '${SIM_GRP} >>>>" && \
   groupdel ${SIM_GRP} && \
   groupadd --gid ${SIM_GID} ${SIM_GRP} && \
-  usermod -aG sudo,${SIM_GRP} ${SIM_USER}
+  usermod -aG sudo,${SIM_GRP} -g ${SIM_GRP} ${SIM_USER}
 
 # Switch to '$SIM_USER'
 USER ${SIM_USER}

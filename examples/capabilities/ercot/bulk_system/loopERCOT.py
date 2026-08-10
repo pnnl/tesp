@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2023 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # file: loopERCOT.py
 
 import json
@@ -282,7 +282,7 @@ while ts <= tmax:
     # run OPF to establish the prices and economic dispatch
     if ts >= tnext_opf:
         ropf = pp.runopf(ppc, ppopt_market)
-        if ropf['success'] == False:
+        if not ropf['success']:
             conv_accum = False
         opf_bus = deepcopy(ropf['bus'])
         opf_gen = deepcopy(ropf['gen'])
@@ -321,7 +321,7 @@ while ts <= tmax:
     ppc['bus'][:, 13] = opf_bus[:, 13]  # set the lmp
     ppc['gen'][:, 1] = opf_gen[:, 1]  # set the economic dispatch
     rpf = pp.runpf(ppc, ppopt_regular)
-    if rpf[0]['success'] == False:
+    if not rpf[0]['success']:
         conv_accum = False
         print('rpf did not converge at', ts)
     #   pp.printpf (100.0,

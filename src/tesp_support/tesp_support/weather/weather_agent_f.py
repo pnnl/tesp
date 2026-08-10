@@ -1,4 +1,4 @@
-# Copyright (C) 2019-2023 Battelle Memorial Institute
+# Copyright (c) 2019-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: weatherAgent.py
 
@@ -14,8 +14,8 @@ from datetime import timedelta
 
 import pandas as pd
 
-import tesp_support.original.fncs as fncs
-from tesp_support.weather.forecast import convertTimeToSeconds, weather_forecast
+from ..original import fncs as fncs
+from ..weather.forecast import convertTimeToSeconds, weather_forecast
 
 def startWeatherAgent(file):
     """ The weather agent publishes weather data as configured by the json file
@@ -44,7 +44,7 @@ def startWeatherAgent(file):
                 publishTimeAhead = conf['PublishTimeAhead']
                 forecastPeriod = conf['forecastPeriod']
                 forecastParameters = conf['parameters']
-            except:
+            except Exception:
                 pass
     else:
         print('could not open WEATHER_CONFIG file for FNCS or HELICS')

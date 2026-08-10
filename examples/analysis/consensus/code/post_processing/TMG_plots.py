@@ -704,7 +704,7 @@ def RCI_analysis(dso_range, case, data_path, metadata_path, dso_metadata_file, e
             for ev in metadata['ev']:
                 EVcount += 1
                 EVrating += metadata['ev'][ev]['max_charge'] / 1000
-                EVcapacity += metadata['ev'][ev]['range_miles'] / metadata['ev'][ev]['miles_per_kwh']
+                EVcapacity += metadata['ev'][ev]['range_miles'] / metadata['ev'][ev]['miles_per_kWh']
         EVtot.append(EVcount)
         EVratingtot.append(EVrating)
         EVcapacitytot.append(EVcapacity)
@@ -1826,7 +1826,7 @@ def dso_forecast_stats(dso_range, day_range, case, dso_metadata_file, ercot_dir,
         # substation_df = substation_df.set_index(ercot_df.index)
 
     rt_error_df = rt_forecast.subtract(load).divide(load)
-    da_error_df = da_forecast.subtract(load.groupby(pd.Grouper(freq='H')).mean()).divide(load.groupby(pd.Grouper(freq='H')).mean())
+    da_error_df = da_forecast.subtract(load.groupby(pd.Grouper(freq='h')).mean()).divide(load.groupby(pd.Grouper(fredq-'h')).mean())
 
     # stats = True
     # if stats:
@@ -2815,7 +2815,7 @@ def customer_comparative_analysis(case_data, comp_data, case_path, comp_path, ds
     # x = customer_diff_df.loc(axis=0)[:, ['kw-hr']]
 
     customer_diff_df.to_csv(path_or_buf=case_path + '\\customer_diff_data_DSO'+dso_num+'.csv')
-    participating = customer_diff_df.loc[customer_diff_df[('metadata','participating')] == True]
+    participating = customer_diff_df.loc[customer_diff_df[('metadata','participating')]]
 
     plt.figure()
     plt.scatter(participating[('metadata','slider_setting')], -100*participating[(month,'kw-hr')])
@@ -3942,13 +3942,13 @@ if __name__ == '__main__':
                 prices_data = prices_data.rename(columns={'Settlement Point Price': place+' $_mwh'})
 
                 if scenario == 'DA':
-                    date_rng = pd.date_range(start='1/1/2016', end='31/12/2016 23:00:00', freq='H')
+                    date_rng = pd.date_range(start='1/1/2016', end='31/12/2016 23:00:00', freq='h')
                 else:
                     date_rng = pd.date_range(start='1/1/2016-01-01 00:00:00', periods=len(prices_data), freq='15min')
                 prices_data['Date'] = pd.to_datetime(date_rng)
                 prices_data = prices_data.set_index('Date')
                 if scenario == 'RT':
-                    prices_data = prices_data.groupby(pd.Grouper(freq='H')).mean()
+                    prices_data = prices_data.groupby(pd.Grouper(freq='h')).mean()
                 prices_data['Year'] = prices_data.index.year
                 prices_data['Month'] = prices_data.index.month
                 prices_data['Week'] = prices_data.index.week

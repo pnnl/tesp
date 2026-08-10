@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2024 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: tso_psst.py
 
@@ -8,7 +8,7 @@ import math
 import json
 import bisect
 import csv as csv
-import logging as log
+import logging
 import numpy as np
 import pandas as pd
 import pypower.api as pp
@@ -45,29 +45,29 @@ def tso_psst_loop(casename):
                 if first:
                     first = False
                     continue
-                rd_curve.append(float(m_row[0]))
+                ec_curve.append(float(m_row[0]))
                 # publishing LMP as $/kWh/p.u.h
-                rd_adder.append(float(m_row[1]))
-            rd_curve.reverse()
-            rd_adder.reverse()
+                ec_adder.append(float(m_row[1]))
+            ec_curve.reverse()
+            ec_adder.reverse()
 
-    def rob_and_don(generation):
+    def energy_and_capacity(generation):
         adder = 0
-        if r_and_d:
-            ii = bisect.bisect_left(rd_curve, generation)
-            log.debug(f"Rob and Don index: {ii}, curve length: {len(rd_curve)}")
-            if -1 < ii < len(rd_curve):
-                if generation - rd_curve[ii] < 0.0001:
-                    adder = rd_adder[ii]
+        if e_and_c:
+            ii = bisect.bisect_left(ec_curve, generation)
+            log.debug(f"Energy and Capacity index: {ii}, curve length: {len(ec_curve)}")
+            if -1 < ii < len(ec_curve):
+                if generation - ec_curve[ii] < 0.0001:
+                    adder = ec_adder[ii]
                 else:
                     # interpolation between upper and lower bounds
-                    percent = (generation - rd_curve[ii]) / (rd_curve[ii+1] - rd_curve[ii])
-                    adder = ((rd_adder[ii+1] - rd_adder[ii]) * percent) + rd_adder[ii+1]
+                    percent = (generation - ec_curve[ii]) / (ec_curve[ii+1] - ec_curve[ii])
+                    adder = ((ec_adder[ii+1] - ec_adder[ii]) * percent) + ec_adder[ii+1]
             else:
-                if generation > rd_curve[-1]:
-                    adder = rd_adder[-1]
+                if generation > ec_curve[-1]:
+                    adder = ec_adder[-1]
                 else:
-                    adder = rd_adder[0]
+                    adder = ec_adder[0]
         return adder
 
     def get_sub(sub_idx):
@@ -152,7 +152,7 @@ def tso_psst_loop(casename):
 
         # rob and don adder if used
         adder = [0 for _ in range(hours_in_a_day)]
-        if r_and_d:
+        if e_and_c:
             generation = [0 for _ in range(hours_in_a_day)]
             for g in dispatch:
                 row = dispatch[g]
@@ -160,7 +160,7 @@ def tso_psst_loop(casename):
                     generation[ii] += row[ii]
             for ii in range(hours_in_a_day):
                 generation[ii] += renew[ii] * baseS
-                adder[ii] = rob_and_don(generation[ii])
+                adder[ii] = energy_and_capacity(generation[ii])
                 log.info(f"generation: {generation[ii]}, renewables: {renew[ii] * baseS}, adder: {adder[ii]}")
                 for jj in range(dsoBus.shape[0]):
                     DA_LMPs[jj][ii] += adder[ii]
@@ -356,8 +356,8 @@ def tso_psst_loop(casename):
             generation += gen[ii, 1]
 
         adder = 0.0
-        if r_and_d:
-            adder = rob_and_don(generation)
+        if e_and_c:
+            adder = energy_and_capacity(generation)
             log.debug(f"generation: {generation}, renewables: {renew * baseS}, adder: {adder}")
             if adder > 0:
                 for ii in range(total_bus_num):
@@ -1023,10 +1023,10 @@ def tso_psst_loop(casename):
     ppopt_market = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['opf_dc'], OPF_ALG_DC=200)  # dc for
     ppopt_regular = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['pf_dc'], PF_MAX_IT=20, PF_ALG=1)  # ac for power flow
 
-    logger = log.getLogger()
-    logger.setLevel(log.INFO)
-    # logger.setLevel(log.WARNING)
-    # logger.setLevel(log.DEBUG)
+    log = logging.getLogger(__name__)
+    log.setLevel(logging.INFO)
+    # log.setLevel(logging.DEBUG)
+
     log.info(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     log.info('starting tso loop...')
 
@@ -1035,6 +1035,7 @@ def tso_psst_loop(casename):
         solver = pst.SOLVER
     if solver == 'cbc':
         ppc['gencost'][:, 4] = 0.0  # can't use quadratic costs with CBC solver
+    log.info(f'solver choice: {solver}')
 
     # these have been aliased from case name .json file
     bus = ppc['bus']
@@ -1074,6 +1075,9 @@ def tso_psst_loop(casename):
     swing_bus = int(ppc['swing_bus'])
     noScale = ppc['noScale']
 
+    # The Grid Project Impact Quantification (GridPIQ) screening tool, default false
+    # provides insight into the impacts of a grid project within its context."
+    # gridpiq private repo https://stash.pnnl.gov/projects/GPIQ/repos/gpiq_python/browse
     pq = None
     piq = False
     piq_hour = 0
@@ -1295,10 +1299,10 @@ def tso_psst_loop(casename):
     rt_lmps = {}
     rt_dispatch = {}
 
-    rd_curve = []
-    rd_adder = []
-    r_and_d = ppc["RandD"]
-    if r_and_d:
+    ec_curve = []
+    ec_adder = []
+    e_and_c = ppc["EandC"]
+    if e_and_c:
         open_ldcurve(ppc["LDCurve"])
 
     # listening to message objects key on bus number

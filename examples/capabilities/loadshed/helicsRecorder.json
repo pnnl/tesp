@@ -1,4 +1,5 @@
 {
+  "name": "loadshedPlayer",
   "loglevel": "warning",
   "period": 1.0,
   "stop": 21600.0,

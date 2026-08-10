@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Battelle Memorial Institute
+# Copyright (c) 2024-2025 Battelle Memorial Institute
 # file: ETP.py
 """
 The Equivalent Thermal Parameters model is a single zone thermodynamic model
@@ -17,7 +17,7 @@ for these types of structures.
 The ETP model has three nodes modeling three temperatures: outside air,
 interior air temperature, and mass temperature. The temperatures are coupled
 through the exterior envelope (outside air temp to interior air temp) and
-and the mass-air interface between the interior air and the mass of the house.
+the mass-air interface between the interior air and the mass of the house.
 Heat is added (or removed) from both the interior air of the house and the 
 mass of the house through solar radiation, electrical loads, and the HVAC
 system. Both the interior air temperature and mass temperature have a delayed
@@ -27,28 +27,30 @@ mass temperature being much more significant than that of the air.
 Here's the electrical circuit model that is solved with the key parameters
 identified. Note that all of the user-facing device parameters map into these
 model parameters in one way or another.
+"""
 
-                        ------                  ------
-                       /      \                /      \
-                       |  Qa   |               |  Qm   |
-                       \      /                \      /
-                        ------                  ------
-                           |                       |
-                           |                       |
-           Ua              |          Hm           |
-       /\    /\    /\      v     /\    /\    /\    v     
-  To--/  \  /  \  /  \----Ta----/  \  /  \  /  \---Tm
-          \/    \/         |        \/    \/       |
-                           |                       |
-                           |                       |
-                        -------  Ca             -------  Cm
-                        _______                 _______
-                           |                       |
-                           |                       |
-                         -----                   -----
-                          ---                     ---
-                           -                       -
+  #                       ------                  ------
+  #                      /      \                /      \
+  #                      |  Qa   |               |  Qm   |
+  #                      \      /                \      /
+  #                       ------                  ------
+  #                          |                       |
+  #                          |                       |
+  #          Ua              |          Hm           |
+  #      /\    /\    /\      v     /\    /\    /\    v
+  # To--/  \  /  \  /  \----Ta----/  \  /  \  /  \---Tm
+  #         \/    \/         |        \/    \/       |
+  #                          |                       |
+  #                          |                       |
+  #                       -------  Ca             -------  Cm
+  #                       _______                 _______
+  #                          |                       |
+  #                          |                       |
+  #                        -----                   -----
+  #                         ---                     ---
+  #                          -                       -
 
+"""
 To - outdoor air temperature
 Ua - Thermal conductivity of the building envelope
 Ta - Indoor air temperature
@@ -69,27 +71,25 @@ import pprint
 import sys
 
 # Setting up logging
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 # Setting up pretty printing, mostly for debugging.
 pp = pprint.PrettyPrinter(indent=4)
 
-def _open_file(file_path: str, type='r'):
-    """Utilty function to open file with reasonable error handling.
+def _open_file(file_path: str, file_type='r'):
+    """Utility function to open file with reasonable error handling.
 
     Args:
         file_path (str) - Path to the file to be opened
-
-        type (str) - Type of the open method. Default is read ('r')
-
+        file_type (str) - Type of the open method. Default is read ('r')
 
     Returns:
         fh (file object) - File handle for the open file
     """
     try:
-        fh = open(file_path, type)
+        fh = open(file_path, file_type)
     except IOError:
-        logger.error('Unable to open {}'.format(file_path))
+        log.error('Unable to open {}'.format(file_path))
     else:
         return fh
 
@@ -97,16 +97,15 @@ def _open_file(file_path: str, type='r'):
 class ETP():
     """
 
-
     """
 
-    def __init__(self):
+    def __init__(self, house_properties):
         # TODO: update inputs for class
         """ Initializes the class
         """
         # TODO: update attributes of class
-        self.name = key
-        self.solver = solver
+        self.name = house_properties['name']
+        # self.solver = solver
         self.air_temp = 72.0
         self.mass_temp = 72.0
         self.hvac_kw = 100.0
@@ -159,8 +158,8 @@ class ETP():
         self.heating_COP = 2.5
         self.cooling_cop_adj_rt = 3.5
         self.heating_cop_adj_rt = 2.5
-        self.cooling_cop_adj = [self.cooling_COP for _ in range(self.windowLength)]
-        self.heating_cop_adj = [self.heating_COP for _ in range(self.windowLength)]
+        # self.cooling_cop_adj = [self.cooling_COP for _ in range(self.windowLength)]
+        # self.heating_cop_adj = [self.heating_COP for _ in range(self.windowLength)]
         # Coefficients to adjust COP and capacity
         self.cooling_COP_K0 = -0.01363961
         self.cooling_COP_K1 = 0.01066989
@@ -178,7 +177,7 @@ class ETP():
         self.cooling_COP = float(house_properties['cooling_COP'])
 
         self.latent_load_fraction = 0.3
-        self.latent_factor = [self.latent_load_fraction for _ in self.TIME]
+        # self.latent_factor = [self.latent_load_fraction for _ in self.TIME]
         self.cooling_design_temperature = 95.0
         self.design_cooling_setpoint = 75.0
         self.design_internal_gains = 167.09 * self.sqft ** 0.442
@@ -236,7 +235,7 @@ class ETP():
         self.ext_wall_area = 0  
         self.window_area = 0
         self.ext_net_wall_area = 0
-        self.Vterm
+        self.Vterm = None
         
         # calculated in calc_etp_model
         self.UA = 0.
@@ -268,8 +267,8 @@ class ETP():
         self.check_parameter_in_bounds("Rroof", 2, 60)
         self.check_parameter_in_bounds("Rwall", 2, 40)
         self.check_parameter_in_bounds("Rfloor", 2, 40)
-        self.check_parameter_in_bounds("Rdoor", 1, 20)
-        self.check_parameter_in_bounds("air_change_per_hour", 0.1, 6.5)
+        self.check_parameter_in_bounds("Rdoors", 1, 20)
+        self.check_parameter_in_bounds("airchange_per_hour", 0.1, 6.5)
         self.check_parameter_in_bounds("glazing_layers", 1, 3)
         self.check_parameter_in_bounds("cooling_COP", 1, 10)
 
@@ -299,8 +298,8 @@ class ETP():
         """
         parameter_value = getattr(self, parameter_name)
         if not (min_value <= parameter_value <= max_value):
-            logger.info(f'{self.name} "init" --  {parameter_name} is {parameter_value}, outside of nominal range of
-                         {min_value} to {max_value}')
+            log.info(f'{self.name} "init" --  {parameter_name} is {parameter_value}, '
+                     f'outside of nominal range of {min_value} to {max_value}')
 
     def set_window_insulation(self, glass_type: int, glazing_layers: int, window_frame: int) -> float:
         """
@@ -312,7 +311,7 @@ class ETP():
         """
         if glass_type == 2:
             if glazing_layers == 1:
-                logging.error("error: no value for one pane of low-e glass")
+                log.error("error: no value for one pane of low-e glass")
                 raise ValueError("No value for Rg for glazing_layers = 1, glass_type = 2 (low-e glass)")
             elif glazing_layers == 2:
                 if window_frame == 0:
@@ -326,7 +325,7 @@ class ETP():
                 elif window_frame == 4:
                     Rg = 1.0 / 0.33
                 else:
-                    logger.error(f"window_frame defined as {window_frame}; valid values are '0', '1', '2', '3', or '4'.")
+                    log.error(f"window_frame defined as {window_frame}; valid values are '0', '1', '2', '3', or '4'.")
             elif glazing_layers == 3:
                 if window_frame == 0:
                     Rg = 1.0 / 0.27
@@ -339,9 +338,9 @@ class ETP():
                 elif window_frame == 4:
                     Rg = 1.0 / 0.31
                 else:
-                    logger.error(f"window_frame defined as {window_frame}; valid values are '0', '1', '2', '3', or '4'.")
+                    log.error(f"window_frame defined as {window_frame}; valid values are '0', '1', '2', '3', or '4'.")
             else:
-                logger.error(f"glazing_layers defined as {glazing_layers}; valid values are '1', '2', or '3'.")
+                log.error(f"glazing_layers defined as {glazing_layers}; valid values are '1', '2', or '3'.")
         elif glass_type == 1:
             if glazing_layers == 1:
                 if window_frame == 0:
@@ -355,7 +354,7 @@ class ETP():
                 elif window_frame == 4:
                     Rg = 1.0 / 0.81
                 else:
-                    logger.error(f"window_frame defined as {window_frame}; valid values are '0', '1', '2', '3', or '4'.")
+                    log.error(f"window_frame defined as {window_frame}; valid values are '0', '1', '2', '3', or '4'.")
             elif glazing_layers == 2:
                 if window_frame == 0:
                     Rg = 1.0 / 0.48
@@ -368,7 +367,7 @@ class ETP():
                 elif window_frame == 4:
                     Rg = 1.0 / 0.44
                 else:
-                    logger.error(f"window_frame defined as {window_frame}; valid values are '0', '1', '2', '3', or '4'.")
+                    log.error(f"window_frame defined as {window_frame}; valid values are '0', '1', '2', '3', or '4'.")
             elif glazing_layers == 3:
                 if window_frame == 0:
                     Rg = 1.0 / 0.31
@@ -381,13 +380,13 @@ class ETP():
                 elif window_frame == 4:
                     Rg = 1.0 / 0.34
                 else:
-                    logger.error(f"window_frame defined as {window_frame}; valid values are '0', '1', '2', '3', or '4'.")
+                    log.error(f"window_frame defined as {window_frame}; valid values are '0', '1', '2', '3', or '4'.")
             else:
-                logger.error(f"glazing_layers defined as {glazing_layers}; valid values are '1', '2', or '3'.")
+                log.error(f"glazing_layers defined as {glazing_layers}; valid values are '1', '2', or '3'.")
         elif glass_type == 0:
             Rg = 2.0
         else:
-            logger.error(f"glass_type defined as {glass_type}; valid values are '2', '1', or '0'.")
+            log.error(f"glass_type defined as {glass_type}; valid values are '2', '1', or '0'.")
         
         return Rg
         
@@ -407,7 +406,7 @@ class ETP():
                 elif window_frame == 3 or window_frame == 4:
                     Wg = 0.64
                 else:
-                    logger.error(f"window_frame defined as {window_frame}; valid values are '0', '1', '2', '3', or '4'.")
+                    log.error(f"window_frame defined as {window_frame}; valid values are '0', '1', '2', '3', or '4'.")
             elif glazing_treatment == 2:
                 if window_frame == 0:
                     Wg = 0.73
@@ -416,7 +415,7 @@ class ETP():
                 elif window_frame == 3 or window_frame == 4:
                     Wg = 0.54
                 else:
-                    logger.error(f"window_frame defined as {window_frame}; valid values are '0', '1', '2', '3', or '4'.")
+                    log.error(f"window_frame defined as {window_frame}; valid values are '0', '1', '2', '3', or '4'.")
             elif glazing_treatment == 3:
                 if window_frame == 0:
                     Wg = 0.31
@@ -425,9 +424,9 @@ class ETP():
                 elif window_frame == 3 or window_frame == 4:
                     Wg = 0.24
                 else:
-                    logger.error(f"window_frame defined as {window_frame}; valid values are '0', '1', '2', '3', or '4'.")
+                    log.error(f"window_frame defined as {window_frame}; valid values are '0', '1', '2', '3', or '4'.")
             else:
-                logger.error(f"glazing_treatment defined as {glazing_treatment}; valid values are '1', '2', or '3'.")
+                log.error(f"glazing_treatment defined as {glazing_treatment}; valid values are '1', '2', or '3'.")
         elif glazing_layers == 2:
             if glazing_treatment == 1:
                 if window_frame == 0:
@@ -437,7 +436,7 @@ class ETP():
                 elif window_frame == 3 or window_frame == 4:
                     Wg = 0.57
                 else:
-                    logger.error(f"window_frame defined as {window_frame}; valid values are '0', '1', '2', '3', or '4'.")
+                    log.error(f"window_frame defined as {window_frame}; valid values are '0', '1', '2', '3', or '4'.")
             elif glazing_treatment == 2:
                 if window_frame == 0:
                     Wg = 0.62
@@ -446,7 +445,7 @@ class ETP():
                 elif window_frame == 3 or window_frame == 4:
                     Wg = 0.46
                 else:
-                    logger.error(f"window_frame defined as {window_frame}; valid values are '0', '1', '2', '3', or '4'.")
+                    log.error(f"window_frame defined as {window_frame}; valid values are '0', '1', '2', '3', or '4'.")
             elif glazing_treatment == 3:
                 if window_frame == 0:
                     Wg = 0.29
@@ -455,9 +454,9 @@ class ETP():
                 elif window_frame == 3 or window_frame == 4:
                     Wg = 0.22
                 else:
-                    logger.error(f"window_frame defined as {window_frame}; valid values are '0', '1', '2', '3', or '4'.")
+                    log.error(f"window_frame defined as {window_frame}; valid values are '0', '1', '2', '3', or '4'.")
             else:
-                logger.error(f"glazing_treatment defined as {glazing_treatment}; valid values are '1', '2', or '3'.")
+                log.error(f"glazing_treatment defined as {glazing_treatment}; valid values are '1', '2', or '3'.")
         elif glazing_layers == 3:
             if glazing_treatment == 1:
                 if window_frame == 0:
@@ -467,7 +466,7 @@ class ETP():
                 elif window_frame == 3 or window_frame == 4:
                     Wg = 0.51
                 else:
-                    logger.error(f"window_frame defined as {window_frame}; valid values are '0', '1', '2', '3', or '4'.")
+                    log.error(f"window_frame defined as {window_frame}; valid values are '0', '1', '2', '3', or '4'.")
             elif glazing_treatment == 2:
                 if window_frame == 0:
                     Wg = 0.34
@@ -476,7 +475,7 @@ class ETP():
                 elif window_frame == 3 or window_frame == 4:
                     Wg = 0.26
                 else:
-                    logger.error(f"window_frame defined as {window_frame}; valid values are '0', '1', '2', '3', or '4'.")
+                    log.error(f"window_frame defined as {window_frame}; valid values are '0', '1', '2', '3', or '4'.")
             elif glazing_treatment == 3:
                 if window_frame == 0:
                     Wg = 0.34
@@ -485,11 +484,11 @@ class ETP():
                 elif window_frame == 3 or window_frame == 4:
                     Wg = 0.26
                 else:
-                    logger.error(f"window_frame defined as {window_frame}; valid values are '0', '1', '2', '3', or '4'.")
+                    log.error(f"window_frame defined as {window_frame}; valid values are '0', '1', '2', '3', or '4'.")
             else:
-                logger.error(f"glazing_treatment defined as {glazing_treatment}; valid values are '1', '2', or '3'.")
+                log.error(f"glazing_treatment defined as {glazing_treatment}; valid values are '1', '2', or '3'.")
         else:
-            logger.error(f"glazing_layers defined as {glazing_layers}; valid values are '1', '2', or '3'.")
+            log.error(f"glazing_layers defined as {glazing_layers}; valid values are '1', '2', or '3'.")
 
         return Wg
 
@@ -531,17 +530,12 @@ class ETP():
             `Thermal Integrity Table Inputs and Defaults <http://gridlab-d.shoutwiki.com/wiki/Residential_module_user%27s_guide#Thermal_Integrity_Table_Inputs_and_Defaults>`_
         """
 
-        
-
-
-
-
-        self.CA = 3 * Vterm
+        self.CA = 3 * self.Vterm
         self.HM = self.int_heat_transfer_coeff \
                 * (self.window_area / self.exterior_wall_fraction + self.ext_wall_area * self.int_ext_wall_ratio + self.ceiling_area * self.stories / self.exterior_ceiling_fraction)
-        self.CM = self.sqft * self.thermal_mass_per_floor_area - 2 * Vterm
+        self.CM = self.sqft * self.thermal_mass_per_floor_area - 2 * self.Vterm
 
-        self.solar_heatgain_factor = Ag * self.Wg * self.window_energy_transfer_coeff
+        self.solar_heatgain_factor = self.window_area * self.Wg * self.window_energy_transfer_coeff
 
         self.design_cooling_capacity = ((1.0 + self.over_sizing_factor) * (1.0 + self.latent_load_fraction) *
                                         (self.UA * (self.cooling_design_temperature - self.design_cooling_setpoint) +
@@ -558,39 +552,105 @@ class ETP():
             round_value = self.design_heating_capacity / 10000.0
             self.design_heating_capacity = math.ceil(round_value) * 10000.0
 
-        logger.debug('ETP model ' + self.name)
-        logger.debug('  UA -> {:.2f}'.format(self.UA))
-        # print('  UA -> {:.2f}'.format(self.UA))
-        logger.debug('  CA -> {:.2f}'.format(self.CA))
-        # print('  CA -> {:.2f}'.format(self.CA))
-        logger.debug('  HM -> {:.2f}'.format(self.HM))
-        logger.debug('  CM -> {:.2f}'.format(self.CM))
-        # print('  CM -> {:.2f}'.format(self.CM))
+        log.setLevel(logging.DEBUG)
+        log.debug('ETP model ' + self.name)
+        log.debug('  UA -> {:.2f}'.format(self.UA))
+#        print('  UA -> {:.2f}'.format(self.UA))
+        log.debug('  CA -> {:.2f}'.format(self.CA))
+#        print('  CA -> {:.2f}'.format(self.CA))
+        log.debug('  HM -> {:.2f}'.format(self.HM))
+#        print('  HM -> {:.2f}'.format(self.HM))
+        log.debug('  CM -> {:.2f}'.format(self.CM))
+#        print('  CM -> {:.2f}'.format(self.CM))
             
     def _auto_run(args):
         pass
 
+def _test():
+    """
+    Testing
+
+    Makes a single hvac agent and run DA
+    """
+    house_properties = \
+        {"feeder_id": "R4_25.00_1",
+         "billingmeter_id": "R4_25_00_1_tn_107_mtr_1",
+         "name": "low_inc",
+         "sqft": 1040.0,
+         "stories": 2,
+         "doors": 4,
+         "thermal_integrity": "VERY_LITTLE",
+         "cooling": "ELECTRIC",
+         "heating": "GAS",
+         "wh_gallons": 0,
+         "house_class": "SINGLE_FAMILY",
+         "Rroof": 20.07,
+         "Rwall": 11.47,
+         "Rfloor": 10.05,
+         "Rdoors": 3.27,
+         "airchange_per_hour": 0.68,
+         "ceiling_height": 9,
+         "thermal_mass_per_floor_area": 2.97,
+         "aspect_ratio": 1.0,
+         "exterior_wall_fraction": 1.0,
+         "exterior_floor_fraction": 1.0,
+         "exterior_ceiling_fraction": 1.0,
+         "window_exterior_transmission_coefficient": 0.57,
+         "glazing_layers": 2,
+         "glass_type": 1,
+         "window_frame": 1,
+         "glazing_treatment": 2,
+         "cooling_COP": 4.0,
+         "over_sizing_factor": 0.2488,
+         "fuel_type": "gas",
+         "zip_skew": -1716.0,
+         "zip_heatgain_fraction": {
+             "constant": 1.0,
+             "responsive_loads": 0.9,
+             "unresponsive_loads": 0.9
+         },
+         "zip_scalar": {
+             "constant": 0.0,
+             "responsive_loads": 0.66,
+             "unresponsive_loads": 0.65
+         },
+         "zip_power_fraction": {
+             "constant": 1.0,
+             "responsive_loads": 1.0,
+             "unresponsive_loads": 0.4
+         },
+         "zip_power_pf": {
+             "constant": 1.0,
+             "responsive_loads": 1.0,
+             "unresponsive_loads": 1.0
+         }
+         }
+    etp = ETP(house_properties)
+
+
 if __name__ == '__main__':
+
     # This slightly complex mess allows lower importance messages
     # to be sent to the log file and ERROR messages to additionally
     # be sent to the console as well. Thus, when bad things happen
     # the user will get an error message in both places which,
-    # hopefully, will aid in trouble-shooting.
+    # hopefully, will aid in troubleshooting.
+
     fileHandle = logging.FileHandler("etp.log",'w')
     fileHandle.setLevel(logging.DEBUG)
     streamHandle = logging.StreamHandler(sys.stdout)
     streamHandle.setLevel(logging.ERROR)
-    logging.basicConfig(level=logging.DEBUG,
-                        handlers=[fileHandle, streamHandle])
-    parser = argparse.ArgumentParser(description="Evaluates disk space used,"
-                                     "writes results to disk, and makes a graph.")
-    parser.add_argument('-g', '--graph',
-                        help="flag to only create a graph of the historic data"
-                                "(no data collection)",
-                        action=argparse.BooleanOptionalAction)
-    parser.add_argument('-i', '--input_paths',
-                        help="paths of folders to get sizes of, one per line",
-                        nargs='?',
-                        default="folder_paths_to_size.txt")
-    args = parser.parse_args()
-    _auto_run(args)
+    logging.basicConfig(level=logging.DEBUG, handlers=[fileHandle, streamHandle])
+    _test()
+
+    # parser = argparse.ArgumentParser(description="Evaluates disk space used,"
+    #                                  "writes results to disk, and makes a graph.")
+    # parser.add_argument('-g', '--graph',
+    #                     help="flag to only create a graph of the historic data"
+    #                             "(no data collection)",
+    #                     action=argparse.BooleanOptionalAction)
+    # parser.add_argument('-i', '--input_paths',
+    #                     help="paths of folders to get sizes of, one per line",
+    #                     nargs='?',
+    #                     default="folder_paths_to_size.txt")
+    # args = parser.parse_args()

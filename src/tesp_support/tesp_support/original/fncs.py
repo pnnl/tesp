@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2023 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # file: fncs.py
 """ Functions that provide access from Python to the FNCS library
 
@@ -163,7 +163,7 @@ try:
                              ctypes.POINTER(ctypes.c_int),
                              ctypes.POINTER(ctypes.c_int)]
     _get_version.restype = None
-except:
+except Exception:
     pass
 
 def time_request(time):

@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2023 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # file: hvac_agent.py
 """Class that controls the responsive thermostat for one house.
 
@@ -7,7 +7,7 @@ bid quantity, and thermostat setting changes as the response
 mechanism.
 """
 
-from tesp_support.api.parse_helpers import parse_number, parse_magnitude
+from ..api.parse_helpers import parse_number, parse_magnitude
 
 
 class hvac:
@@ -81,7 +81,7 @@ class hvac:
         self.ramp = float(hvac_dict['ramp'])
         self.price_cap = float(hvac_dict['price_cap'])
         self.bid_delay = float(hvac_dict['bid_delay'])
-        self.use_pre_dictive_bidding = float(hvac_dict['use_predictive_bidding'])
+        self.use_predictive_bidding = float(hvac_dict['use_predictive_bidding'])
 
         self.std_dev = aucObj.std_dev
         self.mean = aucObj.clearing_price
@@ -178,7 +178,7 @@ class hvac:
         """ Sets the hvac_load attribute, if greater than zero
 
         Args:
-            val (str): FNCS message with load in kW
+            val (str): Message with load in kW
         """
         kw = parse_number(val)
         if kw > 0.0:
@@ -188,7 +188,7 @@ class hvac:
         """ Sets the hvac_on attribute
 
         Args:
-            val (str): FNCS message with state, ON or OFF
+            val (str): Message with state, ON or OFF
         """
         if val == 'OFF':
             self.hvac_on = False
@@ -199,7 +199,7 @@ class hvac:
         """ Sets the air_temp attribute
 
         Args:
-            val (str): FNCS message with temperature in degrees Fahrenheit
+            val (str): Message with temperature in degrees Fahrenheit
         """
         self.air_temp = parse_number(val)
 
@@ -207,7 +207,7 @@ class hvac:
         """ Sets the mtr_v attribute
 
         Args:
-            val (str): FNCS message with meter line-neutral voltage
+            val (str): Message with meter line-neutral voltage
         """
         self.mtr_v = parse_magnitude(val)
 

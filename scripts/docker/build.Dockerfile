@@ -1,8 +1,11 @@
 ARG DOCKER_VER
 ARG TAG=$DOCKER_VER
-
+ARG BUILD_GRIDLABD=yes
+ARG BUILD_ENERGYPLUS=yes
+ARG BUILD_NS3=yes
+ARG BUILD_IPOPT=yes
 # Build runtime image
-FROM cosim-library:tesp_$TAG AS cosim-build
+FROM tesp-library:tesp_$TAG AS tesp-build
 
 ARG SIM_USER
 ARG SIM_GRP
@@ -13,7 +16,7 @@ ENV SIM_EMAIL=pnnl.com
 USER $SIM_USER
 WORKDIR $SIM_HOME
 
-# CoSim exports
+# TESP exports
 ENV TESPDIR=$SIM_HOME/tesp
 ENV INSTDIR=$SIM_HOME/tenv
 ENV REPO_DIR=$SIM_HOME/repo
@@ -26,8 +29,8 @@ ENV GLPATH=$INSTDIR/lib/gridlabd:$INSTDIR/share/gridlabd
 ENV CPLUS_INCLUDE_PATH=/usr/include/hdf5/serial:$INSTDIR/include
 ENV FNCS_INCLUDE_DIR=$INSTDIR/include
 ENV FNCS_LIBRARY=$INSTDIR/lib
-ENV LD_LIBRARY_PATH=$INSTDIR/lib
-ENV LD_RUN_PATH=$INSTDIR/lib
+ENV LD_LIBRARY_PATH=$INSTDIR/lib:$INSTDIR/lib64
+ENV LD_RUN_PATH=$INSTDIR/lib:$INSTDIR/lib64
 
 # PATH
 ENV PATH=$JAVA_HOME:$INSTDIR/bin:$SIM_HOME/.local/bin:$PATH
@@ -43,6 +46,8 @@ ENV PSST_WARNING=ignore
 # 'PSST_WARNING action' -- one of "error", "ignore", "always", "default", "module", or "once"
 
 COPY . ${BUILD_DIR}
+
+RUN python3 --version && pip --version
 
 RUN echo "===== Building TESP Build =====" && \
   echo "Configure name and email for git" && \
@@ -122,12 +127,12 @@ RUN echo "===== Building TESP Build =====" && \
   rm -r ns-3-dev && \
   rm -r Ipopt && \
   rm -r ThirdParty-ASL && \
-  rm -r ThirdParty-Mumps && \
   echo "Install Python Libraries and TESP pypi..." && \
-  pip install --no-warn-script-location --upgrade pip  > "pypi.log" && \
-  pip install --no-warn-script-location --no-cache-dir -r ${TESPDIR}/requirements.txt  >> "pypi.log" && \
-  pip install --no-warn-script-location --no-cache-dir helics[cli]  >> "pypi.log" && \
-  pip install --no-warn-script-location --no-cache-dir -e ${REPO_DIR}/psst  >> "pypi.log" && \
-  pip install --no-warn-script-location --no-cache-dir -e ${TESPDIR}/src/tesp_support  >> "pypi.log" && \
+  pip install --no-warn-script-location --break-system-packages --upgrade pip  > "pypi.log" && \
+  pip install --no-warn-script-location --break-system-packages --no-cache-dir -r ${TESPDIR}/requirements.txt  >> "pypi.log" && \
+  pip install --no-warn-script-location --break-system-packages --no-cache-dir helics[cli]  >> "pypi.log" && \
+  pip install --no-warn-script-location --break-system-packages --no-cache-dir -e ${REPO_DIR}/psst  >> "pypi.log" && \
+  pip install --no-warn-script-location --break-system-packages --no-cache-dir -e ${TESPDIR}/src/tesp_support  >> "pypi.log" && \
   echo "${SIM_USER}" | sudo -S ldconfig && \
-  ${BUILD_DIR}/versions.sh
+#  ${BUILD_DIR}/versions.sh && \
+  echo "Done"

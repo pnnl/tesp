@@ -1,17 +1,16 @@
-# Copyright (C) 2021-2023 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: DSO_quadratic_curves.py
 """Class that prepares the quadratic curves for DSO market
 
 """
 import json
-import logging as log
+import logging
 
 import numpy as np
 import pandas as pd
 
-logger = log.getLogger()
-
+log = logging.getLogger(__name__)
 
 class DSO_LMPs_vs_Q:
     """

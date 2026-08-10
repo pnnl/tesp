@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2019-2023 Battelle Memorial Institute
+# Copyright (c) 2019-2025 Battelle Memorial Institute
 """
 Created on Tue Jan 17 14:05:08 2023
 
@@ -24,7 +24,7 @@ from tesp_support.api.data import feeders_path
 from tesp_support.api.modify_GLM import GLMModifier
 
 # Setting up logging
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 # Setting up pretty printing, mostly for debugging.
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -48,7 +48,7 @@ def _auto_run(plot:bool, args):
     glmMod = GLMModifier()
     glm, success = glmMod.read_model(feeder_path)
     if not success:
-        print('{feeder_path}} not found or file not supported; exiting')
+        print(f'{feeder_path} not found or file not supported; exiting')
 
     if hasattr(args, 'coords_file'):
         coords_file_path = os.path.join(feeders_path, args.coords_file)

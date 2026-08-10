@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (c) 2021-2023 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # file: tesp.sh
 
 # You should get familiar with the command line to have good success with TESP
@@ -43,9 +43,29 @@ while true; do
     esac
 done
 
+# repo for git
+# sudo add-apt-repository ppa:git-core/ppa
+
+# Some support depends linux version for python
+_ver_="3.12"
+lv=( $(cat /etc/issue.net) )
+lv=( ${lv[1]//./ } )
+if [[ ${lv[0]} -lt 24 && ${lv[0]} -gt 18 ]]; then
+  echo "'deadsnakes' has been added to ppa repository"
+  sudo add-apt-repository ppa:deadsnakes/ppa -y
+elif [[ ${lv[0]} -eq 24 ]]; then
+  echo "'deadsnakes' will not add to ppa repository"
+else
+  echo "**************************************************"
+  echo "$(cat /etc/issue.net), not supported for TESP"
+  echo "**************************************************"
+  exit
+fi
+
 # add build tools for compiling
+sudo apt-get update
 sudo apt-get -y upgrade
-sudo apt-get -y install pkgconf \
+sudo apt-get -y pkgconf \
 git \
 build-essential \
 autoconf \
@@ -68,9 +88,11 @@ coinor-libcbc-dev \
 coinor-libipopt-dev \
 liblapack-dev \
 libmetis-dev \
-python3-venv \
+libmumps-dev \
+python${_ver_} \
+python${_ver_}-venv \
 python3-pip \
-python3-tk \
+python${_ver_}-tk \
 python3-pil.imagetk
 
 sudo ln -sf /usr/lib/jvm/java-11-openjdk-amd64 /usr/lib/jvm/default-java

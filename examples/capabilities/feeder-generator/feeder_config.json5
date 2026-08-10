@@ -2,39 +2,44 @@
 // configure the process of populating a feeder.
 
 {
-    // Simulation
-    "starttime": "2023-01-01 07:00:00", // REQUIRED: format "YYYY-MM-DD HH:MM:SS"
-    "stoptime": "2023-01-01 17:00:00",  // REQUIRED: format "YYYY-MM-DD HH:MM:SS"
+    // Simulation Config
+    "StartTime": "2023-01-01 07:00:00", // REQUIRED: format "YYYY-MM-DD HH:MM:SS"
+    "EndTime": "2023-01-01 17:00:00",  // REQUIRED: format "YYYY-MM-DD HH:MM:SS"
     "timestep": 300,              // REQUIRED: simulation timestep, in seconds
-    "timezone": "EST+5EDT",       // REQUIRED: GridLAB-D supported time zone: Eastern. (CST+6CDT (Central), MST+7MDT (Mountain), PST+8PDT (Pacific))
+    "time_zone": "EST+5EDT",       // REQUIRED: GridLAB-D supported time zone: Eastern. (CST+6CDT (Central), MST+7MDT (Mountain), PST+8PDT (Pacific))
+    "metrics_extension": "json",
     "metrics_interval": 300,      // DEFAULT: 300, update frequency of the metrics collector, in seconds
+    "metrics_interim": 3600,      // DEFAULT: 300, update frequency of the metrics collector, in seconds
+    "metrics_filename": "${METRICS_FILE}",
+    "metrics_alternate": "yes",
+    "metrics_full_detail": true, // Level of reporting detail. False = limited, true = full
 
     // Input and Output Files
     "in_file_glm": "",            // input feeder model ("myfeeder.glm"). If empty, taxonomy feeder used
     "make_plot": false,           // specify whether to plot populated feeder
     "gis_file": "",               // optional positional data for feeder (.json)
-    "taxonomy": "R1-12.47-2.glm", // taxonomy feeder model
+    "taxonomy": "R1-12.47-2.glm", // base taxonomy feeder model
     "out_file_glm": "test.glm",   // REQUIRED: output populated feeder ("myfeeder_populated.glm").
-    "case_name": "MyCase",        // REQUIRED: a name for your case
+    "caseName": "MyCase",         // REQUIRED: a name for your case
     "substation_name": "MySub",   // REQUIRED: a name for the substation
     // Metadata Files
     "data_path": ".",
-    "file_residential_meta": "residential_metadata.json",
-    "file_commercial_meta": "commercial_metadata.json",
-    "file_battery_meta": "battery_metadata.json",
-    "file_ev_meta": "ev_model_metadata.json",
-    "file_ev_driving_meta": "ev_driving_metadata.csv",
+    "residential_meta_file": "residential_metadata.json",
+    "commercial_meta_file": "commercial_metadata.json",
+    "battery_meta_file": "battery_metadata.json",
+    "ev_meta_file": "ev_model_metadata.json",
+    "ev_driving_meta_file": "ev_driving_metadata.csv",
 
     // RECS (Residential Energy Consumption Survey) Data
-    "out_file_residential_meta": "RECS_residential_metadata.json", // If empty, will be generated using inputs below:
-    "out_file_hvac_set_point": "hvac_setpt_RECS.json",
+    "residential_meta_file_RECS": "RECS_residential_metadata.json", // If empty, will be generated using inputs below:
+    "out_hvac_set_point_file": "hvac_setpt_RECS.json",
     "sample": {
         "state": ["VT"],
         "housing_density": ["No_DSO_Type"],   //"No_DSO_Type", U, R, C possibly = S
         "income_level": ["Low", "Middle", "Upper"]
     },
     "bin_size_threshold": 100,
-    "climate": "2A", 
+    "climate": "2A", // ASHRAE Climate Region
     "wh_shift": 0,
 
     // Climate/Location (Note: check that all location data is consistent!)
@@ -45,7 +50,8 @@
     "tmyfile": "VT-Burlington_International_Ap.tmy3", // TMY3 weather file, DEFAULT: AZ-Tucson_International_Ap.tmy3.
 
     // Residential & Commercial Population
-    "utility_type": "Urban",
+    "comm_count": 1, // Whether to add commercial buildings
+    "utility_type": "Urban", // Urban, Suburban, or Rural
     "number_of_gld_homes": 1308,
     "comm_customers_per_bldg": 2.09,
     "avg_house": 4500.0, // Average house size, in VA
@@ -57,13 +63,38 @@
     },
 
     // Distributed Energy Resources
-    "use_recs": "True", // populates solar, battery, and ev based on RECS income distributions
-    // if "False", uses the rates analysis pre-defined population values by income and housing type, ignoring the below deployment level configs. 
-    
-    // DER deployment levels 
-    "solar_deployment": 0.20,
-    "battery_deployment": 0.10,
-    "ev_deployment": 0.15,
+    "RECS": true, // populates solar, battery, and ev based on RECS income distributions
+    // if false, use the income-distributions below
+    "DSOT_case": false, // To run a DSOT case, navigate to examples/analysis/glm_dsot/code
+    solar_percentage: {
+        "Low": 0.12,
+        "Middle": 0.30,
+        "Upper": 0.58
+        },
+    storage_percentage: {
+        "Low": 0.12,
+        "Middle": 0.30,
+        "Upper": 0.58
+        },
+    ev_percentage: {
+        "Low": 0.10,
+        "Middle": 0.30,
+        "Upper": 0.60
+        },
+    // DER market participation and deployment levels 
+    "case_type": {
+    // bt = battery participates
+    "bt": 1,
+    // fl = flexible loads (houses) participate
+    "fl": 1,
+    // ev = electric vehicles participate
+    "ev": 1,
+    // pv = photovoltaics
+    "pv": 1
+    },
+    "solar_deployment": 0.20, // deployment level of solar
+    "storage_deployment": 0.10, // deployment level of BESS
+    "ev_deployment": 0.15, // deployment level of EVs
 
     "ev_reserved_soc": 20, // Reserve state of charge of EVs
 
@@ -82,7 +113,7 @@
 
     // Simulation (continued)
     "seed": 13, // random seed
-    "message_broker": "helics_msg", // HELICS ("helics_msg") or FNCS ("fncs_msg") for cosimulation
+    "messenger": false, // HELICS  or FNCS for cosimulation. false otherwise
 
     // add schedules
     "includes": [
@@ -109,12 +140,13 @@
     "income_level": ["Low", "Middle", "Upper"],
     "res_dso_type": "No_DSO_Type",
     "region": 2,
-    "vll": 12470.0,
-    "vln": 7200.0,
-    "water_heater_model": "TWONODE", // MULTILAYER, TWONODE
+    "vll": 12470.0, // line voltage
+    "vln": 7200.0, // nominal voltage
+    "water_heater_model": "MULTILAYER", // MULTILAYER, TWONODE
 
     // Solar player diction
-    "use_solar_player": "False", // True if pre-defining solar generation
+    "use_solar_player": false, // True if pre-defining solar generation
+    "player_file": "", // if use_solar_player, path to solar player file
     "rooftop_pv_rating_MW": 7481.90, // Used to calculate scaling factor
     "solar_P_player": {
         "name": "player",      // class name
@@ -124,6 +156,19 @@
         "data": "power_5_minute.csv"  // if static value is false
     },
     "solar_Q_player": null,
-
- 
+    "BuildingPrep": {
+        "ResBldgMetaData": "",
+        "ASHRAEZone": "",
+        "CommBldgMetaData": "",
+        "CommBldgPopulation": ""
+    },
+    "bill_mode": "TIERED",
+    "monthly_fee": 13,
+    "price": 0.102013,
+    "tier_1_energy": 500,
+    "tier_2_energy": 1000,
+    "tier_3_energy": 0,
+    "tier_1_price": 0.117013,
+    "tier_2_price": 0.122513,
+    "tier_3_price": 0
 }

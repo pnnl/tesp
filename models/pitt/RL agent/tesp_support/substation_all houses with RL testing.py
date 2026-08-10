@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2023 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # file: substation.py
 """Manages the simple_auction and hvac agents for the te30 and sgip1 examples
 
@@ -89,10 +89,10 @@ def inner_substation_loop(configfile, metrics_root, hour_stop=1667, flag='WithMa
         row = dict['controllers'][key]
         hvacObjs[key] = hvac.hvac(row, key, aucObj)
         ctl = hvacObjs[key]
-        topicMap[key + '#Tair'] = [ctl, 2]
-        topicMap[key + '#V1'] = [ctl, 3]
-        topicMap[key + '#Load'] = [ctl, 4]
-        topicMap[key + '#On'] = [ctl, 5]
+        topicMap[key + '/Tair'] = [ctl, 2]
+        topicMap[key + '/V1'] = [ctl, 3]
+        topicMap[key + '/Load'] = [ctl, 4]
+        topicMap[key + '/On'] = [ctl, 5]
 
     # ==================== Time step looping under FNCS ===========================
 
@@ -182,7 +182,7 @@ def inner_substation_loop(configfile, metrics_root, hour_stop=1667, flag='WithMa
             elif row[1] == 4:
                 row[0].set_hvac_load(value)
                 for key in hvac_keys:
-                    if topic == key + '#Load':
+                    if topic == key + '/Load':
                         hvac_energy_[key] += helpers.parse_number(value)
             elif row[1] == 5:
                 row[0].set_hvac_state(value)
