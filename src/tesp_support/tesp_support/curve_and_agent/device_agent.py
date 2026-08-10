@@ -491,7 +491,7 @@ class DeviceAgent:
             points=bid_points,
             market_id=market_obj.market_id,
             interval_id=f"int_{market_obj.market_id}",
-            timestamp=0.0,
+            timestamp=0.0,  # TODO: Set actual timestamp when bid is generated
         )
 
     # ------------------------------------------------------------------

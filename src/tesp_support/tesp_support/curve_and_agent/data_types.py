@@ -217,7 +217,7 @@ class BidPoint:
 
 
 @dataclass
-class BidCurve:
+class BidCurve:  # TODO: any reason to not use a more generic Curve class for all curves?
     """A complete price-quantity bid curve as an ordered list of points.
     
     The points must be ordered by decreasing price (highest price first).

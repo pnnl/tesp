@@ -16,7 +16,7 @@ from .data_types import BidCurve, ClearingResult, BidPoint, MarketTimingParams
 from .enums_and_constants import MarketType, IterationType
 
 
-class SupplyCurve:
+class SupplyCurve:  # TODO: any reason to not use a more generic Curve class for all curves?
     """Supply curve representing the cost of wholesale energy procurement.
 
     This is the DSO's cost curve for procuring energy from the wholesale
@@ -553,5 +553,5 @@ class MarketOperator:
         """
         if current_time < self._timing_params.t_clear:
             return None
-        result = self.clear_market()
-        return self.propagate_results()
+        result = self.clear_market()  # TODO: find way to return clearing result as well
+        return result, self.propagate_results()
