@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Created on Fri Feb  5 08:21:30 2021
 
@@ -22,17 +21,18 @@ and/or plotting results.
 
 @author: barn553
 """
-import pandas as pd
-import numpy as np
-from sklearn.metrics import mean_squared_error
 import itertools
-import networkx as nx
-import pyproj
-import os
-from joblib import Parallel, delayed
+import json
 import logging
 import logging.config
-import json
+import os
+
+import networkx as nx
+import numpy as np
+import pandas as pd
+import pyproj
+from joblib import Parallel, delayed
+from sklearn.metrics import mean_squared_error
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
