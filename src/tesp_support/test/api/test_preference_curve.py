@@ -24,7 +24,7 @@ Amenity cost:
 
 import pytest
 
-from tesp_support.api.preference_curve import PreferenceCurve, DeviceType
+from tesp_support.api.preference_curve import BidPoint, PreferenceCurve, DeviceType
 
 
 # ===================================================================
@@ -297,7 +297,6 @@ class TestSampleBidCurve:
 
     def test_returns_bid_points(self, mid_curve):
         """Each element should be a BidPoint."""
-        from tesp_support.curve_and_agent.data_types import BidPoint
 
         points = mid_curve.sample_bid_curve(
             price_min=0.01,
@@ -306,4 +305,4 @@ class TestSampleBidCurve:
             Q_min=0.0,
             Q_max=10.0,
         )
-        assert all(isinstance(pt, BidPoint) for pt in points)
+        assert all([isinstance(pt, BidPoint) for pt in points])
