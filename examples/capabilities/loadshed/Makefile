@@ -13,7 +13,7 @@ CPPFLAGS += -I$(INSTALL_PATH)/include/ns3-dev
 
 LDFLAGS =
 LDFLAGS += -L$(INSTALL_PATH)/lib
-LDFLAGS += -L$(INSTALL_PATH)/lib64
+#LDFLAGS += -L$(INSTALL_PATH)/lib64
 
 LIBS =
 LIBS += -lns3-dev-helics-optimized
