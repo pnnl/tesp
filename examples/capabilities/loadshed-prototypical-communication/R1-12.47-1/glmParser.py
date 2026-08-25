@@ -64,9 +64,9 @@ def ProcessGLM(glmFile):
 
         # apply the nameing prefix if necessary
         if len(name_prefix) > 0:
-            for t in model:
-                for o in model[t]:
-                    elem = model[t][o]
+            for t, value in model.items():
+                for o in value:
+                    elem = value[o]
                     for tok in ['name', 'parent', 'from', 'to', 'configuration', 'spacing',
                                 'conductor_1', 'conductor_2', 'conductor_N',
                                 'conductor_A', 'conductor_B', 'conductor_C']:
@@ -77,28 +77,28 @@ def ProcessGLM(glmFile):
 
         # construct a graph of the model, starting with known links
         G = nx.Graph()
-        for t in model:
+        for t, value in model.items():
             if is_edge_class(t):
-                for o in model[t]:
-                    n1 = model[t][o]['from']
-                    n2 = model[t][o]['to']
-                    G.add_edge(n1, n2, eclass=t, ename=o, edata=model[t][o])
+                for o in value:
+                    n1 = value[o]['from']
+                    n2 = value[o]['to']
+                    G.add_edge(n1, n2, eclass=t, ename=o, edata=value[o])
 
         # add the parent-child node links
-        for t in model:
+        for t, value in model.items():
             if is_node_class(t):
-                for o in model[t]:
-                    if 'parent' in model[t][o]:
-                        p = model[t][o]['parent']
+                for o in value:
+                    if 'parent' in value[o]:
+                        p = value[o]['parent']
                         G.add_edge(o, p, eclass='parent', ename=o, edata={})
 
         # now we backfill node attributes
-        for t in model:
+        for t, value in model.items():
             if is_node_class(t):
-                for o in model[t]:
+                for o in value:
                     if o in G.nodes():
                         G.nodes()[o]['nclass'] = t
-                        G.nodes()[o]['ndata'] = model[t][o]
+                        G.nodes()[o]['ndata'] = value[o]
                     else:
                         print('orphaned node', t, o)
 
@@ -120,10 +120,8 @@ def is_node_class(s):
     Returns:
         bool: True if a node class, False otherwise
     """
-    if s in ['substation', 'node', 'load', 'meter', 'triplex_node', 'triplex_meter', 'house', 'inverter', 'solar',
-             'battery']:
-        return True
-    return False
+    return s in ['substation', 'node', 'load', 'meter', 'triplex_node',
+                 'triplex_meter', 'house', 'inverter', 'solar', 'battery']
 
 
 def is_edge_class(s):
@@ -137,10 +135,8 @@ def is_edge_class(s):
     Returns:
         bool: True if an edge class, False otherwise
     """
-    if s in ['switch', 'fuse', 'recloser', 'regulator', 'transformer', 'overhead_line', 'underground_line',
-             'triplex_line']:
-        return True
-    return False
+    return s in ['switch', 'fuse', 'recloser', 'regulator', 'transformer',
+                 'overhead_line', 'underground_line', 'triplex_line']
 
 
 def obj(parent, model, line, itr, oidh, octr):
@@ -159,10 +155,10 @@ def obj(parent, model, line, itr, oidh, octr):
     """
     octr += 1
     # Identify the object type
-    m = re.search('object ([^:{\s]+)[:{\s]', line, re.IGNORECASE)
+    m = re.search(r'object ([^:{\s]+)[:{\s]', line, re.IGNORECASE)
     type = m.group(1)
     # If the object has an id number, store it
-    n = re.search('object ([^:]+:[^{\s]+)', line, re.IGNORECASE)
+    n = re.search(r'object ([^:]+:[^{\s]+)', line, re.IGNORECASE)
     if n:
         oid = n.group(1)
     line = next(itr)
@@ -186,7 +182,7 @@ def obj(parent, model, line, itr, oidh, octr):
                 intobj += 1
                 if oname is None:
                     print('ERROR: nested object defined before parent name')
-                    quit()
+                    sys.exit()
                 line, octr = obj(oname, model, line, itr, oidh, octr)
             elif re.match('object', val):
                 # found an inline object
@@ -195,7 +191,7 @@ def obj(parent, model, line, itr, oidh, octr):
                 params[param] = 'ID_' + str(octr)
             else:
                 params[param] = val
-        if re.search('}', line) and not re.search('\${', line):
+        if re.search('}', line) and not re.search(r'\${', line):
             if intobj:
                 intobj -= 1
                 line = next(itr)
@@ -215,8 +211,8 @@ def obj(parent, model, line, itr, oidh, octr):
         # New object type
         model[type] = {}
     model[type][oname] = {}
-    for param in params:
-        model[type][oname][param] = params[param]
+    for param, value in params.items():
+        model[type][oname][param] = value
     return line, octr
 
 
@@ -229,7 +225,7 @@ def plotSaveGraph(G, fileName=None):
     #   pos = nx.spring_layout(G, k = 0.01 / np.sqrt(G.number_of_nodes()), iterations = 100, seed = 39775)
     remNodeList = []
     for node in G.nodes():
-        if 'nclass' not in G.nodes()[node].keys():
+        if 'nclass' not in G.nodes()[node]:
             remNodeList.append(node)
     if not remNodeList:
         print('All nodes seem to have an nclass.')
@@ -302,6 +298,8 @@ def plotSaveGraph(G, fileName=None):
 
 
 if __name__ == '__main__':
+    import panada as pd
+
     spotLoadNums = [1, 2, 4, 5, 6, 7, 9, 10, 11, 12, 16, 17, 19, 20, 22, 24, 28, 29, 30, 31, 32, 33, 34, 35, 37, 38, 39,
                     41, 42, 43, 45, 46, 47, 48, 49, 50, 51, 52, 53, 55, 56, 58, 59, 60, 62, 63, 64, 65, 66, 68, 69, 70,
                     71, 73, 74, 75, 76, 77, 79, 80, 82, 83, 84, 85, 86, 87, 88, 90, 92, 94, 95, 96, 98, 99, 100, 102,
@@ -323,8 +321,8 @@ if __name__ == '__main__':
                                       'Battery rating [kVA]': 0, 'DER rating [kVA]': 0}
     id = 'eureica'
     version = '17-20220404'
-    glmFolder = os.path.abspath(f'./')
-    glmFile = f'R1-12.47-1_processed'
+    glmFolder = os.path.abspath('./')
+    glmFile = 'R1-12.47-1_processed'
     G = ProcessGLM(os.path.abspath(os.path.join(glmFolder, f'{glmFile}.glm')))
     jsonGraph = nx.readwrite.json_graph.node_link_data(G)
     fileG = f'{glmFile}.json'
@@ -386,11 +384,11 @@ if __name__ == '__main__':
 
     print(f'{numSol} PVs totaling {ratedSol * 1e-3} kW rated power')
     print(f'{numBat} batteries totaling {ratedBat * 1e-3} kW rated power')
-    for spot in spotLoads.keys():
-        for phase in spotLoads[spot].keys():
-            spotLoads[spot][phase]['DER rating [kVA]'] = spotLoads[spot][phase]['PV rating [kVA]'] + \
-                                                         spotLoads[spot][phase]['Battery rating [kVA]']
-    fileSpotLoads = f'spotLoads.json'
+    for spot, value in spotLoads.items():
+        for phase in value:
+            spotLoads[spot][phase]['DER rating [kVA]'] = value[phase]['PV rating [kVA]'] + \
+                                                         value[phase]['Battery rating [kVA]']
+    fileSpotLoads = 'spotLoads.json'
     jsonFp = open(os.path.abspath(os.path.join('./', fileSpotLoads)), 'w')
     json.dump(spotLoads, jsonFp)
     jsonFp.close()

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (c) 2017-2025 Battelle Memorial Institute
 # file: validation_plots.py
 """
@@ -21,10 +20,9 @@ import sys
 from os import path
 
 import matplotlib.pyplot as plt
-
-import tesp_support.api.process_pypower as pp
-import tesp_support.api.process_gld as pg
 import tesp_support.api.process_eplus as pe
+import tesp_support.api.process_gld as pg
+import tesp_support.api.process_pypower as pp
 
 # Setting up logging
 log = logging.getLogger(__name__)
@@ -48,7 +46,7 @@ def load_pypower_data(data, case, data_path):
     try:
         diction = pp.read_pypower_metrics(data_path, f'SGIP1{case}')
         found_data = True
-    except:
+    except Exception:
         log.error(f'\tUnable to load PYPOWER data for Case {case}.')
 
     data[case]['pypower'] = {}
@@ -82,7 +80,7 @@ def load_gld_data(data, case, data_path):
     try:
         diction = pg.read_gld_metrics(data_path, f'SGIP1{case}')
         found_data = True
-    except:
+    except Exception:
         log.error(f'\tUnable to load GridLAB-D data for Case {case}.')
 
     data[case]['gld'] = {}
@@ -114,7 +112,7 @@ def load_energy_plus_data(data, case, data_path):
     try:
         diction = pe.read_eplus_metrics(data_path, f'SGIP1{case}', quiet=True)
         found_data = True
-    except:
+    except Exception:
         log.error(f'\tUnable to load Energy+ data for Case {case}.')
 
     data[case]['eplus'] = {}
@@ -166,8 +164,8 @@ def plot_gen_comparison(data, save_path):
         save_path (str): directory path for file
     """
 
-    if 'a' in data.keys():
-        if 'pypower' in data['a'].keys():
+    if 'a' in data:
+        if 'pypower' in data['a']:
             if data['a']['pypower']['found_data']:
                 hrs = data['a']['pypower']['hrs']
                 a_data_g = data['a']['pypower']['data_g']
@@ -216,10 +214,9 @@ def plot_transactive_bus_LMP(data, save_path):
         save_path (str): directory path for file
     """
 
-    if 'a' in data.keys() and 'b' in data.keys():
-        if 'pypower' in data['a'].keys() and 'pypower' in data['b'].keys():
-            if data['a']['pypower']['found_data'] and \
-                    data['b']['pypower']['found_data']:
+    if 'a' in data and 'b' in data:
+        if 'pypower' in data['a'] and 'pypower' in data['b']:
+            if data['a']['pypower']['found_data'] and data['b']['pypower']['found_data']:
 
                 a_hrs = data['a']['pypower']['hrs']
                 a_data_b = data['a']['pypower']['data_b']
@@ -256,17 +253,17 @@ def plot_transactive_bus_LMP(data, save_path):
                 if not (data['b']['pypower']['found_data']):
                     log.error('\t\tMissing data for Case (b)')
         else:
-            if 'pypower' not in data['a'].keys():
+            if 'pypower' not in data['a']:
                 log.error('\tNo PYPOWER data loaded for Case (a); unable '
                              'to complete plot_transactive_bus_LMP')
-            if 'pypower' not in data['b'].keys():
+            if 'pypower' not in data['b']:
                 log.error('\tNo PYPOWER data loaded for Case (b); unable '
                              'to complete plot_transactive_bus_LMP')
     else:
-        if 'a' not in data.keys():
+        if 'a' not in data:
             log.error('\tNo data loaded for Case (a); unable to complete '
                          'plot_transactive_bus_LMP')
-        if 'b' not in data.keys():
+        if 'b' not in data:
             log.error('\tNo data loaded for Case (b); unable to complete '
                          'plot_transactive_bus_LMP')
 
@@ -280,8 +277,8 @@ def plot_transactive_feeder_load(data, save_path):
         data (dict): dictionary with necessary data for creating plot
         save_path (str): directory path for file
     """
-    if 'a' in data.keys() and 'b' in data.keys():
-        if 'pypower' in data['a'].keys() and 'pypower' in data['b'].keys():
+    if 'a' in data and 'b' in data:
+        if 'pypower' in data['a'] and 'pypower' in data['b']:
             if data['a']['pypower']['found_data'] and data['b']['pypower']['found_data']:
 
                 a_hrs = data['a']['pypower']['hrs']
@@ -327,17 +324,17 @@ def plot_transactive_feeder_load(data, save_path):
                 if not (data['b']['pypower']['found_data']):
                     log.error('\t\tMissing data for Case (b)')
         else:
-            if 'pypower' not in data['a'].keys():
+            if 'pypower' not in data['a']:
                 log.error('\tNo PYPOWER data loaded for Case (a); unable '
                              'to complete plot_transactive_feeder_load.')
-            if 'pypower' not in data['b'].keys():
+            if 'pypower' not in data['b']:
                 log.error('\tNo PYPOWER data loaded for Case (b); unable '
                              'to complete plot_transactive_feeder_load.')
     else:
-        if 'a' not in data.keys():
+        if 'a' not in data:
             log.error('\tNo data loaded for Case (a); unable to complete '
                          'plot_transactive_feeder_load.')
-        if 'b' not in data.keys():
+        if 'b' not in data:
             log.error('\tNo data loaded for Case (b); unable to complete '
                          'plot_transactive_feeder_load.')
 
@@ -352,10 +349,8 @@ def plot_transactive_feeder_load_solar(data, save_path):
         data (dict): dictionary with necessary data for creating plot
         save_path (str): directory path for file
     """
-    if 'b' in data.keys() and 'c' in data.keys() and 'd' in data.keys() and \
-            'e' in data.keys():
-        if 'pypower' in data['b'].keys() and 'pypower' in data['c'].keys() \
-                and 'pypower' in data['d'].keys() and 'pypower' in data['e'].keys():
+    if 'b' in data and 'c' in data and 'd' in data and 'e' in data:
+        if 'pypower' in data['b'] and 'pypower' in data['c'] and 'pypower' in data['d'] and 'pypower' in data['e']:
 
             if data['b']['pypower']['found_data'] and \
                     data['c']['pypower']['found_data'] and \
@@ -411,30 +406,30 @@ def plot_transactive_feeder_load_solar(data, save_path):
                 if not (data['e']['pypower']['found_data']):
                     log.error('\t\tMissing data for Case (e)')
         else:
-            if 'pypower' not in data['b'].keys():
+            if 'pypower' not in data['b']:
                 log.error('\tNo PYPOWER data loaded for Case (b); unable '
                              'to '
                              'complete plot_transactive_feeder_load_solar.')
-            if 'pypower' not in data['c'].keys():
+            if 'pypower' not in data['c']:
                 log.error('\tNo PYPOWER data loaded for Case (c); unable '
                              'to complete plot_transactive_feeder_load_solar.')
-            if 'pypower' not in data['d'].keys():
+            if 'pypower' not in data['d']:
                 log.error('\tNo PYPOWER data loaded for Case (d); unable '
                              'to complete plot_transactive_feeder_load_solar.')
-            if 'pypower' not in data['e'].keys():
+            if 'pypower' not in data['e']:
                 log.error('\tNo PYPOWER data loaded for Case (e); unable '
                              'to compelte plot_transactive_feeder_load_solar.')
     else:
-        if 'b' not in data.keys():
+        if 'b' not in data:
             log.error('\tNo data loaded for Case (b); unable to '
                          'complete plot_transactive_feeder_load_solar.')
-        if 'c' not in data.keys():
+        if 'c' not in data:
             log.error('\tNo data loaded for Case (c); unable to complete '
                          'plot_transactive_feeder_load_solar.')
-        if 'd' not in data.keys():
+        if 'd' not in data:
             log.error('\tNo data loaded for Case (d); unable to complete '
                          'plot_transactive_feeder_load_solar.')
-        if 'e' not in data.keys():
+        if 'e' not in data:
             log.error('\tNo data loaded for Case (e); unable to complete '
                          'plot_transactive_feeder_load_solar.')
 
@@ -450,11 +445,9 @@ def plot_avg_indoor_air_temperature(data, save_path):
         data (dict): dictionary with necessary data for creating plot
         save_path (str): directory path for file
     """
-    if 'a' in data.keys() and 'b' in data.keys():
-        if 'gld' in data['a'].keys() and 'gld' in data['b'].keys() and \
-                'pypower' in data['a'].keys():
-            if data['a']['gld']['found_data'] and \
-                    data['b']['gld']['found_data']:
+    if 'a' in data and 'b' in data:
+        if 'gld' in data['a'] and 'gld' in data['b'] and 'pypower' in data['a']:
+            if data['a']['gld']['found_data'] and data['b']['gld']['found_data']:
 
                 a_hrs = data['a']['gld']['hrs']
                 a_data_h = data['a']['gld']['data_h']
@@ -513,23 +506,23 @@ def plot_avg_indoor_air_temperature(data, save_path):
                 if not (data['b']['pypower']['found_data']):
                     log.error('\t\tMissing PYPOWER data for Case (b)')
         else:
-            if 'gld' not in data['a'].keys():
+            if 'gld' not in data['a']:
                 log.error('\tNo GridLAB-D data loaded for Case (a); '
                              'unable to complete '
                              'plot_avg_indoor_air_temperature.')
-            if 'gld' not in data['b'].keys():
+            if 'gld' not in data['b']:
                 log.error('\tNo GridLAB-D data loaded for Case (b); '
                              'unable to complete '
                              'plot_avg_indoor_air_temperature.')
-            if 'pypower' not in data['b'].keys():
+            if 'pypower' not in data['b']:
                 log.error('\tNo PYPOWER data loaded for Case (b); '
                              'unable to complete '
                              'plot_avg_indoor_air_temperature.')
     else:
-        if 'a' not in data.keys():
+        if 'a' not in data:
             log.error('\tNo data loaded for Case (a); unable to complete '
                          'plot_avg_indoor_air_temperature')
-        if 'b' not in data.keys():
+        if 'b' not in data:
             log.error('\tNo data loaded for Case (b); unable to comlpete '
                          'plot_avg_indoor_air_temperature')
 
@@ -543,10 +536,8 @@ def plot_solar_output(data, save_path):
         save_path (str): directory path for file
     """
 
-    if 'b' in data.keys() and 'c' in data.keys() and 'd' in data.keys() and \
-            'e' in data.keys():
-        if 'gld' in data['b'].keys() and 'gld' in data['c'].keys() and \
-                'gld' in data['d'].keys() and 'gld' in data['e'].keys():
+    if 'b' in data and 'c' in data and 'd' in data and 'e' in data:
+        if 'gld' in data['b'] and 'gld' in data['c'] and 'gld' in data['d'] and 'gld' in data['e']:
 
             if data['b']['gld']['found_data'] and \
                     data['c']['gld']['found_data'] and \
@@ -597,29 +588,29 @@ def plot_solar_output(data, save_path):
                 if not (data['e']['gld']['found_data']):
                     log.error('\t\tMissing data for Case (e)')
         else:
-            if 'gld' not in data['b'].keys():
+            if 'gld' not in data['b']:
                 log.error('\tNo GridLAB-D data loaded for Case (b); unable '
                              'to complete plot_solar_output')
-            if 'gld' not in data['c'].keys():
+            if 'gld' not in data['c']:
                 log.error('\tNo GridLAB-D data loaded for Case (c); unable '
                              'to complete plot_solar_output.')
-            if 'gld' not in data['d'].keys():
+            if 'gld' not in data['d']:
                 log.error('\tNo GridLAB-D data loaded for Case (d); unable '
                              'to comeplete plot_solar_output.')
-            if 'gld' not in data['e'].keys():
+            if 'gld' not in data['e']:
                 log.error('\tNo GridLAB-D data loaded for Case (e); unable '
                              'to complete plot_solar_output.')
     else:
-        if 'b' not in data.keys():
+        if 'b' not in data:
             log.error('\tNo data loaded for Case (b); unable to complete '
                          'plot_solar_output;')
-        if 'c' not in data.keys():
+        if 'c' not in data:
             log.error('\tNo data loaded for Case (c); unable to complete '
                          'plot_solar_output.')
-        if 'd' not in data.keys():
+        if 'd' not in data:
             log.error('\tNo data loaded for Case (d); unable to complete '
                          'plot_solar_output.')
-        if 'e' not in data.keys():
+        if 'e' not in data:
             log.error('\tNo data loaded for Case (e); unable to complete '
                          'plot_solar_output.')
 
@@ -633,10 +624,8 @@ def plot_ES_output(data, save_path):
         data (dict): dictionary with necessary data for creating plot
         save_path (str): directory path for file
     """
-    if 'b' in data.keys() and 'c' in data.keys() and 'd' in data.keys() and \
-            'e' in data.keys():
-        if 'gld' in data['b'].keys() and 'gld' in data['c'].keys() and \
-                'gld' in data['d'].keys() and 'gld' in data['e'].keys():
+    if 'b' in data and 'c' in data and 'd' in data and 'e' in data:
+        if 'gld' in data['b'] and 'gld' in data['c'] and 'gld' in data['d'] and 'gld' in data['e']:
 
             if data['b']['gld']['found_data'] and \
                     data['c']['gld']['found_data'] and \
@@ -688,29 +677,29 @@ def plot_ES_output(data, save_path):
                 if not (data['e']['gld']['found_data']):
                     log.error('\t\tMissing data for Case (e)')
         else:
-            if 'gld' not in data['b'].keys():
+            if 'gld' not in data['b']:
                 log.error('\tNo GridLAB-D data loaded for Case (b); '
                              'unable to complete plot_ES_output.')
-            if 'gld' not in data['c'].keys():
+            if 'gld' not in data['c']:
                 log.error('\tNo GridLAB-D data loaded for Case (c); '
                              'unable to complete plot_ES_output.')
-            if 'gld' not in data['d'].keys():
+            if 'gld' not in data['d']:
                 log.error('\tNo GridLAB-D data loaded for Case (d) '
                              'unable to complete plot_ES_output.')
-            if 'gld' not in data['e'].keys():
+            if 'gld' not in data['e']:
                 log.error('\tNo GridLAB-D data loaded for Case (e); '
                              'unable to complete plot_ES_output.')
     else:
-        if 'b' not in data.keys():
+        if 'b' not in data:
             log.error('\tNo data loaded for Case (b); unable to complete '
                          'plot_ES_output.')
-        if 'c' not in data.keys():
+        if 'c' not in data:
             log.error('\tNo data loaded for Case (c); unable to complete '
                          'plot_ES_output.')
-        if 'd' not in data.keys():
+        if 'd' not in data:
             log.error('\tNo data loaded for Case (d); unable to complete '
                          'plot_ES_output.')
-        if 'e' not in data.keys():
+        if 'e' not in data:
             log.error('\tNo data loaded for Case (e); unable to complete '
                          'plot_ES_output.')
 
@@ -723,12 +712,9 @@ def plot_energy_plus_indoor_temperature(data, save_path):
         data (dict): dictionary with necessary data for creating plot
         save_path (str): directory path for file
     """
-    if 'a' in data.keys() and 'b' in data.keys():
-        if 'eplus' in data['a'].keys() and 'eplus' in data['b'].keys() and \
-                'pypower' in data['b'].keys():
-            if data['a']['eplus']['found_data'] and \
-                    data['b']['eplus']['found_data']:
-
+    if 'a' in data and 'b' in data:
+        if 'eplus' in data['a'] and 'eplus' in data['b'] and 'pypower' in data['b']:
+            if data['a']['eplus']['found_data'] and data['b']['eplus']['found_data']:
                 a_hrs = data['a']['eplus']['hrs']
                 a_data = data['a']['eplus']['data_e']
                 a_idx = data['a']['eplus']['idx_e']
@@ -777,23 +763,23 @@ def plot_energy_plus_indoor_temperature(data, save_path):
                 if not (data['b']['eplus']['found_data']):
                     log.error('\t\tMissing data for Case (b)')
         else:
-            if 'eplus' not in data['a'].keys():
+            if 'eplus' not in data['a']:
                 log.error('\tNo Energy+ data loaded for Case (a); unable '
                              'to complete '
                              'plot_energy_plus_indoor_temperature.')
-            if 'eplus' not in data['b'].keys():
+            if 'eplus' not in data['b']:
                 log.error('\tNo Energy+ data loaded for Case (b); unable '
                              'to complete '
                              'plot_energy_plus_indoor_temperature.')
-            if 'pypower' not in data['b'].keys():
+            if 'pypower' not in data['b']:
                 log.error('\tNo PYPOWER data loaded for Case (b); unable '
                              'to complete '
                              'plot_energy_plus_indoor_temperature.')
     else:
-        if 'a' not in data.keys():
+        if 'a' not in data:
             log.error('\tNo data loaded for Case (a); unable to complete '
                          'plot_energy_plus_indoor_temperature.')
-        if 'b' not in data.keys():
+        if 'b' not in data:
             log.error('\tNo data loaded for Case (b); unable to complete '
                          'plot_energy_plus_indoor_temperature.')
 
@@ -806,10 +792,9 @@ def plot_energy_plus_prices(data, save_path):
         data (dict): dictionary with necessary data for creating plot
         save_path (str): directory path for file
     """
-    if 'a' in data.keys() and 'b' in data.keys():
-        if 'eplus' in data['a'].keys() and 'eplus' in data['b'].keys():
-            if data['a']['eplus']['found_data'] and \
-                    data['b']['eplus']['found_data']:
+    if 'a' in data and 'b' in data:
+        if 'eplus' in data['a'] and 'eplus' in data['b']:
+            if data['a']['eplus']['found_data'] and data['b']['eplus']['found_data']:
 
                 a_hrs = data['a']['eplus']['hrs']
                 a_data = data['a']['eplus']['data_e']
@@ -846,17 +831,17 @@ def plot_energy_plus_prices(data, save_path):
                 if not (data['b']['eplus']['found_data']):
                     log.error('\t\tMissing data for Case (b)')
         else:
-            if 'eplus' not in data['a'].keys():
+            if 'eplus' not in data['a']:
                 log.error('\tNo Energy+ data loaded for Case (a); unable '
                              'to complete plot_energy_plus_prices.')
-            if 'eplus' not in data['b'].keys():
+            if 'eplus' not in data['b']:
                 log.error('\tNo Energy+ data loaded for Case (b); unable '
                              'to complete plot_energy_plus_prices.')
     else:
-        if 'a' not in data.keys():
+        if 'a' not in data:
             log.error('\tNo data loaded for Case (a); unable to complete '
                          'plot_energy_plus_prices.')
-        if 'b' not in data.keys():
+        if 'b' not in data:
             log.error('\tNo data loaded for Case (b); unable to complete '
                          'plot_energy_plus_prices.')
 

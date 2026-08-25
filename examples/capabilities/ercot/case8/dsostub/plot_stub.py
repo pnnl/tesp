@@ -154,17 +154,17 @@ def process_pypower(name_root):
             ary = lst_b[str(t)][bus_keys[j]]
             data_b[j, i, :] = ary
             i = i + 1
-        print('{:2d}'.format(int(key)),
-              '{:8.4f}'.format(data_b[j, :, LMP_P_IDX].mean()),
-              '{:8.4f}'.format(data_b[j, :, LMP_P_IDX].max()),
-              '{:8.4f}'.format(data_b[j, 0:last1, LMP_P_IDX].mean()),
-              '{:8.4f}'.format(data_b[j, 0:last1, LMP_P_IDX].std()),
-              '{:8.4f}'.format(data_b[j, :, VMIN_IDX].min()),
-              '{:8.4f}'.format(data_b[j, :, VMAX_IDX].max()),
-              '{:8.2f}'.format(data_b[j, 0:last1, UNRESP_IDX].mean()),
-              '{:8.2f}'.format(data_b[j, 0:last1, RESP_MAX_IDX].mean()),
-              '{:8.4f}'.format(data_b[j, 0:last1, C1_IDX].mean()),
-              '{:8.4f}'.format(data_b[j, 0:last1, C2_IDX].mean()))
+        print(f'{int(key):2d}',
+              f'{data_b[j, :, LMP_P_IDX].mean():8.4f}',
+              f'{data_b[j, :, LMP_P_IDX].max():8.4f}',
+              f'{data_b[j, 0:last1, LMP_P_IDX].mean():8.4f}',
+              f'{data_b[j, 0:last1, LMP_P_IDX].std():8.4f}',
+              f'{data_b[j, :, VMIN_IDX].min():8.4f}',
+              f'{data_b[j, :, VMAX_IDX].max():8.4f}',
+              f'{data_b[j, 0:last1, UNRESP_IDX].mean():8.2f}',
+              f'{data_b[j, 0:last1, RESP_MAX_IDX].mean():8.2f}',
+              f'{data_b[j, 0:last1, C1_IDX].mean():8.4f}',
+              f'{data_b[j, 0:last1, C2_IDX].mean():8.4f}')
         j = j + 1
 
     # read the generator metrics file
@@ -207,7 +207,7 @@ def process_pypower(name_root):
             COV = 0.0
 
         print('{:4d} {:3d} {:6s} {:8s}'.format(int(key), int(row['bus']), row['bustype'], row['genfuel']),
-              '{:7.1f}'.format(p_max), '{:7.4f}'.format(CF), '{:7.4f}'.format(COV))
+              f'{p_max:7.1f}', f'{CF:7.4f}', f'{COV:7.4f}')
         j = j + 1
 
     # read the dso stub metrics, which uses the same bus keys but different hrs

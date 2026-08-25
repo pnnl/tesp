@@ -121,26 +121,34 @@ Feeder class
 
 """
 
+import json
 import logging
 import math
-import json
 import os
+import sys
 
 import numpy as np
 import pandas as pd
 from pandas import DataFrame
 
+from ..api.entity import assign_defaults
 from ..api.helpers import gld_strict_name, random_norm_trunc, randomize_residential_skew
 from ..api.modify_GLM import GLMModifier
-from ..api.time_helpers import get_secs_from_hhmm, get_hhmm_from_secs, get_duration, get_dist
-from ..api.time_helpers import is_hhmm_valid, subtract_hhmm_secs, add_hhmm_secs
-from ..api.entity import assign_defaults
 from ..api.recs_gld_house_parameters import get_RECS_jsons
+from ..api.time_helpers import (
+    add_hhmm_secs,
+    get_dist,
+    get_duration,
+    get_hhmm_from_secs,
+    get_secs_from_hhmm,
+    is_hhmm_valid,
+    subtract_hhmm_secs,
+)
 
 rng = np.random.default_rng(7)
 position = None
-extra_billing_meters = set()
-comm_bldgs_pop = {}
+extra_billing_meters: set[str] = set()
+comm_bldgs_pop: dict[str, dict] = {}
 
 log = logging.getLogger(__name__)
 logging.getLogger('matplotlib.font_manager').disabled = True
@@ -288,11 +296,9 @@ class Config:
         if self.comm_count == 1:
             comm_bldgs_pop = self.com_bld.define_comm_bldg(self.utility_type, num_comm_bldgs)
             self.BuildingPrep['CommBldgPopulation'] = comm_bldgs_pop
-            print("\n------Commercial population has identified {0:d} potential buildings------".format(
-            len(comm_bldgs_pop.keys())))
+            print(f"\n------Commercial population has identified {len(comm_bldgs_pop.keys()):d} potential buildings------")
         else:
-            print("\n------There are {0:d} commercial buildings left------".format(
-            len(comm_bldgs_pop.keys())))
+            print(f"\n------There are {len(comm_bldgs_pop.keys()):d} commercial buildings left------")
 
         assign_defaults(self.res_bld, os.path.join(self.data_path, self.residential_meta_file_RECS))
         self.res_bld.checkResidentialBuildingTable()
@@ -346,7 +352,6 @@ class Config:
             except FileNotFoundError:
                 self.gis_file = False
                 print("Position data not available for base feeder.")
-                pass
 
     def add_position(self, basenode:str, newnode:str):
         """Create a coordinate pair posiiton for a new node, meter, or object
@@ -407,8 +412,7 @@ class Residential_Build:
         for bldg in range(3):
             binZeroReserve = self.config.base.bldgCoolingSetpoints[bldg][0][0]
             binZeroMargin = self.config.base.bldgHeatingSetpoints[bldg][0][0] - binZeroReserve
-            if binZeroMargin < 0.0:
-                binZeroMargin = 0.0
+            binZeroMargin = max(binZeroMargin, 0.0)
             log.info('bldg %s, binZeroReserve %s, binZeroMargin %s', bldg, binZeroReserve, binZeroMargin)
             for cBin in range(1, 6):
                 denom = binZeroMargin
@@ -859,32 +863,32 @@ class Residential_Build:
             # Set housing parameters
             params = {"parent": hse_m_name,
                     "groupid": self.config.base.bldgTypeName[bldg],
-                    "schedule_skew": '{:.0f}'.format(skew_value),
-                    "floor_area": '{:.0f}'.format(floor_area),
+                    "schedule_skew": f'{skew_value:.0f}',
+                    "floor_area": f'{floor_area:.0f}',
                     "number_of_stories": str(stories),
                     "ceiling_height": str(ceiling_height),
-                    "over_sizing_factor": '{:.1f}'.format(oversize),
-                    "Rroof": '{:.2f}'.format(Rroof),
-                    "Rwall": '{:.2f}'.format(Rwall),
-                    "Rfloor": '{:.2f}'.format(Rfloor),
+                    "over_sizing_factor": f'{oversize:.1f}',
+                    "Rroof": f'{Rroof:.2f}',
+                    "Rwall": f'{Rwall:.2f}',
+                    "Rfloor": f'{Rfloor:.2f}',
                     "glazing_layers": str(glazing_layers),
                     "glass_type": str(glass_type),
                     "glazing_treatment": str(glazing_treatment),
                     "window_frame": str(window_frame),
-                    "Rdoors": '{:.2f}'.format(Rdoor),
-                    "airchange_per_hour": '{:.2f}'.format(airchange),
-                    "cooling_COP": '{:.1f}'.format(c_COP),
-                    "air_temperature": '{:.2f}'.format(init_temp),
-                    "mass_temperature": '{:.2f}'.format(init_temp),
-                    "total_thermal_mass_per_floor_area": '{:.3f}'.format(mass_floor),
-                    "mass_solar_gain_fraction": '{}'.format(mass_solar_gain_frac),
-                    "mass_internal_gain_fraction": '{}'.format(mass_int_gain_frac),
-                    "aspect_ratio": '{:.2f}'.format(aspect_ratio),
-                    "exterior_wall_fraction": '{:.2f}'.format(ewf),
-                    "exterior_floor_fraction": '{:.2f}'.format(eff),
-                    "exterior_ceiling_fraction": '{:.2f}'.format(ecf),
-                    "window_exterior_transmission_coefficient": '{:.2f}'.format(wetc),
-                    "window_wall_ratio": '{:.2f}'.format(wwr),
+                    "Rdoors": f'{Rdoor:.2f}',
+                    "airchange_per_hour": f'{airchange:.2f}',
+                    "cooling_COP": f'{c_COP:.1f}',
+                    "air_temperature": f'{init_temp:.2f}',
+                    "mass_temperature": f'{init_temp:.2f}',
+                    "total_thermal_mass_per_floor_area": f'{mass_floor:.3f}',
+                    "mass_solar_gain_fraction": f'{mass_solar_gain_frac}',
+                    "mass_internal_gain_fraction": f'{mass_int_gain_frac}',
+                    "aspect_ratio": f'{aspect_ratio:.2f}',
+                    "exterior_wall_fraction": f'{ewf:.2f}',
+                    "exterior_floor_fraction": f'{eff:.2f}',
+                    "exterior_ceiling_fraction": f'{ecf:.2f}',
+                    "window_exterior_transmission_coefficient": f'{wetc:.2f}',
+                    "window_wall_ratio": f'{wwr:.2f}',
                     "breaker_amps": "1000",
                     "hvac_breaker_rating": "1000"}
             heat_rand = rng.uniform(0, 1)
@@ -908,7 +912,7 @@ class Residential_Build:
                     params["cooling_system_type"] = "NONE"
             elif heat_rand <= heat_pump_prob:
                 params["heating_system_type"] = "HEAT_PUMP"
-                params["heating_COP"] = '{:.1f}'.format(h_COP)
+                params["heating_COP"] = f'{h_COP:.1f}'
                 params["cooling_system_type"] = "ELECTRIC"
                 params["auxiliary_strategy"] = "DEADBAND"
                 params["auxiliary_system_type"] = "ELECTRIC"
@@ -953,18 +957,18 @@ class Residential_Build:
             # Add responsive and unresponsive loads as ZIPloads
             # heatgain fraction, Zpf, Ipf, Ppf, Z, I, P
             params = {"parent": hsename,
-                    "schedule_skew": '{:.0f}'.format(skew_value),
-                    "base_power": 'responsive_loads * ' + '{:.2f}'.format(resp_scalar),
-                    "heatgain_fraction": '{:.2f}'.format(self.config.base.techdata[0]),
-                    "impedance_pf": '{:.2f}'.format(self.config.base.techdata[1]),
-                    "current_pf": '{:.2f}'.format(self.config.base.techdata[2]),
-                    "power_pf": '{:.2f}'.format(self.config.base.techdata[3]),
-                    "impedance_fraction": '{:.2f}'.format(self.config.base.techdata[4]),
-                    "current_fraction": '{:.2f}'.format(self.config.base.techdata[5]),
-                    "power_fraction": '{:.2f}'.format(self.config.base.techdata[6])}
+                    "schedule_skew": f'{skew_value:.0f}',
+                    "base_power": 'responsive_loads * ' + f'{resp_scalar:.2f}',
+                    "heatgain_fraction": f'{self.config.base.techdata[0]:.2f}',
+                    "impedance_pf": f'{self.config.base.techdata[1]:.2f}',
+                    "current_pf": f'{self.config.base.techdata[2]:.2f}',
+                    "power_pf": f'{self.config.base.techdata[3]:.2f}',
+                    "impedance_fraction": f'{self.config.base.techdata[4]:.2f}',
+                    "current_fraction": f'{self.config.base.techdata[5]:.2f}',
+                    "power_fraction": f'{self.config.base.techdata[6]:.2f}'}
             self.mdl.ZIPload.add(f"{hsename}_responsive", params)
 
-            params["base_power"] = 'unresponsive_loads * ' + '{:.2f}'.format(unresp_scalar)
+            params["base_power"] = 'unresponsive_loads * ' + f'{unresp_scalar:.2f}'
             self.mdl.ZIPload.add(f"{hsename}_unresponsive", params)
 
             # Determine house water heating fuel type based on space heating fuel type
@@ -1005,38 +1009,38 @@ class Residential_Build:
                     size_array = range(wh_data['tank_size']['5_plus_people']['min'],
                                     wh_data['tank_size']['5_plus_people']['max'] + 1, 10)
                 wh_size = rng.choice(size_array)
-                wh_demand_str = wh_demand_type + '{:.0f}'.format(water_sch) + '*' + '{:.2f}'.format(water_var)
+                wh_demand_str = wh_demand_type + f'{water_sch:.0f}' + '*' + f'{water_var:.2f}'
                 wh_skew_value = randomize_residential_skew(True)
 
                 if self.config.water_heater_model == "MULTILAYER":
                     params = {"parent": hsename,
-                            "schedule_skew": '{:.0f}'.format(wh_skew_value),
+                            "schedule_skew": f'{wh_skew_value:.0f}',
                             "heating_element_capacity": f'{heat_element:.1f} kW',
-                            "thermostat_deadband": '{:.1f}'.format(therm_dead),
+                            "thermostat_deadband": f'{therm_dead:.1f}',
                             "location": "INSIDE",
                             "heat_mode": "ELECTRIC",
                             "tank_diameter": "1.5",
-                            "tank_UA": '{:.1f}'.format(tank_UA),
+                            "tank_UA": f'{tank_UA:.1f}',
                             "water_demand": wh_demand_str,
-                            "tank_volume": '{:.0f}'.format(wh_size),
+                            "tank_volume": f'{wh_size:.0f}',
                             "waterheater_model": "MULTILAYER",
                             "discrete_step_size": "60.0",
-                            "lower_tank_setpoint": '{:.1f}'.format(tank_set - 5.0),
-                            "upper_tank_setpoint": '{:.1f}'.format(tank_set + 5.0),
-                            "T_mixing_valve": '{:.1f}'.format(tank_set)}
+                            "lower_tank_setpoint": f'{tank_set - 5.0:.1f}',
+                            "upper_tank_setpoint": f'{tank_set + 5.0:.1f}',
+                            "T_mixing_valve": f'{tank_set:.1f}'}
                 else: # Traditional single-node model
                     params = {"parent": hsename,
-                            "schedule_skew": '{:.0f}'.format(wh_skew_value),
+                            "schedule_skew": f'{wh_skew_value:.0f}',
                             "heating_element_capacity": f'{heat_element:.1f} kW',
-                            "thermostat_deadband": '{:.1f}'.format(therm_dead),
+                            "thermostat_deadband": f'{therm_dead:.1f}',
                             "location": "INSIDE",
                             "heat_mode": "ELECTRIC",
                             "tank_diameter": "1.5",
-                            "tank_UA": '{:.1f}'.format(tank_UA),
+                            "tank_UA": f'{tank_UA:.1f}',
                             "water_demand": wh_demand_str,
-                            "tank_volume": '{:.0f}'.format(wh_size),
+                            "tank_volume": f'{wh_size:.0f}',
                             "waterheater_model": "TWONODE",
-                            "tank_setpoint": '{:.1f}'.format(tank_set - 5.0)}
+                            "tank_setpoint": f'{tank_set - 5.0:.1f}'}
                 self.mdl.waterheater.add(whname, params)
                 self.glm.add_metrics_collector(hsename, "house")
 
@@ -1284,7 +1288,7 @@ class Commercial_Build:
             floor_area = comm_bldgs_pop[key][1]
             nphs = 3
             phases = "ABC"
-            vln = float(277.0)
+            vln = 277.0
             params = {"phases": phases,
                       "nominal_voltage": vln,
                       }
@@ -1330,9 +1334,9 @@ class Commercial_Build:
         if comm_type == 'ZIPload':
             phsva = kva / float(nphs)
             name = '{:s}'.format(key + '_streetlights')
-            params = {"parent": '{:s}'.format(mtr),
+            params = {"parent": f'{mtr:s}',
                       "groupid": "STREETLIGHTS",
-                      "nominal_voltage": '{:2f}'.format(vln)}
+                      "nominal_voltage": f'{vln:2f}'}
             for phs in ['A', 'B', 'C']:
                 if phs in phases:
                     params["impedance_fraction_" + phs] = '{:f}'.format(bldg['impedance_fraction_C'])
@@ -1341,7 +1345,7 @@ class Commercial_Build:
                     params["impedance_pf_" + phs] = '{:f}'.format(bldg['impedance_pf_C'])
                     params["current_pf_" + phs] = '{:f}'.format(bldg['current_pf_C'])
                     params["power_pf_" + phs] = '{:f}'.format(bldg['power_pf_C'])
-                    params["base_power_" + phs] = "street_lighting*" + '{:.2f}'.format(self.config.base.light_scalar_comm * phsva)
+                    params["base_power_" + phs] = "street_lighting*" + f'{self.config.base.light_scalar_comm * phsva:.2f}'
                     params["phases"] = phs
                     # Note that self.config.base.light_scalar_comm = 0 as per DSOT
             if self.config.base.light_scalar_comm != 0:
@@ -1671,12 +1675,12 @@ class Commercial_Build:
 
         sum1 = 0
         sum2 = 0
-        for i in diction:
-            sum1 += diction[i]
-        for y in diction:
+        for value in diction.values():
+            sum1 += value
+        for y, value in diction.items():
             diction[y] = diction[y] / sum1
-        for z in diction:
-            sum2 += diction[z]
+        for value in diction.values():
+            sum2 += value
         if sum1 != sum2:
             log.debug("WARNING %s dictionary normalize to 1, values are > %s", name, diction)
         return diction
@@ -1697,8 +1701,8 @@ class Commercial_Build:
         ret_element = ""
         if 0 > probability or probability > 1:
             raise Exception("rand_bin_select: Value must be 0<= probability <=1")
-        for element in diction:
-            total += diction[element]
+        for element, value in diction.items():
+            total += value
             if total >= probability and ret_element == "" :
                 ret_element = element
         if total > 1.0001:
@@ -1927,7 +1931,7 @@ class Solar:
                         "generator_status": "ONLINE",
                         "inverter_type": "FOUR_QUADRANT",
                         "inverter_efficiency": "1",
-                        "rated_power": '{:.0f}'.format(inv_power),
+                        "rated_power": f'{inv_power:.0f}',
                         "generator_mode": self.config.base.solar_inv_mode,
                         "four_quadrant_control_mode": self.config.base.solar_inv_mode}
 
@@ -2106,8 +2110,8 @@ class Electric_Vehicle:
         min_home_need = charge_hour_need + 2
         if min_home_need >= 23:
             raise UserWarning('A particular EV can not be charged fully even within 23 hours!')
-        if home_duration < min_home_need * 3600:  # if home duration is less than required minimum
-            home_duration = min_home_need * 3600
+        # if home duration is less than required minimum
+        home_duration = max(home_duration, min_home_need * 3600)
         if home_duration > 23 * 3600:
             home_duration = 23 * 3600 - 1  # -1 to ensure work duration is not 0 with 1 hour commute time
         # Update home arrival time
@@ -2150,10 +2154,8 @@ class Electric_Vehicle:
         commute_secs = min(3600, 24 * 3600 - drive_sch['home_duration'])
         work_arr_time = add_hhmm_secs(home_leave_time, commute_secs / 2)
         work_duration = 24 * 3600 - drive_sch['home_duration'] - commute_secs
-        if (work_arr_time != drive_sch['work_arr_time'] or
-                round(work_duration / 60) != round(drive_sch['work_duration'] / 60)):
-            return False
-        return True
+        return not (work_arr_time != drive_sch['work_arr_time'] or
+                round(work_duration / 60) != round(drive_sch['work_duration'] / 60))
 
     # EV population functions
     def process_nhts_data(self, data_file: str) -> pd.DataFrame:
@@ -2256,7 +2258,6 @@ class Feeder:
                 self.config.res_bld.add_small_loads(key, 120.0)
         elif feed_type == "copp":
             self.base_feeder_id = ""
-            pass
 
         # Identify and add commercial loads
         if feed_type == "full":
@@ -2332,11 +2333,11 @@ class Feeder:
             i_glm, success = self.glm.model.readBackboneModel(self.config.taxonomy)
             print('User feeder not defined, using taxonomy feeder', self.config.taxonomy)
             if not success:
-                exit()
+                sys.exit()
         else:
             i_glm, success = self.glm.read_model(os.path.join(self.config.data_path, self.config.in_file_glm))
             if not success:
-                exit()
+                sys.exit()
 
         # Plot an unpopulated version of the base feeder
         if self.config.make_plot:
@@ -2550,7 +2551,7 @@ class Feeder:
         for e_name, e_object in entity.items():
             if 'load_class' not in e_object:
                 log.warning("load_class not defined! Cannot add commercial loads")
-                return None
+                return
             else:
                 select_bldg = None
                 if e_object['load_class'] != 'C':
@@ -2615,12 +2616,11 @@ class Feeder:
                     self.config.base.comm_loads[e_name] = [mtr, comm_type, comm_size, kva, nphs, phases, vln, total_commercial, comm_name]
 
         if e_object['load_class'] != 'C':
-            return None
+            return
         
         # Print commercial info
         print('Results in a populated feeder with:')
-        print('    {} commercial loads identified, {} buildings added, approximately {} kVA still to be assigned.'.
-              format(len(comm_bldgs_pop), total_commercial, int(remain_comm_kva)))
+        print(f'    {len(comm_bldgs_pop)} commercial loads identified, {total_commercial} buildings added, approximately {int(remain_comm_kva)} kVA still to be assigned.')
         print('     ', total_office, 'med/small offices with 3 floors, 5 zones each:', total_office*5*3, 'total office zones' )
         print('     ', total_warehouse_storage, 'warehouses,')
         print('     ', total_big_box, 'big box retail with 6 zones each:', total_big_box*6, 'total big box zones')
@@ -2632,8 +2632,7 @@ class Feeder:
         print('     ', total_healthcare_inpatient, 'healthcare,')
         print('     ', total_low_occupancy, 'low occupancy,')
         print('     ', total_zipload, 'streetlights')
-        log.info('The {} commercial loads and {} streetlights (ZIPloads) totaling {:.2f} kVA added to this feeder'.
-                 format(total_commercial, total_zipload, self.config.com_bld.total_comm_kva))
+        log.info(f'The {total_commercial} commercial loads and {total_zipload} streetlights (ZIPloads) totaling {self.config.com_bld.total_comm_kva:.2f} kVA added to this feeder')
 
 def _test1():
 

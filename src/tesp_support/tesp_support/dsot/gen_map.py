@@ -115,10 +115,7 @@ def prepare_network(node, node_col, high_renewables_case, zero_pmin=False, zero_
             # Solar and Wind are to remain on low-voltage buses:
             if node == '200' and on_ehv and "Wind" not in Gentype and "Solar" not in Gentype:  # 1 = 200 node case
                 for branch in data['branch']:
-                    if branch[0] == busNo and branch[1] > 200:
-                        busNo = branch[1]
-                        break
-                    elif branch[1] == busNo and branch[0] > 200:
+                    if (branch[0] == busNo and branch[1] > 200) or (branch[1] == busNo and branch[0] > 200):
                         busNo = branch[1]
                         break
 

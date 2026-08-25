@@ -13,9 +13,8 @@ import os
 import numpy as np
 
 try:
-    import matplotlib as mpl
     import matplotlib.pyplot as plt
-except:
+except Exception:
     pass
 
 
@@ -543,5 +542,5 @@ def process_gld(name_root, diction_name=''):
     plt.show()
     #    fig1.savefig('Figures\ aggregated.svg')
     #    fig.savefig('Figures\ individual.svg')
-    fig1.savefig('Figures\ aggregated.png')
-    fig.savefig('Figures\ individual.png')
+    fig1.savefig(r'Figures\ aggregated.png')
+    fig.savefig(r'Figures\ individual.png')

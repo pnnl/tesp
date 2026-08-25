@@ -172,8 +172,7 @@ if __name__ == '__main__':
         Sg = float(ln[2])
         Pg = Sg * dispatch
         Pmin = float(ln[3])
-        if Pg < Pmin:
-            Pg = Pmin
+        Pg = max(Pg, Pmin)
         if n1 == swing_bus:
             print('setting Pg from', Pg, 'to 0 at swing bus', swing_bus)
             Pg = 0.0

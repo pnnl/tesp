@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Created on Fri Jan 15 08:40:05 2021
 
@@ -25,15 +24,16 @@ leaving it as is for now.
 @author: barn553
 """
 
-import pandas as pd
-import os
 import json
-import networkx as nx
-import holoviews as hv
-import hvplot.networkx as hvnx
-from itertools import combinations
 import logging
 import logging.config
+import os
+from itertools import combinations
+
+import holoviews as hv
+import hvplot.networkx as hvnx
+import networkx as nx
+import pandas as pd
 
 # Creating a custom logger
 head, tail = os.path.split(os.getcwd())
@@ -240,7 +240,7 @@ class MeterNetwork:
             data = json.load(file)
         # Checking to see if model name and feeder are in
         # the data:
-        if 'model_name' in data.keys() and 'feeder' in data.keys():
+        if 'model_name' in data and 'feeder' in data:
             model_name = data['model_name']
             feeder = data['feeder']
         else:
@@ -307,14 +307,13 @@ class MeterNetwork:
              'name': name,
              'pos_x': pos_x,
              'pos_y': pos_y},
-            index=range(0, len(self.graph.nodes())))
+            index=range(len(self.graph.nodes())))
         log.info(
-            'Finished creating a dataframe for {};'.format(
-                self.feeder))
+            f'Finished creating a dataframe for {self.feeder};')
         log.info(
             'it has feeder info, meters, and meter positions.')
         log.info(
-            'Now, we evaluate {}'.format(self.feeder))
+            f'Now, we evaluate {self.feeder}')
         return dataframe
 
     @classmethod
@@ -375,5 +374,5 @@ class MeterNetwork:
         plot = (nodes * edges).opts(**opts_dict)
         # Saving it:
         if save_plot is True:
-            hv.save(plot, '{}.png'.format(output_dir), fmt='png')
+            hv.save(plot, f'{output_dir}.png', fmt='png')
             log.info('Saving the graph as a picture.')

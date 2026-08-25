@@ -1,17 +1,17 @@
 # Copyright (c) 2020-2025 Battelle Memorial Institute
 # file: prep_eplus.py
 
+import copy
 import json
+import math
 import os
 import shutil
 import stat
-import math
-import copy
 import subprocess
 from datetime import datetime
 
-from ..api.make_ems import merge_idf
 from ..api.helpers import HelicsMsg
+from ..api.make_ems import merge_idf
 
 
 def configure_eplus(caseConfig, template_dir):
@@ -49,7 +49,7 @@ def configure_eplus(caseConfig, template_dir):
             eDict['name'] = epName
             for sub in eDict['subscriptions']:
                 sub['key'] = sub['key'].replace('eplus_agent', agName)
-            oname = '{:s}/ep_{:s}_{:s}.json'.format(caseDir, caseName, fedRoot)
+            oname = f'{caseDir:s}/ep_{caseName:s}_{fedRoot:s}.json'
             op = open(oname, 'w')
             json.dump(eDict, op, ensure_ascii=False, indent=2)
             op.close()
@@ -64,18 +64,18 @@ def configure_eplus(caseConfig, template_dir):
                     topic = 'bid_curve_{:d}'.format(otherBldg['ID'])
                     curveSub = {'key': key, 'type': 'vector', 'required': True, 'info': topic}
                     aDict['subscriptions'].append(curveSub)
-            oname = '{:s}/ag_{:s}_{:s}.json'.format(caseDir, caseName, fedRoot)
+            oname = f'{caseDir:s}/ag_{caseName:s}_{fedRoot:s}.json'
             op = open(oname, 'w')
             json.dump(aDict, op, ensure_ascii=False, indent=2)
             op.close()
 
-            oname = '{:s}/agj_{:s}_{:s}.json'.format(caseDir, caseName, fedRoot)
+            oname = f'{caseDir:s}/agj_{caseName:s}_{fedRoot:s}.json'
             op = open(oname, 'w')
             aDict = {'StartTime': caseConfig['StartDate'],
                      'LoadScale': bldg['EpScale'],
                      'BuildingID': fedRoot,
-                     'MetricsFileName': 'eplus_{:s}_metrics.json'.format(fedRoot),
-                     'HelicsConfigFile': 'ag_{:s}_{:s}.json'.format(caseName, fedRoot),
+                     'MetricsFileName': f'eplus_{fedRoot:s}_metrics.json',
+                     'HelicsConfigFile': f'ag_{caseName:s}_{fedRoot:s}.json',
                      'StopSeconds': seconds,
                      'MetricsPeriod': caseConfig['MetricsPeriod'],
                      'BasePrice': caseConfig['BasePrice'],
@@ -89,7 +89,7 @@ def configure_eplus(caseConfig, template_dir):
             json.dump(aDict, op, ensure_ascii=False, indent=2)
             op.close()
 
-            oname = '{:s}/{:s}.idf'.format(caseDir, fedRoot)
+            oname = f'{caseDir:s}/{fedRoot:s}.idf'
             merge_idf(bldg['IDF'], bldg['EMS'], caseConfig['StartDate'], caseConfig['EndDate'],
                           oname, caseConfig['EpStepsPerHour'])
     return fedMeters, fedLoads, fedLoadNames
@@ -251,7 +251,7 @@ def prepare_glm_file(caseConfig):
                     if scaledLoad.imag < 0.0:
                         print('Reactive injection at', thisName)
                     if bPower:
-                        theseLines.append('  {:s} {:.2f}+{:.2f}j;'.format(lst[0], scaledLoad.real, scaledLoad.imag))
+                        theseLines.append(f'  {lst[0]:s} {scaledLoad.real:.2f}+{scaledLoad.imag:.2f}j;')
                     elif bImpedance:
                         zLoad = nomV * nomV / scaledLoad
                         theseLines.append('  {:s} {:.2f}+{:.2f}j;'.format(lst[0].replace('power', 'impedance'),
@@ -265,8 +265,8 @@ def prepare_glm_file(caseConfig):
                         thisName = lst[1].lstrip('"').rstrip('";')
                         if thisName in newLoadNames:
                             xfscale = xfmrLoadScales[thisName]
-                            print('$$$ rename {:s} to {:s}'.format(thisName, newLoadNames[thisName]))
-                            ln = '  name {:s};'.format(newLoadNames[thisName])
+                            print(f'$$$ rename {thisName:s} to {newLoadNames[thisName]:s}')
+                            ln = f'  name {newLoadNames[thisName]:s};'
                     if (thisClass == 'node') and lst[0] == 'name':  # find the swing node; write a substation for it
                         thisName = lst[1].lstrip('"').rstrip('";')
                         if thisName == caseConfig['SwingNode']:
@@ -306,7 +306,7 @@ def prepare_glm_file(caseConfig):
                           gld_step=caseConfig['GldStep'],
                           vsource=caseConfig['SourceNominalVLN'] * caseConfig['SourceNominalVpu']), file=gp)
     gp.close()
-    print('{:.3f} kW total load'.format(nomkW))
+    print(f'{nomkW:.3f} kW total load')
 
 
 # dictionary of buildings with GridLAB-D meters
@@ -344,7 +344,7 @@ def prepare_glm_dict(caseConfig):
         mtr_id = row['Meter']
         mtr_load = row['Name']
         vll = row['Vnom']
-        vln = float('{:.3f}'.format(vll / math.sqrt(3.0)))
+        vln = float(f'{vll / math.sqrt(3.0):.3f}')
         meters[mtr_id] = {'feeder_id': feeder_id, 'phases': 'ABC', 'vll': vll, 'vln': vln, 'children': [mtr_load]}
 
     feeders[feeder_id] = {'house_count': 0, 'inverter_count': 0, 'base_feeder': caseConfig['BaseFeederName']}
@@ -453,7 +453,7 @@ def make_gld_eplus_case(fname, bGlmReady=False):
     prepare_glm_helics(caseConfig, fedMeters, fedLoadNames)
     prepare_run_script(caseConfig, fedMeters)
 
-    fn = '{:s}/clean.sh'.format(caseDir)
+    fn = f'{caseDir:s}/clean.sh'
     fp = open(fn, 'w')
     print("rm - f *.log", file=fp)
     print("rm - f *.csv", file=fp)
@@ -481,7 +481,7 @@ def make_gld_eplus_case(fname, bGlmReady=False):
     shutil.copy(template_dir + 'helicsRecorder.json', caseDir)
     shutil.copy(caseConfig['TMYFile'], '{:s}/{:s}'.format(caseDir, 'gldWeather.tmy3'))
     # process TMY3 ==> TMY2 ==> EPW
-    cmdline = 'TMY3toTMY2_ansi {:s}/gldWeather.tmy3 > {:s}/epWeather.tmy2'.format(caseDir, caseDir)
+    cmdline = f'TMY3toTMY2_ansi {caseDir:s}/gldWeather.tmy3 > {caseDir:s}/epWeather.tmy2'
     print(cmdline)
     pw1 = subprocess.Popen(cmdline, shell=True)
     pw1.wait()
@@ -489,4 +489,4 @@ def make_gld_eplus_case(fname, bGlmReady=False):
     print(cmdline)
     pw2 = subprocess.Popen(cmdline, shell=True)
     pw2.wait()
-    os.remove('{:s}/epWeather.tmy2'.format(caseDir))
+    os.remove(f'{caseDir:s}/epWeather.tmy2')

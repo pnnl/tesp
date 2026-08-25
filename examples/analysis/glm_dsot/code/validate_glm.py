@@ -1,9 +1,12 @@
-import os
-import pandas as pd
 import json
+import os
 import shutil
-from tesp_support.api.modify_GLM import GLMModifier, GLMModel
+import sys
+
+import pandas as pd
 import tesp_support.dsot.glm_dictionary as gd
+from tesp_support.api.modify_GLM import GLMModifier
+
 
 def read_glm(data_path, caseName):
     """Read in the substation .glms written from a prepare_case_dsot.py that 
@@ -22,7 +25,7 @@ def read_glm(data_path, caseName):
         #glm.del_object('fncs_msg', f"gldSubstation_{dso_key}") # HELICS run
         glm.write_model(os.path.join(data_path, in_file_glm))
         if not success:
-            exit()
+            sys.exit()
         gd.glm_diction(caseName, "Substation_" + str(dso_key))
         shutil.move(f'{caseName}/Substation_{dso_key}/Substation_{dso_key}_glm_dict.json',
                         f'{caseName}/DSO_{dso_key}/Substation_{dso_key}_glm_dict.json')     
@@ -42,12 +45,12 @@ def read_feeder_glm(data_path, caseName, feeder_name):
     i_glm, success = glm.read_model(os.path.join(data_path, in_file_glm))
     glm.write_model(os.path.join(data_path, in_file_glm))
     if not success:
-        exit()
+        sys.exit()
     gd.glm_diction(caseName, feeder_name)
     try:
         shutil.move(f'{caseName}/{feeder_name}/{feeder_name}_glm_dict.json',
                         f'{caseName}/DSO_1/{feeder_name}_glm_dict.json')
-    except:
+    except Exception:
         shutil.move(f'{caseName}/{feeder_name}/{feeder_name}_glm_dict.json',
                         f'{caseName}/copperplate_feeder/{feeder_name}_glm_dict.json')
     glm.model.plot_model()
@@ -83,9 +86,9 @@ def read_dict(caseName, level:str):
                     children = val['children']
                     if len([s for s in children if inc in s]) > 0:
                         if len([s for s in children if v in s]) > 0:
-                            res_df.loc[res_df['index']==[s for s in children if inc in s][0],k] = 'Yes'
+                            res_df.loc[res_df['index']==[next(s for s in children if inc in s)],k] = 'Yes'
                         else:
-                            res_df.loc[res_df['index']==[s for s in children if inc in s][0],k] = 'No'
+                            res_df.loc[res_df['index']==[next(s for s in children if inc in s)],k] = 'No'
         # for groupid in ['office', 'warehouse_storage', 'big_box', 'strip_mall', 'education', 'food_service', 'food_sales', 'lodging', 'healthcare_inpatient', 'low_occupancy']:
         #     for k, v in {'house':groupid, 'battery':'bat', 'solar':'sol', 'ev':'ev'}.items():
         #         for val in glm_dict['billingmeters'].values():
@@ -127,15 +130,15 @@ def read_dict(caseName, level:str):
     elec_sh_hses = len(hse_df.loc[(hse_df['house']=='Yes') & (hse_df['fuel_type']=='electric') & (hse_df['income_level'] !='')])
     print(f"=== RESIDENTIAL POPULATION SUMMARY for {caseName} ===")
     print(f"Number of residential homes {tot_hses}")
-    print(f"=== Income (Percent of all homes) ===")
+    print("=== Income (Percent of all homes) ===")
     print(f"=== Low: {round(100*low_hses/tot_hses,2)}%, Middle: {round(100*middle_hses/tot_hses,2)}%, Upper: {round(100*upper_hses/tot_hses,2)}%. ===")
-    print(f"=== DERs (Percent of all homes) ===")
+    print("=== DERs (Percent of all homes) ===")
     print(f"=== Solar: {round(100*sol_hses/tot_hses,2)}%, EVs: {round(100*ev_hses/tot_hses,2)}%, Batteries: {round(100*bat_hses/tot_hses,2)}%. ===")
-    print(f"=== Electric Water Heating/Space Heating (Percent of all homes) ===")
+    print("=== Electric Water Heating/Space Heating (Percent of all homes) ===")
     print(f"=== Water Heating: {round(100*elec_wh_hses/tot_hses,2)}%, Space Heating: {round(100*elec_sh_hses/tot_hses,2)}%. ===")
     print(f"=== COMMERCIAL POPULATION SUMMARY for {caseName} ===")
     print(f"Number of commercial buildings: {com_bldgs}")
-    print(f"=== DERs (Percent of all buildings) ===")
+    print("=== DERs (Percent of all buildings) ===")
     print(f"=== Solar: {round(100*sol_com/com_bldgs,2)}%, EVs: {round(100*ev_com/com_bldgs,2)}%, Batteries: {round(100*bat_com/com_bldgs,2)}%. ===")
 
 if __name__ == "__main__":

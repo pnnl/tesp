@@ -1,9 +1,6 @@
 # Copyright (c) 2020-2025 Battelle Memorial Institute
-import csv
-import sys
-import numpy as np
-import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 
 # CSV: seconds, 8*LMP, 8*CLR, 8*BID, 8*SET
 
@@ -20,7 +17,7 @@ for row in range(2):
     ax[row,col].plot(h, d[:,iLMP+24], color='green', label='SET')
     ax[row,col].grid()
     ax[row,col].legend()
-    ax[row,col].set_title ('Bus {:d}'.format(bus))
+    ax[row,col].set_title (f'Bus {bus:d}')
     ax[row,col].set_ylabel ('MW')
     if row == 1:
       ax[row,col].set_xlabel ('Hours')

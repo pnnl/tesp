@@ -11,11 +11,10 @@ from datetime import timedelta
 import numpy as np
 import pypower.api as pp
 import scipy.interpolate as ip
-
-import tesp_support.original.fncs as fncs
-import tesp_support.original.parse_msout as pm
 import tesp_support.api.tso_helpers as th
+import tesp_support.original.parse_msout as pm
 from tesp_support.api.parse_helpers import parse_mva
+from tesp_support.original import fncs
 
 casename = 'ercot_8'
 
@@ -82,7 +81,7 @@ def shutoff_wind_plants(ppc):
 def print_bus_lmps(lbl, bus):
     print('Bus LMPS', lbl)
     for i in range(bus.shape[0]):
-        print('{:2d} {:9.5f}'.format(i, bus[i, 13]))
+        print(f'{i:2d} {bus[i, 13]:9.5f}')
 
 
 def read_matpower_array(fp):
@@ -101,7 +100,7 @@ def solve_most_rtm_case(fprog, fname):
     rBus = None
     rBranch = None
     rGenCost = None
-    cmdline = '{:s} {:s}'.format(fprog, fname)
+    cmdline = f'{fprog:s} {fname:s}'
     proc = subprocess.Popen(cmdline, shell=True)
     proc.wait()
     fp = open('solved.txt', 'r')
@@ -119,15 +118,15 @@ def solve_most_rtm_case(fprog, fname):
             rGenCost = read_matpower_array(fp)
     fp.close()
     print('Solved Base Case DC OPF in Matpower')
-    print('  rBus is {:d}x{:d}'.format(len(rBus), len(rBus[0])))
-    print('  rBranch is {:d}x{:d}'.format(len(rBranch), len(rBranch[0])))
-    print('  rGen is {:d}x{:d}'.format(len(rGen), len(rGen[0])))
-    print('  rGenCost is {:d}x{:d}'.format(len(rGenCost), len(rGenCost[0])))
+    print(f'  rBus is {len(rBus):d}x{len(rBus[0]):d}')
+    print(f'  rBranch is {len(rBranch):d}x{len(rBranch[0]):d}')
+    print(f'  rGen is {len(rGen):d}x{len(rGen[0]):d}')
+    print(f'  rGenCost is {len(rGenCost):d}x{len(rGenCost[0]):d}')
     return rBus, rBranch, rGen, rGenCost
 
 
 def solve_most_dam_case(fprog, froot):
-    cmdline = '{:s} {:s}solve.m'.format(fprog, froot)
+    cmdline = f'{fprog:s} {froot:s}solve.m'
     proc = subprocess.Popen(cmdline, shell=True)
     proc.wait()
     f, nb, ng, nl, ns, nt, nj_max, Pg, Pd, Pf, u, lamP = pm.read_most_solution('msout.txt')
@@ -171,7 +170,7 @@ def get_plant_commit_key(fuel, gencosts, gen, usewind):
 
 
 def write_array_rows(A, fp):
-    print(';\n'.join([' '.join([' {:s}'.format(str(item)) for item in row]) for row in A]), file=fp)
+    print(';\n'.join([' '.join([f' {item!s:s}' for item in row]) for row in A]), file=fp)
 
 
 def write_most_table_indices(fp):
@@ -200,13 +199,13 @@ def write_most_dam_files(ppc, bids, wind_plants, unit_state, froot):
     print("""mpopt = mpoption(mpopt, 'glpk.opts.mipgap', 0);""", file=fp)
     print("""mpopt = mpoption(mpopt, 'glpk.opts.tolint', 1e-10);""", file=fp)
     print("""mpopt = mpoption(mpopt, 'glpk.opts.tolobj', 1e-10);""", file=fp)
-    print("""mpc = loadcase ('{:s}case.m');""".format(froot), file=fp)
-    print("""xgd = loadxgendata('{:s}xgd.m', mpc);""".format(froot), file=fp)
-    print("""profiles = getprofiles('{:s}unresp.m');""".format(froot), file=fp)
-    print("""profiles = getprofiles('{:s}resp.m', profiles);""".format(froot), file=fp)
+    print(f"""mpc = loadcase ('{froot:s}case.m');""", file=fp)
+    print(f"""xgd = loadxgendata('{froot:s}xgd.m', mpc);""", file=fp)
+    print(f"""profiles = getprofiles('{froot:s}unresp.m');""", file=fp)
+    print(f"""profiles = getprofiles('{froot:s}resp.m', profiles);""", file=fp)
     if len(wind_plants) > 0:
-        print("""profiles = getprofiles('{:s}wind.m', profiles);""".format(froot), file=fp)
-    print("""profiles = getprofiles('{:s}bids.m', profiles);""".format(froot), file=fp)
+        print(f"""profiles = getprofiles('{froot:s}wind.m', profiles);""", file=fp)
+    print(f"""profiles = getprofiles('{froot:s}bids.m', profiles);""", file=fp)
     print("""nt = size(profiles(1).values, 1);""", file=fp)
     print("""mdi = loadmd(mpc, nt, xgd, [], [], profiles);""", file=fp)
     print("""mdo = most(mdi, mpopt);""", file=fp)
@@ -216,7 +215,7 @@ def write_most_dam_files(ppc, bids, wind_plants, unit_state, froot):
     fp.close()
 
     fp = open(froot + 'case.m', 'w')
-    print('function mpc = {:s}case'.format(froot), file=fp)
+    print(f'function mpc = {froot:s}case', file=fp)
     print('%% MATPOWER/MOST base case from PNNL TESP, tso_most.py, model name', casename, file=fp)
     print("""mpc.version = '2';""", file=fp)
     print("""mpc.baseMVA = 100;""", file=fp)
@@ -242,7 +241,7 @@ def write_most_dam_files(ppc, bids, wind_plants, unit_state, froot):
     fp.close()
 
     fp = open(froot + 'xgd.m', 'w')
-    print("""function [xgd_table] = {:s}xgd (mpc)
+    print(f"""function [xgd_table] = {froot:s}xgd (mpc)
   xgd_table.colnames = {{
       'CommitKey', ...
       'InitialState',...
@@ -259,7 +258,7 @@ def write_most_dam_files(ppc, bids, wind_plants, unit_state, froot):
       'NegativeLoadFollowReservePrice', ...
       'NegativeLoadFollowReserveQuantity', ...
   }};
-  xgd_table.data = [""".format(froot), file=fp)
+  xgd_table.data = [""", file=fp)
     ngen = 0
     nwind = 0
     usewind = False
@@ -276,9 +275,8 @@ def write_most_dam_files(ppc, bids, wind_plants, unit_state, froot):
         minup, mindown = get_plant_min_up_down_hours(fuel, ppc['gencost'][i], ppc['gen'][i])
         paPrice, naPrice, pdPrice, ndPrice, plfPrice, nlfPrice = get_plant_prices(fuel, ppc['gencost'][i],
                                                                                   ppc['gen'][i])
-        print(' {:2d} {:4d} {:2d} {:2d} {:f} {:.2f} {:f} {:.2f} {:f} {:f} {:f} {:.2f} {:f} {:.2f};'
-              .format(commit, int(unit_state[i]), minup, mindown, paPrice, reserve, naPrice, reserve,
-                      pdPrice, ndPrice, plfPrice, reserve, nlfPrice, reserve), file=fp)
+        print(f' {commit:2d} {int(unit_state[i]):4d} {minup:2d} {mindown:2d} {paPrice:f} {reserve:.2f} {naPrice:f} {reserve:.2f} {pdPrice:f} {ndPrice:f} {plfPrice:f} {reserve:.2f} {nlfPrice:f} {reserve:.2f};'
+              , file=fp)
     print('];', file=fp)
     print('end', file=fp)
     fp.close()
@@ -289,43 +287,43 @@ def write_most_dam_files(ppc, bids, wind_plants, unit_state, froot):
         rowlist.append(int(row[0]))
 
     fp = open(froot + 'unresp.m', 'w')
-    print("""function unresp = {:s}unresp""".format(froot), file=fp)
+    print(f"""function unresp = {froot:s}unresp""", file=fp)
     write_most_table_indices(fp)
-    print("""  unresp = struct( ...
+    print(f"""  unresp = struct( ...
     'type', 'mpcData', ...
     'table', CT_TBUS, ...
-    'rows', {:s}, ...
+    'rows', {rowlist!s:s}, ...
     'col', PD, ...
     'chgtype', CT_REP, ...
-    'values', [] );""".format(str(rowlist)), file=fp)
+    'values', [] );""", file=fp)
     for row in ppc['DSO']:
         busnum = row[0]
         key = row[1]
         gld_scale = float(row[2]) * 3.0  # adds the "curve" load
         vals = str([round(gld_scale * v, 2) for v in bids[key]['unresp_mw']])
         mvals = vals.replace(',', ';')
-        print("""  unresp.values(:, 1, {:s}) = {:s};""".format(busnum, mvals), file=fp)
+        print(f"""  unresp.values(:, 1, {busnum:s}) = {mvals:s};""", file=fp)
     print("""end""", file=fp)
     fp.close()
 
     fp = open(froot + 'resp.m', 'w')
-    print("""function resp = {:s}resp""".format(froot), file=fp)
+    print(f"""function resp = {froot:s}resp""", file=fp)
     write_most_table_indices(fp)
-    print("""  resp = struct( ...
+    print(f"""  resp = struct( ...
     'type', 'mpcData', ...
     'table', CT_TLOAD, ...
-    'rows', {:s}, ...
+    'rows', {rowlist!s:s}, ...
     'col', CT_LOAD_DIS_P, ...
     'chgtype', CT_REP, ...
-    'values', [] );""".format(str(rowlist)), file=fp)
+    'values', [] );""", file=fp)
     for row in ppc['DSO']:
         busnum = row[0]
         key = row[1]
         gld_scale = float(row[2])
         vals = str([round(gld_scale * v, 2) for v in bids[key]['resp_max_mw']])
         mvals = vals.replace(',', ';')
-        print("""  resp.values(:, 1, {:s}) = {:s};""".format(busnum, mvals), file=fp)
-    print("""  unresp = {:s}unresp;""".format(froot), file=fp)
+        print(f"""  resp.values(:, 1, {busnum:s}) = {mvals:s};""", file=fp)
+    print(f"""  unresp = {froot:s}unresp;""", file=fp)
     print("""  resp.values = resp.values + unresp.values;""", file=fp)
     print("""end""", file=fp)
     fp.close()
@@ -336,21 +334,21 @@ def write_most_dam_files(ppc, bids, wind_plants, unit_state, froot):
         rowlist.append(nwind + ngen + int(row[0]))
 
     fp = open(froot + 'bids.m', 'w')
-    print("""function bids = {:s}bids""".format(froot), file=fp)
+    print(f"""function bids = {froot:s}bids""", file=fp)
     write_most_table_indices(fp)
-    print("""  bids = struct( ...
+    print(f"""  bids = struct( ...
     'type', 'mpcData', ...
     'table', CT_TGENCOST, ...
-    'rows', {:s}, ...
+    'rows', {rowlist!s:s}, ...
     'col', COST, ...
     'chgtype', CT_REP, ...
-    'values', [] );""".format(str(rowlist)), file=fp)
+    'values', [] );""", file=fp)
     for row in ppc['DSO']:
         busnum = int(row[0])
         key = row[1]
         vals = str([round(v, 3) for v in bids[key]['resp_c1']])
         mvals = vals.replace(',', ';')
-        print("""  bids.values(:, 1, {:d}) = {:s};""".format(busnum, mvals), file=fp)
+        print(f"""  bids.values(:, 1, {busnum:d}) = {mvals:s};""", file=fp)
     print("""end""", file=fp)
     fp.close()
 
@@ -373,20 +371,20 @@ def write_most_dam_files(ppc, bids, wind_plants, unit_state, froot):
             wind_vals[int(key) + 1].append(p)
 
     fp = open(froot + 'wind.m', 'w')
-    print("""function wind = {:s}wind""".format(froot), file=fp)
+    print(f"""function wind = {froot:s}wind""", file=fp)
     write_most_table_indices(fp)
-    print("""  wind = struct( ...
+    print(f"""  wind = struct( ...
     'type', 'mpcData', ...
     'table', CT_TGEN, ...
-    'rows', {:s}, ...
+    'rows', {rowlist!s:s}, ...
     'col', PMAX, ...
     'chgtype', CT_REP, ...
-    'values', [] );""".format(str(rowlist)), file=fp)
+    'values', [] );""", file=fp)
     for key, wvals in wind_vals.items():
         rownum = key - ngen
         vals = str([round(v, 2) for v in wvals])
         mvals = vals.replace(',', ';')
-        print("""  wind.values(:, 1, {:d}) = {:s};""".format(rownum, mvals), file=fp)
+        print(f"""  wind.values(:, 1, {rownum:d}) = {mvals:s};""", file=fp)
     print("""end""", file=fp)
     fp.close()
 
@@ -630,7 +628,7 @@ def tso_most_loop_f(bTestDAM=False, test_bids=None):
     next_unit_dispatch = None
     # don't apply zero dispatch to the units on first day
     bDAMValid = False
-    print('numGen = {:d}, numResp = {:d}'.format(numGen, numResp))
+    print(f'numGen = {numGen:d}, numResp = {numResp:d}')
     print('starting unit_state', unit_state)
     print('starting unit_schedule', unit_schedule)
     print('starting unit_dispatch', unit_dispatch)
@@ -714,8 +712,8 @@ def tso_most_loop_f(bTestDAM=False, test_bids=None):
 
     op = open(casename + '_opf.csv', 'w')
     vp = open(casename + '_pf.csv', 'w')
-    print(line, sep=', ', file=op, flush=True)
-    print(line2, sep=', ', file=vp, flush=True)
+    print(line, file=op, flush=True)
+    print(line2, file=vp, flush=True)
 
     # MAIN LOOP starts here
     fncs.initialize()
@@ -812,10 +810,8 @@ def tso_most_loop_f(bTestDAM=False, test_bids=None):
                         row[7] = alag
                         row[8] = ylag
                         # set the max and min
-                        if gen[int(key), 8] < p:
-                            gen[int(key), 8] = p
-                        if gen[int(key), 9] > p:
-                            gen[int(key), 9] = p
+                        gen[int(key), 8] = max(gen[int(key), 8], p)
+                        gen[int(key), 9] = min(gen[int(key), 9], p)
                         row[9][j + 24] = p
                         if ts == 0:
                             row[9][j] = p
@@ -827,8 +823,8 @@ def tso_most_loop_f(bTestDAM=False, test_bids=None):
             tnext_wind += wind_period
             print('========================== Fluctuating Wind at', ts)
             for key, row in wind_plants.items():
-                csvStr = ','.join('{:2f}'.format(item) for item in row[9])
-                print('{:s}{:s}'.format(key, csvStr))
+                csvStr = ','.join(f'{item:2f}' for item in row[9])
+                print(f'{key:s}{csvStr:s}')
         #        print (key, row[9])
 
         # shape the baseline loads if using the curve
@@ -848,13 +844,13 @@ def tso_most_loop_f(bTestDAM=False, test_bids=None):
         if most and bDAMValid:
             if (minutes == 0) and (seconds == 0):
                 if hours == 0:
-                    print('#### At midnight: ts = {:d}, to rotate UC/ED'.format(ts))
+                    print(f'#### At midnight: ts = {ts:d}, to rotate UC/ED')
                     unit_schedule = deepcopy(next_unit_schedule)
                     unit_dispatch = deepcopy(next_unit_dispatch)
                     print('now unit_schedule =', unit_schedule)
                     print('now unit_dispatch =', unit_dispatch)
                 if days > 0:  # we have DAM valid in the middle of first day, but don't use until day 1
-                    print('  #### Top of the hour {:d}: ts = {:d}, to implement UC/ED'.format(hours, ts))
+                    print(f'  #### Top of the hour {hours:d}: ts = {ts:d}, to implement UC/ED')
                     ppc['gen'][:, 7] = unit_schedule[:, hours]
                     for i in range(numGen):
                         fuel = genFuel[i][0]
@@ -867,15 +863,15 @@ def tso_most_loop_f(bTestDAM=False, test_bids=None):
         # run multi-period optimization in MOST to establish the next day's unit commitment and dispatch schedule
         # Run the day ahead market (DAM) at noon every day
         if most and (hours == 12) and (minutes == 0) and (seconds == 0):
-            file_time = 'd{:d}_h{:d}_m{:d}_'.format(days, hours, minutes)
+            file_time = f'd{days:d}_h{hours:d}_m{minutes:d}_'
             most_DAM_case_file = file_time + 'dam'
             update_cost_and_load(ppc, True)
-            print('Running MOST DAM at day {:d}'.format(days))
+            print(f'Running MOST DAM at day {days:d}')
             print(day_ahead_bid)
             write_most_dam_files(ppc, day_ahead_bid, wind_plants, unit_state, most_DAM_case_file)
             f, Pg, Pd, Pf, u, lamP = solve_most_dam_case(ppc['MostCommand'], most_DAM_case_file)
             bDAMValid = True
-            print('#### Objective = {:.2f}'.format(f))
+            print(f'#### Objective = {f:.2f}')
             next_unit_schedule = u
             next_unit_dispatch = Pg
             print('next_unit_schedule', next_unit_schedule)
@@ -907,7 +903,7 @@ def tso_most_loop_f(bTestDAM=False, test_bids=None):
             update_cost_and_load(ppc, True)
 
             if (ts == 21600) or (ts == 64800) or (ts == 75600):
-                write_most_base_case(ppc, 'rtmcase_{:d}.m'.format(ts))
+                write_most_base_case(ppc, f'rtmcase_{ts:d}.m')
             #      rBus, rBranch, rGen, rGenCost = solve_most_rtm_case(ppc['MostCommand'], 'solvertmcase.m')
             ropf = pp.runopf(ppc, ppopt_market)
             if not ropf['success']:
@@ -935,17 +931,17 @@ def tso_most_loop_f(bTestDAM=False, test_bids=None):
                 sum_w += gen[row[10], 1]
 
             line = str(ts) + ',' + str(ropf['success']) + ','
-            line += '{: .2f}'.format(opf_bus[:, 2].sum()) + ','
-            line += '{: .2f}'.format(Pproduced) + ','
-            line += '{: .2f}'.format(Pswing) + ','
-            line += '{: .2f}'.format(Pcleared)
+            line += f'{opf_bus[:, 2].sum(): .2f}' + ','
+            line += f'{Pproduced: .2f}' + ','
+            line += f'{Pswing: .2f}' + ','
+            line += f'{Pcleared: .2f}'
             for idx in range(opf_bus.shape[0]):
-                line += ',' + '{: .4f}'.format(opf_bus[idx, 13])
+                line += ',' + f'{opf_bus[idx, 13]: .4f}'
             for idx in range(opf_gen.shape[0]):
                 if numGen > idx:
-                    line += ',' + '{: .2f}'.format(opf_gen[idx, 1])
-            line += ',{: .2f}'.format(sum_w)
-            print(line, sep=', ', file=op, flush=True)
+                    line += ',' + f'{opf_gen[idx, 1]: .2f}'
+            line += f',{sum_w: .2f}'
+            print(line, file=op, flush=True)
 
             tnext_opf += period
 
@@ -974,17 +970,17 @@ def tso_most_loop_f(bTestDAM=False, test_bids=None):
                 Pswing += rGen[idx, 1]
 
         line = str(ts) + ', ' + str(rpf[0]['success']) + ','
-        line += '{: .2f}'.format(Pload) + ',' + '{: .2f}'.format(Pgen) + ','
-        line += '{: .2f}'.format(Ploss) + ',' + '{: .2f}'.format(Pswing)
+        line += f'{Pload: .2f}' + ',' + f'{Pgen: .2f}' + ','
+        line += f'{Ploss: .2f}' + ',' + f'{Pswing: .2f}'
         for idx in range(rBus.shape[0]):
-            line += ',' + '{: .2f}'.format(rBus[idx, 7])  # bus per-unit voltages
+            line += ',' + f'{rBus[idx, 7]: .2f}'  # bus per-unit voltages
         for idx in range(numGen):
-            line += ',' + '{: .2f}'.format(rGen[idx, 1])
+            line += ',' + f'{rGen[idx, 1]: .2f}'
         sum_w = 0
         for key, row in wind_plants.items():
             sum_w += rGen[row[10], 1]
-        line += ',{: .2f}'.format(sum_w)
-        print(line, sep=', ', file=vp, flush=True)
+        line += f',{sum_w: .2f}'
+        print(line, file=vp, flush=True)
 
         # update the metrics
         dsoBus = ppc['DSO']
@@ -1021,10 +1017,8 @@ def tso_most_loop_f(bTestDAM=False, test_bids=None):
             bus_accum[busnum][3] += row[3]
             bus_accum[busnum][4] += row[8]
             bus_accum[busnum][5] += Vpu
-            if Vpu > bus_accum[busnum][6]:
-                bus_accum[busnum][6] = Vpu
-            if Vpu < bus_accum[busnum][7]:
-                bus_accum[busnum][7] = Vpu
+            bus_accum[busnum][6] = max(bus_accum[busnum][6], Vpu)
+            bus_accum[busnum][7] = min(bus_accum[busnum][7], Vpu)
 
         for i in range(rGen.shape[0]):
             idx = str(i + 1)
@@ -1094,5 +1088,5 @@ if __name__ == '__main__':
         da_bids = json.load(fp)
         fp.close()
         tso_most_loop_f(True, da_bids)
-        quit()
+        sys.exit()
     tso_most_loop_f()

@@ -12,8 +12,8 @@ Public Functions:
     :glm_dict: Writes the JSON metadata file.  
 """
 
-import os
 import json
+import os
 from math import sqrt
 
 from ..api.helpers import zoneMeterName
@@ -37,9 +37,7 @@ def ercotMeterName(objname):
 
 
 def isCommercialHouse(house_class):
-    if ('BIGBOX' in house_class) or ('OFFICE' in house_class) or ('STRIPMALL' in house_class):
-        return True
-    return False
+    return ('BIGBOX' in house_class) or ('OFFICE' in house_class) or ('STRIPMALL' in house_class)
 
 
 def ti_enumeration_string(tok):

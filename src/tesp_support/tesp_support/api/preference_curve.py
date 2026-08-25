@@ -5,9 +5,9 @@
 #          isoelastic demand curve. This module is device-type-agnostic.
 # ============================================================================
 
-from typing import Optional
 from dataclasses import dataclass
 from enum import Enum, auto
+
 
 class DeviceType(Enum):
     """Types of physical devices the agent can manage."""
@@ -178,7 +178,7 @@ class PreferenceCurve:
         n_points: int,
         Q_min: float,
         Q_max: float,
-        price_focus: Optional[float] = None,
+        price_focus: float | None = None,
     ) -> list:
         """Sample the preference curve at N price points to create a bid curve.
 

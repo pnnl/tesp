@@ -137,16 +137,16 @@ def process_pypower(name_root, nhours):
             data_b[j, i, :] = ary
             i = i + 1
         print(key,
-              '{:.4f}'.format(data_b[j, :, LMP_P_IDX].mean()),
-              '{:.4f}'.format(data_b[j, :, LMP_P_IDX].max()),
-              '{:.4f}'.format(data_b[j, 0:last1, LMP_P_IDX].mean()),
-              '{:.4f}'.format(data_b[j, 0:last1, LMP_P_IDX].std()),
-              '{:.4f}'.format(data_b[j, :, VMIN_IDX].min()),
-              '{:.4f}'.format(data_b[j, :, VMAX_IDX].max()),
-              '{:.4f}'.format(data_b[j, 0:last1, UNRESP_IDX].mean()),
-              '{:.4f}'.format(data_b[j, 0:last1, RESP_MAX_IDX].mean()),
-              '{:.4f}'.format(data_b[j, 0:last1, C1_IDX].mean()),
-              '{:.4f}'.format(data_b[j, 0:last1, C2_IDX].mean()))
+              f'{data_b[j, :, LMP_P_IDX].mean():.4f}',
+              f'{data_b[j, :, LMP_P_IDX].max():.4f}',
+              f'{data_b[j, 0:last1, LMP_P_IDX].mean():.4f}',
+              f'{data_b[j, 0:last1, LMP_P_IDX].std():.4f}',
+              f'{data_b[j, :, VMIN_IDX].min():.4f}',
+              f'{data_b[j, :, VMAX_IDX].max():.4f}',
+              f'{data_b[j, 0:last1, UNRESP_IDX].mean():.4f}',
+              f'{data_b[j, 0:last1, RESP_MAX_IDX].mean():.4f}',
+              f'{data_b[j, 0:last1, C1_IDX].mean():.4f}',
+              f'{data_b[j, 0:last1, C2_IDX].mean():.4f}')
         j = j + 1
 
     # read the generator metrics file
@@ -185,8 +185,8 @@ def process_pypower(name_root, nhours):
         row = diction['generators'][key]
         p_max = float(row['Pmax'])
         print(key, row['bus'], row['bustype'], row['genfuel'],
-              '{:.4f}'.format(p_avg / p_max),
-              '{:.4f}'.format(p_std / p_avg))
+              f'{p_avg / p_max:.4f}',
+              f'{p_std / p_avg:.4f}')
         j = j + 1
 
     # display a plot 
@@ -202,8 +202,7 @@ def process_pypower(name_root, nhours):
         tstep = 6
     else:
         tstep = 2
-    for tick in range(0, nhours + 1, tstep):
-        xticks.append(tick)
+    xticks = [tick for tick in range(0, nhours + 1, tstep)]
     for i in range(2):
         for j in range(4):
             ax[i, j].grid(linestyle='-')

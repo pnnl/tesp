@@ -28,7 +28,7 @@ def get_metrics_full_multiple_KEY(file_name, pre_file, pos_file, to_hour=True):
     meta_I_ver = I_ver.pop('Metadata')
 
     temp = {}
-    if 'bid_four_point_rt' in meta_I_ver.keys():
+    if 'bid_four_point_rt' in meta_I_ver:
         temp.update({'bid_four_point_rt_1': {'units': 'kW', 'index': 0}})
         temp.update({'bid_four_point_rt_2': {'units': '$', 'index': 1}})
         temp.update({'bid_four_point_rt_3': {'units': 'kW', 'index': 2}})
@@ -37,7 +37,7 @@ def get_metrics_full_multiple_KEY(file_name, pre_file, pos_file, to_hour=True):
         temp.update({'bid_four_point_rt_6': {'units': '$', 'index': 5}})
         temp.update({'bid_four_point_rt_7': {'units': 'kW', 'index': 6}})
         temp.update({'bid_four_point_rt_8': {'units': '$', 'index': 7}})
-        for i in meta_I_ver.keys():
+        for i in meta_I_ver:
             if 'bid_four_point_rt' in i:
                 pass
             else:
@@ -91,12 +91,12 @@ def get_metrics_full_multiple_KEY(file_name, pre_file, pos_file, to_hour=True):
     Ip = pd.DataFrame(data=data, index=pd.MultiIndex.from_product([index, range(np.shape(data_I_ver)[0])]),
                       columns=range(np.shape(data_I_ver)[2]))
 
-    all_homes_I_ver = list()
+    all_homes_I_ver = []
     all_homes_I_ver.append(Ip.min(level=0))  # use axis if using panel
     all_homes_I_ver.append(Ip.mean(level=0))
     all_homes_I_ver.append(Ip.max(level=0))
     all_homes_I_ver.append(Ip.sum(level=0))
-    data_individual = list()
+
     data_individual = [pd.DataFrame(data_I_ver[i, :, :], index=index) for i in range(x)]
 
     return meta_I_ver, start_time, all_homes_I_ver, data_individual, list(I_ver[times[0]].keys())  # indovidual homes
@@ -105,7 +105,7 @@ def get_metrics_full_multiple_KEY(file_name, pre_file, pos_file, to_hour=True):
 cases = ["", "_base"]
 labels = ['Transactive', 'BaseCase']
 for i in range(len(cases)):
-    pre_file_out = 'C:/Users/tbai440/tesp-private/examples/dsot_v3/wh_hvac_error{}/'.format(cases[i])
+    pre_file_out = f'C:/Users/tbai440/tesp-private/examples/dsot_v3/wh_hvac_error{cases[i]}/'
     pos_file = '.json'
     pre_file = pre_file_out + 'Substation_2/'
     V_file = 'Substation_2_metrics_house'
@@ -134,7 +134,7 @@ houses = {"R5_12_47_2_tn_2_hse_1": 0.9776, "R5_12_47_2_load_10_bldg_82_zone_all"
 plot_data = {}
 for ii in range(len(cases)):
     plot_data_case = {}
-    pre_file_out = 'C:/Users/tbai440/tesp-private/examples/dsot_v3/wh_hvac_error{}/'.format(cases[ii])  #
+    pre_file_out = f'C:/Users/tbai440/tesp-private/examples/dsot_v3/wh_hvac_error{cases[ii]}/'
     pos_file = '.json'
     pre_file = pre_file_out + 'Substation_2/'
     V_file = 'Substation_2_metrics_house'
@@ -152,7 +152,7 @@ for ii in range(len(cases)):
         # residential with 0.1824 slider "R5_12_47_2_tn_4_hse_2":
         # residential with 0.1225 slider "R5_12_47_2_tn_4_hse_3":
 
-        if data_key[i] in houses.keys():  # ihouse:
+        if data_key[i] in houses:  # ihouse:
             AVG_power = data_individual[i][meta_S[V_analis]['index']]
             # greater than the start date and smaller than the end date
             mask = (AVG_power.index >= '08-20-2016') & (AVG_power.index <= '08-22-2016')
@@ -177,7 +177,7 @@ for ii in range(len(cases)):
             plt.ylabel('hvac load (kW)')
             plt.xlabel('time (hours)')
             plt.grid(True)
-            plt.title('home:{} slider:{}'.format(str(data_key[i]), houses[data_key[i]]))
+            plt.title(f'home:{data_key[i]!s} slider:{houses[data_key[i]]}')
         elif False:
             V_analis2 = 'air_temperature_avg'
             AVG_power2 = data_individual[i][meta_S[V_analis2]['index']]
@@ -189,12 +189,12 @@ for ii in range(len(cases)):
             plt.ylabel('room temperature (F)')
             plt.xlabel('time (hours)')
             plt.grid(True)
-            plt.title('home:{} slider:{}'.format(str(data_key[i]), houses[data_key[i]]))
+            plt.title(f'home:{data_key[i]!s} slider:{houses[data_key[i]]}')
 
     plot_data.update({cases[ii]: plot_data_case})
 
-for ihouse in houses.keys():
-    print(ihouse, houses[ihouse])
+for ihouse, value in houses.items():
+    print(ihouse, value)
     for ii in range(len(cases)):
         plt.plot(plot_data[cases[ii]][ihouse][0], plot_data[cases[ii]][ihouse][1], marker='x', label=labels[ii])
         print(labels[ii])
@@ -202,6 +202,6 @@ for ihouse in houses.keys():
         plt.ylabel('hvac load (kW)')
         plt.xlabel('time (hours)')
         plt.grid(True)
-        plt.title('home:{} slider:{}'.format(str(ihouse), houses[ihouse]))
+        plt.title(f'home:{ihouse!s} slider:{value}')
     plt.legend()
     plt.show()

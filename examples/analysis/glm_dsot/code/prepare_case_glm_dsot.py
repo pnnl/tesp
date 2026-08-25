@@ -47,21 +47,20 @@ Public Functions:
     None
 """
 
-import os
-import sys
-import json
-import pyjson5
-import shutil
 import datetime
+import json
+import os
+import shutil
+import sys
+
 import pandas as pd
-
-from tesp_support.api.helpers import HelicsMsg
-
-from tesp_support.api.data import feeder_entities_path as feeder_defaults
-import tesp_support.dsot.helpers_dsot as helpers
+import pyjson5
+import tesp_support.api.gld_feeder_generator as gld_feeder
 import tesp_support.dsot.case_merge as cm
 import tesp_support.dsot.glm_dictionary as gd
-import tesp_support.api.gld_feeder_generator as gld_feeder
+import tesp_support.dsot.helpers_dsot as helpers
+from tesp_support.api.data import feeder_entities_path as feeder_defaults
+from tesp_support.api.helpers import HelicsMsg
 
 
 # Configuration settings for the experimental case
@@ -174,7 +173,7 @@ def prepare_case(case:str):
     e = datetime.datetime.strptime(EndTime, '%Y-%m-%d %H:%M:%S')
     sIdx = (s - ep).total_seconds()
     eIdx = (e - ep).total_seconds()
-    config["Tmax"] = int((eIdx - sIdx))
+    config["Tmax"] = int(eIdx - sIdx)
 
     gen = sys_config["gen"]
     genfuel = sys_config["genfuel"]
@@ -337,7 +336,7 @@ def prepare_case(case:str):
                         print('    topic: ' + player[0] + 'player/' + player[0] + '_load_history_' + bus, file=yp)
                         print('    default: 0', file=yp)
                 continue
-        except:
+        except Exception:
             pass
 
         os.makedirs(caseName + '/' + dso_key)
@@ -382,9 +381,9 @@ def prepare_case(case:str):
         mktPrep['DSO']['Pnom'] = PQ_val[3]
         mktPrep['DSO']['Qnom'] = PQ_val[4]
         # This block now assigns scaling factors to each DSO
-        mktPrep['DSO']['number_of_customers'] = dso_config[dso_key]['number_of_customers']
-        mktPrep['DSO']['RCI customer count mix'] = dso_config[dso_key]['RCI customer count mix']
-        mktPrep['DSO']['number_of_gld_homes'] = dso_config[dso_key]['number_of_gld_homes']
+        mktPrep['DSO']['number_of_customers'] = dso_val['number_of_customers']
+        mktPrep['DSO']['RCI customer count mix'] = dso_val['RCI customer count mix']
+        mktPrep['DSO']['number_of_gld_homes'] = dso_val['number_of_gld_homes']
 
         # Weather is set per substation, with all feeders under the substation 
         # having the same weather profile. The values below need to refer to the 
@@ -412,7 +411,7 @@ def prepare_case(case:str):
         # Make weather agent folder
         try:
             os.makedirs(caseName + '/' + weather_agent_name)
-        except:
+        except Exception:
             pass
 
         # Copy the .dat file from its location into the weather agent folder
@@ -446,12 +445,12 @@ def prepare_case(case:str):
         feedercnt = 1
         config["comm_count"] = 1
         for feed_key, feed_val in feeders.items():
-            print("\t<<<<< Chosen feeder -->> {0} >>>>>".format(feed_val['name']))
+            print("\t<<<<< Chosen feeder -->> {} >>>>>".format(feed_val['name']))
             config["taxonomy"] = feed_val['name']
             if config["simplifiedFeeders"]:
                 feed_val['name'] = 'config_' + feed_val['name']
                 print("\t<<<<< Going with the simplified feeders. >>>>>")
-                print("\t<<<<< Feeder name changed to -->> {0} >>>>>".format(feed_val['name']))
+                print("\t<<<<< Feeder name changed to -->> {} >>>>>".format(feed_val['name']))
             else:
                 print("\t<<<<< Going with the full feeders. >>>>>")
             os.makedirs(caseName + '/' + feed_key)
@@ -543,7 +542,7 @@ def prepare_case(case:str):
 
             feedercnt += 1
             config["comm_count"] += 1
-            print("====== DONE WITH FEEDER {0:s} for {1:s}. ======\n".format(feed_key, dso_key))
+            print(f"====== DONE WITH FEEDER {feed_key:s} for {dso_key:s}. ======\n")
 
         # Copperplate feeder piece
         #bldPrep['CommBldgPopulation'] = gld_feeder.comm_bldgs_pop
@@ -592,7 +591,7 @@ def prepare_case(case:str):
                 else:
                     position = {}
                 feedercnt += 1
-                print("=== DONE WITH COPPERPLATE FEEDER {0:s} for {1:s}. ======\n".format(feed_key, dso_key))
+                print(f"=== DONE WITH COPPERPLATE FEEDER {feed_key:s} for {dso_key:s}. ======\n")
 
         # ======================================================================
         print("\n=== MERGING THE FEEDERS UNDER ONE SUBSTATION =====")
@@ -624,12 +623,12 @@ def prepare_case(case:str):
         # Cleanup after feeders had been merged
         foldersToDelete = [name for name in os.listdir(os.path.abspath(caseName))
                            if os.path.isdir(os.path.join(os.path.abspath(caseName), name)) and 'feeder' in name]
-        print("=== Removing the following folders: {0}. ===".format(foldersToDelete))
+        print(f"=== Removing the following folders: {foldersToDelete}. ===")
         [shutil.rmtree(os.path.join(os.path.abspath(caseName), folder)) for folder in foldersToDelete]
 
         filesToDelete = [name for name in os.listdir(os.path.abspath(caseName + '/' + dso_key))
                          if os.path.isfile(os.path.join(os.path.abspath(caseName + '/' + dso_key), name)) and 'feeder' in name]
-        print("=== Removing the following files: {0} for {1}. ===".format(filesToDelete, dso_key))
+        print(f"=== Removing the following files: {filesToDelete} for {dso_key}. ===")
         [os.remove(os.path.join(os.path.abspath(caseName + '/' + dso_key), fileName)) for fileName in filesToDelete]
 
         # Create the launch, kill and clean scripts for this case
@@ -675,9 +674,9 @@ def prepare_case(case:str):
                         children = val['children']
                         if len([s for s in children if inc in s]) > 0:
                             if len([s for s in children if v in s]) > 0:
-                                res_df.loc[res_df['index']==[s for s in children if inc in s][0],k] = 'Yes'
+                                res_df.loc[res_df['index']==[next(s for s in children if inc in s)],k] = 'Yes'
                             else:
-                                res_df.loc[res_df['index']==[s for s in children if inc in s][0],k] = 'No'
+                                res_df.loc[res_df['index']==[next(s for s in children if inc in s)],k] = 'No'
             # Merge all DSO house parameters into one dataframe
             hse_df = pd.concat([hse_df,res_df],ignore_index=True)
             bldg_df = hse_df
@@ -721,17 +720,17 @@ def prepare_case(case:str):
         bat_com = len(bldg_df.loc[(bldg_df['battery']=='Yes')& (hse_df['income_level'] =='')])
         elec_wh_hses = len(hse_df.loc[(hasattr(hse_df, 'wh_gallons')) & (hse_df['income_level'] !='')])
         elec_sh_hses = len(hse_df.loc[(hse_df['fuel_type']=='electric') & (hse_df['income_level'] !='')])
-        print(f"=== RESIDENTIAL POPULATION SUMMARY ===")
+        print("=== RESIDENTIAL POPULATION SUMMARY ===")
         print(f"Number of residential homes {tot_hses}")
-        print(f"=== Income (Percent of all homes) ===")
+        print("=== Income (Percent of all homes) ===")
         print(f"=== Low: {round(100*low_hses/tot_hses,2)}%, Middle: {round(100*middle_hses/tot_hses,2)}%, Upper: {round(100*upper_hses/tot_hses,2)}%. ===")
-        print(f"=== DERs (Percent of all homes) ===")
+        print("=== DERs (Percent of all homes) ===")
         print(f"=== Solar: {round(100*sol_hses/tot_hses,2)}%, EVs: {round(100*ev_hses/tot_hses,2)}%, Batteries: {round(100*bat_hses/tot_hses,2)}%. ===")
-        print(f"=== Electric Water Heating/Space Heating (Percent of all homes) ===")
+        print("=== Electric Water Heating/Space Heating (Percent of all homes) ===")
         print(f"=== Water Heating: {round(100*elec_wh_hses/tot_hses,2)}%, Space Heating: {round(100*elec_sh_hses/tot_hses,2)}%. ===")
         print(f"=== COMMERCIAL POPULATION SUMMARY for {caseName} ===")
         print(f"Number of commercial building zones: {com_bldgs}")
-        print(f"=== DERs (Percent of all building zones) ===")
+        print("=== DERs (Percent of all building zones) ===")
         print(f"=== Solar: {round(100*sol_com/com_bldgs,2)}%, EVs: {round(100*ev_com/com_bldgs,2)}%, Batteries: {round(100*bat_com/com_bldgs,2)}%. ===")
     
 

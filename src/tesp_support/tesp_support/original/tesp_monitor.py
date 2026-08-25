@@ -15,22 +15,20 @@ import os
 import subprocess
 import sys
 import tkinter as tk
-import tkinter.ttk as ttk
-from tkinter import filedialog
-from tkinter import messagebox
-
-from ..api.parse_helpers import parse_kw
+from tkinter import filedialog, messagebox, ttk
 
 import matplotlib
+
+from ..api.parse_helpers import parse_kw
 
 try:
     matplotlib.use('TkAgg')
 except Exception:
     pass
+import matplotlib.pyplot as plt
+from matplotlib import animation
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.lines import Line2D
-import matplotlib.animation as animation
-import matplotlib.pyplot as plt
 
 helics = None
 fncs = None
@@ -244,7 +242,7 @@ class TespMonitorGUI:
         """
         self.root.update()
         for proc in self.pids:
-            if not proc == self.broker:
+            if proc != self.broker:
                 print('Trying to kill', proc.pid, flush=True)
                 try:
                     os.kill(proc.pid, 9)

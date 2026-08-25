@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Created on Thu Feb  4 07:01:52 2021
 
@@ -25,9 +24,10 @@ data processing functions should the need arise.
 @author: barn553
 """
 
-import os
-import pandas as pd
 import json
+import os
+
+import pandas as pd
 
 
 def parse_json_file(json_file, out_path, out_file_name):
@@ -88,7 +88,7 @@ def parse_json_file(json_file, out_path, out_file_name):
     # Saving the reformatted data as a .csv file.
     # This function can be expanded to have the option
     # of saving in different file types.
-    df.to_csv(r'{}/{}.csv'.format(out_path, out_file_name))
+    df.to_csv(rf'{out_path}/{out_file_name}.csv')
 
 
 def parse_dss_file(load_file, coord_file, out_path, out_file_name):
@@ -214,7 +214,7 @@ if __name__ == '__main__':
                     tamu_data_path, 'Long_lat_buscoords.txt')
                 parse_dss_file(
                     load_file, coord_file, root_head, root_tail)
-        print('')
+        print()
     # for root, dirs, files in os.walk(os.path.join(data_path, 'tamu')):
     #     print('root:', root)
     #     root_head, root_tail = os.path.split(root)

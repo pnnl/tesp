@@ -104,11 +104,11 @@ def prep_precool(name_root, time_step=15):
                     deadband = np.random.uniform(1, 2)
                     toffset = np.random.uniform(toffset_min, toffset_max)
                     houses[house_name] = {'meter': meter_name,
-                                          'night_set': float('{:.3f}'.format(night_set)),
-                                          'day_set': float('{:.3f}'.format(day_set)),
-                                          'day_start_hour': float('{:.3f}'.format(day_start)),
-                                          'day_end_hour': float('{:.3f}'.format(day_end)),
-                                          'deadband': float('{:.3f}'.format(deadband)),
+                                          'night_set': float(f'{night_set:.3f}'),
+                                          'day_set': float(f'{day_set:.3f}'),
+                                          'day_start_hour': float(f'{day_start:.3f}'),
+                                          'day_end_hour': float(f'{day_end:.3f}'),
+                                          'deadband': float(f'{deadband:.3f}'),
                                           'vthresh': vthresh, 'toffset': toffset}
                     # FNCS messages
                     print('  ' + house_name + '/measured_voltage:', file=yp)

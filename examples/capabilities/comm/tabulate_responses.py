@@ -2,16 +2,16 @@
 # file: tabulate_responses.py
 
 # usage 'python3 tabulate_metrics.py'
+import copy
+import json
 import os
 import shutil
 import stat
-import json
-import copy
 
 from tesp_support.api.data import comm_path, energyplus_path
 from tesp_support.api.make_ems import merge_idf
 from tesp_support.api.process_eplus import read_eplus_metrics
-from tesp_support.api.test_runner import init_tests, run_test, report_tests
+from tesp_support.api.test_runner import init_tests, report_tests, run_test
 
 caseDir = './scratch'
 
@@ -48,9 +48,9 @@ bldgs = ['LargeOffice',
 
 
 def configure_building(bldg_id):
-    oname = '{:s}/{:s}.idf'.format(caseDir, bldg_id)
-    IDFName = '{:s}/{:s}.idf'.format(energyplus_path, bldg_id)
-    EMSName = '{:s}/emsHELICS/ems{:s}.idf'.format(energyplus_path, bldg_id)
+    oname = f'{caseDir:s}/{bldg_id:s}.idf'
+    IDFName = f'{energyplus_path:s}/{bldg_id:s}.idf'
+    EMSName = f'{energyplus_path:s}/emsHELICS/ems{bldg_id:s}.idf'
     merge_idf(IDFName, EMSName, StartTime, EndTime, oname, 12)
 
     fp = open(comm_path + 'eplusH.json').read()
@@ -66,7 +66,7 @@ def configure_building(bldg_id):
     eDict['name'] = epName
     for sub in eDict['subscriptions']:
         sub['key'] = sub['key'].replace('eplus_agent', agName)
-    oname = '{:s}/ep_{:s}.json'.format(caseDir, bldg_id)
+    oname = f'{caseDir:s}/ep_{bldg_id:s}.json'
     op = open(oname, 'w')
     json.dump(eDict, op, ensure_ascii=False, indent=2)
     op.close()
@@ -75,7 +75,7 @@ def configure_building(bldg_id):
     aDict['name'] = agName
     for sub in aDict['subscriptions']:
         sub['key'] = sub['key'].replace('energyPlus', epName)
-    oname = '{:s}/ag_{:s}.json'.format(caseDir, bldg_id)
+    oname = f'{caseDir:s}/ag_{bldg_id:s}.json'
     op = open(oname, 'w')
     json.dump(aDict, op, ensure_ascii=False, indent=2)
     op.close()
@@ -85,7 +85,7 @@ def configure_case(bldg_id, tcap, base_price=0.10, ramp=25.0):
     seconds = 172800
     period = 300
 
-    fname = '{:s}/run.sh'.format(caseDir)
+    fname = f'{caseDir:s}/run.sh'
     fp = open(fname, 'w')
     print(brkTemplate.format(nFed=4), file=fp)
     print(recTemplate.format(nSec=seconds, period=period), file=fp)
@@ -103,13 +103,13 @@ def configure_case(bldg_id, tcap, base_price=0.10, ramp=25.0):
     st = os.stat(fname)
     os.chmod(fname, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
-    oname = '{:s}/agj_{:s}.json'.format(caseDir, bldg_id)
+    oname = f'{caseDir:s}/agj_{bldg_id:s}.json'
     op = open(oname, 'w')
     aDict = {'StartTime': StartTime,
              'LoadScale': 1.0,
              'BuildingID': bldg_id,
-             'MetricsFileName': 'eplus_{:s}_metrics.json'.format(bldg_id),
-             'HelicsConfigFile': 'ag_{:s}.json'.format(bldg_id),
+             'MetricsFileName': f'eplus_{bldg_id:s}_metrics.json',
+             'HelicsConfigFile': f'ag_{bldg_id:s}.json',
              'StopSeconds': seconds,
              'MetricsPeriod': period,
              'BasePrice': base_price,
@@ -127,11 +127,11 @@ def get_kw(path, name_root):  # TODO - we want the kW difference between 9 a.m. 
     data = emetrics['data_e']
     idx_e = emetrics['idx_e']
     avg_kw = 0.001 * data[:, idx_e['ELECTRIC_DEMAND_IDX']].mean()
-    idx1 = int(9 * 12)
-    idx2 = int(19 * 12)
+    idx1 = 9 * 12
+    idx2 = 19 * 12
     avg_kw1 = 0.001 * data[idx1:idx2, idx_e['ELECTRIC_DEMAND_IDX']].mean()
-    idx1 = int(33 * 12)
-    idx2 = int(43 * 12)
+    idx1 = 33 * 12
+    idx2 = 43 * 12
     avg_kw2 = 0.001 * data[idx1:idx2, idx_e['ELECTRIC_DEMAND_IDX']].mean()
     return 0.5 * (avg_kw1 + avg_kw2)  # avg_kw
 
@@ -155,7 +155,7 @@ if __name__ == '__main__':
     os.makedirs(caseDir)
 
     shutil.copy(comm_path + 'eplots.py', caseDir)
-    shutil.copy('{:s}/{:s}'.format(energyplus_path, EPWFile), '{:s}/{:s}'.format(caseDir, 'epWeather.epw'))
+    shutil.copy(f'{energyplus_path:s}/{EPWFile:s}', '{:s}/{:s}'.format(caseDir, 'epWeather.epw'))
     shutil.copy(comm_path + 'prices.txt', caseDir)
     shutil.copy(comm_path + 'helicsRecorder.json', caseDir)
 
@@ -167,16 +167,16 @@ if __name__ == '__main__':
         results[bldg] = {}
         for tcap in [0.01, 1.0, 2.0, 3.0, 5.0]:
             mfile = configure_case(bldg, tcap)
-            kw = run_case(basePath, '{:s}_{:.2f}'.format(bldg, tcap), mfile)
-            key = '{:.2f}'.format(tcap)
+            kw = run_case(basePath, f'{bldg:s}_{tcap:.2f}', mfile)
+            key = f'{tcap:.2f}'
             results[bldg][key] = kw
     print(report_tests())
 
     print('Building                  Tcap   Avg kW')
     for bldg in bldgs:
         for tcap in [0.01, 1.0, 2.0, 3.0, 5.0]:
-            key = '{:.2f}'.format(tcap)
-            print('{:25s} {:4.2f} {:8.2f}'.format(bldg, tcap, results[bldg][key]))
+            key = f'{tcap:.2f}'
+            print(f'{bldg:25s} {tcap:4.2f} {results[bldg][key]:8.2f}')
 
 """
 Results obtained 1/29/2021

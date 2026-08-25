@@ -14,9 +14,9 @@ Public Functions:
 
 """
 
-import os
 import json
 import math
+import os
 
 from ..api.helpers import log
 
@@ -548,7 +548,6 @@ def glm_dict_with_microgrids(name_root, config=None, ercot=False):  # , te30=Fal
                     mtr['tariff_class'] = 'residential'
         except KeyError as keyErr:
             log.debug(f"Got a KeyError. Reason - {keyErr}")
-            pass
 
     for key, val in inverters.items():
         mtr = billingmeters[val['billingmeter_id']]
@@ -604,7 +603,7 @@ def glm_dict_with_microgrids(name_root, config=None, ercot=False):  # , te30=Fal
         Microgrid = {'bulkpower_bus': bulkpowerBus,  'message_name': message_name,
                      'transformer_MVA': substationTransformerMVA,
                      'base_feeder': base_feeder, 'feeders': feeders,
-                     'microgrids': dict((k, microgrid_info[key][k]) for k in ('name', 'ercot', 'number_billingmeters')),
+                     'microgrids': {k: microgrid_info[key][k] for k in ('name', 'ercot', 'number_billingmeters')},
                      'billingmeters': microgrid_info[key]['billingmeters_info'],
                      'houses': microgrid_info[key]['house_info'], 'inverters': microgrid_info[key]['inverter_info'],
                      'capacitors': capacitors, 'regulators': regulators, 'climate': climate}

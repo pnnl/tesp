@@ -16,11 +16,11 @@ provides two simple APIs for other entities to extract the data.
 """
 
 import json
+from multiprocessing.managers import SyncManager
+
 import numpy as np
 import pandas as pd
 from pandas import DataFrame
-
-from multiprocessing.managers import SyncManager
 
 from tesp_support.api.data import arguments
 
@@ -54,7 +54,7 @@ cache_output: dict[str, DataFrame] = {}
 # Don't put big data in here since that will force it to be piped to the
 # other process when instantiated there, instead just return a portion of
 # the global data when requested.
-class DataProxy(object):
+class DataProxy:
     def __init__(self):
         pass
 
@@ -129,9 +129,11 @@ class DataProxy(object):
         except Exception:
             cache_output[idx] = [0, 0]
             cache = cache_output[idx]
+
         if cache[0] != time:
             cache[0] = time
             cache[1] = sch_df_dict[name].loc[pd.to_datetime(time)]
+        # print(name, " ", time)
         return cache[1][col_num]
 
 

@@ -36,10 +36,12 @@ import json
 import os.path
 import re
 import sys
+from itertools import pairwise
+from math import sqrt
+
 import networkx as nx
 import numpy as np
 import pandas as pd
-from math import sqrt
 
 from ..api.data import feeders_path, weather_path
 from ..api.helpers import gld_strict_name, random_norm_trunc, randomize_residential_skew
@@ -156,19 +158,19 @@ def write_tariff(op):
         op (file): an open GridLAB-D input file
     """
     print('  bill_mode', bill_mode + ';', file=op)
-    print('  price', '{:.4f}'.format(kwh_price) + ';', file=op)
-    print('  monthly_fee', '{:.2f}'.format(monthly_fee) + ';', file=op)
+    print('  price', f'{kwh_price:.4f}' + ';', file=op)
+    print('  monthly_fee', f'{monthly_fee:.2f}' + ';', file=op)
     print('  bill_day 1;', file=op)
     if 'TIERED' in bill_mode:
         if tier1_energy > 0.0:
-            print('  first_tier_energy', '{:.1f}'.format(tier1_energy) + ';', file=op)
-            print('  first_tier_price', '{:.6f}'.format(tier1_price) + ';', file=op)
+            print('  first_tier_energy', f'{tier1_energy:.1f}' + ';', file=op)
+            print('  first_tier_price', f'{tier1_price:.6f}' + ';', file=op)
         if tier2_energy > 0.0:
-            print('  second_tier_energy', '{:.1f}'.format(tier2_energy) + ';', file=op)
-            print('  second_tier_price', '{:.6f}'.format(tier2_price) + ';', file=op)
+            print('  second_tier_energy', f'{tier2_energy:.1f}' + ';', file=op)
+            print('  second_tier_price', f'{tier2_price:.6f}' + ';', file=op)
         if tier3_energy > 0.0:
-            print('  third_tier_energy', '{:.1f}'.format(tier3_energy) + ';', file=op)
-            print('  third_tier_price', '{:.6f}'.format(tier3_price) + ';', file=op)
+            print('  third_tier_energy', f'{tier3_energy:.1f}' + ';', file=op)
+            print('  third_tier_price', f'{tier3_price:.6f}' + ';', file=op)
 
 
 inverter_undersizing = 1.0
@@ -368,17 +370,16 @@ def checkResidentialBuildingTable():
         total = 0
         for row in range(len(bldgCoolingSetpoints[tbl])):
             total += bldgCoolingSetpoints[tbl][row][0]
-        print('bldgCoolingSetpoints', tbl, 'histogram sums to', '{:.4f}'.format(total))
+        print('bldgCoolingSetpoints', tbl, 'histogram sums to', f'{total:.4f}')
     for tbl in range(len(bldgHeatingSetpoints)):
         total = 0
         for row in range(len(bldgHeatingSetpoints[tbl])):
             total += bldgHeatingSetpoints[tbl][row][0]
-        print('bldgHeatingSetpoints', tbl, 'histogram sums to', '{:.4f}'.format(total))
+        print('bldgHeatingSetpoints', tbl, 'histogram sums to', f'{total:.4f}')
     for bldg in range(3):
         binZeroReserve = bldgCoolingSetpoints[bldg][0][0]
         binZeroMargin = bldgHeatingSetpoints[bldg][0][0] - binZeroReserve
-        if binZeroMargin < 0.0:
-            binZeroMargin = 0.0
+        binZeroMargin = max(binZeroMargin, 0.0)
         #        print(bldg, binZeroReserve, binZeroMargin)
         for cBin in range(1, 6):
             denom = binZeroMargin
@@ -666,17 +667,7 @@ def is_node_class(s):
     Returns:
         bool: True if a node class, False otherwise
     """
-    if s == 'node':
-        return True
-    if s == 'load':
-        return True
-    if s == 'meter':
-        return True
-    if s == 'triplex_node':
-        return True
-    if s == 'triplex_meter':
-        return True
-    return False
+    return s in ['node', 'load', 'meter', 'triplex_node', 'triplex_meter']
 
 
 def is_edge_class(s):
@@ -690,23 +681,8 @@ def is_edge_class(s):
     Returns:
         bool: True if an edge class, False otherwise
     """
-    if s == 'switch':
-        return True
-    if s == 'fuse':
-        return True
-    if s == 'recloser':
-        return True
-    if s == 'regulator':
-        return True
-    if s == 'transformer':
-        return True
-    if s == 'overhead_line':
-        return True
-    if s == 'underground_line':
-        return True
-    if s == 'triplex_line':
-        return True
-    return False
+    return s in ["switch", "fuse", "recloser", "regulator", "transformer",
+                 "overhead_line", "underground_line", "triplex_line"]
 
 
 def obj(parent, model, line, itr, oidh, octr):
@@ -752,7 +728,7 @@ def obj(parent, model, line, itr, oidh, octr):
                 intobj += 1
                 if oname is None:
                     print('ERROR: nested object defined before parent name')
-                    quit()
+                    sys.exit()
                 line, octr = obj(oname, model, line, itr, oidh, octr)
             elif re.match('object', val):
                 # found an inline object
@@ -781,8 +757,8 @@ def obj(parent, model, line, itr, oidh, octr):
         # New object type
         model[_type] = {}
     model[_type][oname] = {}
-    for param in params:
-        model[_type][oname][param] = params[param]
+    for param, value in params.items():
+        model[_type][oname][param] = value
     return line, octr
 
 
@@ -824,7 +800,7 @@ def write_link_class(model, h, t, seg_loads, op, want_metrics=False):
             print('object ' + t + ' {', file=op)
             print('  name ' + o + ';', file=op)
             if o in seg_loads:
-                print('// downstream', '{:.2f}'.format(seg_loads[o][0]), 'kva on', seg_loads[o][1], file=op)
+                print('// downstream', f'{seg_loads[o][0]:.2f}', 'kva on', seg_loads[o][1], file=op)
             for p in model[t][o]:
                 if ':' in model[t][o][p]:
                     print('  ' + p + ' ' + h[model[t][o][p]] + ';', file=op)
@@ -1071,7 +1047,7 @@ def write_ercot_small_loads(basenode, op, vnom):
     print('  nominal_voltage ' + str(vnom) + ';', file=op)
     print('  load_class ' + cls + ';', file=op)
     print(vstart, file=op)
-    print('  //', '{:.3f}'.format(kva), 'kva is less than 1/2 avg_house', file=op)
+    print(f'  // {kva:.3f} kva is less than 1/2 avg_house', file=op)
     print(constpower, file=op)
     print('}', file=op)
 
@@ -1131,7 +1107,7 @@ def identify_ercot_houses(model, h, t, avgHouse, rgn):
                         small_nodes[key] = [kva, phs, parent, cls]  # parent is the primary node, only for ERCOT
     for phs in ['A', 'B', 'C']:
         print('phase', phs, ':', total_houses[phs], 'Houses and', total_small[phs],
-              'Small Loads totaling', '{:.2f}'.format(total_small_kva[phs]), 'kva')
+              'Small Loads totaling', f'{total_small_kva[phs]:.2f}', 'kva')
     print(len(house_nodes), 'primary house nodes, [SF,APT,MH]=', total_sf, total_apt, total_mh)
     for i in range(6):
         heating_bins[0][i] = round(total_sf * bldgHeatingSetpoints[0][i][0] + 0.5)
@@ -1241,7 +1217,7 @@ def replace_commercial_loads(model, h, t, avgBuilding):
                         del (comm_bldgs_pop[select_bldg])
                     else:
                         if nzones > 0:
-                            print('Commercial building could not be found for ', '{:.2f}'.format(kva), ' KVA load')
+                            print('Commercial building could not be found for ', f'{kva:.2f}', ' KVA load')
                         comm_name = 'streetlights'
                         comm_type = 'ZIPLOAD'
                         comm_size = 0
@@ -1252,7 +1228,7 @@ def replace_commercial_loads(model, h, t, avgBuilding):
                     model[t][o]['groupid'] = comm_type + '_' + str(comm_size)
                     del model[t][o]
     # Print commercial info
-    print('Found', total_commercial, 'commercial loads totaling', '{:.2f}'.format(total_comm_kva), 'KVA')
+    print('Found', total_commercial, 'commercial loads totaling', f'{total_comm_kva:.2f}', 'KVA')
     print('  ', total_office, 'med/small offices,')
     print('  ', total_warehouse_storage, 'warehouses,')
     print('  ', total_big_box, 'big box retail,')
@@ -1314,7 +1290,7 @@ def identify_xfmr_houses(model, h, t, seg_loads, avgHouse, rgn):
                         else:
                             total_mh += nhouse
                         house_nodes[node] = [nhouse, rgn, lg_v_sm, phs, bldg, ti]
-    print(total_small, 'small loads totaling', '{:.2f}'.format(total_small_kva), 'kva')
+    print(total_small, 'small loads totaling', f'{total_small_kva:.2f}', 'kva')
     print(total_houses, 'houses on', len(house_nodes), 'transformers, [SF,APT,MH]=', total_sf, total_apt, total_mh)
     for i in range(6):
         heating_bins[0][i] = round(total_sf * bldgHeatingSetpoints[0][i][0] + 0.5)
@@ -1383,7 +1359,7 @@ def write_small_loads(basenode, op, vnom):
     print('  nominal_voltage ' + str(vnom) + ';', file=op)
     print('  voltage_1 ' + vstart + ';', file=op)
     print('  voltage_2 ' + vstart + ';', file=op)
-    print('  //', '{:.3f}'.format(kva), 'kva is less than 1/2 avg_house', file=op)
+    print(f'  // {kva:.3f} kva is less than 1/2 avg_house', file=op)
     print('  constant_power_12_real 10.0;', file=op)
     print('  constant_power_12_reac 8.0;', file=op)
     print('}', file=op)
@@ -1632,32 +1608,32 @@ def write_houses(basenode, op, vnom):
         print('  name', hsename + ';', file=op)
         print('  parent', hse_m_name + ';', file=op)
         print('  groupid', bldgTypeName[bldg] + ';', file=op)
-        print('  schedule_skew', '{:.0f}'.format(skew_value) + ';', file=op)
-        print('  floor_area', '{:.0f}'.format(floor_area) + ';', file=op)
+        print('  schedule_skew', f'{skew_value:.0f}' + ';', file=op)
+        print('  floor_area', f'{floor_area:.0f}' + ';', file=op)
         print('  number_of_stories', str(stories) + ';', file=op)
         print('  ceiling_height', str(ceiling_height) + ';', file=op)
-        print('  over_sizing_factor', '{:.4f}'.format(oversize) + ';', file=op)
-        print('  Rroof', '{:.2f}'.format(Rroof) + ';', file=op)
-        print('  Rwall', '{:.2f}'.format(Rwall) + ';', file=op)
-        print('  Rfloor', '{:.2f}'.format(Rfloor) + ';', file=op)
+        print('  over_sizing_factor', f'{oversize:.4f}' + ';', file=op)
+        print('  Rroof', f'{Rroof:.2f}' + ';', file=op)
+        print('  Rwall', f'{Rwall:.2f}' + ';', file=op)
+        print('  Rfloor', f'{Rfloor:.2f}' + ';', file=op)
         print('  glazing_layers', str(glazing_layers) + ';', file=op)
         print('  glass_type', str(glass_type) + ';', file=op)
         print('  glazing_treatment', str(glazing_treatment) + ';', file=op)
         print('  window_frame', str(window_frame) + ';', file=op)
-        print('  Rdoors', '{:.2f}'.format(Rdoor) + ';', file=op)
-        print('  airchange_per_hour', '{:.2f}'.format(airchange) + ';', file=op)
-        print('  cooling_COP', '{:.1f}'.format(c_COP) + ';', file=op)
-        print('  air_temperature', '{:.2f}'.format(init_temp) + ';', file=op)
-        print('  mass_temperature', '{:.2f}'.format(init_temp) + ';', file=op)
-        print('  total_thermal_mass_per_floor_area', '{:.3f}'.format(mass_floor) + ';', file=op)
-        print('  mass_solar_gain_fraction', '{}'.format(mass_solar_gain_frac) + ';', file=op)
-        print('  mass_internal_gain_fraction', '{}'.format(mass_int_gain_frac) + ';', file=op)
-        print('  aspect_ratio', '{:.2f}'.format(aspect_ratio) + ';', file=op)
-        print('  exterior_wall_fraction', '{:.2f}'.format(ewf) + ';', file=op)
-        print('  exterior_floor_fraction', '{:.2f}'.format(eff) + ';', file=op)
-        print('  exterior_ceiling_fraction', '{:.2f}'.format(ecf) + ';', file=op)
-        print('  window_exterior_transmission_coefficient', '{:.2f}'.format(wetc) + ';', file=op)
-        print('  window_wall_ratio', '{:.2f}'.format(wwr) + ';', file=op)
+        print('  Rdoors', f'{Rdoor:.2f}' + ';', file=op)
+        print('  airchange_per_hour', f'{airchange:.2f}' + ';', file=op)
+        print('  cooling_COP', f'{c_COP:.1f}' + ';', file=op)
+        print('  air_temperature', f'{init_temp:.2f}' + ';', file=op)
+        print('  mass_temperature', f'{init_temp:.2f}' + ';', file=op)
+        print('  total_thermal_mass_per_floor_area', f'{mass_floor:.3f}' + ';', file=op)
+        print('  mass_solar_gain_fraction', f'{mass_solar_gain_frac}' + ';', file=op)
+        print('  mass_internal_gain_fraction', f'{mass_int_gain_frac}' + ';', file=op)
+        print('  aspect_ratio', f'{aspect_ratio:.2f}' + ';', file=op)
+        print('  exterior_wall_fraction', f'{ewf:.2f}' + ';', file=op)
+        print('  exterior_floor_fraction', f'{eff:.2f}' + ';', file=op)
+        print('  exterior_ceiling_fraction', f'{ecf:.2f}' + ';', file=op)
+        print('  window_exterior_transmission_coefficient', f'{wetc:.2f}' + ';', file=op)
+        print('  window_wall_ratio', f'{wwr:.2f}' + ';', file=op)
         print('  breaker_amps 1000;', file=op)
         print('  hvac_breaker_rating 1000;', file=op)
         heat_rand = np.random.uniform(0, 1)
@@ -1672,7 +1648,7 @@ def write_houses(basenode, op, vnom):
                 print('  cooling_system_type NONE;', file=op)
         elif heat_rand <= res_bldg_metadata['gas_heating'][dso_type] + res_bldg_metadata['heat_pump'][dso_type]:
             print('  heating_system_type HEAT_PUMP;', file=op)
-            print('  heating_COP', '{:.1f}'.format(h_COP) + ';', file=op)
+            print('  heating_COP', f'{h_COP:.1f}' + ';', file=op)
             print('  cooling_system_type ELECTRIC;', file=op)
             print('  auxiliary_strategy DEADBAND;', file=op)
             print('  auxiliary_system_type ELECTRIC;', file=op)
@@ -1703,10 +1679,8 @@ def write_houses(basenode, op, vnom):
         heating_set = heating_bin[3] + np.random.uniform(0, 1) * (heating_bin[2] - heating_bin[3]) - 1
         cooling_diff = 2.0 * cooling_bin[1] * np.random.uniform(0, 1)
         heating_diff = 2.0 * heating_bin[1] * np.random.uniform(0, 1)
-        cooling_str = 'cooling' + '{:.0f}'.format(cooling_sch) + '*' + '{:.2f}'.format(
-            cooling_diff) + '+' + '{:.2f}'.format(cooling_set)
-        heating_str = 'heating' + '{:.0f}'.format(heating_sch) + '*' + '{:.2f}'.format(
-            heating_diff) + '+' + '{:.2f}'.format(heating_set)
+        cooling_str = 'cooling' + f'{cooling_sch:.0f}' + '*' + f'{cooling_diff:.2f}' + '+' + f'{cooling_set:.2f}'
+        heating_str = 'heating' + f'{heating_sch:.0f}' + '*' + f'{heating_diff:.2f}' + '+' + f'{heating_set:.2f}'
         # default heating and cooling setpoints are 70 and 75 degrees in GridLAB-D
         # we need more separation to assure no overlaps during transactive simulations
         # print('  cooling_setpoint 80.0; // ', cooling_str + ';', file=op)
@@ -1717,26 +1691,26 @@ def write_houses(basenode, op, vnom):
 
         # heatgain fraction, Zpf, Ipf, Ppf, Z, I, P
         print('  object ZIPload { // responsive', file=op)
-        print('    schedule_skew', '{:.0f}'.format(skew_value) + ';', file=op)
-        print('    base_power', 'responsive_loads*' + '{:.2f}'.format(resp_scalar) + ';', file=op)
-        print('    heatgain_fraction', '{:.2f}'.format(techdata[0]) + ';', file=op)
-        print('    impedance_pf', '{:.2f}'.format(techdata[1]) + ';', file=op)
-        print('    current_pf', '{:.2f}'.format(techdata[2]) + ';', file=op)
-        print('    power_pf', '{:.2f}'.format(techdata[3]) + ';', file=op)
-        print('    impedance_fraction', '{:.2f}'.format(techdata[4]) + ';', file=op)
-        print('    current_fraction', '{:.2f}'.format(techdata[5]) + ';', file=op)
-        print('    power_fraction', '{:.2f}'.format(techdata[6]) + ';', file=op)
+        print('    schedule_skew', f'{skew_value:.0f}' + ';', file=op)
+        print('    base_power', 'responsive_loads*' + f'{resp_scalar:.2f}' + ';', file=op)
+        print('    heatgain_fraction', f'{techdata[0]:.2f}' + ';', file=op)
+        print('    impedance_pf', f'{techdata[1]:.2f}' + ';', file=op)
+        print('    current_pf', f'{techdata[2]:.2f}' + ';', file=op)
+        print('    power_pf', f'{techdata[3]:.2f}' + ';', file=op)
+        print('    impedance_fraction', f'{techdata[4]:.2f}' + ';', file=op)
+        print('    current_fraction', f'{techdata[5]:.2f}' + ';', file=op)
+        print('    power_fraction', f'{techdata[6]:.2f}' + ';', file=op)
         print('  };', file=op)
         print('  object ZIPload { // unresponsive', file=op)
-        print('    schedule_skew', '{:.0f}'.format(skew_value) + ';', file=op)
-        print('    base_power', 'unresponsive_loads*' + '{:.2f}'.format(unresp_scalar) + ';', file=op)
-        print('    heatgain_fraction', '{:.2f}'.format(techdata[0]) + ';', file=op)
-        print('    impedance_pf', '{:.2f}'.format(techdata[1]) + ';', file=op)
-        print('    current_pf', '{:.2f}'.format(techdata[2]) + ';', file=op)
-        print('    power_pf', '{:.2f}'.format(techdata[3]) + ';', file=op)
-        print('    impedance_fraction', '{:.2f}'.format(techdata[4]) + ';', file=op)
-        print('    current_fraction', '{:.2f}'.format(techdata[5]) + ';', file=op)
-        print('    power_fraction', '{:.2f}'.format(techdata[6]) + ';', file=op)
+        print('    schedule_skew', f'{skew_value:.0f}' + ';', file=op)
+        print('    base_power', 'unresponsive_loads*' + f'{unresp_scalar:.2f}' + ';', file=op)
+        print('    heatgain_fraction', f'{techdata[0]:.2f}' + ';', file=op)
+        print('    impedance_pf', f'{techdata[1]:.2f}' + ';', file=op)
+        print('    current_pf', f'{techdata[2]:.2f}' + ';', file=op)
+        print('    power_pf', f'{techdata[3]:.2f}' + ';', file=op)
+        print('    impedance_fraction', f'{techdata[4]:.2f}' + ';', file=op)
+        print('    current_fraction', f'{techdata[5]:.2f}' + ';', file=op)
+        print('    power_fraction', f'{techdata[6]:.2f}' + ';', file=op)
         print('  };', file=op)
         # if np.random.uniform(0, 1) <= water_heater_percentage:  # rgnPenElecWH[rgn-1]:
         if house_fuel_type == 'electric':  # if the house fuel type is electric, install wh
@@ -1781,24 +1755,24 @@ def write_houses(basenode, op, vnom):
                                    wh_data['tank_size']['5_plus_people']['max'] + 1, 10)
             wh_size = np.random.choice(size_array)
 
-            wh_demand_str = wh_demand_type + '{:.0f}'.format(water_sch) + '*' + '{:.2f}'.format(water_var)
+            wh_demand_str = wh_demand_type + f'{water_sch:.0f}' + '*' + f'{water_var:.2f}'
             wh_skew_value = randomize_residential_skew(True)
             print('  object waterheater {', file=op)
             print('    name', whname + ';', file=op)
-            print('    schedule_skew', '{:.0f}'.format(wh_skew_value) + ';', file=op)
-            print('    heating_element_capacity', '{:.1f}'.format(heat_element), 'kW;', file=op)
-            print('    thermostat_deadband', '{:.1f}'.format(therm_dead) + ';', file=op)
+            print('    schedule_skew', f'{wh_skew_value:.0f}' + ';', file=op)
+            print('    heating_element_capacity', f'{heat_element:.1f}', 'kW;', file=op)
+            print('    thermostat_deadband', f'{therm_dead:.1f}' + ';', file=op)
             print('    location INSIDE;', file=op)
             print('    tank_diameter 1.5;', file=op)
-            print('    tank_UA', '{:.1f}'.format(tank_UA) + ';', file=op)
+            print('    tank_UA', f'{tank_UA:.1f}' + ';', file=op)
             print('    water_demand', wh_demand_str + ';', file=op)
-            print('    tank_volume', '{:.0f}'.format(wh_size) + ';', file=op)
+            print('    tank_volume', f'{wh_size:.0f}' + ';', file=op)
             #            if np.random.uniform(0, 1) <= water_heater_participation:
             print('    waterheater_model MULTILAYER;', file=op)
             print('    discrete_step_size 60.0;', file=op)
-            print('    lower_tank_setpoint', '{:.1f}'.format(tank_set - 5.0) + ';', file=op)
-            print('    upper_tank_setpoint', '{:.1f}'.format(tank_set + 5.0) + ';', file=op)
-            print('    T_mixing_valve', '{:.1f}'.format(tank_set) + ';', file=op)
+            print('    lower_tank_setpoint', f'{tank_set - 5.0:.1f}' + ';', file=op)
+            print('    upper_tank_setpoint', f'{tank_set + 5.0:.1f}' + ';', file=op)
+            print('    T_mixing_valve', f'{tank_set:.1f}' + ';', file=op)
             #            else:
             #                print('    tank_setpoint', '{:.1f}'.format(tank_set) + ';', file=op)
             if metrics_interval > 0 and "waterheater" in metrics:
@@ -1841,7 +1815,7 @@ def write_houses(basenode, op, vnom):
                 print('    generator_status ONLINE;', file=op)
                 print('    inverter_type FOUR_QUADRANT;', file=op)
                 print('    inverter_efficiency 1;', file=op)
-                print('    rated_power', '{:.0f}'.format(inv_power) + ';', file=op)
+                print('    rated_power', f'{inv_power:.0f}' + ';', file=op)
                 print('    power_factor 1.0;', file=op)
                 write_solar_inv_settings(op)
                 print('    object solar {', file=op)
@@ -1849,8 +1823,8 @@ def write_houses(basenode, op, vnom):
                 print('      generator_mode SUPPLY_DRIVEN;', file=op)
                 print('      generator_status ONLINE;', file=op)
                 print('      panel_type SINGLE_CRYSTAL_SILICON;', file=op)
-                print('      efficiency', '{:.2f}'.format(array_efficiency) + ';', file=op)
-                print('      area', '{:.2f}'.format(panel_area) + ';', file=op)
+                print('      efficiency', f'{array_efficiency:.2f}' + ';', file=op)
+                print('      area', f'{panel_area:.2f}' + ';', file=op)
                 print('    };', file=op)
                 if metrics_interval > 0 and "inverter" in metrics:
                     print('    object metrics_collector {', file=op)
@@ -1887,15 +1861,15 @@ def write_houses(basenode, op, vnom):
                 print('    four_quadrant_control_mode', storage_inv_mode + ';', file=op)
                 print('    charge_lockout_time 1;', file=op)
                 print('    discharge_lockout_time 1;', file=op)
-                print('    rated_power', '{:.2f}'.format(rated_power) + ';', file=op)
-                print('    max_charge_rate', '{:.2f}'.format(max_charge_rate) + ';', file=op)
-                print('    max_discharge_rate', '{:.2f}'.format(max_discharge_rate) + ';', file=op)
+                print('    rated_power', f'{rated_power:.2f}' + ';', file=op)
+                print('    max_charge_rate', f'{max_charge_rate:.2f}' + ';', file=op)
+                print('    max_discharge_rate', f'{max_discharge_rate:.2f}' + ';', file=op)
                 print('    sense_object', mtrname + ';', file=op)
                 # print('    charge_on_threshold -100;', file=op)
                 # print('    charge_off_threshold 0;', file=op)
                 # print('    discharge_off_threshold 2000;', file=op)
                 # print('    discharge_on_threshold 3000;', file=op)
-                print('    inverter_efficiency', '{:.2f}'.format(inverter_efficiency) + ';', file=op)
+                print('    inverter_efficiency', f'{inverter_efficiency:.2f}' + ';', file=op)
                 print('    power_factor 1.0;', file=op)
                 print('    object battery { // Tesla Powerwall 2', file=op)
                 print('      name', batname + ';', file=op)
@@ -1903,8 +1877,8 @@ def write_houses(basenode, op, vnom):
                 print('      use_internal_battery_model true;', file=op)
                 print('      battery_type LI_ION;', file=op)
                 print('      nominal_voltage 480;', file=op)
-                print('      battery_capacity', '{:.2f}'.format(battery_capacity) + ';', file=op)
-                print('      round_trip_efficiency', '{:.2f}'.format(round_trip_efficiency) + ';', file=op)
+                print('      battery_capacity', f'{battery_capacity:.2f}' + ';', file=op)
+                print('      round_trip_efficiency', f'{round_trip_efficiency:.2f}' + ';', file=op)
                 print('      state_of_charge 0.50;', file=op)
                 print('      generator_mode SUPPLY_DRIVEN;', file=op)
                 print('    };', file=op)
@@ -1948,13 +1922,13 @@ def write_substation(op, name, phs, vnom, vll):
     print('  name substation_xfmr_config;', file=op)
     print('  connect_type WYE_WYE;', file=op)
     print('  install_type PADMOUNT;', file=op)
-    print('  primary_voltage', '{:.2f}'.format(transmissionVoltage) + ';', file=op)
-    print('  secondary_voltage', '{:.2f}'.format(vll) + ';', file=op)
-    print('  power_rating', '{:.2f}'.format(transmissionXfmrMVAbase * 1000.0) + ';', file=op)
-    print('  resistance', '{:.2f}'.format(0.01 * transmissionXfmrRpct) + ';', file=op)
-    print('  reactance', '{:.2f}'.format(0.01 * transmissionXfmrXpct) + ';', file=op)
-    print('  shunt_resistance', '{:.2f}'.format(100.0 / transmissionXfmrNLLpct) + ';', file=op)
-    print('  shunt_reactance', '{:.2f}'.format(100.0 / transmissionXfmrImagpct) + ';', file=op)
+    print('  primary_voltage', f'{transmissionVoltage:.2f}' + ';', file=op)
+    print('  secondary_voltage', f'{vll:.2f}' + ';', file=op)
+    print('  power_rating', f'{transmissionXfmrMVAbase * 1000.0:.2f}' + ';', file=op)
+    print('  resistance', f'{0.01 * transmissionXfmrRpct:.2f}' + ';', file=op)
+    print('  reactance', f'{0.01 * transmissionXfmrXpct:.2f}' + ';', file=op)
+    print('  shunt_resistance', f'{100.0 / transmissionXfmrNLLpct:.2f}' + ';', file=op)
+    print('  shunt_reactance', f'{100.0 / transmissionXfmrImagpct:.2f}' + ';', file=op)
     print('}', file=op)
     print('object transformer {', file=op)
     print('  name substation_transformer;', file=op)
@@ -1968,9 +1942,9 @@ def write_substation(op, name, phs, vnom, vll):
     print('  name network_node;', file=op)
     print('  groupid', base_feeder_name + ';', file=op)
     print('  bustype SWING;', file=op)
-    print('  nominal_voltage', '{:.2f}'.format(vsrcln) + ';', file=op)
-    print('  positive_sequence_voltage', '{:.2f}'.format(vsrcln) + ';', file=op)
-    print('  base_power', '{:.2f}'.format(transmissionXfmrMVAbase * 1000000.0) + ';', file=op)
+    print('  nominal_voltage', f'{vsrcln:.2f}' + ';', file=op)
+    print('  positive_sequence_voltage', f'{vsrcln:.2f}' + ';', file=op)
+    print('  base_power', f'{transmissionXfmrMVAbase * 1000000.0:.2f}' + ';', file=op)
     print('  power_convergence_value 100.0;', file=op)
     print('  phases', phs + ';', file=op)
     if metrics_interval > 0 and "substation" in metrics:
@@ -2108,13 +2082,7 @@ def write_voltage_class(model, h, t, op, vprim, vll, secmtrnode):
                 if str.find(phs, 'C') >= 0:
                     print('  voltage_1 ' + vstartc + ';', file=op)
                     print('  voltage_2 ' + vstartc + ';', file=op)
-            if name in extra_billing_meters:
-                write_tariff(op)
-                if metrics_interval > 0 and "meter" in metrics:
-                    print('  object metrics_collector {', file=op)
-                    print('    interval', str(metrics_interval) + ';', file=op)
-                    print('  };', file=op)
-            elif "meter" in t:
+            if name in extra_billing_meters or "meter" in t:
                 write_tariff(op)
                 if metrics_interval > 0 and "meter" in metrics:
                     print('  object metrics_collector {', file=op)
@@ -2344,9 +2312,9 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
 
         # apply the nameing prefix if necessary
         if len(name_prefix) > 0:
-            for t in model:
-                for o in model[t]:
-                    elem = model[t][o]
+            for t, value in model.items():
+                for o in value:
+                    elem = value[o]
                     for tok in ['name', 'parent', 'from', 'to', 'configuration', 'spacing',
                                 'conductor_1', 'conductor_2', 'conductor_N',
                                 'conductor_A', 'conductor_B', 'conductor_C']:
@@ -2357,28 +2325,28 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
 
         # construct a graph of the model, starting with known links
         G = nx.Graph()
-        for t in model:
+        for t, value in model.items():
             if is_edge_class(t):
-                for o in model[t]:
-                    n1 = gld_strict_name(model[t][o]['from'])
-                    n2 = gld_strict_name(model[t][o]['to'])
-                    G.add_edge(n1, n2, eclass=t, ename=o, edata=model[t][o])
+                for o in value:
+                    n1 = gld_strict_name(value[o]['from'])
+                    n2 = gld_strict_name(value[o]['to'])
+                    G.add_edge(n1, n2, eclass=t, ename=o, edata=value[o])
 
         # add the parent-child node links
-        for t in model:
+        for t, value in model.items():
             if is_node_class(t):
-                for o in model[t]:
-                    if 'parent' in model[t][o]:
-                        p = gld_strict_name(model[t][o]['parent'])
+                for o in value:
+                    if 'parent' in value[o]:
+                        p = gld_strict_name(value[o]['parent'])
                         G.add_edge(o, p, eclass='parent', ename=o, edata={})
 
         # now we backfill node attributes
-        for t in model:
+        for t, value in model.items():
             if is_node_class(t):
-                for o in model[t]:
+                for o in value:
                     if o in G.nodes():
                         G.nodes()[o]['nclass'] = t
-                        G.nodes()[o]['ndata'] = model[t][o]
+                        G.nodes()[o]['ndata'] = value[o]
                     else:
                         print('orphaned node', t, o)
 
@@ -2401,7 +2369,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
                 if kva > 0:
                     total_kva += kva
                     nodes = nx.shortest_path(G, n1, swing_node)
-                    edges = zip(nodes[0:], nodes[1:])
+                    edges = pairwise(nodes)
                     for u, v in edges:
                         eclass = G[u][v]['eclass']
                         if is_edge_class(eclass):
@@ -2412,7 +2380,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
                             seg_loads[ename][1] = union_of_phases(seg_loads[ename][1], data['ndata']['phases'])
 
         print('  swing node', swing_node, 'with', len(list(sub_graphs)), 'subgraphs and',
-              '{:.2f}'.format(total_kva), 'total kva')
+              f'{total_kva:.2f}', 'total kva')
 
         # preparatory items for TESP
         print('module climate;', file=op)
@@ -2434,7 +2402,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
             print('  interim', str(metrics_interim) + ';', file=op)
             print('  filename ${METRICS_FILE};', file=op)
             print('  alternate yes;', file=op)
-            print('  extension {0:s};'.format(metrics_type), file=op)
+            print(f'  extension {metrics_type:s};', file=op)
             print('}', file=op)
 
         print('object climate {', file=op)
@@ -2444,7 +2412,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
         print('  latitude', str(latitude) + ';', file=op)
         print('  longitude', str(longitude) + ';', file=op)
         print('  // altitude', str(altitude) + ';', file=op)
-        print('  tz_meridian {0:.2f};'.format(15 * time_zone_offset), file=op)
+        print(f'  tz_meridian {15 * time_zone_offset:.2f};', file=op)
         print('}', file=op)
 
         #        print('// taxonomy_base_feeder', rootname, file=op)
@@ -2654,7 +2622,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
             print('  name ' + name_prefix + 'Eplus_meter;', file=op)
             print('  phases ABCN;', file=op)
             print('  meter_power_consumption 1+15j;', file=op)
-            print('  nominal_voltage', '{:.4f}'.format(Eplus_vln) + ';', file=op)
+            print('  nominal_voltage', f'{Eplus_vln:.4f}' + ';', file=op)
             print('  voltage_A ' + vstarta + ';', file=op)
             print('  voltage_B ' + vstartb + ';', file=op)
             print('  voltage_C ' + vstartc + ';', file=op)
@@ -2668,18 +2636,18 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
             print('  name ' + name_prefix + 'Eplus_load;', file=op)
             print('  parent ' + name_prefix + 'Eplus_meter;', file=op)
             print('  phases ABCN;', file=op)
-            print('  nominal_voltage', '{:.4f}'.format(Eplus_vln) + ';', file=op)
+            print('  nominal_voltage', f'{Eplus_vln:.4f}' + ';', file=op)
             print('  voltage_A ' + vstarta + ';', file=op)
             print('  voltage_B ' + vstartb + ';', file=op)
             print('  voltage_C ' + vstartc + ';', file=op)
-            print('  constant_power_A', '{:.1f}'.format(watts_per_phase) + ';', file=op)
-            print('  constant_power_B', '{:.1f}'.format(watts_per_phase) + ';', file=op)
-            print('  constant_power_C', '{:.1f}'.format(watts_per_phase) + ';', file=op)
+            print('  constant_power_A', f'{watts_per_phase:.1f}' + ';', file=op)
+            print('  constant_power_B', f'{watts_per_phase:.1f}' + ';', file=op)
+            print('  constant_power_C', f'{watts_per_phase:.1f}' + ';', file=op)
             print('}', file=op)
 
         print('cooling bins unused', cooling_bins)
         print('heating bins unused', heating_bins)
-        print(solar_count, 'pv totaling', '{:.1f}'.format(solar_kw), 'kw with', battery_count, 'batteries')
+        print(solar_count, 'pv totaling', f'{solar_kw:.1f}', 'kw with', battery_count, 'batteries')
 
         for gen in generators:
             gen_vln = float(generators[gen]['voltage'])
@@ -2690,7 +2658,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
             print('  name', generators[gen]['name'] + ';', file=op)
             print('  parent', generators[gen]['parent'] + ';', file=op)
             print('  phases ABCN;', file=op)
-            print('  nominal_voltage', '{:.4f}'.format(gen_vln) + ';', file=op)
+            print('  nominal_voltage', f'{gen_vln:.4f}' + ';', file=op)
             print('  voltage_A ' + vstarta + ';', file=op)
             print('  voltage_B ' + vstartb + ';', file=op)
             print('  voltage_C ' + vstartc + ';', file=op)
@@ -2799,7 +2767,7 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
 
     try:
         generators = config['SimulationConfig']['dso'][next(iter(config['SimulationConfig']['dso']))]['generators']
-        print("Found {} generators in SimulationConfig".format(len(generators)))
+        print(f"Found {len(generators)} generators in SimulationConfig")
     except Exception:
         generators = {}
         print("Found No generators in SimulationConfig")

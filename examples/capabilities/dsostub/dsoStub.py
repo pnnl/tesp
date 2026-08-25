@@ -3,11 +3,11 @@
 
 import json
 import logging
-import helics
 
+import helics
 import tesp_support.api.tso_helpers as tso
-from tesp_support.api.parse_helpers import parse_mva
 from tesp_support.api.helpers import HelicsMsg
+from tesp_support.api.parse_helpers import parse_mva
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
@@ -137,10 +137,7 @@ def dso_loop(casename):
             if helics.helicsInputIsUpdated(sub):
                 val = helics.helicsInputGetString(sub)
                 # get voltages and LMPs from the TSO
-                if 'LMP_DT_' in topic:
-                    busnum = int(topic[7:])
-                    # gld_bus[busnum]['dalmp'] = float(val)
-                elif 'LMP_RT_' in topic:
+                if 'LMP_DT_' in topic or 'LMP_RT_' in topic:
                     busnum = int(topic[7:])
                     # gld_bus[busnum]['rtlmp'] = float(val)
                 elif 'V_Bus_' in topic:

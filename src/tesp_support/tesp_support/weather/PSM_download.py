@@ -53,8 +53,8 @@ def _open_file(file_path, typ='r'):
     """
     try:
         fh = open(file_path, typ)
-    except IOError:
-        log.error('Unable to open {}'.format(file_path))
+    except OSError:
+        log.error(f'Unable to open {file_path}')
     else:
         return fh
 
@@ -104,7 +104,7 @@ def parse_DSO_location(dso_metadata_path, worksheet_name):
             dso_meta.append({'lat': lat,
                              'long': long,
                              '200-bus': bus_200})
-    log.info('Parsed DSO metadata file {}'.format(dso_metadata_path))
+    log.info(f'Parsed DSO metadata file {dso_metadata_path}')
     log.info(pp.pformat(dso_meta))
     return dso_meta
 
@@ -155,30 +155,27 @@ def download_nsrdb_data(dso_meta, output_path):
         mailing_list = 'false'
 
         # Declare url string for the requests
-        url = 'http://developer.nrel.gov/api/solar/nsrdb_psm3_download.csv?wkt=POINT({lon}%20{lat})&names={year}&leap_day={leap}&interval={interval}&utc={utc}&full_name={name}&email={email}&affiliation={affiliation}&mailing_list={mailing_list}&reason={reason}&api_key={api}&attributes={attr}'.format(
-            year=year, lat=lat, lon=long, leap=leap_year, interval=interval,
-            utc=utc, name=your_name, email=your_email, mailing_list=mailing_list,
-            affiliation=your_affiliation, reason=reason_for_use, api=api_key, attr=attributes)
+        url = f'http://developer.nrel.gov/api/solar/nsrdb_psm3_download.csv?wkt=POINT({long}%20{lat})&names={year}&leap_day={leap_year}&interval={interval}&utc={utc}&full_name={your_name}&email={your_email}&affiliation={your_affiliation}&mailing_list={mailing_list}&reason={reason_for_use}&api_key={api_key}&attributes={attributes}'
 
         # Check to see if file exists (indicating we downloaded it before
         # and don't need to do so again). If file does exist, we load
         # it and add it to the list of dataframes.
-        filename = 'DSO_{}_{}_{}_weather_data.csv'.format(dso_num, lat, long)
+        filename = f'DSO_{dso_num}_{lat}_{long}_weather_data.csv'
         output_file = os.path.join(output_path, filename)
 
         # r = requests.get(url, allow_redirects=True)
         # csv_fh = open(output_file, 'wb')
         # csv_fh.write(r.content)
         # csv_fh.close()
-        log.info('Downloaded data for DSO {} and...'.format(dso_num))
+        log.info(f'Downloaded data for DSO {dso_num} and...')
 
         # We've already moved to the correct folder at the top of this
         #   function and all that is needed is the filename.
         file, ext = os.path.splitext(filename)
         PSM.weatherdat(file,
-                       'Bus_{}'.format(dso_num + 1),
-                       '{}_{}'.format(lat, long))
-        log.info('\t...converted PSM to DAT for DSO {}'.format(dso_num))
+                       f'Bus_{dso_num + 1}',
+                       f'{lat}_{long}')
+        log.info(f'\t...converted PSM to DAT for DSO {dso_num}')
 
 
 def _auto_run(args):

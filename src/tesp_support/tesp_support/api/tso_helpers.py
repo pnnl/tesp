@@ -27,9 +27,9 @@ def print_m_case(ppc, ppc_case):
             line = ""
             for j in range(thing.shape[1]):
                 if j in integers:
-                    line += "\t{}".format(int(thing[i][j]))
+                    line += f"\t{int(thing[i][j])}"
                 else:
-                    line += "\t{}".format(thing[i][j])
+                    line += f"\t{thing[i][j]}"
             print(line + ";", file=fp)
         print("];", file=fp)
 
@@ -51,10 +51,10 @@ def print_matrix(lbl, A, fmt='{:8.4f}'):
         nrows = len(A)
         if (nrows > 1) and hasattr(A[0], '__iter__'):  # 2D array
             ncols = len(A[0])
-            print('{:s} is {:d}x{:d}'.format(lbl, nrows, ncols))
+            print(f'{lbl:s} is {nrows:d}x{ncols:d}')
             print('\n'.join([' '.join([fmt.format(item) for item in row]) for row in A]), flush=True)
         else:  # 1D array, printed flat
-            print('{:s} has {:d} elements'.format(lbl, nrows))
+            print(f'{lbl:s} has {nrows:d} elements')
             print(' '.join(fmt.format(item) for item in A), flush=True)
     else:  # single value
         print(lbl, '=', fmt.format(A), flush=True)
@@ -69,8 +69,8 @@ def print_keyed_matrix(lbl, D, fmt='{:8.4f}'):
     for key, row in D.items():
         if ncols == 0:
             ncols = len(row)
-            print('{:s} is {:d}x{:d}'.format(lbl, nrows, ncols))
-        print('{:8s}'.format(key), ' '.join(fmt.format(item) for item in row), flush=True)
+            print(f'{lbl:s} is {nrows:d}x{ncols:d}')
+        print(f'{key:8s}', ' '.join(fmt.format(item) for item in row), flush=True)
 
 
 def load_json_case(file_name):
@@ -102,10 +102,10 @@ def print_mod_load(bus, dso, model_load, msg, ts):
         gld_scale = float(row[2])
         load = model_load[bus_num]
         genidx = -load['genidx']
-        print('{:4d}'.format(bus_num),
-              '{:4d}'.format(genidx),
-              '{:8.2f}'.format(bus[bus_num - 1, 2]),
-              '{:8.2f}'.format(bus[bus_num - 1, 3]),
+        print(f'{bus_num:4d}',
+              f'{genidx:4d}',
+              f'{bus[bus_num - 1, 2]:8.2f}',
+              f'{bus[bus_num - 1, 3]:8.2f}',
               '{:8.2f}'.format(load['pcrv']),
               '{:8.2f}'.format(load['qcrv']),
               '{:8.2f}'.format(load['p'] * gld_scale),
@@ -132,21 +132,17 @@ def summarize_opf(mpc):
     PctLoss = 100.0 * (Pgen - Pload) / Pgen
 
     print('success =', mpc['success'], 'in', '{:.3f}'.format(mpc['et']), 'seconds')
-    print('Total Gen = {:.2f}'.format(Pgen), ' Load = {:.2f}'.format(Pload), ' Loss = {:.3f}'.format(PctLoss), '%')
+    print(f'Total Gen = {Pgen:.2f}', f' Load = {Pload:.2f}', f' Loss = {PctLoss:.3f}', '%')
 
     print('bus #       Pd       Qd       Vm     Vang    LMP_P    LMP_Q  MU_VMAX  MU_VMIN')
     for row in bus:
-        print('{:4d}  {:8.2f} {:8.2f} {:8.4f} {:8.4f} {:8.5f} {:8.5f} {:8.5f} {:8.5f}'.
-              format(int(row[0]), float(row[2]), float(row[3]), float(row[7]), float(row[8]),
-                     float(row[13]), float(row[14]), float(row[15]), float(row[16])))
+        print(f'{int(row[0]):4d}  {float(row[2]):8.2f} {float(row[3]):8.2f} {float(row[7]):8.4f} {float(row[8]):8.4f} {float(row[13]):8.5f} {float(row[14]):8.5f} {float(row[15]):8.5f} {float(row[16]):8.5f}')
 
     print('gen # bus       Pg       Qg   MU_PMAX   MU_PMIN   MU_QMAX   MU_QMIN')
     idx = 0
     for row in gen:
         idx += 1
-        print('{:4d} {:4d} {:8.2f} {:8.2f} {:9.5f} {:9.5f} {:9.5f} {:9.5f}'.
-              format(idx, int(row[0]), float(row[1]), float(row[2]), float(row[21]),
-                     float(row[22]), float(row[23]), float(row[24])))
+        print(f'{idx:4d} {int(row[0]):4d} {float(row[1]):8.2f} {float(row[2]):8.2f} {float(row[21]):9.5f} {float(row[22]):9.5f} {float(row[23]):9.5f} {float(row[24]):9.5f}')
 
 
 def make_dictionary(mpc):

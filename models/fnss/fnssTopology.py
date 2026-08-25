@@ -58,7 +58,7 @@ def buildFNSStopology():
 
     """
     # G = nx.DiGraph()
-    nodeCoord = dict()
+    nodeCoord = {}
     distanceUnit = 'Km'
     capacityUnit = "Mbps"
     leafNum = 2

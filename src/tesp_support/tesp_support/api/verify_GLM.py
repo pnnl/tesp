@@ -1,8 +1,11 @@
 """This script was written to check generated .glms against existing .glms that have been tested and are known to solve successfully.
 
 """
-from ..api.modify_GLM import GLMModifier
 import os
+import sys
+
+from ..api.modify_GLM import GLMModifier
+
 
 class Read:
     def __init__(self, data_path, in_file_glm):
@@ -10,7 +13,7 @@ class Read:
 
         i_glm, success = self.glm.read_model(os.path.join(data_path, in_file_glm))
         if not success:
-            exit()
+            sys.exit()
 
         print(f'Total Houses: {len(i_glm.house.items())}')
         sf = 0
@@ -36,7 +39,7 @@ class Read:
         he_floor_area = 0
         lo = 0
         lo_floor_area = 0
-        for house_name, house in i_glm.house.items():
+        for house in i_glm.house.values():
             groupid = house["groupid"]
             floor_area = house["floor_area"]
             if groupid == 'SINGLE_FAMILY':
@@ -144,7 +147,7 @@ class Read:
         print(f'Total Inverters: {len(i_glm.inverter.items())}')
         sol = 0
         bat = 0
-        for inv_name, inverter in i_glm.inverter.items():
+        for inverter in i_glm.inverter.values():
             groupid = inverter["groupid"]
             if groupid == 'sol_inverter':
                 sol += 1

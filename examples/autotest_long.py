@@ -5,8 +5,8 @@ SGIP1, NIST TE Challenge 2, ERCOT 8-Bus with PSST
 """
 
 import os
-import sys
 import subprocess
+import sys
 
 import tesp_support.api.test_runner as tr
 

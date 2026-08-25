@@ -16,6 +16,7 @@ import json
 
 from ..api.helpers import gld_strict_name
 
+
 def merge_glm(target, sources, xfmva):
     """ Combines GridLAB-D input files into target/target.glm. The source files must already exist.
   
@@ -50,9 +51,9 @@ def merge_glm(target, sources, xfmva):
                         if not inHELICS:
                             line = '  configure ' + target + '_gridlabd.txt;'
                     elif '  power_rating' in line:
-                        line = '  power_rating {:.2f};'.format(xfmva * 1e3)
+                        line = f'  power_rating {xfmva * 1e3:.2f};'
                     elif '  base_power' in line:
-                        line = '  base_power {:.2f};'.format(xfmva * 1e6)
+                        line = f'  base_power {xfmva * 1e6:.2f};'
                     elif '  to ' in line:
                         toks = line.split()
                         thisHeadNode = toks[1][:-1]

@@ -32,7 +32,13 @@ jobs:
 
     - name: Lint with ruff
       run: |
-        ruff check ./src --ignore=F841,E731
+        #       Test code with ruff. This will check for syntax and runtime errors.
+        #       The values after --ignore prefixes that match all error codes starting with those characters.
+        #       F codes found at https://flake8.pycqa.org/en/latest/user/error-codes.html
+        #       F841    unused-variable
+        #       E9xx: Runtime (https://pycodestyle.pycqa.org/en/latest/intro.html#error-codes)
+        #       E731    lambda-assignment
+        ruff check ./src --ignore=F841,E731,UP031,SIM102,SIM113,SIM115,DTZ001,DTZ005,DTZ007,BLE001,S110,TRY002,N999,RUF059,LOG015,PLW0602
         #       exit-zero treats all errors as warnings.
         # ruff check ./src --exit-zero --statistics
     

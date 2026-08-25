@@ -23,9 +23,7 @@ Amenity cost:
 """
 
 import pytest
-
-from tesp_support.api.preference_curve import BidPoint, PreferenceCurve, DeviceType
-
+from tesp_support.api.preference_curve import BidPoint, DeviceType, PreferenceCurve
 
 # ===================================================================
 # Fixtures
@@ -305,4 +303,4 @@ class TestSampleBidCurve:
             Q_min=0.0,
             Q_max=10.0,
         )
-        assert all([isinstance(pt, BidPoint) for pt in points])
+        assert all(isinstance(pt, BidPoint) for pt in points)

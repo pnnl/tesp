@@ -33,17 +33,20 @@ Todo:
 
 """
 
+import itertools
 import os.path
 import re
+import sys
+from itertools import pairwise
+from math import sqrt
+
 import networkx as nx
 import numpy as np
 import pandas as pd
-from math import sqrt
-
+from recs.commercial_feeder_glm import create_comm_zones, define_comm_loads
 from tesp_support.api.data import feeders_path, weather_path
 from tesp_support.api.helpers import gld_strict_name
 from tesp_support.api.parse_helpers import parse_kva
-from recs.commercial_feeder_glm import define_comm_loads, create_comm_zones
 
 transmissionVoltage = 138000.0
 transmissionXfmrMVAbase = 12.0
@@ -119,19 +122,19 @@ def write_tariff(op):
         op (file): an open GridLAB-D input file
     """
     print('  bill_mode', bill_mode + ';', file=op)
-    print('  price', '{:.4f}'.format(kwh_price) + ';', file=op)
-    print('  monthly_fee', '{:.2f}'.format(monthly_fee) + ';', file=op)
+    print('  price', f'{kwh_price:.4f}' + ';', file=op)
+    print('  monthly_fee', f'{monthly_fee:.2f}' + ';', file=op)
     print('  bill_day 1;', file=op)
     if 'TIERED' in bill_mode:
         if tier1_energy > 0.0:
-            print('  first_tier_energy', '{:.1f}'.format(tier1_energy) + ';', file=op)
-            print('  first_tier_price', '{:.6f}'.format(tier1_price) + ';', file=op)
+            print('  first_tier_energy', f'{tier1_energy:.1f}' + ';', file=op)
+            print('  first_tier_price', f'{tier1_price:.6f}' + ';', file=op)
         if tier2_energy > 0.0:
-            print('  second_tier_energy', '{:.1f}'.format(tier2_energy) + ';', file=op)
-            print('  second_tier_price', '{:.6f}'.format(tier2_price) + ';', file=op)
+            print('  second_tier_energy', f'{tier2_energy:.1f}' + ';', file=op)
+            print('  second_tier_price', f'{tier2_price:.6f}' + ';', file=op)
         if tier3_energy > 0.0:
-            print('  third_tier_energy', '{:.1f}'.format(tier3_energy) + ';', file=op)
-            print('  third_tier_price', '{:.6f}'.format(tier3_price) + ';', file=op)
+            print('  third_tier_energy', f'{tier3_energy:.1f}' + ';', file=op)
+            print('  third_tier_price', f'{tier3_price:.6f}' + ';', file=op)
 
 
 inverter_undersizing = 1.0
@@ -329,17 +332,16 @@ def checkResidentialBuildingTable():
         total = 0
         for row in range(len(bldgCoolingSetpoints[tbl])):
             total += bldgCoolingSetpoints[tbl][row][0]
-        print('bldgCoolingSetpoints', tbl, 'histogram sums to', '{:.4f}'.format(total))
+        print('bldgCoolingSetpoints', tbl, 'histogram sums to', f'{total:.4f}')
     for tbl in range(len(bldgHeatingSetpoints)):
         total = 0
         for row in range(len(bldgHeatingSetpoints[tbl])):
             total += bldgHeatingSetpoints[tbl][row][0]
-        print('bldgHeatingSetpoints', tbl, 'histogram sums to', '{:.4f}'.format(total))
+        print('bldgHeatingSetpoints', tbl, 'histogram sums to', f'{total:.4f}')
     for bldg in range(3):
         binZeroReserve = bldgCoolingSetpoints[bldg][0][0]
         binZeroMargin = bldgHeatingSetpoints[bldg][0][0] - binZeroReserve
-        if binZeroMargin < 0.0:
-            binZeroMargin = 0.0
+        binZeroMargin = max(binZeroMargin, 0.0)
         #        print(bldg, binZeroReserve, binZeroMargin)
         for cBin in range(1, 6):
             denom = binZeroMargin
@@ -623,17 +625,7 @@ def is_node_class(s):
     Returns:
         bool: True if a node class, False otherwise
     """
-    if s == 'node':
-        return True
-    if s == 'load':
-        return True
-    if s == 'meter':
-        return True
-    if s == 'triplex_node':
-        return True
-    if s == 'triplex_meter':
-        return True
-    return False
+    return s in ['node', 'load', 'meter', 'triplex_node', 'triplex_meter']
 
 
 def is_edge_class(s):
@@ -647,23 +639,8 @@ def is_edge_class(s):
     Returns:
         bool: True if an edge class, False otherwise
     """
-    if s == 'switch':
-        return True
-    if s == 'fuse':
-        return True
-    if s == 'recloser':
-        return True
-    if s == 'regulator':
-        return True
-    if s == 'transformer':
-        return True
-    if s == 'overhead_line':
-        return True
-    if s == 'underground_line':
-        return True
-    if s == 'triplex_line':
-        return True
-    return False
+    return s in ['switch', 'fuse', 'recloser', 'regulator', 'transformer',
+                 'overhead_line', 'underground_line', 'triplex_line']
 
 
 def obj(parent, model, line, itr, oidh, octr):
@@ -709,7 +686,7 @@ def obj(parent, model, line, itr, oidh, octr):
                 intobj += 1
                 if oname is None:
                     print('ERROR: nested object defined before parent name')
-                    quit()
+                    sys.exit()
                 line, octr = obj(oname, model, line, itr, oidh, octr)
             elif re.match('object', val):
                 # found an inline object
@@ -738,8 +715,8 @@ def obj(parent, model, line, itr, oidh, octr):
         # New object type
         model[_type] = {}
     model[_type][oname] = {}
-    for param in params:
-        model[_type][oname][param] = params[param]
+    for param, value in params.items():
+        model[_type][oname][param] = value
     return line, octr
 
 
@@ -781,7 +758,7 @@ def write_link_class(model, h, t, seg_loads, op):
             print('object ' + t + ' {', file=op)
             print('  name ' + o + ';', file=op)
             if o in seg_loads:
-                print('// downstream', '{:.2f}'.format(seg_loads[o][0]), 'kva on', seg_loads[o][1], file=op)
+                print('// downstream', f'{seg_loads[o][0]:.2f}', 'kva on', seg_loads[o][1], file=op)
             for p in model[t][o]:
                 if ':' in model[t][o][p]:
                     print('  ' + p + ' ' + h[model[t][o][p]] + ';', file=op)
@@ -1021,7 +998,7 @@ def write_ercot_small_loads(basenode, op, vnom):
     print('  nominal_voltage ' + str(vnom) + ';', file=op)
     print('  load_class ' + cls + ';', file=op)
     print(vstart, file=op)
-    print('  //', '{:.3f}'.format(kva), 'kva is less than 1/2 avg_house', file=op)
+    print('  //', f'{kva:.3f}', 'kva is less than 1/2 avg_house', file=op)
     print(constpower, file=op)
     print('}', file=op)
 
@@ -1081,7 +1058,7 @@ def identify_ercot_houses(model, h, t, avgHouse, rgn):
                         small_nodes[key] = [kva, phs, parent, cls]  # parent is the primary node, only for ERCOT
     for phs in ['A', 'B', 'C']:
         print('phase', phs, ':', total_houses[phs], 'Houses and', total_small[phs],
-              'Small Loads totaling', '{:.2f}'.format(total_small_kva[phs]), 'kva')
+              'Small Loads totaling', f'{total_small_kva[phs]:.2f}', 'kva')
     print(len(house_nodes), 'primary house nodes, [SF,APT,MH]=', total_sf, total_apt, total_mh)
     for i in range(6):
         heating_bins[0][i] = round(total_sf * bldgHeatingSetpoints[0][i][0] + 0.5)
@@ -1191,7 +1168,7 @@ def replace_commercial_loads(model, h, t, avgBuilding):
                         del comm_bldgs_pop[select_bldg]
                     else:
                         if nzones > 0:
-                            print('Commercial building could not be found for ', '{:.2f}'.format(kva), ' KVA load')
+                            print('Commercial building could not be found for ', f'{kva:.2f}', ' KVA load')
                         comm_name = 'streetlights'
                         comm_type = 'ZIPLOAD'
                         comm_size = 0
@@ -1201,7 +1178,7 @@ def replace_commercial_loads(model, h, t, avgBuilding):
                     comm_loads[o] = [mtr, comm_type, comm_size, kva, nphs, phases, vln, total_commercial, comm_name]
                     model[t][o]['groupid'] = comm_type + '_' + str(comm_size)
                     del model[t][o]
-    print('Found', total_commercial, 'commercial loads totaling', '{:.2f}'.format(total_comm_kva), 'KVA')
+    print('Found', total_commercial, 'commercial loads totaling', f'{total_comm_kva:.2f}', 'KVA')
     print('  ', total_office, 'med/small offices,')
     print('  ', total_warehouse_storage, 'warehouses,')
     print('  ', total_big_box, 'big box retail,')
@@ -1263,7 +1240,7 @@ def identify_xfmr_houses(model, h, t, seg_loads, avgHouse, rgn):
                         else:
                             total_mh += nhouse
                         house_nodes[node] = [nhouse, rgn, lg_v_sm, phs, bldg, ti]
-    print(total_small, 'small loads totaling', '{:.2f}'.format(total_small_kva), 'kva')
+    print(total_small, 'small loads totaling', f'{total_small_kva:.2f}', 'kva')
     print(total_houses, 'houses on', len(house_nodes), 'transformers, [SF,APT,MH]=', total_sf, total_apt, total_mh)
     for i in range(6):
         heating_bins[0][i] = round(total_sf * bldgHeatingSetpoints[0][i][0] + 0.5)
@@ -1332,7 +1309,7 @@ def write_small_loads(basenode, op, vnom):
     print('  nominal_voltage ' + str(vnom) + ';', file=op)
     print('  voltage_1 ' + vstart + ';', file=op)
     print('  voltage_2 ' + vstart + ';', file=op)
-    print('  //', '{:.3f}'.format(kva), 'kva is less than 1/2 avg_house', file=op)
+    print('  //', f'{kva:.3f}', 'kva is less than 1/2 avg_house', file=op)
     print('  constant_power_12_real 10.0;', file=op)
     print('  constant_power_12_reac 8.0;', file=op)
     print('}', file=op)
@@ -1364,13 +1341,13 @@ def write_substation(op, name, phs, vnom, vll):
     print('  name substation_xfmr_config;', file=op)
     print('  connect_type WYE_WYE;', file=op)
     print('  install_type PADMOUNT;', file=op)
-    print('  primary_voltage', '{:.2f}'.format(transmissionVoltage) + ';', file=op)
-    print('  secondary_voltage', '{:.2f}'.format(vll) + ';', file=op)
-    print('  power_rating', '{:.2f}'.format(transmissionXfmrMVAbase * 1000.0) + ';', file=op)
-    print('  resistance', '{:.2f}'.format(0.01 * transmissionXfmrRpct) + ';', file=op)
-    print('  reactance', '{:.2f}'.format(0.01 * transmissionXfmrXpct) + ';', file=op)
-    print('  shunt_resistance', '{:.2f}'.format(100.0 / transmissionXfmrNLLpct) + ';', file=op)
-    print('  shunt_reactance', '{:.2f}'.format(100.0 / transmissionXfmrImagpct) + ';', file=op)
+    print('  primary_voltage', f'{transmissionVoltage:.2f}' + ';', file=op)
+    print('  secondary_voltage', f'{vll:.2f}' + ';', file=op)
+    print('  power_rating', f'{transmissionXfmrMVAbase * 1000.0:.2f}' + ';', file=op)
+    print('  resistance', f'{0.01 * transmissionXfmrRpct:.2f}' + ';', file=op)
+    print('  reactance', f'{0.01 * transmissionXfmrXpct:.2f}' + ';', file=op)
+    print('  shunt_resistance', f'{100.0 / transmissionXfmrNLLpct:.2f}' + ';', file=op)
+    print('  shunt_reactance', f'{100.0 / transmissionXfmrImagpct:.2f}' + ';', file=op)
     print('}', file=op)
     print('object transformer {', file=op)
     print('  name substation_transformer;', file=op)
@@ -1384,9 +1361,9 @@ def write_substation(op, name, phs, vnom, vll):
     print('  name network_node;', file=op)
     print('  groupid', base_feeder_name + ';', file=op)
     print('  bustype SWING;', file=op)
-    print('  nominal_voltage', '{:.2f}'.format(vsrcln) + ';', file=op)
-    print('  positive_sequence_voltage', '{:.2f}'.format(vsrcln) + ';', file=op)
-    print('  base_power', '{:.2f}'.format(transmissionXfmrMVAbase * 1000000.0) + ';', file=op)
+    print('  nominal_voltage', f'{vsrcln:.2f}' + ';', file=op)
+    print('  positive_sequence_voltage', f'{vsrcln:.2f}' + ';', file=op)
+    print('  base_power', f'{transmissionXfmrMVAbase * 1000000.0:.2f}' + ';', file=op)
     print('  power_convergence_value 100.0;', file=op)
     print('  phases', phs + ';', file=op)
     if metrics_interval > 0 and "substation" in metrics:
@@ -1735,23 +1712,23 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
 
         # construct a graph of the model, starting with known links
         G = nx.Graph()
-        for t in model:
+        for t, value in model.items():
             if is_edge_class(t):
-                for o in model[t]:
-                    n1 = gld_strict_name(model[t][o]['from'])
-                    n2 = gld_strict_name(model[t][o]['to'])
-                    G.add_edge(n1, n2, eclass=t, ename=o, edata=model[t][o])
+                for o in value:
+                    n1 = gld_strict_name(value[o]['from'])
+                    n2 = gld_strict_name(value[o]['to'])
+                    G.add_edge(n1, n2, eclass=t, ename=o, edata=value[o])
 
         # add the parent-child node links
-        for t in model:
+        for t, value in model.items():
             if is_node_class(t):
-                for o in model[t]:
-                    if 'parent' in model[t][o]:
-                        p = gld_strict_name(model[t][o]['parent'])
+                for o in value:
+                    if 'parent' in value[o]:
+                        p = gld_strict_name(value[o]['parent'])
                         G.add_edge(o, p, eclass='parent', ename=o, edata={})
 
         # now we backfill node attributes
-        for t in model:
+        for t, value in model.items:
             if is_node_class(t):
                 for o in model[t]:
                     if o in G.nodes():
@@ -1779,7 +1756,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
                 if kva > 0:
                     total_kva += kva
                     nodes = nx.shortest_path(G, n1, swing_node)
-                    edges = zip(nodes[0:], nodes[1:])
+                    edges = pairwise(nodes)
                     for u, v in edges:
                         eclass = G[u][v]['eclass']
                         if is_edge_class(eclass):
@@ -1790,7 +1767,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
                             seg_loads[ename][1] = union_of_phases(seg_loads[ename][1], data['ndata']['phases'])
 
         print('  swing node', swing_node, 'with', len(list(sub_graphs)), 'subgraphs and',
-              '{:.2f}'.format(total_kva), 'total kva')
+              f'{total_kva:.2f}', 'total kva')
 
         # preparatory items for TESP
         print('module climate;', file=op)
@@ -1813,7 +1790,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
             print('  filename ${METRICS_FILE};', file=op)
             print('  // filename your_metrics;', file=op)
             print('  alternate yes;', file=op)
-            print('  extension {0:s};'.format(metrics_type), file=op)
+            print(f'  extension {metrics_type:s};', file=op)
             print('};', file=op)
 
         print('object climate {', file=op)
@@ -1822,7 +1799,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
         print('  interpolate QUADRATIC;', file=op)
         print('  latitude', str(latitude) + ';', file=op)
         print('  longitude', str(longitude) + ';', file=op)
-        print('  tz_meridian {0:.2f};'.format(15 * time_zone_offset), file=op)
+        print(f'  tz_meridian {15 * time_zone_offset:.2f};', file=op)
         print('};', file=op)
         #        print('// taxonomy_base_feeder', rootname, file=op)
         #        print('// region_name', rgnName[rgn-1], file=op)
@@ -1884,7 +1861,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
         write_voltage_class(model, h, 'meter', op, vln, vll, secnode)
 
         tmp = {}
-        comm_loads = {bldg_list: [None] * 9 for bldg_list in comm_bldgs_pop.keys()}
+        comm_loads = {bldg_list: [None] * 9 for bldg_list in comm_bldgs_pop}
         for bldg in comm_bldgs_pop:
             tmp['meter'] = {}
             tmp['transformer_configuration'] = {}
@@ -2039,7 +2016,7 @@ def populate_feeder(config=None):
     comm_loads = {}
 
     print(rootname, 'to', work_path, 'using', weather_file)
-    print('times: start = {0:s}, end = {1:s}'.format(starttime, endtime))
-    print('steps: simulation step = {0}, metrics interval = {1}'.format(timestep, metrics_interval))
+    print(f'times: start = {starttime:s}, end = {endtime:s}')
+    print(f'steps: simulation step = {timestep}, metrics interval = {metrics_interval}')
     caseName = config['SimulationConfig']['CaseName']
     ProcessTaxonomyFeeder(caseName, rootname, 12470.0, 7200.0, 4000.0, 20000.0)

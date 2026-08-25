@@ -24,13 +24,13 @@ def generate_case(case_name, port, pv=None, bt=None, fl=None, ev=None):
 
     if split_case:
         while True:
-            for i in range(0, 12):
-                directory_name = str(case_start_year) + "_" + '{0:0>2}'.format(i+1)
+            for i in range(12):
+                directory_name = str(case_start_year) + "_" + f'{i+1:0>2}'
                 ppc['caseName'] = case_rate_and_node + directory_name
                 ppc['port'] = int(port + i)
 
                 year = case_start_year
-                month = '{0:0>2}'.format(i)
+                month = f'{i:0>2}'
                 daytime = "-29 00:00:00"
                 if i == 0:
                     daytime = "-01 00:00:00"
@@ -38,7 +38,7 @@ def generate_case(case_name, port, pv=None, bt=None, fl=None, ev=None):
                 ppc['StartTime'] = str(year) + "-" + month + daytime
 
                 year = case_start_year
-                month = '{0:0>2}'.format(i+2)
+                month = f'{i+2:0>2}'
                 daytime = "-01 00:00:00"
                 if i == 11:
                     daytime = "-30 00:00:00"

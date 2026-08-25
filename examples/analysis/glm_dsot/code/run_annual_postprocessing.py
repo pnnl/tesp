@@ -1,18 +1,16 @@
 import json
 import os
-from datetime import datetime
-from os.path import dirname, abspath, isdir
 import shutil
+from datetime import datetime
+from os.path import abspath, dirname, isdir
+
 import numpy as np
-
 import pandas as pd
-
-import tesp_support.dsot.Wh_Energy_Purchases as ep
-import tesp_support.dsot.plots as pt
+import tesp_support.dsot.dso_helper_functions as hf
 import tesp_support.dsot.dso_quadratic_curves as qc
 import tesp_support.dsot.dso_rate_making as rm
-import tesp_support.dsot.dso_helper_functions as hf
-
+import tesp_support.dsot.plots as pt
+import tesp_support.dsot.Wh_Energy_Purchases as ep
 
 """ This script runs key postprocessing functions that warrant execution after every simulation run.  
 It has the following elements:
@@ -170,7 +168,7 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
         # DSO range for 8 node case.  (for 200 node case we will need to 
         # determine active DSOs from metadata file).
         dso_range = []
-        for DSO in DSOmetadata.keys():
+        for DSO in DSOmetadata:
             if 'DSO' in DSO:
                 if DSOmetadata[DSO]['used']:
                     dso_range.append(int(DSO.split('_')[-1]))
@@ -340,9 +338,7 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
 
                 DSOmetadata = pt.load_json(metadata_path, metadata_file)
                 commdata = pt.load_json(metadata_path, 'DSOT_commercial_metadata.json')
-                commbldglist = []
-                for bldg in commdata['building_model_specifics']:
-                    commbldglist.append(bldg)
+                commbldglist = list(commdata["building_model_specifics"])
                 residbldglist = ['SINGLE_FAMILY', 'MOBILE_HOME', 'APARTMENTS', 'MULTI_FAMILY']
 
                 for each in GLD_metadata['billingmeters']:
@@ -385,7 +381,7 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
                 )
 
                 # Example of getting an annual customer bill in dictionary form:
-                customer = list(GLD_metadata['billingmeters'].keys())[0]
+                customer = next(iter(GLD_metadata['billingmeters'].keys()))
                 cust_bill_file = case_path + '/bill_dso_' + str(dso_num) + '_data.h5'
                 cust_bills = pd.read_hdf(cust_bill_file, key='cust_bill_data', mode='r')
                 cust_energy = pd.read_hdf(case_path + '/energy_dso_' + str(dso_num) + '_data.h5', key='energy_data', mode='r')

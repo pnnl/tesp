@@ -8,14 +8,16 @@ Public Functions:
 """
 
 import json
+from copy import deepcopy
+from math import sqrt
+
 import helics
 import numpy as np
 import pypower.api as pp
-from math import sqrt
-from copy import deepcopy
 
-from .tso_helpers import load_json_case, make_dictionary
 from .bench_profile import bench_profile
+from .tso_helpers import load_json_case, make_dictionary
+
 
 @bench_profile
 def tso_pypower_loop(casefile, rootname, helicsConfig):
@@ -242,11 +244,11 @@ def tso_pypower_loop(casefile, rootname, helicsConfig):
             if opf_gen[1, 1] >= PswingSwitch:
                 ppc['bus'][1, 1] = 2
                 ppc['bus'][8, 1] = 3
-                print('  Switching to SWING Bus 9 (Gen 4) at {:d} and {:.2f} MW'.format(ts, opf_gen[1, 1]))
+                print(f'  Switching to SWING Bus 9 (Gen 4) at {ts:d} and {opf_gen[1, 1]:.2f} MW')
             else:
                 ppc['bus'][1, 1] = 3
                 ppc['bus'][8, 1] = 1
-                print('  Keeping SWING Bus 2 (Gen 2) at {:d} and {:.2f} MW'.format(ts, opf_gen[1, 1]))
+                print(f'  Keeping SWING Bus 2 (Gen 2) at {ts:d} and {opf_gen[1, 1]:.2f} MW')
             tnext_opf += period
 
         # always update the electrical quantities with a regular power flow
@@ -288,10 +290,8 @@ def tso_pypower_loop(casefile, rootname, helicsConfig):
             bus_accum[str(busnum)][3] += row[3]
             bus_accum[str(busnum)][4] += row[8]
             bus_accum[str(busnum)][5] += Vpu
-            if Vpu > bus_accum[str(busnum)][6]:
-                bus_accum[str(busnum)][6] = Vpu
-            if Vpu < bus_accum[str(busnum)][7]:
-                bus_accum[str(busnum)][7] = Vpu
+            bus_accum[str(busnum)][6] = max(bus_accum[str(busnum)][6], Vpu)
+            bus_accum[str(busnum)][7] = min(bus_accum[str(busnum)][7], Vpu)
         for i in range(gen.shape[0]):
             row = gen[i].tolist()
             busidx = int(row[0] - 1)
@@ -330,23 +330,23 @@ def tso_pypower_loop(casefile, rootname, helicsConfig):
 
         # CSV file output
         print(ts, res['success'],
-              '{:.3f}'.format(Pload),  # Pload
-              '{:.3f}'.format(csv_load),  # P7 (csv)
-              '{:.3f}'.format(unresp),  # GLD Unresp
-              '{:.3f}'.format(bus[6, 2]),  # P7 (rpf)
-              '{:.3f}'.format(resp),  # Resp (opf)
-              '{:.3f}'.format(feeder_load),  # GLD Pub
+              f'{Pload:.3f}',  # Pload
+              f'{csv_load:.3f}',  # P7 (csv)
+              f'{unresp:.3f}',  # GLD Unresp
+              f'{bus[6, 2]:.3f}',  # P7 (rpf)
+              f'{resp:.3f}',  # Resp (opf)
+              f'{feeder_load:.3f}',  # GLD Pub
               new_bid,
-              '{:.3f}'.format(gen[4, 9]),  # P7 Min
-              '{:.3f}'.format(bus[6, 7]),  # V7
-              '{:.3f}'.format(bus[6, 13]),  # LMP_P7
-              '{:.3f}'.format(bus[6, 14]),  # LMP_Q7
-              '{:.2f}'.format(gen[0, 1]),  # Pgen1
-              '{:.2f}'.format(gen[1, 1]),  # Pgen2
-              '{:.2f}'.format(gen[2, 1]),  # Pgen3
-              '{:.2f}'.format(gen[3, 1]),  # Pgen4
+              f'{gen[4, 9]:.3f}',  # P7 Min
+              f'{bus[6, 7]:.3f}',  # V7
+              f'{bus[6, 13]:.3f}',  # LMP_P7
+              f'{bus[6, 14]:.3f}',  # LMP_Q7
+              f'{gen[0, 1]:.2f}',  # Pgen1
+              f'{gen[1, 1]:.2f}',  # Pgen2
+              f'{gen[2, 1]:.2f}',  # Pgen3
+              f'{gen[3, 1]:.2f}',  # Pgen4
               '{:.2f}'.format(res['gen'][4, 1]),  # Pdisp
-              '{:.4f}'.format(resp_deg),  # degree
+              f'{resp_deg:.4f}',  # degree
               '{:.8f}'.format(ppc['gencost'][4, 4]),  # c2
               '{:.8f}'.format(ppc['gencost'][4, 5]),  # c1
               sep=',', file=op, flush=True)

@@ -4,10 +4,11 @@
 """ Utility functions for use within tesp_support, including new agents.
 """
 
-import logging
 import json
-from scipy.stats import truncnorm
+import logging
+
 from numpy import random
+from scipy.stats import truncnorm
 
 # Setting up main/standard logging with INFO level
 log = logging.getLogger()
@@ -53,7 +54,7 @@ def enable_logging(level, model_diag_level, name_prefix):
     return log
 
 
-class all_from_one_level_down(object):
+class all_from_one_level_down:
     def __init__(self, level):
         self.__level = level
 
@@ -61,7 +62,7 @@ class all_from_one_level_down(object):
         return logRecord.levelno <= self.__level
 
 
-class all_but_one_level(object):
+class all_but_one_level:
     def __init__(self, level):
         self.__level = level
 
@@ -199,7 +200,7 @@ def get_region(s):
     return region
 
 
-class HelicsMsg(object):
+class HelicsMsg:
 
     def __init__(self, name, period):
         # change logging to debug, warning, error
@@ -209,7 +210,6 @@ class HelicsMsg(object):
                       "period": period,
                       "logging": "warning",
                       }
-        pass
 
     def write_file(self, _fn):
         self.config("publications", self._pubs)

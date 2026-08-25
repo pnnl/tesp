@@ -16,11 +16,11 @@ import helics as h
 import numpy as np
 from joblib import Parallel
 
+from ..api.helpers import enable_logging
+from ..api.metrics_collector import MetricsCollector, MetricsStore
 from ..consensus import substation as consensus
 from .dso_market import DSOMarket
 from .retail_market import RetailMarket
-from ..api.helpers import enable_logging
-from ..api.metrics_collector import MetricsStore, MetricsCollector
 
 # import multiprocessing as mp
 NUM_CORE = 1
@@ -29,7 +29,7 @@ def register_federate(json_filename):
     print('register_federate -->', json_filename, flush=True)
     fed = h.helicsCreateCombinationFederateFromConfig(json_filename)
     federate_name = h.helicsFederateGetName(fed)
-    print(" Federate {} has been registered".format(federate_name), flush=True)
+    print(f" Federate {federate_name} has been registered", flush=True)
     pubkeys_count = h.helicsFederateGetPublicationCount(fed)
     subkeys_count = h.helicsFederateGetInputCount(fed)
     endkeys_count = h.helicsFederateGetEndpointCount(fed)
@@ -37,20 +37,20 @@ def register_federate(json_filename):
     pubid = {}
     subid = {}
     endid = {}
-    for i in range(0, pubkeys_count):
-        pubid["m{}".format(i)] = h.helicsFederateGetPublicationByIndex(fed, i)
-        pub_type = h.helicsPublicationGetType(pubid["m{}".format(i)])
-        pub_key = h.helicsPublicationGetName(pubid["m{}".format(i)])
-        print('Registered Publication ---> {} - Type {}'.format(pub_key, pub_type))
-    for i in range(0, subkeys_count):
-        subid["m{}".format(i)] = h.helicsFederateGetInputByIndex(fed, i)
-        status = h.helicsInputSetDefaultString(subid["m{}".format(i)], 'default')
-        sub_key = h.helicsInputGetTarget(subid["m{}".format(i)])
-        print('Registered Subscription ---> {}'.format(sub_key))
-    for i in range(0, endkeys_count):
-        endid["m{}".format(i)] = h.helicsFederateGetEndpointByIndex(fed, i)
-        end_key = h.helicsEndpointGetName(endid["m{}".format(i)])
-        print('Registered Endpoint ---> {}'.format(end_key))
+    for i in range(pubkeys_count):
+        pubid[f"m{i}"] = h.helicsFederateGetPublicationByIndex(fed, i)
+        pub_type = h.helicsPublicationGetType(pubid[f"m{i}"])
+        pub_key = h.helicsPublicationGetName(pubid[f"m{i}"])
+        print(f'Registered Publication ---> {pub_key} - Type {pub_type}')
+    for i in range(subkeys_count):
+        subid[f"m{i}"] = h.helicsFederateGetInputByIndex(fed, i)
+        status = h.helicsInputSetDefaultString(subid[f"m{i}"], 'default')
+        sub_key = h.helicsInputGetTarget(subid[f"m{i}"])
+        print(f'Registered Subscription ---> {sub_key}')
+    for i in range(endkeys_count):
+        endid[f"m{i}"] = h.helicsFederateGetEndpointByIndex(fed, i)
+        end_key = h.helicsEndpointGetName(endid[f"m{i}"])
+        print(f'Registered Endpoint ---> {end_key}')
 
     return fed, federate_name
 
@@ -210,7 +210,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
 
         dso_3600 = MetricsStore(
             name_units_pairs=name_units_pairs_da_list,
-            file_string='dso_market_{}_3600'.format(metrics_root),
+            file_string=f'dso_market_{metrics_root}_3600',
             collector=collector,
         )
 
@@ -227,7 +227,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
 
         dso_300 = MetricsStore(
             name_units_pairs=name_units_pairs_rt_list,
-            file_string='dso_market_{}_300'.format(metrics_root),
+            file_string=f'dso_market_{metrics_root}_300',
             collector=collector,
         )
         #                 'dso_rt_gld_load': {'units': load_recording_unit, 'index': 5},
@@ -360,18 +360,18 @@ def inner_substation_loop(configfile, metrics_root, with_market):
     endkeys_count = h.helicsFederateGetEndpointCount(fed)
     endid = {}
     bid_info = {}
-    for i in range(0, endkeys_count):
-        endid["m{}".format(i)] = h.helicsFederateGetEndpointByIndex(fed, i)
-        key = h.helicsEndpointGetName(endid["m{}".format(i)])
+    for i in range(endkeys_count):
+        endid[f"m{i}"] = h.helicsFederateGetEndpointByIndex(fed, i)
+        key = h.helicsEndpointGetName(endid[f"m{i}"])
         [from_agent, to_agent, property] = key.split('/')
-        if from_agent not in bid_info.keys():
+        if from_agent not in bid_info:
             bid_info[from_agent] = {}
-        if to_agent not in bid_info[from_agent].keys():
+        if to_agent not in bid_info[from_agent]:
             bid_info[from_agent][to_agent] = {}
             bid_info[from_agent][to_agent]['DA'] = {}
             bid_info[from_agent][to_agent]['RT'] = {}
         if 'DA' in property:
-            bid_info[from_agent][to_agent]['DA'][property] = np.zeros((dso_market_obj.windowLength)).tolist()
+            bid_info[from_agent][to_agent]['DA'][property] = np.zeros(dso_market_obj.windowLength).tolist()
         if 'RT' in property:
             bid_info[from_agent][to_agent]['RT'][property] = 0
 
@@ -564,8 +564,8 @@ def inner_substation_loop(configfile, metrics_root, with_market):
             timing(proc[1], False)
             timing(proc[1], True)
             op = open('timing.csv', 'w')
-            print(proc_time, sep=', ', file=op, flush=True)
-            print(wall_time, sep=', ', file=op, flush=True)
+            print(proc_time, file=op, flush=True)
+            print(wall_time, file=op, flush=True)
             op.close()
 
     log.info('finalizing metrics writing')
@@ -575,8 +575,8 @@ def inner_substation_loop(configfile, metrics_root, with_market):
     log.info('finalizing HELICS')
     timing(proc[1], False)
     op = open('timing.csv', 'w')
-    print(proc_time, sep=', ', file=op, flush=True)
-    print(wall_time, sep=', ', file=op, flush=True)
+    print(proc_time, file=op, flush=True)
+    print(wall_time, file=op, flush=True)
     op.close()
     destroy_federate(fed)
 

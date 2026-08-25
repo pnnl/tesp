@@ -3,15 +3,16 @@
 # file: data.py
 """ Path and Data functions for use within tesp_support, including new agents.
 """
-import os
-import re
 import csv
 import json
-import h5py
+import os
+import re
 import sqlite3
-import pandas as pd
-import numpy as np
 import zipfile as zf
+
+import h5py
+import numpy as np
+import pandas as pd
 
 """
 #  add empty json "file" store that holds
@@ -82,7 +83,6 @@ class Directory:
 
         self.recurse = {}
         self.include = {}
-        return
 
     def set_includeDir(self, path, recurse=False):
         if os.path.isdir(os.path.join(self.file, path)):
@@ -173,7 +173,6 @@ class Schema:
         self.columns = {}
         self.dates = {}
         self.skip_rows = {}
-        return
 
     def get_tables(self):
         if self.tables is None:
@@ -349,7 +348,6 @@ def unzip(file, path):
         #     meta = json.loads(cwd + file + ".json")
         #     #write(cwd + file + ".json")
 
-    return
 
 
 class Store:
@@ -358,7 +356,6 @@ class Store:
         self.file = file + '.json'
         self.store = []
         self.read()
-        return
 
     def add_path(self, path, description=""):
         for directory in self.store:
@@ -372,14 +369,12 @@ class Store:
     def add_directory(self, directory):
         if type(directory) is Directory:
             self.store.append(directory)
-        return
 
     def del_directory(self, name):
         for i, directory in enumerate(self.store):
             if type(directory) is Directory:
                 if directory['name'] == name:
                     del self.store[i]
-        return
 
     def get_directory(self, name):
         if name is None:
@@ -407,14 +402,12 @@ class Store:
     def add_schema(self, scheme):
         if type(scheme) is Schema:
             self.store.append(scheme)
-        return
 
     def del_schema(self, name):
         for i, schema in enumerate(self.store):
             if type(schema) is Schema:
                 if schema['name'] == name:
                     del self.store[i]
-        return
 
     def get_schema(self, name=None):
         if name is None:
@@ -438,7 +431,6 @@ class Store:
         with open(self.file, "w", encoding='utf-8') as outfile:
             json.dump(diction, outfile, indent=2)
 
-        return
 
     def read(self):
         if os.path.isfile(self.file):
@@ -504,7 +496,7 @@ def _test_debug_resample():
     tseries.append(ts2)
     tseries.append(ts3)
     tseries.append(ts)
-    synched_series = synch_series(tseries, 2, "T")
+    synched_series = synch_series(tseries, 2, "min")
     print(tseries[0])
 
 
@@ -580,8 +572,7 @@ def _test_read():
 
 
 def _test_dir():
-    from .data import tesp_share
-    from .data import tesp_test
+    from .data import tesp_share, tesp_test
 
     my_store = Store(tesp_test + 'api/store')
     my_file = my_store.add_path(tesp_share, "My data directory")
@@ -608,9 +599,9 @@ def _test_change_gencost():
         row = 0
         for tmp in in_file["genfuel"]:
             fuel = tmp[1]
-            for name in price:
+            for name, value in price.items():
                 if name in fuel:
-                    in_file["gencost"][row][6] = price[name]
+                    in_file["gencost"][row][6] = value
             row = row + 1
 
     with open(file, "w", encoding='utf-8') as outfile:

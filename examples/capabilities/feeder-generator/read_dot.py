@@ -30,8 +30,9 @@ dot_file_path = "R5-12.47-3.dot"
 prefix = dot_file_path.replace('.dot', '').replace('-', '_').replace('.', '_')
 
 
-import re
 import json
+import re
+
 
 def extract_node_positions(dot_file_path):
     # Dictionary to store the node names and positions

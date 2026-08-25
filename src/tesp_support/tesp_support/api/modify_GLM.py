@@ -2,6 +2,7 @@
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: glm_modifier.py
 import math
+import sys
 
 import numpy as np
 
@@ -162,7 +163,7 @@ class GLMModifier:
             if myObj.find_item('parent'):
                 for myName in myObj.instances:
                     instance = myObj.instances[myName]
-                    if 'parent' in instance.keys():
+                    if 'parent' in instance:
                         if instance['parent'] == name:
                             myArr.append(myName)
             # TODO from-to relations
@@ -174,7 +175,6 @@ class GLMModifier:
         """UNIMPLEMENTED
         """
         # TODO replace node with node or edge with edge classes
-        pass
 
     def add_object_attr(self, gld_type: str, name: str, item_name: str, item_value: str) -> None:
         """Adds an attribute to an existing object (those that start "object ..." in a .glm
@@ -207,7 +207,7 @@ class GLMModifier:
         self.model.object_entities[gld_type].del_item(name, item_name)
 
     # Read and Write .GLM files
-    def read_model(self, filepath: str) -> bool:
+    def read_model(self, filepath: str) -> tuple[GLMModel, bool]:
         """Reads in GridLAB-D model from a file (.glm) and stores it as an instance of the GLMModel object.
 
         Args:
@@ -565,7 +565,7 @@ class GLMModifier:
         except Exception:
             return
         for e_name, e_object in entity.items():
-            params = dict()
+            params = {}
             for p in e_object:
                 if ':' in str(e_object[p]):
                     params[p] = self.glm.hash[e_object[p]]
@@ -591,7 +591,7 @@ class GLMModifier:
         except Exception:
             return
         for e_name, e_object in entity.items():
-            params = dict()
+            params = {}
             if e_name in seg_loads:
                 # print('// downstream', '{:.2f}'.format(seg_loads[o][0]), 'kva on', seg_loads[o][1])
                 for p in e_object:
@@ -757,7 +757,7 @@ class GLMModifier:
         Returns:
             None
         """
-        params = dict()
+        params = {}
         name = self.defaults.name_prefix + key
         params["power_rating"] = format(kvat, '.2f')
         kvaphase = kvat
@@ -811,7 +811,7 @@ class GLMModifier:
 
         for row in self.defaults.triplex_conductors:
             name = self.defaults.name_prefix + row[0]
-            params = dict()
+            params = {}
             params["resistance"] = row[1]
             params["geometric_mean_radius"] = row[2]
             rating_str = str(row[3])
@@ -821,7 +821,7 @@ class GLMModifier:
             params["rating.winter.emergency"] = rating_str
             self.add_object("triplex_line_conductor", name, params)
         for row in self.defaults.triplex_configurations:
-            params = dict()
+            params = {}
             name = self.defaults.name_prefix + row[0]
             params["conductor_1"] = self.defaults.name_prefix + row[1]
             params["conductor_2"] = self.defaults.name_prefix + row[1]
@@ -856,13 +856,13 @@ class GLMModifier:
         name = 'substation_xfmr_config'
         params = {"connect_type": 'WYE_WYE',
                   "install_type": 'PADMOUNT',
-                  "primary_voltage": '{:.2f}'.format(self.defaults.transmissionVoltage),
-                  "secondary_voltage": '{:.2f}'.format(v_ll),
-                  "power_rating": '{:.2f}'.format(self.defaults.transmissionXfmrMVAbase * 1000.0),
-                  "resistance": '{:.2f}'.format(0.01 * self.defaults.transmissionXfmrRpct),
-                  "reactance": '{:.2f}'.format(0.01 * self.defaults.transmissionXfmrXpct),
-                  "shunt_resistance": '{:.2f}'.format(100.0 / self.defaults.transmissionXfmrNLLpct),
-                  "shunt_reactance": '{:.2f}'.format(100.0 / self.defaults.transmissionXfmrImagpct)}
+                  "primary_voltage": f'{self.defaults.transmissionVoltage:.2f}',
+                  "secondary_voltage": f'{v_ll:.2f}',
+                  "power_rating": f'{self.defaults.transmissionXfmrMVAbase * 1000.0:.2f}',
+                  "resistance": f'{0.01 * self.defaults.transmissionXfmrRpct:.2f}',
+                  "reactance": f'{0.01 * self.defaults.transmissionXfmrXpct:.2f}',
+                  "shunt_resistance": f'{100.0 / self.defaults.transmissionXfmrNLLpct:.2f}',
+                  "shunt_reactance": f'{100.0 / self.defaults.transmissionXfmrImagpct:.2f}'}
         self.add_object("transformer_configuration", name, params)
 
         name = "substation_transformer"
@@ -875,9 +875,9 @@ class GLMModifier:
         name = "network_node"
         params = {"groupid": self.defaults.base_feeder_name.replace(".glm", ""),
                   "bustype": 'SWING',
-                  "nominal_voltage": '{:.2f}'.format(vsrcln),
-                  "positive_sequence_voltage": '{:.2f}'.format(vsrcln),
-                  "base_power": '{:.2f}'.format(self.defaults.transmissionXfmrMVAbase * 1000000.0),
+                  "nominal_voltage": f'{vsrcln:.2f}',
+                  "positive_sequence_voltage": f'{vsrcln:.2f}',
+                  "base_power": f'{self.defaults.transmissionXfmrMVAbase * 1000000.0:.2f}',
                   "power_convergence_value": "100.0",
                   "phases": phs}
         self.add_object("substation", name, params)
@@ -887,22 +887,18 @@ class GLMModifier:
     def resize(self):
         """UNIMPLEMENTED
         """
-        pass
 
     def resize_secondary_transformers(self) :
         """UNIMPLEMENTED
         """
-        pass
 
     def resize_substation_transformer(self):
         """UNIMPLEMENTED
         """
-        pass
 
     def set_simulation_times(self):
         """UNIMPLEMENTED
         """
-        pass
 
 
 def _test1():
@@ -935,14 +931,14 @@ def _test2():
     testMod = GLMModifier()
     glm, success = testMod.model.readBackboneModel(feeder)
     if not success:
-        exit()
+        sys.exit()
 
     testMod.rename_object("node", "n3", "mynode3")
     # testMod.model.plot_model()
     meter_counter = 0
     house_counter = 0
     house_meter_counter = 0
-    for key, value in glm.load.items():
+    for key in glm.load:
         # add meter for this load
         meter_counter = meter_counter + 1
         meter_name = 'meter_' + str(meter_counter)

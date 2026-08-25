@@ -190,8 +190,8 @@ def convertDataToPYPowerJSON(output_file, NodeData, output_bus_data, output_gen_
         "0.0"
     ]]
 
-    pp_case["UnitsOut"] = list()
-    pp_case["BranchesOut"] = list()
+    pp_case["UnitsOut"] = []
+    pp_case["BranchesOut"] = []
     pp_case["StartTime"] = "2013-07-01 00:00:00",
     pp_case["Tmax"] = 172800
     pp_case["Period"] = 3600

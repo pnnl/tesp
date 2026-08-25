@@ -14,9 +14,9 @@ Public Functions:
 
 """
 
-import os
 import json
 import math
+import os
 
 from ..api.helpers import log
 
@@ -555,7 +555,6 @@ def glm_dict(name_root, config=None, ercot=False):  # , te30=False):
                     mtr['tariff_class'] = 'residential'
         except KeyError as keyErr:
             log.debug(f"Got a KeyError. Reason - {keyErr}")
-            pass
 
     for key, val in inverters.items():
         mtr = billingmeters[val['billingmeter_id']]
@@ -586,6 +585,7 @@ def glm_diction(case_name, feed_key):
         feed_key (str): feeder number
     """
     import math
+
     from tesp_support.api.modify_GLM import GLMModifier
 
     glmMod = GLMModifier()
@@ -1018,17 +1018,17 @@ def glm_diction(case_name, feed_key):
     feeders[feed_key] = {'house_count': len(houses), 'inverter_count': len(inverters), 'ev_count': len(ev)}
 
     try:
-        for name, helics_msg in glm.helics_msg.items():
+        for name in glm.helics_msg:
             message_name = name
     except KeyError:
         pass
     try:
-        for name, fncs_msg in glm.fncs_msg.items():
+        for name in glm.fncs_msg:
             message_name = name
     except KeyError:
         pass
 
-    for sub_name, substations in glm.substation.items():
+    for substations in glm.substation.values():
         substation = {'bulkpower_bus': 1,
                     'message_name': message_name,
                     'transformer_MVA': float(substations["base_power"].strip('MVA')) * 1.0e-6,

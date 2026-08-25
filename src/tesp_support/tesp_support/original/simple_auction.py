@@ -21,7 +21,7 @@ I think we should refactor this so that these assumptions are not so
 tightly integrated with the formulation.
 
 """
-from ..original.curve import ClearingType, curve, aggregate_bid
+from ..original.curve import ClearingType, aggregate_bid, curve
 
 
 # Class definition
@@ -137,7 +137,6 @@ class simple_auction:
     def update_statistics(self):
         """ Update price history statistics - not implemented
         """
-        pass
 
     def clear_bids(self):
         """ Re-initializes curve_buyer and curve_seller,
@@ -188,11 +187,11 @@ class simple_auction:
         else:
             print('$$ flag,Unresp,BuyCount,BuyTotal,BuyOn,BuyOff', flush=True)
             print('$$ unresp < 0',
-                  '{:.3f}'.format(self.unresp),
+                  f'{self.unresp:.3f}',
                   self.curve_buyer.count,
-                  '{:.3f}'.format(self.curve_buyer.total),
-                  '{:.3f}'.format(self.curve_buyer.total_on),
-                  '{:.3f}'.format(self.curve_buyer.total_off),
+                  f'{self.curve_buyer.total:.3f}',
+                  f'{self.curve_buyer.total_on:.3f}',
+                  f'{self.curve_buyer.total_off:.3f}',
                   sep=',', flush=True)
         if self.curve_buyer.count > 0:
             self.curve_buyer.set_curve_order('descending')
@@ -419,7 +418,7 @@ class simple_auction:
         elif self.clearing_type == ClearingType.SELLER:
             marginal_subtotal = 0
             i = 0
-            for i in range(0, self.curve_seller.count):
+            for i in range(self.curve_seller.count):
                 if self.curve_seller.price[i] > self.clearing_price:
                     marginal_subtotal = marginal_subtotal + self.curve_seller.quantity[i]
                 else:
@@ -523,27 +522,27 @@ class simple_auction:
                     grantedRespQuantity = 0.0
                     break
         if grantedRespQuantity != 0.0:
-            print('cleared {:.4f} more quantity than supplied.'.format(grantedRespQuantity))
+            print(f'cleared {grantedRespQuantity:.4f} more quantity than supplied.')
         print('##',
               time_granted,
               tnext_clear,
               self.clearing_type,
-              '{:.3f}'.format(self.clearing_quantity),
-              '{:.6f}'.format(self.clearing_price),
+              f'{self.clearing_quantity:.3f}',
+              f'{self.clearing_price:.6f}',
               self.curve_buyer.count,
-              '{:.3f}'.format(self.unresponsive_buy),
-              '{:.3f}'.format(self.responsive_buy),
+              f'{self.unresponsive_buy:.3f}',
+              f'{self.responsive_buy:.3f}',
               self.curve_seller.count,
-              '{:.3f}'.format(self.unresponsive_sell),
-              '{:.3f}'.format(self.responsive_sell),
-              '{:.3f}'.format(self.marginal_quantity),
-              '{:.6f}'.format(self.marginal_frac),
-              '{:.6f}'.format(self.lmp),
-              '{:.3f}'.format(self.refload),
-              '{:.4f}'.format(self.consumerSurplus),
-              '{:.4f}'.format(self.averageConsumerSurplus),
-              '{:.4f}'.format(self.supplierSurplus),
-              '{:.4f}'.format(self.unrespSupplierSurplus),
+              f'{self.unresponsive_sell:.3f}',
+              f'{self.responsive_sell:.3f}',
+              f'{self.marginal_quantity:.3f}',
+              f'{self.marginal_frac:.6f}',
+              f'{self.lmp:.6f}',
+              f'{self.refload:.3f}',
+              f'{self.consumerSurplus:.4f}',
+              f'{self.averageConsumerSurplus:.4f}',
+              f'{self.supplierSurplus:.4f}',
+              f'{self.unrespSupplierSurplus:.4f}',
               sep=',', flush=True)
 
 

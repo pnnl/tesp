@@ -1,8 +1,9 @@
 # Copyright (c) 2021-2025 Battelle Memorial Institute
 # file: plots.py
 
-import tesp_support.api.process_eplus as ep
 import sys
+
+import tesp_support.api.process_eplus as ep
 
 root='eplus'
 title=None

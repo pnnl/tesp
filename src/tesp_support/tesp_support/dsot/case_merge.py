@@ -17,6 +17,7 @@ from os import path
 from ..api.helpers import gld_strict_name
 from ..api.modify_GLM import GLMModifier
 
+
 def merge_glm(target, sources, xfmva):
     """ Combines GridLAB-D input files into "target". The source files must already exist.
 
@@ -74,9 +75,9 @@ def merge_glm(target, sources, xfmva):
                             else:
                                 line = '  configure ' + path.splitext(path.basename(target))[0] + '.json;'
                         elif ' power_rating ' in line:
-                            line = '  power_rating {:.2f};'.format(xfmva * 1e3)
+                            line = f'  power_rating {xfmva * 1e3:.2f};'
                         elif ' base_power ' in line:
-                            line = '  base_power {:.2f};'.format(xfmva * 1e6)
+                            line = f'  base_power {xfmva * 1e6:.2f};'
                         elif ' to ' in line:
                             toks = line.split()
                             thisHeadNode = toks[1][:-1]
@@ -144,16 +145,14 @@ def del_danglers(glm: GLMModifier, glm_type: str, i_glm_obj):
 
         for type_name, obj_type in glm.model.object_entities.items():
             if glm_type != type_name:
-                for obj_name, obj_int in obj_type.instances.items():
+                for obj_int in obj_type.instances.values():
                     if hasattr(obj_type, "from"):
-                        if to_found == "":
-                            if to_name == obj_int["from"]:
-                                to_found = type_name
-                                continue
-                        if from_found == "":
-                            if from_name == obj_int["to"]:
-                                from_found = type_name
-                                continue
+                        if to_found == "" and to_name == obj_int["from"]:
+                            to_found = type_name
+                            continue
+                        if from_found == "" and from_name == obj_int["to"]:
+                            from_found = type_name
+                            continue
                     if to_found != "" and from_found != "":
                         break
             if to_found != "" and from_found != "":
@@ -353,7 +352,7 @@ def merge_agent_dict(target, sources):
     for fdr in sources:
         lp = open(path.dirname(target) + '/' + fdr + '_agent_dict.json').read()
         cfg = json.loads(lp)
-        for key in cfg.keys():
+        for key in cfg:
             if key in ["StartTime", "EndTime", "rate", "LogLevel", "solver", "numCore", "priceSensLoad", "serverPort",
                        "Metrics", "MetricsType", "MetricsInterval"]:
                 diction[key] = cfg[key]

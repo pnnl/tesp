@@ -6,11 +6,11 @@ Public Functions:
     :prep_substation: processes a GridLAB-D file for one substation and one or more feeders
 """
 import json
-import numpy as np
-import os
 import math
-
+import os
 from datetime import datetime
+
+import numpy as np
 from tesp_support.api.helpers import random_norm_trunc
 
 # write yaml for substation.py to subscribe meter voltages, house temperatures, hvac load and hvac state
@@ -101,9 +101,8 @@ def select_setpt_night(wakeup_set, daylight_set, mode):
             # Do not allow heating setpt at unoccupied home more than at night
             if mode == 'heat' and daylight_set > night_set:
                 night_set = wakeup_set
-        except:
+        except Exception:
             print("WARNING select setpt not found:", wakeup_set, daylight_set, mode, ", setting to ", wakeup_set)
-            pass
         return night_set
 
 
@@ -136,9 +135,9 @@ def process_glm_with_microgrids(gldfileroot, substationfileroot, weatherfileroot
     json_file_name_GLD = gldfileroot + '.json'
     config_gld = {'name': gld_sim_name,
                   'loglevel': "warning",
-                  'coreType': str('zmq'),
+                  'coreType': 'zmq',
                   'timeDelta': 0.001,
-                  'uninterruptible': bool(True),
+                  'uninterruptible': True,
                   'publications': [],
                   'subscriptions': []}
 
@@ -146,9 +145,9 @@ def process_glm_with_microgrids(gldfileroot, substationfileroot, weatherfileroot
     json_file_name_Sub = substationfileroot + '.json'
     config_Sub = {'name': substation_name,
                   'loglevel': "warning",
-                  'coreType': str('zmq'),
+                  'coreType': 'zmq',
                   'timeDelta': 0.001,
-                  'uninterruptible': bool(True),
+                  'uninterruptible': True,
                   'publications': [],
                   'subscriptions': [],
                   'endpoints': []}
@@ -163,9 +162,9 @@ def process_glm_with_microgrids(gldfileroot, substationfileroot, weatherfileroot
         config_DG[dg_name] = {}
         config_DG[dg_name]['name'] = dg_name
         config_DG[dg_name]['loglevel'] = "warning"
-        config_DG[dg_name]['coreType'] = str('zmq')
+        config_DG[dg_name]['coreType'] = 'zmq'
         config_DG[dg_name]['timeDelta'] = 0.001
-        config_DG[dg_name]['uninterruptible'] = bool(True)
+        config_DG[dg_name]['uninterruptible'] = True
         config_DG[dg_name]['publications'] = []
         config_DG[dg_name]['subscriptions'] = []
         config_DG[dg_name]['endpoints'] = []
@@ -183,8 +182,7 @@ def process_glm_with_microgrids(gldfileroot, substationfileroot, weatherfileroot
         gd = json.loads(mg)
         gld_sim_name = gd['message_name']
 
-        print('\tgldfileroot -> {0:s}\n\tsubstationfileroot -> {1:s}\n\tdirname -> {2:s}\n\tbasename -> {3:s}\n\tglmname -> {4:s}\n\tgld_sim_name -> {5:s}\n\tsubstation_name -> {6:s}\n\tmicrogrid_name -> {7:s}\n\tmicrogridfileroot -> {8:s}\n\tmicrogridfilename -> {9:s}'.format(
-            gldfileroot, substationfileroot, dirname, basename, glmname, gld_sim_name, substation_name, microgrid_name, microgrid_file_root, microgrid_file_name))
+        print(f'\tgldfileroot -> {gldfileroot:s}\n\tsubstationfileroot -> {substationfileroot:s}\n\tdirname -> {dirname:s}\n\tbasename -> {basename:s}\n\tglmname -> {glmname:s}\n\tgld_sim_name -> {gld_sim_name:s}\n\tsubstation_name -> {substation_name:s}\n\tmicrogrid_name -> {microgrid_name:s}\n\tmicrogridfileroot -> {microgrid_file_root:s}\n\tmicrogridfilename -> {microgrid_file_name:s}')
 
         # dictionaries with agents and counters
         markets = {}
@@ -238,11 +236,10 @@ def process_glm_with_microgrids(gldfileroot, substationfileroot, weatherfileroot
             rem_non_trans_cust_per = requested_non_trans_cust_per - inelig_per
             if rem_non_trans_cust_per < 0:
                 rem_non_trans_cust_per = 0
-                print("{} % customers are ineligible to participate in market, therefore only {} % of customers "
-                      "will be able to participate rather than requested {} %!".format(inelig_per, 100 - inelig_per,
-                                                                                       100 - requested_non_trans_cust_per))
+                print(f"{inelig_per} % customers are ineligible to participate in market, therefore only {100 - inelig_per} % of customers "
+                      f"will be able to participate rather than requested {100 - requested_non_trans_cust_per} %!")
             else:
-                print("{} % of houses will be participating!".format(trans_cust_per))
+                print(f"{trans_cust_per} % of houses will be participating!")
 
             # 3. Find out % of houses that needs to be set non particpating out of total eligible houses
             # For example: if ineligible houses are 5% and requested non-transactive houses is 20%, we only need to set
@@ -502,38 +499,37 @@ def process_glm_with_microgrids(gldfileroot, substationfileroot, weatherfileroot
                                                     'meterName': meter_name,
                                                     'houseClass': house_class,
                                                     'period': period,
-                                                    'wakeup_start': float('{:.3f}'.format(wakeup_start)),
-                                                    'daylight_start': float('{:.3f}'.format(daylight_start)),
-                                                    'evening_start': float('{:.3f}'.format(evening_start)),
-                                                    'night_start': float('{:.3f}'.format(night_start)),
-                                                    'weekend_day_start': float('{:.3f}'.format(weekend_day_start)),
-                                                    'weekend_night_start': float('{:.3f}'.format(weekend_night_start)),
-                                                    'wakeup_set_cool': float('{:.3f}'.format(wakeup_set_cool)),
-                                                    'daylight_set_cool': float('{:.3f}'.format(daylight_set_cool)),
-                                                    'evening_set_cool': float('{:.3f}'.format(evening_set_cool)),
-                                                    'night_set_cool': float('{:.3f}'.format(night_set_cool)),
-                                                    'weekend_day_set_cool': float('{:.3f}'.format(weekend_day_set_cool)),
-                                                    'weekend_night_set_cool': float('{:.3f}'.format(weekend_night_set_cool)),
-                                                    'wakeup_set_heat': float('{:.3f}'.format(wakeup_set_heat)),
-                                                    'daylight_set_heat': float('{:.3f}'.format(daylight_set_heat)),
-                                                    'evening_set_heat': float('{:.3f}'.format(evening_set_heat)),
-                                                    'night_set_heat': float('{:.3f}'.format(night_set_heat)),
-                                                    'weekend_day_set_heat': float('{:.3f}'.format(weekend_day_set_heat)),
-                                                    'weekend_night_set_heat': float('{:.3f}'.format(weekend_night_set_heat)),
-                                                    'deadband': float('{:.3f}'.format(deadband)),
-                                                    'ramp_high_limit': float('{:.4f}'.format(ramp_high)),
-                                                    'ramp_low_limit': float('{:.4f}'.format(ramp_low)),
-                                                    'range_high_limit': float('{:.4f}'.format(range_high)),
-                                                    'range_low_limit': float('{:.4f}'.format(range_low)),
-                                                    'slider_setting': float('{:.4f}'.format(slider)),
-                                                    'price_cap': float('{:.3f}'.format(ctrl_cap)),
+                                                    'wakeup_start': float(f'{wakeup_start:.3f}'),
+                                                    'daylight_start': float(f'{daylight_start:.3f}'),
+                                                    'evening_start': float(f'{evening_start:.3f}'),
+                                                    'night_start': float(f'{night_start:.3f}'),
+                                                    'weekend_day_start': float(f'{weekend_day_start:.3f}'),
+                                                    'weekend_night_start': float(f'{weekend_night_start:.3f}'),
+                                                    'wakeup_set_cool': float(f'{wakeup_set_cool:.3f}'),
+                                                    'daylight_set_cool': float(f'{daylight_set_cool:.3f}'),
+                                                    'evening_set_cool': float(f'{evening_set_cool:.3f}'),
+                                                    'night_set_cool': float(f'{night_set_cool:.3f}'),
+                                                    'weekend_day_set_cool': float(f'{weekend_day_set_cool:.3f}'),
+                                                    'weekend_night_set_cool': float(f'{weekend_night_set_cool:.3f}'),
+                                                    'wakeup_set_heat': float(f'{wakeup_set_heat:.3f}'),
+                                                    'daylight_set_heat': float(f'{daylight_set_heat:.3f}'),
+                                                    'evening_set_heat': float(f'{evening_set_heat:.3f}'),
+                                                    'night_set_heat': float(f'{night_set_heat:.3f}'),
+                                                    'weekend_day_set_heat': float(f'{weekend_day_set_heat:.3f}'),
+                                                    'weekend_night_set_heat': float(f'{weekend_night_set_heat:.3f}'),
+                                                    'deadband': float(f'{deadband:.3f}'),
+                                                    'ramp_high_limit': float(f'{ramp_high:.4f}'),
+                                                    'ramp_low_limit': float(f'{ramp_low:.4f}'),
+                                                    'range_high_limit': float(f'{range_high:.4f}'),
+                                                    'range_low_limit': float(f'{range_low:.4f}'),
+                                                    'slider_setting': float(f'{slider:.4f}'),
+                                                    'price_cap': float(f'{ctrl_cap:.3f}'),
                                                     'bid_delay': bid_delay,
                                                     'house_participating': site_agent[meter_name]['participating'],
                                                     'cooling_participating': cooling_participating,
                                                     'heating_participating': heating_participating}
             except KeyError as keyErr:
-                print('I got a KeyError. Reason - {0}. See: {1}'.format(str(keyErr), format_exc())) # sys.exc_info()[2].tb_))
-                pass
+                print(f'I got a KeyError. Reason - {keyErr!s}')
 
         print('configured', num_hvacs, 'agents for air conditioners/heating in', microgrid_key, 'out of which', num_hvac_agents_cooling,
               'are participating in cooling and ', num_hvac_agents_heating, ' are participating in heating')
@@ -632,10 +628,10 @@ def process_glm_with_microgrids(gldfileroot, substationfileroot, weatherfileroot
                                                  'charge': val['bat_soc'] * val['bat_capacity'],
                                                  'efficiency': float('{:.4f}'.format(val['inv_eta'] *
                                                                                      math.sqrt(val['bat_eta']))),
-                                                 'slider_setting': float('{:.4f}'.format(slider)),
-                                                 'reserved_soc': float('{:.4f}'.format(reserve_soc)),
-                                                 'profit_margin': float('{:.4f}'.format(profit_margin)),
-                                                 'degrad_factor': float('{:.4f}'.format(degrad_fac)),
+                                                 'slider_setting': float(f'{slider:.4f}'),
+                                                 'reserved_soc': float(f'{reserve_soc:.4f}'),
+                                                 'profit_margin': float(f'{profit_margin:.4f}'),
+                                                 'degrad_factor': float(f'{degrad_fac:.4f}'),
                                                  'participating': participating}
 
         print('configured', num_batteries, 'agents for batteries in', microgrid_key, ' and', num_battery_agents, 'are participating')
@@ -737,77 +733,77 @@ def process_glm_with_microgrids(gldfileroot, substationfileroot, weatherfileroot
         if feedercnt == 1:
             config_MG = {'name': microgrid_name,
                          'loglevel': "warning",
-                         'coreType': str('zmq'),
+                         'coreType': 'zmq',
                          'timeDelta': 0.001,
-                         'uninterruptible': bool(True),
+                         'uninterruptible': True,
                          'publications': [],
                          'subscriptions': [],
                          'endpoints': [],
                          'filters': []}
 
-            config_MG['subscriptions'].append({'required': bool(True),
-                                           'info': str('gld_load'),
+            config_MG['subscriptions'].append({'required': True,
+                                           'info': 'gld_load',
                                            'key': str(gld_sim_name + '/distribution_load'),
-                                           'type': str('string'),
+                                           'type': 'string',
                                            'default': str(0)
                                             })
 
             ## endpoints for Helics Messaging
-            config_MG['endpoints'].append({'global': bool(True),
-                                           'info': str('cleared_price_RT'),
+            config_MG['endpoints'].append({'global': True,
+                                           'info': 'cleared_price_RT',
                                            'name': str( microgrid_name + '/' + substation_name + '/cleared_price_RT'),
-                                           'type': str('genmessage')
+                                           'type': 'genmessage'
                                             })
-            config_MG['endpoints'].append({'global': bool(True),
-                                           'info': str('cleared_quantity_RT'),
+            config_MG['endpoints'].append({'global': True,
+                                           'info': 'cleared_quantity_RT',
                                            'name': str( microgrid_name + '/' + substation_name + '/cleared_quantity_RT'),
-                                           'type': str('genmessage')
+                                           'type': 'genmessage'
                                             })
-            config_MG['endpoints'].append({'global': bool(True),
-                                           'info': str('cleared_price_DA'),
+            config_MG['endpoints'].append({'global': True,
+                                           'info': 'cleared_price_DA',
                                            'name': str( microgrid_name + '/' + substation_name + '/cleared_price_DA'),
-                                           'type': str('genmessage')
+                                           'type': 'genmessage'
                                             })
-            config_MG['endpoints'].append({'global': bool(True),
-                                           'info': str('cleared_quantity_DA'),
+            config_MG['endpoints'].append({'global': True,
+                                           'info': 'cleared_quantity_DA',
                                            'name': str( microgrid_name + '/' + substation_name + '/cleared_quantity_DA'),
-                                           'type': str('genmessage')
+                                           'type': 'genmessage'
                                             })
 
             ## endpoints for Helics Messaging
-            config_Sub['endpoints'].append({'global': bool(True),
-                                           'info': str('cleared_price_RT'),
+            config_Sub['endpoints'].append({'global': True,
+                                           'info': 'cleared_price_RT',
                                            'name': str( substation_name + '/' + microgrid_name +'/cleared_price_RT'),
-                                           'type': str('genmessage')
+                                           'type': 'genmessage'
                                             })
-            config_Sub['endpoints'].append({'global': bool(True),
-                                           'info': str('cleared_quantity_RT'),
+            config_Sub['endpoints'].append({'global': True,
+                                           'info': 'cleared_quantity_RT',
                                            'name': str( substation_name + '/' + microgrid_name + '/cleared_quantity_RT'),
-                                           'type': str('genmessage')
+                                           'type': 'genmessage'
                                            })
-            config_Sub['endpoints'].append({'global': bool(True),
-                                           'info': str('cleared_price_DA'),
+            config_Sub['endpoints'].append({'global': True,
+                                           'info': 'cleared_price_DA',
                                            'name': str( substation_name + '/' + microgrid_name +'/cleared_price_DA'),
-                                           'type': str('genmessage')
+                                           'type': 'genmessage'
                                             })
-            config_Sub['endpoints'].append({'global': bool(True),
-                                           'info': str('cleared_quantity_DA'),
+            config_Sub['endpoints'].append({'global': True,
+                                           'info': 'cleared_quantity_DA',
                                            'name': str( substation_name + '/' + microgrid_name + '/cleared_quantity_DA'),
-                                           'type': str('genmessage')
+                                           'type': 'genmessage'
                                            })
 
             ########################################################################################################
             ################### Adding a  DSO-MG  PUB/SUB depenedency for HELICS Bug ###############################
             ########################################################################################################
-            config_Sub['publications'].append({'global': bool(True),
+            config_Sub['publications'].append({'global': True,
                                               'key': str(substation_name + '/' + microgrid_name + '/Market_status'),
-                                              'type': str('string')
+                                              'type': 'string'
                                               })
 
-            config_MG['subscriptions'].append({'required': bool(True),
-                                               'info': str('Market_status'),
+            config_MG['subscriptions'].append({'required': True,
+                                               'info': 'Market_status',
                                                'key': str(substation_name + '/' + microgrid_name + '/Market_status'),
-                                               'type': str('string')
+                                               'type': 'string'
                                                })
             ########################################################################################################
 
@@ -815,38 +811,38 @@ def process_glm_with_microgrids(gldfileroot, substationfileroot, weatherfileroot
             for mg_key in case_config['SimulationConfig']['dso'][dso_key]['microgrids']:
                 mg_name = case_config['SimulationConfig']['dso'][dso_key]['microgrids'][mg_key]['name']
                 if mg_name != microgrid_name:
-                    config_MG['endpoints'].append({'global': bool(True),
-                                                   'info': str('cleared_price_RT'),
+                    config_MG['endpoints'].append({'global': True,
+                                                   'info': 'cleared_price_RT',
                                                    'name': str(microgrid_name + '/' + mg_name + '/cleared_price_RT'),
-                                                   'type': str('genmessage')
+                                                   'type': 'genmessage'
                                                    })
-                    config_MG['endpoints'].append({'global': bool(True),
-                                                   'info': str('cleared_quantity_RT'),
+                    config_MG['endpoints'].append({'global': True,
+                                                   'info': 'cleared_quantity_RT',
                                                    'name': str(microgrid_name + '/' + mg_name + '/cleared_quantity_RT'),
-                                                   'type': str('genmessage')
+                                                   'type': 'genmessage'
                                                    })
-                    config_MG['endpoints'].append({'global': bool(True),
-                                                   'info': str('cleared_price_DA'),
+                    config_MG['endpoints'].append({'global': True,
+                                                   'info': 'cleared_price_DA',
                                                    'name': str(microgrid_name + '/' + mg_name + '/cleared_price_DA'),
-                                                   'type': str('genmessage')
+                                                   'type': 'genmessage'
                                                    })
-                    config_MG['endpoints'].append({'global': bool(True),
-                                                   'info': str('cleared_quantity_DA'),
+                    config_MG['endpoints'].append({'global': True,
+                                                   'info': 'cleared_quantity_DA',
                                                    'name': str(microgrid_name + '/' + mg_name + '/cleared_quantity_DA'),
-                                                   'type': str('genmessage')
+                                                   'type': 'genmessage'
                                                    })
                     ################################################################################################
                     ################### Adding a  MG-MG  PUB/SUB depenedency for HELICS Bug ########################
                     ################################################################################################
-                    config_MG['publications'].append({'global': bool(True),
+                    config_MG['publications'].append({'global': True,
                                                                'key': str(microgrid_name + '/' + mg_name + '/Market_status'),
-                                                               'type': str('string')
+                                                               'type': 'string'
                                                                })
 
-                    config_MG['subscriptions'].append({'required': bool(True),
-                                                       'info': str('Market_status'),
+                    config_MG['subscriptions'].append({'required': True,
+                                                       'info': 'Market_status',
                                                        'key': str(mg_name + '/' + microgrid_name + '/Market_status'),
-                                                       'type': str('string')
+                                                       'type': 'string'
                                                        })
                     ################################################################################################
 
@@ -855,73 +851,73 @@ def process_glm_with_microgrids(gldfileroot, substationfileroot, weatherfileroot
                 dg_name = case_config['SimulationConfig']['dso'][dso_key]['generators'][dg_key]['name']
 
                 ## MG to DGs
-                config_MG['endpoints'].append({'global': bool(True),
-                                               'info': str('cleared_price_RT'),
+                config_MG['endpoints'].append({'global': True,
+                                               'info': 'cleared_price_RT',
                                                'name': str(microgrid_name + '/' + dg_name + '/cleared_price_RT'),
-                                               'type': str('genmessage')
+                                               'type': 'genmessage'
                                                })
-                config_MG['endpoints'].append({'global': bool(True),
-                                               'info': str('cleared_quantity_RT'),
+                config_MG['endpoints'].append({'global': True,
+                                               'info': 'cleared_quantity_RT',
                                                'name': str(microgrid_name + '/' + dg_name + '/cleared_quantity_RT'),
-                                               'type': str('genmessage')
+                                               'type': 'genmessage'
                                                })
-                config_MG['endpoints'].append({'global': bool(True),
-                                               'info': str('cleared_price_DA'),
+                config_MG['endpoints'].append({'global': True,
+                                               'info': 'cleared_price_DA',
                                                'name': str(microgrid_name + '/' + dg_name + '/cleared_price_DA'),
-                                               'type': str('genmessage')
+                                               'type': 'genmessage'
                                                })
-                config_MG['endpoints'].append({'global': bool(True),
-                                               'info': str('cleared_quantity_DA'),
+                config_MG['endpoints'].append({'global': True,
+                                               'info': 'cleared_quantity_DA',
                                                'name': str(microgrid_name + '/' + dg_name + '/cleared_quantity_DA'),
-                                               'type': str('genmessage')
+                                               'type': 'genmessage'
                                                })
 
                 ## Dgs to MGs
                 ####################################################################################################
                 ###################### Adding a  MG-DG  PUB/SUB depenedency for HELICS Bug #########################
                 ####################################################################################################
-                config_MG['publications'].append({'global': bool(True),
+                config_MG['publications'].append({'global': True,
                                                   'key': str(microgrid_name + '/' + dg_name + '/Market_status'),
-                                                  'type': str('string')
+                                                  'type': 'string'
                                                    })
 
-                config_DG[dg_name]['subscriptions'].append({'required': bool(True),
-                                                            'info': str('Market_status'),
+                config_DG[dg_name]['subscriptions'].append({'required': True,
+                                                            'info': 'Market_status',
                                                             'key': str(microgrid_name  + '/' + dg_name + '/Market_status'),
-                                                            'type': str('string')
+                                                            'type': 'string'
                                                             })
                 ###################### Adding a  DG-MG  PUB/SUB depenedency for HELICS Bug #########################
-                config_DG[dg_name]['publications'].append({'global': bool(True),
+                config_DG[dg_name]['publications'].append({'global': True,
                                                   'key': str(dg_name + '/' + microgrid_name + '/Market_status'),
-                                                  'type': str('string')
+                                                  'type': 'string'
                                                   })
 
-                config_MG['subscriptions'].append({'required': bool(True),
-                                                            'info': str('Market_status'),
+                config_MG['subscriptions'].append({'required': True,
+                                                            'info': 'Market_status',
                                                             'key': str(dg_name + '/' + microgrid_name + '/Market_status'),
-                                                            'type': str('string')
+                                                            'type': 'string'
                                                             })
                 ####################################################################################################
 
-                config_DG[dg_name]['endpoints'].append({'global': bool(True),
-                                                'info': str('cleared_price_RT'),
+                config_DG[dg_name]['endpoints'].append({'global': True,
+                                                'info': 'cleared_price_RT',
                                                 'name': str(dg_name + '/' + microgrid_name + '/cleared_price_RT'),
-                                                'type': str('genmessage')
+                                                'type': 'genmessage'
                                                 })
-                config_DG[dg_name]['endpoints'].append({'global': bool(True),
-                                                'info': str('cleared_quantity_RT'),
+                config_DG[dg_name]['endpoints'].append({'global': True,
+                                                'info': 'cleared_quantity_RT',
                                                 'name': str(dg_name + '/' + microgrid_name + '/cleared_quantity_RT'),
-                                                'type': str('genmessage')
+                                                'type': 'genmessage'
                                                 })
-                config_DG[dg_name]['endpoints'].append({'global': bool(True),
-                                                'info': str('cleared_price_DA'),
+                config_DG[dg_name]['endpoints'].append({'global': True,
+                                                'info': 'cleared_price_DA',
                                                 'name': str(dg_name + '/' + microgrid_name + '/cleared_price_DA'),
-                                                'type': str('genmessage')
+                                                'type': 'genmessage'
                                                 })
-                config_DG[dg_name]['endpoints'].append({'global': bool(True),
-                                                'info': str('cleared_quantity_DA'),
+                config_DG[dg_name]['endpoints'].append({'global': True,
+                                                'info': 'cleared_quantity_DA',
                                                 'name': str(dg_name + '/' + microgrid_name + '/cleared_quantity_DA'),
-                                                'type': str('genmessage')
+                                                'type': 'genmessage'
                                                 })
 
 
@@ -1001,131 +997,131 @@ def process_glm_with_microgrids(gldfileroot, substationfileroot, weatherfileroot
             house_name = val['houseName']
             meter_name = val['meterName']
 
-            config_MG['subscriptions'].append({'required': bool(True),
+            config_MG['subscriptions'].append({'required': True,
                                             'info': str(key + '/measured_voltage'),
                                             'key': str(gld_sim_name + '/' + meter_name + '/measured_voltage_1'),
-                                            'type': str('string'),
+                                            'type': 'string',
                                             'default': str(120)
                                             })
-            config_MG['subscriptions'].append({'required': bool(True),
+            config_MG['subscriptions'].append({'required': True,
                                             'info': str(key + '/air_temperature'),
                                             'key': str(gld_sim_name + '/' + house_name + '/air_temperature'),
-                                            'type': str('string'),
+                                            'type': 'string',
                                             'default': str(80)
                                             })
-            config_MG['subscriptions'].append({'required': bool(True),
+            config_MG['subscriptions'].append({'required': True,
                                             'info': str(key + '/hvac_load'),
                                             'key': str(gld_sim_name + '/' + house_name + '/hvac_load'),
-                                            'type': str('string'),
+                                            'type': 'string',
                                             'default': str(0)
                                             })
-            config_MG['subscriptions'].append({'required': bool(True),
+            config_MG['subscriptions'].append({'required': True,
                                             'info': str(key + '/total_load'),
                                             'key': str(gld_sim_name + '/' + house_name + '/total_load'),
-                                            'type': str('string'),
+                                            'type': 'string',
                                             'default': str(0)
                                             })
-            config_MG['subscriptions'].append({'required': bool(True),
+            config_MG['subscriptions'].append({'required': True,
                                             'info': str(key + '/power_state'),
                                             'key': str(gld_sim_name + '/' + house_name + '/power_state'),
-                                            'type': str('string'),
+                                            'type': 'string',
                                             'default': str(0)
                                             })
         for key, val in water_heater_agents.items():
             wh_name = val['waterheaterName']
-            config_MG['subscriptions'].append({'required': bool(True),
+            config_MG['subscriptions'].append({'required': True,
                                         'info': str(key + '/lower_tank_temperature'),
                                         'key': str(gld_sim_name + '/' + wh_name + '/lower_tank_temperature'),
-                                        'type': str('string'),
+                                        'type': 'string',
                                         'default': str(80)
                                         })
-            config_MG['subscriptions'].append({'required': bool(True),
+            config_MG['subscriptions'].append({'required': True,
                                         'info': str(key + '/upper_tank_temperature'),
                                         'key': str(gld_sim_name + '/' + wh_name + '/upper_tank_temperature'),
-                                        'type': str('string'),
+                                        'type': 'string',
                                         'default': str(120)
                                         })
-            config_MG['subscriptions'].append({'required': bool(True),
+            config_MG['subscriptions'].append({'required': True,
                                         'info': str(key + '/lower_heating_element_state'),
                                         'key': str(gld_sim_name + '/' + wh_name + '/lower_heating_element_state'),
-                                        'type': str('string'),
+                                        'type': 'string',
                                         'default': str(0)
                                         })
-            config_MG['subscriptions'].append({'required': bool(True),
+            config_MG['subscriptions'].append({'required': True,
                                         'info': str(key + '/upper_heating_element_state'),
                                         'key': str(gld_sim_name + '/' + wh_name + '/upper_heating_element_state'),
-                                        'type': str('string'),
+                                        'type': 'string',
                                         'default': str(0)
                                         })
-            config_MG['subscriptions'].append({'required': bool(True),
+            config_MG['subscriptions'].append({'required': True,
                                         'info': str(key + '/heating_element_capacity'),
                                         'key': str(gld_sim_name + '/' + wh_name + '/heating_element_capacity'),
-                                        'type': str('string'),
+                                        'type': 'string',
                                         'default': str(0)
                                         })
-            config_MG['subscriptions'].append({'required': bool(True),
+            config_MG['subscriptions'].append({'required': True,
                                            'info': str(key + '/water_demand'),
                                            'key': str(gld_sim_name + '/' + wh_name + '/water_demand'),
-                                           'type': str('string'),
+                                           'type': 'string',
                                            'default': str(0)
                                            })
         for key, val in battery_agents.items():
             battery_name = val['batteryName']
-            config_MG['subscriptions'].append({'required': bool(True),
+            config_MG['subscriptions'].append({'required': True,
                                            'info': str(key + '/state_of_charge'),
                                            'key': str(gld_sim_name + '/' + battery_name + '/state_of_charge'),
-                                           'type': str('string'),
+                                           'type': 'string',
                                            'default': str(0.5)
                                            })
         # these messages are for weather agent used in DSOT agents
         if feedercnt == 1:
             weather_topic = gd['climate']['name']
-            config_MG['subscriptions'].append({'required': bool(True),
+            config_MG['subscriptions'].append({'required': True,
                                            'info': str(weather_topic + '#Temperature'),
                                            'key': str(weather_topic + '/' + 'temperature'),
-                                           'type': str('string'),
+                                           'type': 'string',
                                            'default': str(70)
                                            })
-            config_MG['subscriptions'].append({'required': bool(True),
+            config_MG['subscriptions'].append({'required': True,
                                            'info': str(weather_topic + '#TempForecast'),
                                            'key': str(weather_topic + '/' + 'temperature' + '/forecast'),
-                                           'type': str('string'),
+                                           'type': 'string',
                                            'default': str(70)
                                            })
-            config_MG['subscriptions'].append({'required': bool(True),
+            config_MG['subscriptions'].append({'required': True,
                                            'info': str(weather_topic + '#Humidity'),
                                            'key': str(weather_topic + '/' + 'humidity'),
-                                           'type': str('string'),
+                                           'type': 'string',
                                            'default': str(0.7)
                                            })
-            config_MG['subscriptions'].append({'required': bool(True),
+            config_MG['subscriptions'].append({'required': True,
                                            'info': str(weather_topic + '#HumidityForecast'),
                                            'key': str(weather_topic + '/' + 'humidity' + '/forecast'),
-                                           'type': str('string'),
+                                           'type': 'string',
                                            'default': str(0.7)
                                            })
-            config_MG['subscriptions'].append({'required': bool(True),
+            config_MG['subscriptions'].append({'required': True,
                                            'info': str(weather_topic + '#SolarDirect'),
                                            'key': str(weather_topic + '/' + 'solar_direct'),
-                                           'type': str('string'),
+                                           'type': 'string',
                                            'default': str(30.0)
                                            })
-            config_MG['subscriptions'].append({'required': bool(True),
+            config_MG['subscriptions'].append({'required': True,
                                            'info': str(weather_topic + '#SolarDirectForecast'),
                                            'key': str(weather_topic + '/' + 'solar_direct' + '/forecast'),
-                                           'type': str('string'),
+                                           'type': 'string',
                                            'default': str(30.0)
                                            })
-            config_MG['subscriptions'].append({'required': bool(True),
+            config_MG['subscriptions'].append({'required': True,
                                            'info': str(weather_topic + '#SolarDiffuse'),
                                            'key': str(weather_topic + '/' + 'solar_diffuse'),
-                                           'type': str('string'),
+                                           'type': 'string',
                                            'default': str(30.0)
                                            })
-            config_MG['subscriptions'].append({'required': bool(True),
+            config_MG['subscriptions'].append({'required': True,
                                            'info': str(weather_topic + '#SolarDiffuseForecast'),
                                            'key': str(weather_topic + '/' + 'solar_diffuse' + '/forecast'),
-                                           'type': str('string'),
+                                           'type': 'string',
                                            'default': str(30.0)
                                            })
 
@@ -1135,172 +1131,172 @@ def process_glm_with_microgrids(gldfileroot, substationfileroot, weatherfileroot
             meter_name = val['meterName']
             #substation_sim_key = substation_name + '/' + key
             substation_sim_key = microgrid_name + '/' + key
-            config_gld['publications'].append({'global': bool(True),
+            config_gld['publications'].append({'global': True,
                                                'key': str(gld_sim_name + '/'+ house_name + '/air_temperature'),
-                                               'type': str('double'),
+                                               'type': 'double',
                                                'info': str('{\"object\" : \"' + house_name + '\",' +
                                                            '\"property\" : \"' + 'air_temperature' + '\"}')
                                                })
-            config_gld['publications'].append({'global': bool(True),
+            config_gld['publications'].append({'global': True,
                                                'key': str(gld_sim_name + '/'+ house_name + '/power_state'),
-                                               'type': str('string'),
+                                               'type': 'string',
                                                'info': str('{\"object\" : \"' + house_name + '\",' +
                                                            '\"property\" : \"' + 'power_state' + '\"}')
                                                })
-            config_gld['publications'].append({'global': bool(True),
+            config_gld['publications'].append({'global': True,
                                                'key': str(gld_sim_name + '/'+ house_name + '/hvac_load'),
-                                               'type': str('double'),
+                                               'type': 'double',
                                                'info': str('{\"object\" : \"' + house_name + '\",' +
                                                            '\"property\" : \"' + 'hvac_load' + '\"}')
                                                })
-            config_gld['publications'].append({'global': bool(True),
+            config_gld['publications'].append({'global': True,
                                                'key': str(gld_sim_name + '/'+ house_name + '/total_load'),
-                                               'type': str('double'),
+                                               'type': 'double',
                                                'info': str('{\"object\" : \"' + house_name + '\",' +
                                                            '\"property\" : \"' + 'total_load' + '\"}')
                                                })
             if val['houseClass'] in comm_bldg_list:
-                config_gld['publications'].append({'global': bool(True),
+                config_gld['publications'].append({'global': True,
                                                    'key': str(gld_sim_name + '/'+ meter_name + '/measured_voltage_1'),
-                                                   'type': str('complex'),
+                                                   'type': 'complex',
                                                    'info': str('{\"object\" : \"' + meter_name + '\",' +
                                                                '\"property\" : \"' + 'measured_voltage_A' + '\"}')
                                                    })
             else:
-                config_gld['publications'].append({'global': bool(True),
+                config_gld['publications'].append({'global': True,
                                                    'key': str(gld_sim_name + '/'+ meter_name + '/measured_voltage_1'),
-                                                   'type': str('complex'),
+                                                   'type': 'complex',
                                                    'info': str('{\"object\" : \"' + meter_name + '\",' +
                                                                '\"property\" : \"' + 'measured_voltage_1' + '\"}')
                                                    })
 
-            config_gld['subscriptions'].append({'required': bool(True),
+            config_gld['subscriptions'].append({'required': True,
                                                'key': str(substation_sim_key + '/cooling_setpoint'),
-                                               'type': str('double'),
+                                               'type': 'double',
                                                'info': str('{\"object\" : \"' + house_name + '\",' +
                                                            '\"property\" : \"' + 'cooling_setpoint' + '\"}')
                                                })
-            config_gld['subscriptions'].append({'required': bool(True),
+            config_gld['subscriptions'].append({'required': True,
                                                'key': str(substation_sim_key + '/heating_setpoint'),
-                                               'type': str('double'),
+                                               'type': 'double',
                                                'info': str('{\"object\" : \"' + house_name + '\",' +
                                                            '\"property\" : \"' + 'heating_setpoint' + '\"}')
                                                })
-            config_gld['subscriptions'].append({'required': bool(True),
+            config_gld['subscriptions'].append({'required': True,
                                                'key': str(substation_sim_key + '/thermostat_deadband'),
-                                               'type': str('double'),
+                                               'type': 'double',
                                                'info': str('{\"object\" : \"' + house_name + '\",' +
                                                            '\"property\" : \"' + 'thermostat_deadband' + '\"}')
                                                })
-            config_gld['subscriptions'].append({'required': bool(True),
+            config_gld['subscriptions'].append({'required': True,
                                                'key': str(substation_sim_key + '/bill_mode'),
-                                               'type': str('string'),
+                                               'type': 'string',
                                                'info': str('{\"object\" : \"' + meter_name + '\",' +
                                                            '\"property\" : \"' + 'bill_mode' + '\"}')
                                                })
-            config_gld['subscriptions'].append({'required': bool(True),
+            config_gld['subscriptions'].append({'required': True,
                                                'key': str(substation_sim_key + '/price'),
-                                               'type': str('double'),
+                                               'type': 'double',
                                                'info': str('{\"object\" : \"' + meter_name + '\",' +
                                                            '\"property\" : \"' + 'price' + '\"}')
                                                })
-            config_gld['subscriptions'].append({'required': bool(True),
+            config_gld['subscriptions'].append({'required': True,
                                                'key': str(substation_sim_key + '/monthly_fee'),
-                                               'type': str('double'),
+                                               'type': 'double',
                                                'info': str('{\"object\" : \"' + meter_name + '\",' +
                                                            '\"property\" : \"' + 'monthly_fee' + '\"}')
                                                })
 
             #############    Adding those publications to the Substation Script ##################
 
-            config_MG['publications'].append({'global': bool(True),
+            config_MG['publications'].append({'global': True,
                                                'key': str(substation_sim_key + '/cooling_setpoint'),
-                                               'type': str('double')
+                                               'type': 'double'
                                                })
-            config_MG['publications'].append({'global': bool(True),
+            config_MG['publications'].append({'global': True,
                                                'key': str(substation_sim_key + '/heating_setpoint'),
-                                               'type': str('double')
+                                               'type': 'double'
                                                })
-            config_MG['publications'].append({'global': bool(True),
+            config_MG['publications'].append({'global': True,
                                                'key': str(substation_sim_key + '/thermostat_deadband'),
-                                               'type': str('double')
+                                               'type': 'double'
                                                })
-            config_MG['publications'].append({'global': bool(True),
+            config_MG['publications'].append({'global': True,
                                                'key': str(substation_sim_key + '/bill_mode'),
-                                               'type': str('string')
+                                               'type': 'string'
                                                })
-            config_MG['publications'].append({'global': bool(True),
+            config_MG['publications'].append({'global': True,
                                                'key': str(substation_sim_key + '/price'),
-                                               'type': str('double')
+                                               'type': 'double'
                                                })
-            config_MG['publications'].append({'global': bool(True),
+            config_MG['publications'].append({'global': True,
                                                'key': str(substation_sim_key + '/monthly_fee'),
-                                               'type': str('double')
+                                               'type': 'double'
                                                })
         for key, val in water_heater_agents.items():
             wh_name = key
             meter_name = val['meterName']
             #substation_sim_key = substation_name + '/' + key
             substation_sim_key = microgrid_name + '/' + key
-            config_gld['publications'].append({'global': bool(True),
+            config_gld['publications'].append({'global': True,
                                                'key': str(gld_sim_name + '/'+ wh_name + '/lower_tank_temperature'),
-                                               'type': str('double'),
+                                               'type': 'double',
                                                'info': str('{\"object\" : \"' + wh_name + '\",' +
                                                            '\"property\" : \"' + 'lower_tank_temperature' + '\"}')
                                                })
-            config_gld['publications'].append({'global': bool(True),
+            config_gld['publications'].append({'global': True,
                                                'key': str(gld_sim_name + '/'+ wh_name + '/upper_tank_temperature'),
-                                               'type': str('double'),
+                                               'type': 'double',
                                                'info': str('{\"object\" : \"' + wh_name + '\",' +
                                                            '\"property\" : \"' + 'upper_tank_temperature' + '\"}')
                                                })
-            config_gld['publications'].append({'global': bool(True),
+            config_gld['publications'].append({'global': True,
                                                'key': str(gld_sim_name + '/'+ wh_name + '/lower_heating_element_state'),
-                                               'type': str('string'),
+                                               'type': 'string',
                                                'info': str('{\"object\" : \"' + wh_name + '\",' +
                                                            '\"property\" : \"' + 'lower_heating_element_state' + '\"}')
                                                })
-            config_gld['publications'].append({'global': bool(True),
+            config_gld['publications'].append({'global': True,
                                                'key': str(gld_sim_name + '/'+ wh_name + '/upper_heating_element_state'),
-                                               'type': str('string'),
+                                               'type': 'string',
                                                'info': str('{\"object\" : \"' + wh_name + '\",' +
                                                            '\"property\" : \"' + 'upper_heating_element_state' + '\"}')
                                                })
-            config_gld['publications'].append({'global': bool(True),
+            config_gld['publications'].append({'global': True,
                                                'key': str(gld_sim_name + '/'+ wh_name + '/heating_element_capacity'),
-                                               'type': str('double'),
+                                               'type': 'double',
                                                'info': str('{\"object\" : \"' + wh_name + '\",' +
                                                            '\"property\" : \"' + 'heating_element_capacity' + '\"}')
                                                })
-            config_gld['publications'].append({'global': bool(True),
+            config_gld['publications'].append({'global': True,
                                                'key': str(gld_sim_name + '/'+ wh_name + '/water_demand'),
-                                               'type': str('double'),
+                                               'type': 'double',
                                                'info': str('{\"object\" : \"' + wh_name + '\",' +
                                                            '\"property\" : \"' + 'water_demand' + '\"}')
                                                })
 
-            config_gld['subscriptions'].append({'required': bool(True),
+            config_gld['subscriptions'].append({'required': True,
                                                'key': str(substation_sim_key + '/lower_tank_setpoint'),
-                                               'type': str('double'),
+                                               'type': 'double',
                                                'info': str('{\"object\" : \"' + wh_name + '\",' +
                                                            '\"property\" : \"' + 'lower_tank_setpoint' + '\"}')
                                                })
-            config_gld['subscriptions'].append({'required': bool(True),
+            config_gld['subscriptions'].append({'required': True,
                                                'key': str(substation_sim_key + '/upper_tank_setpoint'),
-                                               'type': str('double'),
+                                               'type': 'double',
                                                'info': str('{\"object\" : \"' + wh_name + '\",' +
                                                            '\"property\" : \"' + 'upper_tank_setpoint' + '\"}')
                                                })
 
             #############    Adding those publications to the Substation Script ##################
 
-            config_MG['publications'].append({'global': bool(True),
+            config_MG['publications'].append({'global': True,
                                             'key': str(substation_sim_key + '/lower_tank_setpoint'),
-                                            'type': str('double')
+                                            'type': 'double'
                                             })
-            config_MG['publications'].append({'global': bool(True),
+            config_MG['publications'].append({'global': True,
                                             'key': str(substation_sim_key + '/upper_tank_setpoint'),
-                                            'type': str('double')
+                                            'type': 'double'
                                             })
 
         for key, val in battery_agents.items():
@@ -1309,47 +1305,47 @@ def process_glm_with_microgrids(gldfileroot, substationfileroot, weatherfileroot
             meter_name = val['meterName']
             #substation_sim_key = substation_name + '/' + key
             substation_sim_key = microgrid_name + '/' + key
-            config_gld['publications'].append({'global': bool(True),
+            config_gld['publications'].append({'global': True,
                                                'key': str(gld_sim_name + '/'+ inverter_name + '/state_of_charge'),
-                                               'type': str('double'),
+                                               'type': 'double',
                                                'info': str('{\"object\" : \"' + battery_name + '\",' +
                                                            '\"property\" : \"' + 'state_of_charge' + '\"}')
                                                })
 
-            config_gld['subscriptions'].append({'required': bool(True),
+            config_gld['subscriptions'].append({'required': True,
                                                'key': str(substation_sim_key + '/p_out'),
-                                               'type': str('double'),
+                                               'type': 'double',
                                                'info': str('{\"object\" : \"' + inverter_name + '\",' +
                                                            '\"property\" : \"' + 'P_Out' + '\"}')
                                                })
-            config_gld['subscriptions'].append({'required': bool(True),
+            config_gld['subscriptions'].append({'required': True,
                                                 'key': str(substation_sim_key + '/q_out'),
-                                                'type': str('double'),
+                                                'type': 'double',
                                                 'info': str('{\"object\" : \"' + inverter_name + '\",' +
                                                             '\"property\" : \"' + 'Q_Out' + '\"}')
                                                 })
 
             #############    Adding those publications to the Substation Script ##################
 
-            config_MG['publications'].append({'global': bool(True),
+            config_MG['publications'].append({'global': True,
                                                'key': str(substation_sim_key + '/p_out'),
-                                               'type': str('double')
+                                               'type': 'double'
                                                })
-            config_MG['publications'].append({'global': bool(True),
+            config_MG['publications'].append({'global': True,
                                                 'key': str(substation_sim_key + '/q_out'),
-                                                'type': str('double')
+                                                'type': 'double'
                                                 })
         #### Adding the Subscription to get the Meter Load ####
-        config_MG['subscriptions'].append({'required': bool(True),
-                                           'info': str('MG_load'),
+        config_MG['subscriptions'].append({'required': True,
+                                           'info': 'MG_load',
                                            'key': str(gld_sim_name + '/' + microgrid_key +'_load'),
-                                           'type': str('string'),
+                                           'type': 'string',
                                            'default': str(0)
                                            })
 
-        config_gld['publications'].append({'global': bool(True),
+        config_gld['publications'].append({'global': True,
                                            'key': str(gld_sim_name + '/' + microgrid_key +'_load'),
-                                           'type': str('complex'),
+                                           'type': 'complex',
                                            'info': str('{\"object\" : \"' + microgrid_info['parent'] + '\",' +
                                                        '\"property\" : \"' + 'measured_power' + '\"}')
                                            })
@@ -1375,18 +1371,18 @@ def process_glm_with_microgrids(gldfileroot, substationfileroot, weatherfileroot
 
     # write GridLAB-D HELICS configuration
     # Required Once by GridLAB-D
-    config_gld['publications'].append({'global': bool(True),
+    config_gld['publications'].append({'global': True,
                                        'key': str(gld_sim_name + '/distribution_load'),
-                                       'type': str('complex'),
+                                       'type': 'complex',
                                        'info': str('{\"object\" : \"' + 'network_node' + '\",' +
                                                    '\"property\" : \"' + 'distribution_load' + '\"}')
                                        })
     if feedercnt == 1:
         if 'climate' in gld:
             for wTopic in ['temperature', 'humidity', 'solar_direct', 'solar_diffuse', 'pressure', 'wind_speed']:
-                config_gld['subscriptions'].append({'required': bool(True),
+                config_gld['subscriptions'].append({'required': True,
                                                     'key': str(gld['climate']['name'] + '/' + wTopic),
-                                                    'type': str('double'),
+                                                    'type': 'double',
                                                     'info': str('{\"object\" : \"' + gld['climate']['name'] + '\",' +
                                                                 '\"property\" : \"' + wTopic + '\"}')
                                                     })
@@ -1396,108 +1392,108 @@ def process_glm_with_microgrids(gldfileroot, substationfileroot, weatherfileroot
         for gen in case_config['SimulationConfig']['dso'][dso_key]['generators']:
             dg_name = case_config['SimulationConfig']['dso'][dso_key]['generators'][gen]['name']
             for wTopic in ['constant_power_A', 'constant_power_B', 'constant_power_C']:
-                config_gld['subscriptions'].append({'required': bool(True),
+                config_gld['subscriptions'].append({'required': True,
                                                 'key': str(case_config['SimulationConfig']['dso'][dso_key]['generators'][gen]['name'] + '/' + wTopic),
-                                                'type': str('complex'),
+                                                'type': 'complex',
                                                 'info': str('{\"object\" : \"' + case_config['SimulationConfig']['dso'][dso_key]['generators'][gen]['name'] + '\",' +
                                                             '\"property\" : \"' + wTopic + '\"}')
                                                 })
 
-                config_DG[dg_name]['publications'].append({'global': bool(True),
+                config_DG[dg_name]['publications'].append({'global': True,
                                                   'key': str(case_config['SimulationConfig']['dso'][dso_key]['generators'][gen]['name'] + '/' + wTopic),
-                                                  'type': str('complex')
+                                                  'type': 'complex'
                                                   })
 
 
             ## DGs to DSO
-            config_DG[dg_name]['endpoints'].append({'global': bool(True),
-                                               'info': str('cleared_price_RT'),
+            config_DG[dg_name]['endpoints'].append({'global': True,
+                                               'info': 'cleared_price_RT',
                                                'name': str(dg_name + '/' + substation_name + '/cleared_price_RT'),
-                                               'type': str('genmessage')
+                                               'type': 'genmessage'
                                                })
-            config_DG[dg_name]['endpoints'].append({'global': bool(True),
-                                               'info': str('cleared_quantity_RT'),
+            config_DG[dg_name]['endpoints'].append({'global': True,
+                                               'info': 'cleared_quantity_RT',
                                                'name': str(dg_name + '/' + substation_name + '/cleared_quantity_RT'),
-                                               'type': str('genmessage')
+                                               'type': 'genmessage'
                                                })
-            config_DG[dg_name]['endpoints'].append({'global': bool(True),
-                                               'info': str('cleared_price_DA'),
+            config_DG[dg_name]['endpoints'].append({'global': True,
+                                               'info': 'cleared_price_DA',
                                                'name': str(dg_name + '/' + substation_name + '/cleared_price_DA'),
-                                               'type': str('genmessage')
+                                               'type': 'genmessage'
                                                })
-            config_DG[dg_name]['endpoints'].append({'global': bool(True),
-                                               'info': str('cleared_quantity_DA'),
+            config_DG[dg_name]['endpoints'].append({'global': True,
+                                               'info': 'cleared_quantity_DA',
                                                'name': str(dg_name + '/' + substation_name + '/cleared_quantity_DA'),
-                                               'type': str('genmessage')
+                                               'type': 'genmessage'
                                                })
             #### DSO to DG dummy Publication #####
-            config_Sub['publications'].append({'global': bool(True),
+            config_Sub['publications'].append({'global': True,
                                               'key': str(substation_name + '/' + dg_name + '/Market_status'),
-                                              'type': str('string')
+                                              'type': 'string'
                                               })
-            config_DG[dg_name]['subscriptions'].append({'required': bool(True),
-                                                        'info': str('Market_status'),
+            config_DG[dg_name]['subscriptions'].append({'required': True,
+                                                        'info': 'Market_status',
                                                         'key': str(substation_name + '/' + dg_name + '/Market_status'),
-                                                        'type': str('string')
+                                                        'type': 'string'
                                                         })
 
             ## DSO to DGs
-            config_Sub['endpoints'].append({'global': bool(True),
-                                               'info': str('cleared_price_RT'),
+            config_Sub['endpoints'].append({'global': True,
+                                               'info': 'cleared_price_RT',
                                                'name': str(substation_name + '/' + dg_name + '/cleared_price_RT'),
-                                               'type': str('genmessage')
+                                               'type': 'genmessage'
                                                })
-            config_Sub['endpoints'].append({'global': bool(True),
-                                               'info': str('cleared_quantity_RT'),
+            config_Sub['endpoints'].append({'global': True,
+                                               'info': 'cleared_quantity_RT',
                                                'name': str(substation_name + '/' + dg_name + '/cleared_quantity_RT'),
-                                               'type': str('genmessage')
+                                               'type': 'genmessage'
                                                })
-            config_Sub['endpoints'].append({'global': bool(True),
-                                               'info': str('cleared_price_DA'),
+            config_Sub['endpoints'].append({'global': True,
+                                               'info': 'cleared_price_DA',
                                                'name': str(substation_name + '/' + dg_name + '/cleared_price_DA'),
-                                               'type': str('genmessage')
+                                               'type': 'genmessage'
                                                })
-            config_Sub['endpoints'].append({'global': bool(True),
-                                               'info': str('cleared_quantity_DA'),
+            config_Sub['endpoints'].append({'global': True,
+                                               'info': 'cleared_quantity_DA',
                                                'name': str(substation_name + '/' + dg_name + '/cleared_quantity_DA'),
-                                               'type': str('genmessage')
+                                               'type': 'genmessage'
                                                })
 
             ## DGs to other DGs
             for other_gen in case_config['SimulationConfig']['dso'][dso_key]['generators']:
                 other_dg_name = case_config['SimulationConfig']['dso'][dso_key]['generators'][other_gen]['name']
                 if dg_name != other_dg_name:
-                    config_DG[dg_name]['endpoints'].append({'global': bool(True),
-                                                       'info': str('cleared_price_RT'),
+                    config_DG[dg_name]['endpoints'].append({'global': True,
+                                                       'info': 'cleared_price_RT',
                                                        'name': str(dg_name + '/' + other_dg_name + '/cleared_price_RT'),
-                                                       'type': str('genmessage')
+                                                       'type': 'genmessage'
                                                        })
-                    config_DG[dg_name]['endpoints'].append({'global': bool(True),
-                                                       'info': str('cleared_quantity_RT'),
+                    config_DG[dg_name]['endpoints'].append({'global': True,
+                                                       'info': 'cleared_quantity_RT',
                                                        'name': str(dg_name + '/' + other_dg_name + '/cleared_quantity_RT'),
-                                                       'type': str('genmessage')
+                                                       'type': 'genmessage'
                                                        })
-                    config_DG[dg_name]['endpoints'].append({'global': bool(True),
-                                                       'info': str('cleared_price_DA'),
+                    config_DG[dg_name]['endpoints'].append({'global': True,
+                                                       'info': 'cleared_price_DA',
                                                        'name': str(dg_name + '/' + other_dg_name + '/cleared_price_DA'),
-                                                       'type': str('genmessage')
+                                                       'type': 'genmessage'
                                                        })
-                    config_DG[dg_name]['endpoints'].append({'global': bool(True),
-                                                       'info': str('cleared_quantity_DA'),
+                    config_DG[dg_name]['endpoints'].append({'global': True,
+                                                       'info': 'cleared_quantity_DA',
                                                        'name': str(dg_name + '/' + other_dg_name + '/cleared_quantity_DA'),
-                                                       'type': str('genmessage')
+                                                       'type': 'genmessage'
                                                        })
 
                     ####################################################################################################
                     ###################### Adding a  DG-DG  PUB/SUB depenedency for HELICS Bug #########################
                     ####################################################################################################
-                    config_DG[dg_name]['publications'].append({'global': bool(True),
+                    config_DG[dg_name]['publications'].append({'global': True,
                                                       'key': str(dg_name + '/' + other_dg_name + '/Market_status'),
-                                                      'type': str('string')
+                                                      'type': 'string'
                                                       })
-                    config_DG[dg_name]['subscriptions'].append({'global': bool(True),
+                    config_DG[dg_name]['subscriptions'].append({'global': True,
                                                       'key': str(other_dg_name + '/' + dg_name + '/Market_status'),
-                                                      'type': str('string')
+                                                      'type': 'string'
                                                       })
                     ####################################################################################################
 
@@ -1541,7 +1537,7 @@ def process_glm_with_microgrids(gldfileroot, substationfileroot, weatherfileroot
             print(json_file_DG, file=op_dg_helics)
             op_dg_helics.close()
 
-    except:
+    except Exception:
         print("Something went wrong while creating connections with DGs in GridLAB-D")
 
     json_file_GLD = json.dumps(config_gld, indent=4, separators=(',', ': '))

@@ -16,6 +16,7 @@ from os import path
 
 from ..api.helpers import gld_strict_name
 
+
 def merge_glm(target, sources, xfmva):
     """ Combines GridLAB-D input files into "target". The source files must already exist.
 
@@ -70,9 +71,9 @@ def merge_glm(target, sources, xfmva):
                             else:
                                 line = '  configure ' + path.splitext(path.basename(target))[0] + '.json;'
                         elif ' power_rating ' in line:
-                            line = '  power_rating {:.2f};'.format(xfmva * 1e3)
+                            line = f'  power_rating {xfmva * 1e3:.2f};'
                         elif ' base_power ' in line:
-                            line = '  base_power {:.2f};'.format(xfmva * 1e6)
+                            line = f'  base_power {xfmva * 1e6:.2f};'
                         elif ' to ' in line:
                             toks = line.split()
                             thisHeadNode = toks[1][:-1]
@@ -164,7 +165,7 @@ def merge_agent_dict(target, sources):
     for fdr in sources:
         lp = open(path.dirname(target) + '/' + fdr + '_agent_dict.json').read()
         cfg = json.loads(lp)
-        for key in cfg.keys():
+        for key in cfg:
             if key in ["StartTime", "EndTime", "LogLevel", "size", "solver",
                        "Metrics", "MetricsType", "MetricsInterval"]:
                 diction[key] = cfg[key]

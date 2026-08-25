@@ -32,8 +32,14 @@ from copy import deepcopy
 
 import numpy as np
 
-from ..dsot.helpers_dsot import Curve, get_intersect, MarketClearingType, resample_curve, resample_curve_for_price_only
 from ..api.schedule_client import DataClient
+from ..dsot.helpers_dsot import (
+    Curve,
+    MarketClearingType,
+    get_intersect,
+    resample_curve,
+    resample_curve_for_price_only,
+)
 
 
 class RetailMarket:
@@ -113,8 +119,8 @@ class RetailMarket:
         self.FeederPkDemandCapacity = self.Q_max
         self.curve_buyer_RT = None
         self.curve_seller_RT = None
-        self.curve_buyer_DA = dict()
-        self.curve_seller_DA = dict()
+        self.curve_buyer_DA = {}
+        self.curve_seller_DA = {}
         self.FeederCongPrice = 1e-7  # TODO: maybe initialize it for different feeders, with different values
 
         self.clear_type_RT = None
@@ -135,7 +141,7 @@ class RetailMarket:
         self.industrial_bid_da = []
         self.industrial_bid_rt = []
         self.industrial_load_elasticity = 5  # delP/delQ
-        self.site_quantity_DA = dict()
+        self.site_quantity_DA = {}
         # substation transformer lifetime cost parameters
         self.TOC_dict = {
             'OperatingPeriod': retail_dict['OperatingPeriod'],
@@ -189,8 +195,8 @@ class RetailMarket:
         self.cleared_price_DA = []
         self.cleared_quantity_DA = []
         self.congestion_surcharge_DA = []
-        self.curve_buyer_DA = dict()
-        self.curve_seller_DA = dict()
+        self.curve_buyer_DA = {}
+        self.curve_seller_DA = {}
         self.cleared_quantity_DA_unscaled = []
 
         for i in range(self.windowLength):
@@ -351,8 +357,7 @@ class RetailMarket:
                         clear_type = MarketClearingType.CONGESTED
                         # uncongested_price = cleared_price - (cleared_quantity - Q_max) * self.FeederCongPrice
                         uncongested_price = curve_seller.prices[0]
-                        if uncongested_price < 0:
-                            uncongested_price = 0
+                        uncongested_price = max(uncongested_price, 0)
                         congestion_surcharge = cleared_price - uncongested_price
                         if congestion_surcharge > self.price_cap:
                             congestion_surcharge = self.price_cap
@@ -407,8 +412,7 @@ class RetailMarket:
             if cleared_quantity > Q_max:
                 clear_type = MarketClearingType.CONGESTED
                 uncongested_price = cleared_price - (cleared_quantity - Q_max) * self.FeederCongPrice
-                if uncongested_price < 0:
-                    uncongested_price = 0
+                uncongested_price = max(uncongested_price, 0)
                 congestion_surcharge = cleared_price - uncongested_price
                 if congestion_surcharge > self.price_cap:
                     congestion_surcharge = self.price_cap
@@ -478,7 +482,7 @@ class RetailMarket:
 
         """
         #        log.info("running curve_aggregator_AMES_RT")
-        self.AMES_RT = list()
+        self.AMES_RT = []
         substation_curve = deepcopy(self.curve_preprocess(demand_curve_RT, Q_max))
         # print("RT [min, max] substation curve: [" + str(min(substation_curve.quantities)) + ", " +
         #       str(min(substation_curve.quantities)) + "]")
@@ -505,7 +509,7 @@ class RetailMarket:
             price_forecast (float): locally forecast price at the substation level
         """
         # log.info("running curve_aggregator_AMES_DA")
-        self.AMES_DA = list()
+        self.AMES_DA = []
         for idx in range(self.windowLength):
             substation_curve = deepcopy(self.curve_preprocess(demand_curve_DA[idx], Q_max))
             # since we plan to now not use the ./run.sh base, 
@@ -545,8 +549,7 @@ class RetailMarket:
         preprocessed_curve.quantities = deepcopy(substation_demand_curve.quantities)
         for i in range(self.num_samples):
             # Truncate the substation-level demand curve by maximum capacity of the substation
-            if preprocessed_curve.quantities[i] >= Q_max:
-                preprocessed_curve.quantities[i] = Q_max
+            preprocessed_curve.quantities[i] = min(Q_max, preprocessed_curve.quantities[i])
             # we are much lower than what TSO is expecting from us,
             # with this low quantity AMES won't clear market as there can be high wind values
             # elif (Q_max - preprocessed_curve.quantities[i]  > 1000):
@@ -629,7 +632,7 @@ class RetailMarket:
 
         resp_deg = 2
         # below conversion is because TSO is written in terms of MWs and the DSO is in kWs
-        bid = list()
+        bid = []
         bid.append(unresp_mw)
         bid.append(Q_sc_max)  # maximum flexible load
         bid.append(zsc[0])  # c2 ----> f in the manual, B_j,k(P)=d_j(k)+e_j(k)*P-f_j(k)*P**2
@@ -1011,11 +1014,10 @@ def test():
     market.curve_aggregator_AMES_DA(market.curve_buyer_DA, market.Q_max, market.cleared_quantity_DA, price_forecast)
 
     hr = 0
-
     unresp_mw = np.amin(market.curve_buyer_DA[hr].quantities)
     resp_max_mw = np.amax(market.curve_buyer_DA[hr].quantities)
 
-    #    #with bids
+    # with bids
     old_Q = market.curve_buyer_DA[hr].quantities
     old_P = market.curve_buyer_DA[hr].prices
     #    old_P = old_P/1.25
@@ -1029,16 +1031,15 @@ def test():
     Benefit_range = Q_range * P_range
 
     #    print("For the plot to be accurate a line must be uncommented in convert_2_AMES_quadratic_BID function")
-    y = list()
-    y2 = list()
-
+    y = []
     for i in Q_range:
         y.append(market.AMES_DA[hr][2] * (i ** 2) + market.AMES_DA[hr][3] * i + market.AMES_DA[hr][4])
 
     # new_Q_range = np.linspace(market.AMES_DA[hr][0], market.AMES_DA[hr][1], 100)
+
+    # y2 = []
     # for i in new_Q_range:
     #     y2.append(market.AMES_DA[hr][2]*(i**2) + market.AMES_DA[hr][3]*i + market.AMES_DA[hr][4])
-    #
 
     fig, ax = plt.subplots(2, 1, figsize=(8, 8))
     #    ax[0].plot(Q_range, P_range, label='Aggregate demand curve',marker='x')
@@ -1055,7 +1056,6 @@ def test():
     ax[1].legend()
     plt.show()
 
-#    
 #    unresp_mw = np.amin(market.curve_buyer_DA[1].quantities)
 #    resp_max_mw = np.amax(market.curve_buyer_DA[1].quantities)
 #    #no bids

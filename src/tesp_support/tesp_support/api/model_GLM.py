@@ -4,20 +4,62 @@
 """GridLAB-D model I/O for TESP api
 """
 
-import pyjson5
 import os.path
 import re
 import sqlite3
+from itertools import pairwise
 
 import matplotlib.pyplot as plt
-from matplotlib.lines import Line2D
 import networkx as nx
+import pyjson5
+from matplotlib.lines import Line2D
 
-from .data import feeders_path
-from .data import glm_entities_path
+from .data import feeders_path, glm_entities_path
 from .entity import Entity
-from .parse_helpers import parse_kva
 from .helpers import gld_strict_name
+from .parse_helpers import parse_kva
+
+edge_classes = {
+    "switch": "red",
+    "fuse": "blue",
+    "recloser": "green",
+    "regulator": "yellow",
+    "transformer": "orange",
+    "overhead_line": "black",
+    "underground_line": "gray",
+    "triplex_line": "brown",
+    "parent": "violet",
+}
+
+node_classes = {
+    "substation": "black",
+    "node": "red",
+    "load": "blue",
+    "meter": "green",
+    "triplex_node": "yellow",
+    "triplex_meter": "orange",
+    "house": "brown",
+}
+
+# are these edge or node (sectionalizer, series_reactor, capacitor)
+
+set_declarations = [
+    "profiler",
+    "iteration_limit",
+    "randomseed",
+    "relax_naming_rules",
+    "minimum_timestep",
+    "suppress_repeat_messages",
+    "pauseatexit",
+    "double_format",
+    "complex_format",
+    "complex_output_format",
+    "deltamode_timestep",
+    "deltamode_maximumtime",
+    "deltamode_iteration_limit",
+    "deltamode_forced_always",
+]
+
 
 class O_Entity(Entity):
     def __init__(self, model, entity, config):
@@ -82,33 +124,6 @@ class GLMModel:
         #ifdef / #endif -> are black boxes
     """
 
-    edge_classes = {'switch': 'red',
-                    'fuse': 'blue',
-                    'recloser': 'green',
-                    'regulator': 'yellow',
-                    'transformer': 'orange',
-                    'overhead_line': 'black',
-                    'underground_line': 'gray',
-                    'triplex_line': 'brown',
-                    'parent': 'violet'}
-
-    node_classes = {'substation': 'black',
-                    'node': 'red',
-                    'load': 'blue',
-                    'meter': 'green',
-                    'triplex_node': 'yellow',
-                    'triplex_meter': 'orange',
-                    'house': 'brown'}
-
-    # are these edge or node (sectionalizer, series_reactor, capacitor)
-
-    set_declarations = ['profiler', 'iteration_limit', 'randomseed',
-                        'relax_naming_rules', 'minimum_timestep',
-                        'suppress_repeat_messages', 'pauseatexit',
-                        'double_format', 'complex_format', 'complex_output_format',
-                        'deltamode_timestep', 'deltamode_maximumtime',
-                        'deltamode_iteration_limit', 'deltamode_forced_always']
-
     def __init__(self):
         # with open(os.path.join(entities_path, 'glm_modules.json'), 'r', encoding='utf-8') as json_file:
         #     self.modules = pyjson5.load(json_file)
@@ -137,9 +152,9 @@ class GLMModel:
         self.set_lines = []
         self.define_lines = []
         self.include_lines = []
-        self.inside_comments = dict()
-        self.outside_comments = dict()
-        self.inline_comments = dict()
+        self.inside_comments = {}
+        self.outside_comments = {}
+        self.inline_comments = {}
         with open(glm_entities_path, 'r', encoding='utf-8') as json_file:
             self.classes = pyjson5.load(json_file)
             entity = Entity("clock", None)
@@ -181,13 +196,7 @@ class GLMModel:
             datatype = "TEXT"
         elif m_type == "bool":
             datatype = "BOOLEAN"
-        elif m_type == "timestamp":
-            datatype = "TEXT"
-        elif m_type == "complex":
-            datatype = "TEXT"
-        elif m_type == "complex_array":
-            datatype = "TEXT"
-        elif m_type == "double_array":
+        elif m_type == "timestamp" or m_type == "complex" or m_type == "complex_array" or m_type == "double_array":
             datatype = "TEXT"
         elif m_type in ["enduse", "loadshape", "object", "parent"]:
             datatype = "OBJECT"
@@ -208,7 +217,7 @@ class GLMModel:
         #   pwr: line, link, load, node, powerflow_object, switch, triplex_node
         #   res: residential_enduse
 
-        # unit with define unit or if "enumeration" or "set" use 'keywords' seperated by '|'
+        # unit with define unit or if "enumeration" or "set" use 'keywords' separated by '|'
         unit = ""
         if "unit" in attr:
             unit = attr["unit"]
@@ -335,7 +344,7 @@ class GLMModel:
             if len(keys) > 0:
                 diction += " {\n"
                 diction += self.get_InsideComments(name, 'name')
-                for item in i_module.instances[name].keys():
+                for item in i_module.instances[name]:
                     diction += self.get_InsideComments(name, item)
                     if i_module.instances[name][item] is None:
                         continue
@@ -364,7 +373,7 @@ class GLMModel:
         diction += "object " + i_object.entity + " {\n"
         diction += self.get_InsideComments(object_name, "name")
         diction += "  name " + object_name + ";\n"
-        for item in i_object.instances[object_name].keys():
+        for item in i_object.instances[object_name]:
             diction += self.get_InsideComments(object_name, item)
             if i_object.instances[object_name][item] is None:
                 continue
@@ -567,9 +576,7 @@ class GLMModel:
         if exclude is not None:
             if s in exclude:
                 return False
-        if s in self.edge_classes.keys():
-            return True
-        return False
+        return s in edge_classes
 
     def is_node_class(self, s:str) -> bool:
         """Node class is networkx terminology. In GridLAB-D, we will represent those nodes with
@@ -581,12 +588,10 @@ class GLMModel:
         Returns:
             bool: True if a node class, False otherwise
         """
-        if s in self.node_classes.keys():
-            return True
-        return False
+        return s in node_classes
 
     def add_class(self, class_name:str, value_type:str, value_name:str, static:bool, default):
-        if class_name not in self.module_entities.keys():
+        if class_name not in self.module_entities:
             # don't add class_name to self.module_types
             # this makes 'this' a class' in the module_entities list
             entity = Entity(class_name, None)
@@ -663,8 +668,8 @@ class GLMModel:
         params = {}
         # Collect comments
         comments = []
-        inside_comments = dict()
-        inline_comments = dict()
+        inside_comments = {}
+        inline_comments = {}
 
         # Set the clock to date module
         if mod in ["date"]:
@@ -754,8 +759,8 @@ class GLMModel:
         # Collect comments
         comments = []
         object_comments = []
-        inside_comments = dict()
-        inline_comments = dict()
+        inside_comments = {}
+        inline_comments = {}
         done = False
 
         pos = line.find("//")
@@ -1012,21 +1017,21 @@ class GLMModel:
 
         def plot_node_legend():
             def make_node_proxy(nm, mappable, **kwargs):
-                clr = self.node_classes[nm]
+                clr = node_classes[nm]
                 return Line2D([], [], color="white", marker="o", markerfacecolor=clr, **kwargs)
 
-            l_proxies = [make_node_proxy(nm, n1, lw=self.node_classes.__len__()) for nm in self.node_classes]
-            l_labels = ["{}".format(nm) for nm in self.node_classes]
+            l_proxies = [make_node_proxy(nm, n1, lw=node_classes.__len__()) for nm in node_classes]
+            l_labels = [f"{nm}" for nm in node_classes]
             legend1 = plt.legend(l_proxies, l_labels, loc="upper right", fontsize=8)
             plt.gca().add_artist(legend1)
 
         def plot_edge_legend():
             def make_edge_proxy(nm, mappable, **kwargs):
-                clr = self.edge_classes[nm]
+                clr = edge_classes[nm]
                 return Line2D([], [], color="white", marker="s", markerfacecolor=clr, **kwargs)
 
-            l_proxies = [make_edge_proxy(nm, e1, lw=self.edge_classes.__len__()) for nm in self.edge_classes]
-            l_labels = ["{}".format(nm) for nm in self.edge_classes]
+            l_proxies = [make_edge_proxy(nm, e1, lw=edge_classes.__len__()) for nm in self.edge_classes]
+            l_labels = [f"{nm}" for nm in edge_classes]
             legend1 = plt.legend(l_proxies, l_labels, loc="lower right", fontsize=8)
             plt.gca().add_artist(legend1)
 
@@ -1037,7 +1042,7 @@ class GLMModel:
         nlb = {}
         for u, v in G.nodes(data=True):
             try:
-                nc.append(self.node_classes[v['nclass']])
+                nc.append(node_classes[v['nclass']])
                 nlb[u] = u
             except Exception:
                 # various gray/grey
@@ -1049,7 +1054,7 @@ class GLMModel:
         ec = []
         elb = {}
         for u, v in G.edges():
-            ec.append(self.edge_classes[G[u][v]['eclass']])
+            ec.append(edge_classes[G[u][v]['eclass']])
             elb[u, v] = G[u][v]['ename']
 
         # Draw
@@ -1065,8 +1070,8 @@ class GLMModel:
 
         # Annotate and connect event handler
         annot = ax.annotate("", xy=(0, 0), xytext=(20, 20), textcoords="offset points",
-                            bbox=dict(boxstyle="round", fc="w"),
-                            arrowprops=dict(arrowstyle="->"))
+                            bbox={'boxstyle': "round", 'fc': "w"},
+                            arrowprops={'arrowstyle': "->"})
         annot.set_visible(False)
         idx_to_node_dict = {}
         for idx, node in enumerate(G.nodes):
@@ -1207,7 +1212,7 @@ class GLMModel:
                     nodes = nx.shortest_path(G, n1, swing_node)
                     nodes_to_delete.append(nodes[0])
                     class_to_delete.append(data['nclass'])
-                    edges = zip(nodes[0:], nodes[1:])
+                    edges = pairwise(nodes)
                     for u, v in edges:
                         eclass = G[u][v]['eclass']
                         if self.is_edge_class(eclass, exclude=['parent']):
