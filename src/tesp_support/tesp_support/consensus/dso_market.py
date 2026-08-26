@@ -183,13 +183,11 @@ class DSOMarket:
 
         """
         for idx in range(self.windowLength):
-            if max(demand_curve_DA[idx].quantities) > Q_max:
-                if max(demand_curve_DA[idx].quantities) > self.DSO_Q_max:
-                    print("Hour " + str(idx) +
-                          " Demand Curve range exceeds beyond Q_max," +
-                          " changing the LMP forecaster's Q_max to reflect that and extending the supply curve")
-                    self.DSO_Q_max = max(demand_curve_DA[idx].quantities)
-                    self.update_wholesale_node_curve()
+            if max(demand_curve_DA[idx].quantities) > Q_max and max(demand_curve_DA[idx].quantities) > self.DSO_Q_max:
+                print("Hour " + str(idx) + " Demand Curve range exceeds beyond Q_max," +
+                      " changing the LMP forecaster's Q_max to reflect that and extending the supply curve")
+                self.DSO_Q_max = max(demand_curve_DA[idx].quantities)
+                self.update_wholesale_node_curve()
             substation_curve = deepcopy(self.curve_preprocess(demand_curve_DA[idx], self.DSO_Q_max))
             self.curve_DSO_DA[idx].curve_aggregator_DSO(substation_curve)
 

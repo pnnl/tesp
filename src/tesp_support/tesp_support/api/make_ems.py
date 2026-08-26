@@ -166,10 +166,9 @@ def summarize_idf(fname, baseidf):
     fp = open(fname, 'r')
     rdr = csv.reader(fp)
     for row in rdr:
-        if row[0].strip() == 'Component Sizing Information':
-            if row[1].strip() == 'AirLoopHVAC':
-                HVACname = row[2].strip()
-                hvacs.add(HVACname)
+        if row[0].strip() == 'Component Sizing Information' and row[1].strip() == 'AirLoopHVAC':
+            HVACname = row[2].strip()
+            hvacs.add(HVACname)
         if row[0].strip() == 'Zone Information':
             zname = row[1].strip()
             zvol = float(row[19])

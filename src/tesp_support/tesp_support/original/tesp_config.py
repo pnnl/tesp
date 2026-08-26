@@ -610,9 +610,8 @@ class TespConfigGUI:
                 if col == 3 and use3:
                     val = float(w.get())
                     config['MonteCarloCase']['Samples3'][row - 5] = val
-        if not os.path.exists(tesp_share):
-            if not messagebox.askyesno('Continue to Save?', 'TESP Support Directory: ' + tesp_share + ' not found.'):
-                return
+        if not os.path.exists(tesp_share) and not messagebox.askyesno('Continue to Save?', 'TESP Support Directory: ' + tesp_share + ' not found.'):
+            return
         fname = filedialog.asksaveasfilename(initialdir='~/src/examples/te30',
                                              title='Save JSON Configuration to',
                                              defaultextension='json')

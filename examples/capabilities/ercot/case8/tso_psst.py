@@ -462,9 +462,8 @@ def tso_psst_loop():
                 if dayahead:
                     # scale ramp up and down for the generator
                     ramp = zgen[ii][16] * 60.0 / baseS
-                    if day == 1 and not priceSensLoad:
-                        if 0 < powerT0:
-                            unitOnT0 = 1
+                    if day == 1 and not priceSensLoad and 0 < powerT0:
+                        unitOnT0 = 1
                 else:
                     # scale ramp up and down for the generator
                     ramp = zgen[ii][16] * 5.0 / baseS

@@ -162,16 +162,15 @@ def tso_pypower_loop(casefile, rootname, helicsConfig):
         #  3) helicsInputIsUpdated resets to False immediately after you read the value,
         #     will become True if value changes later
         #  4) helicsInputLastUpdateTime is > 0 only after the other federate published its first value
-        if sub_max is not None:
-            if helics.helicsInputIsUpdated(sub_max):
-                new_bid = True
-                resp_max = helics.helicsInputGetComplex(sub_max).real * load_scale
-                # the rest of the bid parameters are updated at the same time
-                unresp = helics.helicsInputGetDouble(sub_unresp) * load_scale
-                dsoBus[0][3] = unresp  # to poke unresponsive estimate into the bus load slot
-                resp_c2 = helics.helicsInputGetDouble(sub_c2) / load_scale
-                resp_c1 = helics.helicsInputGetDouble(sub_c1)
-                resp_deg = helics.helicsInputGetInteger(sub_deg)
+        if sub_max is not None and helics.helicsInputIsUpdated(sub_max):
+            new_bid = True
+            resp_max = helics.helicsInputGetComplex(sub_max).real * load_scale
+            # the rest of the bid parameters are updated at the same time
+            unresp = helics.helicsInputGetDouble(sub_unresp) * load_scale
+            dsoBus[0][3] = unresp  # to poke unresponsive estimate into the bus load slot
+            resp_c2 = helics.helicsInputGetDouble(sub_c2) / load_scale
+            resp_c1 = helics.helicsInputGetDouble(sub_c1)
+            resp_deg = helics.helicsInputGetInteger(sub_deg)
 
         if helics.helicsInputIsUpdated(sub_load):
             gld_load = helics.helicsInputGetComplex(sub_load)

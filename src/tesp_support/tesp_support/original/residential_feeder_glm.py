@@ -1049,10 +1049,9 @@ def identify_ercot_houses(model, h, t, avgHouse, rgn):
                     # don't populate houses onto A, C, I or U load_class nodes
                     if 'load_class' in model[t][o]:
                         cls = model[t][o]['load_class']
-                        if cls == 'R':
-                            if kva > 1.0:
-                                nh = int((kva / avgHouse) + 0.5)
-                                total_houses[phs] += nh
+                        if cls == 'R' and kva > 1.0:
+                            nh = int((kva / avgHouse) + 0.5)
+                            total_houses[phs] += nh
                     if nh > 0:
                         lg_v_sm = kva / avgHouse - nh  # >0 if we rounded down the number of houses
                         bldg, ti = selectResidentialBuilding(rgnThermalPct[rgn - 1], np.random.uniform(0, 1))
@@ -1105,44 +1104,43 @@ def replace_commercial_loads(model, h, t, avgBuilding):
     total_strip_mall = 0
     if t in model:
         for o in list(model[t].keys()):
-            if 'load_class' in model[t][o]:
-                if model[t][o]['load_class'] == 'C':
-                    kva = accumulate_load_kva(model[t][o])
-                    total_commercial += 1
-                    total_comm_kva += kva
-                    vln = float(model[t][o]['nominal_voltage'])
-                    nphs = 0
-                    phases = model[t][o]['phases']
-                    if 'A' in phases:
-                        nphs += 1
-                    if 'B' in phases:
-                        nphs += 1
-                    if 'C' in phases:
-                        nphs += 1
-                    nzones = int((kva / avgBuilding) + 0.5)
-                    total_comm_zones += nzones
-                    if nzones > 14 and nphs == 3:
-                        comm_type = 'OFFICE'
-                        total_office += 1
-                    elif nzones > 5 and nphs > 1:
-                        comm_type = 'BIGBOX'
-                        total_big_box += 1
-                    elif nzones > 0:
-                        comm_type = 'STRIPMALL'
-                        total_strip_mall += 1
-                    else:
-                        comm_type = 'ZIPLOAD'
-                        total_zipload += 1
-                    mtr = gld_strict_name(model[t][o]['parent'])
-                    if forERCOT:
-                        # the parent node is actually a meter, but we have to add the tariff and metrics_collector unless only ZIPLOAD
-                        if comm_type != 'ZIPLOAD':
-                            extra_billing_meters.add(mtr)
-                    else:
+            if 'load_class' in model[t][o] and model[t][o]['load_class'] == 'C':
+                kva = accumulate_load_kva(model[t][o])
+                total_commercial += 1
+                total_comm_kva += kva
+                vln = float(model[t][o]['nominal_voltage'])
+                nphs = 0
+                phases = model[t][o]['phases']
+                if 'A' in phases:
+                    nphs += 1
+                if 'B' in phases:
+                    nphs += 1
+                if 'C' in phases:
+                    nphs += 1
+                nzones = int((kva / avgBuilding) + 0.5)
+                total_comm_zones += nzones
+                if nzones > 14 and nphs == 3:
+                    comm_type = 'OFFICE'
+                    total_office += 1
+                elif nzones > 5 and nphs > 1:
+                    comm_type = 'BIGBOX'
+                    total_big_box += 1
+                elif nzones > 0:
+                    comm_type = 'STRIPMALL'
+                    total_strip_mall += 1
+                else:
+                    comm_type = 'ZIPLOAD'
+                    total_zipload += 1
+                mtr = gld_strict_name(model[t][o]['parent'])
+                if forERCOT:
+                    # the parent node is actually a meter, but we have to add the tariff and metrics_collector unless only ZIPLOAD
+                    if comm_type != 'ZIPLOAD':
                         extra_billing_meters.add(mtr)
-                    comm_loads[o] = [mtr, comm_type, nzones, kva, nphs, phases, vln, total_commercial]
-                    model[t][o]['groupid'] = comm_type + '_' + str(nzones)
-                    del model[t][o]
+                else:
+                    extra_billing_meters.add(mtr)
+                comm_loads[o] = [mtr, comm_type, nzones, kva, nphs, phases, vln, total_commercial]
+                model[t][o]['groupid'] = comm_type + '_' + str(nzones)
+                del model[t][o]
     # Print commercial info
     print('Found', total_commercial, 'commercial loads totaling ', f'{total_comm_kva:.2f}', 'KVA')
     print('  ', total_office, 'offices,')
@@ -1952,50 +1950,49 @@ def write_houses(basenode, op, vnom, bIgnoreThermostatSchedule=True, bWriteServi
                     print('    };', file=op)
                 print('  };', file=op)
                 print('}', file=op)
-        if bConsiderStorage:
-            if np.random.uniform(0, 1) <= storage_percentage:
-                battery_count += 1
-                print(f'object {meter_class:s} {{', file=op)
-                #                print('object triplex_meter {', file=op)
-                print('  name', bat_m_name + ';', file=op)
-                print('  parent', mtrname + ';', file=op)
-                print('  phases', phs + ';', file=op)
-                print('  nominal_voltage ' + str(vnom) + ';', file=op)
-                print('  object inverter {', file=op)
-                print('    name', bat_i_name + ';', file=op)
-                print('    phases', phs + ';', file=op)
-                print('    generator_status ONLINE;', file=op)
-                print('    generator_mode CONSTANT_PQ;', file=op)
-                print('    inverter_type FOUR_QUADRANT;', file=op)
-                print('    four_quadrant_control_mode', storage_inv_mode + ';', file=op)
-                print('    V_base ${INV_VBASE};', file=op)
-                print('    charge_lockout_time 1;', file=op)
-                print('    discharge_lockout_time 1;', file=op)
-                print('    rated_power', f'{rated_power:.2f}' + ';', file=op)
-                print('    max_charge_rate', f'{max_charge_rate:.2f}' + ';', file=op)
-                print('    max_discharge_rate', f'{max_discharge_rate:.2f}' + ';', file=op)
-                print('    sense_object', mtrname + ';', file=op)
-                print('    charge_on_threshold -100;', file=op)
-                print('    charge_off_threshold 0;', file=op)
-                print('    discharge_off_threshold 2000;', file=op)
-                print('    discharge_on_threshold 3000;', file=op)
-                print('    inverter_efficiency', f'{inverter_efficiency:.2f}' + ';', file=op)
-                print('    power_factor 1.0;', file=op)
-                print('    object battery { // Tesla Powerwall 2', file=op)
-                print('      name', batname + ';', file=op)
-                print('      use_internal_battery_model true;', file=op)
-                print('      battery_type LI_ION;', file=op)
-                print('      nominal_voltage 480;', file=op)
-                print('      battery_capacity', f'{battery_capacity:.2f}' + ';', file=op)
-                print('      round_trip_efficiency', f'{round_trip_efficiency:.2f}' + ';', file=op)
-                print('      state_of_charge 0.50;', file=op)
+        if bConsiderStorage and np.random.uniform(0, 1) <= storage_percentage:
+            battery_count += 1
+            print(f'object {meter_class:s} {{', file=op)
+            #                print('object triplex_meter {', file=op)
+            print('  name', bat_m_name + ';', file=op)
+            print('  parent', mtrname + ';', file=op)
+            print('  phases', phs + ';', file=op)
+            print('  nominal_voltage ' + str(vnom) + ';', file=op)
+            print('  object inverter {', file=op)
+            print('    name', bat_i_name + ';', file=op)
+            print('    phases', phs + ';', file=op)
+            print('    generator_status ONLINE;', file=op)
+            print('    generator_mode CONSTANT_PQ;', file=op)
+            print('    inverter_type FOUR_QUADRANT;', file=op)
+            print('    four_quadrant_control_mode', storage_inv_mode + ';', file=op)
+            print('    V_base ${INV_VBASE};', file=op)
+            print('    charge_lockout_time 1;', file=op)
+            print('    discharge_lockout_time 1;', file=op)
+            print('    rated_power', f'{rated_power:.2f}' + ';', file=op)
+            print('    max_charge_rate', f'{max_charge_rate:.2f}' + ';', file=op)
+            print('    max_discharge_rate', f'{max_discharge_rate:.2f}' + ';', file=op)
+            print('    sense_object', mtrname + ';', file=op)
+            print('    charge_on_threshold -100;', file=op)
+            print('    charge_off_threshold 0;', file=op)
+            print('    discharge_off_threshold 2000;', file=op)
+            print('    discharge_on_threshold 3000;', file=op)
+            print('    inverter_efficiency', f'{inverter_efficiency:.2f}' + ';', file=op)
+            print('    power_factor 1.0;', file=op)
+            print('    object battery { // Tesla Powerwall 2', file=op)
+            print('      name', batname + ';', file=op)
+            print('      use_internal_battery_model true;', file=op)
+            print('      battery_type LI_ION;', file=op)
+            print('      nominal_voltage 480;', file=op)
+            print('      battery_capacity', f'{battery_capacity:.2f}' + ';', file=op)
+            print('      round_trip_efficiency', f'{round_trip_efficiency:.2f}' + ';', file=op)
+            print('      state_of_charge 0.50;', file=op)
+            print('    };', file=op)
+            if metrics_interval > 0 and "inverter" in metrics:
+                print('    object metrics_collector {', file=op)
+                print('      interval', str(metrics_interval) + ';', file=op)
                 print('    };', file=op)
-                if metrics_interval > 0 and "inverter" in metrics:
-                    print('    object metrics_collector {', file=op)
-                    print('      interval', str(metrics_interval) + ';', file=op)
-                    print('    };', file=op)
-                print('  };', file=op)
-                print('}', file=op)
+            print('  };', file=op)
+            print('}', file=op)
 
 
 def write_substation(op, name, phs, vnom, vll):
@@ -2097,9 +2094,8 @@ def write_voltage_class(model, h, t, op, vprim, vll, secmtrnode):
             name = o  # model[t][o]['name']
             phs = model[t][o]['phases']
             vnom = vprim
-            if 'bustype' in model[t][o]:
-                if model[t][o]['bustype'] == 'SWING':
-                    write_substation(op, name, phs, vnom, vll)
+            if 'bustype' in model[t][o] and model[t][o]['bustype'] == 'SWING':
+                write_substation(op, name, phs, vnom, vll)
             parent = ''
             prefix = ''
             if str.find(phs, 'S') >= 0:
@@ -2128,9 +2124,9 @@ def write_voltage_class(model, h, t, op, vprim, vll, secmtrnode):
             print('  name ' + gld_strict_name(name) + ';', file=op)
             if 'groupid' in model[t][o]:
                 print('  groupid ' + model[t][o]['groupid'] + ';', file=op)
-            if 'bustype' in model[t][o]:  # already moved the SWING bus behind substation transformer
-                if model[t][o]['bustype'] != 'SWING':
-                    print('  bustype ' + model[t][o]['bustype'] + ';', file=op)
+            # already moved the SWING bus behind substation transformer
+            if 'bustype' in model[t][o] and model[t][o]['bustype'] != 'SWING':
+                print('  bustype ' + model[t][o]['bustype'] + ';', file=op)
             print('  phases ' + phs + ';', file=op)
             print('  nominal_voltage ' + str(vnom) + ';', file=op)
             if 'load_class' in model[t][o]:
@@ -2351,8 +2347,8 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
         avgcommercial (float): the average commercial load in kVA, not used
     """
     global solar_count, solar_kw, battery_count, base_feeder_name
-    global electric_cooling_percentage, storage_percentage, solar_percentage
-    global water_heater_percentage, water_heater_participation
+    global electric_cooling_percentage
+    global water_heater_percentage
 
     solar_count = 0
     solar_kw = 0
@@ -2455,10 +2451,9 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
 
         swing_node = ''
         for n1, data in G.nodes(data=True):
-            if 'nclass' in data:
-                if 'bustype' in data['ndata']:
-                    if data['ndata']['bustype'] == 'SWING':
-                        swing_node = n1
+            if 'nclass' in data and 'bustype' in data['ndata'] and data['ndata']['bustype'] == 'SWING':
+                swing_node = n1
+                break
 
         sub_graphs = nx.connected_components(G)
         seg_loads = {}  # [name][kva, phases]

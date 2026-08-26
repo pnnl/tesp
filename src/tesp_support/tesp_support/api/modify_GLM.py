@@ -131,21 +131,20 @@ class GLMModifier:
             bool: Indicates whether the rename succeeded
         """
         object_entity = self.model.object_entities[gld_type]
-        if object_entity:
-            if object_entity.instances[old_name]:
-                model_object = self.model.model[gld_type]
-                for object_name in self.model.object_entities:
-                    _instances = self.model.object_entities[object_name].instances
-                    for _instance_name, _instance in _instances.items():
-                        for _attr, _val in _instance.items():
-                            if _val == old_name:
-                                _instances[_instance_name][_attr] = new_name
-                if new_name != old_name:
-                    object_entity.instances[new_name] = object_entity.instances[old_name]
-                    del object_entity.instances[old_name]
-                    model_object[new_name] = model_object[old_name]
-                    del model_object[old_name]
-                return True
+        if object_entity and object_entity.instances[old_name]:
+            model_object = self.model.model[gld_type]
+            for object_name in self.model.object_entities:
+                _instances = self.model.object_entities[object_name].instances
+                for _instance_name, _instance in _instances.items():
+                    for _attr, _val in _instance.items():
+                        if _val == old_name:
+                            _instances[_instance_name][_attr] = new_name
+            if new_name != old_name:
+                object_entity.instances[new_name] = object_entity.instances[old_name]
+                del object_entity.instances[old_name]
+                model_object[new_name] = model_object[old_name]
+                del model_object[old_name]
+            return True
         return False
 
     def del_object(self, gld_type: str, name: str) -> None:
@@ -163,9 +162,8 @@ class GLMModifier:
             if myObj.find_item('parent'):
                 for myName in myObj.instances:
                     instance = myObj.instances[myName]
-                    if 'parent' in instance:
-                        if instance['parent'] == name:
-                            myArr.append(myName)
+                    if 'parent' in instance and instance['parent'] == name:
+                        myArr.append(myName)
             # TODO from-to relations
             for myName in myArr:
                 self.model.del_object(gld_type, name)
@@ -604,9 +602,8 @@ class GLMModifier:
                             params[p] = e_object[p]
             self.add_object(gld_class, e_name, params)
 
-            if self.defaults.metrics_interval > 0:
-                if gld_class in ['capacitor', 'regulator', 'transformer']:
-                    self.add_metrics_collector(e_name, gld_class)
+            if self.defaults.metrics_interval > 0 and gld_class in ['capacitor', 'regulator', 'transformer']:
+                self.add_metrics_collector(e_name, gld_class)
 
     def add_voltage_class(self, gld_class: str, v_ln: float, v_ll: float, secmtrnode: dict) -> None:
         """Write GridLAB-D instances that have a primary nominal voltage (i.e. node, meter and load).
@@ -638,9 +635,8 @@ class GLMModifier:
         for e_name, e_object in entity.items():
             phs = e_object['phases']
             vnom = v_ln
-            if 'bustype' in e_object:
-                if e_object['bustype'] == 'SWING':
-                    self.add_substation(e_name, phs, v_ll)
+            if 'bustype' in e_object and e_object['bustype'] == 'SWING':
+                self.add_substation(e_name, phs, v_ll)
             parent = ''
             prefix = ''
             if str.find(phs, 'S') >= 0:
@@ -668,9 +664,9 @@ class GLMModifier:
                 params["parent"] = parent
             if 'groupid' in e_object:
                 params["groupid"] = e_object['groupid']
-            if 'bustype' in e_object:  # already moved the SWING bus behind substation transformer
-                if e_object['bustype'] != 'SWING':
-                    params["bustype"] = e_object['bustype']
+            # already moved the SWING bus behind substation transformer
+            if 'bustype' in e_object and e_object['bustype'] != 'SWING':
+                params["bustype"] = e_object['bustype']
             params["phases"] = phs
             params["nominal_voltage"] = str(vnom)
             if 'load_class' in e_object:

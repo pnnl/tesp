@@ -59,10 +59,9 @@ def merge_glm(target, sources, xfmva):
                         thisHeadNode = toks[1][:-1]
                         if len(firstHeadNode) < 1:
                             firstHeadNode = thisHeadNode
-                if inHELICS:
-                    if 'configure' in line:
-                        line = '  configure ' + target + '_gridlabd.json;'
-                        inHELICS = False
+                if inHELICS and 'configure' in line:
+                    line = '  configure ' + target + '_gridlabd.json;'
+                    inHELICS = False
                 if inSubstation and ('object node' in line):
                     inSubstation = False
                     if finishedFirstSubstation:
@@ -80,10 +79,8 @@ def merge_glm(target, sources, xfmva):
                     canWrite = False
                 if canWrite:
                     print(line.rstrip(), file=op)
-                if '#endif' in line:
-                    if '&&&' in line:
-                        if 'end of common section for combining TESP cases' in line:
-                            inPreamble = False
+                if '#endif' in line and '&&&' in line and 'end of common section for combining TESP cases' in line:
+                    inPreamble = False
         inFirstFile = False
     op.close()
 

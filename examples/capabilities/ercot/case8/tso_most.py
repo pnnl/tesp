@@ -140,9 +140,8 @@ def get_plant_min_up_down_hours(fuel, gencosts, gen):
         return 24, 24
     if fuel == 'coal':
         return 12, 12
-    if fuel == 'gas':
-        if gencosts[4] < 57.0:
-            return 6, 6
+    if fuel == 'gas' and gencosts[4] < 57.0:
+        return 6, 6
     return 1, 1
 
 
@@ -841,24 +840,23 @@ def tso_most_loop_f(bTestDAM=False, test_bids=None):
                 gld_load[busnum]['pcrv'] = Pnom * curve_scale * float(val[1])
                 gld_load[busnum]['qcrv'] = Qnom * curve_scale * float(val[1])
 
-        if most and bDAMValid:
-            if (minutes == 0) and (seconds == 0):
-                if hours == 0:
-                    print(f'#### At midnight: ts = {ts:d}, to rotate UC/ED')
-                    unit_schedule = deepcopy(next_unit_schedule)
-                    unit_dispatch = deepcopy(next_unit_dispatch)
-                    print('now unit_schedule =', unit_schedule)
-                    print('now unit_dispatch =', unit_dispatch)
-                if days > 0:  # we have DAM valid in the middle of first day, but don't use until day 1
-                    print(f'  #### Top of the hour {hours:d}: ts = {ts:d}, to implement UC/ED')
-                    ppc['gen'][:, 7] = unit_schedule[:, hours]
-                    for i in range(numGen):
-                        fuel = genFuel[i][0]
-                        print('   setting {:d} ({:s}) from {:.2f} to {:.2f}'
-                              .format(i, fuel, ppc['gen'][i, 1], unit_dispatch[i, hours]))
-                        if 'wind' not in fuel:
-                            ppc['gen'][i, 1] = unit_dispatch[i, hours]
-                    print(ppc['gen'])
+        if most and bDAMValid and (minutes == 0) and (seconds == 0):
+            if hours == 0:
+                print(f'#### At midnight: ts = {ts:d}, to rotate UC/ED')
+                unit_schedule = deepcopy(next_unit_schedule)
+                unit_dispatch = deepcopy(next_unit_dispatch)
+                print('now unit_schedule =', unit_schedule)
+                print('now unit_dispatch =', unit_dispatch)
+            if days > 0:  # we have DAM valid in the middle of first day, but don't use until day 1
+                print(f'  #### Top of the hour {hours:d}: ts = {ts:d}, to implement UC/ED')
+                ppc['gen'][:, 7] = unit_schedule[:, hours]
+                for i in range(numGen):
+                    fuel = genFuel[i][0]
+                    print('   setting {:d} ({:s}) from {:.2f} to {:.2f}'
+                          .format(i, fuel, ppc['gen'][i, 1], unit_dispatch[i, hours]))
+                    if 'wind' not in fuel:
+                        ppc['gen'][i, 1] = unit_dispatch[i, hours]
+                print(ppc['gen'])
 
         # run multi-period optimization in MOST to establish the next day's unit commitment and dispatch schedule
         # Run the day ahead market (DAM) at noon every day

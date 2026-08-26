@@ -203,19 +203,19 @@ def feeder_generator_test():
 
 
 def feeder_generator_comp_test():
+    from tesp_support.api.gld_feeder_generator import _test2
+
     tr.start_test('Feeder Generator Compare example')
     os.chdir(tesp_path)
     tr.run_test('', 'Feeder generator')
-    from tesp_support.api.gld_feeder_generator import _test2
     _test2()
     os.chdir(tesp_path)
 
 
 if __name__ == '__main__':
     b_helics = True
-    if len(sys.argv) > 1:
-        if sys.argv[1] == "FNCS":
-            b_helics = False
+    if len(sys.argv) > 1 and sys.argv[1] == "FNCS":
+        b_helics = False
 
     # tr.run_test = tr.run_docker_test
 
@@ -231,7 +231,7 @@ if __name__ == '__main__':
     tr.block_test(energyplus_test)
     tr.block_test(weather_agent_test)
     tr.block_test(houses_test)
-    # tr.block_test(gld_modifier_test)
+    tr.block_test(gld_modifier_test)
     tr.block_test(feeder_generator_test)
     # tr.block_test(feeder_generator_comp_test)
     tr.block_test(te30_test)

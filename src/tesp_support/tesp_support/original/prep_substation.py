@@ -184,22 +184,18 @@ def ProcessGLM(fileroot):
                         EndTime = EndTime + ' ' + lst[2].strip('\';')
                 if len(StartTime) > 0 and len(EndTime) > 0:
                     inClock = False
-            if inClimate:
-                if lst[0] == 'name':
-                    climate_name = lst[1].strip(';')
-                    inClimate = False
-            if inHELICSmsg:
-                if lst[0] == 'name':
-                    gld_federate = lst[1].strip(';')
-                    inHELICSmsg = False
-            if inFNCSmsg:
-                if lst[0] == 'name':
-                    gld_federate = lst[1].strip(';')
-                    inFNCSmsg = False
-            if inTriplexMeters:
-                if lst[0] == 'name':
-                    meter_name = lst[1].strip(';')
-                    inTriplexMeters = False
+            if inClimate and lst[0] == 'name':
+                climate_name = lst[1].strip(';')
+                inClimate = False
+            if inHELICSmsg and lst[0] == 'name':
+                gld_federate = lst[1].strip(';')
+                inHELICSmsg = False
+            if inFNCSmsg and lst[0] == 'name':
+                gld_federate = lst[1].strip(';')
+                inFNCSmsg = False
+            if inTriplexMeters and lst[0] == 'name':
+                meter_name = lst[1].strip(';')
+                inTriplexMeters = False
             if inHouses:
                 if lst[0] == 'name' and not endedHouse:
                     house_name = lst[1].strip(';')
@@ -207,9 +203,8 @@ def ProcessGLM(fileroot):
                     house_parent = lst[1].strip(';')
                 if lst[0] == 'groupid':
                     house_class = lst[1].strip(';')
-                if lst[0] == 'cooling_system_type':
-                    if lst[1].strip(';') == 'ELECTRIC':
-                        isELECTRIC = True
+                if lst[0] == 'cooling_system_type' and lst[1].strip(';') == 'ELECTRIC':
+                    isELECTRIC = True
         elif len(lst) == 1:
             inHELICSmsg = False
             if inHouses:

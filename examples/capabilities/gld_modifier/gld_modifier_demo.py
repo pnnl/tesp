@@ -240,18 +240,15 @@ def _auto_run(plot:bool, args):
         "\t(In GridLAB-D, the sizing information is stored in the "
         "transformer_configuration object.)")
     transformer_configs_to_upgrade = {"as": [], "bs": [], "cs": []}
-    for transformer_name, transformer in glm.transformer.values():
+    for transformer_name, transformer in glm.transformer.instances.items():
         phases = transformer["phases"]
         config = transformer["configuration"]
-        if phases.lower() == "as":
-            if config not in transformer_configs_to_upgrade["as"]:
-                transformer_configs_to_upgrade["as"].append(config)
-        elif phases.lower() == "bs":
-            if config not in transformer_configs_to_upgrade["bs"]:
-                transformer_configs_to_upgrade["bs"].append(config)
-        elif phases.lower() == "cs":
-            if config not in transformer_configs_to_upgrade["cs"]:
-                transformer_configs_to_upgrade["cs"].append(config)
+        if phases.lower() == "as" and config not in transformer_configs_to_upgrade["as"]:
+            transformer_configs_to_upgrade["as"].append(config)
+        if phases.lower() == "bs" and config not in transformer_configs_to_upgrade["bs"]:
+            transformer_configs_to_upgrade["bs"].append(config)
+        if phases.lower() == "cs" and config not in transformer_configs_to_upgrade["cs"]:
+            transformer_configs_to_upgrade["cs"].append(config)
     print(f'\tFound {len(transformer_configs_to_upgrade["as"])}'
           ' configurations with phase "AS" that will be upgraded.')
     print(f'\tFound {len(transformer_configs_to_upgrade["bs"])} '
@@ -293,11 +290,10 @@ def _auto_run(plot:bool, args):
     print("\nDemonstrating the use of networkx to find the feeder head and "
           "the closest fuse")
     swing_bus = ""
-    for gld_node_name in glm.node:
+    for gld_node_name, value in glm.node.instances.items():
         # Not every bus has the "bustype" parameter
-        if "bustype" in glm.node[gld_node_name]:
-            if glm.node[gld_node_name]["bustype"].lower() == "swing":
-                swing_bus = gld_node_name
+        if "bustype" in value and value["bustype"].lower() == "swing":
+            swing_bus = gld_node_name
     print(f"\tFound feeder head (swing bus) as node {swing_bus}")
 
     # Find first fuse downstream of the feeder head. I'm guessing it is close-by
@@ -326,9 +322,9 @@ def _auto_run(plot:bool, args):
 
     max_transformer_power = 0
     max_transformer_name = ""
-    for transformer_config_name in glm.transformer_configuration:
+    for transformer_config_name in glm.transformer_configuration.instances:
         transformer_power_rating = float(
-            glm.transformer_configuration[transformer_config_name]["power_rating"]
+            glm.transformer_configuration.instances[transformer_config_name]["power_rating"]
         )
         if transformer_power_rating > max_transformer_power:
             max_transformer_power = transformer_power_rating
@@ -379,4 +375,5 @@ def demo(plot:bool):
 
 
 if __name__ == "__main__":
-    demo(True)
+    demo(False)
+    # demo(True)

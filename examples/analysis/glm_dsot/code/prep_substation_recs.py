@@ -224,49 +224,48 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
 
     # prepare inputs for weather agent
     # write the weather agent's configuration file
-    if 'climate' in gd:
-        # check if this weather agent is already implemented
-        if not os.path.isfile(weatherfileroot + 'weather_Config.json'):
-            time_fmt = '%Y-%m-%d %H:%M:%S'
-            dt1 = datetime.strptime(case_config['StartTime'], time_fmt)
-            dt2 = datetime.strptime(case_config['EndTime'], time_fmt)
-            seconds = int((dt2 - dt1).total_seconds())
-            minutes = int(seconds / 60)
-            if case_config["messenger"] == 'FNCS':
-                wconfig = {'name': gd['climate']['name'],
-                        'StartTime': case_config['StartTime'],
-                        'time_stop': str(minutes) + 'm',
-                        'time_delta': '1s',
-                        'publishInterval': '5m',
-                        'Forecast': 1,
-                        'ForecastLength': '48h',
-                        'PublishTimeAhead': '3s',
-                        'AddErrorToForecast': 0,
-                        'broker': 'tcp://localhost:' + str(case_config['port']),
-                        'forecastPeriod': 48,
-                        'parameters': {}}
-            elif case_config["messenger"] == 'HELICS':
-                wconfig = {'name': gd['climate']['name'],
-                        'StartTime': case_config['StartTime'],
-                        'time_stop': str(minutes) + 'm',
-                        'time_delta': '1s',
-                        'publishInterval': '5m',
-                        'Forecast': 1,
-                        'ForecastLength': '48h',
-                        'PublishTimeAhead': '3s',
-                        'AddErrorToForecast': 0,
-                        'broker': 'HELICS',
-                        'forecastPeriod': 48,
-                        'parameters': {}}
-            for parm in ['temperature', 'humidity', 'pressure', 'solar_diffuse', 'solar_direct', 'wind_speed']:
-                wconfig['parameters'][parm] = {'distribution': 2,
-                                               'P_e_bias': 0.5,
-                                               'P_e_envelope': 0.08,
-                                               'Lower_e_bound': 0.5}
+    # check if this weather agent is already implemented
+    if 'climate' in gd and not os.path.isfile(weatherfileroot + 'weather_Config.json'):
+        time_fmt = '%Y-%m-%d %H:%M:%S'
+        dt1 = datetime.strptime(case_config['StartTime'], time_fmt)
+        dt2 = datetime.strptime(case_config['EndTime'], time_fmt)
+        seconds = int((dt2 - dt1).total_seconds())
+        minutes = int(seconds / 60)
+        if case_config["messenger"] == 'FNCS':
+            wconfig = {'name': gd['climate']['name'],
+                    'StartTime': case_config['StartTime'],
+                    'time_stop': str(minutes) + 'm',
+                    'time_delta': '1s',
+                    'publishInterval': '5m',
+                    'Forecast': 1,
+                    'ForecastLength': '48h',
+                    'PublishTimeAhead': '3s',
+                    'AddErrorToForecast': 0,
+                    'broker': 'tcp://localhost:' + str(case_config['port']),
+                    'forecastPeriod': 48,
+                    'parameters': {}}
+        elif case_config["messenger"] == 'HELICS':
+            wconfig = {'name': gd['climate']['name'],
+                    'StartTime': case_config['StartTime'],
+                    'time_stop': str(minutes) + 'm',
+                    'time_delta': '1s',
+                    'publishInterval': '5m',
+                    'Forecast': 1,
+                    'ForecastLength': '48h',
+                    'PublishTimeAhead': '3s',
+                    'AddErrorToForecast': 0,
+                    'broker': 'HELICS',
+                    'forecastPeriod': 48,
+                    'parameters': {}}
+        for parm in ['temperature', 'humidity', 'pressure', 'solar_diffuse', 'solar_direct', 'wind_speed']:
+            wconfig['parameters'][parm] = {'distribution': 2,
+                                           'P_e_bias': 0.5,
+                                           'P_e_envelope': 0.08,
+                                           'Lower_e_bound': 0.5}
 
-            wp = open(weatherfileroot + 'weather_Config.json', 'w')
-            print(json.dumps(wconfig), file=wp)
-            wp.close()
+        wp = open(weatherfileroot + 'weather_Config.json', 'w')
+        print(json.dumps(wconfig), file=wp)
+        wp.close()
 
     # Obtain hvac agent dictionary based on houses with electric cooling or electric heating
     for key, val in gd['houses'].items():

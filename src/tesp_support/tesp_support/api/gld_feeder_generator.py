@@ -262,17 +262,16 @@ class Config:
         Returns:
             None
         """
-        if hasattr(self, 'residential_meta_file_RECS'):
-            if not self.residential_meta_file_RECS:
-                get_RECS_jsons(
-                    os.path.join(self.data_path, self.residential_meta_file),
-                    os.path.join(self.data_path, self.residential_meta_file_RECS),
-                    os.path.join(self.data_path, self.out_hvac_set_point_file),
-                    self.sample,
-                    self.bin_size_threshold,
-                    self.region,
-                    self.wh_shift
-                )
+        if hasattr(self, 'residential_meta_file_RECS') and not self.residential_meta_file_RECS:
+            get_RECS_jsons(
+                os.path.join(self.data_path, self.residential_meta_file),
+                os.path.join(self.data_path, self.residential_meta_file_RECS),
+                os.path.join(self.data_path, self.out_hvac_set_point_file),
+                self.sample,
+                self.bin_size_threshold,
+                self.region,
+                self.wh_shift
+            )
 
     def load_recs(self) -> tuple[dict, DataFrame]:
         """ Assign default values for residential and commercial buildings,
@@ -978,10 +977,9 @@ class Residential_Build:
                 # percentage of homes with gas space heating but electric water heaters
                 if rng.uniform(0, 1) <= properties['sh_gas']['electric']:
                     wh_fuel_type = 'electric'
-            elif house_fuel_type == 'electric':
-                # percentage of homes with both electric space and water heating
-                if rng.uniform(0, 1) <= properties['sh_electric']['electric']:
-                    wh_fuel_type = 'electric'
+            # percentage of homes with both electric space and water heating
+            elif house_fuel_type == 'electric' and rng.uniform(0, 1) <= properties['sh_electric']['electric']:
+                wh_fuel_type = 'electric'
 
             if wh_fuel_type == 'electric':  # if the water heater fuel type is electric, install wh
                 heat_element = 3.0 + 0.5 * int(rng.integers(1, 6))  # numpy integers (lo, hi) returns lo..(hi-1)

@@ -99,9 +99,8 @@ def find_bus(arr, n):
 
 def find_line(arr, n1, n2):
     for ln in arr:
-        if '//' not in ln[0]:
-            if int(ln[1]) == n1 and int(ln[2]) == n2:
-                return ln
+        if '//' not in ln[0] and int(ln[1]) == n1 and int(ln[2]) == n2:
+            return ln
     return None
 
 

@@ -48,20 +48,19 @@ def merge_glm(target, sources, xfmva):
                     if ('object ' in line) and (
                             ('configuration' in line) or ('conductor' in line) or ('spacing' in line)):
                         inConfig = True
-                    if inConfig and inSubstation:
-                        if ' name ' in line:
-                            toks = line.split()
-                            name = toks[1][:-1]
-                            line = '  name ' + fdr + '_' + name + ';'
-                            inConfig = False
-                    if not inSubstation:
-                        if (' spacing ' in line) or (' configuration ' in line) or \
-                                ('  conductor_1' in line) or ('  conductor_2' in line) or \
-                                ('  conductor_A' in line) or ('  conductor_B' in line) or \
-                                ('  conductor_C' in line) or ('  conductor_N' in line):
-                            toks = line.split()
-                            name = toks[1][:-1]
-                            line = '  ' + toks[0] + ' ' + fdr + '_' + name + ';'
+                    if inConfig and inSubstation and ' name ' in line:
+                        toks = line.split()
+                        name = toks[1][:-1]
+                        line = '  name ' + fdr + '_' + name + ';'
+                        inConfig = False
+                    if (not inSubstation and
+                        (' spacing ' in line) or (' configuration ' in line) or \
+                        ('  conductor_1' in line) or ('  conductor_2' in line) or \
+                        ('  conductor_A' in line) or ('  conductor_B' in line) or \
+                        ('  conductor_C' in line) or ('  conductor_N' in line)):
+                        toks = line.split()
+                        name = toks[1][:-1]
+                        line = '  ' + toks[0] + ' ' + fdr + '_' + name + ';'
                     if '#ifdef USE_FNCS' in line:
                         inSubstation = True
                     if inSubstation:

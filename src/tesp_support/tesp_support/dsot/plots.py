@@ -1855,14 +1855,13 @@ def daily_load_plots(dso, system, subsystem, variable, day, case, comp, agent_pr
     plt.figure()
     case = case.replace('/', '\\')
     plt.plot(case_df, label=case.split('\\')[-1], marker='.')
-    if plot_min_max:
-        if 'real_power_avg' in variable:
-            min_df = get_day_df(dso, system, subsystem, variable.replace('avg', 'min'), day, case, agent_prefix,
-                                gld_prefix)
-            max_df = get_day_df(dso, system, subsystem, variable.replace('avg', 'max'), day, case, agent_prefix,
-                                gld_prefix)
-            plt.plot(min_df, label=case.split('/')[-1] + '-Min', marker='.')
-            plt.plot(max_df, label=case.split('/')[-1] + '-Max', marker='.')
+    if plot_min_max and 'real_power_avg' in variable:
+        min_df = get_day_df(dso, system, subsystem, variable.replace('avg', 'min'), day, case, agent_prefix,
+                            gld_prefix)
+        max_df = get_day_df(dso, system, subsystem, variable.replace('avg', 'max'), day, case, agent_prefix,
+                            gld_prefix)
+        plt.plot(min_df, label=case.split('/')[-1] + '-Min', marker='.')
+        plt.plot(max_df, label=case.split('/')[-1] + '-Max', marker='.')
 
     if comp is not None:
         comp = comp.replace('/', '\\')
@@ -2772,9 +2771,8 @@ def non_participating_dso_loads(dso_range, case, metadata_path):
 
     np_dsos = []
     for dso in DSOmetadata:
-        if 'DSO' in dso:
-            if int(dso.split('_')[-1]) not in dso_range:
-                np_dsos.append('Bus'+dso.split('_')[-1])
+        if 'DSO' in dso and int(dso.split('_')[-1]) not in dso_range:
+            np_dsos.append('Bus'+dso.split('_')[-1])
 
     np_dso_loads = dso_load_profiles[np_dsos].sum(axis=1).to_frame().rename(columns={0: "np_dso_loads"})
     np_dso_loads.index.rename(name='time', inplace=True)
@@ -4361,18 +4359,16 @@ def metadata_dist_plots(system, sys_class, variable, dso_range, case, data_path,
                     if variable in ['kw-hr', 'max_kw', 'avg_load', 'load_factor']:
                         if sys_class in ['residential', 'commercial', 'industrial']:
                             # TODO: need to work out why some unknown loads are not getting a tariff class.
-                            if metadata[system][each]['building_type'] != 'UNKNOWN':
-                                if metadata[system][each]['tariff_class'] == sys_class:
-                                    dist_var.append(pop_df.loc[(each, variable), 'sum'])
+                            if metadata[system][each]['building_type'] != 'UNKNOWN' and metadata[system][each]['tariff_class'] == sys_class:
+                                dist_var.append(pop_df.loc[(each, variable), 'sum'])
                         else:
                             if metadata[system][each]['building_type'] == sys_class:
                                 dist_var.append(pop_df.loc[(each, variable), 'sum'])
                     elif variable in ['sqft']:
                         if sys_class in ['residential', 'commercial', 'industrial']:
                             # TODO: need to work out why some unknown loads are not getting a tariff class.
-                            if metadata[system][each]['building_type'] != 'UNKNOWN':
-                                if metadata[system][each]['tariff_class'] == sys_class:
-                                    dist_var.append(metadata[system][each][variable])
+                            if metadata[system][each]['building_type'] != 'UNKNOWN' and metadata[system][each]['tariff_class'] == sys_class:
+                                dist_var.append(metadata[system][each][variable])
                         else:
                             if metadata[system][each]['building_type'] == sys_class:
                                 dist_var.append(metadata[system][each][variable])

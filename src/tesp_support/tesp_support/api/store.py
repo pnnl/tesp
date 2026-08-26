@@ -228,11 +228,9 @@ class Schema:
         return self.columns[table]
 
     def set_date_bycol(self, table, name):
-        if table in self.tables:
-            if table in self.columns:
-                if name in self.columns[table]:
-                    self.dates[table] = name
-                    return True
+        if table in self.tables and table in self.columns and name in self.columns[table]:
+            self.dates[table] = name
+            return True
         return False
 
     # using pandas offset freq alias, H, S, D
@@ -266,41 +264,40 @@ class Schema:
         else:
             raise Exception("Sorry, can not read series, invalid dates")
 
-        if table in self.tables:
-            if table in self.columns:
-                if self.ext == ".csv":
-                    if type(dt) is list:
-                        df = pd.read_csv(self.file, names=self.columns[table], skiprows=self.skip_rows[table])
-                        df['dates'] = pd.date_range(start=dt[0], periods=len(df), freq=dt[1])
-                        df = df[(start < df['dates']) & (df['dates'] < end)]
-                    else:
-                        df = pd.read_csv(self.file, names=self.columns[table], skiprows=self.skip_rows[table],
-                                         parse_dates=True, keep_date_col=True)
-                        df = df[(start < df[dt]) & (df[dt] < end)]
-                    return df
-
-                if self.ext in [".db"]:
-                    con = sqlite3.connect(self.file)
-                    sql_query = """SELECT * FROM '""" + table + """';"""
-                    df = pd.read_sql_query(sql_query, con, parse_dates={dt: '%Y-%m-%d %H:%M:%S'})
+        if table in self.tables and table in self.columns:
+            if self.ext == ".csv":
+                if type(dt) is list:
+                    df = pd.read_csv(self.file, names=self.columns[table], skiprows=self.skip_rows[table])
+                    df['dates'] = pd.date_range(start=dt[0], periods=len(df), freq=dt[1])
+                    df = df[(start < df['dates']) & (df['dates'] < end)]
+                else:
+                    df = pd.read_csv(self.file, names=self.columns[table], skiprows=self.skip_rows[table],
+                                     parse_dates=True, keep_date_col=True)
                     df = df[(start < df[dt]) & (df[dt] < end)]
-                    # cursor = con.cursor()
-                    # data = cursor.execute(sql_query)
-                    # for column in data.description:
-                    #     self.columns[table].append(column[0])
-                    con.close()
-                    return df
+                return df
 
-                if self.ext in [".h5"]:
-                    f = h5py.File(self.file, 'r')
-                    tbl = np.array(f[table])
-                    df = pd.DataFrame(tbl)
-                    df[dt] = df[dt].astype('str')
-                    pd.to_datetime(df[dt], format='%Y-%m-%d %H:%M:%S PDT')
-                    df = df[(start < df[dt]) & (df[dt] < end)]
-                    # self.tables = list(f.keys())
-                    f.close()
-                    return df
+            if self.ext in [".db"]:
+                con = sqlite3.connect(self.file)
+                sql_query = """SELECT * FROM '""" + table + """';"""
+                df = pd.read_sql_query(sql_query, con, parse_dates={dt: '%Y-%m-%d %H:%M:%S'})
+                df = df[(start < df[dt]) & (df[dt] < end)]
+                # cursor = con.cursor()
+                # data = cursor.execute(sql_query)
+                # for column in data.description:
+                #     self.columns[table].append(column[0])
+                con.close()
+                return df
+
+            if self.ext in [".h5"]:
+                f = h5py.File(self.file, 'r')
+                tbl = np.array(f[table])
+                df = pd.DataFrame(tbl)
+                df[dt] = df[dt].astype('str')
+                pd.to_datetime(df[dt], format='%Y-%m-%d %H:%M:%S PDT')
+                df = df[(start < df[dt]) & (df[dt] < end)]
+                # self.tables = list(f.keys())
+                f.close()
+                return df
 
         return None
 
@@ -359,9 +356,8 @@ class Store:
 
     def add_path(self, path, description=""):
         for directory in self.store:
-            if type(directory) is Directory:
-                if path in directory.file:
-                    return directory
+            if type(directory) is Directory and path in directory.file:
+                return directory
         directory = Directory(path, description)
         self.add_directory(directory)
         return directory
@@ -372,9 +368,8 @@ class Store:
 
     def del_directory(self, name):
         for i, directory in enumerate(self.store):
-            if type(directory) is Directory:
-                if directory['name'] == name:
-                    del self.store[i]
+            if type(directory) is Directory and directory['name'] == name:
+                del self.store[i]
 
     def get_directory(self, name):
         if name is None:
@@ -385,16 +380,14 @@ class Store:
             return desc
         else:
             for i, directory in enumerate(self.store):
-                if type(directory) is Directory:
-                    if directory['name'] == name:
-                        return self.store[i]
+                if type(directory) is Directory and directory['name'] == name:
+                    return self.store[i]
         return None
 
     def add_file(self, path, name="", description=""):
         for schema in self.store:
-            if type(schema) is Schema:
-                if path in schema.file:
-                    return schema
+            if type(schema) is Schema and path in schema.file:
+                return schema
         schema = Schema(path, name, description)
         self.add_schema(schema)
         return schema
@@ -405,9 +398,8 @@ class Store:
 
     def del_schema(self, name):
         for i, schema in enumerate(self.store):
-            if type(schema) is Schema:
-                if schema['name'] == name:
-                    del self.store[i]
+            if type(schema) is Schema and schema['name'] == name:
+                del self.store[i]
 
     def get_schema(self, name=None):
         if name is None:
@@ -418,9 +410,8 @@ class Store:
             return desc
         else:
             for schema in self.store:
-                if type(schema) is Schema:
-                    if schema.name == name:
-                        return schema
+                if type(schema) is Schema and schema.name == name:
+                    return schema
         return None
 
     def write(self):

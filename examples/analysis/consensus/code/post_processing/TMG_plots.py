@@ -736,19 +736,17 @@ def RCI_analysis(dso_range, case, data_path, metadata_path, dso_metadata_file, e
                     metadata['billingmeters'][each]['tariff_class'] = 'commercial'
                     c[bldg] += 1
                     commbldgcount += 1
-                    if energybill:
-                        if energy_df.loc[(each, 'kw-hr'), 'sum'] == 0:
-                            commzerometer += 1
-                            zmeter_list.append('DSO ' + str(dso) + ' comm. meter ' + each + ' is zero!')
+                    if energybill and energy_df.loc[(each, 'kw-hr'), 'sum'] == 0:
+                        commzerometer += 1
+                        zmeter_list.append('DSO ' + str(dso) + ' comm. meter ' + each + ' is zero!')
             for bldg in residbldglist:
                 if bldg in metadata['billingmeters'][each]['building_type']:
                     metadata['billingmeters'][each]['tariff_class'] = 'residential'
                     r[bldg] += 1
                     resbldgcount += 1
-                    if energybill:
-                        if energy_df.loc[(each, 'kw-hr'), 'sum'] == 0:
-                            reszerometer += 1
-                            zmeter_list.append('DSO ' + str(dso) + ' res. meter ' + each + ' is zero!')
+                    if energybill and energy_df.loc[(each, 'kw-hr'), 'sum'] == 0:
+                        reszerometer += 1
+                        zmeter_list.append('DSO ' + str(dso) + ' res. meter ' + each + ' is zero!')
             if metadata['billingmeters'][each]['building_type'] == 'UNKNOWN':
                 metadata['billingmeters'][each]['tariff_class'] = 'industrial'
             if metadata['billingmeters'][each]['tariff_class'] is None:
@@ -1436,12 +1434,11 @@ def daily_load_plots(dso, system, subsystem, variable, day, case, comp, agent_pr
         subsystem = ''
     plt.figure()
     plt.plot(case_df, label=case.split('\\')[-1], marker='.')
-    if plot_min_max:
-        if 'real_power_avg' in variable:
-            min_df = get_day_df(dso, system, subsystem, variable.replace('avg','min'), day, case, agent_prefix, gld_prefix)
-            max_df = get_day_df(dso, system, subsystem, variable.replace('avg','max'), day, case, agent_prefix, gld_prefix)
-            plt.plot(min_df, label=case.split('\\')[-1]+'-Min', marker='.')
-            plt.plot(max_df, label=case.split('\\')[-1]+'-Max', marker='.')
+    if plot_min_max and 'real_power_avg' in variable:
+        min_df = get_day_df(dso, system, subsystem, variable.replace('avg','min'), day, case, agent_prefix, gld_prefix)
+        max_df = get_day_df(dso, system, subsystem, variable.replace('avg','max'), day, case, agent_prefix, gld_prefix)
+        plt.plot(min_df, label=case.split('\\')[-1]+'-Min', marker='.')
+        plt.plot(max_df, label=case.split('\\')[-1]+'-Max', marker='.')
 
     if comp is not None:
         plt.plot(comp_df, label=comp.split('\\')[-1])
@@ -2561,18 +2558,16 @@ def metadata_dist_plots(system, sys_class, variable, dso_range, case, agent_pref
                     if variable in ['kw-hr', 'max_kw', 'avg_load', 'load_factor']:
                         if sys_class in ['residential', 'commercial', 'industrial']:
                             #TODO: need to work out why some unknown loads are not getting a tariff class.
-                            if metadata[system][each]['building_type'] != 'UNKNOWN':
-                                if metadata[system][each]['tariff_class'] == sys_class:
-                                    dist_var.append(pop_df.loc[(each, variable), 'sum'])
+                            if metadata[system][each]['building_type'] != 'UNKNOWN' and metadata[system][each]['tariff_class'] == sys_class:
+                                dist_var.append(pop_df.loc[(each, variable), 'sum'])
                         else:
                             if metadata[system][each]['building_type'] == sys_class:
                                 dist_var.append(pop_df.loc[(each, variable), 'sum'])
                     elif variable in ['sqft']:
                         if sys_class in ['residential', 'commercial', 'industrial']:
                             # TODO: need to work out why some unknown loads are not getting a tariff class.
-                            if metadata[system][each]['building_type'] != 'UNKNOWN':
-                                if metadata[system][each]['tariff_class'] == sys_class:
-                                    dist_var.append(metadata[system][each][variable])
+                            if metadata[system][each]['building_type'] != 'UNKNOWN' and metadata[system][each]['tariff_class'] == sys_class:
+                                dist_var.append(metadata[system][each][variable])
                         else:
                             if metadata[system][each]['building_type'] == sys_class:
                                 dist_var.append(metadata[system][each][variable])

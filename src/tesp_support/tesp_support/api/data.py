@@ -104,15 +104,12 @@ def arguments(description="", args=""):
         elif not path.isfile(_args.input_file[0]):
             print('ERROR-> Input file ' + _args.input_file[0] + ' not found')
             _error = True
-    if 'p' in args:
-        if _args.port is None:
-            _error = True
-    if 'c' in args:
-        if _args.component is None:
-            _error = True
-    if 'o' in args:
-        if _args.output_file[0] is None:
-            _error = True
+    if 'p' in args and _args.port is None:
+        _error = True
+    if 'c' in args and _args.component is None:
+        _error = True
+    if 'o' in args and _args.output_file[0] is None:
+        _error = True
     if 'd' in args:
         if _args.output_dir is None:
             _error = True

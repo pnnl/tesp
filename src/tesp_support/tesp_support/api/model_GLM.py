@@ -573,9 +573,8 @@ class GLMModel:
         Returns:
             bool: True if an edge class, False otherwise
         """
-        if exclude is not None:
-            if s in exclude:
-                return False
+        if exclude is not None and s in exclude:
+            return False
         return s in edge_classes
 
     def is_node_class(self, s:str) -> bool:
@@ -1190,11 +1189,9 @@ class GLMModel:
         swing_node = ''
         # Identify swing node in GridLAB-D model
         for n1, data in G.nodes(data=True):
-            if 'nclass' in data:
-                if 'bustype' in data['ndata']:
-                    if data['ndata']['bustype'] == 'SWING':
-                        swing_node = n1
-                        break
+            if 'nclass' in data and 'bustype' in data['ndata'] and data['ndata']['bustype'] == 'SWING':
+                swing_node = n1
+                break
 
         # Finds the load on each segment (i.e. edge, line) by iterating over all
         # load definitions, identifying all affected lines and adding the load

@@ -865,9 +865,9 @@ def calculate_consumer_bills(
     month_to_dir = {}
     for p in os.listdir(case_path):
         parts = p.split("_")
-        if len(parts) > 3 and parts[3] in month_map.values():
-            if "zip" not in p and os.path.isdir(os.path.join(base_path, p)):
-                month_to_dir[parts[3]] = p
+        if (len(parts) > 3 and parts[3] in month_map.values() and
+            "zip" not in p and os.path.isdir(os.path.join(base_path, p))):
+            month_to_dir[parts[3]] = p
 
     # Cycle through each month for which there is energy data and calculate customer bill
     months = list(meter_df.columns[~meter_df.columns.str.contains("sum")])
@@ -1860,9 +1860,9 @@ def calculate_tariff_prices(
         month_to_dir = {}
         for p in os.listdir(case_path):
             parts = p.split("_")
-            if len(parts) > 3 and parts[3] in month_map.values():
-                if "zip" not in p and os.path.isdir(os.path.join(base_case_path, p)):
-                    month_to_dir[parts[3]] = p
+            if (len(parts) > 3 and parts[3] in month_map.values() and
+                "zip" not in p and os.path.isdir(os.path.join(base_case_path, p))):
+                month_to_dir[parts[3]] = p
 
         # Determine the seasons under consideration in the time-of-use rate
         seasons_dict = {}

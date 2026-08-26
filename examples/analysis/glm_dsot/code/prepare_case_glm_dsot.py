@@ -546,52 +546,51 @@ def prepare_case(case:str):
 
         # Copperplate feeder piece
         #bldPrep['CommBldgPopulation'] = gld_feeder.comm_bldgs_pop
-        if config["copperplate_feeder"]:
-            if len(bldPrep['CommBldgPopulation'].keys()) > 0:
-                print("------We are going with the copperplate feeder now------")
-                feed_key = "copperplate_feeder"
-                feed_val['name'] = feed_key
-                dso_val['feeders'][feed_key] = feed_val
-                os.makedirs(caseName + '/' + feed_key)
-                config["outputPath"] = caseName + '/' + feed_key
-                config["caseName"] = feed_key
-                config["outputPath"] = f'{config["outputPath"]}/{config["caseName"]}.glm'
-                config['taxonomy'] = f'{config["copperplate_feeder_name"]}.glm'
-                config["backbone_files"] = config["copperplate_feeder_file"]
-                config["gis_file"] = False
-                config_dump = pyjson5.dumps(config, indent=2)
-                output_file = 'copper_config_dump.json5'
-                with open(os.path.join("../data/", output_file), 'w', encoding='utf-8') as file:
-                    file.write(config_dump)
-                config_dump = gld_feeder.Config(os.path.join("../data/", output_file))
-                gld_feeder.Feeder(config_dump, "copp")
-                os.remove(os.path.join("../data/", output_file))
+        if config["copperplate_feeder"] and len(bldPrep['CommBldgPopulation'].keys()) > 0:
+            print("------We are going with the copperplate feeder now------")
+            feed_key = "copperplate_feeder"
+            feed_val['name'] = feed_key
+            dso_val['feeders'][feed_key] = feed_val
+            os.makedirs(caseName + '/' + feed_key)
+            config["outputPath"] = caseName + '/' + feed_key
+            config["caseName"] = feed_key
+            config["outputPath"] = f'{config["outputPath"]}/{config["caseName"]}.glm'
+            config['taxonomy'] = f'{config["copperplate_feeder_name"]}.glm'
+            config["backbone_files"] = config["copperplate_feeder_file"]
+            config["gis_file"] = False
+            config_dump = pyjson5.dumps(config, indent=2)
+            output_file = 'copper_config_dump.json5'
+            with open(os.path.join("../data/", output_file), 'w', encoding='utf-8') as file:
+                file.write(config_dump)
+            config_dump = gld_feeder.Config(os.path.join("../data/", output_file))
+            gld_feeder.Feeder(config_dump, "copp")
+            os.remove(os.path.join("../data/", output_file))
 
-                gd.glm_diction(caseName, feed_key)
-                shutil.move(caseName + '/' + feed_key + '/' + feed_key + '_glm_dict.json',
-                            caseName + '/' + dso_key + '/' + feed_key + '_glm_dict.json')
+            gd.glm_diction(caseName, feed_key)
+            shutil.move(caseName + '/' + feed_key + '/' + feed_key + '_glm_dict.json',
+                        caseName + '/' + dso_key + '/' + feed_key + '_glm_dict.json')
 
-                # Create the agent dictionary along with the substation YAML file
-                prep.prep_substation(caseName + '/' + feed_key + '/' + feed_key,
-                                     caseName + '/' + dso_key + '/' + feed_key,
-                                     caseName + '/' + weather_agent_name + '/',
-                                     feedercnt,
-                                     config=config,
-                                     hvacSetpt=hvac_setpt)
+            # Create the agent dictionary along with the substation YAML file
+            prep.prep_substation(caseName + '/' + feed_key + '/' + feed_key,
+                                 caseName + '/' + dso_key + '/' + feed_key,
+                                 caseName + '/' + weather_agent_name + '/',
+                                 feedercnt,
+                                 config=config,
+                                 hvacSetpt=hvac_setpt)
 
-                # Save the position data for plotting
-                if config["make_plot"]:
-                    if feedercnt == 1:
-                        position = gld_feeder.position
-                    else:
-                        pos = gld_feeder.position
-                        # Manually scale and translate feeder position data to fit w/ taxonomy
-                        pos = {key: [value[0]*1000, value[1]*1000] for key, value in pos.items()}
-                        position.update(pos)
+            # Save the position data for plotting
+            if config["make_plot"]:
+                if feedercnt == 1:
+                    position = gld_feeder.position
                 else:
-                    position = {}
-                feedercnt += 1
-                print(f"=== DONE WITH COPPERPLATE FEEDER {feed_key:s} for {dso_key:s}. ======\n")
+                    pos = gld_feeder.position
+                    # Manually scale and translate feeder position data to fit w/ taxonomy
+                    pos = {key: [value[0]*1000, value[1]*1000] for key, value in pos.items()}
+                    position.update(pos)
+            else:
+                position = {}
+            feedercnt += 1
+            print(f"=== DONE WITH COPPERPLATE FEEDER {feed_key:s} for {dso_key:s}. ======\n")
 
         # ======================================================================
         print("\n=== MERGING THE FEEDERS UNDER ONE SUBSTATION =====")

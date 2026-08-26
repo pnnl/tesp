@@ -132,16 +132,13 @@ def get_run_solver(name:str, pyo, model, solver, params=None):
         TerminationCondition.feasible,
     }
 
-    if status != SolverStatus.ok or term not in acceptable_terms:
-        # Optional, print more detail:
-        if params:
-            params["success"] = False
-            params["termination"] = term
+    # Optional, print more detail:
+    if (status != SolverStatus.ok or term not in acceptable_terms) and params:
+        params["success"] = False
+        params["termination"] = term
 
         # raise RuntimeError(f"[{name}] Solver '{solver}' failed: "
         #        f"status={status}, termination={term}")
-        
-
     return results
 
 

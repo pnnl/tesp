@@ -128,10 +128,9 @@ if countmax > 0:
 invmax = ''
 invidx = 0
 for i, key in enumerate(inv_keys):
-    if diction['inverters'][key]['billingmeter_id'] == keymax:
-        if diction['inverters'][key]['resource'] == 'solar':
-            invmax = key
-            invidx = i
+    if diction['inverters'][key]['billingmeter_id'] == keymax and diction['inverters'][key]['resource'] == 'solar':
+        invmax = key
+        invidx = i
 print(f'Inverter to plot is {invmax:s} [{invidx:d}]')
 
 # display a plot

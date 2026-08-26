@@ -468,9 +468,8 @@ def load_energy_data(results_path, dso_range, update_data, scale, labelvals, cal
                 if gendata_df.loc['Capacity (MW)', fuel] != 0:
                     data['data'][0]['link']['value'][link_id] = gendata_df.loc['Capacity (MW)', fuel] * \
                                                                 gendata_df.loc['Capacity Factor (-)', fuel]
-                elif mode == 'Peak':
-                    if gendata_df.loc['Coincident Peak Power (MW)', fuel] != 0:
-                        data['data'][0]['link']['value'][link_id] = gendata_df.loc['Coincident Peak Power (MW)', fuel]
+                elif mode == 'Peak' and gendata_df.loc['Coincident Peak Power (MW)', fuel] != 0:
+                    data['data'][0]['link']['value'][link_id] = gendata_df.loc['Coincident Peak Power (MW)', fuel]
 
         # Load Building and DER load totals:
         loaddata_df = pd.read_csv(results_path + "/DSO_load_stats.csv", index_col=[0], dtype=object)
@@ -628,9 +627,8 @@ def sankey_plot():
     # dso_range = range(1, 9)
     dsorange = []
     for DSO in DSOmetadata:
-        if 'DSO' in DSO:
-            if DSOmetadata[DSO]['used']:
-                dsorange.append(int(DSO.split('_')[-1]))
+        if 'DSO' in DSO and DSOmetadata[DSO]['used']:
+            dsorange.append(int(DSO.split('_')[-1]))
 
     if metric_mode == 'CashFlow':
         data = load_CFS_data(data_path, dsorange, updatedata, scaledata, label_values, calibration)

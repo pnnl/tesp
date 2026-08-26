@@ -169,9 +169,8 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
         # determine active DSOs from metadata file).
         dso_range = []
         for DSO in DSOmetadata:
-            if 'DSO' in DSO:
-                if DSOmetadata[DSO]['used']:
-                    dso_range.append(int(DSO.split('_')[-1]))
+            if 'DSO' in DSO and DSOmetadata[DSO]['used']:
+                dso_range.append(int(DSO.split('_')[-1]))
 
         case_name = ''
         month_def = []

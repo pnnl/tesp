@@ -89,9 +89,8 @@ def prep_precool(name_root, time_step=15):
                     house_name = lst[1].strip(';')
                 if lst[0] == 'parent':
                     meter_name = lst[1].strip(';')
-                if lst[0] == 'cooling_system_type':
-                    if lst[1].strip(';') == 'ELECTRIC':
-                        isELECTRIC = True
+                if lst[0] == 'cooling_system_type' and lst[1].strip(';') == 'ELECTRIC':
+                    isELECTRIC = True
         elif len(lst) == 1:
             if inHouses:
                 inHouses = False

@@ -38,7 +38,7 @@ jobs:
         #       F841    unused-variable
         #       E9xx: Runtime (https://pycodestyle.pycqa.org/en/latest/intro.html#error-codes)
         #       E731    lambda-assignment
-        ruff check ./src --ignore=F841,E731,UP031,SIM102,SIM113,SIM115,DTZ001,DTZ005,DTZ007,BLE001,S110,TRY002,N999,RUF059,LOG015,PLW0602
+        ruff check ./src --ignore=F841,E731,UP031,SIM113,SIM115,DTZ001,DTZ005,DTZ007,BLE001,S110,TRY002,N999,RUF059,LOG015
         #       exit-zero treats all errors as warnings.
         # ruff check ./src --exit-zero --statistics
     

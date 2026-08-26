@@ -222,9 +222,8 @@ def post_process():
 
     dso_range = []
     for DSO in DSOmetadata:
-        if 'DSO' in DSO:
-            if DSOmetadata[DSO]['used']:
-                dso_range.append(int(DSO.split('_')[-1]))
+        if 'DSO' in DSO and DSOmetadata[DSO]['used']:
+            dso_range.append(int(DSO.split('_')[-1]))
 
     processlist = []
     for dso_num in dso_range:

@@ -454,9 +454,9 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
                         children = val['children']
                         if len([s for s in children if inc in s]) > 0:
                             if len([s for s in children if v in s]) > 0:
-                                temp_df.loc[temp_df['index']==[next(s for s in children if inc in s)],k] = 'Yes'
+                                temp_df.loc[temp_df['index']==next(s for s in children if inc in s),k] = 'Yes'
                             else:
-                                temp_df.loc[temp_df['index']==[next(s for s in children if inc in s)],k] = 'No'
+                                temp_df.loc[temp_df['index']==next(s for s in children if inc in s),k] = 'No'
             # Merge all DSO house parameters into one dataframe
             hse_df = pd.concat([hse_df,temp_df],ignore_index=True)
         # Get HVAC agent data

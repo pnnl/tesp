@@ -289,7 +289,7 @@ def ProcessGLM(fileroot, weatherName):
 
 
 def prep_ercot_substation(gldfileroot, jsonfile='', weatherName=''):
-    global dt, period, Eplus_Bus, agent_participation
+    global dt, period, agent_participation
     global wakeup_start_lo, wakeup_start_hi, wakeup_set_lo, wakeup_set_hi
     global daylight_start_lo, daylight_start_hi, daylight_set_lo, daylight_set_hi
     global evening_start_lo, evening_start_hi, evening_set_lo, evening_set_hi

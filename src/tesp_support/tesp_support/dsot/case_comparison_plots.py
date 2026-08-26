@@ -1239,9 +1239,8 @@ def customer_cfs_delta(cases, data_paths, metadata_file, metadata_path = None):
                 'Rural': []}
 
     for DSO in metadata():
-        if 'DSO' in DSO:
-            if metadata[DSO]['used']:
-                dso_type[metadata[DSO]['utility_type']].append(int(DSO.split('_')[-1]))
+        if 'DSO' in DSO and metadata[DSO]['used']:
+            dso_type[metadata[DSO]['utility_type']].append(int(DSO.split('_')[-1]))
 
     # Determine participating DER mix for each customer:
 

@@ -33,7 +33,6 @@ Todo:
 
 """
 
-import itertools
 import os.path
 import re
 import sys
@@ -1037,10 +1036,9 @@ def identify_ercot_houses(model, h, t, avgHouse, rgn):
                     # don't populate houses onto A, C, I or U load_class nodes
                     if 'load_class' in model[t][o]:
                         cls = model[t][o]['load_class']
-                        if cls == 'R':
-                            if kva > 1.0:
-                                nh = int((kva / avgHouse) + 0.5)
-                                total_houses[phs] += nh
+                        if cls == 'R' and kva > 1.0:
+                            nh = int((kva / avgHouse) + 0.5)
+                            total_houses[phs] += nh
                     if nh > 0:
                         lg_v_sm = kva / avgHouse - nh  # >0 if we rounded down the number of houses
                         bldg, ti = selectResidentialBuilding(dsoThermalPct, np.random.uniform(0, 1))
@@ -1100,84 +1098,83 @@ def replace_commercial_loads(model, h, t, avgBuilding):
     sqft_kva_ratio = 0.005  # Average com building design load is 5 W/sq ft.
     if t in model:
         for o in list(model[t].keys()):
-            if 'load_class' in model[t][o]:
-                if model[t][o]['load_class'] == 'C':
-                    kva = accumulate_load_kva(model[t][o])
-                    total_commercial += 1
-                    total_comm_kva += kva
-                    vln = float(model[t][o]['nominal_voltage'])
-                    nphs = 0
-                    phases = model[t][o]['phases']
-                    if 'A' in phases:
-                        nphs += 1
-                    if 'B' in phases:
-                        nphs += 1
-                    if 'C' in phases:
-                        nphs += 1
-                    nzones = int((kva / avgBuilding) + 0.5)
-                    target_sqft = kva / sqft_kva_ratio
-                    sqft_error = -target_sqft
-                    select_bldg = None
-                    # TODO: Need a way to place all remaining buildings if this is the last/fourth feeder.
-                    # TODO: Need a way to place link for j-modelica buildings on fourth feeder of Urban DSOs
-                    # TODO: Need to work out what to do if we run out of commercial buildings before we get to the fourth feeder.
-                    for bldg in comm_bldgs_pop:
-                        if 0 >= (comm_bldgs_pop[bldg][1] - target_sqft) > sqft_error:
-                            select_bldg = bldg
-                            sqft_error = comm_bldgs_pop[bldg][1] - target_sqft
+            if 'load_class' in model[t][o] and model[t][o]['load_class'] == 'C':
+                kva = accumulate_load_kva(model[t][o])
+                total_commercial += 1
+                total_comm_kva += kva
+                vln = float(model[t][o]['nominal_voltage'])
+                nphs = 0
+                phases = model[t][o]['phases']
+                if 'A' in phases:
+                    nphs += 1
+                if 'B' in phases:
+                    nphs += 1
+                if 'C' in phases:
+                    nphs += 1
+                nzones = int((kva / avgBuilding) + 0.5)
+                target_sqft = kva / sqft_kva_ratio
+                sqft_error = -target_sqft
+                select_bldg = None
+                # TODO: Need a way to place all remaining buildings if this is the last/fourth feeder.
+                # TODO: Need a way to place link for j-modelica buildings on fourth feeder of Urban DSOs
+                # TODO: Need to work out what to do if we run out of commercial buildings before we get to the fourth feeder.
+                for bldg in comm_bldgs_pop:
+                    if 0 >= (comm_bldgs_pop[bldg][1] - target_sqft) > sqft_error:
+                        select_bldg = bldg
+                        sqft_error = comm_bldgs_pop[bldg][1] - target_sqft
 
-                    # if nzones > 14 and nphs == 3:
-                    #   comm_type = 'OFFICE'
-                    #   total_office += 1
-                    # elif nzones > 5 and nphs > 1:
-                    #   comm_type = 'BIGBOX'
-                    #   total_bigbox += 1
-                    # elif nzones > 0:
-                    #   comm_type = 'STRIPMALL'
-                    #   total_stripmall += 1
-                    if select_bldg is not None:
-                        comm_name = select_bldg
-                        comm_type = comm_bldgs_pop[select_bldg][0]
-                        comm_size = comm_bldgs_pop[select_bldg][1]
-                        if comm_type == 'office':
-                            total_office += 1
-                        elif comm_type == 'warehouse_storage':
-                            total_warehouse_storage += 1
-                        elif comm_type == 'big_box':
-                            total_big_box += 1
-                        elif comm_type == 'strip_mall':
-                            total_strip_mall += 1
-                        elif comm_type == 'education':
-                            total_education += 1
-                        elif comm_type == 'food_service':
-                            total_food_service += 1
-                        elif comm_type == 'food_sales':
-                            total_food_sales += 1
-                        elif comm_type == 'lodging':
-                            total_lodging += 1
-                        elif comm_type == 'healthcare_inpatient':
-                            total_healthcare_inpatient += 1
-                        elif comm_type == 'low_occupancy':
-                            total_low_occupancy += 1
+                # if nzones > 14 and nphs == 3:
+                #   comm_type = 'OFFICE'
+                #   total_office += 1
+                # elif nzones > 5 and nphs > 1:
+                #   comm_type = 'BIGBOX'
+                #   total_bigbox += 1
+                # elif nzones > 0:
+                #   comm_type = 'STRIPMALL'
+                #   total_stripmall += 1
+                if select_bldg is not None:
+                    comm_name = select_bldg
+                    comm_type = comm_bldgs_pop[select_bldg][0]
+                    comm_size = comm_bldgs_pop[select_bldg][1]
+                    if comm_type == 'office':
+                        total_office += 1
+                    elif comm_type == 'warehouse_storage':
+                        total_warehouse_storage += 1
+                    elif comm_type == 'big_box':
+                        total_big_box += 1
+                    elif comm_type == 'strip_mall':
+                        total_strip_mall += 1
+                    elif comm_type == 'education':
+                        total_education += 1
+                    elif comm_type == 'food_service':
+                        total_food_service += 1
+                    elif comm_type == 'food_sales':
+                        total_food_sales += 1
+                    elif comm_type == 'lodging':
+                        total_lodging += 1
+                    elif comm_type == 'healthcare_inpatient':
+                        total_healthcare_inpatient += 1
+                    elif comm_type == 'low_occupancy':
+                        total_low_occupancy += 1
 
-                        # code = 'total_' + comm_type + ' += 1'
-                        # exec(code)
-                        # my_exec(code)
-                        # eval(compile(code, '<string>', 'exec'))
+                    # code = 'total_' + comm_type + ' += 1'
+                    # exec(code)
+                    # my_exec(code)
+                    # eval(compile(code, '<string>', 'exec'))
 
-                        del comm_bldgs_pop[select_bldg]
-                    else:
-                        if nzones > 0:
-                            print('Commercial building could not be found for ', f'{kva:.2f}', ' KVA load')
-                        comm_name = 'streetlights'
-                        comm_type = 'ZIPLOAD'
-                        comm_size = 0
-                        total_zipload += 1
-                    mtr = gld_strict_name(model[t][o]['parent'])
-                    extra_billing_meters.add(mtr)
-                    comm_loads[o] = [mtr, comm_type, comm_size, kva, nphs, phases, vln, total_commercial, comm_name]
-                    model[t][o]['groupid'] = comm_type + '_' + str(comm_size)
-                    del model[t][o]
+                    del comm_bldgs_pop[select_bldg]
+                else:
+                    if nzones > 0:
+                        print('Commercial building could not be found for ', f'{kva:.2f}', ' KVA load')
+                    comm_name = 'streetlights'
+                    comm_type = 'ZIPLOAD'
+                    comm_size = 0
+                    total_zipload += 1
+                mtr = gld_strict_name(model[t][o]['parent'])
+                extra_billing_meters.add(mtr)
+                comm_loads[o] = [mtr, comm_type, comm_size, kva, nphs, phases, vln, total_commercial, comm_name]
+                model[t][o]['groupid'] = comm_type + '_' + str(comm_size)
+                del model[t][o]
     print('Found', total_commercial, 'commercial loads totaling', f'{total_comm_kva:.2f}', 'KVA')
     print('  ', total_office, 'med/small offices,')
     print('  ', total_warehouse_storage, 'warehouses,')
@@ -1407,9 +1404,8 @@ def write_voltage_class(model, h, t, op, vprim, vll, secmtrnode):
             name = o  # model[t][o]['name']
             phs = model[t][o]['phases']
             vnom = vprim
-            if 'bustype' in model[t][o]:
-                if model[t][o]['bustype'] == 'SWING':
-                    write_substation(op, name, phs, vnom, vll)
+            if 'bustype' in model[t][o] and model[t][o]['bustype'] == 'SWING':
+                write_substation(op, name, phs, vnom, vll)
             parent = ''
             prefix = ''
             if str.find(phs, 'S') >= 0:
@@ -1438,9 +1434,9 @@ def write_voltage_class(model, h, t, op, vprim, vll, secmtrnode):
             print('  name ' + gld_strict_name(name) + ';', file=op)
             if 'groupid' in model[t][o]:
                 print('  groupid ' + model[t][o]['groupid'] + ';', file=op)
-            if 'bustype' in model[t][o]:  # already moved the SWING bus behind substation transformer
-                if model[t][o]['bustype'] != 'SWING':
-                    print('  bustype ' + model[t][o]['bustype'] + ';', file=op)
+            # already moved the SWING bus behind substation transformer
+            if 'bustype' in model[t][o] and model[t][o]['bustype'] != 'SWING':
+                print('  bustype ' + model[t][o]['bustype'] + ';', file=op)
             print('  phases ' + phs + ';', file=op)
             print('  nominal_voltage ' + str(vnom) + ';', file=op)
             if 'load_class' in model[t][o]:
@@ -1728,21 +1724,20 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
                         G.add_edge(o, p, eclass='parent', ename=o, edata={})
 
         # now we backfill node attributes
-        for t, value in model.items:
+        for t, value in model.items():
             if is_node_class(t):
-                for o in model[t]:
+                for o in value:
                     if o in G.nodes():
                         G.nodes()[o]['nclass'] = t
-                        G.nodes()[o]['ndata'] = model[t][o]
+                        G.nodes()[o]['ndata'] = value[o]
                     else:
                         print('orphaned node', t, o)
 
         swing_node = ''
         for n1, data in G.nodes(data=True):
-            if 'nclass' in data:
-                if 'bustype' in data['ndata']:
-                    if data['ndata']['bustype'] == 'SWING':
-                        swing_node = n1
+            if 'nclass' in data and 'bustype' in data['ndata'] and data['ndata']['bustype'] == 'SWING':
+                swing_node = n1
+                break
 
         sub_graphs = [G.subgraph(c).copy() for c in nx.connected_components(G)]
         seg_loads = {}  # [name][kva, phases]
@@ -1910,7 +1905,6 @@ def populate_feeder(config=None):
     global work_path, weather_file
     global timezone, starttime, endtime, timestep
     global metrics, metrics_interval, metrics_interim, metrics_type, electric_cooling_percentage
-    global water_heater_percentage, water_heater_participation
     global caseName, port, substation_name
     global house_nodes, small_nodes, comm_loads
     global inverter_efficiency, round_trip_efficiency
