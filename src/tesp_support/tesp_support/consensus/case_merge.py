@@ -16,6 +16,7 @@ from os import path
 
 from ..api.helpers import gld_strict_name
 
+
 def merge_glm(target, sources, xfmva):
     """ Combines GridLAB-D input files into "target". The source files must already exist.
 
@@ -47,20 +48,19 @@ def merge_glm(target, sources, xfmva):
                     if ('object ' in line) and (
                             ('configuration' in line) or ('conductor' in line) or ('spacing' in line)):
                         inConfig = True
-                    if inConfig and inSubstation:
-                        if ' name ' in line:
-                            toks = line.split()
-                            name = toks[1][:-1]
-                            line = '  name ' + fdr + '_' + name + ';'
-                            inConfig = False
-                    if not inSubstation:
-                        if (' spacing ' in line) or (' configuration ' in line) or \
-                                ('  conductor_1' in line) or ('  conductor_2' in line) or \
-                                ('  conductor_A' in line) or ('  conductor_B' in line) or \
-                                ('  conductor_C' in line) or ('  conductor_N' in line):
-                            toks = line.split()
-                            name = toks[1][:-1]
-                            line = '  ' + toks[0] + ' ' + fdr + '_' + name + ';'
+                    if inConfig and inSubstation and ' name ' in line:
+                        toks = line.split()
+                        name = toks[1][:-1]
+                        line = '  name ' + fdr + '_' + name + ';'
+                        inConfig = False
+                    if (not inSubstation and
+                        (' spacing ' in line) or (' configuration ' in line) or \
+                        ('  conductor_1' in line) or ('  conductor_2' in line) or \
+                        ('  conductor_A' in line) or ('  conductor_B' in line) or \
+                        ('  conductor_C' in line) or ('  conductor_N' in line)):
+                        toks = line.split()
+                        name = toks[1][:-1]
+                        line = '  ' + toks[0] + ' ' + fdr + '_' + name + ';'
                     if '#ifdef USE_FNCS' in line:
                         inSubstation = True
                     if inSubstation:
@@ -70,9 +70,9 @@ def merge_glm(target, sources, xfmva):
                             else:
                                 line = '  configure ' + path.splitext(path.basename(target))[0] + '.json;'
                         elif ' power_rating ' in line:
-                            line = '  power_rating {:.2f};'.format(xfmva * 1e3)
+                            line = f'  power_rating {xfmva * 1e3:.2f};'
                         elif ' base_power ' in line:
-                            line = '  base_power {:.2f};'.format(xfmva * 1e6)
+                            line = f'  base_power {xfmva * 1e6:.2f};'
                         elif ' to ' in line:
                             toks = line.split()
                             thisHeadNode = toks[1][:-1]
@@ -164,7 +164,7 @@ def merge_agent_dict(target, sources):
     for fdr in sources:
         lp = open(path.dirname(target) + '/' + fdr + '_agent_dict.json').read()
         cfg = json.loads(lp)
-        for key in cfg.keys():
+        for key in cfg:
             if key in ["StartTime", "EndTime", "LogLevel", "size", "solver",
                        "Metrics", "MetricsType", "MetricsInterval"]:
                 diction[key] = cfg[key]

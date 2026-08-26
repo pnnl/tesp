@@ -170,8 +170,8 @@ class weather_forecast:
         n = len(weather)
         error = numpy.zeros(n)
         ############## sampling the error distribution
-        ENV_l = list()
-        ENV_U = list()
+        ENV_l = []
+        ENV_U = []
         for i in range(n):
             if bias[i] > 0:
                 EL = -envelope[i] + bias[i]

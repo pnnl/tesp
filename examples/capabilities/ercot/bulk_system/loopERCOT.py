@@ -4,10 +4,10 @@
 import json
 import math
 from copy import deepcopy
+
 import numpy as np
 import pypower.api as pp
 import scipy.interpolate as ip
-
 import tesp_support.api.tso_helpers as tso
 
 casename = 'ercot_8'
@@ -45,7 +45,6 @@ def rescale_case(ppc, scale):
     ppc['bus'][:, 3] *= scale  # Qd
     ppc['bus'][:, 5] *= (scale * scale)  # Qs
     ppc['gen'][:, 1] *= scale  # Pg
-    return
 
 
 # from 'ARIMA-Based Time Series Model of Stochastic Wind Power Generation'
@@ -216,9 +215,7 @@ ts = 0
 tnext_opf = 0
 
 op = open(casename + '.csv', 'w')
-print('seconds,OPFconverged,TotalLoad,TotalGen,SwingGen,LMP1,LMP8,gas1,coal1,nuc1,gas2,' +
-      'coal2,nuc2,gas3,coal3,gas4,gas5,coal5,gas7,coal7,wind1,wind3,wind4,wind6,wind7',
-      sep=',', file=op, flush=True)
+print('seconds,OPFconverged,TotalLoad,TotalGen,SwingGen,LMP1,LMP8,gas1,coal1,nuc1,gas2,' + 'coal2,nuc2,gas3,coal3,gas4,gas5,coal5,gas7,coal7,wind1,wind3,wind4,wind6,wind7', file=op, flush=True)
 while ts <= tmax:
     # fluctuate the wind plants
     if ts >= tnext_wind:
@@ -255,10 +252,9 @@ while ts <= tmax:
             wind_MW += p
             # reset the unit capacity; this will 'stick' for the next wind_period
             ppc['gen'][int(key), 8] = p
-            if ppc['gen'][int(key), 1] > p:
-                ppc['gen'][int(key), 1] = p
+            ppc['gen'][int(key), 1] = min(ppc['gen'][int(key), 1], p)
         tnext_wind += wind_period
-        print('{:6d} # {:d} wind plants produce {:.2f} MW'.format(ts, len(wind_plants), wind_MW))
+        print(f'{ts:6d} # {len(wind_plants):d} wind plants produce {wind_MW:.2f} MW')
 
     # always update the unresponsive load
     #  loads['h'].append (float(ts) / 3600.0)
@@ -291,29 +287,29 @@ while ts <= tmax:
             if opf_gen[idx, 0] == swing_bus:
                 Pswing += opf_gen[idx, 1]
         print(ts, ropf['success'],
-              '{:.2f}'.format(opf_bus[:, 2].sum()),
-              '{:.2f}'.format(opf_gen[:, 1].sum()),
-              '{:.2f}'.format(Pswing),
-              '{:.4f}'.format(opf_bus[0, 13]),
-              '{:.4f}'.format(opf_bus[7, 13]),
-              '{:.2f}'.format(opf_gen[0, 1]),
-              '{:.2f}'.format(opf_gen[1, 1]),
-              '{:.2f}'.format(opf_gen[2, 1]),
-              '{:.2f}'.format(opf_gen[3, 1]),
-              '{:.2f}'.format(opf_gen[4, 1]),
-              '{:.2f}'.format(opf_gen[5, 1]),
-              '{:.2f}'.format(opf_gen[6, 1]),
-              '{:.2f}'.format(opf_gen[7, 1]),
-              '{:.2f}'.format(opf_gen[8, 1]),
-              '{:.2f}'.format(opf_gen[9, 1]),
-              '{:.2f}'.format(opf_gen[10, 1]),
-              '{:.2f}'.format(opf_gen[11, 1]),
-              '{:.2f}'.format(opf_gen[12, 1]),
-              '{:.2f}'.format(opf_gen[13, 1]),
-              '{:.2f}'.format(opf_gen[14, 1]),
-              '{:.2f}'.format(opf_gen[15, 1]),
-              '{:.2f}'.format(opf_gen[16, 1]),
-              '{:.2f}'.format(opf_gen[17, 1]),
+              f'{opf_bus[:, 2].sum():.2f}',
+              f'{opf_gen[:, 1].sum():.2f}',
+              f'{Pswing:.2f}',
+              f'{opf_bus[0, 13]:.4f}',
+              f'{opf_bus[7, 13]:.4f}',
+              f'{opf_gen[0, 1]:.2f}',
+              f'{opf_gen[1, 1]:.2f}',
+              f'{opf_gen[2, 1]:.2f}',
+              f'{opf_gen[3, 1]:.2f}',
+              f'{opf_gen[4, 1]:.2f}',
+              f'{opf_gen[5, 1]:.2f}',
+              f'{opf_gen[6, 1]:.2f}',
+              f'{opf_gen[7, 1]:.2f}',
+              f'{opf_gen[8, 1]:.2f}',
+              f'{opf_gen[9, 1]:.2f}',
+              f'{opf_gen[10, 1]:.2f}',
+              f'{opf_gen[11, 1]:.2f}',
+              f'{opf_gen[12, 1]:.2f}',
+              f'{opf_gen[13, 1]:.2f}',
+              f'{opf_gen[14, 1]:.2f}',
+              f'{opf_gen[15, 1]:.2f}',
+              f'{opf_gen[16, 1]:.2f}',
+              f'{opf_gen[17, 1]:.2f}',
               sep=',', file=op, flush=True)
         tnext_opf += period
 
@@ -354,10 +350,8 @@ while ts <= tmax:
         bus_accum[str(busnum)][3] += row[3]
         bus_accum[str(busnum)][4] += row[8]
         bus_accum[str(busnum)][5] += Vpu
-        if Vpu > bus_accum[str(busnum)][6]:
-            bus_accum[str(busnum)][6] = Vpu
-        if Vpu < bus_accum[str(busnum)][7]:
-            bus_accum[str(busnum)][7] = Vpu
+        bus_accum[str(busnum)][6] = max(bus_accum[str(busnum)][6], Vpu)
+        bus_accum[str(busnum)][7] = min(bus_accum[str(busnum)][7], Vpu)
     for i in range(gen.shape[0]):
         row = gen[i].tolist()
         busidx = int(row[0] - 1)

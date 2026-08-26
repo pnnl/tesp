@@ -1,10 +1,10 @@
 # Copyright (c) 2021-2025 Battelle Memorial Institute
 # file: test_wind.py
 
-import numpy as np
-import matplotlib.pyplot as plt
 import math
-from scipy import stats
+
+import matplotlib.pyplot as plt
+import numpy as np
 from statsmodels import api as sm
 
 
@@ -59,7 +59,7 @@ cov = p.std() / p_avg
 fig, ax = plt.subplots(4, 1)
 
 ax[0].set_title ('LARIMA(0,1,1) Wind Power Output Model: CF = '
-								 + '{:.2f}'.format (cf) + ', COV = ' + '{:.2f}'.format (cov))
+								 + f'{cf:.2f}' + ', COV = ' + f'{cov:.2f}')
 ax[0].set_ylabel ('MW vs. Hours')
 ax[0].grid (linestyle = '-')
 ax[0].plot (h, p, 'r')

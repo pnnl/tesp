@@ -6,13 +6,14 @@
     Intended for simple fast visual plots (works better on IDE so multiple plots can be compared)
     Does not save plots to file
 """
+import datetime
 import itertools
 import json
-import numpy as np
-from copy import deepcopy
-import pandas as pd
 import warnings
-import datetime
+from copy import deepcopy
+
+import numpy as np
+import pandas as pd
 
 warnings.filterwarnings("ignore")
 # #####################################################start conf plot
@@ -49,7 +50,7 @@ def get_metrics_full_multiple_KEY_Mdays_H(file_name, pre_file, pos_file):
         all_homes_I_ver (list of DataFrame): min, mean, max, and the sum of the variables of all the Keys (i.e., "agent")
         data_individual (list of DataFrame): variables for individual homes
     """
-    d1 = dict()
+    d1 = {}
     for n in range(days * 24):
         print(pre_file + file_name + str(n) + pos_file)
         file = open(pre_file + file_name + str(n) + pos_file, 'r')
@@ -64,7 +65,7 @@ def get_metrics_full_multiple_KEY_Mdays_H(file_name, pre_file, pos_file):
     I_ver = d1
 
     temp = {}
-    if 'bid_four_point_da' in meta_I_ver.keys():
+    if 'bid_four_point_da' in meta_I_ver:
         j = 0
         for i in range(48):
             string_N = 'bid_four_point_rt_' + str(j + 1)
@@ -141,13 +142,12 @@ def get_metrics_full_multiple_KEY_Mdays_H(file_name, pre_file, pos_file):
     Ip = pd.DataFrame(data=data, index=pd.MultiIndex.from_product([index, range(np.shape(data_I_ver)[0])]),
                       columns=range(np.shape(data_I_ver)[2]))
 
-    all_homes_I_ver = list()
+    all_homes_I_ver = []
     all_homes_I_ver.append(Ip.min(level=0))  # use axis if using panel
     all_homes_I_ver.append(Ip.mean(level=0))
     all_homes_I_ver.append(Ip.max(level=0))
     all_homes_I_ver.append(Ip.sum(level=0))
 
-    data_individual = list()
     data_individual = [pd.DataFrame(data_I_ver[i, :, :], index=index) for i in range(x)]
 
     return meta_I_ver, start_time, all_homes_I_ver, data_individual, list(I_ver[times[0]].keys())  # indovidual homes
@@ -167,7 +167,7 @@ def get_metrics_full_multiple_KEY_Mdays(file_name, pre_file, pos_file):
         all_homes_I_ver (list of DataFrame): min, mean, max, and the sum of the variables of all the Keys (i.e., "agent")
         data_individual (list of DataFrame): variables for individual homes
     """
-    d1 = dict()
+    d1 = {}
     # days = 1
     hours = days * 24
     for n in range(hours):
@@ -184,7 +184,7 @@ def get_metrics_full_multiple_KEY_Mdays(file_name, pre_file, pos_file):
     I_ver = d1
 
     temp = {}
-    if 'bid_four_point_rt' in meta_I_ver.keys():
+    if 'bid_four_point_rt' in meta_I_ver:
         temp.update({'bid_four_point_rt_1': {'units': 'kW', 'index': 0}})
         temp.update({'bid_four_point_rt_2': {'units': '$', 'index': 1}})
         temp.update({'bid_four_point_rt_3': {'units': 'kW', 'index': 2}})
@@ -193,13 +193,13 @@ def get_metrics_full_multiple_KEY_Mdays(file_name, pre_file, pos_file):
         temp.update({'bid_four_point_rt_6': {'units': '$', 'index': 5}})
         temp.update({'bid_four_point_rt_7': {'units': 'kW', 'index': 6}})
         temp.update({'bid_four_point_rt_8': {'units': '$', 'index': 7}})
-        for i in meta_I_ver.keys():
+        for i in meta_I_ver:
             if 'bid_four_point_rt' in i:
                 pass
             else:
                 temp.update({i: {'units': meta_I_ver[i]['units'], 'index': meta_I_ver[i]['index'] + 7}})
     else:
-        for i in meta_I_ver.keys():
+        for i in meta_I_ver:
             if 'bid_four_point_rt' in i:
                 pass
             else:
@@ -255,13 +255,12 @@ def get_metrics_full_multiple_KEY_Mdays(file_name, pre_file, pos_file):
     Ip = pd.DataFrame(data=data, index=pd.MultiIndex.from_product([index, range(np.shape(data_I_ver)[0])]),
                       columns=range(np.shape(data_I_ver)[2]))
 
-    all_homes_I_ver = list()
+    all_homes_I_ver = []
     all_homes_I_ver.append(Ip.min(level=0))  # use axis if using panel
     all_homes_I_ver.append(Ip.mean(level=0))
     all_homes_I_ver.append(Ip.max(level=0))
     all_homes_I_ver.append(Ip.sum(level=0))
 
-    data_individual = list()
     data_individual = [pd.DataFrame(data_I_ver[i, :, :], index=index) for i in range(x)]
 
     return meta_I_ver, start_time, all_homes_I_ver, data_individual, list(I_ver[times[0]].keys())  # indovidual homes
@@ -290,7 +289,7 @@ def get_metrics_full_multiple_KEY(file_name, pre_file, pos_file, to_hour=True):
     meta_I_ver = I_ver.pop('Metadata')
 
     temp = {}
-    if 'bid_four_point_rt' in meta_I_ver.keys():
+    if 'bid_four_point_rt' in meta_I_ver:
         temp.update({'bid_four_point_rt_1': {'units': 'kW', 'index': 0}})
         temp.update({'bid_four_point_rt_2': {'units': '$', 'index': 1}})
         temp.update({'bid_four_point_rt_3': {'units': 'kW', 'index': 2}})
@@ -299,7 +298,7 @@ def get_metrics_full_multiple_KEY(file_name, pre_file, pos_file, to_hour=True):
         temp.update({'bid_four_point_rt_6': {'units': '$', 'index': 5}})
         temp.update({'bid_four_point_rt_7': {'units': 'kW', 'index': 6}})
         temp.update({'bid_four_point_rt_8': {'units': '$', 'index': 7}})
-        for i in meta_I_ver.keys():
+        for i in meta_I_ver:
             if 'bid_four_point_rt' in i:
                 pass
             else:
@@ -355,13 +354,12 @@ def get_metrics_full_multiple_KEY(file_name, pre_file, pos_file, to_hour=True):
     Ip = pd.DataFrame(data=data, index=pd.MultiIndex.from_product([index, range(np.shape(data_I_ver)[0])]),
                       columns=range(np.shape(data_I_ver)[2]))
 
-    all_homes_I_ver = list()
+    all_homes_I_ver = []
     all_homes_I_ver.append(Ip.min(level=0))  # use axis if using panel
     all_homes_I_ver.append(Ip.mean(level=0))
     all_homes_I_ver.append(Ip.max(level=0))
     all_homes_I_ver.append(Ip.sum(level=0))
 
-    data_individual = list()
     data_individual = [pd.DataFrame(data_I_ver[i, :, :], index=index) for i in range(x)]
 
     return meta_I_ver, start_time, all_homes_I_ver, data_individual, list(I_ver[times[0]].keys())  # indovidual homes
@@ -380,13 +378,10 @@ def make_convergency_test(t, data_s, tf=47):
     """
     index = [tf - y for y in range(tf + 1)]
     price = []
-    price = list()
     for i in index:
         try:
-            #            oi = data_s[t][i]
-            #            print(oi)
             price.append(data_s[t][i])
-        except:
+        except Exception:
             return price
         t = t + 1
     return deepcopy(price)
@@ -401,11 +396,11 @@ def get_first_h(data_s):
     Returns:
         max_delta (int): worse hour in t
     """
-    price = list()
+    price = []
     for i in range(len(data_s)):
         try:
             price.append(data_s[i][0])
-        except:
+        except Exception:
             return price
     return price
 
@@ -425,7 +420,7 @@ def get_data_multiple_days(V_analis, days, pre_file, pos_file):
         Order (list of Metadata): list of matadata in proper time order
 
     """
-    d1 = dict()
+    d1 = {}
     # for n in range(days*24):
     for n in range(days * 12):
         file_name = V_analis + str(n) + '_metrics'
@@ -477,7 +472,7 @@ def get_data_multiple_days_10AM(V_analis, days, pre_file, pos_file):
         Order (list of Metadata): list of matadata in proper time order
 
     """
-    d1 = dict()
+    d1 = {}
     for n in range(int(days)):
         file_name = V_analis + str(n * 24 + 10) + '_metrics'
         file = open(pre_file + file_name + pos_file, 'r')
@@ -515,7 +510,7 @@ def get_data_multiple_days_10AM(V_analis, days, pre_file, pos_file):
 
 if __name__ == "__main__":
     # pre_file_out = 'wh_hvac_error/'  #
-    pre_file_out = 'TMG_helics_1_agent/'  #
+    pre_file_out = 'TMG_helics_1_agent/'
     pos_file = '.json'
     days = 1
     imonth = 8
@@ -742,7 +737,7 @@ if __name__ == "__main__":
         plt.grid(True)
         # plt.xlim([datetime.date(2016, imonth, iday), datetime.date(2016, imonth, iday + Tday)])
         figno += 1
-        plt.savefig(pre_file_out + "figure{}.png".format(figno))
+        plt.savefig(pre_file_out + f"figure{figno}.png")
         plt.show()
         first_h_rt = pd.DataFrame(first_h_rt)
         # first_h_rt.index = first_h_df_rt.index[0:len(first_h_rt)]
@@ -791,12 +786,12 @@ if __name__ == "__main__":
         #        fig = plt.figure(); ax1 = fig.add_subplot(111);ax1.plot((AVG_power.resample('60min').mean()/1000).values,marker='x',color='r');ax1.set_xlabel('time (hours)');ax1.set_ylabel('agregated inverter power (kW)',color='tab:red')
         #        ax2 = ax1.twinx(); ax2.plot((first_h_rt.resample('60min').mean()).values,marker='o',color='b');ax2.set_ylabel('RT retail price ($/kWh)',color='tab:blue');plt.grid(True);plt.show()
 
-        x = list(range(0, 108))
+        x = list(range(108))
         plt.plot(x, (AVG_power / 1000).values[x], marker='x')
         plt.ylabel('agregated inverter power (kW)')
         plt.xlabel('time (5-min)')
         plt.grid(True)
-        [plt.axvline(x=i * 12, color='k') for i in range(0, int(len(x) / 12))]
+        [plt.axvline(x=i * 12, color='k') for i in range(int(len(x) / 12))]
         plt.show()
     #### Homes
     if Homes:
@@ -845,15 +840,15 @@ if __name__ == "__main__":
             AVG_power2 = data_s[1][meta_S[V_analis2]['index']]  # plots mean
             to_kW = 1
             # greater than the start date and smaller than the end date
-            mask = (AVG_power.index >= '{}-{}-2016'.format(imonth, iday)) & (
-                        AVG_power.index <= '{}-{}-2016'.format(imonth, iday + Tday))
+            mask = (AVG_power.index >= f'{imonth}-{iday}-2016') & (
+                        AVG_power.index <= f'{imonth}-{iday + Tday}-2016')
             AVG_power = AVG_power.loc[mask]
             # plt.plot((AVG_power.resample('60min').mean()/to_kW).values,marker='x');plt.ylabel('agregated hvac load (kW)');plt.xlabel('time (hours)');plt.grid(True);plt.show()#plt.title("without commercial buildings");
             # plt.plot((AVG_power2.resample('60min').mean()/to_kW).values,marker='x');plt.ylabel('avg agregated room temperature (kW)');plt.xlabel('time (hours)');plt.grid(True);plt.show()
 
             # We need to only pick the hvacs that are participating
-            agent_dict = "Substation_{}_agent_dict.json".format(dso_num)
-            file = open(pre_file_out + 'DSO_{}/'.format(dso_num) + agent_dict, 'r')
+            agent_dict = f"Substation_{dso_num}_agent_dict.json"
+            file = open(pre_file_out + f'DSO_{dso_num}/' + agent_dict, 'r')
             text = file.read()
             file.close()
             all_agent = json.loads(text)
@@ -869,7 +864,7 @@ if __name__ == "__main__":
                 AVG_power2 = data_individual[i][meta_S[V_analis2]['index']]
                 # if False:#not (data_key[i] == 'R5_12_47_2_tn_133_hse_1' or data_key[i] == 'R5_12_47_2_load_10_bldg_82_zone_all'):
                 #     continue
-                if data_key[i] not in hvac_agent.keys():
+                if data_key[i] not in hvac_agent:
                     continue
                 elif hvac_agent[data_key[i]][property]:
                     index = data_individual[i][meta_S[V_analis]['index']].resample('60min').mean().index
@@ -886,7 +881,7 @@ if __name__ == "__main__":
             plt.grid(True)
             plt.title('Aggregated Participating HVAC ')
             figno += 1
-            plt.savefig(pre_file_out + "figure{}.png".format(figno))
+            plt.savefig(pre_file_out + f"figure{figno}.png")
             plt.show()
             # import pickle
             # with open('GLD_power_basecase.pkl', 'wb') as f:
@@ -901,7 +896,7 @@ if __name__ == "__main__":
             # plt.plot((AVG_power.resample('60min').mean()/to_kW).values,marker='x');plt.ylabel('max max hvac_load_avg (kW)');plt.xlabel('time (hours)');plt.grid(True);plt.show()
 
             if HVAC_comparisons:
-                V_file = 'Substation_{}_metrics_substation'.format(dso_num)
+                V_file = f'Substation_{dso_num}_metrics_substation'
                 meta_S, start_time, data_s, data_individual, data_keys = get_metrics_full_multiple_KEY(V_file, pre_file,
                                                                                                        pos_file)
                 # # aggregated house load without battery
@@ -972,8 +967,8 @@ if __name__ == "__main__":
 
                 # get DA cleared quantities at 10 AM
                 # ten_am = day_of_sim*24 + 10
-                pre_file = pre_file_out + 'DSO_{}/'.format(dso_num)
-                V_file = 'retail_site_Substation_{}_3600'.format(dso_num)
+                pre_file = pre_file_out + f'DSO_{dso_num}/'
+                V_file = f'retail_site_Substation_{dso_num}_3600'
                 meta_I_ver, start_time, Order = get_data_multiple_days_10AM(V_file, days, pre_file, pos_file)
                 # file = open(pre_file + V_file + pos_file, 'r')
                 # text = file.read()
@@ -1011,18 +1006,18 @@ if __name__ == "__main__":
                 plt.show()
 
                 # Plotting agent parameters and optimal bids
-                V_file = 'hvac_agent_Substation_{}_3600'.format(dso_num)
+                V_file = f'hvac_agent_Substation_{dso_num}_3600'
                 meta_da, start_time, data_da, da_bid_hvac, data_keys_da = get_metrics_full_multiple_KEY_Mdays_H(V_file,
                                                                                                                 pre_file,
                                                                                                                 '_metrics' + pos_file)
 
-                V_file = 'hvac_agent_Substation_{}_300'.format(dso_num)
+                V_file = f'hvac_agent_Substation_{dso_num}_300'
                 meta_rt, start_time, data_rt, rt_bid_hvac, data_keys = get_metrics_full_multiple_KEY_Mdays(V_file,
                                                                                                            pre_file,
                                                                                                            '_metrics' + pos_file)
                 to_kW = 1
 
-                agent_dict = "Substation_{}_agent_dict.json".format(dso_num)
+                agent_dict = f"Substation_{dso_num}_agent_dict.json"
                 file = open(pre_file + agent_dict, 'r')
                 text = file.read()
                 file.close()
@@ -1086,8 +1081,7 @@ if __name__ == "__main__":
                             ax1[0].set_ylabel('kW')
                             ax1[0].grid(True)
                             ax1[0].set_title(
-                                "Optimal bid and actual kW by hvac agent with slider setting {}".format(
-                                    0.71))  # ax1.set_ylabel('(F)');
+                                f"Optimal bid and actual kW by hvac agent with slider setting {0.71}")  # ax1.set_ylabel('(F)');
                             ax1[0].legend()
 
                         if data_keys_da[i] == "R5_12_47_2_tn_4_hse_3":  # "R5_12_47_2_tn_3_hse_5":
@@ -1101,8 +1095,7 @@ if __name__ == "__main__":
                             ax1[1].set_ylabel('kW')
                             ax1[1].grid(True)
                             ax1[1].set_title(
-                                "Optimal bid and actual kW by battery agent with slider setting {}".format(
-                                    0.1225))  # 0.0295
+                                f"Optimal bid and actual kW by battery agent with slider setting {0.1225}")  # 0.0295
                             ax1[1].legend()
                     plt.xlabel('time (hours)')
                     plt.show()
@@ -1195,9 +1188,9 @@ if __name__ == "__main__":
 
     if Retail_site:
         pre_file = pre_file_out + 'DSO_2/'
-        gld_pre_file = pre_file_out + 'Substation_{}/'.format(dso_num)
+        gld_pre_file = pre_file_out + f'Substation_{dso_num}/'
         # Lets get total substation load from gridlabd
-        V_file = 'Substation_{}_metrics_substation'.format(dso_num)
+        V_file = f'Substation_{dso_num}_metrics_substation'
         meta_S, start_time, data_s, data_individual, data_key = get_metrics_full_multiple_KEY(V_file, gld_pre_file,
                                                                                               pos_file)
         # # aggregated house load without battery
@@ -1207,11 +1200,11 @@ if __name__ == "__main__":
         # V_file = 'Substation_{}_metrics_inverter'.format(dso_num)
         # meta_S, start_time, data_s, data_individual, data_key = get_metrics_full_multiple_KEY(V_file, gld_pre_file, pos_file)
         # V_analis = 'real_power_avg'  # variable being analized
-        # inv_power = data_s[3][meta_S[V_analis]['index']]
-        # orig_power = inv_power + sub_power
+        inv_power = data_s[3][meta_S[V_analis]['index']]
+        orig_power = inv_power + sub_power
 
         # get forecast uncontrollable load
-        V_file = 'retail_site_Substation_{}_3600'.format(dso_num)
+        V_file = f'retail_site_Substation_{dso_num}_3600'
         meta_I_ver, start_time, Order = get_data_multiple_days(V_file, days, pre_file, pos_file)
         # V_analis = 'non_transactive_quantities'
         # plt.plot(sum(np.array(Order[meta_I_ver[V_analis]['index']][(days - 1) * 24])), label='total load')
@@ -1232,8 +1225,8 @@ if __name__ == "__main__":
                 plt.plot(Order[meta_I_ver[V_analis]['index']][(days - 1) * 24][i], label='agent load')
                 power = (GLD_power[(Order[meta_I_ver['meters']['index']][0][i]).replace("mtr", "hse")]).resample(
                     '60min').mean()
-                mask = (power.index >= '{}-{}-2016'.format(imonth, iday)) & (
-                        power.index <= '{}-{}-2016'.format(imonth, iday + Tday))
+                mask = (power.index >= f'{imonth}-{iday}-2016') & (
+                        power.index <= f'{imonth}-{iday + Tday}-2016')
                 power = power.loc[mask]
                 plt.plot(power.values, label='GLD load')
                 # print(np.array(Order[meta_I_ver[V_analis]['index']][i][(days - 1) * 24]))
@@ -1265,14 +1258,14 @@ if __name__ == "__main__":
             plt.ylabel('load (kW)')
             plt.xlabel('time (hour)')
             plt.grid(True)
-            plt.title('Non-participating forecast and true load; MAPE: {:.2f}'.format(fr_err_avg))
+            plt.title(f'Non-participating forecast and true load; MAPE: {fr_err_avg:.2f}')
             plt.show()
 
             plt.plot(fr_err, marker='.')
             plt.ylabel('absolute error (F-A)/A')
             plt.xlabel('time (hour)')
             plt.grid(True)
-            plt.title('Absolute Percentage Error of Non-participating load forecase; MAPE: {:.2f}'.format(fr_err_avg))
+            plt.title(f'Absolute Percentage Error of Non-participating load forecase; MAPE: {fr_err_avg:.2f}')
             plt.show()
 
             # first_h = get_first_h(data_s=Order[meta_I_ver[V_analis]['index']])
@@ -1354,7 +1347,7 @@ if __name__ == "__main__":
                 ax1.set_ylabel('(kW)')
                 plt.xlabel('time (hours)')
                 plt.grid(True)
-                plt.title('home ' + str(data_key[i]) + ' - day {:.0f}'.format(ihour))
+                plt.title('home ' + str(data_key[i]) + f' - day {ihour:.0f}')
             # ax1.plot((GLD_power[data_key[i]].resample('60min').mean()/to_kW).index,(GLD_power[data_key[i]].resample('60min').mean()/to_kW).values,label = 'GLD power')
             ax1.legend()
             AVG_power = data_individual[i][meta_S[V_analis[-1]]['index']]
@@ -1365,7 +1358,7 @@ if __name__ == "__main__":
             # ax2.legend()
             plt.xlim([datetime.date(2016, imonth, iday), datetime.date(2016, imonth, iday + Tday)])
             figno += 1
-            plt.savefig(pre_file_out + "figure{}.png".format(figno))
+            plt.savefig(pre_file_out + f"figure{figno}.png")
             plt.show()
 
     if HVAC_agent and 1:
@@ -1399,7 +1392,7 @@ if __name__ == "__main__":
                 ax1.set_ylabel('(kW)')
                 plt.xlabel('time (hours)')
                 plt.grid(True)
-                plt.title('home ' + str(data_key[i]) + ' - day {:.0f}'.format(ihour))
+                plt.title('home ' + str(data_key[i]) + f' - day {ihour:.0f}')
             ax1.plot((GLD_power[data_key[i]].resample('60min').mean() / to_kW).index,
                      (GLD_power[data_key[i]].resample('60min').mean() / to_kW).values, label='GLD power')
             ax1.legend()
@@ -1411,10 +1404,10 @@ if __name__ == "__main__":
             # ax2.legend()
             plt.xlim([datetime.date(2016, imonth, iday), datetime.date(2016, imonth, iday + Tday)])
             figno += 1
-            plt.savefig(pre_file_out + "figure{}.png".format(figno))
+            plt.savefig(pre_file_out + f"figure{figno}.png")
             plt.show()
 
-    if HVAC_agent and 0:
+    if HVAC_agent and False:
         pre_file = pre_file_out + 'DSO_2/'
         V_file = 'hvac_agent_Substation_2_3600'
         meta_S, start_time, data_s, data_individual = get_metrics_full_multiple_KEY_Mdays(V_file, pre_file,
@@ -1438,7 +1431,7 @@ if __name__ == "__main__":
             # ax2.legend()
             plt.show()
 
-    if HVAC_agent and 0:
+    if HVAC_agent and False:
         pre_file = pre_file_out + 'DSO_2/'
         V_file = 'hvac_agent_Substation_2_300'
         meta_S, start_time, data_s, data_individual, data_key = get_metrics_full_multiple_KEY_Mdays(V_file, pre_file,
@@ -1458,16 +1451,15 @@ if __name__ == "__main__":
         GLD_power = GLD_power[0]
         print(GLD_power)
         for i in range(len(data_individual)):
-            if data_key[
-                i] not in houses.keys():  # not (data_key[i] == 'R5_12_47_2_tn_3_hse_5' or data_key[i] == 'R5_12_47_2_tn_133_hse_1' or data_key[i] == 'R5_12_47_2_load_10_bldg_82_zone_all'):
+            if data_key[i] not in houses:  # not (data_key[i] == 'R5_12_47_2_tn_3_hse_5' or data_key[i] == 'R5_12_47_2_tn_133_hse_1' or data_key[i] == 'R5_12_47_2_load_10_bldg_82_zone_all'):
                 continue
             price = data_individual[i][meta_S[V_analis[-1]]['index']]
-            mask = (price.index >= '{}-{}-2016'.format(imonth, iday)) & (
-                        price.index <= '{}-{}-2016'.format(imonth, iday + Tday))
+            mask = (price.index >= f'{imonth}-{iday}-2016') & (
+                        price.index <= f'{imonth}-{iday + Tday}-2016')
             price = price.loc[mask]
             power = GLD_power[data_key[i]]
-            mask = (power.index >= '{}-{}-2016'.format(imonth, iday)) & (
-                        power.index <= '{}-{}-2016'.format(imonth, iday + Tday))
+            mask = (power.index >= f'{imonth}-{iday}-2016') & (
+                        power.index <= f'{imonth}-{iday + Tday}-2016')
             power = power.loc[mask]
 
             print(data_key[i])
@@ -1501,7 +1493,7 @@ if __name__ == "__main__":
             ax1.legend(lns, labs)
             plt.xlim([datetime.date(2016, imonth, iday), datetime.date(2016, imonth, iday + Tday)])
             figno += 1
-            plt.savefig(pre_file_out + "figure{}.png".format(figno))
+            plt.savefig(pre_file_out + f"figure{figno}.png")
             plt.show()
 
     #### new waterheater agent

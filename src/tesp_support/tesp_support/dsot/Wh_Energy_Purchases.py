@@ -36,12 +36,12 @@ def load_hourly_data(dir_path, dso_num, simdata):
         data_df = pd.read_csv('Annual_DA_LMP_Load_data.csv')
         data_df.rename(columns={'Unnamed: 0': 'date_time'}, inplace=True)
         data_df.rename(columns={'time': 'date_time'}, inplace=True)
-        data_df.rename(columns={'da_q' + '{}'.format(dso_num): 'Bus' + '{}'.format(dso_num)}, inplace=True)
+        data_df.rename(columns={'da_q' + f'{dso_num}': 'Bus' + f'{dso_num}'}, inplace=True)
     else:
         data_df = pd.read_csv('2016_ERCOT_Hourly_Load_Data.csv', index_col='Hour_End')
         data_df.reset_index(inplace=True)
         data_df.rename(columns={'Hour_End': 'date_time'}, inplace=True)
-    col = 'Bus' + '{}'.format(dso_num)
+    col = 'Bus' + f'{dso_num}'
     data_df = data_df[[col, 'date_time']]
     data_df['date_time'] = pd.to_datetime(data_df['date_time'])
     start_time = datetime.datetime(2016, 1, 1)
@@ -70,8 +70,8 @@ def load_realtime_data(dir_path, dso_num, simdata):
         data_df = pd.read_csv('Annual_RT_LMP_Load_data.csv')
         data_df.rename(columns={'Unnamed: 0': 'date_time'}, inplace=True)
         data_df.rename(columns={'time': 'date_time'}, inplace=True)
-        data_df.rename(columns={'rt_q' + '{}'.format(dso_num): ' Bus' + '{}'.format(dso_num)}, inplace=True)
-        col = ' Bus' + '{}'.format(dso_num)
+        data_df.rename(columns={'rt_q' + f'{dso_num}': ' Bus' + f'{dso_num}'}, inplace=True)
+        col = ' Bus' + f'{dso_num}'
         data_df = data_df[[col, 'date_time']]
         data_df['date_time'] = pd.to_datetime(data_df['date_time'])
         start_time = datetime.datetime(2016, 1, 1)
@@ -84,7 +84,7 @@ def load_realtime_data(dir_path, dso_num, simdata):
         data_df = pd.read_csv('2016_ERCOT_5min_Load_Data.csv')
         date_rng = pd.date_range(start='1/1/2016 01:00:00', periods=len(data_df), freq='5min')
         data_df['date_time'] = pd.to_datetime(date_rng)
-        col = ' Bus' + '{}'.format(dso_num)
+        col = ' Bus' + f'{dso_num}'
         data_df = data_df[[col, 'date_time']]
         data_df = data_df.set_index(['date_time'])
         data_df = data_df.groupby(pd.Grouper(freq='15T')).mean()
@@ -110,16 +110,16 @@ def load_price_data(dir_path, market_type, dso_num, simdata, place):
     """
     if simdata:
         os.chdir(dir_path)
-        col = 'Bus' + '{}'.format(dso_num) + ' $_mwh'
+        col = 'Bus' + f'{dso_num}' + ' $_mwh'
         if market_type == 'DA':
             prices_data = pd.read_csv('Annual_DA_LMP_Load_data.csv')
-            prices_data.rename(columns={'da_lmp' + '{}'.format(dso_num): col}, inplace=True)
+            prices_data.rename(columns={'da_lmp' + f'{dso_num}': col}, inplace=True)
         else:
             prices_data = pd.read_csv('Annual_RT_LMP_Load_data.csv')
-            prices_data.rename(columns={' LMP' + '{}'.format(dso_num): col}, inplace=True)
+            prices_data.rename(columns={' LMP' + f'{dso_num}': col}, inplace=True)
         prices_data.rename(columns={'Unnamed: 0': 'date_time'}, inplace=True)
         prices_data.rename(columns={'time': 'date_time'}, inplace=True)
-        prices_data.rename(columns={'da_lmp' + '{}'.format(dso_num): col}, inplace=True)
+        prices_data.rename(columns={'da_lmp' + f'{dso_num}': col}, inplace=True)
 
         prices_data = prices_data[[col, 'date_time']]
         prices_data['date_time'] = pd.to_datetime(prices_data['date_time'])
@@ -163,9 +163,9 @@ def Wh_Energy_Purchases(dir_path, dso_num, simdata=False, h1=5, h2=16, h3=20, pl
         dict: real-time, day-ahead, and bilateral market purchases (annual cost, energy and average price)
     """
     if simdata:
-        price_name = 'Bus{} $_mwh'.format(dso_num)
+        price_name = f'Bus{dso_num} $_mwh'
     else:
-        price_name = '{} $_mwh'.format(place)
+        price_name = f'{place} $_mwh'
 
     bilateral_MW_data = load_hourly_data(dir_path, dso_num, simdata)
     # bilateral_MW_data['date_time'] = pd.to_datetime(bilateral_MW_data['date_time'])
@@ -182,13 +182,13 @@ def Wh_Energy_Purchases(dir_path, dso_num, simdata=False, h1=5, h2=16, h3=20, pl
         (bilateral_MW_data['hour'] < h1) | (bilateral_MW_data['hour'] >= h3)]
     # computes bilateral quantity for day, evening as the minimum load in each time period
     choices_Q = [bilateral_MW_data[(bilateral_MW_data['hour'] >= h1) & (bilateral_MW_data['hour'] < h2) & (
-                bilateral_MW_data['weekday'] < 5)]['Bus{}'.format(dso_num)].min(),
+                bilateral_MW_data['weekday'] < 5)][f'Bus{dso_num}'].min(),
                  bilateral_MW_data[((bilateral_MW_data['hour'] >= h2) & (bilateral_MW_data['hour'] < h3) & (
                              bilateral_MW_data['weekday'] < 5)) | (
                                                (bilateral_MW_data['hour'] >= h1) & (bilateral_MW_data['hour'] < h3) & (
-                                                   bilateral_MW_data['weekday'] >= 5))]['Bus{}'.format(dso_num)].min(),
+                                                   bilateral_MW_data['weekday'] >= 5))][f'Bus{dso_num}'].min(),
                  bilateral_MW_data[(bilateral_MW_data['hour'] < h1) | (bilateral_MW_data['hour'] >= h3)][
-                     'Bus{}'.format(dso_num)].min()]
+                     f'Bus{dso_num}'].min()]
 
     # determines the bilateral quantity for each hourly interval
     bilateral_MW_data = bilateral_MW_data.set_index(['date_time'])
@@ -225,8 +225,8 @@ def Wh_Energy_Purchases(dir_path, dso_num, simdata=False, h1=5, h2=16, h3=20, pl
 
     # Monthly computations
     WhBLEnergyMonthly = (pd.to_numeric(bilateral_MW_data['Fixed Quantity (MW)']).resample('M')).sum()
-    WhBLPurchasesMonthly = ((pd.to_numeric(bilateral_price_data['Fixed Price ($/MWh)']) * pd.to_numeric(
-        bilateral_MW_data['Fixed Quantity (MW)']))).resample('M').sum()
+    WhBLPurchasesMonthly = (pd.to_numeric(bilateral_price_data['Fixed Price ($/MWh)']) * pd.to_numeric(
+        bilateral_MW_data['Fixed Quantity (MW)'])).resample('M').sum()
     WhBLPriceMonthly = WhBLPurchasesMonthly / WhBLEnergyMonthly
     # Annual compuated from monthly computations
     WhBLEnergy = WhBLEnergyMonthly.sum()
@@ -238,15 +238,15 @@ def Wh_Energy_Purchases(dir_path, dso_num, simdata=False, h1=5, h2=16, h3=20, pl
     DA_MW_data = bilateral_MW_data  # same data used for bilateral computations
     # DA_MW_data.rename(columns={'Bus{}'.format(dso_num):'Day-ahead (MWh)'}, inplace=True)
     # subtracts hourly bilateral quantities from total hourly load to get hourly Day-ahead quantities
-    DA_MW_data['Day-ahead (MWh)'] = pd.to_numeric(DA_MW_data['Bus{}'.format(dso_num)]) - pd.to_numeric(
+    DA_MW_data['Day-ahead (MWh)'] = pd.to_numeric(DA_MW_data[f'Bus{dso_num}']) - pd.to_numeric(
         bilateral_MW_data['Fixed Quantity (MW)'])
     DA_price_data = load_price_data(dir_path, 'DA', dso_num, simdata, place)
     DA_price_data = DA_price_data.set_index(['date_time'])
 
     # Monthly computations
     WhDAEnergyMonthly = (pd.to_numeric(DA_MW_data['Day-ahead (MWh)']).resample('M')).sum()
-    WhDAPurchasesMonthly = ((pd.to_numeric(DA_price_data[price_name]) *
-                             pd.to_numeric(DA_MW_data["Day-ahead (MWh)"]))).resample('M').sum()
+    WhDAPurchasesMonthly = (pd.to_numeric(DA_price_data[price_name]) *
+                             pd.to_numeric(DA_MW_data["Day-ahead (MWh)"])).resample('M').sum()
     WhDAPriceMonthly = WhDAPurchasesMonthly / WhDAEnergyMonthly
     # Annual compuated from monthly computations
     WhDAEnergy = WhDAEnergyMonthly.sum()
@@ -262,17 +262,17 @@ def Wh_Energy_Purchases(dir_path, dso_num, simdata=False, h1=5, h2=16, h3=20, pl
 
     # Converts from 15 min MW data to hourly MWh data
     # TODO: Update to interpolate DA data to 5 or 15 minute data minute for simulation case
-    RT_hourly_MWh_data = RT_MW_data[' Bus{}'.format(dso_num)].resample('H').mean()  # MWh
+    RT_hourly_MWh_data = RT_MW_data[f' Bus{dso_num}'].resample('H').mean()  # MWh
 
     # Annual Peak capacity is computed from hourly real-time load data
     # which is equivalent to real bilateral + Day ahead +_real-time energy purchases.
     # TODO: This hourly mean is likely reducing the peak load from the 5 minute value.
-    WholesalePeakLoadRate = max(RT_MW_data[' Bus{}'.format(dso_num)])
+    WholesalePeakLoadRate = max(RT_MW_data[f' Bus{dso_num}'])
 
     # subtracts hourly load from 15 min real-time load data to compute real-time quantities purchased.
     # It is assumed that hourly load is equivalent to the
     # bilateral + day ahead quantities.
-    RT_hourly_MWh_data = RT_hourly_MWh_data - bilateral_MW_data['Bus{}'.format(dso_num)]
+    RT_hourly_MWh_data = RT_hourly_MWh_data - bilateral_MW_data[f'Bus{dso_num}']
     RT_price_data = load_price_data(dir_path, 'RT', dso_num, simdata, place)
     RT_price_data = RT_price_data.set_index(['date_time'])
     RT_data = RT_MW_data.join(RT_price_data)
@@ -280,8 +280,8 @@ def Wh_Energy_Purchases(dir_path, dso_num, simdata=False, h1=5, h2=16, h3=20, pl
     # Monthly computations
     WhRTEnergyMonthly = (pd.to_numeric(RT_hourly_MWh_data).resample('M')).sum()
 
-    WhRTPurchasesMonthly = ((pd.to_numeric(RT_price_data[price_name]).resample('H').mean() *
-                             RT_hourly_MWh_data)).resample('M').sum()
+    WhRTPurchasesMonthly = (pd.to_numeric(RT_price_data[price_name]).resample('H').mean() *
+                             RT_hourly_MWh_data).resample('M').sum()
     WhRTPriceMonthly = WhRTPurchasesMonthly / WhRTEnergyMonthly
     # Annual computed from monthly computations
     WhRTEnergy = WhRTEnergyMonthly.sum()

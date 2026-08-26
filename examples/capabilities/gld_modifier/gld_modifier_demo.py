@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (c) 2019-2025 Battelle Memorial Institute
 """
 Created on Tue Jan 17 14:05:08 2023
@@ -19,7 +18,6 @@ import pprint
 import sys
 
 import networkx as nx
-
 from tesp_support.api.data import feeders_path
 from tesp_support.api.modify_GLM import GLMModifier
 
@@ -162,7 +160,7 @@ def _auto_run(plot:bool, args):
         if house_num == 0:
             print("\nDemonstrating editing of object properties after adding them "
                   "to the GridLAB-D model.")
-            if "floor_area" in house_obj.keys():
+            if "floor_area" in house_obj:
                 print(f'\t"Redefining floor_area" in {house_name}.')
                 house_obj["floor_area"] = 2469
             else:
@@ -201,13 +199,13 @@ def _auto_run(plot:bool, args):
     print("\nDemonstrating the deletion of a parameter from a GridLAB-D object "
           "in the model.")
     house_to_edit = glm.house[house_name]
-    if "Rroof" in house_to_edit.keys():
+    if "Rroof" in house_to_edit:
         print(f'\t"Rroof" for house {house_name} is {house_to_edit["Rroof"]}.')
     else:
         print(f'\t"Rroof" for house {house_name} is undefined.')
     print(f"\tDeleting paramter Rroof from house {house_name}")
     house_to_edit["Rroof"] = None
-    if "Rroof" in house_to_edit.keys():
+    if "Rroof" in house_to_edit:
         print(f'\tCurrent "Rroof" is {house_to_edit["Rroof"]}')
     else:
         print(f'\t"Rroof" for house {house_name} is undefined.\n')
@@ -242,18 +240,15 @@ def _auto_run(plot:bool, args):
         "\t(In GridLAB-D, the sizing information is stored in the "
         "transformer_configuration object.)")
     transformer_configs_to_upgrade = {"as": [], "bs": [], "cs": []}
-    for transformer_name, transformer in glm.transformer.items():
+    for transformer_name, transformer in glm.transformer.instances.items():
         phases = transformer["phases"]
         config = transformer["configuration"]
-        if phases.lower() == "as":
-            if config not in transformer_configs_to_upgrade["as"]:
-                transformer_configs_to_upgrade["as"].append(config)
-        elif phases.lower() == "bs":
-            if config not in transformer_configs_to_upgrade["bs"]:
-                transformer_configs_to_upgrade["bs"].append(config)
-        elif phases.lower() == "cs":
-            if config not in transformer_configs_to_upgrade["cs"]:
-                transformer_configs_to_upgrade["cs"].append(config)
+        if phases.lower() == "as" and config not in transformer_configs_to_upgrade["as"]:
+            transformer_configs_to_upgrade["as"].append(config)
+        if phases.lower() == "bs" and config not in transformer_configs_to_upgrade["bs"]:
+            transformer_configs_to_upgrade["bs"].append(config)
+        if phases.lower() == "cs" and config not in transformer_configs_to_upgrade["cs"]:
+            transformer_configs_to_upgrade["cs"].append(config)
     print(f'\tFound {len(transformer_configs_to_upgrade["as"])}'
           ' configurations with phase "AS" that will be upgraded.')
     print(f'\tFound {len(transformer_configs_to_upgrade["bs"])} '
@@ -264,14 +259,14 @@ def _auto_run(plot:bool, args):
     # Assumes the model has the "powerX_rating" in the transformer configuration
     # to be used as the basis to determine the existing rating. This will not
     # be true for every feeder.
-    for phase in transformer_configs_to_upgrade.keys():
+    for phase, value in transformer_configs_to_upgrade.items():
         if phase == "as":
             rating_param = "powerA_rating"
         elif phase == "bs":
             rating_param = "powerB_rating"
         elif phase == "cs":
             rating_param = "powerC_rating"
-        for config in transformer_configs_to_upgrade[phase]:
+        for config in value:
             old_rating = float(glm.transformer_configuration[config][rating_param])
             new_rating = 1.15 * old_rating
             # Both the "power_rating" and "powerX_rating" are defined in the model,
@@ -292,14 +287,13 @@ def _auto_run(plot:bool, args):
 
     # Starting out just looking for the swing bus using the non-networkx APIs we've
     # been using up to this point.
-    print(f"\nDemonstrating the use of networkx to find the feeder head and "
+    print("\nDemonstrating the use of networkx to find the feeder head and "
           "the closest fuse")
     swing_bus = ""
-    for gld_node_name in glm.node.keys():
+    for gld_node_name, value in glm.node.instances.items():
         # Not every bus has the "bustype" parameter
-        if "bustype" in glm.node[gld_node_name].keys():
-            if glm.node[gld_node_name]["bustype"].lower() == "swing":
-                swing_bus = gld_node_name
+        if "bustype" in value and value["bustype"].lower() == "swing":
+            swing_bus = gld_node_name
     print(f"\tFound feeder head (swing bus) as node {swing_bus}")
 
     # Find first fuse downstream of the feeder head. I'm guessing it is close-by
@@ -320,7 +314,7 @@ def _auto_run(plot:bool, args):
     # And that's what you get for making assumptions.
     # https://emac.berkeley.edu/gridlabd/taxonomy_graphs/R1-12.47-1.pdf )
     if len(glm.fuse.keys()) > 0:
-        print(f"\tIncreasing fuse size by an arbitrary 10%")
+        print("\tIncreasing fuse size by an arbitrary 10%")
         fuse_obj = glm.fuse[feeder_head_fuse]
         print(f'\t\tOld fuse current limit: {fuse_obj["current_limit"]} A')
         fuse_obj["current_limit"] = float(fuse_obj["current_limit"]) * 1.1
@@ -328,9 +322,9 @@ def _auto_run(plot:bool, args):
 
     max_transformer_power = 0
     max_transformer_name = ""
-    for transformer_config_name in glm.transformer_configuration.keys():
+    for transformer_config_name in glm.transformer_configuration.instances:
         transformer_power_rating = float(
-            glm.transformer_configuration[transformer_config_name]["power_rating"]
+            glm.transformer_configuration.instances[transformer_config_name]["power_rating"]
         )
         if transformer_power_rating > max_transformer_power:
             max_transformer_power = transformer_power_rating
@@ -381,4 +375,5 @@ def demo(plot:bool):
 
 
 if __name__ == "__main__":
-    demo(True)
+    demo(False)
+    # demo(True)

@@ -1,7 +1,8 @@
-import tempfile
 import os
 import sqlite3
-from tesp_support.api.entity import assign_defaults, assign_item_defaults, Item, Entity
+import tempfile
+
+from tesp_support.api.entity import Entity, Item, assign_defaults, assign_item_defaults
 
 
 def test_assign_defaults():
@@ -132,9 +133,10 @@ def test_entity_tohelp():
 
 def test_multiple_entities_from_glm_file():
     """Test loading multiple entities from glm_entities_path and adding to SQLite database"""
-    from tesp_support.api.data import glm_entities_path
-    import pyjson5
     import sqlite3
+
+    import pyjson5
+    from tesp_support.api.data import glm_entities_path
 
     with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as temp_db:
         try:

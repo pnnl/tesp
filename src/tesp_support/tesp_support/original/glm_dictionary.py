@@ -12,8 +12,8 @@ Public Functions:
     :glm_dict: Writes the JSON metadata file.  
 """
 
-import os
 import json
+import os
 from math import sqrt
 
 from ..api.helpers import zoneMeterName
@@ -37,9 +37,7 @@ def ercotMeterName(objname):
 
 
 def isCommercialHouse(house_class):
-    if ('BIGBOX' in house_class) or ('OFFICE' in house_class) or ('STRIPMALL' in house_class):
-        return True
-    return False
+    return ('BIGBOX' in house_class) or ('OFFICE' in house_class) or ('STRIPMALL' in house_class)
 
 
 def ti_enumeration_string(tok):
@@ -171,14 +169,12 @@ def glm_dict(name_root, ercot=False, te30=False):
                 thermal_integrity = 'UNKNOWN'
                 doors = 4
                 house_class = 'SINGLE_FAMILY'
-            if inHELICSmsg:
-                if lst[0] == 'name':
-                    gld_federate = lst[1].strip(';')
-                    inHELICSmsg = False
-            if inFNCSmsg:
-                if lst[0] == 'name':
-                    gld_federate = lst[1].strip(';')
-                    inFNCSmsg = False
+            if inHELICSmsg and lst[0] == 'name':
+                gld_federate = lst[1].strip(';')
+                inHELICSmsg = False
+            if inFNCSmsg and lst[0] == 'name':
+                gld_federate = lst[1].strip(';')
+                inFNCSmsg = False
             if lst[1] == 'triplex_meter':
                 inTriplexMeters = True
                 vln = 120.0
@@ -215,16 +211,14 @@ def glm_dict(name_root, ercot=False, te30=False):
                     parent = lst[1].strip(';')
                     loads[name] = {'parent': parent}
                     inLoads = False
-            if inCapacitors:
-                if lst[0] == 'name':
-                    lastCapacitor = lst[1].strip(';')
-                    capacitors[lastCapacitor] = {'feeder_id': feeder_id}
-                    inCapacitors = False
-            if inRegulators:
-                if lst[0] == 'name':
-                    lastRegulator = lst[1].strip(';')
-                    regulators[lastRegulator] = {'feeder_id': feeder_id}
-                    inRegulators = False
+            if inCapacitors and lst[0] == 'name':
+                lastCapacitor = lst[1].strip(';')
+                capacitors[lastCapacitor] = {'feeder_id': feeder_id}
+                inCapacitors = False
+            if inRegulators and lst[0] == 'name':
+                lastRegulator = lst[1].strip(';')
+                regulators[lastRegulator] = {'feeder_id': feeder_id}
+                inRegulators = False
             if inInverters:
                 if lst[0] == 'name' and lastInverter == '':
                     lastInverter = lst[1].strip(';')
@@ -287,9 +281,8 @@ def glm_dict(name_root, ercot=False, te30=False):
                         waterheaters[lastHouse] = {'name': '', 'gallons': wh_gallons, 'tmix': 0.0, 'mlayer': False}
                 if lst[0] == 'T_mixing_valve':
                     waterheaters[lastHouse]['tmix'] = float(lst[1].strip(' ').strip(';')) * 1.0
-                if lst[0] == 'waterheater_model':
-                    if 'MULTILAYER' == lst[1].strip(' ').strip(';'):
-                        waterheaters[lastHouse]['mlayer'] = True
+                if lst[0] == 'waterheater_model' and 'MULTILAYER' == lst[1].strip(' ').strip(';'):
+                    waterheaters[lastHouse]['mlayer'] = True
             if inTriplexMeters:
                 if lst[0] == 'name':
                     name = lst[1].strip(';')

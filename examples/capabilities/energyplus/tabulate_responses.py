@@ -25,7 +25,7 @@ bldgs = ['FullServiceRestaurant',
 
 
 def get_kw(season, market, building):
-    name_root = '{:s}_{:s}_{:s}'.format(season, market, building)
+    name_root = f'{season:s}_{market:s}_{building:s}'
     _metrics = te.read_eplus_metrics(os.getcwd(), name_root, quiet=True)
     data = _metrics['data_e']
     idx_e = _metrics['idx_e']
@@ -41,4 +41,4 @@ for bldg in bldgs:
     kw2 = get_kw('Summer', 'Mkt', bldg)
     kw3 = get_kw('Winter', 'NoMkt', bldg)
     kw4 = get_kw('Winter', 'Mkt', bldg)
-    print('{:25s} {:8.2f} {:8.2f} {:8.2f} {:8.2f}'.format(bldg, kw1, kw2, kw3, kw4))
+    print(f'{bldg:25s} {kw1:8.2f} {kw2:8.2f} {kw3:8.2f} {kw4:8.2f}')

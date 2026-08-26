@@ -70,18 +70,15 @@ def load_player_loop(casename, keyName):
     dIdx = (d - ep).total_seconds()
     sRow = int((sIdx - dIdx) // dt_load_collector)
     eRow = int((eIdx - dIdx) // dt_load_collector)
-    nRow = int((eIdx - sIdx))
+    nRow = int(eIdx - sIdx)
 
     # couple of checks
     if sRow < 0 or eRow < 0:
         raise Exception("Error: StartTime is before the start date of the data being loaded")
-    if not constant:
-        if sRow > vals_rows or eRow > vals_rows:
-            raise Exception("Error: StartTime is after the end date of the data being loaded")
+    if not constant and sRow > vals_rows or eRow > vals_rows:
+        raise Exception("Error: StartTime is after the end date of the data being loaded")
     if tmax > nRow:
-        raise Exception(
-            "Error: Tmax {} is more than nRow {}, the time period specified in StartTime and EndTime".format(tmax,
-                                                                                                             nRow))
+        raise Exception(f"Error: Tmax {tmax} is more than nRow {nRow}, the time period specified in StartTime and EndTime")
     if tmax < nRow:
         print("Warning: Tmax is less than the time period specified in StartTime and EndTime", flush=True)
 
@@ -128,7 +125,7 @@ def load_player_loop(casename, keyName):
         if tb % day == 0 or ts == 0:
             history_counter = counter
             time_series_history = [None] * history_cnt
-            for i in range(0, history_cnt):
+            for i in range(history_cnt):
                 if constant:
                     time_series_history[i] = load_data[[1]]
                 else:
@@ -160,15 +157,15 @@ def load_player_loop(casename, keyName):
                 if val < 0:
                     val = 0
                     found_neg_val = True
-                val = '+' + '{:.3f}'.format(val) + \
-                      '+' + '{:.3f}'.format(val * power_factor) + 'j MVA'
+                val = '+' + f'{val:.3f}' + \
+                      '+' + f'{val * power_factor:.3f}' + 'j MVA'
                 if output:
                     pub = helics.helicsFederateGetPublication(hFed, prefix + '_load_' + idx)
                     helics.helicsPublicationPublishString(pub, val)
                     # print(prefix + '_load_' + idx, val, flush=True)
                 if tb % day == 0 or ts == 0:
                     time_series_history_pub = []
-                    for j in range(0, history_cnt):
+                    for j in range(history_cnt):
                         val = time_series_history[j][lbl][0]
                         if val < 0:
                             val = 0
@@ -191,19 +188,19 @@ def load_player_loop(casename, keyName):
                     if val < 0:
                         val = 0
                         found_neg_val = True
-                    val = '{:.3f}'.format(val)
+                    val = f'{val:.3f}'
                     if output:
                         pub = helics.helicsFederateGetPublication(hFed, prefix + '_power_' + idx)
                         helics.helicsPublicationPublishString(pub, val)
                         # print(prefix + '_power_' + idx, val, flush=True)
                     if tb % day == 0 or ts == 0:
                         time_series_history_pub = []
-                        for j in range(0, history_cnt):
+                        for j in range(history_cnt):
                             val = time_series_history[j][lbl][0]
                             if val < 0:
                                 val = 0
                                 found_neg_val = True
-                            val = '{:.3f}'.format(val)
+                            val = f'{val:.3f}'
                             time_series_history_pub.append(val)
                         if output_hist:
                             pub = helics.helicsFederateGetPublication(hFed, prefix + '_pwr_hist_' + idx)

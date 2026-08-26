@@ -3,8 +3,9 @@
 """ Utility functions for use within tesp_support, including new agents.
 """
 
-import numpy as np
 from enum import IntEnum
+
+import numpy as np
 
 
 class ClearingType(IntEnum):
@@ -74,7 +75,7 @@ class curve:
             self.count += 1
         else:
             value_insert_flag = 0
-            for i in range(0, self.count):
+            for i in range(self.count):
                 # If the price is larger than the compared curve section price,
                 # price inserted before that section of the curve
                 if price >= self.price[i]:

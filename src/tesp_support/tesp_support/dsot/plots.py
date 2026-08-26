@@ -1,19 +1,19 @@
 # Copyright (c) 2021-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: plots.py
+import bisect
 import copy
 import json
 import math
 import os
-from datetime import datetime, date, timedelta
+import re
+from datetime import date, datetime, timedelta
 
 import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-import bisect
-import re
 
 plt.switch_backend('Agg')
 cache_output = {}
@@ -95,10 +95,8 @@ def customer_meta_data(glm_meta, agent_meta, dso_metadata_path):
     """
     # Determine tariff rate class of each meter up front.
     commdata = load_json(dso_metadata_path, 'DSOT_commercial_metadata.json')
-    commbldglist = []
     # TODO: this should be done in prepare case and read in.
-    for bldg in commdata['building_model_specifics']:
-        commbldglist.append(bldg)
+    commbldglist = list(commdata['building_model_specifics'])
     residbldglist = ['SINGLE_FAMILY', 'MOBILE_HOME', 'APARTMENTS', 'MULTI_FAMILY']
 
     for each in glm_meta['billingmeters']:
@@ -161,7 +159,6 @@ def customer_meta_data(glm_meta, agent_meta, dso_metadata_path):
             glm_meta['billingmeters'][meter]['wh_gallons'] = glm_meta['houses'][house]['wh_gallons']
         except KeyError:
             print(f'{house} has no water heater')
-            pass
         glm_meta['billingmeters'][meter]['income_level'] = glm_meta['houses'][house]['income_level']
 
     for wh in agent_meta['water_heaters']:
@@ -621,14 +618,12 @@ def load_system_data(dir_path, folder_prefix, dso_num, day_num, system_name):
             system_df = pd.read_hdf(hdf5filenames[0], key='/index' + day_num, mode='r')
         except KeyError:
             print(f'file name {hdf5filenames[0]} key index{day_num} not found')
-            pass
     # ----- The code below was used for when there was one index with multiple days
     else:
         try:
             system_df = pd.read_hdf(hdf5filenames[0], key='/index1', mode='r')
         except KeyError:
             print(f'file name {hdf5filenames[0]} key index{day_num} not found')
-            pass
         start_time = (int(day_num) - 1) * 300 * 288
         end_time = start_time + 300 * (288 - 1)
         system_df = system_df[system_df['time'] >= start_time]
@@ -707,7 +702,7 @@ def get_house_schedules(agent_metadata, gld_metadata, house_name):
     heat_weekday = None
     heat_weekend = None
 
-    for wh in agent_metadata['water_heaters'].keys():
+    for wh in agent_metadata['water_heaters']:
         if agent_metadata['water_heaters'][wh]['meterName'] == gld_metadata['houses'][house_name]['billingmeter_id']:
             wh_temp = agent_metadata['water_heaters'][wh]['Tdesired']
 
@@ -810,10 +805,7 @@ def RCI_analysis(dso_range, case, data_path, metadata_path, dso_metadata_file, e
     # Determine tariff rate class of each meter up front.
     commdata = load_json(metadata_path, 'DSOT_commercial_metadata.json')
     dso_data = load_json(metadata_path, dso_metadata_file)
-
-    commbldglist = []
-    for bldg in commdata['building_model_specifics']:
-        commbldglist.append(bldg)
+    commbldglist = list(commdata['building_model_specifics'])
     residbldglist = ['SINGLE_FAMILY', 'MOBILE_HOME', 'MULTI_FAMILY']
 
     dsolist = []
@@ -928,7 +920,7 @@ def RCI_analysis(dso_range, case, data_path, metadata_path, dso_metadata_file, e
         HVACtot.append(HVACcount)
         WHtot.append(WHcount)
 
-        if 'ev' in metadata.keys():
+        if 'ev' in metadata:
             for ev in metadata['ev']:
                 EVcount += 1
                 EVrating += metadata['ev'][ev]['max_charge'] / 1000
@@ -1065,8 +1057,7 @@ def RCI_analysis(dso_range, case, data_path, metadata_path, dso_metadata_file, e
 
     # Save log file of zero energy meters
     with open('Zero_meters_exception_log.txt', 'w') as f:
-        for item in zmeter_list:
-            f.write("%s\n" % item)
+        f.writelines("%s\n" % item for item in zmeter_list)
 
     return rci_df
 
@@ -1451,7 +1442,7 @@ def bldg_stack_plot(dso_range, day_range, case, metadata_path):
     label_list = temp.columns.tolist()
     label_list.insert(0, label_list.pop(label_list.index('Industrial')))
     # label_list = label_list[-1:] + label_list[:-1]
-    temp = temp[label_list]  #
+    temp = temp[label_list]
 
     y = []
     for col in temp.columns:
@@ -1660,7 +1651,7 @@ def der_stack_plot(dso_range, day_range, metadata_path, case, comp=None, plot_re
         compare_df = compare_df.loc[start_time:stop_time, :]
 
     label_list = temp.columns.tolist()
-    temp = temp[label_list]  #
+    temp = temp[label_list]
 
     y = []
     for col in temp.columns:
@@ -1864,14 +1855,13 @@ def daily_load_plots(dso, system, subsystem, variable, day, case, comp, agent_pr
     plt.figure()
     case = case.replace('/', '\\')
     plt.plot(case_df, label=case.split('\\')[-1], marker='.')
-    if plot_min_max:
-        if 'real_power_avg' in variable:
-            min_df = get_day_df(dso, system, subsystem, variable.replace('avg', 'min'), day, case, agent_prefix,
-                                gld_prefix)
-            max_df = get_day_df(dso, system, subsystem, variable.replace('avg', 'max'), day, case, agent_prefix,
-                                gld_prefix)
-            plt.plot(min_df, label=case.split('/')[-1] + '-Min', marker='.')
-            plt.plot(max_df, label=case.split('/')[-1] + '-Max', marker='.')
+    if plot_min_max and 'real_power_avg' in variable:
+        min_df = get_day_df(dso, system, subsystem, variable.replace('avg', 'min'), day, case, agent_prefix,
+                            gld_prefix)
+        max_df = get_day_df(dso, system, subsystem, variable.replace('avg', 'max'), day, case, agent_prefix,
+                            gld_prefix)
+        plt.plot(min_df, label=case.split('/')[-1] + '-Min', marker='.')
+        plt.plot(max_df, label=case.split('/')[-1] + '-Max', marker='.')
 
     if comp is not None:
         comp = comp.replace('/', '\\')
@@ -1935,7 +1925,7 @@ def load_duration_plot(dso, system, subsystem, variable, day, case, comp, agent_
         load_comp_data = np.array(LDC_comp_data)
 
     len_data = len(load_case_data)
-    index = np.array(range(0, len_data)) * 100 / len_data
+    index = np.array(range(len_data)) * 100 / len_data
 
     if subsystem is None:
         subsystem = ''
@@ -2781,9 +2771,8 @@ def non_participating_dso_loads(dso_range, case, metadata_path):
 
     np_dsos = []
     for dso in DSOmetadata:
-        if 'DSO' in dso:
-            if int(dso.split('_')[-1]) not in dso_range:
-                np_dsos.append('Bus'+dso.split('_')[-1])
+        if 'DSO' in dso and int(dso.split('_')[-1]) not in dso_range:
+            np_dsos.append('Bus'+dso.split('_')[-1])
 
     np_dso_loads = dso_load_profiles[np_dsos].sum(axis=1).to_frame().rename(columns={0: "np_dso_loads"})
     np_dso_loads.index.rename(name='time', inplace=True)
@@ -3274,10 +3263,10 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
         DSOTmedian = np.median(DSOT_data)
 
     len_data = len(ERCOTLDC_data)
-    index = np.array(range(0, len_data)) * 100 / len_data
+    index = np.array(range(len_data)) * 100 / len_data
 
     len_data = len(DSOT_data)
-    dsot_index = np.array(range(0, len_data)) * 100 / len_data
+    dsot_index = np.array(range(len_data)) * 100 / len_data
 
     plt.clf()
     plt.plot(index, ERCOTLDC_data, label='ERCOT Delta DA LMP')
@@ -3304,7 +3293,7 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
                "PJM      = " + str(round(PJMmean)) + "     " + str(round(PJMmedian)) + "\n" + \
                "CAISO  = " + str(round(CAISOmean)) + "     " + str(round(CAISOmedian))
         plt.text(0.3, 0.7, text, size=15, horizontalalignment='left',
-                 verticalalignment='center', transform=ax.transAxes, bbox=dict(fc="white"))
+                 verticalalignment='center', transform=ax.transAxes, bbox={'fc': "white"})
 
     plot_filename = datetime.now().strftime('%Y%m%d') + 'ISO_Daily_variation_DA_LMP_Duration_Curve.png'
     file_path_fig = os.path.join(output_path, 'plots', plot_filename)
@@ -3340,10 +3329,10 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
         DSOTmean = np.mean(DSOT_data)
         DSOTmedian = np.median(DSOT_data)
 
-    Eindex = np.array(range(0, len(ERCOTLDC_data))) * 100 / len(ERCOTLDC_data)
-    Cindex = np.array(range(0, len(CAISOLDC_data))) * 100 / len(CAISOLDC_data)
-    Pindex = np.array(range(0, len(PJMLDC_data))) * 100 / len(PJMLDC_data)
-    Dindex = np.array(range(0, len(DSOT_data))) * 100 / len(DSOT_data)
+    Eindex = np.array(range(len(ERCOTLDC_data))) * 100 / len(ERCOTLDC_data)
+    Cindex = np.array(range(len(CAISOLDC_data))) * 100 / len(CAISOLDC_data)
+    Pindex = np.array(range(len(PJMLDC_data))) * 100 / len(PJMLDC_data)
+    Dindex = np.array(range(len(DSOT_data))) * 100 / len(DSOT_data)
 
     plt.clf()
     plt.plot(Eindex, ERCOTLDC_data, label='ERCOT DA LMP')
@@ -3369,7 +3358,7 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
                "PJM      = " + str(round(PJMmean)) + "     " + str(round(PJMmedian)) + "\n" + \
                "CAISO  = " + str(round(CAISOmean)) + "     " + str(round(CAISOmedian))
         plt.text(0.3, 0.7, text, size=15, horizontalalignment='left',
-                 verticalalignment='center', transform=ax.transAxes, bbox=dict(fc="white"))
+                 verticalalignment='center', transform=ax.transAxes, bbox={'fc': "white"})
 
     plot_limit = 1
     ax.set_ylim(bottom=plot_limit)
@@ -3402,10 +3391,10 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
         DSOTmedian = np.median(DSOT_RT_data)
 
     len_data = len(ERCOTRTLDC_data)
-    index = np.array(range(0, len_data)) * 100 / len_data
+    index = np.array(range(len_data)) * 100 / len_data
 
     len_data = len(DSOT_RT_data)
-    dsot_index = np.array(range(0, len_data)) * 100 / len_data
+    dsot_index = np.array(range(len_data)) * 100 / len_data
 
     plt.clf()
     plt.plot(index, ERCOTRTLDC_data, label='ERCOT Delta RT LMP')
@@ -3430,7 +3419,7 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
                "DSO+T     = " + str(round(DSOTmean)) + "     " + str(round(DSOTmedian)) + "\n" + \
                "PJM      = " + str(round(PJMmean)) + "     " + str(round(PJMmedian))
         plt.text(0.3, 0.7, text, size=15, horizontalalignment='left',
-                 verticalalignment='center', transform=ax.transAxes, bbox=dict(fc="white"))
+                 verticalalignment='center', transform=ax.transAxes, bbox={'fc': "white"})
 
     plot_filename = datetime.now().strftime('%Y%m%d') + 'ISO_Daily_variation_RT_LMP_Duration_Curve.png'
     file_path_fig = os.path.join(output_path, 'plots', plot_filename)
@@ -3459,9 +3448,9 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
         DSOTmean = np.mean(DSOT_RTLMP_data)
         DSOTmedian = np.median(DSOT_RTLMP_data)
 
-    Eindex = np.array(range(0, len(ERCOT_RTLMP_LDC_data))) * 100 / len(ERCOT_RTLMP_LDC_data)
-    Dindex = np.array(range(0, len(DSOT_RTLMP_data))) * 100 / len(DSOT_RTLMP_data)
-    Pindex = np.array(range(0, len(PJM_RTLMP_LDC_data))) * 100 / len(PJM_RTLMP_LDC_data)
+    Eindex = np.array(range(len(ERCOT_RTLMP_LDC_data))) * 100 / len(ERCOT_RTLMP_LDC_data)
+    Dindex = np.array(range(len(DSOT_RTLMP_data))) * 100 / len(DSOT_RTLMP_data)
+    Pindex = np.array(range(len(PJM_RTLMP_LDC_data))) * 100 / len(PJM_RTLMP_LDC_data)
 
     plt.clf()
     plt.plot(Eindex, ERCOT_RTLMP_LDC_data, label='ERCOT RT LMP')
@@ -3485,7 +3474,7 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
                "DSO+T  = " + str(round(DSOTmean)) + "     " + str(round(DSOTmedian)) + "\n" + \
                "PJM      = " + str(round(PJMmean)) + "     " + str(round(PJMmedian))
         plt.text(0.3, 0.7, text, size=15, horizontalalignment='left',
-                 verticalalignment='center', transform=ax.transAxes, bbox=dict(fc="white"))
+                 verticalalignment='center', transform=ax.transAxes, bbox={'fc': "white"})
 
     plot_limit = 1
     ax.set_ylim(bottom=plot_limit)
@@ -3514,10 +3503,10 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
         DSOTmedian = np.median(DSOT_data)
 
     len_data = len(ERCOTGDC_data)
-    index = np.array(range(0, len_data)) * 100 / len_data
+    index = np.array(range(len_data)) * 100 / len_data
 
     len_data = len(DSOT_data)
-    dsot_index = np.array(range(0, len_data)) * 100 / len_data
+    dsot_index = np.array(range(len_data)) * 100 / len_data
 
     plt.clf()
     plt.plot(index, ERCOTGDC_data, label='ERCOT Delta DA LMP')
@@ -3542,7 +3531,7 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
                "DSO+T     = " + str(round(DSOTmax, 1)) + "     " + str(round(DSOTmean, 1)) + "     " + str(
             round(DSOTmedian, 1))
         plt.text(0.3, 0.7, text, size=15, horizontalalignment='left',
-                 verticalalignment='center', transform=ax.transAxes, bbox=dict(fc="white"))
+                 verticalalignment='center', transform=ax.transAxes, bbox={'fc': "white"})
 
     plot_filename = datetime.now().strftime('%Y%m%d') + 'ISO_Geographic_variation_DA_LMP_Duration_Curve.png'
     file_path_fig = os.path.join(output_path, 'plots', plot_filename)
@@ -3864,8 +3853,8 @@ def generation_load_profiles(dir_path, metadata_path, data_path, day_range, use_
         i = 0
         for gen in config_data['gen']:
             gen_type = config_data['genfuel'][i][1]
-            for key in fuel_key:
-                if fuel_key[key] in gen_type:
+            for key, value in fuel_key.items():
+                if value in gen_type:
                     gen_fuel = key
             gen_id = ' ' + gen_fuel + str(config_data['genfuel'][i][2])
 
@@ -3969,8 +3958,8 @@ def generation_statistics(dir_path, config_dir, config_file, day_range, use_gen_
         C0 = config_data['gencost'][i][6]
         C1 = config_data['gencost'][i][5]
         C2 = config_data['gencost'][i][4]
-        for key in fuel_key:
-            if fuel_key[key] in gen_type:
+        for key, value in fuel_key.items():
+            if value in gen_type:
                 gen_fuel = key
         alias = ' ' + gen_fuel + str(config_data['genfuel'][i][2])
         gen_key.update({gen_id: [gen_fuel, gen_type, gen_capacity, startup_cost, C0, C1, C2,
@@ -4370,18 +4359,16 @@ def metadata_dist_plots(system, sys_class, variable, dso_range, case, data_path,
                     if variable in ['kw-hr', 'max_kw', 'avg_load', 'load_factor']:
                         if sys_class in ['residential', 'commercial', 'industrial']:
                             # TODO: need to work out why some unknown loads are not getting a tariff class.
-                            if metadata[system][each]['building_type'] != 'UNKNOWN':
-                                if metadata[system][each]['tariff_class'] == sys_class:
-                                    dist_var.append(pop_df.loc[(each, variable), 'sum'])
+                            if metadata[system][each]['building_type'] != 'UNKNOWN' and metadata[system][each]['tariff_class'] == sys_class:
+                                dist_var.append(pop_df.loc[(each, variable), 'sum'])
                         else:
                             if metadata[system][each]['building_type'] == sys_class:
                                 dist_var.append(pop_df.loc[(each, variable), 'sum'])
                     elif variable in ['sqft']:
                         if sys_class in ['residential', 'commercial', 'industrial']:
                             # TODO: need to work out why some unknown loads are not getting a tariff class.
-                            if metadata[system][each]['building_type'] != 'UNKNOWN':
-                                if metadata[system][each]['tariff_class'] == sys_class:
-                                    dist_var.append(metadata[system][each][variable])
+                            if metadata[system][each]['building_type'] != 'UNKNOWN' and metadata[system][each]['tariff_class'] == sys_class:
+                                dist_var.append(metadata[system][each][variable])
                         else:
                             if metadata[system][each]['building_type'] == sys_class:
                                 dist_var.append(metadata[system][each][variable])
@@ -4547,8 +4534,7 @@ def amenity_loss(gld_metadata, dir_path, folder_prefix, dso_num, day_range):
 
     os.chdir(dir_path + folder_prefix + dso_num)
     with open('DSO' + dso_num + '_amenity_log.csv', 'w') as f:
-        for item in log_list:
-            f.write("%s\n" % item)
+        f.writelines("%s\n" % item for item in log_list)
 
     amenity_df['sum'] = amenity_df.sum(axis=1)
     os.chdir(dir_path + folder_prefix + dso_num)
@@ -4900,8 +4886,8 @@ def house_check(dso_range, sourceCase, targetCase, houseProperties):
             # propData_noBatt = np.zeros(len(data_noBatt['houses']))
             # propData_wBatt = np.zeros(len(data_wBatt['houses']))
             houseNum = 0
-            for house in data_noBatt['houses'].keys():
-                if house in data_wBatt['houses'].keys():
+            for house in data_noBatt['houses']:
+                if house in data_wBatt['houses']:
 
                     if dso == dso_range[0] and houseNum == 1:
                         print('You can check some of these properties:')
@@ -4936,17 +4922,17 @@ def house_check(dso_range, sourceCase, targetCase, houseProperties):
                 else:
                     log_list.append('DSO ' + str(dso) + ': House ' + house + ' not present in target population')
 
-            for house in data_wBatt['houses'].keys():
-                if house not in data_noBatt['houses'].keys():
+            for house in data_wBatt['houses']:
+                if house not in data_noBatt['houses']:
                     log_list.append('DSO ' + str(dso) + ': House ' + house + ' not present in source population')
 
             # fig, ax = plt.subplots()
             x = np.arange(1, houseNum + 1, 1)
-            print('DSO {0}: Number of houses from data: {1}'.format(dso, len(data_noBatt['houses'])))
-            print('DSO {0}: Number of counted houses: {1}'.format(dso, houseNum))
+            print(f'DSO {dso}: Number of houses from data: {len(data_noBatt["houses"])}')
+            print(f'DSO {dso}: Number of counted houses: {houseNum}')
             hScatter1 = hAxis.scatter(x, propData_noBatt, 24, color='blue', alpha=1, marker='o')
             hScatter2 = hAxis.scatter(x, propData_wBatt, 18, color='red', alpha=0.5, marker='.')
-            hAxis.set(title='DSO {0} - {1}'.format(dso, houseProperty))
+            hAxis.set(title=f'DSO {dso} - {houseProperty}')
 
         if save_plots:
             # plt.show()
@@ -4959,8 +4945,7 @@ def house_check(dso_range, sourceCase, targetCase, houseProperties):
     # Save log file
     os.chdir(targetCase)
     with open('House_Check_exception_log.txt', 'w') as f:
-        for item in log_list:
-            f.write("%s\n" % item)
+        f.writelines("%s\n" % item for item in log_list)
 
     # return log_list
 
@@ -5633,8 +5618,7 @@ def run_plots():
         # Save log file
         os.chdir(base_case + agent_prefix + dso_num)
         with open('DSO' + dso_num + '_exception_log.txt', 'w') as f:
-            for item in log_list:
-                f.write("%s\n" % item)
+            f.writelines("%s\n" % item for item in log_list)
 
     # 7b-------------  Check consistency between two house populations  --------------------
     if HouseCheck:
@@ -5858,7 +5842,7 @@ def run_plots():
         load_case_data = np.array(LDC_case_data)
 
         len_data = len(load_case_data)
-        index = np.array(range(0, len_data)) * 100 / len_data
+        index = np.array(range(len_data)) * 100 / len_data
 
         plt.clf()
         plt.plot(index, load_case_data, label='wind')
@@ -6002,7 +5986,7 @@ def run_plots():
             LMPLowLDC_data = np.array(LMPLowLDC_data)
 
             len_data = len(DeltaLDC_data)
-            index_day = np.array(range(0, len_data)) * 100 / len_data
+            index_day = np.array(range(len_data)) * 100 / len_data
 
             PriceLDC_data = prices_data[place + ' $_mwh'].values.tolist()
             PriceLDC_data.sort(reverse=False)
@@ -6014,14 +5998,14 @@ def run_plots():
                 DAHighLDC = LMPHighLDC_data
                 DALowLDC = LMPLowLDC_data
                 len_data = len(DAPriceLDC)
-                index_hr = np.array(range(0, len_data)) * 100 / len_data
+                index_hr = np.array(range(len_data)) * 100 / len_data
             elif scenario == 'RT':
                 RTPriceLDC = PriceLDC_data
                 RTDeltaLDC = DeltaLDC_data
                 RTHighLDC = LMPHighLDC_data
                 RTLowLDC = LMPLowLDC_data
                 len_data = len(RTPriceLDC)
-                index_15min = np.array(range(0, len_data)) * 100 / len_data
+                index_15min = np.array(range(len_data)) * 100 / len_data
 
         plt.clf()
         plt.plot(index_day, RTDeltaLDC, label='RT Delta LMP')

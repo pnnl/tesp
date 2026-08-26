@@ -4,10 +4,11 @@
 """Path and Data functions for use within tesp_support.
 """
 
-from os import path, chdir, environ
-from importlib_resources import files
 import argparse
 import subprocess
+from os import chdir, environ, path
+
+from importlib_resources import files
 
 """
 If your Python package needs to write to a file for shared data or configuration,
@@ -63,7 +64,6 @@ else:
         subprocess.Popen(cmd, shell=True).wait()
     except FileExistsError:
         print("Can NOT write the TESP configure files -> " + tesp_path)
-        pass
 
 
 tesp_share = path.join(path.expandvars(tesp_path), 'data/')
@@ -104,15 +104,12 @@ def arguments(description="", args=""):
         elif not path.isfile(_args.input_file[0]):
             print('ERROR-> Input file ' + _args.input_file[0] + ' not found')
             _error = True
-    if 'p' in args:
-        if _args.port is None:
-            _error = True
-    if 'c' in args:
-        if _args.component is None:
-            _error = True
-    if 'o' in args:
-        if _args.output_file[0] is None:
-            _error = True
+    if 'p' in args and _args.port is None:
+        _error = True
+    if 'c' in args and _args.component is None:
+        _error = True
+    if 'o' in args and _args.output_file[0] is None:
+        _error = True
     if 'd' in args:
         if _args.output_dir is None:
             _error = True

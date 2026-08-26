@@ -7,12 +7,12 @@ Public Functions:
     :process_gld: Reads the data and metadata, then makes the plots.
 
 """
-import logging
 import json
+import logging
 import os
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 # Setting up logging
 log = logging.getLogger(__name__)
@@ -82,7 +82,7 @@ def read_gld_metrics(path, name_root, diction_name=''):
     time_key = str(times[0])
 
     # find the actual substation name (not a feeder name) as GridLAB-D wrote it to the metrics file
-    sub_key = list(lst_s[time_key].keys())[0]
+    sub_key = next(iter(lst_s[time_key].keys()))
     print('\n\nFile', sub_dict_path, 'has substation', sub_key, 'at bulk system bus',
           bulkBus, 'with', xfMVA, 'MVA transformer')
     print('\nFeeder Dictionary:')
@@ -467,7 +467,7 @@ def plot_gld(diction, save_file=None, save_only=False):
         ax[0, 1].plot(hrs, min2, color='red', label='Min')
         ax[0, 1].plot(hrs, avg2, color='green', label='Avg')
         ax[0, 1].set_ylabel('degF')
-        ax[0, 1].set_title('Temperature over\n {:d} Houses'.format(len(keys_h)))
+        ax[0, 1].set_title(f'Temperature over\n {len(keys_h):d} Houses')
         ax[0, 1].legend(loc='best')
     else:
         ax[0, 1].set_title('No Houses')
@@ -480,7 +480,7 @@ def plot_gld(diction, save_file=None, save_only=False):
             ax[1, 0].plot(hrs, vmax, color='blue', label='Max')
             ax[1, 0].plot(hrs, vmin, color='red', label='Min')
             ax[1, 0].plot(hrs, vavg, color='green', label='Avg')
-            ax[1, 0].set_title('Voltage over\n {:d} Meters'.format(len(keys_m)))
+            ax[1, 0].set_title(f'Voltage over\n {len(keys_m):d} Meters')
             ax[1, 0].legend(loc='best')
         else:
             ax[1, 0].plot(hrs, data_m[0, :, idx_m['MTR_VOLT_AVG_IDX']], color='blue')

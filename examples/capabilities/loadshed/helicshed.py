@@ -1,14 +1,15 @@
 # Copyright (c) 2021-2025 Battelle Memorial Institute
 # file: helicsshed.py
 
-import helics as h
 import logging
+
+import helics as h
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.StreamHandler())
 
 helicsversion = h.helicsGetVersion()
-log.info("Loadshed Federate: HELICS version = {}".format(helicsversion))
+log.info(f"Loadshed Federate: HELICS version = {helicsversion}")
 
 
 def create_federate(deltat=1.0, fedinitstring="--federates=1"):
@@ -25,19 +26,18 @@ def show_helics_query(fed, qstr):
     qret = h.helicsQueryExecute(hq, fed)
     try:
         log.info(qstr + "=" + ",".join(qret))
-    except:
+    except Exception:
         log.info(qstr + "=")
         log.info(qret)
-        pass
     h.helicsQueryFree(hq)
 
 
 def main():
     fed = create_federate()
     fedName = h.helicsFederateGetName(fed)
-    log.info("The name of the federate is: {0}.".format(fedName))
+    log.info(f"The name of the federate is: {fedName}.")
     endpoint_count = h.helicsFederateGetEndpointCount(fed)
-    log.info("Number of {0} endpoints.".format(endpoint_count))
+    log.info(f"Number of {endpoint_count} endpoints.")
     log.info("########################   Entering Execution Mode  ##########################################")
     h.helicsFederateEnterExecutingMode(fed)
 
@@ -57,7 +57,7 @@ def main():
         currTime = h.helicsFederateGetCurrentTime(fed)
         grantedtime = h.helicsFederateRequestNextStep(fed)
         if (currTime * 100) % 100 == 0:
-            log.debug("Current time: {0}, Granted time: {1}".format(currTime, grantedtime))
+            log.debug(f"Current time: {currTime}, Granted time: {grantedtime}")
         end_name = h.helicsEndpointGetName(swStatusEp)
         for swt in switchings:
             t = swt[0]
@@ -65,10 +65,10 @@ def main():
             if int(currTime) == t:
                 if val == 1:
                     log.info("Switching " + end_name + " to CLOSED at second " + str(t))
-                    h.helicsEndpointSendBytesTo(swStatusEp, "CLOSED".encode(), "")
+                    h.helicsEndpointSendBytesTo(swStatusEp, b"CLOSED", "")
                 elif val == 0:
                     log.info("Switching " + end_name + " to OPEN at second " + str(t))
-                    h.helicsEndpointSendBytesTo(swStatusEp, "OPEN".encode(), "")
+                    h.helicsEndpointSendBytesTo(swStatusEp, b"OPEN", "")
                 else:
                     log.info("!!!!!!! Signals should only be 0 or 1 !!!!!!!")
     log.info("Destroying federate")

@@ -9,13 +9,13 @@ This weather agent needs an WEATHER_CONFIG environment variable to be set, which
 import json
 import os
 import sys
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import pandas as pd
 
-from ..original import fncs as fncs
+from ..original import fncs
 from ..weather.forecast import convertTimeToSeconds, weather_forecast
+
 
 def startWeatherAgent(file):
     """ The weather agent publishes weather data as configured by the json file
@@ -63,8 +63,7 @@ def startWeatherAgent(file):
 
     # write fncs.zpl file here
     # this config str won't work as an argument to fncs::initialize, so write fncs.zpl just in time
-    zplstr = "name = {}\ntime_delta = {}s\ntime_stop = {}s\nbroker = {}".format(
-              agentName, timeDeltaInSeconds, timeStopInSeconds, broker)
+    zplstr = f"name = {agentName}\ntime_delta = {timeDeltaInSeconds}s\ntime_stop = {timeStopInSeconds}s\nbroker = {broker}"
 
     # when doing resample(), use publishIntervalInSeconds to make it uniform
     # the reason for that is due to some of the units that we use for fncs, such as 'min',
@@ -95,7 +94,7 @@ def startWeatherAgent(file):
 
     # find all the time point that need to publish weather data,
     # each time point in this list pairs with each time point in timeNeedToBePublished list
-    timeNeedToPublish = [(i - publishTimeAhead) if (i - publishTimeAhead) >= 0 else 0 for i in timeNeedToBePublished]
+    timeNeedToPublish = [max(i - publishTimeAhead, 0) for i in timeNeedToBePublished]
 
     # other weather agents could be initializing from FNCS.zpl, so we might have a race condition
     #  file locking didn't work, because fncs.initialize() doesn't return until broker hears from all other simulators
@@ -141,12 +140,12 @@ def startWeatherAgent(file):
                 if addErrorToForecast == 1:
                     WF_obj = weather_forecast(col, forecastPeriod * 2, forecastParameters)  # make object
                     data = WF_obj.make_forecast(data, len(data))
-                wd = dict()
+                wd = {}
                 # convert data to a dictionary with time as the key, so it can be published as json string
                 for v in range(len(data)):
-                    if col != "temperature" and data[v] < 1e-4:
-                        data[v] = 0
                     wd[str(times[v])] = str(data[v])
+                    if col != "temperature" and data[v] < 1e-4:
+                        wd[str(times[v])] = 0
 #               print(col, json.dumps(wd))
                 fncs.publish(col + '/forecast', json.dumps(wd))
 

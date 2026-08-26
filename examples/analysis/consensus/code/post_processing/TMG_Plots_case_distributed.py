@@ -1,14 +1,12 @@
-import os, glob
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits import mplot3d
-import h5py
 import json
-import seaborn as sns
-from datetime import datetime, timedelta
 import math
+import os
+from datetime import datetime, timedelta
 
+import h5py
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 
 
 def load_json(dir_path, file_name):
@@ -83,9 +81,9 @@ def get_gridlabd_outputs(case, day_num):
     
     for mg in range(No_Microgrids):
         MG_num = str(mg+1)
-        net_meter_load[str(agent_prefix)+MG_num] = np.zeros((len(time_gld)))
-        net_hvac_load[str(agent_prefix)+MG_num] = np.zeros((len(time_gld)))
-        net_wh_load[str(agent_prefix)+MG_num] = np.zeros((len(time_gld)))
+        net_meter_load[str(agent_prefix)+MG_num] = np.zeros(len(time_gld))
+        net_hvac_load[str(agent_prefix)+MG_num] = np.zeros(len(time_gld))
+        net_wh_load[str(agent_prefix)+MG_num] = np.zeros(len(time_gld))
         
         billing_meter_MG_file = open(case + agent_prefix+ MG_num + "/" + agent_prefix+ MG_num + "_glm_dict.json").read()
         billing_meter_MG = json.loads(billing_meter_MG_file)['billingmeters']
@@ -97,7 +95,7 @@ def get_gridlabd_outputs(case, day_num):
             hvac_load = 0
             wh_load = 0
             for mtr_name in gld_all_meter[str(int(time))]:
-                if mtr_name in billing_meter_MG.keys():
+                if mtr_name in billing_meter_MG:
                     meter_load += gld_all_meter[str(int(time))][mtr_name][2]/1000
                     house_name = billing_meter_MG[mtr_name]['children'][0]
                     hvac_load += gld_all_house[str(int(time))][house_name][5]
@@ -122,7 +120,7 @@ def get_gridlabd_outputs(case, day_num):
 ##################  DSO object 300 min Metrics ################################
 ###############################################################################
 def DSO_price_qunatity_rt(data_path, folder_prefix, object_name, day_num):
-    """ Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
+    r""" Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
     datetime when the energy will be consumed.
     Args:
         dir_path (str): path of parent directory where DSO folders live
@@ -145,7 +143,7 @@ def DSO_price_qunatity_rt(data_path, folder_prefix, object_name, day_num):
 ##################  retail object 300 min retail Metrics ##########################
 ###############################################################################
 def retail_price_qunatity_rt(data_path, folder_prefix, object_name, day_num):
-    """ Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
+    r""" Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
     datetime when the energy will be consumed.
     Args:
         dir_path (str): path of parent directory where DSO folders live
@@ -169,7 +167,7 @@ def retail_price_qunatity_rt(data_path, folder_prefix, object_name, day_num):
 ###############################################################################
     
 def dso_price_qunatity_da(data_path, folder_prefix, object_name, day_num):
-    """ Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
+    r""" Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
     datetime when the energy will be consumed.
     Args:
         dir_path (str): path of parent directory where DSO folders live
@@ -216,7 +214,7 @@ def dso_price_qunatity_da(data_path, folder_prefix, object_name, day_num):
     return data_df, data_df1
 
 def hvac_quantity_price_rt(data_path, folder_prefix, object_name, day_num):
-    """ Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
+    r""" Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
     datetime when the energy will be consumed.
     Args:
         dir_path (str): path of parent directory where DSO folders live
@@ -243,7 +241,7 @@ def hvac_quantity_price_rt(data_path, folder_prefix, object_name, day_num):
 
 
 def water_heater_quantity_price_rt(data_path, folder_prefix, object_name, day_num):
-    """ Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
+    r""" Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
     datetime when the energy will be consumed.
     Args:
         dir_path (str): path of parent directory where DSO folders live
@@ -316,7 +314,7 @@ if __name__ == '__main__':
         #ax.plot(gld_date, substation_load- Data_DSO_base['cleared_quantity_rt_DG_1'] - Data_DSO_base['cleared_quantity_rt_DG_2'] - Data_DSO_base['cleared_quantity_rt_DG_3'], label='Substation- after Market')
         for MG in range(2):
           MG_num = str(MG+1) 
-          ax.plot(gld_date, net_meter_load[str(agent_prefix)+MG_num], linewidth=3,  label=str('Microgrid')+MG_num)
+          ax.plot(gld_date, net_meter_load[str(agent_prefix)+MG_num], linewidth=3,  label='Microgrid'+MG_num)
         # ax.legend(loc='upper left')
         # ax.set_xlabel('Time', size=12)
         # ax.set_ylabel('Entity\'s Net Consumption (kW)', size=12)
@@ -330,8 +328,8 @@ if __name__ == '__main__':
         ax.plot(gld_date, meter_loads['n135'], linewidth=3, label='n135')
         # ax.plot(gld_date, meter_loads['n67']+ meter_loads['n135']+meter_loads['n97'] - Data_DSO_base['cleared_quantity_rt_DG_1'] - Data_DSO_base['cleared_quantity_rt_DG_2'] - Data_DSO_base['cleared_quantity_rt_DG_3'], label='n67+n135+n97-DGs')
         ax.legend(loc='upper left')
-        ax.set_xlabel('Time of the Day', fontdict=dict(size=16, weight='bold'))
-        ax.set_ylabel('Entity\'s Net Consumption (kW)', fontdict=dict(size=16, weight='bold'))
+        ax.set_xlabel('Time of the Day', fontdict={'size': 16, 'weight': 'bold'})
+        ax.set_ylabel('Entity\'s Net Consumption (kW)', fontdict={'size': 16, 'weight': 'bold'})
         plt.grid(True)
         # plt.show()
         fig.tight_layout()
@@ -352,8 +350,8 @@ if __name__ == '__main__':
          
 
     ax.legend(loc='upper left')
-    ax.set_xlabel('Time of the Day', fontdict=dict(size=16, weight='bold'))
-    ax.set_ylabel('Cleared Quantity (kW)',fontdict=dict(size=16, weight='bold'))
+    ax.set_xlabel('Time of the Day', fontdict={'size': 16, 'weight': 'bold'})
+    ax.set_ylabel('Cleared Quantity (kW)',fontdict= {'size': 16, 'weight': 'bold'})
     plt.grid(True)
     # plt.show()
     fig.tight_layout()
@@ -395,14 +393,14 @@ if __name__ == '__main__':
             date_start_bid = date_start + timedelta(hours = 17)
             dso_market_da_df_base_hour = dso_market_da_df_base.loc[dso_market_da_df_base['i']==0]
             dso_market_da_df_base_bid = dso_market_da_df_base_hour.loc[dso_market_da_df_base_hour.index==date_start_bid]
-            dso_market_rt_df_base_hour = dso_market_rt_df_base.loc[dso_market_rt_df_base.index==date_start_bid]
+            # dso_market_rt_df_base_hour = dso_market_rt_df_base.loc[dso_market_rt_df_base.index==date_start_bid]
             
             fig, ax = plt.subplots(1,1,figsize=(16,7), dpi= 160)
-            ax.plot(dso_market_rt_df_base_hour.curve_dso_rt_quantities, dso_market_rt_df_base_hour.curve_dso_rt_prices, label='Bid RT ')
+            # ax.plot(dso_market_rt_df_base_hour.curve_dso_rt_quantities, dso_market_rt_df_base_hour.curve_dso_rt_prices, label='Bid RT ')
             ax.plot(dso_market_da_df_base_bid.curve_dso_da_quantities, dso_market_da_df_base_bid.curve_dso_da_prices, label='Bid DA')
-            ax.plot(retail_market_rt_df_base.cleared_quantity_rt.loc[retail_market_rt_df_base.index==date_start_bid], retail_market_rt_df_base.cleared_price_rt.loc[retail_market_rt_df_base.index==date_start_bid], 'o', label='cleared RT')
+            # ax.plot(retail_market_rt_df_base.cleared_quantity_rt.loc[retail_market_rt_df_base.index==date_start_bid], retail_market_rt_df_base.cleared_price_rt.loc[retail_market_rt_df_base.index==date_start_bid], 'o', label='cleared RT')
             ax.plot(dso_market_da_df1_base.trial_cleared_quantity_da.loc[dso_market_da_df1_base.index==date_start_bid], dso_market_da_df1_base.trial_cleared_price_da.loc[dso_market_da_df1_base.index==date_start_bid], 'o', label='cleared DA')
-            plt.title('Bids at {} - DA at 0th hour and RT '. format(date_start_bid))
+            plt.title(f'Bids at {date_start_bid} - DA at 0th hour and RT ')
             ax.legend(loc='upper left')
             plt.grid(True)
                 
@@ -432,13 +430,13 @@ if __name__ == '__main__':
         #total_cost_trans[MG_num] = sum(net_meter_load_TM[str(agent_prefix)+MG_num] * retail_market_rt_df_TM.cleared_price_rt)*(time_interval/3600)
         #avg_cost_trans[MG_num] = total_cost_trans[MG_num]/no_of_meters_TM[str(agent_prefix)+MG_num]
             
-    ax.grid(True)  
-    ax.legend(loc='upper left')  
-    fig.tight_layout()
-    fig.savefig(case_name + MG + '.png', dpi=fig.dpi)
+        ax.grid(True)
+        ax.legend(loc='upper left')
+        fig.tight_layout()
+        fig.savefig(case_name + MG + '.png', dpi=fig.dpi)
   
-    ax1.grid(True)  
-    ax1.legend(loc='upper left')
-    fig1.tight_layout()
-    fig1.savefig(case_name+'Cleared_Price.png', dpi=fig.dpi)         
+        ax1.grid(True)
+        ax1.legend(loc='upper left')
+        fig1.tight_layout()
+        fig1.savefig(case_name+'Cleared_Price.png', dpi=fig.dpi)
            

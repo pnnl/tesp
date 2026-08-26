@@ -184,7 +184,7 @@ def startWeatherAgent(file):
                 if addErrorToForecast == 1:
                     WF_obj = weather_forecast(col, forecastPeriod * 2, forecastParameters)  # make object
                     data = WF_obj.make_forecast(data, len(data))
-                wd = dict()
+                wd = {}
                 # convert data to a dictionary with time as the key, so it can be published as json string
                 for v in range(len(data)):
                     wd[str(times[v])] = str(data[v])
@@ -387,8 +387,8 @@ class weather_forecast:
         n = len(weather)
         error = numpy.zeros(n)
         ############## sampling the error distribution
-        ENV_l = list()
-        ENV_U = list()
+        ENV_l = []
+        ENV_U = []
         for i in range(n):
             if bias[i] > 0:
                 EL = -envelope[i] + bias[i]

@@ -2,10 +2,12 @@
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: entity.py
 """
+Item and Entity classes
 """
 
-import pyjson5
 import sqlite3
+
+import pyjson5
 
 
 def assign_defaults(obj, file_name):
@@ -227,7 +229,6 @@ class Entity:
                 # print(f"Deleted {self.entity}:{object_name}")
             except Exception:
                 print(f"Can't find {self.entity}:{object_name} for deletion")
-                pass
         else:
             print("object name is not a string in", self.entity)
 
@@ -304,7 +305,6 @@ class Entity:
                     del self.instances[object_name][item]
                 except Exception:
                     print(f"Can't find {object_name}:{item} for deletion")
-                    pass
 
     def toList(self):
         """ List the Item(s) in the Entity
@@ -390,7 +390,7 @@ class Entity:
         diction = ""
         for object_name in self.instances:
             diction += "object " + self.entity + " {\n  name " + object_name + ";\n"
-            for item in self.instances[object_name].keys():
+            for item in self.instances[object_name]:
                 diction += "  " + item + " " + self.instances[object_name][item] + ";\n"
             diction += "}\n"
         return diction
@@ -423,7 +423,7 @@ class Entity:
             sql = "INSERT INTO " + self.entity + "_values(entity, item, valu) VALUES"
             for name in self.instances:
                 if len(self.instances[name].keys()) > 0:
-                    for item in self.instances[name].keys():
+                    for item in self.instances[name]:
                         sql += multi_row + name + "', '" + item + "', '" + self.instances[name][item] + "')"
                         multi_row = ", ('"
                     sql = sql.replace("''", "'")
@@ -438,9 +438,7 @@ class Entity:
 
 def _test():
 
-    from .data import feeder_entities_path
-    from .data import glm_entities_path
-    from .data import tesp_test
+    from .data import feeder_entities_path, glm_entities_path, tesp_test
 
     class mytest:
         def test(self):

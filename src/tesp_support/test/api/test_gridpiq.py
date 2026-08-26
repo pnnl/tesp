@@ -1,7 +1,8 @@
 # test_gridpiq.py
-import pytest
-import tempfile
 import json
+import tempfile
+
+import pytest
 from tesp_support.api.gridpiq import GridPIQ
 
 
@@ -327,7 +328,7 @@ def test_gridpiq_json_structure_validation():
     assert isinstance(dispatch_data, dict)
 
     # Should have normalized percentages
-    for fuel_type, fuel_data in dispatch_data.items():
+    for fuel_data in dispatch_data.values():
         assert isinstance(fuel_data, list)
         for percentage in fuel_data:
             assert 0 <= percentage <= 1

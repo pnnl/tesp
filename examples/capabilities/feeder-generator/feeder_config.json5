@@ -142,7 +142,7 @@
     "region": 2,
     "vll": 12470.0, // line voltage
     "vln": 7200.0, // nominal voltage
-    "water_heater_model": "MULTILAYER", // MULTILAYER, TWONODE
+    "water_heater_model": "TWONODE", // MULTILAYER, TWONODE
 
     // Solar player diction
     "use_solar_player": false, // True if pre-defining solar generation

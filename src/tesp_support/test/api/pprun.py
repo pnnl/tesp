@@ -4,9 +4,7 @@
 from os import path
 
 import pypower.api as pp
-
 import tesp_support.api.tso_helpers as th
-
 
 dirpath = path.expandvars('$TESPDIR/examples/capabilities/pypower/')
 ppc = th.load_json_case(dirpath + '/ppcase.json')

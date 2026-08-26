@@ -10,8 +10,8 @@ import json
 import logging
 import os
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 # Setting up logging
 log = logging.getLogger(__name__)
@@ -146,8 +146,8 @@ def read_agent_metrics(path, name_root, diction_name='', print_dictionary=False)
         if this_max_p > max_p:
             max_p = this_max_p
             cidx = i
-    print('Out of {:d} controllers, {:d} submitted bids and the highest bidder was {:s} [{:d}]'
-          .format(len(c_keys), nbidding, c_keys[cidx], cidx))
+    print(f'Out of {len(c_keys):d} controllers, {nbidding:d} submitted bids and the highest bidder was {c_keys[cidx]:s} [{cidx:d}]'
+          )
 
     return {
         'hrs': hrs,

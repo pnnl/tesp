@@ -4,18 +4,18 @@
 import os
 from datetime import datetime, timedelta
 
-import waterfall_chart #distribution name: waterfallcharts
-import matplotlib.pyplot as plt
 import matplotlib
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import waterfall_chart  #distribution name: waterfallcharts
 
 from ..dsot import plots as pt
 
 
 def rec_diff(d1, d2):
-    diff = dict()
+    diff = {}
     for k,v1 in d1.items():
         if isinstance(v1, dict):
             diff[k] = rec_diff(v1, d2[k])
@@ -92,13 +92,7 @@ def customer_bill_component_comparison(cases, data_paths, output_path, dso_num):
                 df.loc[(month, case), 'Volumetric Charge (Off-Peak)'] = var_df.loc[(Customer_class, 'tou_off-peak_energy_charge'), month] / cust_sf
                 df.loc[(month, case), 'Demand Charge'] = var_df.loc[(Customer_class, 'tou_demand_charge'), month] / cust_sf
 
-            elif case == 'DE':
-                df.loc[(month, case), 'Fixed Charge'] = var_df.loc[(Customer_class, 'transactive_fixed_charge'), month] / cust_sf
-                df.loc[(month, case), 'Volumetric Energy Charge'] = var_df.loc[(Customer_class, 'transactive_volumetric_charge'), month] / cust_sf
-                df.loc[(month, case), 'Dynamic (DA) Charge'] = var_df.loc[(Customer_class, 'transactive_DA_energy_charge'), month] / cust_sf
-                df.loc[(month, case), 'Dynamic (RT) Charge'] = var_df.loc[(Customer_class, 'transactive_RT_energy_charge'), month] / cust_sf
-
-            elif case == 'DE+C':
+            elif case == 'DE' or case == 'DE+C':
                 df.loc[(month, case), 'Fixed Charge'] = var_df.loc[(Customer_class, 'transactive_fixed_charge'), month] / cust_sf
                 df.loc[(month, case), 'Volumetric Energy Charge'] = var_df.loc[(Customer_class, 'transactive_volumetric_charge'), month] / cust_sf
                 df.loc[(month, case), 'Dynamic (DA) Charge'] = var_df.loc[(Customer_class, 'transactive_DA_energy_charge'), month] / cust_sf
@@ -419,10 +413,10 @@ def retail_price_comparison_plot(dso, day_range, metadata_path, cases, data_path
             tou_params = pt.load_json(os.path.join(data_path), "time_of_use_parameters.json", False)
             for ii in DA_LMPs_df.index:
                 hour = ii.hour
-                for k in tou_params["DSO_" + dso][month_name]["periods"].keys():
+                for k in tou_params["DSO_" + dso][month_name]["periods"]:
                     for t in range(len(tou_params["DSO_" + dso][month_name]["periods"][k]["hour_start"])):
-                        if hour >= tou_params["DSO_" + dso][month_name]["periods"][k]["hour_start"][t] \
-                                and hour < tou_params["DSO_" + dso][month_name]["periods"][k]["hour_end"][t]:
+                        if tou_params["DSO_" + dso][month_name]["periods"][k]["hour_start"][t] <= hour < \
+                                tou_params["DSO_" + dso][month_name]["periods"][k]["hour_end"][t]:
                             DA_LMPs_df.loc[ii, 'Retail'] = tou_params["DSO_" + dso][month_name]["price"] \
                                 * tou_params["DSO_" + dso][month_name]["periods"][k]["ratio"]
         elif rate_scenario == "DSOT":
@@ -708,7 +702,7 @@ def plot_annual_stats(cases, data_paths, output_path, dso_num, variable):
                 median = np.median(case_data[~np.isnan(case_data)])
                 text = text + case + " = " + str(round(mean, 1)) + "     " + str(round(median, 1)) + "\n"
             plt.text(0.4, 0.1, text, size=10, horizontalalignment='left',
-                     verticalalignment='center', transform=ax.transAxes, bbox=dict(fc="white"))
+                     verticalalignment='center', transform=ax.transAxes, bbox={'fc': "white"})
 
         plot_filename = datetime.now().strftime('%Y%m%d') + 'Case_Comparison_' + file_name + '_Duration_Curve.png'
         file_path_fig = os.path.join(output_path, 'plots', plot_filename)
@@ -736,7 +730,7 @@ def plot_annual_stats(cases, data_paths, output_path, dso_num, variable):
                 median = np.median(case_data[~np.isnan(case_data)])
                 text = text + case + " = " + str(round(mean,1)) + "     " + str(round(median,1)) + "\n"
             plt.text(0.4, 0.1, text, size=10, horizontalalignment='left',
-                     verticalalignment='center', transform=ax.transAxes, bbox=dict(fc="white"))
+                     verticalalignment='center', transform=ax.transAxes, bbox={'fc': "white"})
 
         plot_filename = datetime.now().strftime('%Y%m%d') + 'Case_Comparison_Daily_Variation_' + file_name + '_Duration_Curve.png'
         file_path_fig = os.path.join(output_path, 'plots', plot_filename)
@@ -1244,10 +1238,9 @@ def customer_cfs_delta(cases, data_paths, metadata_file, metadata_path = None):
                 'Suburban': [],
                 'Rural': []}
 
-    for DSO in metadata.keys():
-        if 'DSO' in DSO:
-            if metadata[DSO]['used']:
-                dso_type[metadata[DSO]['utility_type']].append(int(DSO.split('_')[-1]))
+    for DSO in metadata():
+        if 'DSO' in DSO and metadata[DSO]['used']:
+            dso_type[metadata[DSO]['utility_type']].append(int(DSO.split('_')[-1]))
 
     # Determine participating DER mix for each customer:
 

@@ -13,14 +13,13 @@ Todo:
 """
 
 import json
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
 
-from ..original import fncs as fncs
-from ..api.parse_helpers import parse_magnitude, parse_kw
+from ..api.bench_profile import bench_profile
+from ..api.parse_helpers import parse_kw, parse_magnitude
+from ..original import fncs
 from .hvac_agent import hvac
 from .simple_auction import simple_auction
-from ..api.bench_profile import bench_profile
 
 
 @bench_profile
@@ -54,7 +53,7 @@ def substation_loop_f(configfile, metrics_root, hour_stop=48, flag='WithMarket')
     lp = open(configfile).read()
     diction = json.loads(lp)
 
-    market_key = list(diction['markets'].keys())[0]  # only using the first market
+    market_key = next(iter(diction['markets'].keys()))  # only using the first market
     market_row = diction['markets'][market_key]
     unit = market_row['unit']
 

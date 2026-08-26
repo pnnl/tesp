@@ -3,6 +3,7 @@
 import json
 
 import matplotlib.pyplot as plt
+
 # import sys;
 import numpy as np
 from matplotlib.lines import Line2D
@@ -126,12 +127,12 @@ def process_pypower(name_root):
             data_b[j, i, :] = ary
             i = i + 1
         print(key,
-              '{:.4f}'.format(data_b[j, :, LMP_P_IDX].mean()),
-              '{:.4f}'.format(data_b[j, :, LMP_P_IDX].max()),
-              '{:.4f}'.format(data_b[j, 0:last1, LMP_P_IDX].mean()),
-              '{:.4f}'.format(data_b[j, 0:last1, LMP_P_IDX].std()),
-              '{:.4f}'.format(data_b[j, :, VMIN_IDX].min()),
-              '{:.4f}'.format(data_b[j, :, VMAX_IDX].max()))
+              f'{data_b[j, :, LMP_P_IDX].mean():.4f}',
+              f'{data_b[j, :, LMP_P_IDX].max():.4f}',
+              f'{data_b[j, 0:last1, LMP_P_IDX].mean():.4f}',
+              f'{data_b[j, 0:last1, LMP_P_IDX].std():.4f}',
+              f'{data_b[j, :, VMIN_IDX].min():.4f}',
+              f'{data_b[j, :, VMAX_IDX].max():.4f}')
         j = j + 1
 
     # read the generator metrics file
@@ -170,8 +171,8 @@ def process_pypower(name_root):
         row = diction['generators'][key]
         p_max = float(row['Pmax'])
         print(key, row['bus'], row['bustype'], row['genfuel'],
-              '{:.4f}'.format(p_avg / p_max),
-              '{:.4f}'.format(p_std / p_avg))
+              f'{p_avg / p_max:.4f}',
+              f'{p_std / p_avg:.4f}')
         j = j + 1
 
     # display a plot 

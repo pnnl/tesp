@@ -1,10 +1,11 @@
 # Copyright (c) 2022-2025 Battelle Memorial Institute
 # file: recs_api.py
 
-import pandas as pd
-import sqlite3 as sqlite
-import duckdb as dkdb
 import random
+import sqlite3 as sqlite
+
+import duckdb as dkdb
+import pandas as pd
 
 pd.options.mode.chained_assignment = None
 
@@ -163,7 +164,6 @@ class recs_data_set:
         return percentage_df
 
     def get_all_params_list(self, param_type):
-        param_list = []
         if param_type == "state_name":
             param_df = self.get_state_names()
         elif param_type == "income_cat":
@@ -178,9 +178,7 @@ class recs_data_set:
             param_id = "UATYP10"
         else:
             param_id = param_type
-        for param in param_df[param_id]:
-            param_list.append(param)
-        return param_list
+        return list(param_df[param_id])
 
     def build_key_parameter_distributions(self, state, income_level, housing_density):
         distribution_df = pd.DataFrame()

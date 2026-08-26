@@ -180,9 +180,7 @@ def customer_CFS(GLD_metadata,
             Bills = customer_bill['BillsFix']['TotalFix']
         elif rate_scenario == "time-of-use":
             Bills = customer_bill['BillsFix']['TotalFix'] + customer_bill['BillsTOU']['TotalTOU']
-        elif rate_scenario == "transactive":
-            Bills = customer_bill['BillsFix']['TotalFix'] + customer_bill['BillsTransactive']['TotalDyn']
-        elif rate_scenario == "dsot":
+        elif rate_scenario == "transactive" or rate_scenario == "dsot":
             Bills = customer_bill['BillsFix']['TotalFix'] + customer_bill['BillsTransactive']['TotalDyn']
         elif rate_scenario == "subscription":
             Bills = customer_bill['BillsFix']['TotalFix'] + customer_bill['BillsSubscription']['TotalSub']
@@ -304,23 +302,7 @@ def customer_CFS(GLD_metadata,
                 'ConnChargesTOU': ConnChargesTOU
             })
 
-        elif rate_scenario == "dsot":
-            # PurchasesDyn = dso_helper.returnDictSum(customer_bill['BillsTransactive']['PurchasesDyn'])
-            DAEnergy = customer_bill['BillsTransactive']['PurchasesDyn']['DAEnergy']
-            RTEnergy = customer_bill['BillsTransactive']['PurchasesDyn']['RTEnergy']
-            DistCharges = customer_bill['BillsTransactive']['DistCharges']
-            ConnChargesDyn = customer_bill['BillsTransactive']['ConnChargesDyn']
-            BillsTransactive = customer_bill['BillsTransactive']['TotalDyn']
-
-            Customer_Cash_Flows_csv.update({
-                'BillsTransactive': BillsTransactive,
-                'DAEnergy': DAEnergy,
-                'RTEnergy': RTEnergy,
-                'DistCharges': DistCharges,
-                'ConnChargesDyn': ConnChargesDyn
-            })
-
-        elif rate_scenario == "transactive":
+        elif rate_scenario == "dsot" or rate_scenario == "transactive":
             # PurchasesDyn = dso_helper.returnDictSum(customer_bill['BillsTransactive']['PurchasesDyn'])
             DAEnergy = customer_bill['BillsTransactive']['PurchasesDyn']['DAEnergy']
             RTEnergy = customer_bill['BillsTransactive']['PurchasesDyn']['RTEnergy']

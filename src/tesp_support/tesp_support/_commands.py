@@ -8,6 +8,5 @@ def version():
     print(_version)
 
 def tesp_support():
-    if sys.argv.__len__() == 2:
-        if sys.argv[1] == "-v" or sys.argv[1] == "--version":
-            version()
+    if sys.argv.__len__() == 2 and (sys.argv[1] == "-v" or sys.argv[1] == "--version"):
+        version()

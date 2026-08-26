@@ -6,7 +6,7 @@ log = logging.getLogger(__name__)
 log.addHandler(logging.StreamHandler())
 
 helicsversion = h.helicsGetVersion()
-log.info('Loadshed Federate: HELICS version = {}'.format(helicsversion))
+log.info(f'Loadshed Federate: HELICS version = {helicsversion}')
 
 
 def create_federate(deltat=1.0, fedinitstring='--federates=1'):
@@ -30,9 +30,9 @@ def show_helics_query(fed, qstr):
 def main():
     fed = create_federate()
     fedName = h.helicsFederateGetName(fed)
-    log.info('The name of the federate is: {0}.'.format(fedName))
+    log.info(f'The name of the federate is: {fedName}.')
     endpoint_count = h.helicsFederateGetEndpointCount(fed)
-    log.info('I have counted a number of {0} endpoints.'.format(endpoint_count))
+    log.info(f'I have counted a number of {endpoint_count} endpoints.')
     log.info('########################   Entering Execution Mode  ##########################################')
     h.helicsFederateEnterExecutingMode(fed)
 
@@ -50,7 +50,7 @@ def main():
     seconds = int(60 * 60 * hours)
     grantedTime = 0
     currTime = h.helicsFederateGetCurrentTime(fed)
-    log.info('Current time: {0}, Granted time: {1}'.format(currTime, grantedTime))
+    log.info(f'Current time: {currTime}, Granted time: {grantedTime}')
     log.info('====================================================================')
 
     while grantedTime < seconds:
@@ -63,10 +63,10 @@ def main():
             if int(currTime) == t:
                 if val == 1:
                     log.info(f'Switching {end_name} to CLOSED at second {int(currTime)} ({t})')
-                    h.helicsEndpointSendBytes(swStatusEp, 'CLOSED'.encode())
+                    h.helicsEndpointSendBytes(swStatusEp, b'CLOSED')
                 elif val == 0:
                     log.info(f'Switching {end_name} to OPEN at second {int(currTime)} ({t})')
-                    h.helicsEndpointSendBytes(swStatusEp, 'OPEN'.encode())
+                    h.helicsEndpointSendBytes(swStatusEp, b'OPEN')
                 else:
                     log.info('!!!!!!! Signals should only be 0 or 1 !!!!!!!')
         grantedTime = h.helicsFederateRequestNextStep(fed)

@@ -9,9 +9,9 @@ from scipy.interpolate import interp1d
 
 from ..dsot.helpers_dsot import MarketClearingType
 
-P_price_DSO = np.array(([0.0247, 0.01974, 0.01889, 0.01797, 0.01724, 0.01713, 0.018, 0.01709, 0.0181,
+P_price_DSO = np.array([0.0247, 0.01974, 0.01889, 0.01797, 0.01724, 0.01713, 0.018, 0.01709, 0.0181,
                          0.02185, 0.02462, 0.03037, 0.04141, 0.04885, 0.06822, 0.09555, 0.14969, 0.11952,
-                         0.08191, 0.05319, 0.04177, 0.03359, 0.02702, 0.02552]))
+                         0.08191, 0.05319, 0.04177, 0.03359, 0.02702, 0.02552])
 P_price_DSO = P_price_DSO * 5
 P_price_DSO = np.hstack((P_price_DSO, P_price_DSO))
 
@@ -109,7 +109,7 @@ def Consenus_dist_DA(dso_market_obj, DA_horizon, fed, hour_of_day, time_granted,
     kk = 0
     jj = 0
     gamma_max = 10
-    logging.debug('Solving Multi Step Consensus for {} steps and  {} Agents'.format(DA_horizon, N_agents))
+    logging.debug(f'Solving Multi Step Consensus for {DA_horizon} steps and  {N_agents} Agents')
 
     time_market_da = time_granted
     while (np.any(abs(DeltaP[:, kk]) > rela_eps) or kk < 2) and time_granted < time_market_DA_complete:
@@ -122,9 +122,9 @@ def Consenus_dist_DA(dso_market_obj, DA_horizon, fed, hour_of_day, time_granted,
             gamma0 = gamma0 / (jj ** 0.5)
 
         if jj > gamma_max:
-            logging.warning('Failed to reach Consensus (Multi-step) !!!! On iteration {} for Gamma {}'.format(jj, kk))
+            logging.warning(f'Failed to reach Consensus (Multi-step) !!!! On iteration {jj} for Gamma {kk}')
             f = open("Consensus_reports.txt", "a+")
-            f.write('Failed to reach Consensus (Multi-step) !!!! On iteration {} for Gamma {}'.format(jj, kk))
+            f.write(f'Failed to reach Consensus (Multi-step) !!!! On iteration {jj} for Gamma {kk}')
             break
 
         ###########################################################################
@@ -179,8 +179,8 @@ def Consenus_dist_DA(dso_market_obj, DA_horizon, fed, hour_of_day, time_granted,
 
             # ######## Bounding and Ramping Constraints (Temporary) ###########
             if 'DG' in fed_name:
-                PG_max = np.max((Q_agents_DA[T, :]))
-                PG_min = np.min((Q_agents_DA[T, :]))
+                PG_max = np.max(Q_agents_DA[T, :])
+                PG_min = np.min(Q_agents_DA[T, :])
                 if abs(PG[T, agent_idx, kk + 1]) > PG_max:
                     PG[T, agent_idx, kk + 1] = PG_max
                     # print('hit Limit for agent',n, kk)
@@ -210,7 +210,7 @@ def Consenus_dist_DA(dso_market_obj, DA_horizon, fed, hour_of_day, time_granted,
 
     print(kk, np.max(np.abs(DeltaP[:, kk])))
     if jj < gamma_max:
-        logging.info('Sucessfully Reached Consensus (Multi-step) !!!! On iteration {} for Gamma {}'.format(kk, jj))
+        logging.info(f'Sucessfully Reached Consensus (Multi-step) !!!! On iteration {kk} for Gamma {jj}')
 
     dso_market_obj.trial_cleared_quantity_DA = np.concatenate([PG[:, agent_idx, kk], PG[:, agent_idx, kk]]).tolist()
     dso_market_obj.Pwclear_DA = np.concatenate([lambda_c[:, agent_idx, kk], lambda_c[:, agent_idx, kk]]).tolist()
@@ -311,7 +311,7 @@ def Consenus_dist_RT(dso_market_obj, fed, hour_of_day, time_granted, time_market
     temp_price = 0
     temp_quantity = 0
 
-    logging.debug('Solving Single Step Consensus for {} Agents'.format(N_agents))
+    logging.debug(f'Solving Single Step Consensus for {N_agents} Agents')
 
     time_market_rt = time_granted
     while ((abs(DeltaP[:, kk]) > rela_eps) or kk < 2) and time_granted < time_market_RT_complete:
@@ -324,9 +324,9 @@ def Consenus_dist_RT(dso_market_obj, fed, hour_of_day, time_granted, time_market
             gamma0 = gamma0 / (jj ** 0.5)
 
         if jj > gamma_max:
-            logging.warning('Failed to reach Consensus (Multi-step) !!!! On iteration {} for Gamma {}'.format(jj, kk))
+            logging.warning(f'Failed to reach Consensus (Multi-step) !!!! On iteration {jj} for Gamma {kk}')
             f = open("Consensus_reports.txt", "a+")
-            f.write('Failed to reach Consensus (Multi-step) !!!! On iteration {} for Gamma {}'.format(jj, kk))
+            f.write(f'Failed to reach Consensus (Multi-step) !!!! On iteration {jj} for Gamma {kk}')
             break
 
         ###########################################################################
@@ -415,7 +415,7 @@ def Consenus_dist_RT(dso_market_obj, fed, hour_of_day, time_granted, time_market
 
     print(kk, np.max(np.abs(DeltaP[:, kk])))
     if jj < gamma_max:
-        logging.info('Sucessfully Reached Consensus (Single-step) !!!! On iteration {} for Gamma {}'.format(kk, jj))
+        logging.info(f'Sucessfully Reached Consensus (Single-step) !!!! On iteration {kk} for Gamma {jj}')
 
     dso_market_obj.trial_cleared_quantity_RT = PG[agent_idx, kk]
     dso_market_obj.Pwclear_RT = lambda_c[agent_idx, kk]

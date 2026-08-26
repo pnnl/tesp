@@ -15,22 +15,20 @@ import os
 import subprocess
 import sys
 import tkinter as tk
-import tkinter.ttk as ttk
-from tkinter import filedialog
-from tkinter import messagebox
-
-from ..api.parse_helpers import parse_kw
+from tkinter import filedialog, messagebox, ttk
 
 import matplotlib
+
+from ..api.parse_helpers import parse_kw
 
 try:
     matplotlib.use('TkAgg')
 except Exception:
     pass
+import matplotlib.pyplot as plt
+from matplotlib import animation
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.lines import Line2D
-import matplotlib.animation as animation
-import matplotlib.pyplot as plt
 
 helics = None
 fncs = None
@@ -244,7 +242,7 @@ class TespMonitorGUI:
         """
         self.root.update()
         for proc in self.pids:
-            if not proc == self.broker:
+            if proc != self.broker:
                 print('Trying to kill', proc.pid, flush=True)
                 try:
                     os.kill(proc.pid, 9)
@@ -481,18 +479,16 @@ class TespMonitorGUI:
                 v2lmp = 0.0
                 v3 = 0.0
 
-                if self.sub_power_A:
-                    if helics.helicsInputIsUpdated(self.sub_power_A):
-                        v1 = 3.0 * helics.helicsInputGetDouble(self.sub_power_A) / 1000.0
+                if self.sub_power_A and helics.helicsInputIsUpdated(self.sub_power_A):
+                    v1 = 3.0 * helics.helicsInputGetDouble(self.sub_power_A) / 1000.0
                 if helics.helicsInputIsUpdated(self.sub_TPV_7):
                     v0 = helics.helicsInputGetDouble(self.sub_TPV_7) / 133000.0
                 if helics.helicsInputIsUpdated(self.sub_clear_price):
                     v2auc = helics.helicsInputGetDouble(self.sub_clear_price)
                 if helics.helicsInputIsUpdated(self.sub_LMP_7):
                     v2lmp = helics.helicsInputGetDouble(self.sub_LMP_7)
-                if self.sub_TEDP:
-                    if helics.helicsInputIsUpdated(self.sub_TEDP):
-                        v1 = helics.helicsInputGetDouble(self.sub_TEDP)
+                if self.sub_TEDP and helics.helicsInputIsUpdated(self.sub_TEDP):
+                    v1 = helics.helicsInputGetDouble(self.sub_TEDP)
                 if helics.helicsInputIsUpdated(self.sub_dist_load):
                     cval = helics.helicsInputGetComplex(self.sub_dist_load)
                     v3 = cval.real / 1.0e3

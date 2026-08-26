@@ -1,10 +1,17 @@
 # test_parse_helpers.py
-import pytest
 import math
+
+import pytest
 from tesp_support.api.parse_helpers import (
-    parse_number, parse_magnitude_1, parse_magnitude_2, 
-    parse_helic_input, parse_magnitude, parse_mva, 
-    parse_kva, parse_kva_old, parse_kw
+    parse_helic_input,
+    parse_kva,
+    parse_kva_old,
+    parse_kw,
+    parse_magnitude,
+    parse_magnitude_1,
+    parse_magnitude_2,
+    parse_mva,
+    parse_number,
 )
 
 

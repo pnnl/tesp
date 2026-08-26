@@ -1,7 +1,8 @@
 # test_model_glm.py
-import pytest
-import tempfile
 import os
+import tempfile
+
+import pytest
 from tesp_support.api.model_GLM import GLMModel, O_Entity
 
 

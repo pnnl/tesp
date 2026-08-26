@@ -99,9 +99,8 @@ def find_bus(arr, n):
 
 def find_line(arr, n1, n2):
     for ln in arr:
-        if '//' not in ln[0]:
-            if int(ln[1]) == n1 and int(ln[2]) == n2:
-                return ln
+        if '//' not in ln[0] and int(ln[1]) == n1 and int(ln[2]) == n2:
+            return ln
     return None
 
 
@@ -223,8 +222,7 @@ if __name__ == '__main__':
         Pmin = float(ln[3]) / nunits
         Pmin = 0.05 * Sg
         Pmin = 0.0
-        if Pg < Pmin:
-            Pg = Pmin
+        Pg = max(Pg, Pmin)
         if n1 == swing_bus:
             #      print ('Setting Pg from {:.2f} to 0 at swing bus {:d}'.format (Pg, swing_bus))
             Pg = 0.0
@@ -235,8 +233,8 @@ if __name__ == '__main__':
         c1 = float(ln[7])
         c0 = float(ln[8])
 
-        print('{:3d} {:2d} {:8.2f} {:8.2f} {:8.2f} {:8.2f} {:8.2f} {:8.5f} {:8.2f} {:8.2f} {:2d} {:s}'
-              .format(idx, n1, Sg, Pg, Pmin, Qmin, Qmax, c2, c1, c0, nunits, ln[9]))
+        print(f'{idx:3d} {n1:2d} {Sg:8.2f} {Pg:8.2f} {Pmin:8.2f} {Qmin:8.2f} {Qmax:8.2f} {c2:8.5f} {c1:8.2f} {c0:8.2f} {nunits:2d} {ln[9]:s}'
+              )
         idx += 1
         #  for disaggregated units, we want to space the values +/- 10% around the mean
         if nunits > 1:
@@ -255,7 +253,7 @@ if __name__ == '__main__':
                 c2 += step_c2
                 c1 += step_c1
                 c0 += step_c0
-    print('{:d} total units'.format(total_units))
+    print(f'{total_units:d} total units')
 
     ppcase['swing_bus'] = swing_bus
     ppcase['metadata'] = meta

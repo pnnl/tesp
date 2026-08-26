@@ -2,11 +2,10 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
-
 import tesp_support.original.parse_msout as pm
 
 f, nb, ng, nl, ns, nt, nj_max, Pg, Pd, Pf, u, lamP = pm.read_most_solution('msout.txt')
-print('f={:.2f} nb={:d} ng={:d} nl={:d} ns={:d} nt={:d} nj_max={:d}'.format(f, nb, ng, nl, ns, nt, nj_max))
+print(f'f={f:.2f} nb={nb:d} ng={ng:d} nl={nl:d} ns={ns:d} nt={nt:d} nj_max={nj_max:d}')
 
 np.set_printoptions(precision=3)
 h = np.linspace(1.0, 24.0, num=nt) - 0.5
@@ -21,9 +20,7 @@ AvgWind = np.mean(Pwind)
 AvgFixed = np.mean(Pfixed)
 AvgResp = np.mean(Presp)
 AvgErr = AvgSteam + AvgWind - AvgFixed - AvgResp
-print('Average Psteam={:.2f}, Pwind={:.2f}, Pfixed={:.2f}, Presp={:.2f}, Perr={:.2f}'.format(AvgSteam,
-                                                                                             AvgWind, AvgFixed, AvgResp,
-                                                                                             AvgErr))
+print(f'Average Psteam={AvgSteam:.2f}, Pwind={AvgWind:.2f}, Pfixed={AvgFixed:.2f}, Presp={AvgResp:.2f}, Perr={AvgErr:.2f}')
 # quit()
 
 cset = ['red', 'blue', 'green', 'magenta', 'cyan', 'orange', 'lime', 'silver',
@@ -55,29 +52,29 @@ for i in range(13):
 
 ax[0, 1].set_title('Bus LMP')
 for i in range(nb):
-    ax[0, 1].plot(h, lamP[i, :], label='Bus{:d}'.format(i + 1), color=cset[i])
+    ax[0, 1].plot(h, lamP[i, :], label=f'Bus{i + 1:d}', color=cset[i])
 ax[0, 1].set_ylabel('$/MWhr')
 ax[0, 1].legend()
 
 ax[0, 2].set_title('Branch Flows')
 for i in range(nl):
-    ax[0, 2].plot(h, 0.001 * np.abs(Pf[i, :]), label='Ln{:d}'.format(i + 1), color=cset[i])
+    ax[0, 2].plot(h, 0.001 * np.abs(Pf[i, :]), label=f'Ln{i + 1:d}', color=cset[i])
 ax[0, 2].set_ylabel('GW')
 
 ax[1, 0].set_title('Unit Dispatch')
 for i in range(13):
-    ax[1, 0].plot(h, 0.001 * Pg[i, :], label='Gen{:d}'.format(i + 1), color=cset[i])
+    ax[1, 0].plot(h, 0.001 * Pg[i, :], label=f'Gen{i + 1:d}', color=cset[i])
 ax[1, 0].set_ylabel('GW')
 
 ax[1, 1].set_title('Fixed Load')
 for i in range(nb):
-    ax[1, 1].plot(h, 0.001 * Pd[i, :], label='Bus{:d}'.format(i + 1), color=cset[i])
+    ax[1, 1].plot(h, 0.001 * Pd[i, :], label=f'Bus{i + 1:d}', color=cset[i])
 ax[1, 1].set_ylabel('GW')
 ax[1, 1].legend()
 
 ax[1, 2].set_title('Responsive Load')
 for i in range(nb):
-    ax[1, 2].plot(h, 0.001 * np.abs(Pg[i + 18, :]), label='Bus{:d}'.format(i + 1), color=cset[i])
+    ax[1, 2].plot(h, 0.001 * np.abs(Pg[i + 18, :]), label=f'Bus{i + 1:d}', color=cset[i])
 ax[1, 2].set_ylabel('GW')
 ax[1, 2].legend()
 

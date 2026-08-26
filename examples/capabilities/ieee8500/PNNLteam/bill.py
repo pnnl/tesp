@@ -71,8 +71,8 @@ for i in range(1, len(hrs)):
     # print ('adding', kwh, 'at', price)
     final_bill[i] = final_bill[i - 1] + price * kwh
 
-print("Initial meter bill =", '{:.2f}'.format(data_m[:, -1, BILL_IDX].sum()))
-print("Final meter bill =", '{:.2f}'.format(final_bill[-1]))
+print("Initial meter bill =", f'{data_m[:, -1, BILL_IDX].sum():.2f}')
+print("Final meter bill =", f'{final_bill[-1]:.2f}')
 # display a plot
 fig, ax = plt.subplots(1, 3)
 tmin = 0.0

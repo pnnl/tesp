@@ -6,11 +6,12 @@ demonstrates the prototype datastore capability in TESP.
 """
 
 
-import tesp_support.api.store as store
 import os
 import pprint
+
 import matplotlib.pyplot as plt
 import pandas as pd
+from tesp_support.api import store
 
 # Setting up pretty printing, mostly for debugging.
 pp = pprint.PrettyPrinter(indent=4)
@@ -37,7 +38,7 @@ def process_results(case_name):
 
     # List all the files in the store for inspection; particularly useful if
     # you're new to the dataset
-    print(f"Schemas in data store:")
+    print("Schemas in data store:")
     for item in te30_store.get_schema():
         print(f"\t{item}")
 
