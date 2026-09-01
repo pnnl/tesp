@@ -14,10 +14,10 @@ from copy import deepcopy
 from datetime import datetime, timedelta
 from math import cos, sin
 
-from pyglm import glm
 import numpy as np
 import pandas as pd
 import pytz
+from pyglm import glm
 
 # from ..api.schedule_client import *
 

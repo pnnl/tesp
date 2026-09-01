@@ -34,7 +34,7 @@ import pandas as pd
 def read_timeseries_csv(path: Path) -> pd.DataFrame:
     df = pd.read_csv(path, index_col=0, parse_dates=True)
     if not isinstance(df.index, pd.DatetimeIndex):
-        raise ValueError(f"{path}: index is not datetime after parsing")
+        raise TypeError(f"{path}: index is not datetime after parsing")
     if df.index.has_duplicates:
         df = df.groupby(level=0).mean(numeric_only=True)
     return df.sort_index()

@@ -1,11 +1,13 @@
 """This script was written to check generated .glms against existing .glms that 
 have been tested and are known to solve successfully.
 """
-from tesp_support.api.modify_GLM import GLMModifier
-import tesp_support.api.parse_helpers as helpers
 import os
+import sys
+
 import matplotlib.pyplot as plt
 import numpy as np
+import tesp_support.api.parse_helpers as helpers
+from tesp_support.api.modify_GLM import GLMModifier
 
 
 def parse_water_demand(val):
@@ -40,7 +42,7 @@ class Read:
         self.glm = GLMModifier()
         i_glm, success = self.glm.read_model(os.path.join(data_path, in_file_glm))
         if not success:
-            exit()
+            sys.exit()
 
         print(f'[{self.label}] Total Houses: {len(i_glm.house.items())}')
         sf = 0
@@ -85,8 +87,8 @@ class Read:
         
         self.wh_water_demand = {}
 
-        for wh_name, water_heaters in i_glm.waterheater.items():
-            for key in self.wh_params.keys():
+        for water_heaters in i_glm.waterheater.values():
+            for key in self.wh_params:
                 val = helpers.parse_number(water_heaters.get(key))
                 self.wh_params[key].append(val)
             
@@ -97,7 +99,7 @@ class Read:
                     self.wh_water_demand[sched] = []
                 self.wh_water_demand[sched].append(mult)
 
-        for house_name, house in i_glm.house.items():
+        for house in i_glm.house.values():
             groupid = house["groupid"]
             floor_area = house["floor_area"]
             if groupid == 'SINGLE_FAMILY':
@@ -236,7 +238,7 @@ class Read:
 
         sol = 0
         bat = 0
-        for inv_name, inverter in i_glm.inverter.items():
+        for inverter in i_glm.inverter.values():
             groupid = inverter["groupid"]
             if groupid == 'sol_inverter':
                 sol += 1

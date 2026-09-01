@@ -108,7 +108,7 @@ class DSO_LMPs_vs_Q:
         #df_dsos_lml_q = np.array([zz[2], zz[1], zz[0]])
         
         # replace polyfit with non-negative least squares fit
-        from scipy.optimize import nnls 
+        from scipy.optimize import nnls
         S = x.max() if x.max() > 0 else 1.0
         xs = x / S
 

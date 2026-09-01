@@ -4,7 +4,6 @@
 import os
 
 import matplotlib.pyplot as plt
-
 from tesp_support.api.data import tesp_path
 from tesp_support.valuation.TransmissionMetricsProcessor import TransmissionMetricsProcessor
 
@@ -22,7 +21,7 @@ colors = {0: 'k', 1: 'b', 2: 'r', 3: 'g', 4: 'm', 5: 'y'}
 
 fig1, ax1 = plt.subplots()
 
-for i in range(0, len(subdir)):
+for i in range(len(subdir)):
     casepath = subdir[i] + "/"
     casename = foldernames[i]  # 'SGIP1a'
     tmp = TransmissionMetricsProcessor()

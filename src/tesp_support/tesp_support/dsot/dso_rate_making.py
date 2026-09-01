@@ -624,14 +624,7 @@ def create_demand_profiles_for_each_meter(
         # On the first loaded day (meter not yet in dict) the list is initialised;
         # on subsequent days the values are extended.
         for meter in meter_data_df.index.get_level_values("name").unique():
-            if start_index == meter_data_df["date"].iloc[0].date() and day == day_range[0]:
-                demand_dict[meter] = list(
-                    meter_data_df.loc[
-                        meter_data_df.index.get_level_values("name") == meter,
-                        "real_power_avg",
-                    ].values
-                )
-            elif meter not in demand_dict:
+            if start_index == meter_data_df["date"].iloc[0].date() and day == day_range[0] or meter not in demand_dict:
                 demand_dict[meter] = list(
                     meter_data_df.loc[
                         meter_data_df.index.get_level_values("name") == meter,

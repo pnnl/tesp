@@ -1,21 +1,20 @@
 import json
-import pyjson5
 import os
-from datetime import datetime
-from os.path import dirname, abspath, isdir
-from pathlib import Path
 import shutil
-import pandas as pd
+from datetime import datetime
+from os.path import abspath, dirname, isdir
+from pathlib import Path
 
-import tesp_support.dsot.Wh_Energy_Purchases as ep
-import tesp_support.dsot.plots as pt
+import pandas as pd
+import pyjson5
+import tesp_support.dsot.dso_helper_functions as hf
 import tesp_support.dsot.dso_quadratic_curves as qc
 import tesp_support.dsot.dso_rate_making as rm
-import tesp_support.dsot.dso_helper_functions as hf
+import tesp_support.dsot.plots as pt
+import tesp_support.dsot.Wh_Energy_Purchases as ep
 from build_actual_da_q import reconstruct_actual_da_quantities
-from calibrate_q_bid_forecast_correction import calibrate_q_bid_forecast_correction
 from calibrate_config import merge_calibration_into_config
-
+from calibrate_q_bid_forecast_correction import calibrate_q_bid_forecast_correction
 
 """Run annual DSOT postprocessing for one or more rate-scenario cases.
 

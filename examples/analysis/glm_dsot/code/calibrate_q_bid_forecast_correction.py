@@ -49,11 +49,9 @@ import logging
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
-
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 log = logging.getLogger("calibrate_q_bid")
@@ -77,7 +75,7 @@ class ValidationConfig:
     # Warn if the (standardized) design condition number exceeds this.
     cond_warn: float = 1.0e6
     # Plausible ranges for the returned coefficients.
-    q_gain_range: Tuple[float, float] = (0.0, 1.5)
+    q_gain_range: tuple[float, float] = (0.0, 1.5)
     # t_65 is bounded by its contribution relative to load
     temp_contrib_frac_of_mean: float = 1.5
     # DC_change is bounded relative to the mean baseline quantity for the DSO.
@@ -96,14 +94,14 @@ class FitResult:
     rmse: float
     n_samples: int
     cond_number: float = float("nan")
-    warnings: List[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
 
 
 def read_timeseries_csv(path: Path) -> pd.DataFrame:
     """Read a CSV with a datetime index in column 0."""
     df = pd.read_csv(path, index_col=0, parse_dates=True)
     if not isinstance(df.index, pd.DatetimeIndex):
-        raise ValueError(f"{path}: index is not datetime after parsing")
+        raise TypeError(f"{path}: index is not datetime after parsing")
     df = df.sort_index()
     # Ensure hourly alignment if source has duplicate timestamps.
     if df.index.has_duplicates:
@@ -111,7 +109,7 @@ def read_timeseries_csv(path: Path) -> pd.DataFrame:
     return df
 
 
-def parse_dso_id(column_name: str) -> Optional[int]:
+def parse_dso_id(column_name: str) -> int | None:
     for pattern in DSO_PATTERNS:
         match = pattern.match(column_name.strip())
         if match:
@@ -119,8 +117,8 @@ def parse_dso_id(column_name: str) -> Optional[int]:
     return None
 
 
-def map_dso_columns(df: pd.DataFrame) -> Dict[int, str]:
-    mapping: Dict[int, str] = {}
+def map_dso_columns(df: pd.DataFrame) -> dict[int, str]:
+    mapping: dict[int, str] = {}
     for col in df.columns:
         dso = parse_dso_id(str(col))
         if dso is not None:
@@ -131,8 +129,8 @@ def map_dso_columns(df: pd.DataFrame) -> Dict[int, str]:
 def choose_temperature_series(
     temp_df: pd.DataFrame,
     dso_id: int,
-    default_col: Optional[str],
-    col_template: Optional[str],
+    default_col: str | None,
+    col_template: str | None,
 ) -> pd.Series:
     if col_template:
         candidate = col_template.format(dso=dso_id)
@@ -168,7 +166,7 @@ def _stable_linear_fit(
     features: np.ndarray,      # (n, 3): [baseline_q, t65, t65_2]
     y: np.ndarray,             # (n,)
     ridge_lambda: float,
-) -> Tuple[np.ndarray, float, float]:
+) -> tuple[np.ndarray, float, float]:
     """Fit y ~ a*q + b*t65 + c*t65_2 + d on standardized features.
 
     Returns:
@@ -221,7 +219,7 @@ def _validate_coefficients(
     dso: int,
 ) -> FitResult:
     """Check coefficients against physical bounds; warn or raise."""
-    problems: List[str] = []
+    problems: list[str] = []
 
     lo, hi = cfg.q_gain_range
     if not (lo <= result.gain_q <= hi):
@@ -288,7 +286,7 @@ def fit_coefficients(
     min_samples: int,
     cfg: ValidationConfig,
     dso: int,
-) -> Tuple[FitResult, FitResult]:
+) -> tuple[FitResult, FitResult]:
     """Fit weekday/weekend coefficients using stabilized least squares."""
     df = pd.DataFrame(
         {
@@ -378,14 +376,14 @@ def fit_coefficients(
 
 
 def build_output(
-    fits: Dict[int, Tuple[FitResult, FitResult]],
+    fits: dict[int, tuple[FitResult, FitResult]],
     include_diagnostics: bool,
-) -> Dict[str, object]:
-    payload: Dict[str, object] = {"default": {"correct": False}}
+) -> dict[str, object]:
+    payload: dict[str, object] = {"default": {"correct": False}}
 
     for dso in sorted(fits):
         wkday, wkend = fits[dso]
-        item: Dict[str, object] = {
+        item: dict[str, object] = {
             "correct": True,
             "Q_gain": [wkday.gain_q, wkend.gain_q],
             "t_65": [wkday.gain_t65, wkend.gain_t65],
@@ -412,7 +410,7 @@ def build_output(
     return payload
 
 
-def parse_dso_list(raw: Optional[str]) -> Optional[List[int]]:
+def parse_dso_list(raw: str | None) -> list[int] | None:
     if raw is None or raw.strip() == "":
         return None
     return [int(x.strip()) for x in raw.split(",") if x.strip()]
@@ -421,17 +419,17 @@ def parse_dso_list(raw: Optional[str]) -> Optional[List[int]]:
 def calibrate_q_bid_forecast_correction(
     baseline_csv: Path,
     actual_csv: Path,
-    temperature_csv: Optional[Path] = None,
-    temperature_csv_template: Optional[str] = None,
-    temperature_column: Optional[str] = None,
-    temperature_column_template: Optional[str] = None,
+    temperature_csv: Path | None = None,
+    temperature_csv_template: str | None = None,
+    temperature_column: str | None = None,
+    temperature_column_template: str | None = None,
     temperature_unit: str = "F",
-    dsos: Optional[List[int]] = None,
+    dsos: list[int] | None = None,
     min_samples: int = 72,
     include_diagnostics: bool = False,
-    output: Optional[Path] = None,
-    cfg: Optional[ValidationConfig] = None,
-) -> Tuple[Dict[str, object], Dict[int, Tuple[FitResult, FitResult]]]:
+    output: Path | None = None,
+    cfg: ValidationConfig | None = None,
+) -> tuple[dict[str, object], dict[int, tuple[FitResult, FitResult]]]:
     """Calibrate DSO forecast-correction coefficients.
 
     Returns:
@@ -445,7 +443,7 @@ def calibrate_q_bid_forecast_correction(
     if temperature_csv is None and not temperature_csv_template:
         raise ValueError("Either temperature_csv or temperature_csv_template must be provided")
 
-    temp_df: Optional[pd.DataFrame] = None
+    temp_df: pd.DataFrame | None = None
     if temperature_csv is not None:
         temp_df = read_timeseries_csv(temperature_csv)
 
@@ -464,7 +462,7 @@ def calibrate_q_bid_forecast_correction(
             "Expected patterns include DSO_1, DSO 1, da_q1, Bus1."
         )
 
-    fits: Dict[int, Tuple[FitResult, FitResult]] = {}
+    fits: dict[int, tuple[FitResult, FitResult]] = {}
     for dso in dso_ids:
         baseline_col = baseline_map[dso]
         actual_col = actual_map[dso]

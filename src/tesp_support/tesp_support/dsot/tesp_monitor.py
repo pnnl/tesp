@@ -36,22 +36,21 @@ import os
 import subprocess
 import sys
 import tkinter as tk
-import tkinter.ttk as ttk
-from tkinter import filedialog
-from tkinter import messagebox
 from datetime import datetime
-from api.parse_helpers import parse_kw
-from api.helpers import HelicsMsg
+from tkinter import filedialog, messagebox, ttk
+
 import matplotlib
+from api.helpers import HelicsMsg
+from api.parse_helpers import parse_kw
 
 try:
     matplotlib.use('TkAgg')
 except Exception:
     pass
+import matplotlib.pyplot as plt
+from matplotlib import animation
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.lines import Line2D
-import matplotlib.animation as animation
-import matplotlib.pyplot as plt
 
 
 class TespMonitorJSON:
@@ -589,7 +588,8 @@ class TespMonitorGUI:
         return artists
 
     def _make_patched_runscript(self):
-        import re, tempfile
+        import re
+        import tempfile
         """Copy run.sh to a temp script with the fncs_broker federate count
         bumped by 1 to include this monitor. Returns the temp path."""
         with open('run.sh') as f:
@@ -627,7 +627,8 @@ class TespMonitorGUI:
         stored input handles, so the topics are matched by name later in
         update_plots_f().
         """
-        import socket, time
+        import socket
+        import time
         self.root.update()
         self.pids = []
 
@@ -822,7 +823,7 @@ class TespMonitorGUI:
                 #v_load_real = v_load_fl[0]
                 #print(f'v_load_real: {v_load_real}, type: {type(v_load_real)}')
                 #v_load_kW = v_load_real / 1.0e3
-                v_load_kw = parse_kw(v_load)
+                v_load_kW = parse_kw(v_load)
                 self.gld_load = v_load_kW
                 self.y3fncs.append(v_load_kW) # feeder load from HELICS (could be zero if no update)
                 self.y3gld.append(self.gld_load)  # most recent feeder load from HELICS
@@ -861,7 +862,8 @@ class TespMonitorGUI:
         """ Launches the simulators, initializes HELICS and starts the animated 
             plots
         """
-        import socket, time
+        import socket
+        import time
         self.root.update()
         self.pids = []
 
@@ -957,7 +959,7 @@ def show_tesp_monitor():
     """
     global helics, fncs
     import helics
-    from original import fncs as fncs
+    from original import fncs
 
     root = tk.Tk()
     root.title('Transactive Energy Simulation Platform: Solution Monitor')

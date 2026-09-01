@@ -240,7 +240,7 @@ def _auto_run(plot:bool, args):
         "\t(In GridLAB-D, the sizing information is stored in the "
         "transformer_configuration object.)")
     transformer_configs_to_upgrade = {"as": [], "bs": [], "cs": []}
-    for transformer_name, transformer in glm.transformer.instances.items():
+    for transformer in glm.transformer.instances.values():
         phases = transformer["phases"]
         config = transformer["configuration"]
         if phases.lower() == "as" and config not in transformer_configs_to_upgrade["as"]:

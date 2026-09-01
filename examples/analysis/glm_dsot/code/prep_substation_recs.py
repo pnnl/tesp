@@ -691,7 +691,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
     try: # DSOT
         with open(case_config["quadraticFile"]) as json_file:
             DSO_quadratic_curves = json.load(json_file)
-    except:
+    except Exception:
         try: # glm_dsot
             if case_config["RECS"]:
                 rate = case_config["rate"]
@@ -702,7 +702,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                 scenario = case_config["scenario"]
                 with open(case_config[f'quadratic_file_{nodes}_{scenario}']) as json_file:
                     DSO_quadratic_curves = json.load(json_file)
-    except Exception:
+        except Exception:
             DSO_quadratic_curves = None
 
     # Obtain market agent dictionary based on markets

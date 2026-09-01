@@ -899,7 +899,7 @@ def tso_psst_loop(casename):
                 if int(zgen[jj, 0]) == ii + 1 and zgenFuel[jj][0] not in renewables:
                     write_line = write_line + ' GenCo' + str(jj + 1)
             print(write_line, ';', file=fp)
-        print('', file=fp)
+        print(file=fp)
 
         print('param BalPenPos :=', str(priceCap), ';\n', file=fp)
         print('param BalPenNeg :=', str(priceCap), ';\n', file=fp)

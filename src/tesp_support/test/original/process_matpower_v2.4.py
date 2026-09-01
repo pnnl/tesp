@@ -6,6 +6,7 @@ import json
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
+from tesp_support.api.data import tesp_path
 
 # first, read and print a dictionary of relevant MATPOWER objects
 

@@ -514,7 +514,7 @@ def load_retail_data(dir_path, folder_prefix, dso_num, day_num, agent_name):
     date = get_date(dir_path, dso_num, str(day_num))
     os.chdir(dir_path + folder_prefix + dso_num)
     hdf5filenames = [f for f in os.listdir('.') if ('_' + dso_num) in f and f.startswith(agent_name)]
-    print(f"Looking in {str(dir_path + folder_prefix + dso_num)} for hdf5 files:")
+    print(f"Looking in {dir_path + folder_prefix + dso_num!s} for hdf5 files:")
     print(hdf5filenames)
 
     # TODO: - error message if more than one value in hdf5filenames

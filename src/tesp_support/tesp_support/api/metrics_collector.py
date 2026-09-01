@@ -339,7 +339,7 @@ def finalize_hdf(metrics_store):
 
     :param metrics_store: Description
     """
-    filename = '{}_metrics.h5'.format(metrics_store.file_string)
+    filename = f'{metrics_store.file_string}_metrics.h5'
     if os.path.isfile(filename):
         log.debug(f'opening file {filename} to compress')
         with pd.HDFStore(filename, 'r+', complevel=9) as out_store:

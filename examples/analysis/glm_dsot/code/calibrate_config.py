@@ -22,7 +22,7 @@ import argparse
 import json
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 
 def _remove_json5_comments(text: str) -> str:
@@ -104,7 +104,7 @@ def _find_matching_brace(text: str, start_index: int) -> int:
     raise ValueError("No matching closing brace found")
 
 
-def extract_qbid_block(config_text: str) -> Tuple[int, int, str]:
+def extract_qbid_block(config_text: str) -> tuple[int, int, str]:
     key_match = re.search(r'"Q_bid_forecast_correction"\s*:\s*', config_text)
     if not key_match:
         raise ValueError('Could not find key "Q_bid_forecast_correction" in config')
@@ -118,13 +118,13 @@ def extract_qbid_block(config_text: str) -> Tuple[int, int, str]:
     return open_brace, close_brace, block
 
 
-def parse_json5_object_block(block_text: str) -> Dict[str, Any]:
+def parse_json5_object_block(block_text: str) -> dict[str, Any]:
     cleaned = _remove_json5_comments(block_text)
     cleaned = _remove_trailing_commas(cleaned)
     return json.loads(cleaned)
 
 
-def merge_qbid(old_block: Dict[str, Any], new_block: Dict[str, Any]) -> Dict[str, Any]:
+def merge_qbid(old_block: dict[str, Any], new_block: dict[str, Any]) -> dict[str, Any]:
     merged = dict(old_block)
     # Keep existing default unless explicitly desired otherwise.
     for key, value in new_block.items():
@@ -133,14 +133,14 @@ def merge_qbid(old_block: Dict[str, Any], new_block: Dict[str, Any]) -> Dict[str
     return merged
 
 
-def _safe_pair(values: Any) -> List[float]:
+def _safe_pair(values: Any) -> list[float]:
     if isinstance(values, list) and len(values) >= 2:
         return [float(values[0]), float(values[1])]
     return [float("nan"), float("nan")]
 
 
-def build_diff_report(old_block: Dict[str, Any], merged_block: Dict[str, Any]) -> Dict[str, Any]:
-    report: Dict[str, Any] = {
+def build_diff_report(old_block: dict[str, Any], merged_block: dict[str, Any]) -> dict[str, Any]:
+    report: dict[str, Any] = {
         "summary": {
             "dsos_updated": 0,
             "parameters_compared": ["Q_gain", "t_65", "t_65_2", "DC_change_Q_DA"],
@@ -156,7 +156,7 @@ def build_diff_report(old_block: Dict[str, Any], merged_block: Dict[str, Any]) -
         old = old_block.get(key, {})
         new = merged_block.get(key, {})
 
-        dso_diff: Dict[str, Any] = {
+        dso_diff: dict[str, Any] = {
             "correct_old": old.get("correct"),
             "correct_new": new.get("correct"),
             "params": {},
@@ -179,7 +179,7 @@ def build_diff_report(old_block: Dict[str, Any], merged_block: Dict[str, Any]) -
     return report
 
 
-def render_qbid_block(merged_block: Dict[str, Any], indent_spaces: int = 2) -> str:
+def render_qbid_block(merged_block: dict[str, Any], indent_spaces: int = 2) -> str:
     return json.dumps(merged_block, indent=indent_spaces)
 
 
@@ -188,7 +188,7 @@ def merge_calibration_into_config(
     calibration_json: Path,
     output_config_json5: Path,
     report_json: Path,
-) -> Tuple[Path, Path]:
+) -> tuple[Path, Path]:
     config_text = source_config_json5.read_text(encoding="utf-8")
     calibration = json.loads(calibration_json.read_text(encoding="utf-8"))
 
