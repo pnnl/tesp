@@ -586,6 +586,8 @@ class TespMonitorGUI:
         except Exception as e:
             print("Exception in update_plots_f:", repr(e), flush=True)
 
+        self.fig.savefig('tesp_monitor.png')
+
         return artists
 
     def _make_patched_runscript(self):

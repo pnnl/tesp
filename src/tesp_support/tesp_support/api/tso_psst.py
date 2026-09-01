@@ -1086,7 +1086,11 @@ def tso_psst_loop(casename):
                             if row[0] == bus_num:
                                 ndg += float(row[2][jj+24])
                         if bus_num <= dsoBus.shape[0]:
-                            net = ref_load_hist[bus_num][jj+24] - ndg  # uses history
+                            gld_hist = gld_load_hist.get(bus_num)
+                            if isinstance(gld_hist, list) and len(gld_hist) > jj + 24:
+                                net = gld_hist[jj + 24] - ndg
+                            else:
+                                net = ref_load_hist[bus_num][jj + 24] - ndg  # uses history (original)
                         else:
                             net = - ndg
                         print('Bus' + str(bus_num) + ' ' + str(jj + 1) + ' {:.4f}'.format(net / baseS), file=fp)
@@ -1529,6 +1533,7 @@ def tso_psst_loop(casename):
     RTDur_in_hrs = period / secs_in_a_hr
     RTOPDur = period // 60  # in minutes
     TAU = 1
+    da_bid_bus_received = set()  # 1-indexed bus numbers that submitted a DA bid since last solve
     NS = 4  # number of segments
     dso_bid = False
     schedule = {}
@@ -1750,6 +1755,7 @@ def tso_psst_loop(casename):
                 elif 'DA_BID_' in topic:
                     dso_bid = True
                     busnum = int(topic[7:]) - 1
+                    da_bid_bus_received.add(busnum + 1)  # track 1-indexed bus
                     da_bid = json.loads(val)
                     # keys unresp_mw, resp_max_mw, resp_c2, resp_c1, resp_deg; each array[hours_in_a_day]
                     last_unRespMW[busnum] = deepcopy(unRespMW[busnum])
@@ -1831,6 +1837,16 @@ def tso_psst_loop(casename):
 
             # Run the day ahead
             if hour == 10 and mn == 0:
+                expected_da_buses = set(int(row[0]) for row in dsoBus)
+                missing_da_buses = expected_da_buses - da_bid_bus_received
+                if missing_da_buses:
+                    log.warning("DA solve at T=%d: no DA bid received from %d bus(es) %s — "
+                                "those buses will use the no-bid load fallback",
+                                ts, len(missing_da_buses), sorted(missing_da_buses))
+                else:
+                    log.info("DA solve at T=%d: DA bids confirmed from all %d buses",
+                             ts, len(expected_da_buses))
+                da_bid_bus_received.clear()
                 idx_add = []
                 idx_del = []
                 if outages:
