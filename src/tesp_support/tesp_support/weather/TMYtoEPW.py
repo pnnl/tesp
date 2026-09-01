@@ -220,7 +220,7 @@ def convert_tmy2_to_epw(in_file_root, out_file_root=None):
                     (drybulb + 273) * (drybulb + 273) * (drybulb + 273) * (drybulb + 273))
         #     if i==1:
         #       print ('HorzIRSky',HorzIRSky,'!')
-        temp = temp + ',{:.3f}'.format(HorzIRSky)
+        temp = temp + f',{HorzIRSky:.3f}'
         GloHorzRad = float(lines[i][17:21])
         temp = temp + ',' + str(GloHorzRad)
         DirNormRad = float(lines[i][23:27])

@@ -1,11 +1,12 @@
+#!/usr/bin/env python3
 # Copyright (c) 2021-2025 Battelle Memorial Institute
 # file: plot_loadshed.py
 
 import json
 import sys
-import numpy as np
-import matplotlib as mpl
+
 import matplotlib.pyplot as plt
+import numpy as np
 
 # first, read and print a dictionary of all the monitored GridLAB-D objects
 lp = open(sys.argv[1] + "_dict.json").read()

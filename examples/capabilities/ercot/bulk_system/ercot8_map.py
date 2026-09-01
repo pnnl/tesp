@@ -1,35 +1,34 @@
 # Copyright (c) 2021-2025 Battelle Memorial Institute
 # file: ercot_map.py
 
+import os
+import zipfile
+
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import cartopy.io.shapereader as shpreader
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
-import csv
+import matplotlib.patches as mpatches
+import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
-import sys
-import zipfile
-import os
 
 featureScale = '50m'  # 10, 50 0r 110
 shapePath = './Texas_SHP/'
 
 def feature_from_archive (shp_path, zip_name, shp_root, asFeature=True):
-  zf = zipfile.ZipFile (shp_path + zip_name)
-  for ext in ['shp', 'shx', 'dbf']:
-	fname = '{:s}{:s}.{:s}'.format (shp_path, shp_root, ext)
-	if not os.path.isfile (fname):
-	  zf.extract (shp_root + '.' + ext, shp_path)
-  rdr = shpreader.Reader (shp_path + shp_root)
-  if asFeature:
-	f = cfeature.ShapelyFeature (list(rdr.geometries()), ccrs.PlateCarree())
-  else:
-	f = list(rdr.geometries())
-  zf.close()
-  return f
+	zf = zipfile.ZipFile (shp_path + zip_name)
+	for ext in ['shp', 'shx', 'dbf']:
+		fname = f'{shp_path:s}{shp_root:s}.{ext:s}'
+		if not os.path.isfile (fname):
+			zf.extract (shp_root + '.' + ext, shp_path)
+	rdr = shpreader.Reader (shp_path + shp_root)
+	if asFeature:
+		f = cfeature.ShapelyFeature (list(rdr.geometries()), ccrs.PlateCarree())
+	else:
+		f = list(rdr.geometries())
+	zf.close()
+	return f
 
 COUNTIES = feature_from_archive (shapePath, 'Tx_Census_CntyGeneralCoast_TTU.zip', 'Tx_Census_CntyGeneralCoast_TTU')
 ROADS = feature_from_archive (shapePath, 'Tx_Interstates_General_NE.zip', 'Tx_Interstates_General_NE')

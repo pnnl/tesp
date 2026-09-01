@@ -17,13 +17,13 @@ from copy import deepcopy
 from datetime import datetime, timedelta
 from math import cos, sin
 
-from pyglm import glm
 import numpy as np
 import pandas as pd
 import pytz
+from pyglm import glm
 
-from .hvac_agent import HVACDSOT
 from ..api.schedule_client import DataClient
+from .hvac_agent import HVACDSOT
 
 
 class Forecasting:
@@ -79,7 +79,7 @@ class Forecasting:
         self.solar_direct_forecast = [0.0] * 48
         self.solar_diffuse_forecast = [0.0] * 48
 
-        self.NOerrors = bool(True)
+        self.NOerrors = True
         self.base_run_load = np.array([0.43, 0.41, 0.40, 0.39, 0.39, 0.40, 0.45, 0.45, 0.55, 0.80, 0.90, 0.98,
                                        0.99, 1.00, 1.00, 0.99, 0.98, 0.97, 0.97, 0.90, 0.70, 0.60, 0.55, 0.45,
                                        0.43, 0.41, 0.40, 0.39, 0.39, 0.40, 0.45, 0.45, 0.55, 0.80, 0.90, 0.98,
@@ -91,7 +91,7 @@ class Forecasting:
                                                   0.6, 0.5, 0.42, 0.41, 0.4, 0.4, 0.41, 0.42, 0.43, 0.43, 0.5,
                                                   0.7, 0.8, 0.85, 0.95])
 
-        self.retail_price_forecast = list()
+        self.retail_price_forecast = []
         self.firstRun = True
         # data = pd.read_csv("C:\\Users\\sing492\\OneDrive - PNNL\\Documents\\Projects\\TESP_DSOT\\Hvac Debug Ahmad\\Qi_individual.csv",
         #                        index_col=0)
@@ -149,7 +149,7 @@ class Forecasting:
             filename (str): name of glm file to be loaded
             schedule_name (str): name of the schedule to be loaded
         """
-        print("Reading and constructing 1 year dataframe for {} schedule from {}".format(schedule_name, filename))
+        print(f"Reading and constructing 1 year dataframe for {schedule_name} schedule from {filename}")
         ip_file = glm.load(filename)
         data = [n for n in ip_file["schedules"] if n["name"] == schedule_name]
         temp1 = []
@@ -230,7 +230,7 @@ class Forecasting:
                 dow_1 = list(map(int, dow_1))
                 ###making list of the values in the schedule for this data
                 if 0 in dow_1 or 6 in dow_1:
-                    dow_1 = dow_1
+                    pass
                 else:
                     if len(dow_1) == 2:
                         dow_1 = list(range(dow_1[0], dow_1[1] + 1))
@@ -308,7 +308,7 @@ class Forecasting:
             param message: solar_diffuse_forecast ([float x 48]):
         """
         solar_diffuse_forecast = eval(message)
-        self.solar_diffuse_forecast = [float(solar_diffuse_forecast[key]) for key in solar_diffuse_forecast.keys()]
+        self.solar_diffuse_forecast = [float(solar_diffuse_forecast[key]) for key in solar_diffuse_forecast]
 
     def set_solar_direct_forecast(self, message: str):
         """ Set the 48-hour solar direct forecast
@@ -316,7 +316,7 @@ class Forecasting:
             param message: solar_direct_forecast ([float x 48]):
         """
         solar_direct_forecast = eval(message)
-        self.solar_direct_forecast = [float(solar_direct_forecast[key]) for key in solar_direct_forecast.keys()]
+        self.solar_direct_forecast = [float(solar_direct_forecast[key]) for key in solar_direct_forecast]
 
     def set_temperature_forecast(self, message: str):
         """ Set the 48-hour temperature forecast
@@ -325,7 +325,7 @@ class Forecasting:
             message: temperature_forecast ([float x 48]): predicted temperature in F
         """
         temperature_forecast = eval(message)
-        self.temperature_forecast = [float(temperature_forecast[key]) for key in temperature_forecast.keys()]
+        self.temperature_forecast = [float(temperature_forecast[key]) for key in temperature_forecast]
         # log.info('FORECAST AGENT ' + str(self.temperature_forecast) )
 
     def get_substation_unresponsive_load_forecast(self, peak_load=7500.0):
@@ -361,7 +361,7 @@ class Forecasting:
             dnr_i = dnr[i]
             dhr_i = dhr[i]
             solar_flux = []
-            for cpt in self.surface_angles.keys():
+            for cpt in self.surface_angles:
                 vertical_angle = math.radians(90)
                 if cpt == 'H':
                     vertical_angle = math.radians(0)
@@ -395,8 +395,7 @@ class Forecasting:
                        + cosdecl * coslat * cosslope * coshr \
                        + cosdecl * sinlat * sinslope * cosaz * coshr \
                        + cosdecl * sinslope * sinaz * sinhr
-        if cos_incident < 0:
-            cos_incident = 0
+        cos_incident = max(cos_incident, 0)
         return dnr_i * cos_incident + dhr_i
 
     def get_solar_gain_forecast(self, climate_conf, current_time):
@@ -490,7 +489,7 @@ class Forecasting:
         else:
             deltaP = np.array(self.retail_price_forecast) - temp
             a = 0.2
-            k = np.flip((np.arange(1, 49, 1)))
+            k = np.flip(np.arange(1, 49, 1))
             alpha = a / (k ** 0.5)
             temp = np.array(self.retail_price_forecast) - alpha * deltaP
 
@@ -651,8 +650,8 @@ def test():
     t = ti.time()
     del_t = 3600
     # obj.extra_forecast_hours = 10  # give me forecast enough so that I only need to come back after this duration (hours)
-    for h in range(0, 24 * 4):
-        for i in range(0, 1):
+    for h in range(24 * 4):
+        for i in range(1):
             skew_scalar = {'zip_skew': int(-4456.0),
                            'zip_scalar': {'responsive_loads': 1.3,
                                           'unresponsive_loads': 1.14},

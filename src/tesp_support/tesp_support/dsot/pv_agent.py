@@ -5,10 +5,11 @@
 for now, it only provides day ahead forecast for each agent.
 It does not participate in bidding
 """
-import numpy as np
 from datetime import datetime
 
-from ..api.helpers import logging, log
+import numpy as np
+
+from ..api.helpers import log, logging
 
 logging.getLogger('pyomo.core').setLevel(logging.ERROR)
 
@@ -43,7 +44,7 @@ class PVDSOT:
         self.slider = pv_dict['slider_setting']
 
         self.windowLength = 48
-        self.TIME = range(0, self.windowLength)
+        self.TIME = range(self.windowLength)
 
     def scale_pv_forecast(self, solar_f):
         # scaling factor multiplication gives in watts, need to convert to kW

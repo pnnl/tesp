@@ -15,7 +15,7 @@ for row in ropf['gen']:
   elif Pg < 0.0:
     Presp -= Pg
 
-print ('Gen={:.2f}, FixedLoad={:.2f}, RespLoad={:.2f}'.format (Pgen, Pload, Presp))
+print (f'Gen={Pgen:.2f}, FixedLoad={Pload:.2f}, RespLoad={Presp:.2f}')
 
 print ('Bus     LMP  RespMax  Cleared')
 for row in ropf['gen']:
@@ -24,4 +24,4 @@ for row in ropf['gen']:
     Pg = row[1]
     busidx = int(row[0])
     lmp = ropf['bus'][busidx-1][13]
-    print ('{:2d} {:8.3f} {:8.3f} {:8.3f}'.format (busidx, lmp, -Pmin, -Pg))
+    print (f'{busidx:2d} {lmp:8.3f} {-Pmin:8.3f} {-Pg:8.3f}')

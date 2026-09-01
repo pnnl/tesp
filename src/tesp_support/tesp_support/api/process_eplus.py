@@ -8,12 +8,12 @@ Public Functions:
         :process_eplus: Reads the data and metadata, then makes the plots.  
 
 """
-import logging
 import json
+import logging
 import os
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 # Setting up logging
 log = logging.getLogger(__name__)
@@ -124,7 +124,7 @@ def read_eplus_metrics(path, name_root, quiet=False):
             idx_e['OFFER_CLEARED_DEGF_UNITS'] = val['units']
 
     # make sure we found the metric indices of interest
-    building = list(lst['3600'].keys())[0]
+    building = next(iter(lst['3600'].keys()))
     ary = lst['3600'][building]
     if not quiet:
         print('There are', len(ary), 'metrics for', building)

@@ -1,16 +1,18 @@
-# -*- coding: utf-8 -*-
 """
 Created on Fri Jan 29 07:34:28 2021
 
 @author: barn553
 """
 import os
+
+import pandas as pd
+
 # import random
 # from system import MeterNetwork
 # from metrics import EvaluateSystem
 # from metrics import Results
 from metrics import Compare
-import pandas as pd
+
 # import logging
 # import logging.config
 # import numpy as np

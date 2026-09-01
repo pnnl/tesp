@@ -7,12 +7,12 @@ Public Functions:
     :process_gld: Reads the data and metadata, then makes the plots.
 
 """
-import logging
 import json
+import logging
 import os
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 # Setting up logging
 log = logging.getLogger(__name__)
@@ -63,7 +63,7 @@ def read_gld_metrics(path, name_root, diction_name=''):
     xfMVA = diction['transformer_MVA']
     bulkBus = diction['bulkpower_bus']
 
-    # parse the substation metrics file first; there should just be one entity 
+    # parse the substation metrics file first; there should just be one entity
     # per time sample. Each metrics file should have matching time points
     lp_s = open(sub_dict_path).read()
     lst_s = json.loads(lp_s)
@@ -81,9 +81,8 @@ def read_gld_metrics(path, name_root, diction_name=''):
 
     time_key = str(times[0])
 
-    # find the actual substation name (not a feeder name) as GridLAB-D wrote 
-    # it to the metrics file
-    sub_key = list(lst_s[time_key].keys())[0]
+    # find the actual substation name (not a feeder name) as GridLAB-D wrote it to the metrics file
+    sub_key = next(iter(lst_s[time_key].keys()))
     print('\n\nFile', sub_dict_path, 'has substation', sub_key, 'at bulk system bus',
           bulkBus, 'with', xfMVA, 'MVA transformer')
     print('\nFeeder Dictionary:')
@@ -171,7 +170,7 @@ def read_gld_metrics(path, name_root, diction_name=''):
             idx_h['HSE_WH_AVG_IDX'] = val['index']
             idx_h['HSE_WH_AVG_UNITS'] = val['units']
     if len(hse_keys) > 0:
-        # there may be some houses in the dictionary that we don't write metrics 
+        # there may be some houses in the dictionary that we don't write metrics
         # for, e.g., write_node_houses with default node_metrics_interval=None
         hse_keys = [x for x in hse_keys if x in lst_h[time_key]]
         print(len(hse_keys), 'houses left')
@@ -259,7 +258,7 @@ def read_gld_metrics(path, name_root, diction_name=''):
             idx_m['MTR_REAL_POWER_MIN_IDX'] = val['index']
 
     if nBillingMeters > 0:
-        # there may be some meters in the dictionary that we don't write metrics 
+        # there may be some meters in the dictionary that we don't write metrics
         # for, e.g., write_node_houses with default node_metrics_interval=None
         mtr_keys = [x for x in mtr_keys if x in lst_m[time_key]]
         print(len(mtr_keys), 'meters left, expecting', nBillingMeters)
@@ -397,7 +396,7 @@ def read_gld_metrics(path, name_root, diction_name=''):
 
 
 def plot_gld(diction, save_file=None, save_only=False):
-    """ The feederGenerator now inserts metrics_collector objects on capacitors 
+    """ The feederGenerator now inserts metrics_collector objects on capacitors
         and regulators
 
     Args:
@@ -476,7 +475,7 @@ def plot_gld(diction, save_file=None, save_only=False):
         ax[0, 1].plot(hrs, min2, color='red', label='Min')
         ax[0, 1].plot(hrs, avg2, color='green', label='Avg')
         ax[0, 1].set_ylabel('degF')
-        ax[0, 1].set_title('Temperature over\n {:d} Houses'.format(len(keys_h)))
+        ax[0, 1].set_title(f'Temperature over\n {len(keys_h):d} Houses')
         ax[0, 1].legend(loc='best')
     else:
         ax[0, 1].set_title('No Houses')
@@ -489,7 +488,7 @@ def plot_gld(diction, save_file=None, save_only=False):
             ax[1, 0].plot(hrs, vmax, color='blue', label='Max')
             ax[1, 0].plot(hrs, vmin, color='red', label='Min')
             ax[1, 0].plot(hrs, vavg, color='green', label='Avg')
-            ax[1, 0].set_title('Voltage over\n {:d} Meters'.format(len(keys_m)))
+            ax[1, 0].set_title(f'Voltage over\n {len(keys_m):d} Meters')
             ax[1, 0].legend(loc='best')
         else:
             ax[1, 0].plot(hrs, data_m[0, :, idx_m['MTR_VOLT_AVG_IDX']], color='blue')
@@ -610,17 +609,17 @@ def process_gld(name_root, diction_name='', save_file=None, save_only=False):
 
     1. Substation real power and losses
     2. Average air temperature over all houses
-    3. Min/Max line-to-neutral voltage and Min/Max line-to-line voltage at the 
+    3. Min/Max line-to-neutral voltage and Min/Max line-to-line voltage at the
         first billing meter
     4. Min, Max and Average air temperature at the first house
 
     Args:
-      name_root (str): name of the TESP case, not necessarily the same as the 
+      name_root (str): name of the TESP case, not necessarily the same as the
         GLM case, without the extension
       diction_name (str): metafile name (with json extension) for a different GLM dictionary, if it's not *[name_root]_glm_dict.json*. Defaults to empty.
-      save_file (str): name of a file to save plot, should include the *png* or 
+      save_file (str): name of a file to save plot, should include the *png* or
         *pdf* extension to determine type.
-      save_only (bool): set True with *save_file* to skip the display of the plot.      
+      save_only (bool): set True with *save_file* to skip the display of the plot.
         Otherwise, script waits for user keypress.
     """
     path = os.getcwd()

@@ -2,7 +2,7 @@
 # file: make_units.py
 
 import json
-import math 
+import math
 
 unitparameters = [
 	{'fuel':'Conventional Steam Coal', 'c2': 0.005, 'c1':19.0, 'Pminpu': 0.5, 'Pmaxpu': 1.0, 'MinLagPF': 0.95, 'MinLeadPF': 0.95, 'count': 0, 'total': 0.0},
@@ -44,8 +44,8 @@ if __name__ == '__main__':
 							qmin = -gen * math.sqrt (1.0 - pf * pf)
 							pf = ln['MinLagPF']
 							qmax = gen * math.sqrt (1.0 - pf * pf)
-							print (idx, n, gen, '{:.2f}'.format(gen*ln['Pminpu']), '{:.2f}'.format(qmin), 
-										 '{:.2f}'.format(qmax), ln['c2'], ln['c1'], 0.0, sep=',', file=fp)
+							print (idx, n, gen, '{:.2f}'.format(gen*ln['Pminpu']), f'{qmin:.2f}', 
+										 f'{qmax:.2f}', ln['c2'], ln['c1'], 0.0, sep=',', file=fp)
 							idx = idx + 1
 	fp.close ()
 
@@ -55,6 +55,6 @@ if __name__ == '__main__':
 		print (row['fuel'], 'totals', '{:.2f}'.format(row['total']), 'in', row['count'], 'units')
 		gen = gen + row['total']
 		idx = idx + row['count']
-	print ('Total', '{:.2f}'.format(gen), 'MW in', idx, 'units')
+	print ('Total', f'{gen:.2f}', 'MW in', idx, 'units')
 
 

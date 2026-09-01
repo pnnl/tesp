@@ -22,7 +22,7 @@ try:
 except Exception:
     pass
 try:
-    from ..original import fncs as fncs
+    from ..original import fncs
 except Exception:
     pass
 
@@ -30,7 +30,7 @@ import json
 import math
 
 from ..api.helpers import log
-from ..api.parse_helpers import parse_number, parse_magnitude_2
+from ..api.parse_helpers import parse_magnitude_2, parse_number
 
 thermalIntegrity = {
     'VERY_LITTLE':
@@ -140,11 +140,11 @@ class precooler:
         self.HM = hs * (Aw / EWR + Awt * IWR + Ac * self.stories / ECR)
         self.CM = self.sqft * mf - 2 * Vterm
 
-        print('ETP model', self.name, self.ti, '{:.2f}'.format(self.sqft), str(self.stories), str(self.doors))
-        print('  UA', '{:.2f}'.format(self.UA))
-        print('  CA', '{:.2f}'.format(self.CA))
-        print('  HM', '{:.2f}'.format(self.HM))
-        print('  CM', '{:.2f}'.format(self.CM))
+        print('ETP model', self.name, self.ti, f'{self.sqft:.2f}', str(self.stories), str(self.doors))
+        print('  UA', f'{self.UA:.2f}')
+        print('  CA', f'{self.CA:.2f}')
+        print('  HM', f'{self.HM:.2f}')
+        print('  CM', f'{self.CM:.2f}')
 
     def __init__(self, name, agentrow, gldrow, k, mean, stddev, lockout_time, precooling_quiet, precooling_off, bPrice,
                  bVoltage):
@@ -212,7 +212,7 @@ class precooler:
         Args:
             hour_of_day (float): the current time of day, 0..24
             price (float): the current price in $/kwh
-            time_seconds (long long): the current FNCS time in seconds
+            time_seconds (int): the current FNCS time in seconds
         Returns:
             bool: True if the setpoint changed, False if not
         """
@@ -236,11 +236,10 @@ class precooler:
             if self.precooling:
                 new_setpoint += self.toffset
         # is the new setpoint different from the existing setpoint?
-        if abs(new_setpoint - self.setpoint) > 0.1:
-            if (time_seconds - self.lastchange) > self.lockout_time:
-                self.setpoint = new_setpoint
-                self.lastchange = time_seconds
-                return True
+        if abs(new_setpoint - self.setpoint) > 0.1 and (time_seconds - self.lastchange) > self.lockout_time:
+            self.setpoint = new_setpoint
+            self.lastchange = time_seconds
+            return True
         return False
 
     def get_temperature_deviation(self):
@@ -370,26 +369,21 @@ def helics_precool_loop(nhours, metrics_root, dict_root, response, helicsConfig)
         n_changes = 0
         max_changes = 25
         for key, obj in precoolerObjs.items():
-            if n_changes < max_changes:
-                if obj.check_setpoint_change(hour_of_day, price, time_granted):
-                    print('  setting {:s} to {:.3f} at {:d} and {:.2f} volts pre-cooling'
-                          .format(key, obj.setpoint, time_granted, obj.mtr_v), obj.precooling)
-                    n_changes += 1
-                    pub = helics.helicsFederateGetPublication(hFed, key + '/cooling_setpoint')
-                    helics.helicsPublicationPublishDouble(pub, obj.setpoint)
-                    if obj.precooling:
-                        setPrecoolers.add(obj.name)
+            if n_changes < max_changes and obj.check_setpoint_change(hour_of_day, price, time_granted):
+                print(f'  setting {key:s} to {obj.setpoint:.3f} at {time_granted:d} and {obj.mtr_v:.2f} volts pre-cooling {obj.precooling}')
+                n_changes += 1
+                pub = helics.helicsFederateGetPublication(hFed, key + '/cooling_setpoint')
+                helics.helicsPublicationPublishDouble(pub, obj.setpoint)
+                if obj.precooling:
+                    setPrecoolers.add(obj.name)
             temp_dev = obj.get_temperature_deviation()
             count_temp_dev += 1
-            if temp_dev < min_temp_dev:
-                min_temp_dev = temp_dev
-            if temp_dev > max_temp_dev:
-                max_temp_dev = temp_dev
+            min_temp_dev = min(min_temp_dev, temp_dev)
+            max_temp_dev = max(max_temp_dev, temp_dev)
             sum_temp_dev += temp_dev
 
         if n_changes > 0:
-            print('*** {:6.4f} hr, changing {:d} set points, {:d} out of {:d} are pre-cooling'
-                  .format(hour_of_day, n_changes, len(setPrecoolers), n_houses))
+            print(f'*** {hour_of_day:6.4f} hr, changing {n_changes:d} set points, {len(setPrecoolers):d} out of {n_houses:d} are pre-cooling')
 
         if count_temp_dev < 1:
             count_temp_dev = 1
@@ -504,25 +498,20 @@ def fncs_precool_loop(nhours, metrics_root, dict_root, response):
         n_changes = 0
         max_changes = 25
         for key, obj in precoolerObjs.items():
-            if n_changes < max_changes:
-                if obj.check_setpoint_change(hour_of_day, price, time_granted):
-                    print('  setting {:s} to {:.3f} at {:d} and {:.2f} volts precooling'
-                          .format(key, obj.setpoint, time_granted, obj.mtr_v), obj.precooling)
-                    n_changes += 1
-                    fncs.publish(key + '_cooling_setpoint', obj.setpoint)
-                    if obj.precooling:
-                        setPrecoolers.add(obj.name)
+            if n_changes < max_changes and obj.check_setpoint_change(hour_of_day, price, time_granted):
+                print(f'  setting {key:s} to {obj.setpoint:.3f} at {time_granted:d} and {obj.mtr_v:.2f} volts precooling {obj.precooling}')
+                n_changes += 1
+                fncs.publish(key + '_cooling_setpoint', obj.setpoint)
+                if obj.precooling:
+                    setPrecoolers.add(obj.name)
             temp_dev = obj.get_temperature_deviation()
             count_temp_dev += 1
-            if temp_dev < min_temp_dev:
-                min_temp_dev = temp_dev
-            if temp_dev > max_temp_dev:
-                max_temp_dev = temp_dev
+            min_temp_dev = min(min_temp_dev, temp_dev)
+            max_temp_dev = max(max_temp_dev, temp_dev)
             sum_temp_dev += temp_dev
 
         if n_changes > 0:
-            print('*** {:6.4f} hr, changing {:d} setpoints, {:d} out of {:d} are pre-cooling'
-                  .format(hour_of_day, n_changes, len(setPrecoolers), n_houses))
+            print(f'*** {hour_of_day:6.4f} hr, changing {n_changes:d} setpoints, {len(setPrecoolers):d} out of {n_houses:d} are pre-cooling')
 
         if count_temp_dev < 1:
             count_temp_dev = 1

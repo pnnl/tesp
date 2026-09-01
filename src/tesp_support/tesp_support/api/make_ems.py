@@ -33,28 +33,28 @@ def valid_var(name):
 
 def schedule_sensor(name, op):
     print('  EnergyManagementSystem:Sensor,', file=op)
-    print('    {:s},  !- Name'.format(name), file=op)
-    print('    {:s},  !- Output:Variable or Output:Meter Index Key Name'.format(name), file=op)
+    print(f'    {name:s},  !- Name', file=op)
+    print(f'    {name:s},  !- Output:Variable or Output:Meter Index Key Name', file=op)
     print('    Schedule Value;    !- Output:Variable or Output:Meter Name', file=op)
 
 
 def schedule_actuator(name, target, op):
     print('  EnergyManagementSystem:Actuator,', file=op)
-    print('    {:s},  !- Name'.format(name), file=op)
-    print('    {:s},  !- Actuated Component Unique Name'.format(target), file=op)
+    print(f'    {name:s},  !- Name', file=op)
+    print(f'    {target:s},  !- Actuated Component Unique Name', file=op)
     print('    Schedule:Compact, !- Actuated Component Type', file=op)
     print('    Schedule Value;   !- Actuated Component Control Type', file=op)
 
 
 def global_variable(name, op):
     print('  EnergyManagementSystem:GlobalVariable,', file=op)
-    print('    {:s};'.format(name), file=op)
+    print(f'    {name:s};', file=op)
 
 
 def output_variable(name, target, op):
     print('  EnergyManagementSystem:OutputVariable,', file=op)
-    print('    {:s},  !- Name'.format(name), file=op)
-    print('    {:s},  !- EMS Variable Name'.format(target), file=op)
+    print(f'    {name:s},  !- Name', file=op)
+    print(f'    {target:s},  !- EMS Variable Name', file=op)
     print('    Averaged,     !- Type of Data in Variable', file=op)
     print('    ZoneTimeStep, !- Update Frequency', file=op)
     print('    ,             !- EMS Program or Subroutine Name', file=op)
@@ -63,50 +63,50 @@ def output_variable(name, target, op):
 
 def heating_coil_sensor(name, target, op):
     print('  EnergyManagementSystem:Sensor,', file=op)
-    print('    {:s},  !- Name'.format(valid_var(name)), file=op)
-    print('    {:s},  !- Coil'.format(target), file=op)
+    print(f'    {valid_var(name):s},  !- Name', file=op)
+    print(f'    {target:s},  !- Coil', file=op)
     print('    Heating Coil Electric Energy;', file=op)
 
 
 def cooling_coil_sensor(name, target, op):
     print('  EnergyManagementSystem:Sensor,', file=op)
-    print('    {:s},  !- Name'.format(valid_var(name)), file=op)
-    print('    {:s},  !- Coil'.format(target), file=op)
+    print(f'    {valid_var(name):s},  !- Name', file=op)
+    print(f'    {target:s},  !- Coil', file=op)
     print('    Cooling Coil Electric Energy;', file=op)
 
 
 def zone_temperature_sensor(name, op):
     print('  EnergyManagementSystem:Sensor,', file=op)
-    print('    {:s}_T,  !- Name'.format(valid_var(name)), file=op)
-    print('    {:s},    !- Zone'.format(name), file=op)
+    print(f'    {valid_var(name):s}_T,  !- Name', file=op)
+    print(f'    {name:s},    !- Zone', file=op)
     print('    Zone Mean Air Temperature;', file=op)
 
 
 def zone_heating_sensor(name, op):
     print('  EnergyManagementSystem:Sensor,', file=op)
-    print('    {:s}_H,                   !- Name'.format(valid_var(name)), file=op)
-    print('    {:s} VAV Box Reheat Coil, !- Zone/Coil'.format(name), file=op)
+    print(f'    {valid_var(name):s}_H,                   !- Name', file=op)
+    print(f'    {name:s} VAV Box Reheat Coil, !- Zone/Coil', file=op)
     print('    Heating Coil Heating Energy;', file=op)
 
 
 def zone_sensible_heating_sensor(name, op):
     print('  EnergyManagementSystem:Sensor,', file=op)
-    print('    {:s}_H,  !- Name'.format(valid_var(name)), file=op)
-    print('    {:s},    !- Zone'.format(name), file=op)
+    print(f'    {valid_var(name):s}_H,  !- Name', file=op)
+    print(f'    {name:s},    !- Zone', file=op)
     print('    Zone Air System Sensible Heating Energy;', file=op)
 
 
 def zone_sensible_cooling_sensor(name, op):
     print('  EnergyManagementSystem:Sensor,', file=op)
-    print('    {:s}_C,  !- Name'.format(valid_var(name)), file=op)
-    print('    {:s},    !- Zone'.format(name), file=op)
+    print(f'    {valid_var(name):s}_C,  !- Name', file=op)
+    print(f'    {name:s},    !- Zone', file=op)
     print('    Zone Air System Sensible Cooling Energy;', file=op)
 
 
 def zone_occupant_sensor(name, op):
     print('  EnergyManagementSystem:Sensor,', file=op)
-    print('    {:s}_O,  !- Name'.format(valid_var(name)), file=op)
-    print('    {:s},    !- Zone'.format(name), file=op)
+    print(f'    {valid_var(name):s}_O,  !- Name', file=op)
+    print(f'    {name:s},    !- Zone', file=op)
     print('    Zone People Occupant Count;', file=op)
 
 
@@ -136,7 +136,7 @@ def print_idf_summary(zones, zonecontrols, thermostats, schedules, hcoils, ccoil
         print('{:40s} {:40s} {:40s}'.format(name, row['Heating'], row['Cooling']))
     print('\n  === zonecontrols                       Thermostat')
     for name, row in zonecontrols.items():
-        print('{:40s} {:40s}'.format(name, row))
+        print(f'{name:40s} {row:40s}')
     print('\n  === zones                                Volume   Heating                                    Cooling                                  People Controlled')
     for zname, row in zones.items():
         zvol = row['zvol']
@@ -144,7 +144,7 @@ def print_idf_summary(zones, zonecontrols, thermostats, schedules, hcoils, ccoil
         Csched = row['Csched']
         People = row['People']
         Controlled = row['Controlled']
-        print('{:40s} {:8.2f}   {:40s}   {:40s} {:1}      {:1}'.format(zname, zvol, Hsched, Csched, People, Controlled))
+        print(f'{zname:40s} {zvol:8.2f}   {Hsched:40s}   {Csched:40s} {People:1}      {Controlled:1}')
 
 
 def summarize_idf(fname, baseidf):
@@ -166,10 +166,9 @@ def summarize_idf(fname, baseidf):
     fp = open(fname, 'r')
     rdr = csv.reader(fp)
     for row in rdr:
-        if row[0].strip() == 'Component Sizing Information':
-            if row[1].strip() == 'AirLoopHVAC':
-                HVACname = row[2].strip()
-                hvacs.add(HVACname)
+        if row[0].strip() == 'Component Sizing Information' and row[1].strip() == 'AirLoopHVAC':
+            HVACname = row[2].strip()
+            hvacs.add(HVACname)
         if row[0].strip() == 'Zone Information':
             zname = row[1].strip()
             zvol = float(row[19])
@@ -191,12 +190,12 @@ def summarize_idf(fname, baseidf):
             if ('Coil:Heating:Electric' in line) or ('Coil:Heating:DX' in line):
                 coilname = get_eplus_token(fp.readline())
                 if coilname not in hcoils:
-                    hcoils[coilname] = {'Sensor': 'Heating_Coil_{:d}'.format(idx_hcoil)}
+                    hcoils[coilname] = {'Sensor': f'Heating_Coil_{idx_hcoil:d}'}
                     idx_hcoil += 1
             if 'Coil:Cooling:DX' in line:
                 coilname = get_eplus_token(fp.readline())
                 if coilname not in ccoils:
-                    ccoils[coilname] = {'Sensor': 'Cooling_Coil_{:d}'.format(idx_ccoil)}
+                    ccoils[coilname] = {'Sensor': f'Cooling_Coil_{idx_ccoil:d}'}
                     idx_ccoil += 1
             if 'Schedule:Compact' in line:
                 schedule = line
@@ -236,17 +235,17 @@ def summarize_idf(fname, baseidf):
             if not schedules[heat]['Used']:
                 schedules[heat]['Used'] = True
                 schedules[heat]['Heating'] = True
-                schedules[heat]['Alias'] = 'H{:d}'.format(idx_hsched)
+                schedules[heat]['Alias'] = f'H{idx_hsched:d}'
                 idx_hsched += 1
             if not schedules[cool]['Used']:
                 schedules[cool]['Used'] = True
-                schedules[cool]['Alias'] = 'C{:d}'.format(idx_csched)
+                schedules[cool]['Alias'] = f'C{idx_csched:d}'
                 idx_csched += 1
             zones[zone]['Hsched'] = heat
             zones[zone]['Csched'] = cool
             zones[zone]['Controlled'] = True
         else:
-            print('  ** No Schedule Found for Zone={:s}'.format(zone))
+            print(f'  ** No Schedule Found for Zone={zone:s}')
     for name, row in schedules.items():
         if row['Used']:
             nschedused += 1
@@ -308,7 +307,7 @@ def write_new_ems(target, zones, zonecontrols, thermostats, schedules, hcoils, c
                 setp = HEAT_SETP_DELTA
             if idx < nschedused:
                 term = ','
-            print('    Set {:s} = {:s}_NOM + {:s}*5.0/9.0{:s}'.format(alias, alias, setp, term), file=op)
+            print(f'    Set {alias:s} = {alias:s}_NOM + {setp:s}*5.0/9.0{term:s}', file=op)
             idx += 1
 
     print("""
@@ -331,7 +330,7 @@ def write_new_ems(target, zones, zonecontrols, thermostats, schedules, hcoils, c
         total_volume += zvol
         if idx == nzones:
             term = ';'
-        print('    Set {:s}_V = {:.2f}{:s}'.format(valid_var(zname), zvol, term), file=op)
+        print(f'    Set {valid_var(zname):s}_V = {zvol:.2f}{term:s}', file=op)
         idx += 1
 
     print("""  
@@ -343,8 +342,8 @@ def write_new_ems(target, zones, zonecontrols, thermostats, schedules, hcoils, c
     Set H_SET = 0.0,
     Set C_CUR = 0.0,
     Set H_CUR = 0.0,""", file=op)
-    print('    Set Total_V = {:.2f},'.format(total_volume), file=op)
-    print('    Set Controlled_V = {:.2f},'.format(controlled_volume), file=op)
+    print(f'    Set Total_V = {total_volume:.2f},', file=op)
+    print(f'    Set Controlled_V = {controlled_volume:.2f},', file=op)
 
     for zname, row in zones.items():
         if row['Controlled']:
@@ -355,15 +354,15 @@ def write_new_ems(target, zones, zonecontrols, thermostats, schedules, hcoils, c
             Csens = sname + '_C'
             Csched = row['Csched']
             Calias = schedules[Csched]['Alias']
-            print('    IF ({:s} > 0),'.format(Hsens), file=op)
-            print('      Set H_SET = H_SET + {:s} * {:s}_V,'.format(Halias, sname), file=op)
-            print('      Set H_CUR = H_CUR + {:s}_T * {:s}_V,'.format(sname, sname), file=op)
-            print('      Set TOTAL_HEAT_V = TOTAL_HEAT_V + {:s}_V,'.format(sname), file=op)
+            print(f'    IF ({Hsens:s} > 0),', file=op)
+            print(f'      Set H_SET = H_SET + {Halias:s} * {sname:s}_V,', file=op)
+            print(f'      Set H_CUR = H_CUR + {sname:s}_T * {sname:s}_V,', file=op)
+            print(f'      Set TOTAL_HEAT_V = TOTAL_HEAT_V + {sname:s}_V,', file=op)
             print('    ENDIF,', file=op)
-            print('    IF ({:s} > 0),'.format(Csens), file=op)
-            print('      Set C_SET = C_SET + {:s} * {:s}_V,'.format(Calias, sname), file=op)
-            print('      Set C_CUR = C_CUR + {:s}_T * {:s}_V,'.format(sname, sname), file=op)
-            print('      Set TOTAL_COOL_V = TOTAL_COOL_V + {:s}_V,'.format(sname), file=op)
+            print(f'    IF ({Csens:s} > 0),', file=op)
+            print(f'      Set C_SET = C_SET + {Calias:s} * {sname:s}_V,', file=op)
+            print(f'      Set C_CUR = C_CUR + {sname:s}_T * {sname:s}_V,', file=op)
+            print(f'      Set TOTAL_COOL_V = TOTAL_COOL_V + {sname:s}_V,', file=op)
             print('    ENDIF,', file=op)
 
     print("""! Average temperature over controlled zone air volumes""", file=op)
@@ -371,7 +370,7 @@ def write_new_ems(target, zones, zonecontrols, thermostats, schedules, hcoils, c
     for zname, row in zones.items():
         if row['Controlled']:
             sname = valid_var(zname)
-            print('    Set T_CUR = T_CUR + {:s}_T * {:s}_V,'.format(sname, sname), file=op)
+            print(f'    Set T_CUR = T_CUR + {sname:s}_T * {sname:s}_V,', file=op)
     print('    Set T_CUR = T_CUR/Controlled_V*9.0/5.0+32.0,', file=op)
 
     print("""! Average cooling schedule and setpoint over controlled zone air volumes
@@ -381,9 +380,9 @@ def write_new_ems(target, zones, zonecontrols, thermostats, schedules, hcoils, c
         if row['Controlled']:
             sname = valid_var(zname)
             alias = schedules[row['Csched']]['Alias']
-            print('    Set T_Cooling = T_Cooling + {:s} * {:s}_V,'.format(alias, sname), file=op)
-            print('    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + {:s}_NOM * {:s}_V,'
-                  .format(alias, sname), file=op)
+            print(f'    Set T_Cooling = T_Cooling + {alias:s} * {sname:s}_V,', file=op)
+            print(f'    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + {alias:s}_NOM * {sname:s}_V,'
+                  , file=op)
     print('    Set T_Cooling = T_Cooling/Controlled_V*9.0/5.0+32.0,', file=op)
     print('    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature/Controlled_V*9.0/5.0+32.0,', file=op)
 
@@ -394,9 +393,9 @@ def write_new_ems(target, zones, zonecontrols, thermostats, schedules, hcoils, c
         if row['Controlled']:
             sname = valid_var(zname)
             alias = schedules[row['Hsched']]['Alias']
-            print('    Set T_Heating = T_Heating + {:s} * {:s}_V,'.format(alias, sname), file=op)
-            print('    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + {:s}_NOM * {:s}_V,'
-                  .format(alias, sname), file=op)
+            print(f'    Set T_Heating = T_Heating + {alias:s} * {sname:s}_V,', file=op)
+            print(f'    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + {alias:s}_NOM * {sname:s}_V,'
+                  , file=op)
     print('    Set T_Heating = T_Heating/Controlled_V*9.0/5.0+32.0,', file=op)
     print('    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature/Controlled_V*9.0/5.0+32.0,', file=op)
 
@@ -466,7 +465,7 @@ def write_new_ems(target, zones, zonecontrols, thermostats, schedules, hcoils, c
         if row['People']:
             if idx == nocczones:
                 term = ';'
-            print('    Set Total_Occupants = Total_Occupants + {:s}_O{:s}'.format(valid_var(name), term), file=op)
+            print(f'    Set Total_Occupants = Total_Occupants + {valid_var(name):s}_O{term:s}', file=op)
             idx += 1
 
     for name, row in schedules.items():
@@ -527,14 +526,14 @@ def write_new_ems(target, zones, zonecontrols, thermostats, schedules, hcoils, c
             zone_sensible_cooling_sensor(zname, op)
         global_variable(valid_var(zname) + '_V', op)
 
-    print("""! ***EXTERNAL INTERFACE***
+    print(f"""! ***EXTERNAL INTERFACE***
   ExternalInterface,
-    {COSIM}; !- Name of External Interface
+    {CosimInterface}; !- Name of External Interface
   ExternalInterface:Variable,
-    {COOL},  !- Name
+    {COOL_SETP_DELTA},  !- Name
     0;                !- Initial Value
   ExternalInterface:Variable,
-    {HEAT},  !- Name
+    {HEAT_SETP_DELTA},  !- Name
     0;                !- Initial Value
 ! ***GENERAL REPORTING***
   Output:VariableDictionary,IDF,Unsorted;
@@ -556,9 +555,7 @@ def write_new_ems(target, zones, zonecontrols, thermostats, schedules, hcoils, c
   Output:Variable,WHOLE BUILDING,Facility Total Electric Demand Power,timestep;
   Output:Variable,WHOLE BUILDING,Facility Total HVAC Electric Demand Power,timestep;
   Output:Variable,FACILITY,Facility Thermal Comfort ASHRAE 55 Simple Model Summer or Winter Clothes Not Comfortable Time,timestep;
-  Output:Variable,Environment,Site Outdoor Air Drybulb Temperature,timestep; """.format(COSIM=CosimInterface,
-                                                                                        COOL=COOL_SETP_DELTA,
-                                                                                        HEAT=HEAT_SETP_DELTA), file=op)
+  Output:Variable,Environment,Site Outdoor Air Drybulb Temperature,timestep; """, file=op)
 
     op.close()
 

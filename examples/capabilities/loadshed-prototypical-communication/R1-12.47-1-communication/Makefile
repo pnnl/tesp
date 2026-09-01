@@ -5,7 +5,8 @@ INSTALL_PATH := ${INSTDIR}
 # Specifically, extracting all the ns-3 libraries to link against later,
 # such that I do not have to speciffy each of them.
 ##############################################################################
-LIBDIRS = $(INSTALL_PATH)/lib64
+#LIBDIRS = $(INSTALL_PATH)/lib64
+LIBDIRS = $(INSTALL_PATH)/lib
 $(info <<<<<<<<<< lib directory >>>>>>>>>>)
 $(info $(LIBDIRS))
 NS3_LIBFILES = $(patsubst $(LIBDIRS)/libns3%.so,-lns3%,$(wildcard $(LIBDIRS)/libns3*))
@@ -47,8 +48,8 @@ $(info $(CPPFLAGS))
 #   because each compiler already knows where to look for its system files.
 ##############################################################################
 LDFLAGS = -L. \
-          -L$(INSTALL_PATH)/lib \
-          -L$(INSTALL_PATH)/lib64
+          -L$(INSTALL_PATH)/lib
+#          -L$(INSTALL_PATH)/lib64
 # What libraries should be linked with.
 LDLIBS =
 LDLIBS += $(NS3_LIBFILES)

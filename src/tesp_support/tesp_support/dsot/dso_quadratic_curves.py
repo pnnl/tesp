@@ -131,8 +131,8 @@ class DSO_LMPs_vs_Q:
         The scenarios are hour of day and day type (i.e., weekday and weekends)
         
         """
-        coeficients_weekday = list()
-        coeficients_weekend = list()
+        coeficients_weekday = []
+        coeficients_weekend = []
         for i in range(len(self.lmps_names)):
             temp = self.df_dsos_lml_q[i].index.dayofweek <= 4
             coeficients_weekday.append(self.fit_model(i, temp))

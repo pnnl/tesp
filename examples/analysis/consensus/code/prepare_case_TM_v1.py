@@ -6,19 +6,20 @@ Public Functions:
     None
 """
 
-import os
-import json
-import shutil
 import datetime
-import numpy as np
+import json
+import os
+import shutil
+import sys
 
+import numpy as np
 import prep_microgrid_agent_v1 as prep
+import tesp_support.consensus.case_merge as cm
+import tesp_support.consensus.glm_dictionary as gd
+import tesp_support.consensus.residential_feeder_glm as res_FG
 import tesp_support.dsot.helpers_dsot as helpers
 import tesp_support.original.commercial_feeder_glm as com_FG
 import tesp_support.original.copperplate_feeder_glm as cp_FG
-import tesp_support.consensus.residential_feeder_glm as res_FG
-import tesp_support.consensus.glm_dictionary as gd
-import tesp_support.consensus.case_merge as cm
 
 
 def prepare_case(mastercase):
@@ -65,11 +66,11 @@ def prepare_case(mastercase):
     caseName = sys_config['caseName']
     start_time = sys_config['StartTime']
     end_time = sys_config['EndTime']
-    debug_mode = bool(False)
-    fncs_flag = bool(False)
-    helics_flag = bool(False)
+    debug_mode = False
+    fncs_flag = False
+    helics_flag = False
     if 'HELICS' in sys_config:
-        helics_flag = bool(True)
+        helics_flag = True
         helics_config = sys_config['HELICS']
 
     # setting Tmax in seconds
@@ -78,7 +79,7 @@ def prepare_case(mastercase):
     e = datetime.datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S')
     sIdx = (s - ep).total_seconds()
     eIdx = (e - ep).total_seconds()
-    sys_config['Tmax'] = int((eIdx - sIdx))
+    sys_config['Tmax'] = int(eIdx - sIdx)
 
     # dt = sys_config['dt']
     # gen = sys_config['gen']
@@ -98,11 +99,10 @@ def prepare_case(mastercase):
     sim['port'] = sys_config['port']
     sim.update({'dso': {}})
     sim.update({'weather': {}})
-    [sim['dso'].update({key: dso_config[key]}) for key in dso_config.keys() if 'DSO' in key]
+    [sim['dso'].update({key: dso_config[key]}) for key in dso_config if 'DSO' in key]
 
     substation_config = sim['dso']
     weather_config = sim['weather']
-    case_config = case_config
 
     sim['caseType'] = sys_config['caseType']
     sim['agent_debug_mode'] = sys_config['agent_debug_mode']
@@ -120,7 +120,7 @@ def prepare_case(mastercase):
         os.makedirs(caseName)
     else:
         print('Case name is blank or Case name is "." or ".." and could cause file deletion')
-        exit(1)
+        sys.exit(1)
 
     # We need to create the experiment out folder. If it already exists, we delete it and then create it
     if out_Path != "" and out_Path != ".." and out_Path != ".":
@@ -140,7 +140,7 @@ def prepare_case(mastercase):
         copperplate_feeder_name = 'commercial_copperplate_feeder'
         # copperplate_feeder_name = 'commercial_populated_copperplate_feeder'
         copperplate_feeder_file = os.path.join(path_to_copperplate, copperplate_feeder_name + ".glm")
-        print('Copperplate feeder taxonomy at {0:s}.\n'.format(copperplate_feeder_file))
+        print(f'Copperplate feeder taxonomy at {copperplate_feeder_file:s}.\n')
     # ====================== end copperplate feeder initialization part ===============
 
     # First step is to create the dso folders and populate the feeders
@@ -217,7 +217,7 @@ def prepare_case(mastercase):
         # make weather agent folder
         try:
             os.makedirs(caseName + '/' + weather_agent_name)
-        except:
+        except Exception:
             pass
 
         # (Laurentiu Marinovici 11/07/2019)
@@ -234,7 +234,7 @@ def prepare_case(mastercase):
         bldPrep['CommBldgPopulation'] = comm_bldgs_pop
 
         # print(json.dumps(comm_bldgs_pop, sort_keys = True, indent = 2))
-        print("\n!!!!! Initially, there are {0:d} commercial buildings !!!!!".format(
+        print("\n!!!!! Initially, there are {:d} commercial buildings !!!!!".format(
             len(bldPrep['CommBldgPopulation'].keys())))
 
         # write out a configuration for each substation
@@ -247,11 +247,11 @@ def prepare_case(mastercase):
         feeders = dso_val['feeders']
         feedercnt = 1
         for feed_key, feed_val in feeders.items():
-            print("\t<<<<< Chosen feeder -->> {0} >>>>>".format(feed_val['name']))
+            print("\t<<<<< Chosen feeder -->> {} >>>>>".format(feed_val['name']))
             if sim['simplifiedFeeders']:
                 feed_val['name'] = 'sim_' + feed_val['name']
                 print("\t<<<<< Going with the simplified feeders. >>>>>")
-                print("\t<<<<< Feeder name changed to -->> {0} >>>>>".format(feed_val['name']))
+                print("\t<<<<< Feeder name changed to -->> {} >>>>>".format(feed_val['name']))
             else:
                 print("\t<<<<< Going with the full feeders. >>>>>")
             os.makedirs(caseName + '/' + feed_key)
@@ -281,11 +281,11 @@ def prepare_case(mastercase):
                                                  hvacSetpt=hvac_setpt)
 
             feedercnt += 1
-            print("=== DONE WITH FEEDER {0:s} for {1:s}. ======\n".format(feed_key, dso_key))
+            print(f"=== DONE WITH FEEDER {feed_key:s} for {dso_key:s}. ======\n")
 
         # =================== Laurentiu Marinovici 12/13/2019 - Copperplate feeder piece =======
         if need_copperplate_feeder:
-            print("!!!!! There are {0:d} / {1:d} commercial buildings left !!!!!".format(
+            print("!!!!! There are {:d} / {:d} commercial buildings left !!!!!".format(
                 len(bldPrep['CommBldgPopulation'].keys()), len(comm_bldgs_pop)))
             if len(bldPrep['CommBldgPopulation'].keys()) > 0:
                 print("!!!!! We are going with the copperplate feeder now. !!!!!")
@@ -312,7 +312,7 @@ def prepare_case(mastercase):
                                      config=case_config,
                                      hvacSetpt=hvac_setpt)
                 feedercnt += 1
-                print("=== DONE WITH COPPERPLATE FEEDER {0:s} for {1:s}. ======\n".format(feed_key, dso_key))
+                print(f"=== DONE WITH COPPERPLATE FEEDER {feed_key:s} for {dso_key:s}. ======\n")
 
         # ======================================================================================
         print("\n=== MERGING THE FEEDERS UNDER ONE SUBSTATION =====")
@@ -331,23 +331,23 @@ def prepare_case(mastercase):
             print("\n=== MERGING THE FEEDERS GLM DICTIONARIES =====")
             cm.merge_glm_dict(
                 os.path.abspath(caseName + '/' + microgrid_key + '/' + microgrid_key + '_glm_dict.json'),
-                list(key + '_' + microgrid_key for key in dso_val['feeders']), 20)
+                [key + '_' + microgrid_key for key in dso_val['feeders']], 20)
 
             print("\n=== MERGING THE MICROGRID AGENT DICTIONARIES =====")
             cm.merge_agent_dict(
                 os.path.abspath(caseName + '/' + microgrid_key + '/' + microgrid_key + '_agent_dict.json'),
-                list(key + '_' + microgrid_key for key in dso_val['feeders']))
+                [key + '_' + microgrid_key for key in dso_val['feeders']])
 
             print("\n=== MERGING THE MICROGRID YAML =====")
             cm.merge_substation_yaml(
                 os.path.abspath(caseName + '/' + microgrid_key + '/' + microgrid_key + '.json'),
-                list(key + '_' + microgrid_key for key in dso_val['feeders']))
+                [key + '_' + microgrid_key for key in dso_val['feeders']])
 
             # for dso_key, dso_val in substation_config.items():
             filesToDelete = [name for name in os.listdir(os.path.abspath(caseName + '/' + microgrid_key)) if
                              os.path.isfile(os.path.join(os.path.abspath(caseName + '/' + microgrid_key),
                                                          name)) and 'feeder' in name]
-            print("=== Removing the following files: {0} for {1}. ===".format(filesToDelete, microgrid_key))
+            print(f"=== Removing the following files: {filesToDelete} for {microgrid_key}. ===")
             [os.remove(os.path.join(os.path.abspath(caseName + '/' + microgrid_key), fileName)) for fileName in
              filesToDelete]
 
@@ -355,16 +355,16 @@ def prepare_case(mastercase):
 
             print("\n=== MERGING THE DG AGENT DICTIONARIES =====")
             cm.merge_agent_dict(os.path.abspath(caseName + '/' + gen_key + '/' + gen_key + '_agent_dict.json'),
-                                  list(key + '_' + gen_key for key in dso_val['feeders']))
+                                  [key + '_' + gen_key for key in dso_val['feeders']])
 
             print("\n=== MERGING THE MICROGRID YAML =====")
             cm.merge_substation_yaml(os.path.abspath(caseName + '/' + gen_key + '/' + gen_key + '.json'),
-                                       list(key + '_' + gen_key for key in dso_val['feeders']))
+                                       [key + '_' + gen_key for key in dso_val['feeders']])
 
             # for dso_key, dso_val in substation_config.items():
             filesToDelete = [name for name in os.listdir(os.path.abspath(caseName + '/' + gen_key)) if os.path.isfile(
                 os.path.join(os.path.abspath(caseName + '/' + gen_key), name)) and 'feeder' in name]
-            print("=== Removing the following files: {0} for {1}. ===".format(filesToDelete, gen_key))
+            print(f"=== Removing the following files: {filesToDelete} for {gen_key}. ===")
             [os.remove(os.path.join(os.path.abspath(caseName + '/' + gen_key), fileName)) for fileName in filesToDelete]
 
         print("\n=== MERGING THE SUBSTATION AGENT DICTIONARIES =====")
@@ -380,13 +380,13 @@ def prepare_case(mastercase):
         # cleaning after feeders had been merged
         foldersToDelete = [name for name in os.listdir(os.path.abspath(caseName))
                            if os.path.isdir(os.path.join(os.path.abspath(caseName), name)) and 'feeder' in name]
-        print("=== Removing the following folders: {0}. ===".format(foldersToDelete))
+        print(f"=== Removing the following folders: {foldersToDelete}. ===")
         [shutil.rmtree(os.path.join(os.path.abspath(caseName), folder)) for folder in foldersToDelete]
 
         # for dso_key, dso_val in substation_config.items():
         filesToDelete = [name for name in os.listdir(os.path.abspath(caseName + '/' + dso_key))
                          if os.path.isfile(os.path.join(os.path.abspath(caseName + '/' + dso_key), name)) and 'feeder' in name]
-        print("=== Removing the following files: {0} for {1}. ===".format(filesToDelete, dso_key))
+        print(f"=== Removing the following files: {filesToDelete} for {dso_key}. ===")
         [os.remove(os.path.join(os.path.abspath(caseName + '/' + dso_key), fileName)) for fileName in filesToDelete]
 
     # Also create the launch, kill and clean scripts for this case

@@ -30,13 +30,14 @@ Todo:
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 import json
+from datetime import datetime, timedelta
+
 import helics
-from datetime import datetime
-from datetime import timedelta
 
 from ..original.hvac_agent import hvac
 from ..original.simple_auction import simple_auction
 from .bench_profile import bench_profile
+
 
 @bench_profile
 def substation_loop(configfile, metrics_root, helicsConfig, hour_stop=48, flag='WithMarket'):
@@ -90,7 +91,7 @@ def substation_loop(configfile, metrics_root, helicsConfig, hour_stop=48, flag='
     lp = open(configfile).read()
     diction = json.loads(lp)
 
-    market_key = list(diction['markets'].keys())[0]  # only using the first market
+    market_key = next(iter(diction['markets'].keys()))  # only using the first market
     market_row = diction['markets'][market_key]
     unit = market_row['unit']
 

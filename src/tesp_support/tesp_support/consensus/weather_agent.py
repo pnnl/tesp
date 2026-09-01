@@ -5,19 +5,19 @@ This weather agent needs an WEATHER_CONFIG environment variable to be set, which
 import json
 import os
 import sys
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import pandas as pd
 
 try:
-    from ..original import fncs as fncs
+    from ..original import fncs
 except Exception:
     pass
 import random
+
+import helics as h
 import numpy
 from scipy.stats import truncnorm
-import helics as h
 
 
 def register_federate(json_filename):
@@ -25,7 +25,7 @@ def register_federate(json_filename):
     fed = h.helicsCreateValueFederateFromConfig(json_filename)
     status = h.helicsFederateRegisterInterfaces(fed, json_filename)
     federate_name = h.helicsFederateGetName(fed)
-    print(" Federate {} has been registered".format(federate_name))
+    print(f" Federate {federate_name} has been registered")
     pubkeys_count = h.helicsFederateGetPublicationCount(fed)
     subkeys_count = h.helicsFederateGetInputCount(fed)
     print(pubkeys_count)
@@ -33,16 +33,16 @@ def register_federate(json_filename):
     ######################   Reference to Publications and Subscription form index  #############################
     pubid = {}
     subid = {}
-    for i in range(0, pubkeys_count):
-        pubid["m{}".format(i)] = h.helicsFederateGetPublicationByIndex(fed, i)
-        pub_type = h.helicsPublicationGetType(pubid["m{}".format(i)])
-        pub_key = h.helicsPublicationGetName(pubid["m{}".format(i)])
-        print('Registered Publication ---> {} - Type {}'.format(pub_key, pub_type))
-    for i in range(0, subkeys_count):
-        subid["m{}".format(i)] = h.helicsFederateGetInputByIndex(fed, i)
-        status = h.helicsInputSetDefaultString(subid["m{}".format(i)], 'default')
-        sub_key = h.helicsInputGetTarget(subid["m{}".format(i)])
-        print('Registered Subscription ---> {}'.format(sub_key))
+    for i in range(pubkeys_count):
+        pubid[f"m{i}"] = h.helicsFederateGetPublicationByIndex(fed, i)
+        pub_type = h.helicsPublicationGetType(pubid[f"m{i}"])
+        pub_key = h.helicsPublicationGetName(pubid[f"m{i}"])
+        print(f'Registered Publication ---> {pub_key} - Type {pub_type}')
+    for i in range(subkeys_count):
+        subid[f"m{i}"] = h.helicsFederateGetInputByIndex(fed, i)
+        status = h.helicsInputSetDefaultString(subid[f"m{i}"], 'default')
+        sub_key = h.helicsInputGetTarget(subid[f"m{i}"])
+        print(f'Registered Subscription ---> {sub_key}')
 
     return fed, federate_name
 
@@ -64,7 +64,7 @@ def startWeatherAgent(file):
     # read the weather data file, arguments to mimic deprecated from_csv function
     weatherData = pd.read_csv(file, index_col=0, parse_dates=True)
     config = os.environ['WEATHER_CONFIG']  # read the weather config json file
-    Helics_Flag = bool(True)
+    Helics_Flag = True
     if os.path.isfile(config):
         with open(config, 'r') as stream:
             try:
@@ -117,8 +117,7 @@ def startWeatherAgent(file):
 
     # write fncs.zpl file here
     # this config str won't work as an argument to fncs::initialize, so write fncs.zpl just in time
-    zplstr = "name = {}\ntime_delta = {}s\ntime_stop = {}s\nbroker = {}".format(agentName, timeDeltaInSeconds,
-                                                                                timeStopInSeconds, broker)
+    zplstr = f"name = {agentName}\ntime_delta = {timeDeltaInSeconds}s\ntime_stop = {timeStopInSeconds}s\nbroker = {broker}"
 
     # when doing resample(), use publishIntervalInSeconds to make it uniform
     # the reason for that is due to some of the units that we use for fncs, such as 'min',
@@ -174,7 +173,7 @@ def startWeatherAgent(file):
 
     # find all the time point that need to publish weather data,
     # each time point in this list pairs with each time point in timeNeedToBePublished list
-    timeNeedToPublish = [(i - publishTimeAhead) if (i - publishTimeAhead) >= 0 else 0 for i in timeNeedToBePublished]
+    timeNeedToPublish = [max(i - publishTimeAhead, 0) for i in timeNeedToBePublished]
 
     # other weather agents could be initializing from FNCS.zpl, so we might have a race condition
     #  file locking didn't work, because fncs.initialize() doesn't return until broker hears from all other simulators
@@ -183,16 +182,16 @@ def startWeatherAgent(file):
         config = {}
         config['name'] = agentName
         config['loglevel'] = "warning"
-        config['coreType'] = str('zmq')
+        config['coreType'] = 'zmq'
         config['publications'] = []
 
         for key in forecastParameters:
             config['publications'].append({'global': bool('true'),
                                            'key': str(agentName + '/' + key),
-                                           'type': str('double')})
+                                           'type': 'double'})
             config['publications'].append({'global': bool('true'),
                                            'key': str(agentName + '/' + key + '/forecast'),
-                                           'type': str('string')})
+                                           'type': 'string'})
 
         json_file = json.dumps(config, indent=4, separators=(',', ': '))
         fp = open(json_name, 'w')
@@ -239,7 +238,7 @@ def startWeatherAgent(file):
             # time_granted = fncs.time_request(timeToRequest)
             while time_granted < timeToRequest:
                 time_granted = h.helicsFederateRequestTime(fed, timeToRequest)
-            print('HELICS Time Requested {} and Time Granted {}'.format(time_granted, timeToRequest), flush=True)
+            print(f'HELICS Time Requested {time_granted} and Time Granted {timeToRequest}', flush=True)
             # print("time_granted", time_granted)
             # if timeDeltaChanged == 1:
             #    fncs.update_time_delta(timeDeltaInSeconds)
@@ -285,7 +284,7 @@ def startWeatherAgent(file):
                 if addErrorToForecast == 1:
                     WF_obj = weather_forecast(col, forecastPeriod * 2, forecastParameters)  # make object
                     data = WF_obj.make_forecast(data, len(data))
-                wd = dict()
+                wd = {}
                 # convert data to a dictionary with time as the key so it can be published as json string
                 for v in range(len(data)):
                     if col != "temperature" and data[v] < 1e-4:
@@ -499,8 +498,8 @@ class weather_forecast:
         n = len(weather)
         error = numpy.zeros(n)
         ############## sampling the error distribution
-        ENV_l = list()
-        ENV_U = list()
+        ENV_l = []
+        ENV_U = []
         for i in range(n):
             if bias[i] > 0:
                 EL = -envelope[i] + bias[i]

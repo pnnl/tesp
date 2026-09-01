@@ -51,17 +51,29 @@ Key output files written per call to DSO_rate_making()
 """
 
 import json
+import logging
 import os
 import sys
-import logging
-from os.path import dirname, abspath
+from os.path import abspath, dirname
 
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from ..dsot.plots import load_da_retail_price, customer_meta_data, load_json, load_agent_data, \
-    load_system_data, get_date, tic, toc, load_retail_data, load_ames_data, load_gen_data, load_indust_data
+from ..dsot.plots import (
+    customer_meta_data,
+    get_date,
+    load_agent_data,
+    load_ames_data,
+    load_da_retail_price,
+    load_gen_data,
+    load_indust_data,
+    load_json,
+    load_retail_data,
+    load_system_data,
+    tic,
+    toc,
+)
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -168,7 +180,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num,
 
         # Add consumption during time-of-use periods, if applicable
         if rate_scenario in ["time-of-use", "TOU"]:
-            for k in tou_params["DSO_" + dso_num][month_name]["periods"].keys():
+            for k in tou_params["DSO_" + dso_num][month_name]["periods"]:
                 meter.append(each)
                 variable.append(k + "_kwh")
                 month.append(0)
@@ -225,7 +237,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num,
         
         # Add consumtpion during time-of-use periods, if applicable
         if rate_scenario in ["time-of-use", "TOU"]:
-            for k in tou_params["DSO_" + dso_num][month_name]["periods"].keys():
+            for k in tou_params["DSO_" + dso_num][month_name]["periods"]:
                 loads.append(each)
                 variable.append(k + "_kwh")
                 month.append(0)
@@ -320,7 +332,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num,
             
             # Calculate each consumer's time-of-use-related consumption metrics, if applicable
             if rate_scenario in ["time-of-use", "TOU"]:
-                for k in tou_params["DSO_" + dso_num][month_name]["periods"].keys():
+                for k in tou_params["DSO_" + dso_num][month_name]["periods"]:
                     for t in range(len(tou_params["DSO_" + dso_num][month_name]["periods"][k]["hour_start"])):
                         meter_df.loc[(each, k + "_kwh"), day_name] += (
                             temp.loc[
@@ -392,7 +404,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num,
                     
                     # Calculate the time-of-use-related metrics, if applicable
                     if rate_scenario in ["time-of-use", "TOU"]:
-                        for k in tou_params["DSO_" + dso_num][month_name]["periods"].keys():
+                        for k in tou_params["DSO_" + dso_num][month_name]["periods"]:
                             energysum_df.loc[(load, k + "_kwh"), day_name] += (
                                 meter_df.loc[(each, k + "_kwh"), day_name] * SF
                             )
@@ -417,7 +429,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num,
 
         # Calculate the time-of-use-related metrics, if applicable
         if rate_scenario in ["time-of-use", "TOU"]:
-            for k in tou_params["DSO_" + dso_num][month_name]["periods"].keys():
+            for k in tou_params["DSO_" + dso_num][month_name]["periods"]:
                 num_hours = 0
                 for i in range(
                         len(tou_params["DSO_" + dso_num][month_name]["periods"][k]["hour_start"])):
@@ -433,7 +445,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num,
     # Create totals for energy metrics
     energysum_metrics = ['kw-hr', 'demand_quantity', 'da_q', 'rt_q', 'congest_$', 'congest_q']
     if rate_scenario in ["time-of-use", "TOU"]:
-        for k in tou_params["DSO_" + dso_num][month_name]["periods"].keys():
+        for k in tou_params["DSO_" + dso_num][month_name]["periods"]:
             energysum_metrics.append(k + "_kwh")
     for item in energysum_metrics:
         for load in ['residential', 'commercial', 'industrial']:
@@ -455,7 +467,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num,
             meter_df.loc[(each, 'load_factor'), 'sum'] = 0
     
     if rate_scenario in ["time-of-use", "TOU"]:
-        for k in tou_params["DSO_" + dso_num][month_name]["periods"].keys():
+        for k in tou_params["DSO_" + dso_num][month_name]["periods"]:
             meter_df.loc[(slice(None), k + "_kwh"), ["sum"]] = meter_df.loc[
                 (slice(None), k + "_kwh"),
                 meter_df.columns[~meter_df.columns.isin(["sum"])],
@@ -965,7 +977,7 @@ def calculate_consumer_bills(
         bill_components.extend(
             [
                 "tou_" + k + "_energy_charge"
-                for k in tou_params["DSO_" + dso_num]["Jan"]["periods"].keys()
+                for k in tou_params["DSO_" + dso_num]["Jan"]["periods"]
             ]
         )
         bill_components.append("tou_demand_charge")
@@ -974,7 +986,7 @@ def calculate_consumer_bills(
         bill_components.extend(
             [
                 "tou_" + k + "_energy_purchased"
-                for k in tou_params["DSO_" + dso_num]["Jan"]["periods"].keys()
+                for k in tou_params["DSO_" + dso_num]["Jan"]["periods"]
             ]
         )
         bill_components.append("tou_energy_purchased")
@@ -985,7 +997,7 @@ def calculate_consumer_bills(
         bill_components.extend(
             [
                 "subscription_" + k + "_energy_charge"
-                for k in tou_params["DSO_" + dso_num]["Jan"]["periods"].keys()
+                for k in tou_params["DSO_" + dso_num]["Jan"]["periods"]
             ]
         )
         bill_components.append("subscription_demand_charge")
@@ -994,7 +1006,7 @@ def calculate_consumer_bills(
         bill_components.extend(
             [
                 "subscription_" + k + "_energy_purchased"
-                for k in tou_params["DSO_" + dso_num]["Jan"]["periods"].keys()
+                for k in tou_params["DSO_" + dso_num]["Jan"]["periods"]
             ]
         )
         bill_components.append("subscription_energy_purchased")
@@ -1068,9 +1080,9 @@ def calculate_consumer_bills(
     month_to_dir = {}
     for p in os.listdir(case_path):
         parts = p.split("_")
-        if len(parts) > 3 and parts[3] in month_map.values():
-            if "zip" not in p and os.path.isdir(os.path.join(base_path, p)):
-                month_to_dir[parts[3]] = p
+        if (len(parts) > 3 and parts[3] in month_map.values() and
+            "zip" not in p and os.path.isdir(os.path.join(base_path, p))):
+            month_to_dir[parts[3]] = p
 
     # Cycle through each month for which there is energy data and calculate customer bill
     months = list(meter_df.columns[~meter_df.columns.str.contains("sum")])
@@ -1130,7 +1142,7 @@ def calculate_consumer_bills(
                         tou_params["DSO_" + dso_num][m]["price"]
                         * tou_params["DSO_" + dso_num][m]["periods"][k]["ratio"]
                         * meter_df.loc[(each, k + "_kwh"), m]
-                        for k in tou_params["DSO_" + dso_num][m]["periods"].keys()
+                        for k in tou_params["DSO_" + dso_num][m]["periods"]
                     )
 
                     # Calculate the consumer's tier credit (due to the declining block)
@@ -1150,7 +1162,7 @@ def calculate_consumer_bills(
                         )
 
                     # Calculate the consumer's energy charge for each time-of-use period
-                    for k in tou_params["DSO_" + dso_num][m]["periods"].keys():
+                    for k in tou_params["DSO_" + dso_num][m]["periods"]:
                         bill_df.loc[(each, "tou_" + k + "_energy_charge"), m] = (
                             tou_params["DSO_" + dso_num][m]["price"]
                             * tou_params["DSO_" + dso_num][m]["periods"][k]["ratio"]
@@ -1178,7 +1190,7 @@ def calculate_consumer_bills(
                     ]
 
                     # Store the total energy purchased during each time-of-use period
-                    for k in tou_params["DSO_" + dso_num][m]["periods"].keys():
+                    for k in tou_params["DSO_" + dso_num][m]["periods"]:
                         bill_df.loc[
                             (each, "tou_" + k + "_energy_purchased"), m
                         ] = meter_df.loc[(each, k + "_kwh"), m]
@@ -1210,35 +1222,21 @@ def calculate_consumer_bills(
                         * sum(
                             bl_demand_df.loc[:, each]
                             .between_time(
-                                str(
-                                    tou_params["DSO_" + dso_num][m]["periods"][k][
-                                        "hour_start"
-                                    ][h]
-                                )
+                                str(tou_params["DSO_" + dso_num][m]["periods"][k]["hour_start"][h])
                                 + ":00",
-                                str(
-                                    tou_params["DSO_" + dso_num][m]["periods"][k][
-                                        "hour_end"
-                                    ][h]
-                                )
+                                str(tou_params["DSO_" + dso_num][m]["periods"][k]["hour_end"][h])
                                 + ":00"
-                                if tou_params["DSO_" + dso_num][m]["periods"][k][
-                                    "hour_end"
-                                ][h]
+                                if tou_params["DSO_" + dso_num][m]["periods"][k]["hour_end"][h]
                                 != 24
                                 else "0:00",
                                 inclusive="left",
                             )
                             .sum()
                             for h in range(
-                                len(
-                                    tou_params["DSO_" + dso_num][m]["periods"][k][
-                                        "hour_start"
-                                    ]
-                                )
+                                len(tou_params["DSO_" + dso_num][m]["periods"][k]["hour_start"])
                             )
                         )
-                        for k in tou_params["DSO_" + dso_num][m]["periods"].keys()
+                        for k in tou_params["DSO_" + dso_num][m]["periods"]
                     ) + calculate_tier_credit(
                         dso_num,
                         metadata["billingmeters"][each]["tariff_class"],
@@ -1247,39 +1245,25 @@ def calculate_consumer_bills(
                     )
 
                     # Calculate the consumer's energy charge for each time-of-use period
-                    for k in tou_params["DSO_" + dso_num][m]["periods"].keys():
+                    for k in tou_params["DSO_" + dso_num][m]["periods"]:
                         bill_df.loc[(each, "subscription_" + k + "_energy_charge"), m] = (
                             tou_params["DSO_" + dso_num][m]["price"]
                             * tou_params["DSO_" + dso_num][m]["periods"][k]["ratio"]
                             * sum(
                                 bl_demand_df.loc[:, each]
                                 .between_time(
-                                    str(
-                                        tou_params["DSO_" + dso_num][m]["periods"][k][
-                                            "hour_start"
-                                        ][h]
-                                    )
+                                    str(tou_params["DSO_" + dso_num][m]["periods"][k]["hour_start"][h])
                                     + ":00",
-                                    str(
-                                        tou_params["DSO_" + dso_num][m]["periods"][k][
-                                            "hour_end"
-                                        ][h]
-                                    )
+                                    str(tou_params["DSO_" + dso_num][m]["periods"][k]["hour_end"][h])
                                     + ":00"
-                                    if tou_params["DSO_" + dso_num][m]["periods"][k][
-                                        "hour_end"
-                                    ][h]
+                                    if tou_params["DSO_" + dso_num][m]["periods"][k]["hour_end"][h]
                                     != 24
                                     else "0:00",
                                     inclusive="left",
                                 )
                                 .sum()
                                 for h in range(
-                                    len(
-                                        tou_params["DSO_" + dso_num][m]["periods"][k][
-                                            "hour_start"
-                                        ]
-                                    )
+                                    len(tou_params["DSO_" + dso_num][m]["periods"][k]["hour_start"])
                                 )
                             )
                         )
@@ -1306,38 +1290,21 @@ def calculate_consumer_bills(
                     ] = bl_demand_df.loc[:, each].sum()
 
                     # Store the total energy purchased during each time-of-use period
-                    for k in tou_params["DSO_" + dso_num][m]["periods"].keys():
+                    for k in tou_params["DSO_" + dso_num][m]["periods"]:
                         bill_df.loc[
                             (each, "subscription_" + k + "_energy_purchased"), m
                         ] = sum(
                             bl_demand_df.loc[:, each]
                             .between_time(
-                                str(
-                                    tou_params["DSO_" + dso_num][m]["periods"][k][
-                                        "hour_start"
-                                    ][h]
-                                )
-                                + ":00",
-                                str(
-                                    tou_params["DSO_" + dso_num][m]["periods"][k][
-                                        "hour_end"
-                                    ][h]
-                                )
-                                + ":00"
-                                if tou_params["DSO_" + dso_num][m]["periods"][k][
-                                    "hour_end"
-                                ][h]
-                                != 24
+                                str(tou_params["DSO_" + dso_num][m]["periods"][k]["hour_start"][h]) + ":00",
+                                str(tou_params["DSO_" + dso_num][m]["periods"][k]["hour_end"][h]) + ":00"
+                                if tou_params["DSO_" + dso_num][m]["periods"][k]["hour_end"][h] != 24
                                 else "0:00",
                                 inclusive="left",
                             )
                             .sum()
                             for h in range(
-                                len(
-                                    tou_params["DSO_" + dso_num][m]["periods"][k][
-                                        "hour_start"
-                                    ]
-                                )
+                                len(tou_params["DSO_" + dso_num][m]["periods"][k]["hour_start"])
                             )
                         )
 
@@ -1920,7 +1887,7 @@ def calculate_tariff_prices(
                             * meter_df.loc[(each, k + "_kwh"), m]
                             for m in seasons_dict[s]
                         )
-                        for k in tou_params["DSO_" + dso_num][m]["periods"].keys()
+                        for k in tou_params["DSO_" + dso_num][m]["periods"]
                     )
 
                     # Specify the demand charge based on the consumer's sector type
@@ -1961,10 +1928,9 @@ def calculate_tariff_prices(
                     * energy_sum_df.loc[("industrial", k + "_kwh"), m]
                     for m in seasons_dict[s]
                 )
-                for k in tou_params["DSO_" + dso_num][m]["periods"].keys()
+                for k in tou_params["DSO_" + dso_num][m]["periods"]
             )
-            rev_demand_charge_tou_i[s] = tariff["DSO_" + dso_num]["industrial"][
-                "demand_charge"
+            rev_demand_charge_tou_i[s] = tariff["DSO_" + dso_num]["industrial"]["demand_charge"
             ] * sum(
                 energy_sum_df.loc[("industrial", "demand_quantity"), m]
                 for m in seasons_dict[s]
@@ -2019,7 +1985,7 @@ def calculate_tariff_prices(
                 "commercial",
             ]:
                 if metadata["billingmeters"][each]["cust_participating"]:
-                    for s in seasons_dict:
+                    for s, value in seasons_dict.items:
                         # Update the total revenue from energy charges for time-of-use
                         # consumers during each season
                         rev_energy_charge_tou[s] += sum(
@@ -2029,7 +1995,7 @@ def calculate_tariff_prices(
                                 * meter_df.loc[(each, k + "_kwh"), m]
                                 for m in seasons_dict[s]
                             )
-                            for k in tou_params["DSO_" + dso_num][m]["periods"].keys()
+                            for k in tou_params["DSO_" + dso_num][m]["periods"]
                         )
 
                         # Calculate the consumer's tier credit (due to the declining 
@@ -2160,9 +2126,9 @@ def calculate_tariff_prices(
         month_to_dir = {}
         for p in os.listdir(case_path):
             parts = p.split("_")
-            if len(parts) > 3 and parts[3] in month_map.values():
-                if "zip" not in p and os.path.isdir(os.path.join(base_case_path, p)):
-                    month_to_dir[parts[3]] = p
+            if (len(parts) > 3 and parts[3] in month_map.values() and
+                "zip" not in p and os.path.isdir(os.path.join(base_case_path, p))):
+                month_to_dir[parts[3]] = p
 
         # Determine the seasons under consideration in the time-of-use rate
         seasons_dict = {}
@@ -2291,37 +2257,21 @@ def calculate_tariff_prices(
                             bl_demand_df[s]
                             .loc[:, each]
                             .between_time(
-                                str(
-                                    tou_params["DSO_" + dso_num][seasons_dict[s][0]][
-                                        "periods"
-                                    ][k]["hour_start"][h]
-                                )
+                                str(tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"][k]["hour_start"][h])
                                 + ":00",
-                                str(
-                                    tou_params["DSO_" + dso_num][seasons_dict[s][0]][
-                                        "periods"
-                                    ][k]["hour_end"][h]
-                                )
+                                str(tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"][k]["hour_end"][h])
                                 + ":00"
-                                if tou_params["DSO_" + dso_num][seasons_dict[s][0]][
-                                    "periods"
-                                ][k]["hour_end"][h]
+                                if tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"][k]["hour_end"][h]
                                 != 24
                                 else "0:00",
                                 inclusive="left",
                             )
                             .sum()
                             for h in range(
-                                len(
-                                    tou_params["DSO_" + dso_num][seasons_dict[s][0]][
-                                        "periods"
-                                    ][k]["hour_start"]
-                                )
+                                len(tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"][k]["hour_start"])
                             )
                         )
-                        for k in tou_params["DSO_" + dso_num][seasons_dict[s][0]][
-                            "periods"
-                        ].keys()
+                        for k in tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"]
                     )
 
                     # Update the total revenue from demand charges for each residential
@@ -2361,9 +2311,7 @@ def calculate_tariff_prices(
                                 dso_num,
                                 metadata["billingmeters"][each]["tariff_class"],
                                 tariff,
-                                bl_demand_df[s][
-                                    bl_demand_df[s].index.month == int(month_map[m])
-                                ]
+                                bl_demand_df[s][bl_demand_df[s].index.month == int(month_map[m])]
                                 .loc[:, each]
                                 .sum(),
                             )
@@ -2373,44 +2321,26 @@ def calculate_tariff_prices(
                     # Update the total weighted consumption for each industrial consumer
                     # during each season
                     total_weighted_consumption_sub_i[s] += sum(
-                        tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"][k][
-                            "ratio"
-                        ]
+                        tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"][k]["ratio"]
                         * sum(
                             bl_demand_df[s]
                             .loc[:, each]
                             .between_time(
-                                str(
-                                    tou_params["DSO_" + dso_num][seasons_dict[s][0]][
-                                        "periods"
-                                    ][k]["hour_start"][h]
-                                )
+                                str(tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"][k]["hour_start"][h])
                                 + ":00",
-                                str(
-                                    tou_params["DSO_" + dso_num][seasons_dict[s][0]][
-                                        "periods"
-                                    ][k]["hour_end"][h]
-                                )
+                                str(tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"][k]["hour_end"][h])
                                 + ":00"
-                                if tou_params["DSO_" + dso_num][seasons_dict[s][0]][
-                                    "periods"
-                                ][k]["hour_end"][h]
+                                if tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"][k]["hour_end"][h]
                                 != 24
                                 else "0:00",
                                 inclusive="left",
                             )
                             .sum()
                             for h in range(
-                                len(
-                                    tou_params["DSO_" + dso_num][seasons_dict[s][0]][
-                                        "periods"
-                                    ][k]["hour_start"]
-                                )
+                                len(tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"][k]["hour_start"])
                             )
                         )
-                        for k in tou_params["DSO_" + dso_num][seasons_dict[s][0]][
-                            "periods"
-                        ].keys()
+                        for k in tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"]
                     )
 
                     # Specify the demand charge based on the consumer's sector type
@@ -2447,7 +2377,7 @@ def calculate_tariff_prices(
 
             # Calculate the necessary rate components for industrial consumers
             indust_df = load_indust_data(industrial_file, range(1, 2)) * 1000
-            for k in tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"].keys():
+            for k in tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"]:
                 num_hours = 0
                 for i in range(len(tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"][k]["hour_start"])):
                     num_hours += (
@@ -2540,44 +2470,26 @@ def calculate_tariff_prices(
                         # consumers durng each season
                         rev_energy_charge_sub[s] += sum(
                             prices["subscription_rate_" + s]
-                            * tou_params["DSO_" + dso_num][seasons_dict[s][0]][
-                                "periods"
-                            ][k]["ratio"]
+                            * tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"][k]["ratio"]
                             * sum(
                                 bl_demand_df[s]
                                 .loc[:, each]
                                 .between_time(
-                                    str(
-                                        tou_params["DSO_" + dso_num][
-                                            seasons_dict[s][0]
-                                        ]["periods"][k]["hour_start"][h]
-                                    )
+                                    str(tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"][k]["hour_start"][h])
                                     + ":00",
-                                    str(
-                                        tou_params["DSO_" + dso_num][
-                                            seasons_dict[s][0]
-                                        ]["periods"][k]["hour_end"][h]
-                                    )
+                                    str(tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"][k]["hour_end"][h])
                                     + ":00"
-                                    if tou_params["DSO_" + dso_num][seasons_dict[s][0]][
-                                        "periods"
-                                    ][k]["hour_end"][h]
+                                    if tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"][k]["hour_end"][h]
                                     != 24
                                     else "0:00",
                                     inclusive="left",
                                 )
                                 .sum()
                                 for h in range(
-                                    len(
-                                        tou_params["DSO_" + dso_num][
-                                            seasons_dict[s][0]
-                                        ]["periods"][k]["hour_start"]
-                                    )
+                                    len(tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"][k]["hour_start"])
                                 )
                             )
-                            for k in tou_params["DSO_" + dso_num][seasons_dict[s][0]][
-                                "periods"
-                            ].keys()
+                            for k in tou_params["DSO_" + dso_num][seasons_dict[s][0]]["periods"]
                         )
 
                         # Calculate the consumer's tier credit (due to the declining 
@@ -3226,15 +3138,7 @@ def get_total_dso_costs(case_path, dso_num, rate_scenario, seasons_dict=None):
                     + float(dso_df.loc["OperatingExpenses_" + m, "DSO_" + dso_num])
                     for m in seasons_dict[s]
                 )
-    elif rate_scenario == "transactive":
-        if dso_df is None:
-            dso_expenses = 1e10
-        else:
-            dso_expenses = 1000 * (
-                float(dso_df.loc["CapitalExpenses", "DSO_" + dso_num])
-                + float(dso_df.loc["OperatingExpenses", "DSO_" + dso_num])
-            )
-    elif rate_scenario == "dsot":
+    elif rate_scenario == "transactive" or rate_scenario == "dsot":
         if dso_df is None:
             dso_expenses = 1e10
         else:
@@ -3497,7 +3401,7 @@ def DSO_rate_making(
         # NOTE: data_path below is assigned but not used; retained for future reference.
         data_path = os.path.expandvars('$TESPDIR/examples/analysis/dsot/data')
         tou_params = load_json(case, "time_of_use_parameters.json", False)
-        for m in tou_params["DSO_" + str(dso_num)].keys():
+        for m in tou_params["DSO_" + str(dso_num)]:
             tou_params["DSO_" + str(dso_num)][m]["price"] = prices[
                 "tou_rate_" + tou_params["DSO_" + str(dso_num)][m]["season"]
             ]
@@ -3508,7 +3412,7 @@ def DSO_rate_making(
     elif rate_scenario == "subscription":
         tariff["DSO_" + str(dso_num)]["flat_rate"] = prices["flat_rate"]
         tou_params = load_json(case, "time_of_use_parameters.json", False)
-        for m in tou_params["DSO_" + str(dso_num)].keys():
+        for m in tou_params["DSO_" + str(dso_num)]:
             tou_params["DSO_" + str(dso_num)][m]["price"] = prices[
                 "subscription_rate_" + tou_params["DSO_" + str(dso_num)][m]["season"]
             ]
@@ -4089,7 +3993,7 @@ def _testing():
                                                                                          dso_scaling_factor)
 
         # Example of getting an annual customer bill in dictionary form:
-        customer = list(metadata['billingmeters'].keys())[0]
+        customer = next(iter(metadata['billingmeters'].keys()))
         cust_bill_file = data_path + '/bill_dso_' + str(dso_num) + '_data.h5'
         cust_bills = pd.read_hdf(cust_bill_file, key='cust_bill_data', mode='r')
         cust_energy = pd.read_hdf(data_path + '/energy_dso_' + str(dso_num) + '_data.h5', key='energy_data', mode='r')

@@ -7,7 +7,7 @@ bid quantity, and thermostat setting changes as the response
 mechanism.
 """
 
-from ..api.parse_helpers import parse_number, parse_magnitude
+from ..api.parse_helpers import parse_magnitude, parse_number
 
 
 class hvac:

@@ -48,9 +48,8 @@ def ieee8500_precool_test():
 
 if __name__ == '__main__':
     b_helics = True
-    if len(sys.argv) > 1:
-        if sys.argv[1] == "FNCS":
-            b_helics = False
+    if len(sys.argv) > 1 and sys.argv[1] == "FNCS":
+        b_helics = False
 
     tr.init_tests()
     tesp_path = os.path.expandvars('$TESPDIR/examples')

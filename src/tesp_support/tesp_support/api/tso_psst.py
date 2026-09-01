@@ -23,25 +23,27 @@ Entry point:
 # an AI-assistant trained on the TESP codebase, and specifically this file. 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+import bisect
+import csv
+import json
+import logging
+import math
 import os
 import sys
-import math
-import json
-import bisect
-import csv as csv
-import logging
-import numpy as np
-import pandas as pd
-import pypower.api as pp
-import psst.cli as pst
-import helics
 from copy import deepcopy
 from datetime import datetime
 
-from .parse_helpers import parse_mva
-from .tso_helpers import load_json_case, make_dictionary, dist_slack, print_m_case
-from .metrics_collector import MetricsStore, MetricsCollector
+import helics
+import numpy as np
+import pandas as pd
+import psst.cli as pst
+import pypower.api as pp
+
 from .bench_profile import bench_profile
+from .metrics_collector import MetricsCollector, MetricsStore
+from .parse_helpers import parse_mva
+from .tso_helpers import dist_slack, load_json_case, make_dictionary, print_m_case
+
 
 def make_generator_plants(ppc, renewables):
     """Build a dictionary of variable renewable generator plants.
@@ -286,7 +288,7 @@ def tso_psst_loop(casename):
             row = DA_LMPs[ii]
             da_lmp_store.append_data(
                 ts,
-                'da_lmp{}'.format(str(ii+1)),
+                f'da_lmp{ii+1!s}',
                 row[0], row[1], row[2], row[3], row[4], row[5],
                 row[6], row[7], row[8], row[9], row[10], row[11],
                 row[12], row[13], row[14], row[15], row[16], row[17],
@@ -306,7 +308,7 @@ def tso_psst_loop(casename):
                 row.append(instance.LinePower[ii + 1, tp].value / limit)
             da_line_store.append_data(
                 ts,
-                'da_line{}'.format(str(ii+1)),
+                f'da_line{ii+1!s}',
                 row[0], row[1], row[2], row[3], row[4], row[5],
                 row[6], row[7], row[8], row[9], row[10], row[11],
                 row[12], row[13], row[14], row[15], row[16], row[17],
@@ -317,7 +319,7 @@ def tso_psst_loop(casename):
             row = dispatch[g]
             da_gen_q_store.append_data(
                 ts,
-                'da_gen_q{}'.format(str(g)),
+                f'da_gen_q{g!s}',
                 row[0], row[1], row[2], row[3], row[4], row[5],
                 row[6], row[7], row[8], row[9], row[10], row[11],
                 row[12], row[13], row[14], row[15], row[16], row[17],
@@ -360,7 +362,7 @@ def tso_psst_loop(casename):
                 helics.helicsPublicationPublishString(pub, json.dumps(row))
                 da_q_store.append_data(
                     ts,
-                    'da_q{}'.format(str(ii+1)),
+                    f'da_q{ii+1!s}',
                     row[0], row[1], row[2], row[3], row[4], row[5],
                     row[6], row[7], row[8], row[9], row[10], row[11],
                     row[12], row[13], row[14], row[15], row[16], row[17],
@@ -380,7 +382,7 @@ def tso_psst_loop(casename):
                 helics.helicsPublicationPublishString(pub, json.dumps(row))
                 da_q_store.append_data(
                     ts,
-                    'da_q{}'.format(str(bus_num)),
+                    f'da_q{bus_num!s}',
                     row[0], row[1], row[2], row[3], row[4], row[5],
                     row[6], row[7], row[8], row[9], row[10], row[11],
                     row[12], row[13], row[14], row[15], row[16], row[17],
@@ -514,7 +516,7 @@ def tso_psst_loop(casename):
                 row.append(instance.LinePower[ii + 1, tp].value / limit)
             rt_line_store.append_data(
                 ts,
-                'rt_line{}'.format(str(ii+1)),
+                f'rt_line{ii+1!s}',
                 row[0]
             )
 
@@ -553,7 +555,7 @@ def tso_psst_loop(casename):
                 # log.debug('Bus ' + str(ii+1) + ' cleared - [fixed, flex] ' + '[' + str(gld_load[ii+1]['unresp']) + ', ' + str(row[0] - gld_load[ii+1]['unresp']) + ']')
                 rt_q_store.append_data(
                     ts,
-                    'rt_q{}'.format(str(ii+1)),
+                    f'rt_q{ii+1!s}',
                     row[0]
                 )
         else:
@@ -575,7 +577,7 @@ def tso_psst_loop(casename):
                 helics.helicsPublicationPublishString(pub, json.dumps(row[0]))
                 rt_q_store.append_data(
                     ts,
-                    'rt_q{}'.format(str(bus_num)),
+                    f'rt_q{bus_num!s}',
                     row[0]
                 )
         return adder, status, dispatch, RT_LMPs
@@ -597,7 +599,7 @@ def tso_psst_loop(casename):
             for ii in range(numGen):
                 if genFuel[ii][0] not in renewables:
                     name = "GenCo" + str(ii + 1)
-                    if name in uc_df1.keys():
+                    if name in uc_df1:
                         rr[name] = uc_df1.at[hh, name]
             data.append(rr)
         df = pd.DataFrame(data, index=range(1, 2))
@@ -643,7 +645,7 @@ def tso_psst_loop(casename):
             total_neg = 0
             total_dso = 0
             neg_loads = [0] * (bus.shape[0] + 1)
-            for key, row in generator_plants.items():
+            for row in generator_plants.values():
                 neg_loads[row[0]] += float(row[2][jj+24]) / baseS
                 total_neg += float(row[2][jj+24]) / baseS
 
@@ -714,7 +716,7 @@ def tso_psst_loop(casename):
             log.info('DA Hour: ' + str(jj + 1))
             log.info('Total DSO Load: ' + str(total_dso))
             log.info('Total DSO to PSST: ' + str(tot_dso) + ', Total Renewables: ' + str(total_neg))
-            log.info('Used Renewables:' + '{: .3f}'.format(total_neg*curtail) + ', Percent:' + '{: .0f}'.format(curtail*100))
+            log.info('Used Renewables:' + f'{total_neg*curtail: .3f}' + ', Percent:' + f'{curtail*100: .0f}')
         return da_curtail, renew
 
     def rt_curtail_renewables(znumGen, zgenFuel, zgen, tot_gen_down, tot_gen_up):
@@ -739,7 +741,7 @@ def tso_psst_loop(casename):
         total_neg = 0
         total_dso = 0
         neg_loads = [0] * (bus.shape[0] + 1)
-        for key, row in generator_plants.items():
+        for row in generator_plants.values():
             for jj in range(znumGen):
                 if zgenFuel[jj][2] == row[3]:
                     neg_loads[row[0]] += zgen[jj, 1] / baseS
@@ -804,7 +806,7 @@ def tso_psst_loop(casename):
 
             # Set renewable generation for curtailment
             tot_lost = 0
-            for key, row in generator_plants.items():
+            for row in generator_plants.values():
                 for jj in range(znumGen):
                     if zgenFuel[jj][2] == row[3]:
                         tot_lost += zgen[jj, 1] * (1.0 - curtail)
@@ -821,7 +823,7 @@ def tso_psst_loop(casename):
         renew = total_neg*curtail
         log.info('Total DSO Load: ' + str(total_dso))
         log.info('Total DSO to PSST: ' + str(tot_dso) + ', Total Renewables: ' + str(total_neg))
-        log.info('Used Renewables:' + '{: .3f}'.format(total_neg*curtail) + ', Percent:' + '{: .0f}'.format(curtail*100))
+        log.info('Used Renewables:' + f'{total_neg*curtail: .3f}' + ', Percent:' + f'{curtail*100: .0f}')
         return rt_curtail, renew
 
     def write_psst_file(fname, dayahead, zgen, zgenCost, zgenFuel, znumGen):
@@ -849,13 +851,13 @@ def tso_psst_loop(casename):
         print('set CommitmentTimeInStage[SecondStage] := ;\n', file=fp)
         print('set GenerationTimeInStage[FirstStage] := ;', file=fp)
         print('set GenerationTimeInStage[SecondStage] := 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 ;', file=fp)
-        print('', file=fp)
+        print(file=fp)
 
         write_line = 'set Buses :='
         for ii in range(bus.shape[0]):
             write_line = write_line + ' Bus' + str(ii + 1)
         print(write_line + ' ;', file=fp)
-        print('', file=fp)
+        print(file=fp)
 
         print('set TransmissionLines :=', file=fp)
         for ii in range(branch.shape[0]):
@@ -883,7 +885,7 @@ def tso_psst_loop(casename):
             #  // Convert  reactance  from SI to  PU, x(pu) = x / Zo = x / (Vo ^ 2 / So) = (x * So) / Vo ^ 2
             reactance = (branch[ii, 3] * baseS) / (baseV_dict[int(branch[ii, 0])]*baseV_dict[int(branch[ii, 0])])
             print(str(ii + 1) + ' Bus' + str(fbus) + ' Bus' + str(tbus) +
-                  '{: .2f}'.format(limit) + '{: .2E}'.format(reactance), file=fp)
+                  f'{limit: .2f}' + f'{reactance: .2E}', file=fp)
         print(';\n', file=fp)
 
         write_line = 'set ThermalGenerators :='
@@ -928,7 +930,7 @@ def tso_psst_loop(casename):
                 Pmin = zgen[ii, 9] / baseS
                 if Pmin > Pmax:
                     log.debug("ERROR: Some thing is wrong with " + name + ' in ' + fname)
-                    log.debug('=====: Pmax:' + '{: .4}'.format(Pmax) + ', Pmin:' + '{: .4}'.format(Pmin))
+                    log.debug('=====: Pmax:' + f'{Pmax: .4}' + ', Pmin:' + f'{Pmin: .4}')
                     Pmax = Pmin
 
                 # TODO fill out gen min up an down in parameters
@@ -942,16 +944,14 @@ def tso_psst_loop(casename):
                 if dayahead:
                     # scale ramp up and down for the generator
                     ramp = zgen[ii][16] * 60.0 / baseS
-                    if day == 1 and not priceSensLoad:
-                        if 0 < powerT0:
-                            unitOnT0 = 1
+                    if day == 1 and not priceSensLoad and 0 < powerT0:
+                        unitOnT0 = 1
                 else:
                     # scale ramp up and down for the generator
                     ramp = zgen[ii][16] * 5.0 / baseS
 
                 if unitOnT0 > 0:
-                    if powerT0 < Pmin:
-                        powerT0 = Pmin
+                    powerT0 = max(powerT0, Pmin)
                 else:
                     if not dayahead:
                         powerT0 = 0
@@ -962,14 +962,14 @@ def tso_psst_loop(casename):
                     Pmax_avail += min(Pmax, powerT0 + ramp)
                     if unitOnT0 < 0:
                         log.info("WARNING: " + name + ' in ' + fname + ' might power off')
-                        log.info('=====: powerT0:' + '{: .4}'.format(powerT0) + ', unitOnT0: ' + str(unitOnT0))
+                        log.info('=====: powerT0:' + f'{powerT0: .4}' + ', unitOnT0: ' + str(unitOnT0))
 
-                print(name + '{: .6f}'.format(powerT0) + ' ' + str(unitOnT0) + ' 0 0' +
-                      '{: .6f}'.format(Pmin) + '{: .6f}'.format(Pmax) + ' ' + str(minUp) + ' ' + str(minDn) +
-                      '{: .6f}'.format(ramp) + '{: .6f}'.format(ramp) +
-                      '{: .6f}'.format(ramp) + '{: .6f}'.format(ramp) +
-                      ' 0' + '{: .6f}'.format(zgenCost[ii][1]) + '{: .6f}'.format(zgenCost[ii][1]) +
-                      '{: .6f}'.format(zgenCost[ii][2]), file=fp)
+                print(name + f'{powerT0: .6f}' + ' ' + str(unitOnT0) + ' 0 0' +
+                      f'{Pmin: .6f}' + f'{Pmax: .6f}' + ' ' + str(minUp) + ' ' + str(minDn) +
+                      f'{ramp: .6f}' + f'{ramp: .6f}' +
+                      f'{ramp: .6f}' + f'{ramp: .6f}' +
+                      ' 0' + f'{zgenCost[ii][1]: .6f}' + f'{zgenCost[ii][1]: .6f}' +
+                      f'{zgenCost[ii][2]: .6f}', file=fp)
                 # Set gen = powerT0 level
                 zgen[ii][1] = powerT0 * baseS
 
@@ -1017,7 +1017,7 @@ def tso_psst_loop(casename):
                         else:
                             buses = buses + 'Bus' + str(ii + 1) + ','
                 print('Zone' + str(jj + 1) + ' ' + buses +
-                      '{: .1f}'.format(zones[jj][2]) + '{: .1f}'.format(zones[jj][3]), file=fp)
+                      f'{zones[jj][2]: .1f}' + f'{zones[jj][3]: .1f}', file=fp)
             print(';\n', file=fp)
 
         # Market ie bidding from a dso (dsoBus) and bus
@@ -1033,11 +1033,11 @@ def tso_psst_loop(casename):
                 bus_num = ii + 1
                 if dayahead:                                      # 12am to 12am
                     for jj in range(hours_in_a_day):
-                        print('Bus' + str(bus_num) + ' ' + str(jj + 1) + ' {:.5f}'.format(net[jj][ii]), file=fp)
+                        print('Bus' + str(bus_num) + ' ' + str(jj + 1) + f' {net[jj][ii]:.5f}', file=fp)
                 else:                                             # real time
-                    print('Bus' + str(bus_num) + ' 1' + ' {:.5f}'.format(net[ii]), file=fp)
+                    print('Bus' + str(bus_num) + ' 1' + f' {net[ii]:.5f}', file=fp)
                     # log.debug("RT Fixed Load LSE_" + str(bus_num) + ", MW :" + str(net[ii]))
-                print('', file=fp)
+                print(file=fp)
             print(';\n', file=fp)
 
             if priceSensLoad:
@@ -1055,12 +1055,12 @@ def tso_psst_loop(casename):
                         for jj in range(hours_in_a_day):
                             print('LSE' + str(bus_num) + ' ' + str(bus_num) + ' Bus' + str(bus_num) +
                                   ' ' + str(jj + 1) +
-                                  ' {: .5f}'.format(respC0[ii][jj]) +
-                                  ' {: .5f}'.format(respC1[ii][jj] / gld_scale) +
-                                  ' {: .5f}'.format(respC2[ii][jj] / (gld_scale * gld_scale)) +
-                                  ' {: .5f}'.format((respMaxMW[ii][jj] * gld_scale) / baseS) +
+                                  f' {respC0[ii][jj]: .5f}' +
+                                  f' {respC1[ii][jj] / gld_scale: .5f}' +
+                                  f' {respC2[ii][jj] / (gld_scale * gld_scale): .5f}' +
+                                  f' {(respMaxMW[ii][jj] * gld_scale) / baseS: .5f}' +
                                   ' ' + str(NS), file=fp)
-                        print('', file=fp)
+                        print(file=fp)
                     else:                                         # real time
                         for jj in range(TAU):
                             print('LSE' + str(bus_num) + ' ' + str(bus_num) + ' Bus' + str(bus_num) +
@@ -1071,7 +1071,7 @@ def tso_psst_loop(casename):
                                   ' {: .5f}'.format((gld_load[bus_num]['resp_max'] * gld_scale) / baseS) +
                                   ' ' + str(NS), file=fp)
                             # log.debug("RT Max Flex Load LSE_" + str(bus_num) + ", MW :" + str(gld_load[bus_num]['resp_max']/ baseS))
-                        print('', file=fp)
+                        print(file=fp)
                 print(';\n', file=fp)
         else:
             # no bid using gld_load (tape player/gridlab)
@@ -1082,18 +1082,18 @@ def tso_psst_loop(casename):
                 if dayahead:
                     for jj in range(hours_in_a_day):
                         ndg = 0
-                        for key, row in generator_plants.items():
+                        for row in generator_plants.values():
                             if row[0] == bus_num:
                                 ndg += float(row[2][jj+24])
                         if bus_num <= dsoBus.shape[0]:
                             net = ref_load_hist[bus_num][jj+24] - ndg  # uses history
                         else:
                             net = - ndg
-                        print('Bus' + str(bus_num) + ' ' + str(jj + 1) + ' {:.4f}'.format(net / baseS), file=fp)
+                        print('Bus' + str(bus_num) + ' ' + str(jj + 1) + f' {net / baseS:.4f}', file=fp)
                         c_renew[jj] += ndg
                 else:
                     ndg = 0
-                    for key, row in generator_plants.items():
+                    for row in generator_plants.values():
                         if row[0] == bus_num:
                             for jj in range(znumGen):
                                 if zgenFuel[jj][2] == row[3]:
@@ -1103,9 +1103,9 @@ def tso_psst_loop(casename):
                     else:
                         net = - ndg
                     for jj in range(TAU):
-                        print('Bus' + str(bus_num) + ' ' + str(jj + 1) + ' {:.4f}'.format(net / baseS), file=fp)
+                        print('Bus' + str(bus_num) + ' ' + str(jj + 1) + f' {net / baseS:.4f}', file=fp)
                     c_renew = ndg
-                print('', file=fp)
+                print(file=fp)
             print(';\n', file=fp)
 
         print('param: a b c NS :=', file=fp)
@@ -1117,8 +1117,8 @@ def tso_psst_loop(casename):
                 ns = '1'
                 if c0 > 0 and c1 > 0 and c2 > 0:
                     ns = str(NS)
-                print('GenCo' + str(ii + 1) + '{: .5f}'.format(c0) +
-                      '{: .5f}'.format(c1) + '{: .5f}'.format(c2) + ' ' + ns, file=fp)
+                print('GenCo' + str(ii + 1) + f'{c0: .5f}' +
+                      f'{c1: .5f}' + f'{c2: .5f}' + ' ' + ns, file=fp)
         print(';\n', file=fp)
         fp.close()
         return c_renew
@@ -1370,7 +1370,7 @@ def tso_psst_loop(casename):
             ('c1', '$/MW'),
             ('c2', '$/MW^2')
         ],
-        file_string='bus_{}'.format(casefile),
+        file_string=f'bus_{casefile}',
         collector=collector,
     )
     gen_store = MetricsStore(
@@ -1379,7 +1379,7 @@ def tso_psst_loop(casename):
             ('Qgen', 'MVAR'),
             ('LMP_P', 'USD/kwh')
         ],
-        file_string='gen_{}'.format(casefile),
+        file_string=f'gen_{casefile}',
         collector=collector,
     )
     sys_store = MetricsStore(
@@ -1387,7 +1387,7 @@ def tso_psst_loop(casename):
             ('Ploss', 'MW'),
             ('Converged', 'true/false')
         ],
-        file_string='sys_{}'.format(casefile),
+        file_string=f'sys_{casefile}',
         collector=collector
     )
     da_lmp_store = MetricsStore(
@@ -1405,7 +1405,7 @@ def tso_psst_loop(casename):
             ('Adder_17', 'USD/kwh'), ('Adder_18', 'USD/kwh'), ('Adder_19', 'USD/kwh'), ('Adder_20', 'USD/kwh'),
             ('Adder_21', 'USD/kwh'), ('Adder_22', 'USD/kwh'), ('Adder_23', 'USD/kwh'), ('Adder_24', 'USD/kwh')
         ],
-        file_string='da_lmp_{}'.format(casefile),
+        file_string=f'da_lmp_{casefile}',
         collector=collector,
     )
     da_line_store = MetricsStore(
@@ -1417,7 +1417,7 @@ def tso_psst_loop(casename):
             ('Line_17', 'line/limit'), ('Line_18', 'line/limit'), ('Line_19', 'line/limit'), ('Line_20', 'line/limit'),
             ('Line_21', 'line/limit'), ('Line_22', 'line/limit'), ('Line_23', 'line/limit'), ('Line_24', 'line/limit')
         ],
-        file_string='da_line_{}'.format(casefile),
+        file_string=f'da_line_{casefile}',
         collector=collector,
     )
     da_gen_q_store = MetricsStore(
@@ -1429,7 +1429,7 @@ def tso_psst_loop(casename):
             ('ClearQ_17', 'MW'), ('ClearQ_18', 'MW'), ('ClearQ_19', 'MW'), ('ClearQ_20', 'MW'),
             ('ClearQ_21', 'MW'), ('ClearQ_22', 'MW'), ('ClearQ_23', 'MW'), ('ClearQ_24', 'MW')
         ],
-        file_string='da_gen_q_{}'.format(casefile),
+        file_string=f'da_gen_q_{casefile}',
         collector=collector,
     )
     da_q_store = MetricsStore(
@@ -1441,17 +1441,17 @@ def tso_psst_loop(casename):
             ('ClearQ_17', 'MW'), ('ClearQ_18', 'MW'), ('ClearQ_19', 'MW'), ('ClearQ_20', 'MW'),
             ('ClearQ_21', 'MW'), ('ClearQ_22', 'MW'), ('ClearQ_23', 'MW'), ('ClearQ_24', 'MW')
         ],
-        file_string='da_q_{}'.format(casefile),
+        file_string=f'da_q_{casefile}',
         collector=collector,
     )
     rt_line_store = MetricsStore(
         name_units_pairs=[('Line', 'line/limit')],
-        file_string='rt_line_{}'.format(casefile),
+        file_string=f'rt_line_{casefile}',
         collector=collector,
     )
     rt_q_store = MetricsStore(
         name_units_pairs=[('ClearQ', 'MW')],
-        file_string='rt_q_{}'.format(casefile),
+        file_string=f'rt_q_{casefile}',
         collector=collector,
     )
     log.info('Metrics collection started')
@@ -1685,8 +1685,8 @@ def tso_psst_loop(casename):
 
     op = open(os.path.join(output_Path, 'opf.csv'), 'w')
     vp = open(os.path.join(output_Path, 'pf.csv'), 'w')
-    print(line, sep=', ', file=op, flush=True)
-    print(line2, sep=', ', file=vp, flush=True)
+    print(line, file=op, flush=True)
+    print(line2, file=vp, flush=True)
 
     # initialize schedule and generators
     # schedule = write_default_schedule()
@@ -1735,10 +1735,8 @@ def tso_psst_loop(casename):
                         p = float(val)
                         for i in range(numGen):
                             if genFuel[i][2] == gen_id:
-                                if gen[i, 8] < p:
-                                    gen[i, 8] = p
-                                if gen[i, 9] > p:
-                                    gen[i, 9] = p
+                                gen[i, 8] = max(gen[i, 8], p)
+                                gen[i, 9] = min(gen[i, 9], p)
                                 gen[i, 1] = p
                     log.debug("at " + str(ts) + " " + topic + " " + val)
                 elif 'GEN_PWR_HIST_' in topic or 'ALT_PWR_HIST_' in topic:
@@ -1843,7 +1841,7 @@ def tso_psst_loop(casename):
                             # delete generator for that day
                             planned_outage_dict.update({_: 0})
                             idx_del.append(_)
-                        elif _ in planned_outage_dict.keys():
+                        elif _ in planned_outage_dict:
                             # this means that generator was out, but now is back in service
                             idx_add.append(_)
                             del planned_outage_dict[_]
@@ -1888,7 +1886,7 @@ def tso_psst_loop(casename):
                     for i in range(numGen):
                         if genFuel[i][0] not in renewables:
                             gen_name = "GenCo" + str(i + 1)
-                            if gen_name in schedule.keys():
+                            if gen_name in schedule:
                                 gen[i, 7] = int(schedule.at[hour + 1, gen_name])
                                 if gen[i, 7] == 1:
                                     if genFuel[i][3] > 0:
@@ -1912,7 +1910,7 @@ def tso_psst_loop(casename):
                                 gen_name = 'GenCo' + str(igen + 1)
                                 gen[igen, 1] = gen[igen, 9] + ((gen[igen, 8] - gen[igen, 9]) * power_level)
                                 genFuel[igen][3] = 1  # turn on generator
-                                if gen_name in rt_schedule.keys():
+                                if gen_name in rt_schedule:
                                     rt_schedule[gen_name] = '1'
 
                     # unplanned outage implementation on the hour
@@ -1927,7 +1925,7 @@ def tso_psst_loop(casename):
                                         log.info("Unplanned outage " + str(hour_of_year) + " min " + str(mn))
                                         gen[igen][1] = 0
                                         genFuel[igen][3] = -1
-                                        if gen_name in rt_schedule.keys():
+                                        if gen_name in rt_schedule:
                                             rt_schedule[gen_name] = '0'
                                             log.info("Changing schedule for " + genFuel[igen][0] + ", " + gen_name + ", Gen Id " + str(_))
                                         else:
@@ -1964,14 +1962,14 @@ def tso_psst_loop(casename):
 
             # seconds, OPFconverged, TotalLoad, TotalGen, SwingGen
             line = str(ts) + ', ' + "True" + ','
-            line += '{: .2f}'.format(bus[:, 2].sum()) + ','
-            line += '{: .2f}'.format(gen[:, 1].sum()) + ','
-            line += '{: .2f}'.format(Pswing) + ','
+            line += f'{bus[:, 2].sum(): .2f}' + ','
+            line += f'{gen[:, 1].sum(): .2f}' + ','
+            line += f'{Pswing: .2f}' + ','
 
             # LMP for each bus
             da_sum = 0
             for _ in range(bus.shape[0]):
-                line += '{: .2f}'.format(bus[_, 13]) + ','
+                line += f'{bus[_, 13]: .2f}' + ','
                 da_sum += last_unRespMW[_][hour] + last_respMaxMW[_][hour]
 
             # Must keep the generators in original order for printing when outages are applied
@@ -1979,32 +1977,32 @@ def tso_psst_loop(casename):
                 not_used = True
                 for _ in range(numGen):
                     if ugenFuel[uidx][2] == genFuel[_][2]:
-                        line += '{: .2f}'.format(gen[_, 1]) + ','
+                        line += f'{gen[_, 1]: .2f}' + ','
                         not_used = False
                         break
                 if not_used:
                     line += ' 0,'
 
             # TotRenGen, TotRenGenHr, TotalGLDLoad
-            line += '{: .2f}'.format(sum_w) + ',' + '{: .2f}'.format(sum_hr) + ',' + \
-                    '{: .2f}'.format(sum(nobid_unresp_rt)) + ','
+            line += f'{sum_w: .2f}' + ',' + f'{sum_hr: .2f}' + ',' + \
+                    f'{sum(nobid_unresp_rt): .2f}' + ','
 
             # DALoad
-            line += '{: .2f}'.format(da_sum) + ','
+            line += f'{da_sum: .2f}' + ','
             # DAGen
             if len(last_dispatch) > 0:
                 da_sum = 0
                 for ky in last_dispatch:
                     da_sum += last_dispatch[ky][hour]
-                line += '{: .2f}'.format(da_sum) + ','
+                line += f'{da_sum: .2f}' + ','
             else:
                 line += ' 0,'
             # TotRenGenHR
-            line += '{: .2f}'.format(da_sum + sum_hr) + ', '
-            line += '{: .2f}'.format(rt_percent) + ', '
+            line += f'{da_sum + sum_hr: .2f}' + ', '
+            line += f'{rt_percent: .2f}' + ', '
             line += str(rt_status) + ', ' + str(rt_adder)
 
-            print(line, sep=', ', file=op, flush=True)
+            print(line, file=op, flush=True)
 
             mn = mn + RTOPDur  # period // 60
             piq_count += 1
@@ -2032,16 +2030,16 @@ def tso_psst_loop(casename):
                         sum_w += gen[_, 1]
 
             line = str(ts) + ',' + "True" + ','
-            line += '{: .2f}'.format(opf_bus[:, 2].sum()) + ','
-            line += '{: .2f}'.format(opf_gen[:, 1].sum()) + ','
-            line += '{: .2f}'.format(Pswing)
+            line += f'{opf_bus[:, 2].sum(): .2f}' + ','
+            line += f'{opf_gen[:, 1].sum(): .2f}' + ','
+            line += f'{Pswing: .2f}'
             for _ in range(opf_bus.shape[0]):
-                line += ',' + '{: .4f}'.format(opf_bus[_, 13])
+                line += ',' + f'{opf_bus[_, 13]: .4f}'
             for _ in range(opf_gen.shape[0]):
                 if numGen > _:
-                    line += ',' + '{: .2f}'.format(opf_gen[_, 1])
-            line += ',{: .2f}'.format(sum_w)
-            print(line, sep=', ', file=op, flush=True)
+                    line += ',' + f'{opf_gen[_, 1]: .2f}'
+            line += f',{sum_w: .2f}'
+            print(line, file=op, flush=True)
 
             tnext_opf_pp += period
 
@@ -2080,7 +2078,7 @@ def tso_psst_loop(casename):
             opf = False
 
         rpf = pp.runpf(ppc, ppopt_regular)
-        if not (file_time == ""):
+        if file_time != "":
             print_m_case(ppc, os.path.join(output_Path, file_time + ".m"))
 
         # TODO: add a check if does not converge, switch to DC
@@ -2109,11 +2107,11 @@ def tso_psst_loop(casename):
                 Pswing += rGen[_, 1]
 
         line = str(ts) + ', ' + "True" + ','
-        line += '{: .2f}'.format(Pload) + ',' + '{: .2f}'.format(Pgen) + ','
-        line += '{: .2f}'.format(Ploss) + ',' + '{: .2f}'.format(Pswing)
+        line += f'{Pload: .2f}' + ',' + f'{Pgen: .2f}' + ','
+        line += f'{Ploss: .2f}' + ',' + f'{Pswing: .2f}'
         for _ in range(rBus.shape[0]):
-            line += ',' + '{: .2f}'.format(rBus[_, 7])  # bus per-unit voltages
-        print(line, sep=', ', file=vp, flush=True)
+            line += ',' + f'{rBus[_, 7]: .2f}'  # bus per-unit voltages
+        print(line, file=vp, flush=True)
 
         # E) Metrics write cadence + next time request
         # update the metrics
@@ -2137,10 +2135,8 @@ def tso_psst_loop(casename):
             bus_accum[busnum][3] += rw[3]
             bus_accum[busnum][4] += rw[8]
             bus_accum[busnum][5] += Vpu
-            if Vpu > bus_accum[busnum][6]:
-                bus_accum[busnum][6] = Vpu
-            if Vpu < bus_accum[busnum][7]:
-                bus_accum[busnum][7] = Vpu
+            bus_accum[busnum][6] = max(bus_accum[busnum][6], Vpu)
+            bus_accum[busnum][7] = min(bus_accum[busnum][7], Vpu)
 
         for i in range(rGen.shape[0]):
             idx = str(genFuel[i][2])
@@ -2182,7 +2178,7 @@ def tso_psst_loop(casename):
                 # ('c2', '$/MW^2')
                 bus_store.append_data(
                     ts,
-                    'bus{}'.format(busnum),
+                    f'bus{busnum}',
                     met[0] / n_accum, met[1] / n_accum,
                     met[2] / n_accum, met[3] / n_accum,
                     met[4] / n_accum, met[5] / n_accum,
@@ -2200,7 +2196,7 @@ def tso_psst_loop(casename):
                 # ('LMP_P', 'USD/kwh'),
                 gen_store.append_data(
                     ts,
-                    'gen{}'.format(idx),
+                    f'gen{idx}',
                     met[0] / n_accum,
                     met[1] / n_accum,
                     met[2] / n_accum,

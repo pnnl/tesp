@@ -16,6 +16,7 @@ It writes two files:
 """
 
 import math
+
 import numpy as np
 import pandas as pd
 
@@ -62,7 +63,7 @@ def make_wind_plants(ppc):
 
 def generate_wind_data_24hr(wind_plants):
     for j in range(24):
-        for key, row in wind_plants.items():
+        for row in wind_plants.values():
             # return dict with rows like
             # wind['unit'] = [bus, MW, Theta0, Theta1, StdDev, Psi1, Ylim, alag, ylag, [24-hour p]]
             Theta0 = row[2]
@@ -93,10 +94,12 @@ def generate_wind_data_24hr(wind_plants):
 
 
 def test():
+    from datetime import datetime
+
     resolution = 300  # seconds
-    # casename = '../../../examples/analysis/dsot/code/system_case_config_new'
-    casename = '../../../examples/analysis/dsot/code/system_case_config'
-    output_Path = '../../../../examples/analysis/dsot/data/'
+    # casename = '../../examples/analysis/dsot/code/system_case_config_new'
+    casename = '../../examples/analysis/dsot/code/8_system_case_config'
+    output_Path = '../../examples/analysis/dsot/data/'
 
     ppc = load_json_case(casename + ".json")
     # initialize for variable wind
@@ -105,10 +108,10 @@ def test():
     day = 0
     # year = 2016
     # max_days = 366  # days in 2016
-    # start_day = pd.datetime(year,1,1)
+    # start_day = datetime(year,1,1)
     year = 2015
     max_days = 371  # days in 2016
-    start_day = pd.datetime(year, 12, 29)
+    start_day = datetime(year, 12, 29)
     df_wind_yr = pd.DataFrame()
     if len(ppc['gen']) == 18:
         plant_name = ['wind1', 'wind2', 'wind3', 'wind4', 'wind5']
@@ -124,7 +127,7 @@ def test():
                                    index=pd.date_range(start=start_day + pd.Timedelta(day, unit='d'), periods=24, freq='h'))
         wind_plant = generate_wind_data_24hr(wind_plants)  # generate 24-hour wind data with hourly resolution
         i = 0
-        for key, row in wind_plants.items():
+        for row in wind_plants.values():
             df_wind_day[plant_name[i]] = row[9]
             i += 1
         df_wind_yr = df_wind_yr.append(df_wind_day)

@@ -3,7 +3,7 @@
 
 import sys
 
-import tesp_support.original.fncs as fncs
+from tesp_support.original import fncs
 
 time_stop = int(sys.argv[1])
 time_granted = 0

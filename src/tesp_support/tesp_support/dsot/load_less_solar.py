@@ -14,13 +14,14 @@ automatically after the full 200-bus load dataset has been created.
 """
 
 import argparse
+import datetime as dt
 import logging
-import pprint
 import os
+import pprint
 import sys
 from enum import Enum
 from pathlib import Path
-import datetime as dt
+
 import matplotlib.pyplot as plt
 import openpyxl as xl
 
@@ -67,8 +68,8 @@ def _open_file(file_path, type='r'):
     """
     try:
         fh = open(file_path, type)
-    except IOError:
-       log.error('Unable to open {}'.format(file_path))
+    except OSError:
+       log.error(f'Unable to open {file_path}')
        sys.exit()
     else:
         return fh
@@ -133,8 +134,7 @@ def parse_DSO_metadata_Excel(dso_metadata_path_Excel, worksheet_name):
                     bus_8 = item.value
             dso_meta.append({'200-bus': bus_200,
                              '8-bus': bus_8})
-    log.info('Parsed DSO Excel metadata file {}'.format(
-        dso_metadata_path_Excel))
+    log.info(f'Parsed DSO Excel metadata file {dso_metadata_path_Excel}')
     log.info(pp.pformat(dso_meta))
 
     return dso_meta
@@ -455,7 +455,7 @@ def create_8_node_load_less_solar(dso_meta, load_dir, input_load_filename, outpu
             #   Skip the last column because it is the ERCOT total
             for bus_idx, bus_load in enumerate(ts_data[:-1]):
                 if bus_idx == 0:
-                    dso_load[ts][bus_idx] = load_data[ts][0]
+                    dso_load[ts][bus_idx] = ts_data[0]
                 else:
                     eight_bus_num = dso_meta[bus_idx]['8-bus']
                     dso_load[ts][eight_bus_num] = \

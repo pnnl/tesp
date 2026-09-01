@@ -14,9 +14,9 @@ Public Functions:
 
 """
 
-import os
 import json
 import math
+import os
 
 from ..api.helpers import log
 
@@ -186,10 +186,9 @@ def glm_dict_with_microgrids(name_root, config=None, ercot=False):  # , te30=Fal
                 cooling_COP = 3.5
                 total_thermal_mass_per_floor_area = 2
                 house_class = 'SINGLE_FAMILY'
-            if inMessage:
-                if lst[0] == 'name':
-                    message_name = lst[1].strip(';')
-                    inMessage = False
+            if inMessage and lst[0] == 'name':
+                message_name = lst[1].strip(';')
+                inMessage = False
             if inClimate:
                 if lst[0] == 'name':
                     climateName = lst[1].strip(';')
@@ -230,16 +229,14 @@ def glm_dict_with_microgrids(name_root, config=None, ercot=False):  # , te30=Fal
                 inZIPload = True
             if lst[1] == 'evcharger_det':
                 inEV = True
-            if inCapacitors:
-                if lst[0] == 'name':
-                    lastCapacitor = lst[1].strip(';')
-                    capacitors[lastCapacitor] = {'feeder_id': feeder_id}
-                    inCapacitors = False
-            if inRegulators:
-                if lst[0] == 'name':
-                    lastRegulator = lst[1].strip(';')
-                    regulators[lastRegulator] = {'feeder_id': feeder_id}
-                    inRegulators = False
+            if inCapacitors and lst[0] == 'name':
+                lastCapacitor = lst[1].strip(';')
+                capacitors[lastCapacitor] = {'feeder_id': feeder_id}
+                inCapacitors = False
+            if inRegulators and lst[0] == 'name':
+                lastRegulator = lst[1].strip(';')
+                regulators[lastRegulator] = {'feeder_id': feeder_id}
+                inRegulators = False
             if inInverters:
                 if lst[0] == 'name' and lastInverter == '':
                     lastInverter = lst[1].strip(';')
@@ -410,9 +407,8 @@ def glm_dict_with_microgrids(name_root, config=None, ercot=False):  # , te30=Fal
                     waterheaters[lastHouse]['gallons'] = float(lst[1].strip(' ').strip(';')) * 1.0
                 if lst[0] == 'T_mixing_valve':
                     waterheaters[lastHouse]['tmix'] = float(lst[1].strip(' ').strip(';')) * 1.0
-                if lst[0] == 'waterheater_model':
-                    if 'MULTILAYER' == lst[1].strip(' ').strip(';'):
-                        waterheaters[lastHouse]['mlayer'] = True
+                if lst[0] == 'waterheater_model' and 'MULTILAYER' == lst[1].strip(' ').strip(';'):
+                    waterheaters[lastHouse]['mlayer'] = True
             if inZIPload:
                 if lastHouse not in ziploads:
                     hf = 1.0  # default heatgain_fraction = 1.0
@@ -548,7 +544,6 @@ def glm_dict_with_microgrids(name_root, config=None, ercot=False):  # , te30=Fal
                     mtr['tariff_class'] = 'residential'
         except KeyError as keyErr:
             log.debug(f"Got a KeyError. Reason - {keyErr}")
-            pass
 
     for key, val in inverters.items():
         mtr = billingmeters[val['billingmeter_id']]
@@ -604,7 +599,7 @@ def glm_dict_with_microgrids(name_root, config=None, ercot=False):  # , te30=Fal
         Microgrid = {'bulkpower_bus': bulkpowerBus,  'message_name': message_name,
                      'transformer_MVA': substationTransformerMVA,
                      'base_feeder': base_feeder, 'feeders': feeders,
-                     'microgrids': dict((k, microgrid_info[key][k]) for k in ('name', 'ercot', 'number_billingmeters')),
+                     'microgrids': {k: microgrid_info[key][k] for k in ('name', 'ercot', 'number_billingmeters')},
                      'billingmeters': microgrid_info[key]['billingmeters_info'],
                      'houses': microgrid_info[key]['house_info'], 'inverters': microgrid_info[key]['inverter_info'],
                      'capacitors': capacitors, 'regulators': regulators, 'climate': climate}

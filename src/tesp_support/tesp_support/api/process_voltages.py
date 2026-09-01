@@ -7,12 +7,12 @@ Public Functions:
     :process_voltages: Reads the data and metadata, then makes the plot.  
 
 """
-import logging
 import json
+import logging
 import os
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 # Setting up logging
 log = logging.getLogger(__name__)
@@ -122,7 +122,7 @@ def plot_voltages(diction, save_file=None, save_only=False):
     ax[0].set_ylabel('Min Voltage [%]')
     ax[1].set_ylabel('Max Voltage [%]')
     ax[1].set_xlabel('Hours')
-    ax[0].set_title('Voltage at {:d} Meters'.format(len(keys_m)))
+    ax[0].set_title(f'Voltage at {len(keys_m):d} Meters')
 
     if save_file is not None:
         plt.savefig(save_file)

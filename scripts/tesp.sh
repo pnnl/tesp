@@ -114,8 +114,7 @@ cd grid || exit
 
 echo
 echo "Install a virtual python environment to $HOME/grid/venv"
-python${_ver_} -m pip install --upgrade pip
-python${_ver_} -m venv venv --prompt GRID
+python3 -m venv ./venv --prompt GRID
 
 echo
 echo "Install executables environment to $HOME/grid/tenv"

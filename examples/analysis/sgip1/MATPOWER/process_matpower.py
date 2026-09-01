@@ -148,7 +148,7 @@ ax[2, 0].set_ylabel(VMAG_UNITS)
 ax[2, 0].set_title("Voltages at " + bus_keys[0])
 ax[2, 0].legend(loc='best')
 
-for i in range(0, 4):
+for i in range(4):
     ax[i, 1].plot(hrs, data_g[i, :, PGEN_IDX], color="blue", label="P")
     ax[i, 1].plot(hrs, data_g[i, :, QGEN_IDX], color="red", label="Q")
     ax[i, 1].set_ylabel(PGEN_UNITS + "/" + QGEN_UNITS)

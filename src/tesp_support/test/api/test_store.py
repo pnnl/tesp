@@ -1,17 +1,18 @@
 # test_store.py
-import pytest
-import tempfile
-import os
 import csv
+import os
 import sqlite3
-from tesp_support.api.store import Schema, Directory, Store
+import tempfile
+
+import pytest
+from tesp_support.api.store import Directory, Schema, Store
 
 
 def test_store_debug_resample():
     """Test debug resample functionality from _test_debug_resample"""
-    from tesp_support.api.metrics_api import synch_series
-    import pandas as pd
     import numpy as np
+    import pandas as pd
+    from tesp_support.api.metrics_api import synch_series
 
     # Replicate the original test data
     np.random.seed(0)  # Same seed as original
@@ -54,7 +55,7 @@ def test_store_debug_resample():
     tseries = [ts1, ts2, ts3, ts]
 
     # Test the synch_series function
-    synched_series = synch_series(tseries, 2, "T")
+    synched_series = synch_series(tseries, 2, "min")
 
     # Test that it returns a list of DataFrames, not a single DataFrame
     assert isinstance(synched_series, list)

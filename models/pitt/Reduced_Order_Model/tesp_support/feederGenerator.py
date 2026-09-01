@@ -2074,10 +2074,9 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
 
         swing_node = ''
         for n1, data in G.nodes(data=True):
-            if 'nclass' in data:
-                if 'bustype' in data['ndata']:
-                    if data['ndata']['bustype'] == 'SWING':
-                        swing_node = n1
+            if 'nclass' in data and 'bustype' in data['ndata'] and data['ndata']['bustype'] == 'SWING':
+                swing_node = n1
+                break
 
         sub_graphs = nx.connected_component_subgraphs(G)
         seg_loads = {}  # [name][kva, phases]

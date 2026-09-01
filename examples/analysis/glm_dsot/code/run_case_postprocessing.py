@@ -1,11 +1,10 @@
 import os
-from os.path import dirname, abspath, isdir
-
 from datetime import datetime, timedelta
-from joblib import Parallel, delayed
+from os.path import abspath, dirname, isdir
 
-import tesp_support.dsot.plots as pt
 import tesp_support.dsot.dso_rate_making as rm
+import tesp_support.dsot.plots as pt
+from joblib import Parallel, delayed
 
 """Run monthly case-level DSOT postprocessing.
 
@@ -68,9 +67,7 @@ def post_process():
         # Determine tariff class for each meter.
         # TODO: move this to case preparation and read directly from metadata.
         commdata = pt.load_json(metadata_path, 'DSOT_commercial_metadata.json')
-        commbldglist = []
-        for bldg in commdata['building_model_specifics']:
-            commbldglist.append(bldg)
+        commbldglist = list(commdata['building_model_specifics'])
         residbldglist = ['SINGLE_FAMILY', 'MOBILE_HOME', 'APARTMENTS', 'MULTI_FAMILY']
 
         for each in GLD_metadata['billingmeters']:
@@ -222,12 +219,11 @@ def post_process():
     day_range = range(first_data_day, num_sim_days - discard_end_days + 1)
 
     dso_range = []
-    for DSO in DSOmetadata.keys():
-        if 'DSO' in DSO:
-            if DSOmetadata[DSO]['used']:
-                dso_range.append(int(DSO.split('_')[-1]))
+    for DSO in DSOmetadata:
+        if 'DSO' in DSO and DSOmetadata[DSO]['used']:
+            dso_range.append(int(DSO.split('_')[-1]))
 
-    processlist = list()
+    processlist = []
     for dso_num in dso_range:
         processlist.append([DSO_specific_cost, dso_num])
 
@@ -253,7 +249,7 @@ def post_process():
             processlist.append([determine_demand_profiles, dso_num])
 
     if len(processlist) > 0:
-        print('About to parallelize {} processes'.format(len(processlist)))
+        print(f'About to parallelize {len(processlist)} processes')
         results = parallel(delayed(worker)(p[0], p[1]) for p in processlist)
     else:
         print('No  process list')

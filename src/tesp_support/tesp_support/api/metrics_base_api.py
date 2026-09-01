@@ -2,9 +2,10 @@
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: metrics_base_api.py
 
-import pandas as pd
-import numpy as np
 import logging as log_msg
+
+import numpy as np
+import pandas as pd
 
 
 def get_node_ids(time_series, id_column_name):

@@ -12,7 +12,6 @@ import pandas as pd
 
 from ..dsot import dso_helper_functions as dso_helper
 
-
 # This dso_CFS function calculates cash flow statement ...
 
 # inputs:

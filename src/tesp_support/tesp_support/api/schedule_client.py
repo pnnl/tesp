@@ -12,11 +12,12 @@ data provided by the schedule server.
 
 
 from multiprocessing.managers import BaseManager
+
 # import psutil  # 3rd party module for process info (not strictly required)
 
 
 # Grab the shared proxy class.  All methods in that class will be available here
-class DataClient(object):
+class DataClient:
     def __init__(self, port):
         # assert self._checkForProcess('DataServer.py'), 'Must have DataServer running'
 

@@ -185,11 +185,11 @@ for key in mtr_keys:
     data_m[j, :, MTR_VOLT12_MAX_IDX] /= vll
     j = j + 1
 
-print('Total meter bill =', '{:.2f}'.format(data_m[:, -1, MTR_BILL_IDX].sum()))
-print('Min house voltage = ', '{:.2f} pu'.format(data_m[:, :, MTR_VOLT_MIN_IDX].min()))
-print('Min house voltage = ', '{:.2f} pu'.format(data_m[:, :, MTR_VOLT_MAX_IDX].max()))
-print('Min feeder power =', '{:.2f}'.format(1.0e-6 * data_s[0, :, SUB_POWER_IDX].min()), 'MW')
-print('Max feeder power =', '{:.2f}'.format(1.0e-6 * data_s[0, :, SUB_POWER_IDX].max()), 'MW')
+print('Total meter bill =', f'{data_m[:, -1, MTR_BILL_IDX].sum():.2f}')
+print('Min house voltage = ', f'{data_m[:, :, MTR_VOLT_MIN_IDX].min():.2f} pu')
+print('Min house voltage = ', f'{data_m[:, :, MTR_VOLT_MAX_IDX].max():.2f} pu')
+print('Min feeder power =', f'{1.0e-6 * data_s[0, :, SUB_POWER_IDX].min():.2f}', 'MW')
+print('Max feeder power =', f'{1.0e-6 * data_s[0, :, SUB_POWER_IDX].max():.2f}', 'MW')
 
 # display a plot
 fig, ax = plt.subplots(2, 2, sharex='col')

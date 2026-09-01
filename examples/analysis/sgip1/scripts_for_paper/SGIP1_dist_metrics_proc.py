@@ -1,7 +1,8 @@
-from DistributionMetricsProcessor import DistributionMetricsProcessor
 import os
+
 import matplotlib
 import matplotlib.pyplot as plt
+from DistributionMetricsProcessor import DistributionMetricsProcessor
 
 d = '../SGIP1new'
 subdir = [os.path.join(d, o) for o in os.listdir(d) if os.path.isdir(os.path.join(d, o))]
@@ -28,7 +29,7 @@ BatteryRevenue = {}
 colors = {0: 'k', 1: 'b', 2: 'r', 3: 'g', 4: 'm', 5: 'y'}
 
 case_name = None
-for i in range(0, len(subdir)):
+for i in range(len(subdir)):
 
     case_path = subdir[i] + "/"
     case_name = folder_names[i]  # 'SGIP1a'

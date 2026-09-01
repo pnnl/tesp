@@ -329,17 +329,17 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
     case_list = [c for c in case_list for _ in range(2)]
     
     for case_path in case_list:
-        # ------------------------------------------------------------------ 
-        # STEP 0 -- Determine which processing steps to run for this case. 
-        #                                                                   
-        # Each flag below is set True when the corresponding output file is 
-        # absent from case_path. This makes the script re-entrant: if it   
+        # ------------------------------------------------------------------
+        # STEP 0 -- Determine which processing steps to run for this case.
+        #
+        # Each flag below is set True when the corresponding output file is
+        # absent from case_path. This makes the script re-entrant: if it
         # was interrupted, only the remaining outputs will be regenerated on
-        # the next run.                                                    
-        #                                                                    
-        # Exception: retail, customer_cfs, and dso_cfs are always True so  
-        # that the billing reconciliation re-runs on every pass.            
-        # ------------------------------------------------------------------ 
+        # the next run.
+        #
+        # Exception: retail, customer_cfs, and dso_cfs are always True so
+        # that the billing reconciliation re-runs on every pass.
+        # ------------------------------------------------------------------
 
         if not os.path.isfile(os.path.join(case_path, 'energy_dso_8_data.h5')):
             print('No or incomplete annual energy files found, running annual_energy...')
@@ -407,7 +407,7 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
         # other system parameters that are common to all rate scenarios.
         # The file lives in metadata_path (glm_dsot/data/), not in case_path.
         config_path = os.path.join(metadata_path, case)
-        
+
         with open(config_path, 'r', encoding='utf-8') as json5_file:
             case_config = pyjson5.load(json5_file)
 
@@ -428,10 +428,9 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
         # simulation; unused entries are topology placeholders only.
         # For the 8-node case this should yield dso_range = [1..8].
         dso_range = []
-        for DSO in DSOmetadata.keys():
-            if 'DSO' in DSO:
-                if DSOmetadata[DSO]['used']:
-                    dso_range.append(int(DSO.split('_')[-1]))
+        for DSO in DSOmetadata:
+            if 'DSO' in DSO and DSOmetadata[DSO]['used']:
+                dso_range.append(int(DSO.split('_')[-1]))
 
         # Now that dso_range is known, check whether wholesale market-purchase
         # files exist for ALL active DSOs. If any are missing, regenerate all.
@@ -575,9 +574,9 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
             os.makedirs(case_path + '/plots')
 
         # ------------------------------------------------------------------
-        # STEP 1 -- Annual aggregation and analysis                          
-        # All steps in this section read already-completed monthly outputs   
-        # and write annual summary files into case_path.                    
+        # STEP 1 -- Annual aggregation and analysis
+        # All steps in this section read already-completed monthly outputs
+        # and write annual summary files into case_path.
         # ------------------------------------------------------------------
 
         # --------------- AGGREGATE ANNUAL ENERGY SUMMARIES  -------------------
@@ -751,7 +750,7 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
         #   1. Load GLD billing-meter and agent metadata.
         #   2. Classify each billing meter as 'commercial', 'residential', or
         #      'industrial' based on its building_type field.
-        #   3. Add customer participation flags (price-responsive, PV, EV) from 
+        #   3. Add customer participation flags (price-responsive, PV, EV) from
         #      the agent dictionary to the meter metadata.
         #   4. Call DSO_rate_making() to compute customer bills and the DSO
         #      revenue statement, returning a surplus-error percentage.
@@ -771,9 +770,7 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
                 # NOTE: these metadata could eventually be moved over to glm_dsot/data
                 # TODO: Why is DSOT_commercial_metadata.json for Miami, FL?
                 commdata = pt.load_json(DSOT_metadata_path, 'DSOT_commercial_metadata.json')
-                commbldglist = []
-                for bldg in commdata['building_model_specifics']:
-                    commbldglist.append(bldg)
+                commbldglist = list(commdata["building_model_specifics"])
                 residbldglist = ['SINGLE_FAMILY', 'MOBILE_HOME', 'APARTMENTS', 'MULTI_FAMILY']
 
                 # Assign a tariff_class ('commercial', 'residential', or
@@ -831,7 +828,7 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
                 # Generate a sample annual bill for the first billing meter as a
                 # diagnostic output. The meter key is arbitrary; swap it for a
                 # specific meter name to inspect a different customer's bill.
-                customer = list(GLD_metadata['billingmeters'].keys())[0]
+                customer = next(iter(GLD_metadata['billingmeters'].keys()))
                 cust_bill_file = case_path + '/bill_dso_' + str(dso_num) + '_data.h5'
                 cust_bills = pd.read_hdf(cust_bill_file, key='cust_bill_data', mode='r')
                 cust_energy = pd.read_hdf(case_path + '/energy_dso_' + str(dso_num) + '_data.h5', key='energy_data', mode='r')
@@ -918,13 +915,13 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
                     json.dump(Expenses_dict_list[i], f, indent=2)
                 i += 1
 
-        # ------------------------------------------------------------------ 
-        # STEP 2 -- Cross-case comparison and distribution outputs            
-        # These run on every pass for every case. They produce RCI           
-        # (residential/commercial/industrial) bill distributions and          
-        # metadata attribute histograms used for cross-scenario comparison.  
+        # ------------------------------------------------------------------
+        # STEP 2 -- Cross-case comparison and distribution outputs
+        # These run on every pass for every case. They produce RCI
+        # (residential/commercial/industrial) bill distributions and
+        # metadata attribute histograms used for cross-scenario comparison.
         # TODO: Complete comparison analysis additions (e.g. slider settings).
-        # ------------------------------------------------------------------ 
+        # ------------------------------------------------------------------
 
         # RCI_analysis: computes income-weighted bill distributions by customer
         # class (residential, commercial, industrial) across all active DSOs.
@@ -958,7 +955,7 @@ def batch_process():
     """Process all rate scenarios in a single run.
 
     Runs the full case_list (DSOT, TOU, Transactive, Subscription) plus the
-    Flat base case. Used after completing all twelve monthly co-simulations for 
+    Flat base case. Used after completing all twelve monthly co-simulations for
     every case.
 
     The TOU case serves as the demand reference for billing calculations
@@ -974,18 +971,18 @@ def one_process(case_path):
     """Process one case only.
 
     Useful for a quick end-to-end pipeline check or when only one case's
-    outputs need refreshing. 
+    outputs need refreshing.
 
     Before running, create the case annual output directory if it does not
-    exist. E.g., 
-        mkdir <post_processing_root>/Flat 
+    exist. E.g.,
+        mkdir <post_processing_root>/Flat
     """
     base_case_path = case_path
     if case_path == flat_path:
         demand_case_path = flat_path  # Flat used as its own demand reference
     else:
         demand_case_path = TOU_path  # TOU provides the demand reference for billing
-    
+
     run_base = True
     run_annual_postprocessing([], base_case_path, demand_case_path, run_base)
 
@@ -996,7 +993,7 @@ def base_params_process():
     -------------------------------------------------------------------------------
     Note: this function was generated by an AI assistant to reproduce the forecast
     correction calibration process used in previous iterations of the DSOT analysis.
-    -------------------------------------------------------------------------------      
+    -------------------------------------------------------------------------------
     This wrapper runs a base-only annual postprocessing pass focused on
     producing calibration artifacts for:
 

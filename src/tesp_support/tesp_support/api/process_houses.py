@@ -7,12 +7,12 @@ Public Functions:
     :process_houses: Reads the data and metadata, then makes the plot.  
 
 """
-import logging
 import json
+import logging
 import os
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 # Setting up logging
 log = logging.getLogger(__name__)
@@ -122,7 +122,7 @@ def plot_houses(diction, save_file=None, save_only=False):
     ax[0].set_ylabel('Degrees')
     ax[1].set_ylabel('kW')
     ax[1].set_xlabel('Hours')
-    ax[0].set_title('HVAC at {:d} Houses'.format(len(keys_h)))
+    ax[0].set_title(f'HVAC at {len(keys_h):d} Houses')
 
     if save_file is not None:
         plt.savefig(save_file)

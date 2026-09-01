@@ -14,28 +14,26 @@ References:
 
   `Matplotlib Animation <https://matplotlib.org/api/animation_api.html>`_
 """
-import os
 import json
-import yaml
+import os
 import subprocess
-
 import tkinter as tk
-import tkinter.ttk as ttk
-from tkinter import filedialog
-from tkinter import messagebox
-
-from ..original import fncs as fncs
-from ..api.parse_helpers import parse_kw
+from tkinter import filedialog, messagebox, ttk
 
 import matplotlib
+import yaml
+
+from ..api.parse_helpers import parse_kw
+from ..original import fncs
+
 try:
     matplotlib.use('TkAgg')
 except Exception:
     pass
+import matplotlib.pyplot as plt
+from matplotlib import animation
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.lines import Line2D
-import matplotlib.animation as animation
-import matplotlib.pyplot as plt
 
 
 class TespMonitorGUI:
@@ -259,7 +257,7 @@ class TespMonitorGUI:
             with open(self.fncsyaml, 'r') as stream:
                 try:
                     dd = yaml.load(stream)['values'].items()
-                    self.topicDict = dict((v['topic'], k) for k, v in dd)
+                    self.topicDict = {v['topic']: k for k, v in dd}
                 except yaml.YAMLError as ex:
                     print(ex)
         else:
@@ -394,8 +392,7 @@ class TespMonitorGUI:
                 else:
                     self.plot0.ymin = min(self.plot0.y) - 0.00001 * diff
                     self.plot0.ymax = max(self.plot0.y) + 0.00001 * diff
-                if self.plot0.ymin < 0:
-                    self.plot0.ymin = 0
+                self.plot0.ymin = max(self.plot0.ymin, 0)
                 self.plot0.ax.set_ylim(self.plot0.ymin, self.plot0.ymax)
                 self.plot0.fig.canvas.draw()
                 diff = abs(self.plot1.y[0] - self.plot1.y[1])
@@ -405,8 +402,7 @@ class TespMonitorGUI:
                 else:
                     self.plot1.ymin = min(self.plot1.y) - 0.00001 * diff
                     self.plot1.ymax = max(self.plot1.y) + 0.00001 * diff
-                if self.plot1.ymin < 0:
-                    self.plot1.ymin = 0
+                self.plot1.ymin = max(self.plot1.ymin, 0)
                 self.plot1.ax.set_ylim(self.plot1.ymin, self.plot1.ymax)
                 self.plot1.fig.canvas.draw()
                 diff = abs(self.plot2.y[0] - self.plot2.y[1])
@@ -416,8 +412,7 @@ class TespMonitorGUI:
                 else:
                     self.plot2.ymin = min(self.plot2.y) - 0.00001 * diff
                     self.plot2.ymax = max(self.plot2.y) + 0.00001 * diff
-                if self.plot2.ymin < 0:
-                    self.plot2.ymin = 0
+                self.plot2.ymin = max(self.plot2.ymin, 0)
                 self.plot2.ax.set_ylim(self.plot2.ymin, self.plot2.ymax)
                 self.plot2.fig.canvas.draw()
                 diff = abs(self.plot3.y[0] - self.plot3.y[1])
@@ -427,37 +422,28 @@ class TespMonitorGUI:
                 else:
                     self.plot3.ymin = min(self.plot3.y) - 0.00001 * diff
                     self.plot3.ymax = max(self.plot3.y) + 0.00001 * diff
-                if self.plot3.ymin < 0:
-                    self.plot3.ymin = 0
+                self.plot3.ymin = max(self.plot3.ymin, 0)
                 self.plot3.ax.set_ylim(self.plot3.ymin, self.plot3.ymax)
                 self.plot3.fig.canvas.draw()
             else:
                 if v0 < self.plot0.ymin or v0 > self.plot0.ymax:
-                    if v0 < self.plot0.ymin:
-                        self.plot0.ymin = v0
-                    if v0 > self.plot0.ymax:
-                        self.plot0.ymax = v0
+                    self.plot0.ymin = min(self.plot0.ymin, v0)
+                    self.plot0.ymax = max(self.plot0.ymax, v0)
                     self.plot0.ax.set_ylim(self.plot0.ymin, self.plot0.ymax)
                     self.plot0.fig.canvas.draw()
                 if v1 < self.plot1.ymin or v1 > self.plot1.ymax:
-                    if v1 < self.plot1.ymin:
-                        self.plot1.ymin = v1
-                    if v1 > self.plot1.ymax:
-                        self.plot1.ymax = v1
+                    self.plot1.ymin = min(self.plot1.ymin, v1)
+                    self.plot1.ymax = max(self.plot1.ymax, v1)
                     self.plot1.ax.set_ylim(self.plot1.ymin, self.plot1.ymax)
                     self.plot1.fig.canvas.draw()
                 if v2 < self.plot2.ymin or v2 > self.plot2.ymax:
-                    if v2 < self.plot2.ymin:
-                        self.plot2.ymin = v2
-                    if v2 > self.plot2.ymax:
-                        self.plot2.ymax = v2
+                    self.plot2.ymin = min(self.plot2.ymin, v2)
+                    self.plot2.ymax = max(self.plot2.ymax, v2)
                     self.plot2.ax.set_ylim(self.plot2.ymin, self.plot2.ymax)
                     self.plot2.fig.canvas.draw()
                 if v3 < self.plot3.ymin or v3 > self.plot3.ymax:
-                    if v3 < self.plot3.ymin:
-                        self.plot3.ymin = v3
-                    if v3 > self.plot3.ymax:
-                        self.plot3.ymax = v3
+                    self.plot3.ymin = min(self.plot3.ymin, v3)
+                    self.plot3.ymax = max(self.plot3.ymax, v3)
                     self.plot3.ax.set_ylim(self.plot3.ymin, self.plot3.ymax)
                     self.plot3.fig.canvas.draw()
 
@@ -486,9 +472,7 @@ class TespMonitorGUI:
             return float(value.strip('+ degFkW')) / float(plot.voltageBase.get())
         elif 'distribution_load' in topic:
             return parse_kw(value)
-        elif 'airtemp' in topic:
-            return float(value.strip('+ degFkW'))
-        elif 'LMP' in topic:
+        elif 'airtemp' in topic or 'LMP' in topic:
             return float(value.strip('+ degFkW'))
         else:
             return float(value.strip('+ degFkW'))
@@ -581,7 +565,7 @@ class ChoosablePlot(tk.Frame):
         voltageBase:
         voltageBaseTextbox:
     """
-    def __init__(self, master, color='red', xLabel='', topicDict={}, **kwargs):
+    def __init__(self, master, color='red', xLabel='', topicDict=None, **kwargs):
         super().__init__(master, background='#ffffff', **kwargs)
         self.root = master
         self.fig, self.ax = plt.subplots(1, 1, figsize=(9, 1.8))

@@ -96,7 +96,7 @@ for j, key in enumerate(mtr_keys):
             if s in diction['inverters']:
                 hasInverter = True
     for i, t in enumerate(times):
-        val = lst_m[str(t)][mtr_keys[j]][MTR_VOLT_AVG_IDX]
+        val = lst_m[str(t)][key][MTR_VOLT_AVG_IDX]
         data_m[j, i] = val
         if hasInverter and val > vmax:
             vmax = val
@@ -104,7 +104,7 @@ for j, key in enumerate(mtr_keys):
             jmax = j
             imax = i
 
-print('max average inverter voltage {:.3f} at meter {:s} [{:d}] at {:.3f} hrs'.format(vmax, keymax, jmax, hrs[imax]))
+print(f'max average inverter voltage {vmax:.3f} at meter {keymax:s} [{jmax:d}] at {hrs[imax]:.3f} hrs')
 
 # find the inverter meter with most counts over 105%
 mtridx = jmax
@@ -123,17 +123,15 @@ for i, key in enumerate(mtr_keys):
                     keymax = key
                     mtridx = i
 if countmax > 0:
-    print('Found inverter meter with {:d} points above {:.3f} pu at {:s} [{:d}]'.format(countmax, vthresh, keymax,
-                                                                                        mtridx))
+    print(f'Found inverter meter with {countmax:d} points above {vthresh:.3f} pu at {keymax:s} [{mtridx:d}]')
 
 invmax = ''
 invidx = 0
 for i, key in enumerate(inv_keys):
-    if diction['inverters'][key]['billingmeter_id'] == keymax:
-        if diction['inverters'][key]['resource'] == 'solar':
-            invmax = key
-            invidx = i
-print('Inverter to plot is {:s} [{:d}]'.format(invmax, invidx))
+    if diction['inverters'][key]['billingmeter_id'] == keymax and diction['inverters'][key]['resource'] == 'solar':
+        invmax = key
+        invidx = i
+print(f'Inverter to plot is {invmax:s} [{invidx:d}]')
 
 # display a plot
 fig, ax = plt.subplots(2, 1, sharex='col')

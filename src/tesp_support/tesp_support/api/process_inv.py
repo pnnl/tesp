@@ -7,12 +7,12 @@ Public Functions:
     :process_inv: Reads the data and metadata, then makes the plots.  
 
 """
-import logging
 import json
+import logging
 import os
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 # Setting up logging
 log = logging.getLogger(__name__)
@@ -348,41 +348,41 @@ def read_inv_metrics(path, name_root, diction_name=''):
     hour1 = 4.0
     ihour1 = 0
     ihour1_p = 0
-    for i in range(0, len(hrs)):
+    for i in range(len(hrs)):
         if hrs[i] > hour1:
             ihour1 = i
             break
 
     if have_precool:
-        for i in range(0, len(hrs_p)):
+        for i in range(len(hrs_p)):
             if hrs_p[i] > hour1:
                 ihour1_p = i
                 break
 
     # display some averages
-    print("Maximum feeder power =", '{:.2f}'.format(0.001 * data_s[0, :, SUB_POWER_IDX].max()), 'kW')
-    print("Average feeder power =", '{:.2f}'.format(0.001 * data_s[0, :, SUB_POWER_IDX].mean()), 'kW')
-    print("Average feeder losses =", '{:.2f}'.format(0.001 * data_s[0, :, SUB_LOSSES_IDX].mean()), 'kW')
+    print("Maximum feeder power =", f'{0.001 * data_s[0, :, SUB_POWER_IDX].max():.2f}', 'kW')
+    print("Average feeder power =", f'{0.001 * data_s[0, :, SUB_POWER_IDX].mean():.2f}', 'kW')
+    print("Average feeder losses =", f'{0.001 * data_s[0, :, SUB_LOSSES_IDX].mean():.2f}', 'kW')
     print('Average all house temperatures Noon-8 pm day 1:',
-          '{:.2f}'.format(data_h[:, 144:240, HSE_AIR_AVG_IDX].mean()))
+          f'{data_h[:, 144:240, HSE_AIR_AVG_IDX].mean():.2f}')
     # print('Average all house temperatures Noon-8 pm day 2:', '{:.2f}'.format(data_h[:,432:528,HSE_AIR_AVG_IDX].mean()))
     if have_invs:
-        print("Average inverter P =", '{:.2f}'.format(data_i[:, :, INV_P_AVG_IDX].mean()), INV_P_AVG_UNITS)
-        print("Average inverter Q =", '{:.2f}'.format(data_i[:, :, INV_Q_AVG_IDX].mean()), INV_Q_AVG_UNITS)
-    print("A Range Hi Duration =", '{:.2f}'.format(data_m[:, :, MTR_AHI_DURATION_IDX].sum() / 3600.0),
-          "count =", '{:.2f}'.format(data_m[:, :, MTR_AHI_COUNT_IDX].sum()))
-    print("A Range Lo Duration =", '{:.2f}'.format(data_m[:, :, MTR_ALO_DURATION_IDX].sum() / 3600.0),
-          "count =", '{:.2f}'.format(data_m[:, :, MTR_ALO_COUNT_IDX].sum()))
-    print("B Range Hi Duration =", '{:.2f}'.format(data_m[:, :, MTR_BHI_DURATION_IDX].sum() / 3600.0),
-          "count =", '{:.2f}'.format(data_m[:, :, MTR_BHI_COUNT_IDX].sum()))
-    print("B Range Lo Duration =", '{:.2f}'.format(data_m[:, :, MTR_BLO_DURATION_IDX].sum() / 3600.0),
-          "count =", '{:.2f}'.format(data_m[:, :, MTR_BLO_COUNT_IDX].sum()))
-    print("Zero-Volts Duration =", '{:.2f}'.format(data_m[:, :, MTR_OUT_DURATION_IDX].sum() / 3600.0),
-          "count =", '{:.2f}'.format(data_m[:, :, MTR_OUT_COUNT_IDX].sum()))
+        print("Average inverter P =", f'{data_i[:, :, INV_P_AVG_IDX].mean():.2f}', INV_P_AVG_UNITS)
+        print("Average inverter Q =", f'{data_i[:, :, INV_Q_AVG_IDX].mean():.2f}', INV_Q_AVG_UNITS)
+    print("A Range Hi Duration =", f'{data_m[:, :, MTR_AHI_DURATION_IDX].sum() / 3600.0:.2f}',
+          "count =", f'{data_m[:, :, MTR_AHI_COUNT_IDX].sum():.2f}')
+    print("A Range Lo Duration =", f'{data_m[:, :, MTR_ALO_DURATION_IDX].sum() / 3600.0:.2f}',
+          "count =", f'{data_m[:, :, MTR_ALO_COUNT_IDX].sum():.2f}')
+    print("B Range Hi Duration =", f'{data_m[:, :, MTR_BHI_DURATION_IDX].sum() / 3600.0:.2f}',
+          "count =", f'{data_m[:, :, MTR_BHI_COUNT_IDX].sum():.2f}')
+    print("B Range Lo Duration =", f'{data_m[:, :, MTR_BLO_DURATION_IDX].sum() / 3600.0:.2f}',
+          "count =", f'{data_m[:, :, MTR_BLO_COUNT_IDX].sum():.2f}')
+    print("Zero-Volts Duration =", f'{data_m[:, :, MTR_OUT_DURATION_IDX].sum() / 3600.0:.2f}',
+          "count =", f'{data_m[:, :, MTR_OUT_COUNT_IDX].sum():.2f}')
     if have_caps:
-        print("Total cap switchings =", '{:.2f}'.format(data_c[:, -1, CAP_COUNT_IDX].sum()))
+        print("Total cap switchings =", f'{data_c[:, -1, CAP_COUNT_IDX].sum():.2f}')
     if have_regs:
-        print("Total tap changes =", '{:.2f}'.format(data_r[:, -1, REG_COUNT_IDX].sum()))
+        print("Total tap changes =", f'{data_r[:, -1, REG_COUNT_IDX].sum():.2f}')
 
     final_bill = np.empty(shape=(len(times)), dtype=float)
     final_bill[0] = 0.0
@@ -397,27 +397,27 @@ def read_inv_metrics(path, name_root, diction_name=''):
 
     monthly_fee = 10.0  # the fixed charge from TEPCO used in NIST TE Challenge; not te30
     total_monthly = monthly_fee * len(mtr_keys)
-    print('Total Fixed Montly={:.2f}'.format(total_monthly))
+    print(f'Total Fixed Montly={total_monthly:.2f}')
 
-    print("Initial meter bill =", '{:.2f}'.format(data_m[:, -1, MTR_BILL_IDX].sum() - total_monthly))
-    print("Final meter bill =", '{:.2f}'.format(final_bill[-1]))
+    print("Initial meter bill =", f'{data_m[:, -1, MTR_BILL_IDX].sum() - total_monthly:.2f}')
+    print("Final meter bill =", f'{final_bill[-1]:.2f}')
     if have_precool:
-        print("Average Temperature Deviation =", '{:.2f}'.format(data_p[:, :, TEMPDEV_AVG_IDX].mean()))
+        print("Average Temperature Deviation =", f'{data_p[:, :, TEMPDEV_AVG_IDX].mean():.2f}')
 
     print('Summarizing from', hour1, 'hours to begin at indices', ihour1, ihour1_p)
-    print("Interval A Range Hi Duration =", '{:.2f}'.format(data_m[:, ihour1:-1, MTR_AHI_DURATION_IDX].sum() / 3600.0))
-    print("Interval A Range Lo Duration =", '{:.2f}'.format(data_m[:, ihour1:-1, MTR_ALO_DURATION_IDX].sum() / 3600.0))
-    print("Interval B Range Hi Duration =", '{:.2f}'.format(data_m[:, ihour1:-1, MTR_BHI_DURATION_IDX].sum() / 3600.0))
-    print("Interval B Range Lo Duration =", '{:.2f}'.format(data_m[:, ihour1:-1, MTR_BLO_DURATION_IDX].sum() / 3600.0))
+    print("Interval A Range Hi Duration =", f'{data_m[:, ihour1:-1, MTR_AHI_DURATION_IDX].sum() / 3600.0:.2f}')
+    print("Interval A Range Lo Duration =", f'{data_m[:, ihour1:-1, MTR_ALO_DURATION_IDX].sum() / 3600.0:.2f}')
+    print("Interval B Range Hi Duration =", f'{data_m[:, ihour1:-1, MTR_BHI_DURATION_IDX].sum() / 3600.0:.2f}')
+    print("Interval B Range Lo Duration =", f'{data_m[:, ihour1:-1, MTR_BLO_DURATION_IDX].sum() / 3600.0:.2f}')
     if have_precool:
         print("Interval Average Temperature Deviation =",
-              '{:.2f}'.format(data_p[:, ihour1_p:-1, TEMPDEV_AVG_IDX].mean()))
+              f'{data_p[:, ihour1_p:-1, TEMPDEV_AVG_IDX].mean():.2f}')
     if have_caps:
         print("Interval Cap Switchings =",
-              '{:.2f}'.format(data_c[:, -1, CAP_COUNT_IDX].sum() - data_c[:, ihour1, CAP_COUNT_IDX].sum()))
+              f'{data_c[:, -1, CAP_COUNT_IDX].sum() - data_c[:, ihour1, CAP_COUNT_IDX].sum():.2f}')
     if have_regs:
         print("Interval Tap Changes =",
-              '{:.2f}'.format(data_r[:, -1, REG_COUNT_IDX].sum() - data_r[:, ihour1, REG_COUNT_IDX].sum()))
+              f'{data_r[:, -1, REG_COUNT_IDX].sum() - data_r[:, ihour1, REG_COUNT_IDX].sum():.2f}')
 
     # create summary arrays
     total1 = (data_h[:, :, HSE_TOTAL_AVG_IDX]).squeeze()

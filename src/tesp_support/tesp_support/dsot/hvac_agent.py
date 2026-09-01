@@ -8,8 +8,7 @@ TODO: update the purpose of this Agent
 """
 import math
 from datetime import datetime, timedelta
-from math import cos as cos
-from math import sin as sin
+from math import cos, sin
 
 import numpy as np
 import pulp
@@ -17,8 +16,8 @@ import pyomo.environ as pyo
 import pytz
 from scipy import linalg
 
-from ..api.helpers import get_run_solver, logging, log
-from ..api.parse_helpers import parse_number, parse_magnitude
+from ..api.helpers import get_run_solver, log, logging
+from ..api.parse_helpers import parse_magnitude, parse_number
 
 logging.getLogger('pyomo.core').setLevel(logging.ERROR)
 
@@ -171,12 +170,12 @@ class HVACDSOT:  # TODO: update class name
         self.Qs = 0.0
 
         # interpolation
-        self.interpolation = bool(True)
-        self.RT_minute_count_interpolation = float(0.0)
-        self.previous_Q_DA = float(0.0)
-        self.previous_T_DA = float(0.0)
-        self.delta_Q = float(0.0)
-        self.delta_T = float(0.0)
+        self.interpolation = True
+        self.RT_minute_count_interpolation = 0.0
+        self.previous_Q_DA = 0.0
+        self.previous_T_DA = 0.0
+        self.delta_Q = 0.0
+        self.delta_T = 0.0
 
         self.A_ETP = np.zeros([2, 2])
         self.AEI = np.zeros([2, 2])
@@ -529,10 +528,8 @@ class HVACDSOT:  # TODO: update class name
             mid_point = (self.temp_min_cool + self.temp_max_heat) / 2.0
             self.temp_min_cool = mid_point + self.deadband / 2.0 + 0.5
             self.temp_max_heat = mid_point - self.deadband / 2.0 - 0.5
-            if self.temp_min_cool > cooling_setpt:
-                self.temp_min_cool = cooling_setpt
-            if self.temp_max_heat < heating_setpt:
-                self.temp_max_heat = heating_setpt
+            self.temp_min_cool = min(self.temp_min_cool, cooling_setpt)
+            self.temp_max_heat = max(self.temp_max_heat, heating_setpt)
 
     def update_temp_limits_da(self, cooling_setpt, heating_setpt):
         self.temp_max_cool_da = cooling_setpt + self.range_high_cool  # - self.ramp_high_limit * (1 - self.slider)
@@ -543,10 +540,8 @@ class HVACDSOT:  # TODO: update class name
             mid_point = (self.temp_min_cool_da + self.temp_max_heat_da) / 2.0
             self.temp_min_cool_da = mid_point + self.deadband / 2.0 + 0.5
             self.temp_max_heat_da = mid_point - self.deadband / 2.0 - 0.5
-            if self.temp_min_cool_da > cooling_setpt:
-                self.temp_min_cool_da = cooling_setpt
-            if self.temp_max_heat_da < heating_setpt:
-                self.temp_max_heat_da = heating_setpt
+            self.temp_min_cool_da = min(self.temp_min_cool_da, cooling_setpt)
+            self.temp_max_heat_da = max(self.temp_max_heat_da, heating_setpt)
 
     def calc_etp_model(self):
         """ Sets the ETP parameters from configuration data
@@ -695,14 +690,7 @@ class HVACDSOT:  # TODO: update class name
                     Wg = 0.60
                 elif self.window_frame == 3 or self.window_frame == 4:
                     Wg = 0.51
-            elif self.glazing_treatment == 2:
-                if self.window_frame == 0:
-                    Wg = 0.34
-                elif self.window_frame == 1 or self.window_frame == 2:
-                    Wg = 0.31
-                elif self.window_frame == 3 or self.window_frame == 4:
-                    Wg = 0.26
-            elif self.glazing_treatment == 3:
+            elif self.glazing_treatment == 2 or self.glazing_treatment == 3:
                 if self.window_frame == 0:
                     Wg = 0.34
                 elif self.window_frame == 1 or self.window_frame == 2:
@@ -822,12 +810,12 @@ class HVACDSOT:  # TODO: update class name
             self.design_heating_capacity = math.ceil(round_value) * 10000.0
 
         log.debug('ETP model ' + self.name)
-        log.debug('  UA -> {:.2f}'.format(self.UA))
+        log.debug(f'  UA -> {self.UA:.2f}')
         # print('  UA -> {:.2f}'.format(self.UA))
-        log.debug('  CA -> {:.2f}'.format(self.CA))
+        log.debug(f'  CA -> {self.CA:.2f}')
         # print('  CA -> {:.2f}'.format(self.CA))
-        log.debug('  HM -> {:.2f}'.format(self.HM))
-        log.debug('  CM -> {:.2f}'.format(self.CM))
+        log.debug(f'  HM -> {self.HM:.2f}')
+        log.debug(f'  CM -> {self.CM:.2f}')
         # print('  CM -> {:.2f}'.format(self.CM))
 
     def set_price_forecast(self, price_forecast):
@@ -850,7 +838,7 @@ class HVACDSOT:  # TODO: update class name
             message: temperature_forecast ([float x 48]): predicted temperature in F
         """
         temperature_forecast = eval(message)
-        self.temperature_forecast = [float(temperature_forecast[key]) for key in temperature_forecast.keys()]
+        self.temperature_forecast = [float(temperature_forecast[key]) for key in temperature_forecast]
         # print ("temperature forecast inside function")
         # print(self)
         # print (self.temperature_forecast)
@@ -864,7 +852,7 @@ class HVACDSOT:  # TODO: update class name
             message: humidity forecast ([float x 48]): predicted humidity in relative percent
         """
         humidity_forecast = eval(message)
-        self.humidity_forecast = [float(humidity_forecast[key]) for key in humidity_forecast.keys()]
+        self.humidity_forecast = [float(humidity_forecast[key]) for key in humidity_forecast]
 
     def set_solargain_forecast(self, solargain_forecast):
         """ Set the 48-hour solargain_forecast variable so that it can be used for forcasting
@@ -983,7 +971,7 @@ class HVACDSOT:  # TODO: update class name
         std_time = start_hour
         sol_time = std_time + eq_time + 12.0 / math.pi * (lon - std_meridian)
         solar_flux = []
-        for cpt in self.surface_angles.keys():
+        for cpt in self.surface_angles:
             vertical_angle = math.radians(90)
             if cpt == 'H':
                 vertical_angle = math.radians(0)
@@ -1016,8 +1004,7 @@ class HVACDSOT:  # TODO: update class name
                         cosdecl * coslat * cosslope * coshr +
                         cosdecl * sinlat * sinslope * cosaz * coshr +
                         cosdecl * sinslope * sinaz * sinhr)
-        if cos_incident < 0:
-            cos_incident = 0
+        cos_incident = max(cos_incident, 0)
         return dnr_i * cos_incident + dhr_i
 
     def inform_bid(self, price):
@@ -1093,7 +1080,7 @@ class HVACDSOT:  # TODO: update class name
             else:
                 ramp_high_tmp = 10000000000000.0
                 ramp_low_tmp = 10000000000000.0
-                log.log(self.model_diag_level, '{} {} -- thermostat mode not defined.'.format(self.name, sim_time))
+                log.log(self.model_diag_level, f'{self.name} {sim_time} -- thermostat mode not defined.')
             use_RT_curve = True
             use_DA_curve = False
             use_leg_clearing = False
@@ -1184,18 +1171,16 @@ class HVACDSOT:  # TODO: update class name
                 pass
             else:
                 log.log(self.model_diag_level,
-                        '{} {} -- cooling_setpoint ({}), outside of nominal range {} to {}'
-                        .format(self.name, sim_time, self.cooling_setpoint, self.cooling_setpoint_lower,
-                                self.cooling_setpoint_upper))
+                        f'{self.name} {sim_time} -- cooling_setpoint ({self.cooling_setpoint}), outside of nominal range {self.cooling_setpoint_lower} to {self.cooling_setpoint_upper}'
+                        )
         else:
             self.heating_setpoint = setpoint_tmp
             if self.heating_setpoint_lower < self.heating_setpoint < self.heating_setpoint_upper:
                 pass
             else:
                 log.log(self.model_diag_level,
-                        '{} {} -- heating_setpoint ({}), outside of nominal range of {} to {}'
-                        .format(self.name, sim_time, self.heating_setpoint, self.heating_setpoint_lower,
-                                self.heating_setpoint_upper))
+                        f'{self.name} {sim_time} -- heating_setpoint ({self.heating_setpoint}), outside of nominal range of {self.heating_setpoint_lower} to {self.heating_setpoint_upper}'
+                        )
 
         if self.heating_setpoint + self.deadband / 2.0 >= self.cooling_setpoint - self.deadband / 2.0:
             if self.thermostat_mode == 'Heating':
@@ -1294,15 +1279,15 @@ class HVACDSOT:  # TODO: update class name
                 # log.info('basepoint_cooling is within the bounds.')
                 pass
             else:
-                log.log(self.model_diag_level, '{} {} -- basepoint_cooling ({}) is out of bounds.'
-                        .format(self.name, sim_time, self.basepoint_cooling))
+                log.log(self.model_diag_level, f'{self.name} {sim_time} -- basepoint_cooling ({self.basepoint_cooling}) is out of bounds.'
+                        )
             self.basepoint_heating = val_heat
             if 60 < self.basepoint_heating < 85:
                 # log.info('basepoint_heating is within the bounds.')
                 pass
             else:
-                log.log(self.model_diag_level, '{} {} -- basepoint_heating ({}) is out of bounds.'
-                        .format(self.name, sim_time, self.basepoint_heating))
+                log.log(self.model_diag_level, f'{self.name} {sim_time} -- basepoint_heating ({self.basepoint_heating}) is out of bounds.'
+                        )
             self.calc_thermostat_settings(sim_time)  # update thermostat settings
             return True
         return False
@@ -1374,11 +1359,11 @@ class HVACDSOT:  # TODO: update class name
             if self.air_temp - 20 < T_air < self.air_temp + 20:
                 T_air = self.air_temp
                 log.log(self.model_diag_level,
-                        '{} Severe Warning temp {}: 20 degree swing, setting to last temperature'
-                        .format(self.name, T_air))
+                        f'{self.name} Severe Warning temp {T_air}: 20 degree swing, setting to last temperature'
+                        )
             log.log(self.model_diag_level,
-                    '{} {} -- air_temp ({}) is out of bounds, outside of nominal range of {} to {}.'
-                    .format(self.name, sim_time, self.air_temp, self.T_lower_limit, self.T_upper_limit))
+                    f'{self.name} {sim_time} -- air_temp ({self.air_temp}) is out of bounds, outside of nominal range of {self.T_lower_limit} to {self.T_upper_limit}.'
+                    )
         self.air_temp = T_air
 
         # This is a correction within the hour for the DA prediction of thermostat mode using heating as default
@@ -1441,8 +1426,7 @@ class HVACDSOT:  # TODO: update class name
 
         # estimating the HVAC consumption based on the last reported from GLD
         Qi = (self.house_kw - abs(Qh_org) - self.wh_kw) * 3412.1416331279
-        if Qi <= 0.0:
-            Qi = 0.0
+        Qi = max(0.0, Qi)
 
         Qs = self.solar_gain * self.solar_heatgain_factor
 
@@ -1675,14 +1659,10 @@ class HVACDSOT:  # TODO: update class name
             BID[3][P] = min(self.price_forecast) - (self.ProfitMargin_intercept / 100) * delta_DA_price
 
         for i in range(4):
-            if BID[i][Q] > self.hvac_kw:
-                BID[i][Q] = self.hvac_kw
-            if BID[i][Q] < 0:
-                BID[i][Q] = 0
-            if BID[i][P] > self.price_cap:
-                BID[i][P] = self.price_cap
-            if BID[i][P] < 0:
-                BID[i][P] = 0
+            BID[i][Q] = min(BID[i][Q], self.hvac_kw)
+            BID[i][Q] = max(BID[i][Q], 0)
+            BID[i][P] = min(BID[i][P], self.price_cap)
+            BID[i][P] = max(BID[i][P], 0)
 
         self.RT_Q_max = Q_max
         self.RT_Q_min = Q_min
@@ -1788,17 +1768,13 @@ class HVACDSOT:  # TODO: update class name
                     self.ProfitMargin_intercept / 100) * delta_DA_price
 
             for i in range(4):
-                if BID[t][i][Q] > self.hvac_kw:
-                    BID[t][i][Q] = self.hvac_kw
-                if BID[t][i][Q] < 0:
-                    BID[t][i][Q] = 0
-                if BID[t][i][P] > self.price_cap:
-                    BID[t][i][P] = self.price_cap
-                if BID[t][i][P] < 0:
-                    BID[t][i][P] = 0
+                BID[t][i][Q] = min(BID[t][i][Q], self.hvac_kw)
+                BID[t][i][Q] = max(BID[t][i][Q], 0)
+                BID[t][i][P] = min(BID[t][i][P], self.price_cap)
+                BID[t][i][P] = max(BID[t][i][P], 0)
 
         self.bid_da = BID
-        self.RT_minute_count_interpolation = float(0.0)
+        self.RT_minute_count_interpolation = 0.0
 
         return self.bid_da
 
@@ -1872,14 +1848,10 @@ class HVACDSOT:  # TODO: update class name
 
             # making sure the desired temperature falls between min and max temp values
             # these values are used to adjust the basepoint and vice-versa
-            if val_cool > self.temp_max_cool_da:
-                val_cool = self.temp_max_cool_da
-            if val_cool < self.temp_min_cool_da:
-                val_cool = self.temp_min_cool_da
-            if val_heat > self.temp_max_heat_da:
-                val_heat = self.temp_max_heat_da
-            if val_heat < self.temp_min_heat_da:
-                val_heat = self.temp_min_heat_da
+            val_cool = min(val_cool, self.temp_max_cool_da)
+            val_cool = max(val_cool, self.temp_min_cool_da)
+            val_heat = min(val_heat, self.temp_max_heat_da)
+            val_heat = max(val_heat, self.temp_min_heat_da)
             self.temp_desired_48hour_cool[itime] = val_cool
             self.temp_desired_48hour_heat[itime] = val_heat
 
@@ -2034,8 +2006,7 @@ class HVACDSOT:  # TODO: update class name
 
             if self.thermostat_mode == 'Cooling':
                 # to avoid problem while warming up and GridLAB-D is heating instead of cooling
-                if self.hvac_kw < 3.0:
-                    self.hvac_kw = 3.0
+                self.hvac_kw = max(self.hvac_kw, 3.0)
                 # if self.hvac_kw>6.0:
                 #    self.hvac_kw = 6.0
                 quan_hvac = pulp.LpVariable.dicts("hvac_quantity", self.TIME, 0, self.hvac_kw)

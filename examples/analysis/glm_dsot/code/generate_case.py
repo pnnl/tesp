@@ -3,11 +3,11 @@
 """ Utility function to split a year run to monthly runs. This is DSO+T specific helper functions
 """
 
-import pyjson5
-import sys
 import os
+import sys
 
 import prepare_case_glm_dsot as prep_case
+import pyjson5
 
 
 def generate_case(caseName, start, finish):
@@ -28,12 +28,12 @@ def generate_case(caseName, start, finish):
         while True:
             for i in range(start, finish):
                 # (exclusive, inclusive)
-                directory_name = str(caseStartYear) + "_" + '{0:0>2}'.format(i+1)
+                directory_name = str(caseStartYear) + "_" + f'{i+1:0>2}'
                 ppc['caseName'] = case_rate_and_node + directory_name
                 ppc['port'] = int(port + i)
 
                 year = caseStartYear
-                month = '{0:0>2}'.format(i)
+                month = f'{i:0>2}'
                 daytime = "-29 00:00:00"
                 if i == 0:
                     daytime = "-01 00:00:00"
@@ -41,7 +41,7 @@ def generate_case(caseName, start, finish):
                 ppc['StartTime'] = str(year) + "-" + month + daytime
 
                 year = caseStartYear
-                month = '{0:0>2}'.format(i+2)
+                month = f'{i+2:0>2}'
                 daytime = "-01 00:00:00"
                 if i == 11:
                     daytime = "-30 00:00:00"

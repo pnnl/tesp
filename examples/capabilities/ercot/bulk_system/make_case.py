@@ -26,9 +26,8 @@ def find_bus(arr, n):
 
 def find_line(arr, n1, n2):
     for ln in arr:
-        if '//' not in ln[0]:
-            if int(ln[1]) == n1 and int(ln[2]) == n2:
-                return ln
+        if '//' not in ln[0] and int(ln[1]) == n1 and int(ln[2]) == n2:
+            return ln
     return None
 
 
@@ -172,8 +171,7 @@ if __name__ == '__main__':
         Sg = float(ln[2])
         Pg = Sg * dispatch
         Pmin = float(ln[3])
-        if Pg < Pmin:
-            Pg = Pmin
+        Pg = max(Pg, Pmin)
         if n1 == swing_bus:
             print('setting Pg from', Pg, 'to 0 at swing bus', swing_bus)
             Pg = 0.0

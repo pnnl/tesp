@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Created on Thursday, April 21, 2022
 @author: Laurentiu Marinovici
@@ -18,14 +17,14 @@ log.addHandler(logging.StreamHandler())
 log.setLevel(logging.INFO)
 # log.setLevel(logging.DEBUG)
 
-log.info('Federated Learning Federate - Test. HELICS version = {}'.format(helicsversion))
+log.info(f'Federated Learning Federate - Test. HELICS version = {helicsversion}')
 
 
 def start_loadshed(argv):
     # SETUP SIMULATION
     # ---------------
     # total simulation time for fed
-    simTime = int(3)
+    simTime = 3
     grantedTime = 0
     try:
         opts, args = getopt.getopt(argv, 'hc:t:', ['help', 'config=', 'simTime='])
@@ -49,16 +48,16 @@ def start_loadshed(argv):
     #  Registering  federate info from json
     fed = h.helicsCreateCombinationFederateFromConfig(configFileName)
     fedName = h.helicsFederateGetName(fed)
-    log.info('Federate name: {}'.format(fedName))
+    log.info(f'Federate name: {fedName}')
     endpoint_count = h.helicsFederateGetEndpointCount(fed)
-    log.info('Number of endpoints: {}'.format(endpoint_count))
+    log.info(f'Number of endpoints: {endpoint_count}')
     log.info('######################## Entering Execution Mode ########################')
     #   Entering Execution Mode
     execStartTime = tm.time()
     h.helicsFederateEnterExecutingMode(fed)
     currTime = h.helicsFederateGetCurrentTime(fed)
     deltaTime = h.helicsFederateGetTimeProperty(fed, 140)  # helics_property_time_period = 140, in the C API
-    log.info('START: Current time: {0}. Delta time: {1}. Granted time: {2}.'.format(currTime, deltaTime, grantedTime))
+    log.info(f'START: Current time: {currTime}. Delta time: {deltaTime}. Granted time: {grantedTime}.')
 
     with open('loadshedScenario.json', 'r') as loadshedFile:
         loadshedScenario = json.load(loadshedFile)
@@ -104,18 +103,17 @@ def start_loadshed(argv):
         totalBillMtrLoad = 0
         currTime = h.helicsFederateGetCurrentTime(fed)
         log.info('\n========================================================')
-        log.info('Current time: {0}. Delta time: {1}. Granted time: {2}.'.format(currTime, deltaTime, grantedTime))
+        log.info(f'Current time: {currTime}. Delta time: {deltaTime}. Granted time: {grantedTime}.')
         iterStartTime = tm.time()
-        for ind in range(0, endpoint_count):
+        for ind in range(endpoint_count):
             fedEP = h.helicsFederateGetEndpointByIndex(fed, ind)
             epName = h.helicsEndpointGetName(fedEP)
             # Checking for new messages destined to the particular monitor EP in this federate
             if epName.split('/')[0] == fedName and 'substation' in epName.split('/')[1]:
                 log.info(
-                    '<<<<< time: {0}; federate: {1}; endpoint: {2}; message? {3}  >>>>>'.
-                    format(grantedTime, fedName, epName,
-                           h.helicsEndpointHasMessage(fedEP) and 'YES' or 'NO'))
-                epMessages = dict({})
+                    '<<<<< time: {}; federate: {}; endpoint: {}; message? {}  >>>>>'.
+                    format(grantedTime, fedName, epName, h.helicsEndpointHasMessage(fedEP) and 'YES' or 'NO'))
+                epMessages = {}
                 while h.helicsEndpointHasMessage(fedEP):
                     message = h.helicsFederateGetMessage(fed)
                     messageDetails = {
@@ -131,7 +129,7 @@ def start_loadshed(argv):
                     # the following line would overwrite them
                     # allowing access to the latest ones through epMessages structure
                     epMessages[messageDetails['source']] = messageDetails
-                for epKey in epMessages.keys():
+                for epKey in epMessages:
                     log.info(
                         f'\toriginal source: {epMessages[epKey]["original source"]}, source: {epMessages[epKey]["source"]}, data: {epMessages[epKey]["data"]}, time received: {epMessages[epKey]["time received"]}')
                     # if 'mhse' in epMessages[epKey]['source']:

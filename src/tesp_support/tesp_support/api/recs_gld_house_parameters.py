@@ -43,7 +43,7 @@ def bin_size_check(sample_data, recs_data, state, housing_dens, inc_lev, binsize
     # If it is, use census region, then climate zone, and then finally widen income level input if needed.
     if og_bin_size < binsize:
         print(state, housing_dens, inc_lev)
-        rgn = [key for key, value in census_rgn.items() if state in value][0]
+        rgn = next(iter([key for key, value in census_rgn.items() if state in value]))
         if housing_dens == 'No_DSO_Type':
             rgn_bin_size = len(recs_data.loc[
                                    ((recs_data['DIVISION'] == rgn) &
@@ -572,10 +572,10 @@ def get_RECS_jsons(bldg_in, bldg_out, hvac_out,
     }
 
     for st in sample['state']:
-        for key in res_metadata:
-            res_metadata[key].update({st: {}})  # Add new state keys to the metadata dictionary
-        for key in hvac_setpoints:
-            hvac_setpoints[key].update({st: {}})
+        for key, value in res_metadata.items():
+            value.update({st: {}})  # Add new state keys to the metadata dictionary
+        for key, value in hvac_setpoints.items():
+            value.update({st: {}})
         for hd in sample['housing_density']:
             hd_str = housing_density_dict[hd]
             for key in res_metadata:

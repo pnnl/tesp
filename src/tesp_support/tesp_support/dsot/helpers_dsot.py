@@ -7,9 +7,9 @@ This is DSO+T specific helper functions
 
 import platform
 import subprocess
-from os import getcwd, path, environ
 from copy import deepcopy
 from enum import IntEnum
+from os import environ, getcwd, path
 
 import numpy as np
 
@@ -61,7 +61,7 @@ def write_mircogrids_management_script(case_path, system_config=None, substation
                 [len(substation_config[dso]['generators']) for dso in substation_config]) + len(
                 weather_config)), out_path))
 
-        for w_key, w_val in weather_config.items():
+        for w_key in weather_config:
             outfile.write('cd %s\n' % w_key)
             outfile.write('(export WEATHER_CONFIG=weather_Config.json '
                           '&& exec python3 -c "import tesp_support.consensus.weather_agent as tesp;'
@@ -129,9 +129,9 @@ done
 """)
 
     with open(out_folder + '/kill.sh', 'w') as outfile:
-        if 'HELICS' in system_config.keys():
+        if 'HELICS' in system_config:
             outfile.write('pkill -9 helics_broker\n')
-        if 'FNCS' in system_config.keys():
+        if 'FNCS' in system_config:
             outfile.write('pkill -9 fncs_broker\n')
         outfile.write('pkill -9 python\n')
         outfile.write('pkill -9 gridlab\n')
@@ -148,13 +148,13 @@ done
         outfile.write('find . -name \\*log.txt -type f -delete\n')
         outfile.write('cd -\n')
 
-    subprocess.run(['chmod', '+x', out_folder + '/run.sh'])
-    subprocess.run(['chmod', '+x', out_folder + '/monitor.sh'])
-    subprocess.run(['chmod', '+x', out_folder + '/kill.sh'])
-    subprocess.run(['chmod', '+x', out_folder + '/clean.sh'])
-    subprocess.run(['chmod', '+x', out_folder + '/docker-run.sh'])
+    subprocess.run(['chmod', '+x', out_folder + '/run.sh'], check=False)
+    subprocess.run(['chmod', '+x', out_folder + '/monitor.sh'], check=False)
+    subprocess.run(['chmod', '+x', out_folder + '/kill.sh'], check=False)
+    subprocess.run(['chmod', '+x', out_folder + '/clean.sh'], check=False)
+    subprocess.run(['chmod', '+x', out_folder + '/docker-run.sh'], check=False)
     try:
-        subprocess.run(['chmod', '+x', out_folder + '/tesp_monitor.sh'])
+        subprocess.run(['chmod', '+x', out_folder + '/tesp_monitor.sh'], check=False)
     except FileNotFoundError:
         pass
 
@@ -237,17 +237,16 @@ def write_dsot_management_script(master_file, case_path, config=None, system_con
             else:
                 outfile.write('with_market=0\n\n')
 
-        for cnt in range(len(ports)):
-            outfile.write('(exec python3 -c "import tesp_support.api.schedule_server as tesp;'
+        outfile.writelines('(exec python3 -c "import tesp_support.api.schedule_server as tesp;'
                           'tesp.schedule_server(\'../%s\', %s)" &> %s/schedule.log &)\n'
-                          % (config_file, str(5150 + ports[cnt]), out_path))
+                          % (config_file, str(5150 + ports[cnt]), out_path) for cnt in range(len(ports)))
         outfile.write('# wait schedule server to populate\n')
         outfile.write('sleep 60\n')
 
         outfile.write('(helics_broker -f %s --loglevel=warning --name=mainbroker &> %s/broker.log &)\n'
                       % (str(len(weather_config) * 3 + tso), out_path))
 
-        for w_key, w_val in weather_config.items():
+        for w_key in weather_config:
             outfile.write('cd %s\n' % w_key)
             outfile.write('(export WEATHER_CONFIG=weather_Config.json '
                           '&& exec python3 -c "import tesp_support.weather.weather_agent as tesp;'
@@ -302,7 +301,7 @@ def write_dsot_management_script(master_file, case_path, config=None, system_con
         write_management_script(archive_folder, case_path, out_path, config['gld_debug'], 1)
     except TypeError:
         write_management_script(archive_folder, case_path, out_path, system_config['gldDebug'], 1)
-    
+
     if config['monitor']:
         with open(out_folder + '/tesp_monitor.sh', 'w') as outfile:
             outfile.write('python3 $TESPDIR/src/tesp_support/tesp_support/dsot/tesp_monitor.py')
@@ -388,17 +387,16 @@ def write_dsot_management_script_f(master_file, case_path, config=None, system_c
                 else:
                     outfile.write('with_market=0\n\n')
 
-            for cnt in range(len(ports)):
-                outfile.write('start /b cmd /c python -c "import tesp_support.api.schedule_server as tesp;'
+            outfile.writelines('start /b cmd /c python -c "import tesp_support.api.schedule_server as tesp;'
                               'tesp.schedule_server(\'..\\%s\', %s)" ^> %s\\schedule.log 2^>^&1\n'
-                              % (config_file, str(5150 + ports[cnt]), out_path))
+                              % (config_file, str(5150 + ports[cnt]), out_path) for cnt in range(len(ports)))
             outfile.write('rem wait schedule server to populate\n')
             outfile.write('sleep 60\n')
 
             outfile.write('start /b cmd /c fncs_broker %s ^>%s\\broker.log 2^>^&1\n'
                           % (str(len(weather_config) * 3 + tso), out_path))
 
-            for w_key, w_val in weather_config.items():
+            for w_key in weather_config:
                 outfile.write('set FNCS_CONFIG_FILE=%s.zpl\n' % w_key)
                 outfile.write('cd %s\n' % w_key)
                 outfile.write('start /b cmd /c python -c "import tesp_support.weather.weather_agent_f as tesp;'
@@ -440,7 +438,6 @@ def write_dsot_management_script_f(master_file, case_path, config=None, system_c
                         outfile.write('start /b cmd /c python -c "import tesp_support.original.player_f as tesp;'
                                       'tesp.load_player_loop_f(\'./%s\', \'%s\')" ^> %s\\%s_player.log 2^>^&1\n'
                                       % (master_file, players[plyr], out_path, player[0]))
-                        
 
         with open(out_folder + '/kill.bat', 'w') as outfile:
             outfile.write('taskkill /F /IM fncs_broker.exe\n')
@@ -506,10 +503,9 @@ def write_dsot_management_script_f(master_file, case_path, config=None, system_c
                 else:
                     outfile.write('with_market=0\n\n')
 
-            for cnt in range(len(ports)):
-                outfile.write('(exec python3 -c "import tesp_support.api.schedule_server as tesp;'
+            outfile.writelines('(exec python3 -c "import tesp_support.api.schedule_server as tesp;'
                               'tesp.schedule_server(\'../%s\', %s)" &> %s/schedule.log &)\n'
-                              % (config_file, str(5150 + ports[cnt]), out_path))
+                              % (config_file, str(5150 + ports[cnt]), out_path) for cnt in range(len(ports)))
             outfile.write('# wait schedule server to populate\n')
             outfile.write('sleep 60\n')
 
@@ -522,7 +518,7 @@ def write_dsot_management_script_f(master_file, case_path, config=None, system_c
                             + '" && fncs_broker %s &> %s/broker.log &)\n'
                             % (str(len(weather_config) * 3 + tso), out_path))
 
-            for w_key, w_val in weather_config.items():
+            for w_key in weather_config:
                 outfile.write('cd %s\n' % w_key)
                 outfile.write('(export FNCS_CONFIG_FILE=%s.zpl && export WEATHER_CONFIG=weather_Config.json '
                               '&& exec python3 -c "import tesp_support.weather.weather_agent_f as tesp;'
@@ -580,7 +576,7 @@ def write_dsot_management_script_f(master_file, case_path, config=None, system_c
             write_management_script(archive_folder, case_path, out_path, config['gld_debug'], 1)
         except TypeError:
             write_management_script(archive_folder, case_path, out_path, system_config['gldDebug'], 1)
-        
+
         if config['monitor']:
             with open(out_folder + '/tesp_monitor.sh', 'w') as outfile:
                 outfile.write('python3 $TESPDIR/src/tesp_support/tesp_support/dsot/tesp_monitor.py')
@@ -688,14 +684,14 @@ docker run \\
         outfile.write('find . -name \\*log.txt -type f -delete\n')
         outfile.write('cd -\n')
 
-    subprocess.run(['chmod', '+x', out_folder + '/run.sh'])
-    subprocess.run(['chmod', '+x', out_folder + '/monitor.sh'])
-    subprocess.run(['chmod', '+x', out_folder + '/docker-run.sh'])
-    subprocess.run(['chmod', '+x', out_folder + '/postprocess.sh'])
-    subprocess.run(['chmod', '+x', out_folder + '/kill.sh'])
-    subprocess.run(['chmod', '+x', out_folder + '/clean.sh'])
+    subprocess.run(['chmod', '+x', out_folder + '/run.sh'], check=False)
+    subprocess.run(['chmod', '+x', out_folder + '/monitor.sh'], check=False)
+    subprocess.run(['chmod', '+x', out_folder + '/docker-run.sh'], check=False)
+    subprocess.run(['chmod', '+x', out_folder + '/postprocess.sh'], check=False)
+    subprocess.run(['chmod', '+x', out_folder + '/kill.sh'], check=False)
+    subprocess.run(['chmod', '+x', out_folder + '/clean.sh'], check=False)
     try:
-        subprocess.run(['chmod', '+x', out_folder + '/tesp_monitor.sh'])
+        subprocess.run(['chmod', '+x', out_folder + '/tesp_monitor.sh'], check=False)
     except FileNotFoundError:
         pass
 
