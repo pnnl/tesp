@@ -235,7 +235,7 @@ def deepish_copy(obj):
             return obj  # ints
 
 
-def to_json(metrics_store, start_time):
+def to_json(metrics_store, start_time, clear =True):
     """ This function writes the metric data to JSON files (and clears the data)
 
     Args:
@@ -331,7 +331,7 @@ def to_hdf(metrics_store, start_time, num_writes_counter, clear):
                           # don't index here (can only do so with 'table') since we may chunk first, then index (possibly in post-processing even)
                           index=False)
             except Exception as e:
-                log.error('got error when attempting to write table to hdf {}: {}'.format(filename, e))
+                log.error('Error when attempting to write table to hdf {}: {}'.format(filename, e))
         else:
             log.debug('passing on trying to append an empty dataframe to file {}, key {}'.format(filename, key))
         # else:  # if try works, go here

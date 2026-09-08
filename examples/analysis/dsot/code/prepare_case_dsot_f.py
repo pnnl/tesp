@@ -101,7 +101,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
     # print(json.dumps(hvac_setpt, sort_keys = True, indent = 2))
 
     port = str(sys_config['port'])
-    caseName = sys_config['caseName']
+    caseName = sys_config['caseName'] + "_f"
     start_time = sys_config['StartTime']
     end_time = sys_config['EndTime']
 
