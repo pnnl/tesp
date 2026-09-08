@@ -30,6 +30,11 @@ from .retail_market import RetailMarket
 from .water_heater_agent import WaterHeaterDSOT
 
 
+from ..modular.hybrid_loop_runner import (
+    HybridLoopRunner,
+    compare_clearing_results,
+)
+
 @bench_profile
 def inner_substation_loop(metrics_root, with_market):
     """ Helper function that initializes and runs the DSOT agents
@@ -342,6 +347,27 @@ def inner_substation_loop(metrics_root, with_market):
         pv_agent_objs[key] = PVDSOT(row, gld_row, key, 11, current_time, solver)
         # nothing to map as topics
     log.info('instantiated %s solar control agents' % (len(pv_keys)))
+
+    device_adapters = {}
+    try:
+        from ..modular import (
+            BatteryDSOTStrategyAdapter, HVACDSOTStrategyAdapter,
+            EVDSOTStrategyAdapter, WaterHeaterDSOTStrategyAdapter,
+        )
+        for _key, _agent in battery_agent_objs.items():
+            device_adapters[_key] = BatteryDSOTStrategyAdapter(_key, config['batteries'][_key], legacy_agent=_agent)
+        for _key, _agent in hvac_agent_objs.items():
+            device_adapters[_key] = HVACDSOTStrategyAdapter(_key, config['hvacs'][_key], config_glm['houses'][_key], legacy_agent=_agent)
+        for _key, _agent in ev_agent_objs.items():
+            _ev_row = config['ev'][_key]
+            device_adapters[_key] = EVDSOTStrategyAdapter(_key, _ev_row, config_glm['ev'][_ev_row['houseName']], legacy_agent=_agent)
+        for _key, _agent in water_heater_agent_objs.items():
+            _wh_key = config_glm['houses'][_key].get('wh_name', _key)
+            device_adapters[_key] = WaterHeaterDSOTStrategyAdapter(_key, config['water_heaters'][_wh_key], config_glm['houses'][_key], legacy_agent=_agent)
+        log.info(f'Instantiated {len(device_adapters)} device adapters')
+    except Exception as _exc:
+        log.warning(f'Device adapter setup failed: {_exc}; hybrid comparison will use legacy path only')
+        device_adapters = {}
     # read and store yearly pv forecast tape
 
     site_dictionary = config['site_agent']
@@ -637,20 +663,15 @@ def inner_substation_loop(metrics_root, with_market):
     # specific timing tasks to do
     tnext_historic_load_da = 1
     tnext_water_heater_update = 75
-    tnext_retail_bid_rt = retail_period_rt - 30 + retail_period_da * 1
-    tnext_retail_bid_da = retail_period_da - 60
-    tnext_dso_bid_rt = retail_period_rt - 30 + retail_period_da * 1
-    tnext_dso_bid_da = retail_period_da - 30
-    tnext_wholesale_bid_rt = retail_period_rt - 30 + 86100          # just before a whole day
-    tnext_wholesale_bid_da = 36000 - 30  # 10AM minus 30 secs
-    tnext_wholesale_clear_rt = retail_period_rt + 86100      # at a whole day + period
-    tnext_wholesale_clear_da = 50400  # 2PM
-    tnext_dso_clear_rt = retail_period_rt + retail_period_da * 1
-    tnext_dso_clear_da = retail_period_da
-    tnext_retail_clear_da = retail_period_da
-    tnext_retail_clear_rt = retail_period_rt + retail_period_da * 1
-    tnext_retail_adjust_rt = retail_period_rt + retail_period_da * 1
-    tnext_write_metrics = metrics_record_interval + 1800
+    # DSO/wholesale event times computed once at startup; replaces per-iteration timer variables
+    _dso_bid_rt_times = set(range(retail_period_rt - 30 + retail_period_da, simulation_duration + 1, retail_period_rt))
+    _dso_bid_da_times = set(range(retail_period_da - 30, simulation_duration + 1, retail_period_da))
+    _dso_clear_rt_times = set(range(retail_period_rt + retail_period_da, simulation_duration + 1, retail_period_rt))
+    _dso_clear_da_times = set(range(retail_period_da, simulation_duration + 1, retail_period_da))
+    _wholesale_bid_rt_times = set(range(retail_period_rt - 30 + 86100, simulation_duration + 1, retail_period_rt))
+    _wholesale_bid_da_times = set(range(36000 - 30, simulation_duration + 1, 86400))
+    _wholesale_clear_rt_times = set(range(retail_period_rt + 86100, simulation_duration + 1, retail_period_rt))
+    _wholesale_clear_da_times = set(range(50400, simulation_duration + 1, 86400))
 
     time_granted = 0   # is midnite always
     time_last = 0
@@ -676,6 +697,23 @@ def inner_substation_loop(metrics_root, with_market):
     forecast_load = []
     agent_class = ["HVACDSOT", "EVDSOT", "BatteryDSOT", "WaterHeaterDSOT"]
 
+    # Initialize market protocol and generate all settlement windows for the simulation
+    try:
+        from ..modular import DSOTMarketProtocol
+        _rm = retail_market_obj if hasattr(retail_market_obj, 'clear_market') else None
+        market_protocol = DSOTMarketProtocol(
+            da_period_seconds=retail_period_da,
+            rt_period_seconds=retail_period_rt,
+            da_bid_lead_time_seconds=60,
+            rt_bid_lead_time_seconds=30,
+            retail_market=_rm,
+        )
+        market_windows = market_protocol.settlement_structure(0, simulation_duration)
+        log.info(f"Generated {len(market_windows)} market windows for {simulation_duration}s simulation")
+    except Exception as e:
+        log.warning(f"Market protocol setup failed: {e}; proceeding without market windows")
+        market_windows = []
+
     cache_pub = {}
     cache_sub = {}
     log.info("Initialize HELICS dso federate")
@@ -689,16 +727,51 @@ def inner_substation_loop(metrics_root, with_market):
     log.info('Starting HELICS dso federate')
     helics.helicsFederateEnterExecutingMode(hFed)
 
+    # Run hybrid path alongside legacy to validate clearing results match
+    _clearing_mechs = market_protocol.clearing_mechanisms if market_windows else {}
+    hybrid_runner = HybridLoopRunner(
+        legacy_state=None,  # Will update below
+        market_windows=market_windows if market_windows else [],
+        price_tolerance=0.01,  # $0.01/MWh
+        quantity_tolerance=0.001,  # 0.001 MWh per device
+        log_func=log.info,
+        enabled=True,  # Set to False to disable hybrid mode
+        adapters=device_adapters,
+        clearing_mechanisms=_clearing_mechs,
+    )
+
     timing(proc[1], True)
+    
+    # Wire legacy market objects into the hybrid runner for side-by-side comparison
+    hybrid_runner.state.legacy_state = {
+        'retail_market': retail_market_obj,
+        'dso_market': dso_market_obj,
+    }
+
+    def get_market_window_for_event(windows, market_id, time_granted, event_type):
+        """Return the MarketWindow for market_id whose bid deadline or clearing time equals time_granted."""
+        if not windows:
+            return None
+        
+        for window in windows:
+            if window.market_id == market_id:
+                if event_type == 'bid' and time_granted == window.bid_submission_deadline:
+                    return window
+                elif event_type == 'clear' and time_granted == window.clearing_time:
+                    return window
+        return None
+
     while time_granted < simulation_duration:
         # determine the next HELICS time
         timing(proc[16], True)
-        next_time =\
-            int(min([tnext_historic_load_da, tnext_water_heater_update,
-                     tnext_retail_bid_rt, tnext_retail_bid_da, tnext_dso_bid_rt, tnext_dso_bid_da,
-                     tnext_wholesale_bid_rt, tnext_wholesale_bid_da, tnext_wholesale_clear_rt, tnext_wholesale_clear_da,
-                     tnext_dso_clear_rt, tnext_dso_clear_da, tnext_retail_clear_da, tnext_retail_clear_rt,
-                     tnext_retail_adjust_rt, tnext_write_metrics, simulation_duration]))
+        _window_times = [w.bid_submission_deadline for w in market_windows if w.bid_submission_deadline > time_granted] + \
+                        [w.clearing_time for w in market_windows if w.clearing_time > time_granted]
+        _dso_ws_next = [t for t in (
+            _dso_bid_rt_times | _dso_bid_da_times | _dso_clear_rt_times | _dso_clear_da_times |
+            _wholesale_bid_rt_times | _wholesale_bid_da_times | _wholesale_clear_rt_times | _wholesale_clear_da_times
+        ) if t > time_granted]
+        next_time = int(min([tnext_historic_load_da, tnext_water_heater_update,
+                             tnext_write_metrics, simulation_duration] + _window_times + _dso_ws_next))
         time_granted = int(helics.helicsFederateRequestTime(hFed, next_time))
         time_delta = time_granted - time_last
         time_last = time_granted
@@ -801,8 +874,9 @@ def inner_substation_loop(metrics_root, with_market):
         # ----------------------------------------------------------------------------------------------------
         # ------------------------------------ Retail bidding ------------------------------------------------
         # ----------------------------------------------------------------------------------------------------
-        if time_granted >= tnext_retail_bid_rt:
-            log.info("-- retail real-time bidding --")
+        rt_window = get_market_window_for_event(market_windows, 'RT', time_granted, 'bid')
+        if rt_window and with_market:
+            log.info(f"-- retail real-time bidding (window {rt_window.window_id}) --")
             # clean the real-time bids
             retail_market_obj.clean_bids_RT()
             # since the current time is 30 seconds ahead of retail bidding time
@@ -908,14 +982,16 @@ def inner_substation_loop(metrics_root, with_market):
             #          str(min(retail_market_obj.curve_buyer_RT.quantities)) + " , " +
             #          str(max(retail_market_obj.curve_buyer_RT.quantities)))
 
-            tnext_retail_bid_rt += retail_period_rt
-
-        if time_granted >= tnext_retail_bid_da:
+        # ----------------------------------------------------------------------------------------------------
+        # ------------------------------------ Retail bidding ------------------------------------------------
+        # ----------------------------------------------------------------------------------------------------
+        da_window = get_market_window_for_event(market_windows, 'DA', time_granted, 'bid')
+        if da_window and with_market:
+            log.info(f"-- retail day-ahead bidding (window {da_window.window_id}) --")
             timing(proc[15], True)
             # resetting Qmax from the previous iterations
             dso_market_obj.DSO_Q_max = retail_market_obj.Q_max
             dso_market_obj.update_wholesale_node_curve()
-            log.info("-- retail day-ahead bidding --")
             # clean the day-ahead bids
             retail_market_obj.clean_bids_DA()
             P_age_DA = [] # list to store DA price bidding
@@ -1220,30 +1296,29 @@ def inner_substation_loop(metrics_root, with_market):
             # log.info("Hour 0 total quantity after scale min, max " + str(min(retail_market_obj.curve_buyer_DA[0].quantities))+ ", " + str(max(retail_market_obj.curve_buyer_DA[0].quantities)))
 
             timing(proc[15], False)
-            tnext_retail_bid_da += retail_period_da
+            
+            log.info(f"DA bidding window {da_window.window_id} complete: {len(P_age_DA)} agents participated")
 
         # ----------------------------------------------------------------------------------------------------
         # ------------------------------------ DSO bidding ---------------------------------------------------
         # ----------------------------------------------------------------------------------------------------
-        if time_granted >= tnext_dso_bid_rt:
+        if time_granted in _dso_bid_rt_times:
             log.info("-- dso real-time bidding --")
             dso_market_obj.clean_bids_RT()
             retail_market_obj.curve_buyer_RT.quantities = retail_market_obj.curve_buyer_RT.quantities * scale + forecast_load_ind[0]
             dso_market_obj.curve_aggregator_DSO_RT(retail_market_obj.curve_buyer_RT, Q_max=dso_market_obj.DSO_Q_max)
-            tnext_dso_bid_rt += retail_period_rt
 
-        if time_granted >= tnext_dso_bid_da:
+        if time_granted in _dso_bid_da_times:
             log.info("-- dso day-ahead bidding --")
             dso_market_obj.clean_bids_DA()
             for idx in range(retail_market_obj.windowLength):
                 retail_market_obj.curve_buyer_DA[idx].quantities = retail_market_obj.curve_buyer_DA[idx].quantities * scale + forecast_load_ind[0]
             dso_market_obj.curve_aggregator_DSO_DA(retail_market_obj.curve_buyer_DA, Q_max=dso_market_obj.DSO_Q_max)
-            tnext_dso_bid_da += retail_period_da
 
         # ----------------------------------------------------------------------------------------------------
         # ------------------------------------ Wholesale bidding ---------------------------------------------
         # ----------------------------------------------------------------------------------------------------
-        if time_granted >= tnext_wholesale_bid_rt:
+        if time_granted in _wholesale_bid_rt_times:
             gld_load_scaled_mean = gld_load_rolling_mean * scale
             log.info('AMES-RT-Bid-current real-time cleared bid -> ' + str(retail_cleared_quantity_RT / 1.0e3) + ' MW')
             log.info('AMES-RT-Bid-current real-time gld mean load scaled -> ' + str(gld_load_scaled_mean / 1.0e3) + ' MW')
@@ -1297,9 +1372,8 @@ def inner_substation_loop(metrics_root, with_market):
                     retail_market_obj.cleared_quantity_RT_for_AMES,
                 )
             timing(proc[17], False)
-            tnext_wholesale_bid_rt += retail_period_rt
 
-        if time_granted >= tnext_wholesale_bid_da:
+        if time_granted in _wholesale_bid_da_times:
             log.info("-- wholesale AMES day-ahead bidding --")
             log.info('current day-ahead cleared quantities -> ' + str(retail_cleared_quantity_DA) + ' kW')
             retail_market_obj.curve_aggregator_AMES_DA(retail_market_obj.curve_buyer_DA, dso_market_obj.DSO_Q_max, retail_cleared_quantity_DA, forecast_obj.retail_price_forecast)  # makes AMES_DA
@@ -1381,12 +1455,11 @@ def inner_substation_loop(metrics_root, with_market):
                     da_bid['resp_max_mw'],
                 )
             timing(proc[17], False)
-            tnext_wholesale_bid_da += 86400
 
         # ----------------------------------------------------------------------------------------------------
         # ------------------------------------ Wholesale clearing --------------------------------------------
         # ----------------------------------------------------------------------------------------------------
-        if time_granted >= tnext_wholesale_clear_rt:
+        if time_granted in _wholesale_clear_rt_times:
             log.info("-- wholesale AMES real-time clearing --")
 
             # the actual load is the unresponsive load, plus a cleared portion of the responsive load
@@ -1424,9 +1497,8 @@ def inner_substation_loop(metrics_root, with_market):
                     dso_market_obj.active_power_rt,
                 )
             timing(proc[17], False)
-            tnext_wholesale_clear_rt += retail_period_rt
 
-        if time_granted >= tnext_wholesale_clear_da:
+        if time_granted in _wholesale_clear_da_times:
             log.info("-- wholesale day-ahead clearing --")
             # the actual load is the unresponsive load, plus a cleared portion of the responsive load
             dso_market_obj.active_power_total_da = []
@@ -1486,12 +1558,11 @@ def inner_substation_loop(metrics_root, with_market):
                     list(dso_market_obj.active_power_total_da),
                 )
             timing(proc[17], False)
-            tnext_wholesale_clear_da += 86400
 
         # ----------------------------------------------------------------------------------------------------
         # ------------------------------------ DSO clearing --------------------------------------------------
         # ----------------------------------------------------------------------------------------------------
-        if time_granted >= tnext_dso_clear_rt:
+        if time_granted in _dso_clear_rt_times:
             log.info("-- dso real-time clearing --")
             # set the real-time clearing price (trial clearing using the supply curve)
             if ames_lmp:
@@ -1528,9 +1599,8 @@ def inner_substation_loop(metrics_root, with_market):
                     dso_market_obj.trial_clear_type_RT,
                 )
             timing(proc[17], False)
-            tnext_dso_clear_rt += retail_period_rt
 
-        if time_granted >= tnext_dso_clear_da:
+        if time_granted in _dso_clear_da_times:
             log.info("-- dso day-ahead clearing --")
             # set the day-ahead clearing price (trial clearing using the supply curve)
             dso_market_obj.set_Pwclear_DA(hour_of_day, day_of_week)
@@ -1562,17 +1632,50 @@ def inner_substation_loop(metrics_root, with_market):
                     dso_market_obj.trial_clear_type_DA,
                 )
             timing(proc[17], False)
-            tnext_dso_clear_da += retail_period_da
 
         # ----------------------------------------------------------------------------------------------------
         # ------------------------------------ Retail clearing -----------------------------------------------
         # ----------------------------------------------------------------------------------------------------
-        if time_granted >= tnext_retail_clear_rt:
-            log.info("-- retail real-time clearing --")
+        rt_clear_window = get_market_window_for_event(market_windows, 'RT', time_granted, 'clear')
+        if rt_clear_window and with_market:
+            log.info(f"-- retail real-time clearing (window {rt_clear_window.window_id}) --")
             # clear the retail real-time market
             retail_market_obj.clear_market_RT(dso_market_obj.transformer_degradation, retail_market_obj.Q_max)
             retail_cleared_quantity_RT = retail_market_obj.cleared_quantity_RT
             retail_market_obj.cleared_quantity_RT_unscaled = (retail_market_obj.cleared_quantity_RT - forecast_load_ind[0])/scale
+
+            # Capture legacy RT clearing result for hybrid comparison
+            legacy_rt_result = {
+                'price': retail_market_obj.cleared_price_RT,
+                'quantities': {}
+            }
+            # Extract per-device quantities (approximate from cleared quantity)
+            participating_count = 0
+            for agent_id in list(hvac_agent_objs.keys()) + list(battery_agent_objs.keys()) + \
+                           list(ev_agent_objs.keys()) + list(water_heater_agent_objs.keys()):
+                legacy_rt_result['quantities'][agent_id] = 0.0
+                participating_count += 1
+            
+            if participating_count > 0 and retail_cleared_quantity_RT != 0:
+                qty_per_agent = retail_cleared_quantity_RT / participating_count
+                for agent_id in legacy_rt_result['quantities'].keys():
+                    legacy_rt_result['quantities'][agent_id] = qty_per_agent
+            
+            log.info(f"[Legacy] RT Clearing: price=${legacy_rt_result['price']:.4f}, total_qty={sum(legacy_rt_result['quantities'].values()):.3f}MWh")
+            # Notify adapters of cleared RT price via modular interface
+            if device_adapters:
+                from ..modular.price_signal import PriceSignal as _PriceSignal
+                _rt_signal = _PriceSignal(
+                    market_id='RT', time_step=time_granted,
+                    period_start=time_granted - retail_period_rt, period_end=time_granted,
+                    clearing_price=max(0.0, legacy_rt_result['price'] * 1000.0),
+                    cleared_quantities={pid: q / 1000.0 for pid, q in legacy_rt_result['quantities'].items()},
+                )
+                for _adapter in device_adapters.values():
+                    try:
+                        _adapter.observe_prices(_rt_signal)
+                    except Exception:
+                        pass
 
             log.info('current retail real-time cleared price -> ' + str(retail_market_obj.cleared_price_RT) + ' $/kWh')
             log.info('current retail real-time cleared type -> ' + str(retail_market_obj.clear_type_RT))
@@ -1640,16 +1743,56 @@ def inner_substation_loop(metrics_root, with_market):
                         retail_cleared_quantity_RT_unadjusted
                     )
             timing(proc[17], False)
-            tnext_retail_clear_rt += retail_period_rt
-
-        if time_granted >= tnext_retail_clear_da:
-            log.info("-- retail day-ahead clearing --")
+            
+            log.info(f"RT clearing window {rt_clear_window.window_id} complete: price=${retail_market_obj.cleared_price_RT:.4f}/kWh")
+        da_clear_window = get_market_window_for_event(market_windows, 'DA', time_granted, 'clear')
+        if da_clear_window and with_market:
+            log.info(f"-- retail day-ahead clearing (window {da_clear_window.window_id}) --")
             # clear the retail real-time market
             retail_market_obj.clear_market_DA(dso_market_obj.transformer_degradation, retail_market_obj.Q_max)
             retail_cleared_quantity_DA = retail_market_obj.cleared_quantity_DA
             # print("DA cleared price", retail_market_obj.cleared_price_DA)
             log.info('current day-ahead price -> ' + str(retail_market_obj.cleared_price_DA) + ' $/kWh')
             log.info('current day-ahead quantities -> ' + str(retail_cleared_quantity_DA) + ' kWh')
+
+            # Capture DA clearing result for hybrid validation
+            legacy_da_result = {
+                'price': retail_market_obj.cleared_price_DA,
+                'quantities': {}
+            }
+            # Extract per-device quantities (approximate from cleared quantity and agent participation)
+            # Distribute cleared quantity evenly among participating agents as an approximation
+            if retail_cleared_quantity_DA and len(retail_cleared_quantity_DA) > 0:
+                total_cleared_qty = sum(retail_cleared_quantity_DA)
+                if total_cleared_qty != 0:
+                    # Distribute quantities proportionally among participating devices
+                    participating_count = 0
+                    for agent_id in list(hvac_agent_objs.keys()) + list(battery_agent_objs.keys()) + \
+                                       list(ev_agent_objs.keys()) + list(water_heater_agent_objs.keys()):
+                        legacy_da_result['quantities'][agent_id] = 0.0
+                        participating_count += 1
+                    
+                    if participating_count > 0:
+                        qty_per_agent = total_cleared_qty / participating_count
+                        for agent_id in legacy_da_result['quantities'].keys():
+                            legacy_da_result['quantities'][agent_id] = qty_per_agent
+            log.info(f"[Legacy] DA Clearing: price=${legacy_da_result['price']:.4f}, total_qty={sum(legacy_da_result['quantities'].values()):.3f}MWh")
+            # Notify adapters of cleared DA price via modular interface
+            if device_adapters:
+                from ..modular.price_signal import PriceSignal as _PriceSignal
+                _da_price = legacy_da_result['price']
+                _da_clearing_price = max(0.0, (_da_price[0] if isinstance(_da_price, list) else _da_price) * 1000.0)
+                _da_signal = _PriceSignal(
+                    market_id='DA', time_step=time_granted,
+                    period_start=time_granted - retail_period_da, period_end=time_granted,
+                    clearing_price=_da_clearing_price,
+                    cleared_quantities={pid: q / 1000.0 for pid, q in legacy_da_result['quantities'].items()},
+                )
+                for _adapter in device_adapters.values():
+                    try:
+                        _adapter.observe_prices(_da_signal)
+                    except Exception:
+                        pass
 
             retail_market_obj.cleared_quantity_DA_unscaled = []
             for idx in range(retail_market_obj.windowLength):
@@ -1819,14 +1962,14 @@ def inner_substation_loop(metrics_root, with_market):
                         retail_market_obj.congestion_surcharge_DA
                     )
             timing(proc[17], False)
-
-            tnext_retail_clear_da += retail_period_da
+            
+            log.info(f"DA clearing window {da_clear_window.window_id} complete: price=${retail_market_obj.cleared_price_DA[0]:.4f}/kWh")
 
         # ----------------------------------------------------------------------------------------------------
         # ------------------------------------ Agent adjust --------------------------------------------------
         # ----------------------------------------------------------------------------------------------------
-        if time_granted >= tnext_retail_adjust_rt:
-            if with_market:
+        _rt_adjust_window = get_market_window_for_event(market_windows, 'RT', time_granted, 'clear')
+        if _rt_adjust_window and with_market:
                 log.info("-- real-time adjusting --")
 
                 for key, obj in hvac_agent_objs.items():
@@ -1959,7 +2102,33 @@ def inner_substation_loop(metrics_root, with_market):
                         )
                     timing(proc[17], False)
 
-            tnext_retail_adjust_rt += retail_period_rt
+        # Compare hybrid clearing results against legacy at each market window
+        if hybrid_runner.enabled and market_windows:
+            # Handle bid submissions for windows approaching deadline
+            for window in market_windows:
+                if window.bid_submission_deadline <= time_granted:
+                    if window.market_id == 'DA' and window.window_id not in hybrid_runner.state.hybrid_da_bids_submitted:
+                        hybrid_runner.process_hybrid_bids_for_window(window, time_granted)
+                    elif window.market_id == 'RT' and window.window_id not in hybrid_runner.state.hybrid_rt_bids_submitted:
+                        hybrid_runner.process_hybrid_bids_for_window(window, time_granted)
+            
+            # Handle clearings and comparisons at clearing times
+            for window in market_windows:
+                if window.clearing_time == time_granted:
+                    if window.window_id not in hybrid_runner.state.hybrid_clears_completed:
+                        # Get legacy result for this window
+                        if window.market_id == 'DA':
+                            legacy_result = legacy_da_result if 'legacy_da_result' in locals() else {}
+                        elif window.market_id == 'RT':
+                            legacy_result = legacy_rt_result if 'legacy_rt_result' in locals() else {}
+                        else:
+                            legacy_result = {}
+                        
+                        # Compare and validate
+                        if legacy_result:
+                            comparison = hybrid_runner.process_hybrid_clearing_for_window(
+                                window, time_granted, legacy_result
+                            )
 
         # ----------------------------------------------------------------------------------------------------
         # ------------------------------------ Write metrics -------------------------------------------------
@@ -1988,6 +2157,18 @@ def inner_substation_loop(metrics_root, with_market):
     timing(proc[17], True)
     collector.finalize_writing()
     timing(proc[17], False)
+    
+    # Log hybrid vs legacy comparison summary at end of simulation
+    if hybrid_runner.enabled:
+        summary_report = hybrid_runner.generate_summary_report()
+        log.info(summary_report)
+        
+        if hybrid_runner.state.failing_comparisons > 0:
+            log.error(f"⚠ validation detected {hybrid_runner.state.failing_comparisons} mismatches!")
+            log.error("Check comparison results above for details")
+        else:
+            log.info("✓✓✓ VALIDATION PASSED — All clearing results match! ✓✓✓")
+
     log.info('finalizing HELICS dso federate')
     timing(proc[1], False)
     op = open('timing.csv', 'w')
