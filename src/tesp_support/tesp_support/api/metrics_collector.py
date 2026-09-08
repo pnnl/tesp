@@ -73,7 +73,7 @@ class MetricsTable:
                 log.warning(f'data is empty {self.data}, constructing empty dataframe for {filename}')
                 df = pd.DataFrame(columns=np.concatenate([idx_columns, self.columns]))
         except AssertionError as e:
-            log.error(f'got error: {e}, setting df to be empty!')
+            log.warning(f'Warning: {e}, setting df to be empty!')
             df = pd.DataFrame(columns=np.concatenate([idx_columns, self.columns]))
         return df.set_index(['time'])  # , 'uid'])#.set_index(idx_columns)
 
@@ -316,7 +316,7 @@ def to_hdf(metrics_store, start_time, num_writes_counter):
                           # don't index here (can only do so with 'table') since we may chunk first, then index (possibly in post-processing even)
                           index=False)
             except Exception as e:
-                log.error(f'got error when attempting to write table to hdf {filename}: {e}')
+                log.error(f'Error when attempting to write table to hdf {filename}: {e}')
         else:
             log.debug(f'passing on trying to append an empty dataframe to file {filename}, key {key}')
         # else:  # if try works, go here

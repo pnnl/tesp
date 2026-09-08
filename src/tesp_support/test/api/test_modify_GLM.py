@@ -185,7 +185,7 @@ def test_glmmodifier_randomize_skew():
     np.random.seed(42)
     
     # Test static method
-    skew = GLMModifier.randomize_skew(1800.0, 7200.0)
+    skew = modifier.randomize_skew(1800.0, 7200.0)
     assert isinstance(skew, float)
     assert -7200.0 <= skew <= 7200.0
     

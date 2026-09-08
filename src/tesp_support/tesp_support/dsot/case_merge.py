@@ -55,10 +55,10 @@ def merge_glm(target, sources, xfmva):
                         line = '  name ' + fdr + '_' + name + ';'
                         inConfig = False
                     if (not inSubstation and
-                        (' spacing ' in line) or (' configuration ' in line) or
+                        ((' spacing ' in line) or (' configuration ' in line) or
                         ('  conductor_1' in line) or ('  conductor_2' in line) or
                         ('  conductor_A' in line) or ('  conductor_B' in line) or
-                        ('  conductor_C' in line) or ('  conductor_N' in line)):
+                        ('  conductor_C' in line) or ('  conductor_N' in line))):
                         if 'IS220' in line or 'IS110' in line:
                             pass
                         else:

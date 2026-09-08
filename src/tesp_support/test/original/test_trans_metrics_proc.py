@@ -5,8 +5,9 @@ import os
 
 import matplotlib.pyplot as plt
 from tesp_support.api.data import tesp_path
-from tesp_support.valuation.TransmissionMetricsProcessor import TransmissionMetricsProcessor
-
+from tesp_support.valuation.TransmissionMetricsProcessor import (
+    TransmissionMetricsProcessor,
+)
 
 d = tesp_path + '/examples/analysis/SGIP1'
 subdir = [os.path.join(d, o) for o in os.listdir(d) if os.path.isdir(os.path.join(d, o))]

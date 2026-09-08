@@ -147,7 +147,7 @@ def parse_mva(arg):
     bParsed = False
     vals = [0.0, 0.0]
     for i in range(len(tok)):
-        if tok[i] == '+' or tok[i] == '-' and bLastDigit:
+        if (tok[i] == '+' or tok[i] == '-') and bLastDigit:
             vals[0] = float(tok[: i])
             vals[1] = float(tok[i:])
             bParsed = True

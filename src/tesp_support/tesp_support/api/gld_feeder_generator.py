@@ -977,7 +977,7 @@ class Residential_Build:
                 if self.config.rng.uniform(0, 1) <= properties['sh_gas']['electric']:
                     wh_fuel_type = 'electric'
             # percentage of homes with both electric space and water heating
-            elif house_fuel_type == 'electric' and self.rng.uniform(0, 1) <= properties['sh_electric']['electric']:
+            elif house_fuel_type == 'electric' and self.config.rng.uniform(0, 1) <= properties['sh_electric']['electric']:
                 wh_fuel_type = 'electric'
 
             if wh_fuel_type == 'electric':  # if the water heater fuel type is electric, install wh

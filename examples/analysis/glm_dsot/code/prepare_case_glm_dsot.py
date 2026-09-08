@@ -630,26 +630,26 @@ def prepare_case(case:str):
         print(f"=== Removing the following files: {filesToDelete} for {dso_key}. ===")
         [os.remove(os.path.join(os.path.abspath(caseName + '/' + dso_key), fileName)) for fileName in filesToDelete]
 
-        # Create the launch, kill and clean scripts for this case
-        if config["messenger"] == 'HELICS':
-            helpers.write_dsot_management_script(master_file="generate_case_config",
-                                                case_path=caseName,
-                                                config=config,
-                                                system_config=sys_config,
-                                                substation_config=dso_config,
-                                                weather_config=weather_config)
-        elif config["messenger"] == 'FNCS':
-            helpers.write_dsot_management_script_f(master_file="generate_case_config",
-                                    case_path=caseName,
-                                    config=config,
-                                    system_config=sys_config,
-                                    substation_config=dso_config,
-                                    weather_config=weather_config)
+    # Create the launch, kill and clean scripts for this case
+    if config["messenger"] == 'HELICS':
+        helpers.write_dsot_management_script(master_file="generate_case_config",
+                                            case_path=caseName,
+                                            config=config,
+                                            system_config=sys_config,
+                                            substation_config=dso_config,
+                                            weather_config=weather_config)
+    elif config["messenger"] == 'FNCS':
+        helpers.write_dsot_management_script_f(master_file="generate_case_config",
+                                case_path=caseName,
+                                config=config,
+                                system_config=sys_config,
+                                substation_config=dso_config,
+                                weather_config=weather_config)
             
-        if config["monitor"]:
-            # Write the monitor.json or monitor.yaml file used in the monitor GUI
-            import tesp_support.dsot.tesp_monitor as monitor
-            monitor.TespMonitorJSON.write_monitor(config, caseName)
+    if config["monitor"]:
+        # Write the monitor.json or monitor.yaml file used in the monitor GUI
+        import tesp_support.dsot.tesp_monitor as monitor
+        monitor.TespMonitorJSON.write_monitor(config, caseName)
 
     if config["messenger"] == 'HELICS':
         tso.write_file(caseName + '/tso_h.json')

@@ -1014,21 +1014,20 @@ def glm_diction(case_name, feed_key):
     feeders[feed_key] = {'house_count': len(houses), 'inverter_count': len(inverters), 'ev_count': len(ev)}
 
     try:
-        for name in glm.helics_msg:
+        for name in glm.helics_msg.instances:
             message_name = name
     except KeyError:
         pass
     try:
-        for name in glm.fncs_msg:
+        for name in glm.fncs_msg.instances:
             message_name = name
     except KeyError:
         pass
 
-    for substations in glm.substation.values():
-        substation = {'bulkpower_bus': 1,
+    substation = {'bulkpower_bus': 1,
                     'message_name': message_name,
-                    'transformer_MVA': float(substations["base_power"].strip('MVA')) * 1.0e-6,
-                    'base_feeder': substations["groupid"],
+                    'transformer_MVA': float(glm.substation.instances["network_node"]["base_power"].strip('MVA')) * 1.0e-6,
+                    'base_feeder': glm.substation.instances["network_node"]["groupid"],
                     'feeders': feeders,
                     'billingmeters': billingmeters,
                     'houses': houses,

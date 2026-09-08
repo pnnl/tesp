@@ -42,7 +42,6 @@ class GLMModifier:
         self.model = GLMModel()
         self.glm = self.model.glm
         self.defaults = Defaults
-        self.rng = None
         self.extra_billing_meters = set()
         assign_defaults(self.defaults, feeder_entities_path)
 
@@ -405,11 +404,10 @@ class GLMModifier:
         Returns:
             float: Randomized skew value
         """
-        local_rng = rng if rng is not None else self.rng
-        if local_rng is None:
+        if rng is None:
             sk = stdev * np.random.randn()
         else:
-            sk = stdev * local_rng.standard_normal()
+            sk = stdev * rng.standard_normal()
         if sk < -skew_abs_max:
             sk = -skew_abs_max
         elif sk > skew_abs_max:

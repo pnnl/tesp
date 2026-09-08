@@ -55,7 +55,7 @@ def load_player_loop_f(casename, keyName):
     # couple of checks
     if sRow < 0 or eRow < 0:
         raise Exception("Error: StartTime is before the start date of the data being loaded")
-    if not constant and sRow > vals_rows or eRow > vals_rows:
+    if not constant and (sRow > vals_rows or eRow > vals_rows):
         raise Exception("Error: StartTime is after the end date of the data being loaded")
     if tmax > nRow:
         raise Exception(f"Error: Tmax {tmax} is more than nRow {nRow}, the time period specified in StartTime and EndTime")
