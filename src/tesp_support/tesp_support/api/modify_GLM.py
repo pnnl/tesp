@@ -952,7 +952,7 @@ def _test2():
         # add house
         house_counter = house_counter + 1
         house_name = 'house_' + str(house_counter)
-        house = testMod.add_object('house', house_name, [])
+        house = testMod.add_object('house', house_name, {})
         house['parent'] = house_meter_name
         meter = testMod.add_object('transformer', 'f2_transformer', {'from': 'meter_1', 'to': 'meter_2'})
         meter = testMod.add_object('meter', 'meter_2', {'parent': 'meter_1'})

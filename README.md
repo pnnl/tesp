@@ -31,3 +31,4 @@ Change log:
 - v1.3.3  Add tesp_component download in tesp_support pypi, change directory structure. Add dockerfile for each module getting ready for dockerize COSU Simulations
 - v1.3.5  Minor changes and bugs fixes
 - v1.3.6  Updated versions for grid applications GridLAB-D and HELICS, new tools to modify GLM files and RECS implementation for GLM residential and commercial feeder
+- v1.3.8  Added customer preference curve generation, experimental monitor for DSOT like analysis, replace ref_load_hist with gld_load_hist in the DA and Ruff linter fixes. 

@@ -146,8 +146,7 @@ def read_agent_metrics(path, name_root, diction_name='', print_dictionary=False)
         if this_max_p > max_p:
             max_p = this_max_p
             cidx = i
-    print(f'Out of {len(c_keys):d} controllers, {nbidding:d} submitted bids and the highest bidder was {c_keys[cidx]:s} [{cidx:d}]'
-          )
+    print(f'Out of {len(c_keys):d} controllers, {nbidding:d} submitted bids and the highest bidder was {c_keys[cidx]:s} [{cidx:d}]')
 
     return {
         'hrs': hrs,

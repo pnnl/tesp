@@ -181,7 +181,7 @@ def startWeatherAgent(file):
         json_name = agentName + '.json'
         config = {}
         config['name'] = agentName
-        config['loglevel'] = "warning"
+        config['loglevel'] = 'warning'
         config['coreType'] = 'zmq'
         config['publications'] = []
 

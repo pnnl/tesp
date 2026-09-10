@@ -151,8 +151,7 @@ def adjust_date_time(start_date, offset_type, offset_val):
         offset_type (str): defines what interval of time is to be used. 
             The following identifiers can be used "years", "months", "days", 
             "hours", "minutes", "seconds", "nanoseconds"
-        offset_val (int): the number of time intervals that are to be added to 
-            tart_time
+        offset_val (int): the number of time intervals that are to be added to start_time
     Returns:
         dataframe: the modified date time
     """

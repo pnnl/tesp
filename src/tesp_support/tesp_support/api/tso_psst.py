@@ -1266,7 +1266,6 @@ def tso_psst_loop(casename):
         ppc['gencost'][:, 4] = 0.0  # can't use quadratic costs with CBC solver
     log.info(f'solver choice: {solver}')
 
-
     # -------------------------------------------------------------------------
     # 3) Alias MATPOWER arrays and case structures (bus/branch/gen/cost/DSO)
     # -------------------------------------------------------------------------
@@ -1799,6 +1798,7 @@ def tso_psst_loop(casename):
                     busnum = int(topic[12:])
                     ref_load_hist[busnum] = json.loads(val)
                     log.debug("at " + str(ts) + " " + topic + " " + val)
+
         # B) Event-driven model update
         if new_event:
             log.info("at " + str(ts))

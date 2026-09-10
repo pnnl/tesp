@@ -1171,16 +1171,14 @@ class HVACDSOT:  # TODO: update class name
                 pass
             else:
                 log.log(self.model_diag_level,
-                        f'{self.name} {sim_time} -- cooling_setpoint ({self.cooling_setpoint}), outside of nominal range {self.cooling_setpoint_lower} to {self.cooling_setpoint_upper}'
-                        )
+                        f'{self.name} {sim_time} -- cooling_setpoint ({self.cooling_setpoint}), outside of nominal range {self.cooling_setpoint_lower} to {self.cooling_setpoint_upper}')
         else:
             self.heating_setpoint = setpoint_tmp
             if self.heating_setpoint_lower < self.heating_setpoint < self.heating_setpoint_upper:
                 pass
             else:
                 log.log(self.model_diag_level,
-                        f'{self.name} {sim_time} -- heating_setpoint ({self.heating_setpoint}), outside of nominal range of {self.heating_setpoint_lower} to {self.heating_setpoint_upper}'
-                        )
+                        f'{self.name} {sim_time} -- heating_setpoint ({self.heating_setpoint}), outside of nominal range of {self.heating_setpoint_lower} to {self.heating_setpoint_upper}')
 
         if self.heating_setpoint + self.deadband / 2.0 >= self.cooling_setpoint - self.deadband / 2.0:
             if self.thermostat_mode == 'Heating':
@@ -1279,15 +1277,13 @@ class HVACDSOT:  # TODO: update class name
                 # log.info('basepoint_cooling is within the bounds.')
                 pass
             else:
-                log.log(self.model_diag_level, f'{self.name} {sim_time} -- basepoint_cooling ({self.basepoint_cooling}) is out of bounds.'
-                        )
+                log.log(self.model_diag_level, f'{self.name} {sim_time} -- basepoint_cooling ({self.basepoint_cooling}) is out of bounds.')
             self.basepoint_heating = val_heat
             if 60 < self.basepoint_heating < 85:
                 # log.info('basepoint_heating is within the bounds.')
                 pass
             else:
-                log.log(self.model_diag_level, f'{self.name} {sim_time} -- basepoint_heating ({self.basepoint_heating}) is out of bounds.'
-                        )
+                log.log(self.model_diag_level, f'{self.name} {sim_time} -- basepoint_heating ({self.basepoint_heating}) is out of bounds.')
             self.calc_thermostat_settings(sim_time)  # update thermostat settings
             return True
         return False
@@ -1359,11 +1355,9 @@ class HVACDSOT:  # TODO: update class name
             if self.air_temp - 20 < T_air < self.air_temp + 20:
                 T_air = self.air_temp
                 log.log(self.model_diag_level,
-                        f'{self.name} Severe Warning temp {T_air}: 20 degree swing, setting to last temperature'
-                        )
+                        f'{self.name} Severe Warning temp {T_air}: 20 degree swing, setting to last temperature')
             log.log(self.model_diag_level,
-                    f'{self.name} {sim_time} -- air_temp ({self.air_temp}) is out of bounds, outside of nominal range of {self.T_lower_limit} to {self.T_upper_limit}.'
-                    )
+                    f'{self.name} {sim_time} -- air_temp ({self.air_temp}) is out of bounds, outside of nominal range of {self.T_lower_limit} to {self.T_upper_limit}.')
         self.air_temp = T_air
 
         # This is a correction within the hour for the DA prediction of thermostat mode using heating as default

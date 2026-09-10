@@ -1055,8 +1055,7 @@ class WaterHeaterDSOT:
             # log.info('T_bottom is within the bounds.')
             pass
         else:
-            log.log(self.model_diag_level, f'{self.name} {sim_time} -- T_bottom is {self.T_bottom}, outside of nominal range of {T_bottom_lower} to {T_bottom_upper}'
-                    )
+            log.log(self.model_diag_level, f'{self.name} {sim_time} -- T_bottom is {self.T_bottom}, outside of nominal range of {T_bottom_lower} to {T_bottom_upper}')
 
     def set_wh_upper_temperature(self, message, sim_time):
         """ Sets the upper tank temperature attribute
@@ -1078,8 +1077,7 @@ class WaterHeaterDSOT:
             # log.info('T_upper is within the bounds.')
             pass
         else:
-            log.log(self.model_diag_level, f'{self.name} {sim_time} -- T_upper is {self.T_upper}, outside of nominal range of {T_upper_lower} to {T_upper_upper}'
-                    )
+            log.log(self.model_diag_level, f'{self.name} {sim_time} -- T_upper is {self.T_upper}, outside of nominal range of {T_upper_lower} to {T_upper_upper}')
 
     def set_wh_lower_state(self, message: str):
         """ Sets the lower element state attribute

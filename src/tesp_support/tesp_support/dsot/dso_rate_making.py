@@ -302,7 +302,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num,
             # temp = meter_data_df[meter_data_df['name'].str.contains(each)]
             try:
                 temp = meter_data_df.xs(each, level=1)[['real_power_avg', 'date']]
-            except KeyError as e:
+            except KeyError:
                 print("name not found:", repr(each))
                 raise
             meter_df.loc[(each, 'kw-hr'), day_name] = temp.loc[:, 'real_power_avg'].sum() / 1000 / 12

@@ -188,16 +188,14 @@ class GLMModel:
     def get_datatype(m_type:str):
         if m_type == "double":
             datatype = "REAL"
-        elif m_type in ["char8", "char32", "char256", "char1024"]:
+        elif m_type in ["char8", "char32", "char256", "char1024",
+                        "enumeration", "set", "timestamp",
+                        "complex", "complex_array", "double_array"]:
             datatype = "TEXT"
         elif m_type in ["int16", "int32", "int64"]:
             datatype = "INTEGER"
-        elif m_type in ["enumeration", "set"]:
-            datatype = "TEXT"
         elif m_type == "bool":
             datatype = "BOOLEAN"
-        elif m_type == "timestamp" or m_type == "complex" or m_type == "complex_array" or m_type == "double_array":
-            datatype = "TEXT"
         elif m_type in ["enduse", "loadshape", "object", "parent"]:
             datatype = "OBJECT"
         else:
