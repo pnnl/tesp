@@ -20,12 +20,12 @@ jobs:
         run: echo "VER=$(cat scripts/grid_version | tr -d '\n')" >> $GITHUB_OUTPUT
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
         with:
           driver: docker
 
       - name: Build tesp-ubuntu
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: scripts/docker
           file: scripts/docker/ubuntu.Dockerfile
@@ -36,7 +36,7 @@ jobs:
             UBUNTU_VERSION=24.04
 
       - name: Build tesp-library
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: scripts/docker
           file: scripts/docker/library.Dockerfile
@@ -51,7 +51,7 @@ jobs:
             SIM_USER=worker
 
       - name: Build tesp-build
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: scripts/build
           file: scripts/docker/build.Dockerfile
@@ -73,7 +73,7 @@ jobs:
 
 
       - name: login to hub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
