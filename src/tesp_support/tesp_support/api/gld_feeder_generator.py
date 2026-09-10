@@ -155,6 +155,7 @@ logging.getLogger('matplotlib.font_manager').disabled = True
 class Config:
     def __init__(self, config=None):
         # Assign default values to those not defined in config file
+        self.residential_meta_file_RECS = None
         self.keys = list(assign_defaults(self, config).keys())
         self.glm = GLMModifier()
         self.rng = np.random.default_rng(self.seed)
@@ -1461,8 +1462,8 @@ class Commercial_Build:
                 bldg['exterior_floor_fraction'] = 1
                 bldg['exterior_ceiling_fraction'] = 1
                 bldg['exterior_wall_fraction'] = 1
-                zone = 'all'
-                bldg['zonename'] = gld_strict_name(f'{key}_zn_{zone}_{comm_type}')
+                all_zones = 'all'
+                bldg['zonename'] = gld_strict_name(f'{key}_zn_{all_zones}_{comm_type}')
                 Commercial_Build.add_one_commercial_zone(self, bldg, key, phases)
 
             # Buildings between 10K and 30K sqft = six zones
