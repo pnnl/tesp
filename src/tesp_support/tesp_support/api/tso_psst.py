@@ -1835,7 +1835,7 @@ def tso_psst_loop(casename):
 
             # Run the day ahead
             if hour == 10 and mn == 0:
-                expected_da_buses = set(int(row[0]) for row in dsoBus)
+                expected_da_buses = {int(row[0]) for row in dsoBus}
                 missing_da_buses = expected_da_buses - da_bid_bus_received
                 if missing_da_buses:
                     log.warning("DA solve at T=%d: no DA bid received from %d bus(es) %s — "
