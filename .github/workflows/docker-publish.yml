@@ -2,9 +2,9 @@ name: Deploy Docker Image CI
 
 on:
   push:
-    branches: [ "main", "test-workflow" ]
+    branches: [ "rem_main", "test-workflow" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "rem_main" ]
 
 jobs:
   build:
