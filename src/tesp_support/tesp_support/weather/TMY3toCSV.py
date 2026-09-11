@@ -15,13 +15,11 @@ Public Functions:
 
 import io
 import warnings
+from urllib.request import Request, urlopen
+
 import dateutil
-
-import pandas as pd
 import matplotlib.pyplot as plt
-
-from urllib.request import urlopen, Request
-
+import pandas as pd
 
 # DateOffset is not vectorized and will throw a nuisance warning
 warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
@@ -43,8 +41,7 @@ def readtmy3(filename=None, coerce_year=None, recolumn=True):
             filename = _interactive_load()
         except Exception:
             raise Exception('Interactive load failed. Tkinter not supported '
-                            'on this system. Try installing X-Quartz and '
-                            'reloading')
+                            'on this system. Try installing X-Quartz and reloading')
 
     head = ['USAF', 'Name', 'State', 'TZ', 'latitude', 'longitude', 'altitude']
 
@@ -63,7 +60,7 @@ def readtmy3(filename=None, coerce_year=None, recolumn=True):
     # read in file metadata, advance buffer to second line
     firstline = csvdata.readline()
     if 'Request Rejected' in firstline:
-        raise IOError('Remote server rejected TMY file request')
+        raise OSError('Remote server rejected TMY file request')
 
     meta = dict(zip(head, firstline.rstrip('\n').split(",")))
 
@@ -84,16 +81,22 @@ def readtmy3(filename=None, coerce_year=None, recolumn=True):
     #     date_parser=lambda *x: _parsedate(*x, year=coerce_year),
     #     index_col='datetime')
 
-    converters = {
-        'Time (HH:MM)': lambda x: _parsehour(x),
-    }
+    # converters = {
+    #     'Time (HH:MM)': lambda x: _parsehour(x),
+    # }
 
-    data = pd.read_csv(
-        csvdata, header=0,
-        parse_dates={'datetime': ['Date (MM/DD/YYYY)', 'Time (HH:MM)']},
-        converters=converters,
-        index_col='datetime'
-    )
+    # data = pd.read_csv(
+    #     csvdata, header=0,
+    #     parse_dates={'datetime': ['Date (MM/DD/YYYY)', 'Time (HH:MM)']},
+    #     converters=converters,
+    #     index_col='datetime'
+    # )
+
+    data = pd.read_csv(csvdata, header=0)
+    data['Time (HH:MM)'] = data['Time (HH:MM)'].apply(_parsehour)
+    data['datetime'] = data['Date (MM/DD/YYYY)'] + " " + data['Time (HH:MM)']
+    data['datetime'] = pd.to_datetime(data['datetime'])
+    data.set_index("datetime", inplace=True)
 
     if coerce_year is not None:
         data['datetime'] = data['datetime'].replace(year=coerce_year)
@@ -125,7 +128,7 @@ def _parsedate(ymd, hour, year=None):
     # stupidly complicated due to TMY3's usage of hour 24
     # and dateutil's inability to handle that.
     offset_hour = int(hour[:2]) - 1
-    offset_datetime = '{} {}:00'.format(ymd, offset_hour)
+    offset_datetime = f'{ymd} {offset_hour}:00'
     offset_date = dateutil.parser.parse(offset_datetime)
     true_date = offset_date + dateutil.relativedelta.relativedelta(hours=1)
     if year is not None:
@@ -244,10 +247,10 @@ def weathercsv_cloudy_day(start_time, end_time, output_file):
     a = day_weather.temperature
     b = a.tolist()
     # define start and end time
-    start_down = int(13 * 12)
-    stop_down = int(13.125 * 12)
-    start_up = int(14.5 * 12)
-    stop_up = int(16 * 12)
+    start_down = int(13.0 * 12.0)
+    stop_down = int(13.125 * 12.0)
+    start_up = int(14.5 * 12.0)
+    stop_up = int(16.0 * 12.0)
     # define a down magnitude
     mag = 3
     slope_down = -mag / (stop_down - start_down)

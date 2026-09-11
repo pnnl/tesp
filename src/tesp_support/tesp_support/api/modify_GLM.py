@@ -2,6 +2,7 @@
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: glm_modifier.py
 import math
+import sys
 
 import numpy as np
 
@@ -130,21 +131,20 @@ class GLMModifier:
             bool: Indicates whether the rename succeeded
         """
         object_entity = self.model.object_entities[gld_type]
-        if object_entity:
-            if object_entity.instances[old_name]:
-                model_object = self.model.model[gld_type]
-                for object_name in self.model.object_entities:
-                    _instances = self.model.object_entities[object_name].instances
-                    for _instance_name, _instance in _instances.items():
-                        for _attr, _val in _instance.items():
-                            if _val == old_name:
-                                _instances[_instance_name][_attr] = new_name
-                if new_name != old_name:
-                    object_entity.instances[new_name] = object_entity.instances[old_name]
-                    del object_entity.instances[old_name]
-                    model_object[new_name] = model_object[old_name]
-                    del model_object[old_name]
-                return True
+        if object_entity and object_entity.instances[old_name]:
+            model_object = self.model.model[gld_type]
+            for object_name in self.model.object_entities:
+                _instances = self.model.object_entities[object_name].instances
+                for _instance_name, _instance in _instances.items():
+                    for _attr, _val in _instance.items():
+                        if _val == old_name:
+                            _instances[_instance_name][_attr] = new_name
+            if new_name != old_name:
+                object_entity.instances[new_name] = object_entity.instances[old_name]
+                del object_entity.instances[old_name]
+                model_object[new_name] = model_object[old_name]
+                del model_object[old_name]
+            return True
         return False
 
     def del_object(self, gld_type: str, name: str) -> None:
@@ -162,9 +162,8 @@ class GLMModifier:
             if myObj.find_item('parent'):
                 for myName in myObj.instances:
                     instance = myObj.instances[myName]
-                    if 'parent' in instance.keys():
-                        if instance['parent'] == name:
-                            myArr.append(myName)
+                    if 'parent' in instance and instance['parent'] == name:
+                        myArr.append(myName)
             # TODO from-to relations
             for myName in myArr:
                 self.model.del_object(gld_type, name)
@@ -174,7 +173,6 @@ class GLMModifier:
         """UNIMPLEMENTED
         """
         # TODO replace node with node or edge with edge classes
-        pass
 
     def add_object_attr(self, gld_type: str, name: str, item_name: str, item_value: str) -> None:
         """Adds an attribute to an existing object (those that start "object ..." in a .glm
@@ -207,7 +205,7 @@ class GLMModifier:
         self.model.object_entities[gld_type].del_item(name, item_name)
 
     # Read and Write .GLM files
-    def read_model(self, filepath: str) -> bool:
+    def read_model(self, filepath: str) -> tuple[GLMModel, bool]:
         """Reads in GridLAB-D model from a file (.glm) and stores it as an instance of the GLMModel object.
 
         Args:
@@ -359,7 +357,8 @@ class GLMModifier:
                 return row
         return 999999
 
-    def randomize_residential_skew(self, skew_std: float|None = None, skew_abs_max: float|None = None) -> float:
+    def randomize_residential_skew(self, skew_std: float|None = None, skew_abs_max: float|None = None,
+                                   rng: np.random.Generator|None = None) -> float:
         """Returns a random value used to diversify the residential loads being
         defined with schedule skew. Uses two parameters found in
         feeder defaults.json that can optionally be defined by the caller
@@ -374,9 +373,10 @@ class GLMModifier:
             skew_std = self.defaults.residential_skew_std
         if skew_abs_max is None:
             skew_abs_max = self.defaults.residential_skew_max
-        return self.randomize_skew(skew_std, skew_abs_max)
+        return self.randomize_skew(skew_std, skew_abs_max, rng=rng)
 
-    def randomize_commercial_skew(self, skew_std: float|None = None, skew_abs_max: float|None = None, ) -> float:
+    def randomize_commercial_skew(self, skew_std: float|None = None, skew_abs_max: float|None = None,
+                                  rng: np.random.Generator|None = None) -> float:
         """Returns a random value used to diversify the commercial loads being
         defined with schedule skew. Uses two parameters found in
         feeder defaults.json that can optionally be defined by the caller
@@ -391,10 +391,9 @@ class GLMModifier:
             skew_std = self.defaults.commercial_skew_std
         if skew_abs_max is None:
             skew_abs_max = self.defaults.commercial_skew_max
-        return self.randomize_skew(skew_std, skew_abs_max)
+        return self.randomize_skew(skew_std, skew_abs_max, rng=rng)
 
-    @staticmethod
-    def randomize_skew(stdev: float, skew_abs_max: float) -> float:
+    def randomize_skew(self, stdev: float, skew_abs_max: float, rng: np.random.Generator|None = None) -> float:
         """Samples a normal distribution to find a schedule skew value given
         a standard deviation and an absolute maximum deviation.
 
@@ -405,7 +404,10 @@ class GLMModifier:
         Returns:
             float: Randomized skew value
         """
-        sk = stdev * np.random.randn()
+        if rng is None:
+            sk = stdev * np.random.randn()
+        else:
+            sk = stdev * rng.standard_normal()
         if sk < -skew_abs_max:
             sk = -skew_abs_max
         elif sk > skew_abs_max:
@@ -565,7 +567,7 @@ class GLMModifier:
         except Exception:
             return
         for e_name, e_object in entity.items():
-            params = dict()
+            params = {}
             for p in e_object:
                 if ':' in str(e_object[p]):
                     params[p] = self.glm.hash[e_object[p]]
@@ -591,7 +593,7 @@ class GLMModifier:
         except Exception:
             return
         for e_name, e_object in entity.items():
-            params = dict()
+            params = {}
             if e_name in seg_loads:
                 # print('// downstream', '{:.2f}'.format(seg_loads[o][0]), 'kva on', seg_loads[o][1])
                 for p in e_object:
@@ -604,9 +606,8 @@ class GLMModifier:
                             params[p] = e_object[p]
             self.add_object(gld_class, e_name, params)
 
-            if self.defaults.metrics_interval > 0:
-                if gld_class in ['capacitor', 'regulator', 'transformer']:
-                    self.add_metrics_collector(e_name, gld_class)
+            if self.defaults.metrics_interval > 0 and gld_class in ['capacitor', 'regulator', 'transformer']:
+                self.add_metrics_collector(e_name, gld_class)
 
     def add_voltage_class(self, gld_class: str, v_ln: float, v_ll: float, secmtrnode: dict) -> None:
         """Write GridLAB-D instances that have a primary nominal voltage (i.e. node, meter and load).
@@ -638,9 +639,8 @@ class GLMModifier:
         for e_name, e_object in entity.items():
             phs = e_object['phases']
             vnom = v_ln
-            if 'bustype' in e_object:
-                if e_object['bustype'] == 'SWING':
-                    self.add_substation(e_name, phs, v_ll)
+            if 'bustype' in e_object and e_object['bustype'] == 'SWING':
+                self.add_substation(e_name, phs, v_ll)
             parent = ''
             prefix = ''
             if str.find(phs, 'S') >= 0:
@@ -668,9 +668,9 @@ class GLMModifier:
                 params["parent"] = parent
             if 'groupid' in e_object:
                 params["groupid"] = e_object['groupid']
-            if 'bustype' in e_object:  # already moved the SWING bus behind substation transformer
-                if e_object['bustype'] != 'SWING':
-                    params["bustype"] = e_object['bustype']
+            # already moved the SWING bus behind substation transformer
+            if 'bustype' in e_object and e_object['bustype'] != 'SWING':
+                params["bustype"] = e_object['bustype']
             params["phases"] = phs
             params["nominal_voltage"] = str(vnom)
             if 'load_class' in e_object:
@@ -757,7 +757,7 @@ class GLMModifier:
         Returns:
             None
         """
-        params = dict()
+        params = {}
         name = self.defaults.name_prefix + key
         params["power_rating"] = format(kvat, '.2f')
         kvaphase = kvat
@@ -811,7 +811,7 @@ class GLMModifier:
 
         for row in self.defaults.triplex_conductors:
             name = self.defaults.name_prefix + row[0]
-            params = dict()
+            params = {}
             params["resistance"] = row[1]
             params["geometric_mean_radius"] = row[2]
             rating_str = str(row[3])
@@ -821,7 +821,7 @@ class GLMModifier:
             params["rating.winter.emergency"] = rating_str
             self.add_object("triplex_line_conductor", name, params)
         for row in self.defaults.triplex_configurations:
-            params = dict()
+            params = {}
             name = self.defaults.name_prefix + row[0]
             params["conductor_1"] = self.defaults.name_prefix + row[1]
             params["conductor_2"] = self.defaults.name_prefix + row[1]
@@ -856,13 +856,13 @@ class GLMModifier:
         name = 'substation_xfmr_config'
         params = {"connect_type": 'WYE_WYE',
                   "install_type": 'PADMOUNT',
-                  "primary_voltage": '{:.2f}'.format(self.defaults.transmissionVoltage),
-                  "secondary_voltage": '{:.2f}'.format(v_ll),
-                  "power_rating": '{:.2f}'.format(self.defaults.transmissionXfmrMVAbase * 1000.0),
-                  "resistance": '{:.2f}'.format(0.01 * self.defaults.transmissionXfmrRpct),
-                  "reactance": '{:.2f}'.format(0.01 * self.defaults.transmissionXfmrXpct),
-                  "shunt_resistance": '{:.2f}'.format(100.0 / self.defaults.transmissionXfmrNLLpct),
-                  "shunt_reactance": '{:.2f}'.format(100.0 / self.defaults.transmissionXfmrImagpct)}
+                  "primary_voltage": f'{self.defaults.transmissionVoltage:.2f}',
+                  "secondary_voltage": f'{v_ll:.2f}',
+                  "power_rating": f'{self.defaults.transmissionXfmrMVAbase * 1000.0:.2f}',
+                  "resistance": f'{0.01 * self.defaults.transmissionXfmrRpct:.2f}',
+                  "reactance": f'{0.01 * self.defaults.transmissionXfmrXpct:.2f}',
+                  "shunt_resistance": f'{100.0 / self.defaults.transmissionXfmrNLLpct:.2f}',
+                  "shunt_reactance": f'{100.0 / self.defaults.transmissionXfmrImagpct:.2f}'}
         self.add_object("transformer_configuration", name, params)
 
         name = "substation_transformer"
@@ -875,9 +875,9 @@ class GLMModifier:
         name = "network_node"
         params = {"groupid": self.defaults.base_feeder_name.replace(".glm", ""),
                   "bustype": 'SWING',
-                  "nominal_voltage": '{:.2f}'.format(vsrcln),
-                  "positive_sequence_voltage": '{:.2f}'.format(vsrcln),
-                  "base_power": '{:.2f}'.format(self.defaults.transmissionXfmrMVAbase * 1000000.0),
+                  "nominal_voltage": f'{vsrcln:.2f}',
+                  "positive_sequence_voltage": f'{vsrcln:.2f}',
+                  "base_power": f'{self.defaults.transmissionXfmrMVAbase * 1000000.0:.2f}',
                   "power_convergence_value": "100.0",
                   "phases": phs}
         self.add_object("substation", name, params)
@@ -887,22 +887,18 @@ class GLMModifier:
     def resize(self):
         """UNIMPLEMENTED
         """
-        pass
 
     def resize_secondary_transformers(self) :
         """UNIMPLEMENTED
         """
-        pass
 
     def resize_substation_transformer(self):
         """UNIMPLEMENTED
         """
-        pass
 
     def set_simulation_times(self):
         """UNIMPLEMENTED
         """
-        pass
 
 
 def _test1():
@@ -935,14 +931,14 @@ def _test2():
     testMod = GLMModifier()
     glm, success = testMod.model.readBackboneModel(feeder)
     if not success:
-        exit()
+        sys.exit()
 
     testMod.rename_object("node", "n3", "mynode3")
     # testMod.model.plot_model()
     meter_counter = 0
     house_counter = 0
     house_meter_counter = 0
-    for key, value in glm.load.items():
+    for key in glm.load:
         # add meter for this load
         meter_counter = meter_counter + 1
         meter_name = 'meter_' + str(meter_counter)
@@ -956,7 +952,7 @@ def _test2():
         # add house
         house_counter = house_counter + 1
         house_name = 'house_' + str(house_counter)
-        house = testMod.add_object('house', house_name, [])
+        house = testMod.add_object('house', house_name, {})
         house['parent'] = house_meter_name
         meter = testMod.add_object('transformer', 'f2_transformer', {'from': 'meter_1', 'to': 'meter_2'})
         meter = testMod.add_object('meter', 'meter_2', {'parent': 'meter_1'})

@@ -5,10 +5,10 @@
 # @Last modified time: 2021-11-09T14:20:18-08:00
 
 
-import matplotlib.ticker as ticker
 import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
+from matplotlib import ticker
 from matplotlib.patches import Patch
 
 

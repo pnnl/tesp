@@ -7,11 +7,13 @@
 
 import itertools
 import math
+
 import pandas as pd
-from ..dsot import plots as pt
-from ..dsot import dso_rate_making as rm
+
 from ..dsot import customer_CFS as ccfs
 from ..dsot import dso_CFS as cfs
+from ..dsot import dso_rate_making as rm
+from ..dsot import plots as pt
 
 # get rid of the burn-in days
 
@@ -20,7 +22,7 @@ from ..dsot import dso_CFS as cfs
 # filenames[0]
 
 # old functions
-'''
+"""
 def get_correct_days(dso_path, filenames):
     sub_filenames = []
     temp_df = pd.read_hdf(os.path.join(dso_path, filenames[0]), key='/metrics_df0', mode='r')
@@ -102,20 +104,20 @@ def dict_add(dict_list):
 
 def get_number_levels(d):
     return max(get_number_levels(v) if isinstance(v, dict) else 0 for v in d.values()) + 1
-'''
+"""
 
 
 ###################################################
 
 def returnDictSum(temp_dict):
     temp_sum = 0
-    for k, v in temp_dict.items():
+    for v in temp_dict.values():
         if isinstance(v, dict):
             temp_sum += returnDictSum(v)
         elif isinstance(v, str):
             pass
         else:
-            temp_sum += temp_dict[k]
+            temp_sum += v
 
     return temp_sum
 
@@ -137,7 +139,7 @@ def TEAM(FteLev1=100.0, SalaryEsc1=1.3):
     FteTeam = sum(Fte)
 
     Esc = [0.0] * 6
-    for N in range(0, 6):
+    for N in range(6):
         Esc[N] = SalaryEsc1 ** N
 
     Salary = [0.0] * 6

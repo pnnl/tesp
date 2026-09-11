@@ -2,11 +2,11 @@
 import json
 import random
 import sys
+
 import numpy as np
 import scipy.interpolate as ip
-
-import tesp_support.original.fncs as fncs
 import tesp_support.api.tso_helpers as tso
+from tesp_support.original import fncs
 
 # day-ahead market runs at noon every day
 da_period = 86400
@@ -158,7 +158,7 @@ if len(sys.argv) > 1:
     fp = open(sys.argv[1], 'w')
     json.dump(da_bids, fp, indent=2)
     fp.close()
-    quit()
+    sys.exit()
 
 # initialize for time stepping and metrics
 op = open(casename + '_dso.csv', 'w')
@@ -179,11 +179,7 @@ while ts <= tmax:
     events = fncs.get_events()
     for topic in events:
         val = fncs.get_value(topic)
-        if 'LMP_RT_Bus_' in topic:
-            busnum = int(topic[11:])
-        # following is for tso_psst_f.py, the AMES/PSST version
-        #      gld_bus[busnum]['lmpRT'][] = float(val)
-        elif 'LMP_DA_Bus_' in topic:
+        if 'LMP_RT_Bus_' in topic or 'LMP_DA_Bus_' in topic:
             busnum = int(topic[11:])
         # following is for tso_psst_f.py, the AMES/PSST version
         #      gld_bus[busnum]['lmpDA'][] = float(val)
@@ -279,7 +275,7 @@ while ts <= tmax:
         gld_bus[busnum]['q'] = q
         gld_bus[busnum]['resp'] = p_cleared
         gld_bus[busnum]['resp_max'] = resp_max
-        distload = '{:.3f}'.format(p / gld_scale) + '+' + '{:.3f}'.format(q / gld_scale) + 'j MVA'
+        distload = f'{p / gld_scale:.3f}' + '+' + f'{q / gld_scale:.3f}' + 'j MVA'
         pubtopic = 'gridlabdBus' + str(busnum)  # this is what the tso8stub.yaml expects to receive from GridLAB-D
         fncs.publish(pubtopic + '/distribution_load', distload)
 
@@ -296,8 +292,8 @@ while ts <= tmax:
         A.append(gld_bus[i]['resp_max'])
     for i in range(1, 9, 1):
         A.append(gld_bus[i]['resp'])
-    csvStr = ','.join('{:5f}'.format(item) for item in A)
-    print('{:d},{:s}'.format(ts, csvStr), file=op, flush=True)
+    csvStr = ','.join(f'{item:5f}' for item in A)
+    print(f'{ts:d},{csvStr:s}', file=op, flush=True)
 
     # request the next time step, if necessary
     if ts >= tmax:

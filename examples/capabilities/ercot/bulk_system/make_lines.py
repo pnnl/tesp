@@ -2,11 +2,12 @@
 # file: make_lines.py
 
 import json
+import math
+
+import matplotlib.pyplot as plt
+import networkx as nx
 import numpy as np
 from scipy.spatial import Delaunay
-import matplotlib.pyplot as plt 
-import networkx as nx
-import math 
 
 # units are kv, ohms and mvar per mile, amperes, MW
 lineparameters = [
@@ -35,7 +36,7 @@ def printcsv (ln, n1, n2, xy, npar, kv, parmrow, fp):
 	x2 = xy[n2][0]
 	y2 = xy[n2][1]
 	row = lineparameters[parmrow]
-	print (ln, n1, n2, kv, '{:.2f}'.format(distance(y1, x1, y2, x2)), npar,
+	print (ln, n1, n2, kv, f'{distance(y1, x1, y2, x2):.2f}', npar,
 				 row['r1'], row['x1'], row['b1'], row['amps'], row['mw'], sep=',', file=fp)
 
 # latitude is y, longitude is x
@@ -75,7 +76,7 @@ if __name__ == '__main__':
 	for n in range(nbus):
 		load = load + pwr[n][0]
 		gen = gen + pwr[n][1]
-	print ('total load:', '{:.2f}'.format(load), 'generation:', '{:.2f}'.format(gen))
+	print ('total load:', f'{load:.2f}', 'generation:', f'{gen:.2f}')
 
 	# define the 138-kV lines
 	p138 = np.array (xy)
@@ -180,8 +181,8 @@ if __name__ == '__main__':
 	fp = open ('Buses.csv', 'w')
 	print('bus', 'lon', 'lat', 'load', 'gen', 'diff', sep=',', file=fp)
 	for n in range(nbus):
-		print (n, xy[n][0], xy[n][1], '{:.2f}'.format(pwr[n][0]), '{:.2f}'.format(pwr[n][1]), 
-					 '{:.2f}'.format(pwr[n][2]), sep=',', file=fp)
+		print (n, xy[n][0], xy[n][1], f'{pwr[n][0]:.2f}', f'{pwr[n][1]:.2f}', 
+					 f'{pwr[n][2]:.2f}', sep=',', file=fp)
 	fp.close ()
 
 	fp = open ('Lines.csv', 'w')

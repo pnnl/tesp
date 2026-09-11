@@ -20,11 +20,12 @@ The function call order for this agent is:
 
 """
 import math
-import numpy as np
 from copy import deepcopy
+
+import numpy as np
 import pyomo.environ as pyo
 
-from ..api.helpers import get_run_solver, logging, log
+from ..api.helpers import get_run_solver, log, logging
 from ..api.parse_helpers import parse_number
 
 logging.getLogger('pyomo.core').setLevel(logging.ERROR)
@@ -239,10 +240,10 @@ class WaterHeaterDSOT:
         self.RT_Q_min = 0.0
 
         #interpolation
-        self.interpolation = bool(True)
-        self.RT_minute_count_interpolation = float(0.0)
-        self.previous_Q_RT = float(0.0)
-        self.delta_Q = float(0.0)
+        self.interpolation = True
+        self.RT_minute_count_interpolation = 0.0
+        self.previous_Q_RT = 0.0
+        self.delta_Q = 0.0
         # self.previous_Q_DA = float(0.0)
 
         # optimization
@@ -353,7 +354,7 @@ class WaterHeaterDSOT:
             # log.info('runtime_upper is within the bounds.')
             pass
         else:
-            log.log(self.model_diag_level, '{} {} -- runtime_upper is {}, outside of nominal range of {} to {}'.format(self.name, sim_time, self.runtime_upper, runtime_upper_lower, runtime_upper_upper))
+            log.log(self.model_diag_level, f'{self.name} {sim_time} -- runtime_upper is {self.runtime_upper}, outside of nominal range of {runtime_upper_lower} to {runtime_upper_upper}')
         
         self.runtime_bottom = np.sum(np.array(self.states_bottom), axis=0)[2]
         runtime_bottom_lower = 0
@@ -362,7 +363,7 @@ class WaterHeaterDSOT:
             # log.info('runtime_bottom is within the bounds.')
             pass
         else:
-            log.log(self.model_diag_level, '{} {} -- runtime_bottom is {}, outside of nominal range of {} to {}'.format(self.name, sim_time, self.runtime_bottom, runtime_bottom_lower, runtime_bottom_upper))
+            log.log(self.model_diag_level, f'{self.name} {sim_time} -- runtime_bottom is {self.runtime_bottom}, outside of nominal range of {runtime_bottom_lower} to {runtime_bottom_upper}')
         
         self.runtime_wdrate = np.sum(np.array(self.wd_rate_val), axis=0)[2]
         # =============================================================================
@@ -377,7 +378,7 @@ class WaterHeaterDSOT:
             # log.info('E_upper is within the bounds.')
             pass
         else:
-            log.log(self.model_diag_level, '{} {} -- E_upper is {}, outside of nominal range of {} to {}'.format(self.name, sim_time, self.E_upper, E_upper_lower, E_upper_upper))
+            log.log(self.model_diag_level, f'{self.name} {sim_time} -- E_upper is {self.E_upper}, outside of nominal range of {E_upper_lower} to {E_upper_upper}')
         
         self.E_bottom = self.runtime_bottom / 5 * self.Phw / self.hourto5min
         E_bottom_lower = 0
@@ -386,7 +387,7 @@ class WaterHeaterDSOT:
             # log.info('E_bottom is within the bounds.')
             pass
         else:
-            log.log(self.model_diag_level, '{} {} -- E_bottom is {}, outside of nominal range of {} to {}'.format(self.name, sim_time, self.E_bottom, E_bottom_lower, E_bottom_upper))
+            log.log(self.model_diag_level, f'{self.name} {sim_time} -- E_bottom is {self.E_bottom}, outside of nominal range of {E_bottom_lower} to {E_bottom_upper}')
         self.E_gld = self.E_upper + self.E_bottom
 
         SOHC_lower = 0
@@ -396,7 +397,7 @@ class WaterHeaterDSOT:
             # log.info('SOHC is within the bounds.')
             pass
         else:
-            log.log(self.model_diag_level, '{} {} -- SOHC is {}, outside of nominal range of {} to {}'.format(self.name, sim_time, self.SOHC, SOHC_lower, SOHC_upper))
+            log.log(self.model_diag_level, f'{self.name} {sim_time} -- SOHC is {self.SOHC}, outside of nominal range of {SOHC_lower} to {SOHC_upper}')
         
         self.wd_rate = self.runtime_wdrate / 5
 #        if 0 <= self.wd_rate and 'something' >= self.wd_rate:
@@ -450,11 +451,9 @@ class WaterHeaterDSOT:
         Heat_loss_waterdraw = Heat_gain - Heat_loss_ambient + Delta_heat  ##changed recently
         estimated_wd_rate = Heat_loss_waterdraw / (((self.his_T_upper[-1] + self.his_T_upper[
             -2]) / 2 - self.Tcold) * self.Cp * self.Rho * 5 / self.GALperFt3)
-        if estimated_wd_rate < 0:  # changed to cap water draw
-            estimated_wd_rate = 0
-        if estimated_wd_rate > 6:  # changed to cap water draw
-            estimated_wd_rate = 6
-
+        # changed to cap water draw
+        estimated_wd_rate = max(estimated_wd_rate, 0)
+        estimated_wd_rate = min(estimated_wd_rate, 6)
         return estimated_wd_rate
 
     def set_price_forecast(self, forecasted_price):
@@ -536,20 +535,16 @@ class WaterHeaterDSOT:
             BID[t][3][P] = self.Phw * CurveSlope[t] + yIntercept[t]
 
             for i in range(4):
-                if BID[t][i][Q] > self.Phw:
-                    BID[t][i][Q] = self.Phw
-                if BID[t][i][Q] < 0:
-                    BID[t][i][Q] = 0
-                if BID[t][i][P] > self.price_cap:
-                    BID[t][i][P] = self.price_cap
-                if BID[t][i][P] < 0:
-                    BID[t][i][P] = 0
+                BID[t][i][Q] = min(BID[t][i][Q], self.Phw)
+                BID[t][i][Q] = max(BID[t][i][Q], 0)
+                BID[t][i][P] = min(BID[t][i][P], self.price_cap)
+                BID[t][i][P] = max(BID[t][i][P], 0)
 
         self.bid_da = deepcopy(BID)
         #print("DA ahead first bid", self.bid_da[0])
         self.DA_cleared_prices = deepcopy(self.f_DA_price)  ## to be used in formulating real-time bid
 
-        self.RT_minute_count_interpolation = float(0.0)
+        self.RT_minute_count_interpolation = 0.0
         return self.bid_da
 
     def get_uncntrl_wh_load(self):
@@ -569,8 +564,7 @@ class WaterHeaterDSOT:
             Qdraw = self.Rho * self.Cp * self.f_DA_schedule[t - 1] * 60 * (self.Tdesired - self.Tcold) / (
                     self.GALperFt3 * self.BTUperkWh)  ##60 is for converting gpm into gphr as Qdraw for an hour is being calculated
             temp = Qdraw - ((self.co2_hour * (self.SOHC_desired / 100) + self.co0_hour)/self.co1_hour)
-            if temp > self.Phw:
-                temp = self.Phw
+            temp = min(temp, self.Phw)
             Q.append(temp)
         return Q
             # 0 = (self.co0_hour + self.co1_hour * (m.E_upper[t - 1] + m.E_bottom[t - 1] - Qdraw) + self.co2_hour * (
@@ -843,7 +837,7 @@ class WaterHeaterDSOT:
                 # start interpolation
                 if self.interpolation:
                     if self.RT_minute_count_interpolation == 0.0:
-                        self.delta_Q = deepcopy((self.bid_da[0][1][Q]-self.previous_Q_RT))
+                        self.delta_Q = deepcopy(self.bid_da[0][1][Q]-self.previous_Q_RT)
                     if self.RT_minute_count_interpolation == 30.0:
                         self.delta_Q = deepcopy((self.bid_da[1][1][Q]-self.previous_Q_RT)*0.5)
                     Qopt_DA=self.previous_Q_RT+self.delta_Q*(5.0/30.0)
@@ -903,14 +897,10 @@ class WaterHeaterDSOT:
             BID[3][P] = min(self.f_DA_price)
 
         for i in range(4):
-            if BID[i][Q] > self.Phw:
-                BID[i][Q] = self.Phw
-            if BID[i][Q] < 0:
-                BID[i][Q] = 0
-            if BID[i][P] > self.price_cap:
-                BID[i][P] = self.price_cap
-            if BID[i][P] < 0:
-                BID[i][P] = 0
+            BID[i][Q] = min(BID[i][Q], self.Phw)
+            BID[i][Q] = max(BID[i][Q], 0)
+            BID[i][P] = min(BID[i][P], self.price_cap)
+            BID[i][P] = max(BID[i][P], 0)
 
         self.RT_Q_max = Q_max
         self.RT_Q_min = Q_min
@@ -1033,10 +1023,7 @@ class WaterHeaterDSOT:
         # print("Calculated SOHC setpoints", Setpoint_upper_SOHC, Setpoint_bottom_SOHC)
         # print("Calculated temp SETPOINT_LOWER and UPPER",self.Setpoint_bottom, self.Setpoint_upper)
 
-        if self.Setpoint_upper == upper_previous and self.Setpoint_bottom == bottom_previous:
-            return False
-        else:
-            return True
+        return not (self.Setpoint_upper == upper_previous and self.Setpoint_bottom == bottom_previous)
 
     def set_time(self, minute, hour):
         """ Sets the current hour and minute
@@ -1068,8 +1055,7 @@ class WaterHeaterDSOT:
             # log.info('T_bottom is within the bounds.')
             pass
         else:
-            log.log(self.model_diag_level, '{} {} -- T_bottom is {}, outside of nominal range of {} to {}'
-                    .format(self.name, sim_time, self.T_bottom, T_bottom_lower, T_bottom_upper))
+            log.log(self.model_diag_level, f'{self.name} {sim_time} -- T_bottom is {self.T_bottom}, outside of nominal range of {T_bottom_lower} to {T_bottom_upper}')
 
     def set_wh_upper_temperature(self, message, sim_time):
         """ Sets the upper tank temperature attribute
@@ -1091,8 +1077,7 @@ class WaterHeaterDSOT:
             # log.info('T_upper is within the bounds.')
             pass
         else:
-            log.log(self.model_diag_level, '{} {} -- T_upper is {}, outside of nominal range of {} to {}'
-                    .format(self.name, sim_time, self.T_upper, T_upper_lower, T_upper_upper))
+            log.log(self.model_diag_level, f'{self.name} {sim_time} -- T_upper is {self.T_upper}, outside of nominal range of {T_upper_lower} to {T_upper_upper}')
 
     def set_wh_lower_state(self, message: str):
         """ Sets the lower element state attribute

@@ -84,7 +84,11 @@ class DSO_LMPs_vs_Q:
         # Remove outliers (Retail market has a maximum price of "1000.0",
         # thus after division is equal to "1".)
         for i in range(len(lmps)):
-            df_dsos_lml_q[i] = df_dsos_lml_q[i][df_dsos_lml_q[i]['y'] <= 0.999]
+            df = df_dsos_lml_q[i]
+            # Drop the NaN-flagged missing hours (formerly zero-filled) and any inf.
+            df = df.replace([np.inf, -np.inf], np.nan).dropna(subset=['x', 'y'])
+            # Drop retail price-cap hits (price of 1000 -> 1.0 after /1000).
+            df = df[df['y'] <= 0.999]
 
         return df_dsos_lml_q, lmps, q_lmps
 
@@ -100,9 +104,26 @@ class DSO_LMPs_vs_Q:
         """
         x = np.array(self.df_dsos_lml_q[i]['x'][p_time].values)
         y = np.array(self.df_dsos_lml_q[i]['y'][p_time].values)
-        zz = np.polyfit(x, y, self.degree)
-        df_dsos_lml_q = np.array([zz[2], zz[1], zz[0]])
+        #zz = np.polyfit(x, y, self.degree)
+        #df_dsos_lml_q = np.array([zz[2], zz[1], zz[0]])
+        
+        # replace polyfit with non-negative least squares fit
+        from scipy.optimize import nnls
+        S = x.max() if x.max() > 0 else 1.0
+        xs = x / S
+
+        A = np.column_stack([np.ones_like(xs), xs, xs**2])   # [c, b_s, a_s]
+        coef_s, _ = nnls(A, y) # coef_s >= 0 enforced
+        c, b_s, a_s = coef_s
+
+        # transform scaled coeffs back to raw-x space
+        b = b_s / S
+        a = a_s / (S**2)
+
+        df_dsos_lml_q = np.array([c, b, a])
+
         return df_dsos_lml_q
+
 
     def multiple_fit_calls(self):
         """ Calls the fit model for each scenario
@@ -110,8 +131,8 @@ class DSO_LMPs_vs_Q:
         The scenarios are hour of day and day type (i.e., weekday and weekends)
         
         """
-        coeficients_weekday = list()
-        coeficients_weekend = list()
+        coeficients_weekday = []
+        coeficients_weekend = []
         for i in range(len(self.lmps_names)):
             temp = self.df_dsos_lml_q[i].index.dayofweek <= 4
             coeficients_weekday.append(self.fit_model(i, temp))
@@ -135,7 +156,7 @@ class DSO_LMPs_vs_Q:
         curve_c = np.concatenate((curve_c_weekday, curve_c_weekend), axis=0)
         return curve_c
 
-    def make_json_out(self):
+    def make_json_out(self, rate_scenario=""):
         """ Save the fitted curve to json
         """
         data = {}
@@ -148,7 +169,7 @@ class DSO_LMPs_vs_Q:
             })
 
         # with open(self.config_path+'/DSO_quadratic_curves.json', 'w') as outfile:
-        with open('DSO_quadratic_curves.json', 'w') as outfile:
+        with open(f'quadratic_curves_{rate_scenario}.json', 'w') as outfile:
             json.dump(data, outfile)
 
 

@@ -1,9 +1,10 @@
 # Copyright (c) 2021-2025 Battelle Memorial Institute
 # file: wind_plants.py
 
-import numpy as np
-import matplotlib.pyplot as plt
 import math
+
+import matplotlib.pyplot as plt
+import numpy as np
 
 days = 2
 Pnorm = 165.6
@@ -32,7 +33,7 @@ for j in range (nplants):
 	Ylim[j] = math.sqrt (wind_plants[j])
 	alag[j] = Theta0[j]
 	ylag[j] = Ylim[j]
-	print (j, '{:7.2f} {:7.4f} {:7.4f} {:7.4f} {:7.4f} {:7.4f} {:7.2f}'.format(wind_plants[j], scale, Theta0[j], Theta1[j], StdDev[j], Psi1[j], Ylim[j]))
+	print (j, f'{wind_plants[j]:7.2f} {scale:7.4f} {Theta0[j]:7.4f} {Theta1[j]:7.4f} {StdDev[j]:7.4f} {Psi1[j]:7.4f} {Ylim[j]:7.2f}')
 
 # time-stepping to mimic what will happen in fncsERCOT.py
 i = 0
@@ -71,7 +72,7 @@ for j in range (nplants):
 	p_std = p[j,:].std()
 	CF[j] = p_avg / wind_plants[j]
 	COV[j] = p_std / p_avg
-	msg[j] = '{:.1f}'.format (wind_plants[j]) + ' MW, CF = ' + '{:.2f}'.format (CF[j]) + ', COV = ' + '{:.2f}'.format (COV[j])	
+	msg[j] = f'{wind_plants[j]:.1f}' + ' MW, CF = ' + f'{CF[j]:.2f}' + ', COV = ' + f'{COV[j]:.2f}'	
 	print (msg[j]) 
 
 fig, ax = plt.subplots(nplants, 1)

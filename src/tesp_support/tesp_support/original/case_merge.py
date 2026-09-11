@@ -16,6 +16,7 @@ import json
 
 from ..api.helpers import gld_strict_name
 
+
 def merge_glm(target, sources, xfmva):
     """ Combines GridLAB-D input files into target/target.glm. The source files must already exist.
   
@@ -50,18 +51,17 @@ def merge_glm(target, sources, xfmva):
                         if not inHELICS:
                             line = '  configure ' + target + '_gridlabd.txt;'
                     elif '  power_rating' in line:
-                        line = '  power_rating {:.2f};'.format(xfmva * 1e3)
+                        line = f'  power_rating {xfmva * 1e3:.2f};'
                     elif '  base_power' in line:
-                        line = '  base_power {:.2f};'.format(xfmva * 1e6)
+                        line = f'  base_power {xfmva * 1e6:.2f};'
                     elif '  to ' in line:
                         toks = line.split()
                         thisHeadNode = toks[1][:-1]
                         if len(firstHeadNode) < 1:
                             firstHeadNode = thisHeadNode
-                if inHELICS:
-                    if 'configure' in line:
-                        line = '  configure ' + target + '_gridlabd.json;'
-                        inHELICS = False
+                if inHELICS and 'configure' in line:
+                    line = '  configure ' + target + '_gridlabd.json;'
+                    inHELICS = False
                 if inSubstation and ('object node' in line):
                     inSubstation = False
                     if finishedFirstSubstation:
@@ -79,10 +79,8 @@ def merge_glm(target, sources, xfmva):
                     canWrite = False
                 if canWrite:
                     print(line.rstrip(), file=op)
-                if '#endif' in line:
-                    if '&&&' in line:
-                        if 'end of common section for combining TESP cases' in line:
-                            inPreamble = False
+                if '#endif' in line and '&&&' in line and 'end of common section for combining TESP cases' in line:
+                    inPreamble = False
         inFirstFile = False
     op.close()
 

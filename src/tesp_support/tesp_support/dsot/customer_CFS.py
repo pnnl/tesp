@@ -180,9 +180,7 @@ def customer_CFS(GLD_metadata,
             Bills = customer_bill['BillsFix']['TotalFix']
         elif rate_scenario == "time-of-use":
             Bills = customer_bill['BillsFix']['TotalFix'] + customer_bill['BillsTOU']['TotalTOU']
-        elif rate_scenario == "transactive":
-            Bills = customer_bill['BillsFix']['TotalFix'] + customer_bill['BillsTransactive']['TotalDyn']
-        elif rate_scenario == "dsot":
+        elif rate_scenario == "transactive" or rate_scenario == "dsot":
             Bills = customer_bill['BillsFix']['TotalFix'] + customer_bill['BillsTransactive']['TotalDyn']
         elif rate_scenario == "subscription":
             Bills = customer_bill['BillsFix']['TotalFix'] + customer_bill['BillsSubscription']['TotalSub']
@@ -304,23 +302,7 @@ def customer_CFS(GLD_metadata,
                 'ConnChargesTOU': ConnChargesTOU
             })
 
-        elif rate_scenario == "dsot":
-            # PurchasesDyn = dso_helper.returnDictSum(customer_bill['BillsTransactive']['PurchasesDyn'])
-            DAEnergy = customer_bill['BillsTransactive']['PurchasesDyn']['DAEnergy']
-            RTEnergy = customer_bill['BillsTransactive']['PurchasesDyn']['RTEnergy']
-            DistCharges = customer_bill['BillsTransactive']['DistCharges']
-            ConnChargesDyn = customer_bill['BillsTransactive']['ConnChargesDyn']
-            BillsTransactive = customer_bill['BillsTransactive']['TotalDyn']
-
-            Customer_Cash_Flows_csv.update({
-                'BillsTransactive': BillsTransactive,
-                'DAEnergy': DAEnergy,
-                'RTEnergy': RTEnergy,
-                'DistCharges': DistCharges,
-                'ConnChargesDyn': ConnChargesDyn
-            })
-
-        elif rate_scenario == "transactive":
+        elif rate_scenario == "dsot" or rate_scenario == "transactive":
             # PurchasesDyn = dso_helper.returnDictSum(customer_bill['BillsTransactive']['PurchasesDyn'])
             DAEnergy = customer_bill['BillsTransactive']['PurchasesDyn']['DAEnergy']
             RTEnergy = customer_bill['BillsTransactive']['PurchasesDyn']['RTEnergy']
@@ -356,7 +338,7 @@ def customer_CFS(GLD_metadata,
 
 
 if __name__ == '__main__':
-    '''
+    """
     dso_paths = ['D:/DSOT/20160807_5d_lean_batt_acd8c80b/DSO_1',
                  'D:/DSOT/20160807_5d_lean_batt_acd8c80b/DSO_2',
                  'D:/DSOT/20160807_5d_lean_batt_acd8c80b/DSO_3']
@@ -372,7 +354,7 @@ if __name__ == '__main__':
 
     path_to_write = 'C:/Users/yint392/OneDrive - PNNL/Documents/DSO/test_save_files'
     save_path = 'C:/Users/yint392/OneDrive - PNNL/Documents/DSO/test_save_files'
-    '''
+    """
 
     # Customer_Cash_Flows_dict, Customer_Cash_Flows_csv = customer_CFS(GLD_metadata,
     #                                                                  metadata_path,

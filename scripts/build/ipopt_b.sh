@@ -31,13 +31,13 @@ cd "${REPO_DIR}/ThirdParty-ASL" || exit
 sed -i "s:wgetcmd=\"wget\":wgetcmd=\"wget --no-check-certificate\":g" ./get.ASL
 ./get.ASL
 ./configure --prefix="${INSTDIR}"
-make -j "$(grep -c "^processor" /proc/cpuinfo)"
+make -j "$(nproc)"
 make install
 
 echo
 echo "===== Make Ipopt ====="
 cd "${REPO_DIR}/Ipopt" || exit
 ./configure --prefix="${INSTDIR}"  --with-lapack="-llapack" --with-mumps-cflags=-I/usr/include/mumps_seq --with-mumps-lflags=-ldmumps_seq
-make -j "$(grep -c "^processor" /proc/cpuinfo)"
+make -j "$(nproc)"
 make test
 make install

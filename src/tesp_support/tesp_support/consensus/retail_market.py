@@ -32,7 +32,7 @@ from copy import deepcopy
 
 import numpy as np
 
-from ..dsot.helpers_dsot import Curve, get_intersect, MarketClearingType, resample_curve
+from ..dsot.helpers_dsot import Curve, MarketClearingType, get_intersect, resample_curve
 
 
 class RetailMarket:
@@ -101,8 +101,8 @@ class RetailMarket:
         self.FeederPkDemandCapacity = self.Q_max
         self.curve_buyer_RT = None
         self.curve_seller_RT = None
-        self.curve_buyer_DA = dict()
-        self.curve_seller_DA = dict()
+        self.curve_buyer_DA = {}
+        self.curve_seller_DA = {}
         self.FeederCongPrice = 1e-7  # TODO: maybe initialize it for different feeders, with different values
 
         self.clear_type_RT = None
@@ -117,7 +117,7 @@ class RetailMarket:
         self.industrial_bid_da = []
         self.industrial_bid_rt = []
         self.industrial_load_elasticity = 5  # delP/delQ
-        self.site_quantity_DA = dict()
+        self.site_quantity_DA = {}
         # substation transformer lifetime cost parameters
         self.TOC_dict = {
             'OperatingPeriod': retail_dict['OperatingPeriod'],
@@ -169,8 +169,8 @@ class RetailMarket:
         self.cleared_price_DA = []
         self.cleared_quantity_DA = []
         self.congestion_surcharge_DA = []
-        self.curve_buyer_DA = dict()
-        self.curve_seller_DA = dict()
+        self.curve_buyer_DA = {}
+        self.curve_seller_DA = {}
 
         for i in range(self.windowLength):
             self.curve_buyer_DA[i] = Curve(self.price_cap, self.num_samples)
@@ -248,8 +248,7 @@ class RetailMarket:
                 if cleared_quantity > self.Q_max:
                     clear_type = MarketClearingType.CONGESTED
                     uncongested_price = cleared_price - (cleared_quantity - Q_max) * self.FeederCongPrice
-                    if uncongested_price < 0:
-                        uncongested_price = 0
+                    uncongested_price = max(uncongested_price, 0)
                     congestion_surcharge = cleared_price - uncongested_price
                     if congestion_surcharge > self.price_cap:
                         congestion_surcharge = self.price_cap
@@ -289,8 +288,7 @@ class RetailMarket:
                     if cleared_quantity > Q_max:
                         clear_type = MarketClearingType.CONGESTED
                         uncongested_price = cleared_price - (cleared_quantity - Q_max) * self.FeederCongPrice
-                        if uncongested_price < 0:
-                            uncongested_price = 0
+                        uncongested_price = max(uncongested_price, 0)
                         congestion_surcharge = cleared_price - uncongested_price
                         if congestion_surcharge > self.price_cap:
                             congestion_surcharge = self.price_cap
@@ -325,8 +323,7 @@ class RetailMarket:
             if cleared_quantity > Q_max:
                 clear_type = MarketClearingType.CONGESTED
                 uncongested_price = cleared_price - (cleared_quantity - Q_max) * self.FeederCongPrice
-                if uncongested_price < 0:
-                    uncongested_price = 0
+                uncongested_price = max(uncongested_price, 0)
                 congestion_surcharge = cleared_price - uncongested_price
                 if congestion_surcharge > self.price_cap:
                     congestion_surcharge = self.price_cap
@@ -385,7 +382,7 @@ class RetailMarket:
 
         """
         #        log.info("runing curve_aggregator_AMES_RT")
-        self.AMES_RT = list()
+        self.AMES_RT = []
         substation_curve = deepcopy(self.curve_preprocess(demand_curve_RT, Q_max))
         #        print(
         #            "RT [min, max] substation curve: [" + str(min(substation_curve.quantities)) + ", " + str(
@@ -414,7 +411,7 @@ class RetailMarket:
             price_forecast (float): locally forecast price at the substation level
         """
         # log.info("running curve_aggregator_AMES_DA")
-        self.AMES_DA = list()
+        self.AMES_DA = []
         for idx in range(self.windowLength):
             substation_curve = deepcopy(self.curve_preprocess(demand_curve_DA[idx], Q_max))
             # since we plan to now not use the ./run.sh base,
@@ -454,8 +451,7 @@ class RetailMarket:
         preprocessed_curve.quantities = deepcopy(substation_demand_curve.quantities)
         for i in range(self.num_samples):
             # Truncate the substation-level demand curve by maximum capacity of the substation
-            if preprocessed_curve.quantities[i] >= Q_max:
-                preprocessed_curve.quantities[i] = Q_max
+            preprocessed_curve.quantities[i] = min(Q_max, preprocessed_curve.quantities[i])
             # we are much lower than what TSO is expecting from us,
             # with this low quantity AMES won't clear market as there can be high wind values
             # elif (Q_max - preprocessed_curve.quantities[i]  > 1000):
@@ -536,20 +532,20 @@ class RetailMarket:
         if Q_range.size == 0:
             if unresp_mw == resp_max_mw:
                 log.info("-- No DERs bids convert_2_AMES_quadratic_BID --")
-                z = list([-0.0, 0.0, 0.0])
+                z = [-0.0, 0.0, 0.0]
             else:
                 log.info("-- Error empty array for fitting curve for AMES --")
                 log.info("quantity")
                 log.info(str(curve.quantities))
                 log.info("prices:")
                 log.info(str(curve.prices))
-                z = list([-0.0, 0.0, 0.0])
+                z = [-0.0, 0.0, 0.0]
         else:
             z = np.polyfit(x=Q_range, y=new_benefit, deg=2)
 
             if abs(z[
                        0]) < 1e-3:  # This means the curve is almost linear and due to the resolution of piecewise linear benefit function it won't be able to make the piecewise bids
-                z[0] = -z[1] / (2 * ((resp_max_mw - unresp_mw)))
+                z[0] = -z[1] / (2 * (resp_max_mw - unresp_mw))
             # check for concavity, which is a necessary condition for AMES to converge with Price Sensitivity Load
             if z[1] - z[0] * (resp_max_mw - unresp_mw) < 0:
                 try:
@@ -565,7 +561,7 @@ class RetailMarket:
 
         resp_deg = 2
         # below conversion is because fncsTSO is written in terms of MWs and the DSO is in kWs
-        bid = list()
+        bid = []
         # bid.append(unresp_mw/1000.0)
         # bid.append(resp_max_mw/1000.0)
         # bid.append(-z[0]* 1000.0 * 1000.0) #c2  ---> f in the manual, -negative sign makes it strictly concave with which the check has been added above
@@ -629,7 +625,7 @@ class RetailMarket:
         Returns:
             bid_da (float) (1 x windowLength): Bid quantity from optimization for all hours of the window specified by windowLength
         """
-        TIME = range(0, self.windowLength)
+        TIME = range(self.windowLength)
 
         BID = [[[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]] for i in TIME]
 
@@ -971,8 +967,8 @@ def test():
     Benefit_range = Q_range * P_range
 
     #    print("For the plot to be accurate a line must be uncommented in convert_2_AMES_quadratic_BID function")
-    y = list()
-    y2 = list()
+    y = []
+    y2 = []
 
     for i in Q_range:
         y.append(market.AMES_DA[hr][2] * (i ** 2) + market.AMES_DA[hr][3] * i + market.AMES_DA[hr][4])

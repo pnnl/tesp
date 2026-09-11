@@ -11,11 +11,8 @@ References:
 import csv
 import json
 import os
-
 import tkinter as tk
-import tkinter.ttk as ttk
-from tkinter import filedialog
-from tkinter import messagebox
+from tkinter import filedialog, messagebox, ttk
 
 import numpy as np
 
@@ -368,17 +365,17 @@ class TespConfigGUI:
           var (str): one of ElectricCoolingParticipation, ThermostatRampMid, ThermostatOffsetLimitMid, WeekdayEveningStartMid or WeekdayEveningSetMid
         """
         if var == 'ElectricCoolingParticipation':
-            return '{:.3f}'.format(np.random.uniform(0, 100))
+            return f'{np.random.uniform(0, 100):.3f}'
         elif var == 'ThermostatRampMid':
-            return '{:.3f}'.format(np.random.uniform(1.0, 4.0))
+            return f'{np.random.uniform(1.0, 4.0):.3f}'
         elif var == 'ThermostatOffsetLimitMid':
-            return '{:.3f}'.format(np.random.uniform(0, 6.0))
+            return f'{np.random.uniform(0, 6.0):.3f}'
         elif var == 'WeekdayEveningStartMid':
-            return '{:.3f}'.format(np.random.uniform(16.5, 18.0))
+            return f'{np.random.uniform(16.5, 18.0):.3f}'
         elif var == 'WeekdayEveningSetMid':
-            return '{:.3f}'.format(np.random.uniform(68.0, 74.0))
+            return f'{np.random.uniform(68.0, 74.0):.3f}'
         else:
-            return '{:.3f}'.format(np.random.uniform(0, 1))
+            return f'{np.random.uniform(0, 1):.3f}'
 
     @staticmethod
     def mcBand(var):
@@ -393,9 +390,7 @@ class TespConfigGUI:
             return 0.5
         elif var == 'ThermostatOffsetLimitMid':
             return 2.0
-        elif var == 'WeekdayEveningStartMid':
-            return 1.0
-        elif var == 'WeekdayEveningSetMid':
+        elif var == 'WeekdayEveningStartMid' or var == 'WeekdayEveningSetMid':
             return 1.0
         else:
             return 0.0
@@ -615,9 +610,8 @@ class TespConfigGUI:
                 if col == 3 and use3:
                     val = float(w.get())
                     config['MonteCarloCase']['Samples3'][row - 5] = val
-        if not os.path.exists(tesp_share):
-            if not messagebox.askyesno('Continue to Save?', 'TESP Support Directory: ' + tesp_share + ' not found.'):
-                return
+        if not os.path.exists(tesp_share) and not messagebox.askyesno('Continue to Save?', 'TESP Support Directory: ' + tesp_share + ' not found.'):
+            return
         fname = filedialog.asksaveasfilename(initialdir='~/src/examples/te30',
                                              title='Save JSON Configuration to',
                                              defaultextension='json')

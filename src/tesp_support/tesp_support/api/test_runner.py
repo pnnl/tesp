@@ -13,10 +13,10 @@ for the examples are written in a very specified way.
 """
 
 import os
-import time
 import subprocess
+import time
 
-reports = []
+reports: list[dict] = []
 b_reporting = False
 
 
@@ -67,7 +67,7 @@ def exec_test(file_name, case_name=None):
         if case_name is None:
             case_name = file_name
         reports.append({'case': case_name, 'elapsed': t_elapsed})
-        print('====  Time elapsed: {:12.6f}'.format(t_elapsed), flush=True)
+        print(f'====  Time elapsed: {t_elapsed:12.6f}', flush=True)
     print('==  Done: ', case_name, flush=True)
 
 
@@ -89,9 +89,7 @@ def run_test(file_name, case_name=None):
             tokens = line.split()
             keyval = tokens[2].split('=')
             local_vars.append({'key': keyval[0], 'val': keyval[1]})
-        elif line.startswith('javac') or line.startswith('python') or \
-                line.startswith('make') or line.startswith('chmod') or \
-                line.startswith('gridlabd') or line.startswith('TMY3toTMY2_ansi'):
+        elif line.startswith(('javac','python','make','chmod','gridlabd','TMY3toTMY2_ansi')):
             jc = subprocess.Popen(process_line(line, local_vars), shell=True)
             jc.wait()
         elif 'fncs_broker' in line:
@@ -119,7 +117,7 @@ def run_test(file_name, case_name=None):
         if case_name is None:
             case_name = file_name
         reports.append({'case': case_name, 'elapsed': t_elapsed})
-        print('====  Time elapsed: {:12.6f}'.format(t_elapsed), flush=True)
+        print(f'====  Time elapsed: {t_elapsed:12.6f}', flush=True)
     print('==  Done: ', case_name, flush=True)
 
 
@@ -199,9 +197,7 @@ def run_docker_test(file_name, case_name=None):
             tokens = line.split()
             keyval = tokens[2].split('=')
             local_vars.append({'key': keyval[0], 'val': keyval[1]})
-        elif line.startswith('javac') or line.startswith('python') or \
-                line.startswith('make') or line.startswith('chmod') or \
-                line.startswith('gridlabd') or line.startswith('TMY3toTMY2_ansi'):
+        elif line.startswith(('javac','python','make','chmod','gridlabd','TMY3toTMY2_ansi')):
             jc = subprocess.Popen(process_line(line, local_vars), shell=True)
             jc.wait()
         else:
@@ -259,7 +255,7 @@ def run_docker_test(file_name, case_name=None):
         if case_name is None:
             case_name = file_name
         reports.append({'case': case_name, 'elapsed': t_elapsed})
-        print('====  Time elapsed: {:12.6f}'.format(t_elapsed), flush=True)
+        print(f'====  Time elapsed: {t_elapsed:12.6f}', flush=True)
     print('==  Done: ', case_name, flush=True)
 
 

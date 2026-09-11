@@ -5,7 +5,7 @@ import importlib.util
 import json
 import shutil
 from datetime import datetime
-from os import path, makedirs
+from os import makedirs, path
 
 ppdir = path.expandvars('$TESPDIR/models/pypower/')
 

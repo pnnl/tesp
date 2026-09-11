@@ -1,14 +1,11 @@
 # Copyright (c) 2021-2025 Battelle Memorial Institute
 # file: compile_png.py
 
-import operator
-import subprocess
-import os
-import shutil
 import glob
+
 from docx import Document
-from docx.shared import Inches
 from docx.enum.section import WD_ORIENT
+from docx.shared import Inches
 
 document = Document()
 #section = document.sections[-1]

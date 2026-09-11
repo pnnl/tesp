@@ -29,5 +29,6 @@ if [[ $1 == "clean" ]]; then
   make clean
   pip uninstall --break-system-packages -y helics
 fi
-make -j "$(grep -c "^processor" /proc/cpuinfo)"
-make install
+
+# Run the build system and install the application
+cmake --build . -j $(nproc) --target install

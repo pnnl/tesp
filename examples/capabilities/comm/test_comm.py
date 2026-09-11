@@ -1,12 +1,12 @@
 # Copyright (c) 2021-2025 Battelle Memorial Institute
 # file: test_comm.py
 
-import sys
 import json
 import math
-import numpy as np
-import matplotlib.pyplot as plt
+import sys
 
+import matplotlib.pyplot as plt
+import numpy as np
 
 # bldgs = {'Office':{'LoadScale':2.1, 'RampSlope':25.0,
 #            'dT':[0.0, 0.99, 1.99, 2.99, 4.99],
@@ -58,7 +58,7 @@ if __name__ == '__main__':
     for key, row in bldgs.items():
         bid = load_bid(row['dT'], row['dP'], row['RampSlope'], row['LoadScale'])
         bids[key] = bid
-        print('  {:20s} quantity = '.format(key), bid['q'])
+        print(f'  {key:20s} quantity = ', bid['q'])
         print('  {:20s}  price = '.format(' '), bid['p'])
         for p in bid['p']:
             pset.add(p)
@@ -70,7 +70,7 @@ if __name__ == '__main__':
     for i in range(len(pload)):
         for key, row in bids.items():
             qload[i] += interpolate_pq(pload[i], row['p'], row['q'])
-        print('  {:8.2f} {:8.2f}'.format(pload[i], qload[i]))
+        print(f'  {pload[i]:8.2f} {qload[i]:8.2f}')
 
     supply = 60.0
     if len(sys.argv) > 2:  # plotting results
@@ -134,10 +134,10 @@ if __name__ == '__main__':
         qnet = qload + supply
         print('     pload     qnet')
         for i in range(len(pload)):
-            print('  {:8.2f} {:8.2f}'.format(pload[i], qnet[i]))
+            print(f'  {pload[i]:8.2f} {qnet[i]:8.2f}')
 
         pclear = np.interp(0.0, -qnet, pload)
-        print('Clearing price = {:.3f} for Supply = {:.2f}'.format(pclear, supply))
+        print(f'Clearing price = {pclear:.3f} for Supply = {supply:.2f}')
 
         qtotal = 0.0
         print('  Building             qcleared  deltaT')
@@ -146,6 +146,6 @@ if __name__ == '__main__':
             bldg = bldgs[key]
             dTemp = np.interp(qval, -bldg['dP'] * bldg['LoadScale'], bldg['dT'])
             qtotal += qval
-            print('  {:20s} {:8.2f} {:7.2f}'.format(key, qval, dTemp))
+            print(f'  {key:20s} {qval:8.2f} {dTemp:7.2f}')
 
-        print('Total Cleared Load = {:.2f} for Supply = {:.2f}'.format(qtotal, supply))
+        print(f'Total Cleared Load = {qtotal:.2f} for Supply = {supply:.2f}')

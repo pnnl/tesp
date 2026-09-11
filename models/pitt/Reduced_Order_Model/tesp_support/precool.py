@@ -206,7 +206,7 @@ class precooler:
     Args:
         hour_of_day (float): the current time of day, 0..24
         price (float): the current price in $/kwh
-        time_seconds (long long): the current FNCS time in seconds
+        time_seconds (int): the current FNCS time in seconds
     Returns:
         bool: True if the setpoint changed, False if not
     """

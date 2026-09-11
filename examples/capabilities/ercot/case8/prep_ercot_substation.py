@@ -4,6 +4,7 @@
 import json
 import math
 import os
+
 import numpy as np
 import utilities
 
@@ -142,22 +143,22 @@ def ProcessGLM(fileroot, weatherName):
                                                 'meterName': meterName,
                                                 'houseClass': houseClass,
                                                 'period': periodController,
-                                                'wakeup_start': float('{:.3f}'.format(wakeup_start)),
-                                                'daylight_start': float('{:.3f}'.format(daylight_start)),
-                                                'evening_start': float('{:.3f}'.format(evening_start)),
-                                                'night_start': float('{:.3f}'.format(night_start)),
-                                                'wakeup_set': float('{:.3f}'.format(wakeup_set)),
-                                                'daylight_set': float('{:.3f}'.format(daylight_set)),
-                                                'evening_set': float('{:.3f}'.format(evening_set)),
-                                                'night_set': float('{:.3f}'.format(night_set)),
-                                                'weekend_day_start': float('{:.3f}'.format(weekend_day_start)),
-                                                'weekend_day_set': float('{:.3f}'.format(weekend_day_set)),
-                                                'weekend_night_start': float('{:.3f}'.format(weekend_night_start)),
-                                                'weekend_night_set': float('{:.3f}'.format(weekend_night_set)),
-                                                'deadband': float('{:.3f}'.format(deadband)),
-                                                'offset_limit': float('{:.3f}'.format(offset_limit)),
-                                                'ramp': float('{:.4f}'.format(ramp)),
-                                                'price_cap': float('{:.3f}'.format(ctrl_cap)),
+                                                'wakeup_start': float(f'{wakeup_start:.3f}'),
+                                                'daylight_start': float(f'{daylight_start:.3f}'),
+                                                'evening_start': float(f'{evening_start:.3f}'),
+                                                'night_start': float(f'{night_start:.3f}'),
+                                                'wakeup_set': float(f'{wakeup_set:.3f}'),
+                                                'daylight_set': float(f'{daylight_set:.3f}'),
+                                                'evening_set': float(f'{evening_set:.3f}'),
+                                                'night_set': float(f'{night_set:.3f}'),
+                                                'weekend_day_start': float(f'{weekend_day_start:.3f}'),
+                                                'weekend_day_set': float(f'{weekend_day_set:.3f}'),
+                                                'weekend_night_start': float(f'{weekend_night_start:.3f}'),
+                                                'weekend_night_set': float(f'{weekend_night_set:.3f}'),
+                                                'deadband': float(f'{deadband:.3f}'),
+                                                'offset_limit': float(f'{offset_limit:.3f}'),
+                                                'ramp': float(f'{ramp:.4f}'),
+                                                'price_cap': float(f'{ctrl_cap:.3f}'),
                                                 'bid_delay': bid_delay,
                                                 'use_predictive_bidding': use_predictive_bidding,
                                                 'use_override': use_override}
@@ -218,7 +219,7 @@ def ProcessGLM(fileroot, weatherName):
 
 
 def prep_ercot_substation(gldfileroot, jsonfile='', weatherName=''):
-    global dt, period, Eplus_Bus, agent_participation
+    global dt, period, agent_participation
     global wakeup_start_lo, wakeup_start_hi, wakeup_set_lo, wakeup_set_hi
     global daylight_start_lo, daylight_start_hi, daylight_set_lo, daylight_set_hi
     global evening_start_lo, evening_start_hi, evening_set_lo, evening_set_hi

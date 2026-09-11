@@ -15,10 +15,10 @@
   "RECS": true,
   "time_zone": "CST+6CDT",
   "case_type": {
-    "bt": 1, // bt = battery participates
+    "bt": 0, // bt = battery participates
     "fl": 0, // fl = flexible loads (houses) participate
     "ev": 0, // ev = electric vehicles participate
-    "pv": 0  // pv = photovoltaics
+    "pv": 1  // pv = photovoltaics
   },
   // Participation rate. Default: 0.80
   "transactive_house_percentage": 0.80,
@@ -57,7 +57,7 @@
     "Upper": 0.6
   },
   // Rate tariff name for post-processing. "" = DSOT ['', 'Flat', 'EandC', 'TOU']
-  "rate": "",
+  "rate": "Flat",
   // Set to true if running Dynamic Energy and Capacity rate (EandC)
   "EandC": false,
   // true = Substation load is flexible, false = inflexible
@@ -84,7 +84,7 @@
   // Set generation lower limit in MVA
   "genLowerLimit": 150.0,
   // percent generation power level at start up (0.6-0.7 typical, try 0.85 for high demand months)
-  "genPowerLevel": 0.5,
+  "genPowerLevel": 0.45,
   // Set to true if renewables are turned on, set to false if renewables are turned off
   "genPower": true,
   // Random number seed
@@ -101,6 +101,7 @@
   "opf_dc": 1,
   "LogLevel": "INFO",
   "gld_debug": 0,
+  "monitor": true,
   "DSOT_case": true,
   // Default: blank, otherwise set a path for all outputs
   "outputPath": "",
@@ -169,7 +170,10 @@
   "quadratic_file_8_hi": "8_hi_quadratic_curves.json",
   "quadratic_file_200": "200_quadratic_curves.json",
   "quadratic_file_200_hi": "200_hi_quadratic_curves.json",
-  "quadratic_file_RECS": "8_hi_quadratic_curves_Flat.json",
+  "quadratic_file_RECS_Flat": "8_hi_quadratic_curves_Flat.json",
+  "quadratic_file_RECS_TOU": "8_hi_quadratic_curves_Flat.json",
+  "quadratic_file_RECS_EandC": "8_hi_quadratic_curves_EandC.json",
+  "quadratic_file_RECS_": "8_hi_quadratic_curves.json",
   "commercial_meta_file": "DSOT_commercial_metadata.json",
   "residential_meta_file": "DSOT_residential_metadata.json",
   "residential_meta_file_RECS": "RECS_residential_metadata.json",
@@ -192,7 +196,7 @@
   // *** Gridlabd metrics
   // Setting metrics_interval to 0 turns off metrics
   // Removes all metrics collector and writer in the glm files
-  "metrics_interval": 0,
+  "metrics_interval": 300,
   "metrics": [
     "house",
     "waterheater",
@@ -203,7 +207,7 @@
     "inverter",
     "regulator",
     "substation",
-    "evchagerdet"
+    "evcharger_det"
   ],
   "metrics_interim": 7200,
   "metrics_filename": "${METRICS_FILE}",
@@ -442,160 +446,240 @@
     }
   },
   "Q_bid_forecast_correction": {
-    "default": {
-      "correct": false
-    },
-    "DSO_1": {
-      "correct": true,
-      "Q_gain": [
-        0.8432719833248055,
-        0.7852307135796892
-      ],
-      "t_65": [
-        -1.183780313682675,
-        -1.4913287559582358
-      ],
-      "t_65_2": [
-        2.4209461160607337,
-        3.1966259833252844
-      ],
-      "DC_change_Q_DA": [
-        1240.3175715267969,
-        1892.4862691083563
-      ]
-    },
-    "DSO_2": {
-      "correct": true,
-      "Q_gain": [
-        0.8118144652585926,
-        0.7231953442395413
-      ],
-      "t_65": [
-        4.849915786232735,
-        13.648482103801072
-      ],
-      "t_65_2": [
-        2.5866797966771014,
-        3.089277672740714
-      ],
-      "DC_change_Q_DA": [
-        1595.5168418125359,
-        2504.9756509881286
-      ]
-    },
-    "DSO_3": {
-      "correct": true,
-      "Q_gain": [
-        0.8497463035497925,
-        0.8018700899818214
-      ],
-      "t_65": [
-        -3.331975069962633,
-        -0.6634153345892049
-      ],
-      "t_65_2": [
-        0.21204294866232487,
-        0.1470040802295049
-      ],
-      "DC_change_Q_DA": [
-        30.518777360426053,
-        30.324735727429836
-      ]
-    },
-    "DSO_4": {
-      "correct": true,
-      "Q_gain": [
-        0.7023805999672099,
-        0.6676497140548733
-      ],
-      "t_65": [
-        -12.957544363782551,
-        2.743006231438347
-      ],
-      "t_65_2": [
-        1.545457244198972,
-        1.176176617063642
-      ],
-      "DC_change_Q_DA": [
-        703.5397097910571,
-        772.7264143999012
-      ]
-    },
-    "DSO_5": {
-      "correct": true,
-      "Q_gain": [
-        0.7861996892055955,
-        0.7766987016024219
-      ],
-      "t_65": [
-        8.86593080289446,
-        -12.560485176914831
-      ],
-      "t_65_2": [
-        1.2898957918632412,
-        2.372601262330644
-      ],
-      "DC_change_Q_DA": [
-        826.882523791278,
-        968.1897361022956
-      ]
-    },
-    "DSO_6": {
-      "correct": true,
-      "Q_gain": [
-        0.6809004177127939,
-        0.6620575900046219
-      ],
-      "t_65": [
-        0.8737239094895604,
-        1.1283862836097007
-      ],
-      "t_65_2": [
-        0.08408223657673644,
-        0.11173743228486016
-      ],
-      "DC_change_Q_DA": [
-        111.80327962830987,
-        110.94543236153801
-      ]
-    },
-    "DSO_7": {
-      "correct": true,
-      "Q_gain": [
-        0.7823319181691977,
-        0.6240743685117078
-      ],
-      "t_65": [
-        13.59456562839983,
-        11.970891095344314
-      ],
-      "t_65_2": [
-        0.5554048883935649,
-        1.4065368671048422
-      ],
-      "DC_change_Q_DA": [
-        480.94753859829774,
-        916.8706503357253
-      ]
-    },
-    "DSO_8": {
-      "correct": true,
-      "Q_gain": [
-        0.770918573105145,
-        0.85414544775404
-      ],
-      "t_65": [
-        -1.0829592884100054,
-        -0.4226991768149394
-      ],
-      "t_65_2": [
-        0.09752615284118005,
-        0.07053480821782598
-      ],
-      "DC_change_Q_DA": [
-        17.830883097838168,
-        5.281144840340772
-      ]
+  "default": {
+    "correct": false
+  },
+  "DSO_1": {
+    "correct": true,
+    "Q_gain": [
+      0.5198640310199366,
+      0.5824838855649291
+    ],
+    "t_65": [
+      -184.8839907869274,
+      -162.25599717460793
+    ],
+    "t_65_2": [
+      1.2920331009667905,
+      1.1670311724361682
+    ],
+    "DC_change_Q_DA": [
+      10598.213518909366,
+      9212.016661025144
+    ],
+    "_fit_diagnostics": {
+      "weekday": {
+        "rmse": 859.3736744997811,
+        "n_samples": 5904
+      },
+      "weekend": {
+        "rmse": 947.4725335973841,
+        "n_samples": 2328
+      }
+    }
+  },
+  "DSO_2": {
+    "correct": true,
+    "Q_gain": [
+      0.6729590181681064,
+      0.7405098006816307
+    ],
+    "t_65": [
+      -211.33772384388018,
+      -176.77266050113693
+    ],
+    "t_65_2": [
+      1.5524269557260766,
+      1.3313334940922346
+    ],
+    "DC_change_Q_DA": [
+      10855.157562940107,
+      8995.826335561258
+    ],
+    "_fit_diagnostics": {
+      "weekday": {
+        "rmse": 999.8431429033541,
+        "n_samples": 5904
+      },
+      "weekend": {
+        "rmse": 1001.1420150641034,
+        "n_samples": 2328
+      }
+    }
+  },
+  "DSO_3": {
+    "correct": true,
+    "Q_gain": [
+      0.4845548580447601,
+      0.5121981555613945
+    ],
+    "t_65": [
+      -4.560139646931034,
+      -4.3667766151825536
+    ],
+    "t_65_2": [
+      0.032186637902878346,
+      0.03112045770147276
+    ],
+    "DC_change_Q_DA": [
+      271.4214125833466,
+      257.11095109855495
+    ],
+    "_fit_diagnostics": {
+      "weekday": {
+        "rmse": 25.115555827424146,
+        "n_samples": 5904
+      },
+      "weekend": {
+        "rmse": 25.9046200330975,
+        "n_samples": 2328
+      }
+    }
+  },
+  "DSO_4": {
+    "correct": true,
+    "Q_gain": [
+      0.5038409662548039,
+      0.5582616299925196
+    ],
+    "t_65": [
+      -38.79334346570096,
+      -35.227098268333776
+    ],
+    "t_65_2": [
+      0.2748121520110871,
+      0.25554381538050563
+    ],
+    "DC_change_Q_DA": [
+      2629.6410197495097,
+      2348.377564539586
+    ],
+    "_fit_diagnostics": {
+      "weekday": {
+        "rmse": 192.21307514275057,
+        "n_samples": 5904
+      },
+      "weekend": {
+        "rmse": 207.77242955701857,
+        "n_samples": 2328
+      }
+    }
+  },
+  "DSO_5": {
+    "correct": true,
+    "Q_gain": [
+      0.5522952738719114,
+      0.6201517894778729
+    ],
+    "t_65": [
+      -114.20648570429735,
+      -94.61761362534077
+    ],
+    "t_65_2": [
+      0.8211336361798516,
+      0.7004182882938466
+    ],
+    "DC_change_Q_DA": [
+      6444.507090051117,
+      5389.895444640395
+    ],
+    "_fit_diagnostics": {
+      "weekday": {
+        "rmse": 546.8437861953296,
+        "n_samples": 5904
+      },
+      "weekend": {
+        "rmse": 589.5341701083086,
+        "n_samples": 2328
+      }
+    }
+  },
+  "DSO_6": {
+    "correct": true,
+    "Q_gain": [
+      0.5282810247764703,
+      0.5881799120745613
+    ],
+    "t_65": [
+      -5.827243535011443,
+      -4.909180968666653
+    ],
+    "t_65_2": [
+      0.04256182075974202,
+      0.037006877545028516
+    ],
+    "DC_change_Q_DA": [
+      387.28819344478364,
+      330.7957667269177
+    ],
+    "_fit_diagnostics": {
+      "weekday": {
+        "rmse": 31.728024109355005,
+        "n_samples": 5904
+      },
+      "weekend": {
+        "rmse": 34.22794477724424,
+        "n_samples": 2328
+      }
+    }
+  },
+  "DSO_7": {
+    "correct": true,
+    "Q_gain": [
+      0.6557299081907974,
+      0.7189568588640382
+    ],
+    "t_65": [
+      -94.74572751048763,
+      -77.06237567643329
+    ],
+    "t_65_2": [
+      0.6397196922812896,
+      0.5361333864940434
+    ],
+    "DC_change_Q_DA": [
+      4468.37133992233,
+      3582.3417469362157
+    ],
+    "_fit_diagnostics": {
+      "weekday": {
+        "rmse": 356.6976465752976,
+        "n_samples": 5904
+      },
+      "weekend": {
+        "rmse": 397.40701719348067,
+        "n_samples": 2328
+      }
+    }
+  },
+  "DSO_8": {
+    "correct": true,
+    "Q_gain": [
+      0.4832362450295355,
+      0.5158145554240615
+    ],
+    "t_65": [
+      -1.8456824343351508,
+      -1.7195599734075924
+    ],
+    "t_65_2": [
+      0.013589840273829923,
+      0.012818018293160538
+    ],
+    "DC_change_Q_DA": [
+      101.59746251642322,
+      94.41585247734683
+    ],
+    "_fit_diagnostics": {
+      "weekday": {
+        "rmse": 10.25070131830041,
+        "n_samples": 5904
+      },
+      "weekend": {
+        "rmse": 10.961934772250988,
+        "n_samples": 2328
+      }
     }
   }
+}
 }

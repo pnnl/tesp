@@ -5,7 +5,7 @@ import json
 
 import xlrd
 
-'''
+"""
 0: "bus id -bus number",
 1: "Pg -real power output (MW)",
 2: "Qg -reactive power output (MVAr)",
@@ -33,7 +33,7 @@ import xlrd
 24:"Gen type",
 
 "gencost": "An array for each generator cost [2, startup, shutdown, 3, c2, c1, c0]"
-'''
+"""
 
 pctramprate = {'wind': 0.05,
                'nuclear': 0.003162,
@@ -115,10 +115,7 @@ def prepare_network(node, node_col, high_renewables_case, zero_pmin=False, zero_
             # Solar and Wind are to remain on low-voltage buses:
             if node == '200' and on_ehv and "Wind" not in Gentype and "Solar" not in Gentype:  # 1 = 200 node case
                 for branch in data['branch']:
-                    if branch[0] == busNo and branch[1] > 200:
-                        busNo = branch[1]
-                        break
-                    elif branch[1] == busNo and branch[0] > 200:
+                    if (branch[0] == busNo and branch[1] > 200) or (branch[1] == busNo and branch[0] > 200):
                         busNo = branch[1]
                         break
 
@@ -184,7 +181,7 @@ def prepare_network(node, node_col, high_renewables_case, zero_pmin=False, zero_
 
         # divide the generators into parts
         # testing on dividing first generator into 3
-        '''
+        """
         oldQmax = genData[0][3]
         oldQmin = genData[0][4]
         oldPmax = genData[0][8]
@@ -231,7 +228,7 @@ def prepare_network(node, node_col, high_renewables_case, zero_pmin=False, zero_
             data['gen'][i][16] = ramprate
             data['gen'][i].append(minUpTime)
             data['gen'][i].append(minDownTime)
-        '''
+        """
         data['gen'] = genData
         data['gencost'] = genCost
         data['genfuel'] = genFuel

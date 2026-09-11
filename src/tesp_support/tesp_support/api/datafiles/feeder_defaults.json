@@ -68,7 +68,7 @@
       "inverter",
       "regulator",
       "substation",
-      "evchagerdet"],
+      "evcharger_det"],
 
   "base_feeder_name": "",
 

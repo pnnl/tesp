@@ -2,8 +2,9 @@
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: metrics_api.py
 
-import pandas as pd
 import logging as log_msg
+
+import pandas as pd
 
 from ..api import metrics_base_api as bc
 
@@ -15,8 +16,8 @@ def synch_time_series(series_list, synch_interval, interval_unit):
     Args:
         series_list (list<dataframe>): List containing a set of pandas dataframes each representing a time series
         synch_interval (int): the size of the time step which should be used to resample the dataframe
-        interval_unit (str): the measurement unit of the interval to be sampled. The options for this function
-            include the following options "nanoseconds", "seconds", "minutes", "hours", "days", "months", "years"
+        interval_unit (str): the measurement unit of the interval to be sampled.
+            The options for this function include: "nanoseconds", "seconds", "minutes", "hours", "days", "months", "years"
     Returns:
         list<dataframe>: pandas dataframe time series containing the resampled columns of data
     """
@@ -40,10 +41,8 @@ def get_synch_date_range(time_series):
     t_start = time_series[0].index.min()
     t_end = time_series[0].index.max()
     for t_series in time_series:
-        if t_series.index.min() > t_start:
-            t_start = t_series.index.min()
-        if t_series.index.max() < t_end:
-            t_end = t_series.index.max()
+        t_start = max(t_start, t_series.index.min())
+        t_end = min(t_end, t_series.index.max())
     return t_start, t_end
 
 
@@ -72,11 +71,11 @@ def synch_series(time_series, synch_interval, interval_unit):
     Args:
         time_series (list<dataframe>): time series dataframe
         synch_interval (int): the size of the time intervals to be used in the time series
-        interval_unit (str): the unit of the time interval the time series is to be sampled "T", "H", "S"
+        interval_unit (str): the unit of the time interval the time series is to be sampled "min", "H", "S"
     Returns:
         list<dataframe>: time series dataframe containing the resampled data of the original
     """
-    synchronized_series = synch_time_series(time_series, 1, "T")
+    synchronized_series = synch_time_series(time_series, 1, "min")
     clipped_series = synch_series_lengths(synchronized_series)
     sampled_series = synch_time_series(clipped_series, synch_interval, interval_unit)
     return sampled_series
@@ -969,7 +968,7 @@ def get_total_pv_real_power(time_series, pv_col_id, start_date_time, duration):
         start_date_time (str): the starting date and time when the calculation should start
         duration (int): the length of time in hours which the calculations should be executed
     Returns:
-        dataframe:
+        dataframe: time series dataframe containing the calculated hourly total real power values
     """
     st_time = pd.to_datetime(start_date_time)
     ts_end_time = bc.adjust_date_time(st_time, "hours", duration)

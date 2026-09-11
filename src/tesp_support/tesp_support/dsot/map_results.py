@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 
-from .plots import load_json, load_ames_data, load_gen_data
+from .plots import load_ames_data, load_gen_data, load_json
 
 
 def bulk_system_map_plot(dataPath, configPath, shapePath, case_config_path, case_config_name, day_range, hour,
@@ -338,8 +338,8 @@ def bulk_system_map_plot(dataPath, configPath, shapePath, case_config_path, case
             i = 0
             for gen in case_config_data['gen']:
                 gen_type = case_config_data['genfuel'][i][1]
-                for key in fuel_key:
-                    if fuel_key[key] in gen_type:
+                for key, value in fuel_key.items():
+                    if value in gen_type:
                         gen_fuel = key
                 gen_id = ' ' + gen_fuel + str(case_config_data['genfuel'][i][2])
                 if gen[0] > 200:
@@ -443,7 +443,7 @@ if __name__ == '__main__':
     case_config_name = '200_system_case_config.json'
 
     contour_idx = 0
-    ''' Contour Index = Title , Units
+    """ Contour Index = Title , Units
     0 = 'Wholesale LMP', 'LMP ($/MW-hr)'
     1 = 'Generation Utilization', 'Generation Fraction (-)' (Fraction of generation capacity dispatched at each bus)
     2 = 'Generation Load', 'Gen Load (MW)'  (Generator capacity dispatched at each bus)
@@ -454,13 +454,13 @@ if __name__ == '__main__':
     7 = 'Load Fraction', 'Load Fraction (-)' (fraction of total system load that resides at each bus)
     8 = 'Renewable Capacity', 'Renew Capacity (MW)' Total renewable capacity installed at each bus
     9 = 'Renewable Generation', 'Renew Gen (MW)' Total renewable generation produced at each bus
-    '''
+    """
     # index_range = range(0,6)
     # for contour_idx in index_range:
     #   bulk_system_map_plot(data_path, config_path, shape_path, case_config_path, case_config_name, dayrange, hr, contour_idx, ercot_200, real_time)
 
     contour_idx = 0
-    hr_range = range(0, 24)
+    hr_range = range(24)
     for hr in hr_range:
         real_time = True
         bulk_system_map_plot(data_path, config_path, shape_path, case_config_path, case_config_name, dayrange, hr,

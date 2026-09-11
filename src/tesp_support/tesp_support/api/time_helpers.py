@@ -90,12 +90,10 @@ def is_hhmm_valid(time):
     """
     hr = np.floor(time / 100)
     mn = time % 100
-    if hr > 23 or hr < 0 or mn < 0 or mn > 59 or type(mn) is not int:
-        return False
-    return True
+    return not (hr > 23 or hr < 0 or mn < 0 or mn > 59 or type(mn) is not int)
 
 
-def get_dist(mean, var):
+def get_dist(mean, var, rng=None):
     """ Get a random number from a distribution given mean and %variability
 
     Args:
@@ -104,5 +102,8 @@ def get_dist(mean, var):
     Returns:
         float: one random entry from distribution
     """
-    dev = (1 - var / 100) + np.random.uniform(0, 1) * var / 100 * 2
+    if rng is None:
+        dev = (1 - var / 100) + np.random.uniform(0, 1) * var / 100 * 2
+    else:
+        dev = (1 - var / 100) + rng.uniform(0, 1) * var / 100 * 2
     return mean * dev

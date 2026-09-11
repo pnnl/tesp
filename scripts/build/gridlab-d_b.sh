@@ -18,7 +18,7 @@ fi
 #if [[ $1 == "clean" ]]; then
 #  make clean
 #fi
-#make -j "$(grep -c "^processor" /proc/cpuinfo)"
+#make -j "$(nproc)"
 #make install
 
 # using cmake for >=5.0 GridLAB-D
@@ -38,7 +38,7 @@ cmake -DCMAKE_INSTALL_PREFIX="${INSTDIR}" -DCMAKE_BUILD_TYPE=Release \
 # Remove -DGLD_USE_FNCS=ON -DGLD_FNCS_DIR="${INSTDIR}" if you do not need to use FNCS
 
 # Run the build system and install the application
-cmake --build . -j $(grep -c "^processor" /proc/cpuinfo) --target install
+cmake --build . -j $(nproc) --target install
 
 # To validate the build
 #gridlabd.sh -t 0 --validate

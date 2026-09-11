@@ -2,12 +2,13 @@
 # file: process_gld_v2.1.py
 
 import json
+
 import numpy as np
 import xarray as xr
+from tesp_support.api.data import tesp_path
 
 # first, read and print a dictionary of all the monitored GridLAB-D objects
-casepath = r'''..\SGIP1a\\'''
-casepath = r'''C:\Qiuhua\FY2016_Project_Transactive_system\Simulation_Year1\SGIP1\SGIP1e\\'''
+casepath = tesp_path + '/examples/analysis/SGIP1/SGIP1e/'
 casename = 'SGIP1e'
 lp = open(casepath + casename + "_glm_dict.json").read()
 dict = json.loads(lp)

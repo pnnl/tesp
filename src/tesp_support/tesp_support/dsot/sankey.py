@@ -10,7 +10,6 @@ import plotly.graph_objects as go
 
 from ..dsot import plots as pt
 
-
 # Example from: https://plotly.com/python/sankey-diagram/
 
 # url = 'https://raw.githubusercontent.com/plotly/plotly.js/master/test/image/mocks/sankey_energy.json'
@@ -52,7 +51,7 @@ from ..dsot import plots as pt
 
 
 def rec_diff(d1, d2):
-    diff = dict()
+    diff = {}
     for k, v1 in d1.items():
         if isinstance(v1, dict):
             diff[k] = rec_diff(v1, d2[k])
@@ -63,10 +62,10 @@ def rec_diff(d1, d2):
 
 def label_nodes(data, total_value):
     """ Adds max quantity of node value to node label"""
-    for node in range(0, len(data['data'][0]['node']['label'])):
+    for node in range(len(data['data'][0]['node']['label'])):
         source_value = 0
         target_value = 0
-        for link in range(0, len(data['data'][0]['link']['value'])):
+        for link in range(len(data['data'][0]['link']['value'])):
             if data['data'][0]['link']['target'][link] == node:
                 target_value += data['data'][0]['link']['value'][link]
             if data['data'][0]['link']['source'][link] == node:
@@ -284,7 +283,7 @@ def load_CFS_data(results_path, dso_range, update_data, scale, labelvals, calibr
                                  data['data'][0]['link']['value'][17]) / corrected_total_gen_revenue
         # Load and assign transmission data:
         loads_df = pd.read_csv(results_path + "/DSO_load_stats.csv", index_col=[0], dtype=object)
-        peak_sys_load = float((loads_df.loc['Max', 'Substation'])) + float((loads_df.loc['Max', 'Industrial Loads']))
+        peak_sys_load = float(loads_df.loc['Max', 'Substation']) + float(loads_df.loc['Max', 'Industrial Loads'])
 
         Transmission_Capital = 169 * peak_sys_load * 0.0825
         Transmission_Operation = data['data'][0]['link']['value'][13] - Transmission_Capital
@@ -469,9 +468,8 @@ def load_energy_data(results_path, dso_range, update_data, scale, labelvals, cal
                 if gendata_df.loc['Capacity (MW)', fuel] != 0:
                     data['data'][0]['link']['value'][link_id] = gendata_df.loc['Capacity (MW)', fuel] * \
                                                                 gendata_df.loc['Capacity Factor (-)', fuel]
-                elif mode == 'Peak':
-                    if gendata_df.loc['Coincident Peak Power (MW)', fuel] != 0:
-                        data['data'][0]['link']['value'][link_id] = gendata_df.loc['Coincident Peak Power (MW)', fuel]
+                elif mode == 'Peak' and gendata_df.loc['Coincident Peak Power (MW)', fuel] != 0:
+                    data['data'][0]['link']['value'][link_id] = gendata_df.loc['Coincident Peak Power (MW)', fuel]
 
         # Load Building and DER load totals:
         loaddata_df = pd.read_csv(results_path + "/DSO_load_stats.csv", index_col=[0], dtype=object)
@@ -490,8 +488,8 @@ def load_energy_data(results_path, dso_range, update_data, scale, labelvals, cal
                     'EV': 14,
                     'Battery': 15}
 
-        for load in load_key.keys():
-            link_id = load_key[load]
+        for load, value in load_key.items():
+            link_id = value
             if load in ['Plug Loads', 'HVAC Loads']:
                 data['data'][0]['link']['value'][link_id] = loaddata_df.loc[load_field, load] * RC_ratio
                 data['data'][0]['link']['value'][link_id + 5] = loaddata_df.loc[load_field, load] * (1 - RC_ratio)
@@ -628,10 +626,9 @@ def sankey_plot():
     # DSO range for 8 node case.  (for 200 node case we will need to determine active DSOs from metadata file).
     # dso_range = range(1, 9)
     dsorange = []
-    for DSO in DSOmetadata.keys():
-        if 'DSO' in DSO:
-            if DSOmetadata[DSO]['used']:
-                dsorange.append(int(DSO.split('_')[-1]))
+    for DSO in DSOmetadata:
+        if 'DSO' in DSO and DSOmetadata[DSO]['used']:
+            dsorange.append(int(DSO.split('_')[-1]))
 
     if metric_mode == 'CashFlow':
         data = load_CFS_data(data_path, dsorange, updatedata, scaledata, label_values, calibration)
@@ -643,7 +640,7 @@ def sankey_plot():
     opacity = 0.4
     # round(255*matplotlib.colors.to_rgba(data['data'][0]['node']['color'][4], alpha=0.8))
     # for color in data['data'][0]['node']['color']:
-    for color_id in range(0, len(data['data'][0]['node']['color'])):
+    for color_id in range(len(data['data'][0]['node']['color'])):
         new_color = matplotlib.colors.to_rgba(data['data'][0]['node']['color'][color_id], alpha=0.8)
         new_color = [round(255 * value) for value in new_color]
         new_color[3] = 0.8
@@ -679,23 +676,19 @@ def sankey_plot():
     fig = go.Figure(data=[go.Sankey(
         valueformat=".0f",
         valuesuffix=data['data'][0]['valuesuffix'],
-        textfont=dict(size=12),
+        textfont={'size': 12},
         # Define nodes
-        node=dict(
-            pad=15,
-            thickness=15,
-            line=dict(color="black", width=0.5),
-            label=data['data'][0]['node']['label'],
-            color=data['data'][0]['node']['color']
-        ),
+        node={'pad': 15,
+              'thickness': 15,
+              'line': {'color': "black", 'width': 0.5},
+              'label': data['data'][0]['node']['label'],
+              'color': data['data'][0]['node']['color']},
         # Add links
-        link=dict(
-            source=data['data'][0]['link']['source'],
-            target=data['data'][0]['link']['target'],
-            value=data['data'][0]['link']['value'],
-            label=data['data'][0]['link']['label'],
-            color=data['data'][0]['link']['color']
-        ))])
+        link={'source': data['data'][0]['link']['source'],
+              'target': data['data'][0]['link']['target'],
+              'value': data['data'][0]['link']['value'],
+              'label': data['data'][0]['link']['label'],
+              'color': data['data'][0]['link']['color']})])
 
     fig.update_layout(title_text=data['layout']['title']['text'] + title_suffix,
                       font_size=10)

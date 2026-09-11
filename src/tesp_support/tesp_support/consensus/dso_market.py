@@ -17,7 +17,7 @@ from copy import deepcopy
 import numpy as np
 
 from ..api.parse_helpers import parse_kw
-from ..dsot.helpers_dsot import Curve, get_intersect, MarketClearingType, resample_curve
+from ..dsot.helpers_dsot import Curve, MarketClearingType, get_intersect, resample_curve
 
 
 class DSOMarket:
@@ -105,8 +105,8 @@ class DSOMarket:
         self.cleared_q_da = [0.0] * self.windowLength
         self.cleared_q_rt = [0.0]
         self.curve_DSO_RT = None
-        self.curve_DSO_DA = dict()
-        self.curve_ws_node = dict()
+        self.curve_DSO_DA = {}
+        self.curve_ws_node = {}
         self.trial_clear_type_RT = None
         self.trial_clear_type_DA = [None] * self.windowLength
         self.distribution_charge_rate = dso_dict['distribution_charge_rate']
@@ -130,7 +130,7 @@ class DSOMarket:
         """
         # Update the wholesale node curves according to the most updated curve coefficients
         for day in range(7):
-            self.curve_ws_node[day] = dict()
+            self.curve_ws_node[day] = {}
             for hour in range(24):
                 self.curve_ws_node[day][hour] = Curve(self.price_cap, self.num_samples)
                 self.curve_ws_node[day][hour].quantities = np.linspace(0, self.DSO_Q_max, self.num_samples)
@@ -153,7 +153,7 @@ class DSOMarket:
         """
         self.Pwclear_DA = [0.0] * self.windowLength
         self.trial_cleared_quantity_DA = [0.0] * self.windowLength
-        self.curve_DSO_DA = dict()
+        self.curve_DSO_DA = {}
         self.trial_clear_type_DA = [None] * self.windowLength
         for idx in range(self.windowLength):
             self.curve_DSO_DA[idx] = Curve(self.price_cap, self.num_samples)
@@ -183,13 +183,11 @@ class DSOMarket:
 
         """
         for idx in range(self.windowLength):
-            if max(demand_curve_DA[idx].quantities) > Q_max:
-                if max(demand_curve_DA[idx].quantities) > self.DSO_Q_max:
-                    print("Hour " + str(idx) +
-                          " Demand Curve range exceeds beyond Q_max," +
-                          " changing the LMP forecaster's Q_max to reflect that and extending the supply curve")
-                    self.DSO_Q_max = max(demand_curve_DA[idx].quantities)
-                    self.update_wholesale_node_curve()
+            if max(demand_curve_DA[idx].quantities) > Q_max and max(demand_curve_DA[idx].quantities) > self.DSO_Q_max:
+                print("Hour " + str(idx) + " Demand Curve range exceeds beyond Q_max," +
+                      " changing the LMP forecaster's Q_max to reflect that and extending the supply curve")
+                self.DSO_Q_max = max(demand_curve_DA[idx].quantities)
+                self.update_wholesale_node_curve()
             substation_curve = deepcopy(self.curve_preprocess(demand_curve_DA[idx], self.DSO_Q_max))
             self.curve_DSO_DA[idx].curve_aggregator_DSO(substation_curve)
 
@@ -210,8 +208,7 @@ class DSOMarket:
         preprocessed_curve.quantities = deepcopy(substation_demand_curve.quantities)
         for i in range(self.num_samples):
             # Truncate the substation-level demand curve by maximum capacity of the substation
-            if preprocessed_curve.quantities[i] >= Q_max:
-                preprocessed_curve.quantities[i] = Q_max
+            preprocessed_curve.quantities[i] = min(Q_max, preprocessed_curve.quantities[i])
             # Convert the retail price into wholesale price
             preprocessed_curve.prices[i] = self.retail_rate_inverse(preprocessed_curve.prices[i])
         return preprocessed_curve
@@ -297,8 +294,7 @@ class DSOMarket:
                     elif curve_ws_node.quantities[idx] == cleared_quantity:
                         cleared_price = curve_ws_node.prices[idx]
                 clear_type = MarketClearingType.UNCONGESTED
-                if cleared_price > self.price_cap:
-                    cleared_price = self.price_cap
+                cleared_price = min(cleared_price, self.price_cap)
                 return cleared_price, cleared_quantity, clear_type
             else:
                 return float('inf'), float('inf'), MarketClearingType.FAILURE
@@ -421,7 +417,7 @@ class DSOMarket:
         maxPuLoading = retail_obj.maxPuLoading
         TOC_dict = retail_obj.TOC_dict
         Prclear_DA = [0.0] * self.windowLength
-        supply_curve_DA = dict()
+        supply_curve_DA = {}
         for idx in range(self.windowLength):
             Prclear_DA[idx] = self.retail_rate(self.Pwclear_DA[idx])
             # price cap of the supply_curve has to be the retail price cap
@@ -482,8 +478,8 @@ class DSOMarket:
         FeederCongPrice = Prclear
         FeederPkDemandPrice = Prclear
         SupplyQuantities = np.linspace(0, Q_max * maxPuLoading, num_samples)
-        SupplyPrices = [0.0 for _ in range(0, num_samples)]
-        for i in range(0, len(SupplyQuantities)):
+        SupplyPrices = [0.0 for _ in range(num_samples)]
+        for i in range(len(SupplyQuantities)):
             if FeederPkDemandCapacity <= FeederCongCapacity:
                 if SupplyQuantities[i] < FeederPkDemandCapacity:
                     SupplyPrices[i] = Prclear
@@ -500,12 +496,12 @@ class DSOMarket:
         # cost per 60 minutes (so kW is same as kWh)
         dollars, pu_loading = self.generate_TOC(60, maxPuLoading, num_samples, TOC_dict)
 
-        self.dollarsPerKW = [0 for _ in range(0, len(SupplyQuantities))]
-        for i in range(0, len(pu_loading)):
+        self.dollarsPerKW = [0 for _ in range(len(SupplyQuantities))]
+        for i in range(len(pu_loading)):
             if pu_loading[i] != 0:
                 self.dollarsPerKW[i] = dollars[i] / (pu_loading[i] * Q_max)
 
-        for i in range(0, len(SupplyQuantities)):
+        for i in range(len(SupplyQuantities)):
             SupplyPrices[i] = SupplyPrices[i] + self.dollarsPerKW[i]
 
         return SupplyQuantities, SupplyPrices
@@ -545,8 +541,8 @@ class DSOMarket:
         delta_T_ave_wind_R = TOC_dict['delta_T_ave_wind_R']
 
         plotLoadDelta = maxPuLoad / num_samples
-        T_amb = [Tamb for _ in range(0, OperatingPeriod)]
-        F_AA = [0 for _ in range(0, OperatingPeriod)]
+        T_amb = [Tamb for _ in range(OperatingPeriod)]
+        F_AA = [0 for _ in range(OperatingPeriod)]
         P_NLL = P_Rated * NLL_rate / 100
         P_LL = P_Rated * LL_rate / 100
         R_ratio = P_LL / P_NLL
@@ -554,9 +550,9 @@ class DSOMarket:
         delta_T_WR = delta_T_hotspot_R - delta_T_TOR
 
         # Variable Initialization
-        delta_T_TO = [0 for _ in range(0, OperatingPeriod)]
-        delta_T_W = [0 for _ in range(0, OperatingPeriod)]
-        T_HS = [0 for _ in range(0, OperatingPeriod)]
+        delta_T_TO = [0 for _ in range(OperatingPeriod)]
+        delta_T_W = [0 for _ in range(OperatingPeriod)]
+        T_HS = [0 for _ in range(OperatingPeriod)]
 
         # Computing TOC
         TOC = BP + toc_A * P_NLL + toc_B * P_LL
@@ -564,12 +560,12 @@ class DSOMarket:
 
         LoadsForPlot = None
         plotLoadlevel = 0  # pu load level initialized to zero
-        DollarsForPlot = [0 for _ in range(0, num_samples)]
-        self.Feqa_T = [0 for _ in range(0, num_samples)]
-        for Iterator in range(0, num_samples):
+        DollarsForPlot = [0 for _ in range(num_samples)]
+        self.Feqa_T = [0 for _ in range(num_samples)]
+        for Iterator in range(num_samples):
             plotLoadlevel = plotLoadlevel + plotLoadDelta
-            I_load = [I_rated * plotLoadlevel for _ in range(0, OperatingPeriod)]
-            for t in range(0, OperatingPeriod):
+            I_load = [I_rated * plotLoadlevel for _ in range(OperatingPeriod)]
+            for t in range(OperatingPeriod):
                 # Computing hot-spot temperature
                 K_U = I_load[t] / I_rated
                 delta_T_TO_SS = delta_T_TOR * ((((K_U ** 2) * R_ratio + 1) / (R_ratio + 1)) ** Oil_n)
@@ -584,7 +580,7 @@ class DSOMarket:
             # Computing equivalent aging acceleration factor F_AA over operating interval
             F_EQA_num = 0
             F_EQA_den = 0
-            for t in range(0, OperatingPeriod):
+            for t in range(OperatingPeriod):
                 F_EQA_num = F_EQA_num + F_AA[t] * timeStep
                 F_EQA_den = F_EQA_den + timeStep
             F_EQA = F_EQA_num / F_EQA_den  # unit per day
@@ -598,7 +594,7 @@ class DSOMarket:
             # Computing $ per operating period
             dollars_per_period = (TOC / (L * 365 * 24 * 60)) * costInterval
             DollarsForPlot[Iterator] = dollars_per_period
-            LoadsForPlot = [plotLoadDelta * i for i in range(0, num_samples)]
+            LoadsForPlot = [plotLoadDelta * i for i in range(num_samples)]
 
         return DollarsForPlot, LoadsForPlot
 
@@ -687,6 +683,7 @@ class DSOMarket:
 
 def test():
     import matplotlib.pyplot as plt
+
     from .retail_market import RetailMarket
 
     def test_dso_clearing_RT():

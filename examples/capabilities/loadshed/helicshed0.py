@@ -1,8 +1,9 @@
 # Copyright (c) 2021-2025 Battelle Memorial Institute
 # file: helicsshed0.py
 
-import helics as h
 import logging
+
+import helics as h
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.StreamHandler())
@@ -10,7 +11,7 @@ log.setLevel(logging.INFO)
 # log.setLevel(logging.DEBUG)
 
 helicsversion = h.helicsGetVersion()
-log.info("Loadshed0 Federate: HELICS version = {}".format(helicsversion))
+log.info(f"Loadshed0 Federate: HELICS version = {helicsversion}")
 
 
 def create_federate(deltat=1.0, fedinitstring="--federates=1"):
@@ -32,7 +33,7 @@ def main():
     pubid = h.helicsFederateRegisterGlobalPublication(fed, "loadshed/sw_status", h.helics_data_type_string, "")
     #    subid = h.helicsFederateRegisterSubscription(fed, "gridlabdSimulator1/totalLoad", "")
     endpoint_count = h.helicsFederateGetEndpointCount(fed)
-    log.info("I have counted a number of {0} endpoints.".format(endpoint_count))
+    log.info(f"I have counted a number of {endpoint_count} endpoints.")
     log.info("########################   Entering Execution Mode  ##########################################")
     h.helicsFederateEnterExecutingMode(fed)
 

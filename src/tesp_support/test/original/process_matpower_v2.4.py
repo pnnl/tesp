@@ -2,13 +2,15 @@
 # file: process_matpower_v2.4.py
 
 import json
+
+import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
-import matplotlib.pyplot as plt
+from tesp_support.api.data import tesp_path
 
 # first, read and print a dictionary of relevant MATPOWER objects
 
-casepath = r'''C:\Qiuhua\FY2016_Project_Transactive_system\Simulation_Year1\SGIP1\SGIP1a\\'''
+casepath = tesp_path + '/examples/analysis/SGIP1/SGIP1a/'
 casename = 'SGIP1a'
 lp = open(casepath + casename + "_m_dict.json").read()
 dict = json.loads(lp)
@@ -150,7 +152,7 @@ ax[2, 0].set_ylabel(VMAG_UNITS)
 ax[2, 0].set_title("Voltages at " + bus_keys[0])
 ax[2, 0].legend(loc='best')
 
-for i in range(0, 3):
+for i in range(3):
     ax[i, 1].plot(hrs, data_g[i, :, PGEN_IDX], color="blue", label="P")
     ax[i, 1].plot(hrs, data_g[i, :, QGEN_IDX], color="red", label="Q")
     ax[i, 1].set_ylabel(PGEN_UNITS + "/" + QGEN_UNITS)
@@ -207,10 +209,10 @@ print("Sum of Real power during 240s to 2040s ",
 
 #  -----------save the dataset to a netCMF format file-------------------------
 
-# mp_bus_metrics.to_netcdf(r'''..\mp_bus_metrics.nc''')
+# mp_bus_metrics.to_netcdf('../mp_bus_metrics.nc')
 
 #  -----------load a netCMF format file to dataset-----------------------------
-# mp_bus_metrics2 = xr.open_dataset(r'''..\mp_bus_metrics.nc''')
+# mp_bus_metrics2 = xr.open_dataset('../mp_bus_metrics.nc')
 
 
 # processing the generation part metrics

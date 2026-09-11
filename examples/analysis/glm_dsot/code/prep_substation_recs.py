@@ -11,9 +11,7 @@ import os
 from datetime import datetime
 
 import numpy as np
-
-from tesp_support.api.helpers import HelicsMsg
-from tesp_support.api.helpers import random_norm_trunc
+from tesp_support.api.helpers import HelicsMsg, random_norm_trunc
 
 # write yaml for substation.py to subscribe meter voltages, house temperatures, hvac load and hvac state
 # write txt for gridlabd to subscribe house setpoints and meter price; publish meter voltages
@@ -107,9 +105,8 @@ def select_setpt_night(wakeup_set, daylight_set, mode, st, hd, inc_lev):
             # Do not allow heating setpt at unoccupied home more than at night
             if mode == 'heat' and daylight_set > night_set:
                 night_set = wakeup_set
-        except:
+        except Exception:
             print("WARNING select setpt not found:", wakeup_set, daylight_set, mode, st, hd, inc_lev, ", setting to ", wakeup_set)
-            pass
         return night_set
 
 def telework(prob, st, hd, inc_lev):
@@ -171,9 +168,8 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
     gd = json.loads(ip)
     gld_sim_name = gd['message_name']
 
-    print('\tgldfileroot -> {0:s}\n\tsubstationfileroot -> {1:s}\n\tdirname -> {2:s}\n'
-          '\tbasename -> {3:s}\n\tglmname -> {4:s}\n\tgld_sim_name -> {5:s}\n\tsubstation_name -> {6:s}'.
-          format(gldfileroot, substationfileroot, dirname, basename, glmname, gld_sim_name, substation_name))
+    print(f'\tgldfileroot -> {gldfileroot:s}\n\tsubstationfileroot -> {substationfileroot:s}\n\tdirname -> {dirname:s}\n'
+          f'\tbasename -> {basename:s}\n\tglmname -> {glmname:s}\n\tgld_sim_name -> {gld_sim_name:s}\n\tsubstation_name -> {substation_name:s}')
 
     # dictionaries with agents and counters
     markets = {}
@@ -220,8 +216,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
             sliders = {'customer': np.random.uniform(0.001, 1.0)}
             for _key, _val in slider_ranges.items():
                 sliders[_key] = (sliders['customer'] * (_val['_UP'] - _val['_DOWN']) + _val['_DOWN'])
-                if sliders[_key] < _val['_DOWN']:
-                    sliders[_key] = _val['_DOWN']
+                sliders[_key] = max(sliders[_key], _val['_DOWN'])
             for child in val['children']:
                 site_map[child] = {'slider_settings': sliders}
             cust_participating = np.random.uniform(0, 1) <= trans_cust_per
@@ -229,49 +224,48 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
 
     # prepare inputs for weather agent
     # write the weather agent's configuration file
-    if 'climate' in gd:
-        # check if this weather agent is already implemented
-        if not os.path.isfile(weatherfileroot + 'weather_Config.json'):
-            time_fmt = '%Y-%m-%d %H:%M:%S'
-            dt1 = datetime.strptime(case_config['StartTime'], time_fmt)
-            dt2 = datetime.strptime(case_config['EndTime'], time_fmt)
-            seconds = int((dt2 - dt1).total_seconds())
-            minutes = int(seconds / 60)
-            if case_config["messenger"] == 'FNCS':
-                wconfig = {'name': gd['climate']['name'],
-                        'StartTime': case_config['StartTime'],
-                        'time_stop': str(minutes) + 'm',
-                        'time_delta': '1s',
-                        'publishInterval': '5m',
-                        'Forecast': 1,
-                        'ForecastLength': '48h',
-                        'PublishTimeAhead': '3s',
-                        'AddErrorToForecast': 0,
-                        'broker': 'tcp://localhost:' + str(case_config['port']),
-                        'forecastPeriod': 48,
-                        'parameters': {}}
-            elif case_config["messenger"] == 'HELICS':
-                wconfig = {'name': gd['climate']['name'],
-                        'StartTime': case_config['StartTime'],
-                        'time_stop': str(minutes) + 'm',
-                        'time_delta': '1s',
-                        'publishInterval': '5m',
-                        'Forecast': 1,
-                        'ForecastLength': '48h',
-                        'PublishTimeAhead': '3s',
-                        'AddErrorToForecast': 0,
-                        'broker': 'HELICS',
-                        'forecastPeriod': 48,
-                        'parameters': {}}
-            for parm in ['temperature', 'humidity', 'pressure', 'solar_diffuse', 'solar_direct', 'wind_speed']:
-                wconfig['parameters'][parm] = {'distribution': 2,
-                                               'P_e_bias': 0.5,
-                                               'P_e_envelope': 0.08,
-                                               'Lower_e_bound': 0.5}
+    # check if this weather agent is already implemented
+    if 'climate' in gd and not os.path.isfile(weatherfileroot + 'weather_Config.json'):
+        time_fmt = '%Y-%m-%d %H:%M:%S'
+        dt1 = datetime.strptime(case_config['StartTime'], time_fmt)
+        dt2 = datetime.strptime(case_config['EndTime'], time_fmt)
+        seconds = int((dt2 - dt1).total_seconds())
+        minutes = int(seconds / 60)
+        if case_config["messenger"] == 'FNCS':
+            wconfig = {'name': gd['climate']['name'],
+                    'StartTime': case_config['StartTime'],
+                    'time_stop': str(minutes) + 'm',
+                    'time_delta': '1s',
+                    'publishInterval': '5m',
+                    'Forecast': 1,
+                    'ForecastLength': '48h',
+                    'PublishTimeAhead': '3s',
+                    'AddErrorToForecast': 0,
+                    'broker': 'tcp://localhost:' + str(case_config['port']),
+                    'forecastPeriod': 48,
+                    'parameters': {}}
+        elif case_config["messenger"] == 'HELICS':
+            wconfig = {'name': gd['climate']['name'],
+                    'StartTime': case_config['StartTime'],
+                    'time_stop': str(minutes) + 'm',
+                    'time_delta': '1s',
+                    'publishInterval': '5m',
+                    'Forecast': 1,
+                    'ForecastLength': '48h',
+                    'PublishTimeAhead': '3s',
+                    'AddErrorToForecast': 0,
+                    'broker': 'HELICS',
+                    'forecastPeriod': 48,
+                    'parameters': {}}
+        for parm in ['temperature', 'humidity', 'pressure', 'solar_diffuse', 'solar_direct', 'wind_speed']:
+            wconfig['parameters'][parm] = {'distribution': 2,
+                                           'P_e_bias': 0.5,
+                                           'P_e_envelope': 0.08,
+                                           'Lower_e_bound': 0.5}
 
-            wp = open(weatherfileroot + 'weather_Config.json', 'w')
-            print(json.dumps(wconfig), file=wp)
-            wp.close()
+        wp = open(weatherfileroot + 'weather_Config.json', 'w')
+        print(json.dumps(wconfig), file=wp)
+        wp.close()
 
     # Obtain hvac agent dictionary based on houses with electric cooling or electric heating
     for key, val in gd['houses'].items():
@@ -465,31 +459,31 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                                                 'meterName': meter_name,
                                                 'houseClass': house_class,
                                                 'period': period,
-                                                'wakeup_start': float('{:.3f}'.format(wakeup_start)),
-                                                'daylight_start': float('{:.3f}'.format(daylight_start)),
-                                                'evening_start': float('{:.3f}'.format(evening_start)),
-                                                'night_start': float('{:.3f}'.format(night_start)),
-                                                'weekend_day_start': float('{:.3f}'.format(weekend_day_start)),
-                                                'weekend_night_start': float('{:.3f}'.format(weekend_night_start)),
-                                                'wakeup_set_cool': float('{:.3f}'.format(wakeup_set_cool)),
-                                                'daylight_set_cool': float('{:.3f}'.format(daylight_set_cool)),
-                                                'evening_set_cool': float('{:.3f}'.format(evening_set_cool)),
-                                                'night_set_cool': float('{:.3f}'.format(night_set_cool)),
-                                                'weekend_day_set_cool': float('{:.3f}'.format(weekend_day_set_cool)),
-                                                'weekend_night_set_cool': float('{:.3f}'.format(weekend_night_set_cool)),
-                                                'wakeup_set_heat': float('{:.3f}'.format(wakeup_set_heat)),
-                                                'daylight_set_heat': float('{:.3f}'.format(daylight_set_heat)),
-                                                'evening_set_heat': float('{:.3f}'.format(evening_set_heat)),
-                                                'night_set_heat': float('{:.3f}'.format(night_set_heat)),
-                                                'weekend_day_set_heat': float('{:.3f}'.format(weekend_day_set_heat)),
-                                                'weekend_night_set_heat': float('{:.3f}'.format(weekend_night_set_heat)),
-                                                'deadband': float('{:.3f}'.format(deadband)),
-                                                'ramp_high_limit': float('{:.4f}'.format(ramp_high)),
-                                                'ramp_low_limit': float('{:.4f}'.format(ramp_low)),
-                                                'range_high_limit': float('{:.4f}'.format(range_high)),
-                                                'range_low_limit': float('{:.4f}'.format(range_low)),
-                                                'slider_setting': float('{:.4f}'.format(slider)),
-                                                'price_cap': float('{:.3f}'.format(ctrl_cap)),
+                                                'wakeup_start': float(f'{wakeup_start:.3f}'),
+                                                'daylight_start': float(f'{daylight_start:.3f}'),
+                                                'evening_start': float(f'{evening_start:.3f}'),
+                                                'night_start': float(f'{night_start:.3f}'),
+                                                'weekend_day_start': float(f'{weekend_day_start:.3f}'),
+                                                'weekend_night_start': float(f'{weekend_night_start:.3f}'),
+                                                'wakeup_set_cool': float(f'{wakeup_set_cool:.3f}'),
+                                                'daylight_set_cool': float(f'{daylight_set_cool:.3f}'),
+                                                'evening_set_cool': float(f'{evening_set_cool:.3f}'),
+                                                'night_set_cool': float(f'{night_set_cool:.3f}'),
+                                                'weekend_day_set_cool': float(f'{weekend_day_set_cool:.3f}'),
+                                                'weekend_night_set_cool': float(f'{weekend_night_set_cool:.3f}'),
+                                                'wakeup_set_heat': float(f'{wakeup_set_heat:.3f}'),
+                                                'daylight_set_heat': float(f'{daylight_set_heat:.3f}'),
+                                                'evening_set_heat': float(f'{evening_set_heat:.3f}'),
+                                                'night_set_heat': float(f'{night_set_heat:.3f}'),
+                                                'weekend_day_set_heat': float(f'{weekend_day_set_heat:.3f}'),
+                                                'weekend_night_set_heat': float(f'{weekend_night_set_heat:.3f}'),
+                                                'deadband': float(f'{deadband:.3f}'),
+                                                'ramp_high_limit': float(f'{ramp_high:.4f}'),
+                                                'ramp_low_limit': float(f'{ramp_low:.4f}'),
+                                                'range_high_limit': float(f'{range_high:.4f}'),
+                                                'range_low_limit': float(f'{range_low:.4f}'),
+                                                'slider_setting': float(f'{slider:.4f}'),
+                                                'price_cap': float(f'{ctrl_cap:.3f}'),
                                                 'bid_delay': bid_delay,
                                                 'house_participating': site_agent[meter_name]['participating'],
                                                 'cooling_participating': cooling_participating,
@@ -600,10 +594,10 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                                              'charge': val['bat_soc'] * val['bat_capacity'],
                                              'efficiency': float('{:.4f}'.format(val['inv_eta'] *
                                                                                  math.sqrt(val['bat_eta']))),
-                                             'slider_setting': float('{:.4f}'.format(slider)),
-                                             'reserved_soc': float('{:.4f}'.format(reserve_soc)),
-                                             'profit_margin': float('{:.4f}'.format(profit_margin)),
-                                             'degrad_factor': float('{:.4f}'.format(degrad_fac)),
+                                             'slider_setting': float(f'{slider:.4f}'),
+                                             'reserved_soc': float(f'{reserve_soc:.4f}'),
+                                             'profit_margin': float(f'{profit_margin:.4f}'),
+                                             'degrad_factor': float(f'{degrad_fac:.4f}'),
                                              'participating': participating}
 
     print('configured', num_batteries, 'agents for batteries and', num_battery_agents, 'are participating')
@@ -650,10 +644,10 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                               'miles_per_kWh': val['miles_per_kWh'],
                               'range_miles': val['range_miles'],
                               'efficiency': val['efficiency'],
-                              'slider_setting': float('{:.4f}'.format(slider)),
-                              'reserved_soc': float('{:.4f}'.format(reserve_soc)),
-                              'profit_margin': float('{:.4f}'.format(profit_margin)),
-                              'degrad_factor': float('{:.4f}'.format(degrad_fac)),
+                              'slider_setting': float(f'{slider:.4f}'),
+                              'reserved_soc': float(f'{reserve_soc:.4f}'),
+                              'profit_margin': float(f'{profit_margin:.4f}'),
+                              'degrad_factor': float(f'{degrad_fac:.4f}'),
                               'participating': participating}
 
     print('configured', num_evs, 'agents for electric vehicles and', num_ev_agents, 'are participating')
@@ -686,7 +680,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                                         'meterName': meter_name,
                                         'rating': val['rated_W'],
                                         'scaling_factor': pv_scaling_fac,
-                                        'slider_setting': float('{:.4f}'.format(slider)),
+                                        'slider_setting': float(f'{slider:.4f}'),
                                         'participating': participating}
 
     print('configured', num_pvs, 'agents for PVs and', num_pv_agents, 'are participating')
@@ -694,11 +688,22 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
     np.random.set_state(st2)
 
     # Including quadratic curves to agent_dict if possible
-    try:
+    try: # DSOT
         with open(case_config["quadraticFile"]) as json_file:
             DSO_quadratic_curves = json.load(json_file)
-    except:
-        DSO_quadratic_curves = None
+    except Exception:
+        try: # glm_dsot
+            if case_config["RECS"]:
+                rate = case_config["rate"]
+                with open(case_config[f'quadratic_file_RECS_{rate}']) as json_file:
+                    DSO_quadratic_curves = json.load(json_file)
+            else:
+                nodes = case_config["nodes"]
+                scenario = case_config["scenario"]
+                with open(case_config[f'quadratic_file_{nodes}_{scenario}']) as json_file:
+                    DSO_quadratic_curves = json.load(json_file)
+        except Exception:
+            DSO_quadratic_curves = None
 
     # Obtain market agent dictionary based on markets
     for market in market_config:

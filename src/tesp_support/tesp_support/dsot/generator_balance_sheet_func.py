@@ -5,9 +5,8 @@
 @author: yint392
 """
 
-import os
 import json
-
+import os
 
 # This function calculates ...
 # inputs: generator type and paths
@@ -22,8 +21,8 @@ def generator_balance_sheet_annual(generator_num, gen_type, meta_path, system_pa
     with open(os.path.join(system_path, 'system_case_config.json')) as json_file:
         system_case_config = json.load(json_file)
 
-    MW_Rated = system_case_config['gen'][generator_num][
-        [i for i, x in enumerate(system_case_config['metadata']['gen']) if 'Pmax' in x][0]]
+    MW_Rated = system_case_config['gen'][generator_num][next(iter(
+        [i for i, x in enumerate(system_case_config['metadata']['gen']) if 'Pmax' in x]))]
     # MW_Rated = system_case_config['gen'][0][[i for i, x in enumerate(system_case_config['metadata']['gen']) if 'Pmax' in x][0]]
 
     FixedMaintenance = generator_metadata['fixed_maintenance']['fixed_cost'][gen_type] + (

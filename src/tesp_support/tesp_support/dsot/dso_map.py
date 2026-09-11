@@ -8,7 +8,7 @@ import json
 import pandas as pd
 import requests
 
-'''
+"""
 This script automatically creates the 200 bus meta data files.
 
 
@@ -66,7 +66,7 @@ The following DSO specific parameters are instantiated
     },
     "DSO_system_energy_fraction" : 0.11
 
-'''
+"""
 
 
 def prepare_metadata(node, end_row, feeder_mode, high_renewables_case, DSO_Load_Threshold):
@@ -323,7 +323,7 @@ def prepare_metadata(node, end_row, feeder_mode, high_renewables_case, DSO_Load_
                 },
                 "DSO_system_energy_fraction": 0.11
             }
-        print("\n=== {0:d} DSOs Defined in Metadata File =====".format(len(data) - 1))
+        print(f"\n=== {len(data) - 1:d} DSOs Defined in Metadata File =====")
 
     json_file.close()
     # write it in the original data file

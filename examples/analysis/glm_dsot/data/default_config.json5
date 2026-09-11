@@ -83,6 +83,7 @@
   "opf_dc": 1,
   "LogLevel": "INFO",
   "gld_debug": 0,
+  "monitor": true,
   "DSOT_case": true,
   // Default: blank, otherwise set a path for all outputs
   "outputPath": "",
@@ -148,7 +149,10 @@
   "quadratic_file_8_hi": "8_hi_quadratic_curves.json",
   "quadratic_file_200": "200_quadratic_curves.json",
   "quadratic_file_200_hi": "200_hi_quadratic_curves.json",
-  "quadratic_file_RECS": "8_hi_quadratic_curves_Flat.json",
+  "quadratic_file_RECS_Flat": "8_hi_quadratic_curves_Flat.json",
+  "quadratic_file_RECS_TOU": "8_hi_quadratic_curves_Flat.json",
+  "quadratic_file_RECS_EandC": "8_hi_quadratic_curves_EandC.json",
+  "quadratic_file_RECS_": "8_hi_quadratic_curves.json",
   "commercial_meta_file": "DSOT_commercial_metadata.json",
   "residential_meta_file": "DSOT_residential_metadata.json",
   "residential_meta_file_RECS": "RECS_residential_metadata.json",
@@ -178,7 +182,7 @@
     "inverter",
     "regulator",
     "substation",
-    "evchagerdet"
+    "evcharger_det"
   ],
   "metrics_interval": 300,
   "metrics_interim": 7200,

@@ -30,7 +30,7 @@ class MetricsTable(object):
              format(len(columns), len(units)))
         self.columns = columns
         self.units = units
-        self.data = list()
+        self.data = []
 
     def append_data(self, data):
         assert len(data) == len(self.columns), \
@@ -118,8 +118,8 @@ class MetricsStore(object):
         """
         # Note: this new format doesn't allow for extra metadata info to be stored/sent here,
         # which I believe I saw in earlier JSON metadata outputs
-        self.time_uid_pairs = list()
-        self.index_to_shapes = list()
+        self.time_uid_pairs = []
+        self.index_to_shapes = []
         shape_to_cols = collections.defaultdict(list)
         shape_to_units = collections.defaultdict(list)
         for i, (col, units) in enumerate(name_units_pairs):
@@ -172,7 +172,7 @@ class MetricsCollector(object):
 
     def __init__(self, start_time='1970-01-01 00:00:00'):
         self.start_time = pd.Timestamp(start_time)
-        self.metrics_stores = list()
+        self.metrics_stores = []
 
     @classmethod
     def factory(cls, start_time='1970-01-01 00:00:00', write_hdf5=False):
@@ -235,7 +235,7 @@ def deepish_copy(obj):
             return obj  # ints
 
 
-def to_json(metrics_store, start_time):
+def to_json(metrics_store, start_time, clear =True):
     """ This function writes the metric data to JSON files (and clears the data)
 
     Args:
@@ -331,7 +331,7 @@ def to_hdf(metrics_store, start_time, num_writes_counter, clear):
                           # don't index here (can only do so with 'table') since we may chunk first, then index (possibly in post-processing even)
                           index=False)
             except Exception as e:
-                log.error('got error when attempting to write table to hdf {}: {}'.format(filename, e))
+                log.error('Error when attempting to write table to hdf {}: {}'.format(filename, e))
         else:
             log.debug('passing on trying to append an empty dataframe to file {}, key {}'.format(filename, key))
         # else:  # if try works, go here

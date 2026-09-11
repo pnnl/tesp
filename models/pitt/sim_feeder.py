@@ -19,9 +19,9 @@ from numpy.linalg import inv
 
 from tesp_support.api.data import feeders_path
 
-'''
+"""
 switch line 68 to line 69 for feeder #16 #17 #19 #20
-'''
+"""
 
 min_load_size = 10.0
 
@@ -1128,9 +1128,9 @@ def _one_test(k):
         if 'nclass' in data:
             if data['nclass'] == 'node':
                 data['ndata']['class_load'] = {'A': 0, 'I': 0, 'C': 0, 'R': 0, 'U': 0}
-            if 'bustype' in data['ndata']:
-                if data['ndata']['bustype'] == 'SWING':
-                    swing_node = n1
+            if 'bustype' in data['ndata'] and data['ndata']['bustype'] == 'SWING':
+                swing_node = n1
+
     print('swing node is', swing_node)
     retained_nodes = set()
     retained_nodes.add(swing_node)

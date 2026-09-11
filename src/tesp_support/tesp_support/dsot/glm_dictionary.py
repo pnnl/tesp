@@ -14,9 +14,9 @@ Public Functions:
 
 """
 
-import os
 import json
 import math
+import os
 
 from ..api.helpers import log
 
@@ -200,10 +200,9 @@ def glm_dict(name_root, config=None, ercot=False):  # , te30=False):
                 cooling_COP = 3.5
                 total_thermal_mass_per_floor_area = 2
                 house_class = 'SINGLE_FAMILY'
-            if inMessage:
-                if lst[0] == 'name':
-                    message_name = lst[1].strip(';')
-                    inMessage = False
+            if inMessage and lst[0] == 'name':
+                message_name = lst[1].strip(';')
+                inMessage = False
             if inClimate:
                 if lst[0] == 'name':
                     climateName = lst[1].strip(';')
@@ -244,16 +243,14 @@ def glm_dict(name_root, config=None, ercot=False):  # , te30=False):
                 inZIPload = True
             if lst[1] == 'evcharger_det':
                 inEV = True
-            if inCapacitors:
-                if lst[0] == 'name':
-                    lastCapacitor = lst[1].strip(';')
-                    capacitors[lastCapacitor] = {'feeder_id': feeder_id}
-                    inCapacitors = False
-            if inRegulators:
-                if lst[0] == 'name':
-                    lastRegulator = lst[1].strip(';')
-                    regulators[lastRegulator] = {'feeder_id': feeder_id}
-                    inRegulators = False
+            if inCapacitors and lst[0] == 'name':
+                lastCapacitor = lst[1].strip(';')
+                capacitors[lastCapacitor] = {'feeder_id': feeder_id}
+                inCapacitors = False
+            if inRegulators and lst[0] == 'name':
+                lastRegulator = lst[1].strip(';')
+                regulators[lastRegulator] = {'feeder_id': feeder_id}
+                inRegulators = False
             if inInverters:
                 if lst[0] == 'name' and lastInverter == '':
                     lastInverter = lst[1].strip(';')
@@ -432,9 +429,8 @@ def glm_dict(name_root, config=None, ercot=False):  # , te30=False):
                     waterheaters[lastHouse]['gallons'] = float(lst[1].strip(' ').strip(';')) * 1.0
                 if lst[0] == 'T_mixing_valve':
                     waterheaters[lastHouse]['tmix'] = float(lst[1].strip(' ').strip(';')) * 1.0
-                if lst[0] == 'waterheater_model':
-                    if 'MULTILAYER' == lst[1].strip(' ').strip(';'):
-                        waterheaters[lastHouse]['mlayer'] = True
+                if lst[0] == 'waterheater_model' and 'MULTILAYER' == lst[1].strip(' ').strip(';'):
+                    waterheaters[lastHouse]['mlayer'] = True
             if inZIPload:
                 if lastHouse not in ziploads:
                     hf = 1.0  # default heatgain_fraction = 1.0
@@ -555,7 +551,6 @@ def glm_dict(name_root, config=None, ercot=False):  # , te30=False):
                     mtr['tariff_class'] = 'residential'
         except KeyError as keyErr:
             log.debug(f"Got a KeyError. Reason - {keyErr}")
-            pass
 
     for key, val in inverters.items():
         mtr = billingmeters[val['billingmeter_id']]
@@ -586,6 +581,7 @@ def glm_diction(case_name, feed_key):
         feed_key (str): feeder number
     """
     import math
+
     from tesp_support.api.modify_GLM import GLMModifier
 
     glmMod = GLMModifier()
@@ -1018,21 +1014,20 @@ def glm_diction(case_name, feed_key):
     feeders[feed_key] = {'house_count': len(houses), 'inverter_count': len(inverters), 'ev_count': len(ev)}
 
     try:
-        for name, helics_msg in glm.helics_msg.items():
+        for name in glm.helics_msg.instances:
             message_name = name
     except KeyError:
         pass
     try:
-        for name, fncs_msg in glm.fncs_msg.items():
+        for name in glm.fncs_msg.instances:
             message_name = name
     except KeyError:
         pass
 
-    for sub_name, substations in glm.substation.items():
-        substation = {'bulkpower_bus': 1,
+    substation = {'bulkpower_bus': 1,
                     'message_name': message_name,
-                    'transformer_MVA': float(substations["base_power"].strip('MVA')) * 1.0e-6,
-                    'base_feeder': substations["groupid"],
+                    'transformer_MVA': float(glm.substation.instances["network_node"]["base_power"].strip('MVA')) * 1.0e-6,
+                    'base_feeder': glm.substation.instances["network_node"]["groupid"],
                     'feeders': feeders,
                     'billingmeters': billingmeters,
                     'houses': houses,

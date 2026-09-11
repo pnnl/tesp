@@ -5,12 +5,13 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-# from matplotlib import rcParams
-from matplotlib.gridspec import GridSpec
 
 # rcParams['font.family'] = 'sans-serif'
 # rcParams['font.sans-serif'] = ['Times']
 import seaborn as sns
+
+# from matplotlib import rcParams
+from matplotlib.gridspec import GridSpec
 
 LOWER_BOUND = 0.95
 UPPER_BOUND = 1.05
@@ -120,14 +121,14 @@ def main():
     yLabelText = 'substation load [MW]'
     legendText = ['no load shed', 'load shed, no communication network', 'load shed, with communication network']
     hAxis = hFig.add_subplot(gs[0, 0])  # (gs[0:5, 0])
-    titleText = f'substation load'
+    titleText = 'substation load'
     for scen in scenarios:
         if scenarios.index(scen) == 2:
             lw = 2
         else:
             lw = 3
         resultsFolder = os.path.abspath(f'./R1-12.47-1/outputs_{scen}')
-        fileName = f'substation_load.csv'
+        fileName = 'substation_load.csv'
         filePath = os.path.join(resultsFolder, fileName)
         data = pd.read_csv(filePath, skiprows=8)
         # Doing the actual conversion of time takes too long to worth it.

@@ -1,9 +1,10 @@
 # test_modify_glm.py
-import pytest
-import tempfile
 import os
+import tempfile
+
 import numpy as np
-from tesp_support.api.modify_GLM import GLMModifier, Defaults
+import pytest
+from tesp_support.api.modify_GLM import Defaults, GLMModifier
 
 
 def test_glmmodifier_initialization():
@@ -184,7 +185,7 @@ def test_glmmodifier_randomize_skew():
     np.random.seed(42)
     
     # Test static method
-    skew = GLMModifier.randomize_skew(1800.0, 7200.0)
+    skew = modifier.randomize_skew(1800.0, 7200.0)
     assert isinstance(skew, float)
     assert -7200.0 <= skew <= 7200.0
     
@@ -373,7 +374,7 @@ def test_glmmodifier_error_handling():
     
     # Test reading non-existent file
     with pytest.raises(FileNotFoundError):
-        glm_obj, success = modifier.read_model("nonexistent_file.glm")
+        modifier.read_model("nonexistent_file.glm")
 
 
 def test_glmmodifier_extra_billing_meters():

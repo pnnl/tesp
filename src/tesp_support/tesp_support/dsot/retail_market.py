@@ -3,9 +3,13 @@
 # file: retail_market.py
 """Class that manages the operation of retail market at substation-level
 
-Functionalities include: collecting curve bids from DER and DSO agents; 
-generating aggregated buyer and seller curves; market clearing for both RT and DA
-retail markets; deciding cleared quantity for individual DERs.   
+This module defines :class:`RetailMarket`, which performs customer-facing
+day-ahead (DA) and real-time (RT) market functions:
+- collect and aggregate participant curve bids from DER and DSO agents,
+- generate aggregated buyer and seller curves
+- clear RT and DA retail markets against DSO supply curves,
+- compute cleared quantities, prices, and congestion components for individual DERs.
+
 
 The function call order for this agent is:
     
@@ -27,22 +31,38 @@ The function call order for this agent is:
 
 """
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Note: the doc-strings in this file were either written in full or modified by
+# an AI-assistant trained on the TESP codebase, and specifically this file. 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 import logging as log
 from copy import deepcopy
 
 import numpy as np
 
-from ..dsot.helpers_dsot import Curve, get_intersect, MarketClearingType, resample_curve, resample_curve_for_price_only
 from ..api.schedule_client import DataClient
+from ..dsot.helpers_dsot import (
+    Curve,
+    MarketClearingType,
+    get_intersect,
+    resample_curve,
+    resample_curve_for_price_only,
+)
 
 
 class RetailMarket:
     """
-    This agent manages the retail market operating
+    The market agent in charge of managing the retail market operation
+
+    The class maintains RT/DA bid state, aggregates buyer/seller curves, clears
+    retail markets, and stores cleared outcomes for downstream agent control
+    and settlement analysis.
 
     Args:
-        retail_dict:
-        key:
+        retail_dict (dict): Retail market configuration (caps, sampling, horizon,
+            feeder and TOC-related options).
+        key (str): Retail market agent identifier.
 
     Attributes:
         name (str): name of the retail market agent
@@ -93,7 +113,21 @@ class RetailMarket:
     """
 
     def __init__(self, retail_dict, key):
-        """ Initializes the class
+        """Initialize RetailMarket state for customer-facing DA and RT clearing.
+
+        Sets market parameters, bid containers, and cleared-result structures used
+        to:
+            - clean and aggregate participant bids,
+            - clear RT and DA retail markets,
+            - translate wholesale/DSO conditions into retail signals,
+            - persist cleared outcomes for agent feedback and settlement analysis.
+
+        This class implements retail-clearing logic; simulation control is handled
+        externally by the DSOT runtime loop.
+
+        Args:
+            retail_dict (dict): Retail market configuration.
+            key (str): Retail market name/identifier.
         """
         self.name = key
         self.dso_bus = int(key.replace("Retail_", ""))
@@ -113,8 +147,8 @@ class RetailMarket:
         self.FeederPkDemandCapacity = self.Q_max
         self.curve_buyer_RT = None
         self.curve_seller_RT = None
-        self.curve_buyer_DA = dict()
-        self.curve_seller_DA = dict()
+        self.curve_buyer_DA = {}
+        self.curve_seller_DA = {}
         self.FeederCongPrice = 1e-7  # TODO: maybe initialize it for different feeders, with different values
 
         self.clear_type_RT = None
@@ -135,7 +169,7 @@ class RetailMarket:
         self.industrial_bid_da = []
         self.industrial_bid_rt = []
         self.industrial_load_elasticity = 5  # delP/delQ
-        self.site_quantity_DA = dict()
+        self.site_quantity_DA = {}
         # substation transformer lifetime cost parameters
         self.TOC_dict = {
             'OperatingPeriod': retail_dict['OperatingPeriod'],
@@ -167,7 +201,8 @@ class RetailMarket:
 
 
     def clean_bids_RT(self):
-        """ Initialize the real-time market
+        """ Initialize the real-time market by resetting RT market state and 
+        initializing empty RT buyer/seller curves
         """
         self.clear_type_RT = None
         self.cleared_price_RT = None
@@ -183,14 +218,15 @@ class RetailMarket:
         self.curve_seller_RT = Curve(self.price_cap, self.num_samples)
 
     def clean_bids_DA(self):
-        """ Initialize the day-ahead market
+        """ Initialize the day-ahead market by resetting DA market state and 
+        initializing empty DA buyer/seller curves
         """
         self.clear_type_DA = []
         self.cleared_price_DA = []
         self.cleared_quantity_DA = []
         self.congestion_surcharge_DA = []
-        self.curve_buyer_DA = dict()
-        self.curve_seller_DA = dict()
+        self.curve_buyer_DA = {}
+        self.curve_seller_DA = {}
         self.cleared_quantity_DA_unscaled = []
 
         for i in range(self.windowLength):
@@ -200,12 +236,17 @@ class RetailMarket:
             self.curve_seller_DA[i] = Curve(self.price_cap, self.num_samples)
 
     def curve_aggregator_RT(self, identity, bid_RT, name):
-        """ Function used to collect the RT bid and update the accumulated buyer or seller curve 
+        """ Function used to collect the RT bid and update the accumulated buyer
+        or seller curve. Aggregates one RT participant bid into the retail market
+        curve.
         
         Args:
-            identity (str): identifies whether the bid is collected from a "Buyer" or "Seller"
-            bid_RT (list): a nested list with dimension (m, 2), with m equals 2 to 4 
-            name (str): name of the buyer or seller
+            identity (str): identifies whether the bid is collected from a 
+                "Buyer" or "Seller"
+            bid_RT (list): RT bid points (quantity/price pairs) (a nested list 
+                with dimension (m, 2), with m equals 2 to 4)
+            name (str): Participant(buyer or seller) identifier used for 
+                logging/debug.
         
         """
         if identity == 'Buyer':
@@ -214,12 +255,18 @@ class RetailMarket:
             self.curve_seller_RT.curve_aggregator(identity, bid_RT)
 
     def curve_aggregator_DA(self, identity, bid_DA, name):
-        """ Function used to collect the DA bid and update the accumulated buyer or seller curve  
+        """ Function used to collect the DA bid and update the accumulated buyer
+        or seller curve. Aggregates one DA participant bid profile into DA market
+        curves.
         
         Args:
-            identity (str): identifies whether the bid is collected from a "Buyer" or "Seller"
-            bid_DA (list): a nested list with dimension (self.windowLength, m, 2), with m equals 2 to 4 
-            name (str): name of the buyer or seller
+            identity (str): identifies whether the bid is collected from a 
+                "Buyer" or "Seller"
+            bid_DA (list): DA bid profile by interval (per-interval bid points) 
+                (a nested list with dimension (self.windowLength, m, 2), with m 
+                equals 2 to 4)
+            name (str): Participant(buyer or seller) identifier used for 
+                logging/debug
         
         """
         if identity == 'Buyer':
@@ -351,8 +398,7 @@ class RetailMarket:
                         clear_type = MarketClearingType.CONGESTED
                         # uncongested_price = cleared_price - (cleared_quantity - Q_max) * self.FeederCongPrice
                         uncongested_price = curve_seller.prices[0]
-                        if uncongested_price < 0:
-                            uncongested_price = 0
+                        uncongested_price = max(uncongested_price, 0)
                         congestion_surcharge = cleared_price - uncongested_price
                         if congestion_surcharge > self.price_cap:
                             congestion_surcharge = self.price_cap
@@ -407,8 +453,7 @@ class RetailMarket:
             if cleared_quantity > Q_max:
                 clear_type = MarketClearingType.CONGESTED
                 uncongested_price = cleared_price - (cleared_quantity - Q_max) * self.FeederCongPrice
-                if uncongested_price < 0:
-                    uncongested_price = 0
+                uncongested_price = max(uncongested_price, 0)
                 congestion_surcharge = cleared_price - uncongested_price
                 if congestion_surcharge > self.price_cap:
                     congestion_surcharge = self.price_cap
@@ -418,27 +463,53 @@ class RetailMarket:
             return clear_type, cleared_price, cleared_quantity, congestion_surcharge
 
     def clear_market_RT(self, transformer_degradation, Q_max):
-        """ Function used for clearing the RT market
+        """ Clear the RT retail market and store cleared RT outputs.
         
-        Three steps of work are fullfilled in this function: First the buyer curve is fitted polynomial;
-        Second clear_market function is called for calculating the cleared price and cleared quantity for the whole market; 
-        Third distribute_cleared_quantity function is called for finding the cleared price and cleared quantity for the individual DERs.
+        Three steps of work are fullfilled in this function: 
+            * the buyer curve is fitted polynomial;
+            * clear_market function is called for calculating the cleared price 
+                and cleared quantity for the whole market; 
+            * distribute_cleared_quantity function is called for finding the 
+                cleared price and cleared quantity for the individual DERs.
         
-        buyer_info_RT and seller_info_RT, clear_type_RT, cleared_price_RT and cleared_quantity_RT are updated with cleared results
+        buyer_info_RT and seller_info_RT, clear_type_RT, cleared_price_RT and
+            cleared_quantity_RT are updated with cleared results
+           
+        Args:
+            transformer_degradation (bool): Whether TOC/degradation effects are active.
+            Q_max (float): Retail feeder quantity limit used for clearing context.
+
+        Returns:
+            tuple[float, float, object] | None:
+                Cleared RT price, quantity, and clear-type if returned by implementation.
+        
     
         """
         self.clear_type_RT, self.cleared_price_RT, self.cleared_quantity_RT, self.congestion_surcharge_RT = \
             self.clear_market(self.curve_buyer_RT, self.curve_seller_RT, transformer_degradation, Q_max)
 
     def clear_market_DA(self, transformer_degradation, Q_max):
-        """ Function used for clearing the DA market
+        """ Clear the DA retail market for all DA intervals.
         
-        Three steps of work are fullfilled in a loop in this function: First the buyer curve at each hour is fitted polynomial;
-        Second clear_market function is called for calculating the cleared price and cleared quantity for the whole market at each hour; 
-        Third distribute_cleared_quantity function is called for finding the cleared price and cleared quantity for the individual DERs at each hour.
+        Three steps of work are fullfilled in a loop in this function: 
+            * the buyer curve at each hour is fitted polynomial;
+            * clear_market function is called for calculating the cleared price 
+                and cleared quantity for the whole market at each hour; 
+            * distribute_cleared_quantity function is called for finding the 
+                cleared price and cleared quantity for the individual DERs at 
+                each hour.
         
-        buyer_info_DA and seller_info_DA, clear_type_DA, cleared_price_DA and cleared_quantity_DA are updated with cleared results        
-        
+        buyer_info_DA and seller_info_DA, clear_type_DA, cleared_price_DA and 
+            cleared_quantity_DA are updated with cleared results        
+                
+        Args:
+            transformer_degradation (bool): Whether TOC/degradation effects are active.
+            Q_max (float): Retail feeder quantity limit used for clearing context.
+
+        Returns:
+            tuple[list[float], list[float], list[object]] | None:
+                Cleared DA prices, quantities, and clear-types if returned by implementation.
+       
         """
 
         for i in range(self.windowLength):
@@ -450,7 +521,15 @@ class RetailMarket:
             self.congestion_surcharge_DA.append(congestion_surcharge)
 
     def update_price_CA(self, price_forecast):
-        """ Updates the price_CA
+        """ Update the control-area retail price signal used by customer agents.
+
+        Applies the current clearing outcome (or configured fallback rule) to 
+        compute the control-area retail price signal broadcast for downstream 
+        bidding/response (i.e., the responsive customer agents).
+
+       
+        Returns:
+            Updated price value or updates internal state, depending on call pattern.
 
         """
         price_DA = np.array(price_forecast)
@@ -478,7 +557,7 @@ class RetailMarket:
 
         """
         #        log.info("running curve_aggregator_AMES_RT")
-        self.AMES_RT = list()
+        self.AMES_RT = []
         substation_curve = deepcopy(self.curve_preprocess(demand_curve_RT, Q_max))
         # print("RT [min, max] substation curve: [" + str(min(substation_curve.quantities)) + ", " +
         #       str(min(substation_curve.quantities)) + "]")
@@ -505,7 +584,7 @@ class RetailMarket:
             price_forecast (float): locally forecast price at the substation level
         """
         # log.info("running curve_aggregator_AMES_DA")
-        self.AMES_DA = list()
+        self.AMES_DA = []
         for idx in range(self.windowLength):
             substation_curve = deepcopy(self.curve_preprocess(demand_curve_DA[idx], Q_max))
             # since we plan to now not use the ./run.sh base, 
@@ -545,8 +624,7 @@ class RetailMarket:
         preprocessed_curve.quantities = deepcopy(substation_demand_curve.quantities)
         for i in range(self.num_samples):
             # Truncate the substation-level demand curve by maximum capacity of the substation
-            if preprocessed_curve.quantities[i] >= Q_max:
-                preprocessed_curve.quantities[i] = Q_max
+            preprocessed_curve.quantities[i] = min(Q_max, preprocessed_curve.quantities[i])
             # we are much lower than what TSO is expecting from us,
             # with this low quantity AMES won't clear market as there can be high wind values
             # elif (Q_max - preprocessed_curve.quantities[i]  > 1000):
@@ -629,7 +707,7 @@ class RetailMarket:
 
         resp_deg = 2
         # below conversion is because TSO is written in terms of MWs and the DSO is in kWs
-        bid = list()
+        bid = []
         bid.append(unresp_mw)
         bid.append(Q_sc_max)  # maximum flexible load
         bid.append(zsc[0])  # c2 ----> f in the manual, B_j,k(P)=d_j(k)+e_j(k)*P-f_j(k)*P**2
@@ -733,7 +811,13 @@ class RetailMarket:
 
 
 def test():
-    """ Testing AMES
+    """ Run a smoke test for RetailMarket initialization and clearing paths.
+
+    Intended for quick developer checks that representative bids can be ingested
+    and both DA/RT clearing routines execute with valid output structure.
+
+    Returns:
+        None.
     """
     import matplotlib.pyplot as plt
 
@@ -1011,11 +1095,10 @@ def test():
     market.curve_aggregator_AMES_DA(market.curve_buyer_DA, market.Q_max, market.cleared_quantity_DA, price_forecast)
 
     hr = 0
-
     unresp_mw = np.amin(market.curve_buyer_DA[hr].quantities)
     resp_max_mw = np.amax(market.curve_buyer_DA[hr].quantities)
 
-    #    #with bids
+    # with bids
     old_Q = market.curve_buyer_DA[hr].quantities
     old_P = market.curve_buyer_DA[hr].prices
     #    old_P = old_P/1.25
@@ -1029,16 +1112,15 @@ def test():
     Benefit_range = Q_range * P_range
 
     #    print("For the plot to be accurate a line must be uncommented in convert_2_AMES_quadratic_BID function")
-    y = list()
-    y2 = list()
-
+    y = []
     for i in Q_range:
         y.append(market.AMES_DA[hr][2] * (i ** 2) + market.AMES_DA[hr][3] * i + market.AMES_DA[hr][4])
 
     # new_Q_range = np.linspace(market.AMES_DA[hr][0], market.AMES_DA[hr][1], 100)
+
+    # y2 = []
     # for i in new_Q_range:
     #     y2.append(market.AMES_DA[hr][2]*(i**2) + market.AMES_DA[hr][3]*i + market.AMES_DA[hr][4])
-    #
 
     fig, ax = plt.subplots(2, 1, figsize=(8, 8))
     #    ax[0].plot(Q_range, P_range, label='Aggregate demand curve',marker='x')
@@ -1055,7 +1137,6 @@ def test():
     ax[1].legend()
     plt.show()
 
-#    
 #    unresp_mw = np.amin(market.curve_buyer_DA[1].quantities)
 #    resp_max_mw = np.amax(market.curve_buyer_DA[1].quantities)
 #    #no bids

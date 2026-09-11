@@ -8,25 +8,27 @@ Public Functions:
 
 """
 
-import time
 import json
-import numpy as np
-from datetime import datetime, timedelta
+import time
 from copy import deepcopy
+from datetime import datetime, timedelta
+
+import numpy as np
 from joblib import Parallel, delayed
 
-from ..original import fncs as fncs
+from ..api.bench_profile import bench_profile
 from ..api.helpers import enable_logging
-from .hvac_agent import HVACDSOT
-from .water_heater_agent import WaterHeaterDSOT
-from .ev_agent import EVDSOT
-from .pv_agent import PVDSOT
+from ..api.metrics_collector import MetricsCollector, MetricsStore
+from ..original import fncs
 from .battery_agent import BatteryDSOT
 from .dso_market import DSOMarket
-from .retail_market import RetailMarket
+from .ev_agent import EVDSOT
 from .forecasting import Forecasting
-from ..api.metrics_collector import MetricsStore, MetricsCollector
-from ..api.bench_profile import bench_profile
+from .hvac_agent import HVACDSOT
+from .pv_agent import PVDSOT
+from .retail_market import RetailMarket
+from .water_heater_agent import WaterHeaterDSOT
+
 
 @bench_profile
 def inner_substation_loop(configfile, metrics_root, with_market):
@@ -233,32 +235,32 @@ def inner_substation_loop(configfile, metrics_root, with_market):
         hvac_agent_objs[key] = HVACDSOT(row, gld_row, key, 11, current_time, solver)
 
         weather_topic = config_glm['climate']['name']
-        if weather_topic + '#TempForecast' not in topic_map.keys():
+        if weather_topic + '#TempForecast' not in topic_map:
             topic_map[weather_topic + '#TempForecast'] = [hvac_agent_objs[key].set_temperature_forecast]
         else:
             topic_map[weather_topic + '#TempForecast'].append(hvac_agent_objs[key].set_temperature_forecast)
 
-        if weather_topic + '#Temperature' not in topic_map.keys():
+        if weather_topic + '#Temperature' not in topic_map:
             topic_map[weather_topic + '#Temperature'] = [hvac_agent_objs[key].set_temperature]
         else:
             topic_map[weather_topic + '#Temperature'].append(hvac_agent_objs[key].set_temperature)
 
-        if weather_topic + '#Humidity' not in topic_map.keys():
+        if weather_topic + '#Humidity' not in topic_map:
             topic_map[weather_topic + '#Humidity'] = [hvac_agent_objs[key].set_humidity]
         else:
             topic_map[weather_topic + '#Humidity'].append(hvac_agent_objs[key].set_humidity)
 
-        if weather_topic + '#HumidityForecast' not in topic_map.keys():
+        if weather_topic + '#HumidityForecast' not in topic_map:
             topic_map[weather_topic + '#HumidityForecast'] = [hvac_agent_objs[key].set_humidity_forecast]
         else:
             topic_map[weather_topic + '#HumidityForecast'].append(hvac_agent_objs[key].set_humidity_forecast)
 
-        if weather_topic + '#SolarDirect' not in topic_map.keys():
+        if weather_topic + '#SolarDirect' not in topic_map:
             topic_map[weather_topic + '#SolarDirect'] = [hvac_agent_objs[key].set_solar_direct]
         else:
             topic_map[weather_topic + '#SolarDirect'].append(hvac_agent_objs[key].set_solar_direct)
 
-        if weather_topic + '#SolarDiffuse' not in topic_map.keys():
+        if weather_topic + '#SolarDiffuse' not in topic_map:
             topic_map[weather_topic + '#SolarDiffuse'] = [hvac_agent_objs[key].set_solar_diffuse]
         else:
             topic_map[weather_topic + '#SolarDiffuse'].append(hvac_agent_objs[key].set_solar_diffuse)
@@ -276,7 +278,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
     water_heater_keys = []
     house_keys = list(config_glm['houses'].keys())  # each house will have a water heater
     for key in house_keys:
-        if 'wh_name' in config_glm['houses'][key].keys():
+        if 'wh_name' in config_glm['houses'][key]:
             try:
                 wh_key = config_glm['houses'][key]['wh_name']
                 water_heater_keys.append(wh_key)
@@ -292,7 +294,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                 topic_map[wh_key + '/heating_element_capacity'] = [water_heater_agent_objs[key].set_wh_load]
                 topic_map[wh_key + '/water_demand'] = [water_heater_agent_objs[key].set_wh_wd_rate_val]
             except KeyError as e:
-                log.info('Error {}, wh_name in key={}'.format(e, key))
+                log.info(f'Error {e}, wh_name in key={key}')
     log.info('instantiated %s water heater control agents' % (len(water_heater_keys)))
 
     # instantiate the Battery controller objects and map their message inputs
@@ -333,7 +335,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
     site_da_status = []
     for key, obj in site_dictionary.items():
         site_da_meter.append(key)
-        if site_dictionary[key]['participating'] is True:
+        if obj['participating'] is True:
             site_da_status.append(1)
         else:
             site_da_status.append(0)
@@ -354,7 +356,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                 ('curve_ws_node_prices', [['$/' + dso_unit] * dso_market_obj.num_samples] * 24),
                 ('Feqa_T', ['/hour']),  # TODO: double-check that this is correct
             ],
-            file_string='dso_market_{}_86400'.format(metrics_root),
+            file_string=f'dso_market_{metrics_root}_86400',
             collector=collector,
         )
 
@@ -364,7 +366,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                 ('unresponsive_da', [dso_unit] * int(dso_market_obj.windowLength/2)),
                 ('cleared_quantities_da', [dso_unit] * int(dso_market_obj.windowLength/2)),
             ],
-            file_string='dso_tso_{}_86400'.format(metrics_root),
+            file_string=f'dso_tso_{metrics_root}_86400',
             collector=collector,
         )
 
@@ -374,7 +376,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                 ('unresponsive_rt', dso_unit),
                 ('cleared_quantities_rt', dso_unit),
             ],
-            file_string='dso_tso_{}_300'.format(metrics_root),
+            file_string=f'dso_tso_{metrics_root}_300',
             collector=collector,
         )
 
@@ -386,7 +388,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                 ('trial_cleared_quantity_da', [dso_unit] * dso_market_obj.windowLength),
                 ('trial_clear_type_da', ['[0..3]=[UNCONGESTED,CONGESTED,INEFFICIENT,FAILURE]'] * dso_market_obj.windowLength),
             ],
-            file_string='dso_market_{}_3600'.format(metrics_root),
+            file_string=f'dso_market_{metrics_root}_3600',
             collector=collector,
         )
 
@@ -398,7 +400,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                 ('cleared_quantity_rt', dso_unit),
                 ('clear_type_rt', '[0..3]=[UNCONGESTED,CONGESTED,INEFFICIENT,FAILURE]'),
             ],
-            file_string='dso_market_{}_300'.format(metrics_root),
+            file_string=f'dso_market_{metrics_root}_300',
             collector=collector,
         )
 
@@ -414,7 +416,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                     ('clear_type_da', ['[0..3]=[UNCONGESTED,CONGESTED,INEFFICIENT,FAILURE]'] * retail_market_obj.windowLength),
                     ('congestion_surcharge_DA', ['$/' + retail_unit] * retail_market_obj.windowLength),
                 ],
-                file_string='retail_market_{}_3600'.format(metrics_root),
+                file_string=f'retail_market_{metrics_root}_3600',
                 collector=collector,
             )
         else:
@@ -425,7 +427,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                     ('clear_type_da', ['[0..3]=[UNCONGESTED,CONGESTED,INEFFICIENT,FAILURE]'] * retail_market_obj.windowLength),
                     ('congestion_surcharge_DA', ['$/' + retail_unit] * retail_market_obj.windowLength),
                 ],
-                file_string='retail_market_{}_3600'.format(metrics_root),
+                file_string=f'retail_market_{metrics_root}_3600',
                 collector=collector,
             )
 
@@ -449,7 +451,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                     ('transactive_batt', [[retail_unit] * retail_market_obj.windowLength] * len(site_da_meter)),
                     ('transactive_cleared_quantity', [[retail_unit] * retail_market_obj.windowLength] * len(site_da_meter)),
                 ],
-                file_string='retail_site_{}_3600'.format(metrics_root),
+                file_string=f'retail_site_{metrics_root}_3600',
                 collector=collector,
             )
         else:
@@ -459,7 +461,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                     ('status', ['[0..1]=[PARTICIPATION,NONPARTICIPATION]'] * len(site_da_meter)),
                     ('site_quantities', [[retail_unit] * int(dso_market_obj.windowLength / 2)] * len(site_da_meter)),
                 ],
-                file_string='retail_site_{}_3600'.format(metrics_root),
+                file_string=f'retail_site_{metrics_root}_3600',
                 collector=collector,
             )
 
@@ -468,7 +470,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                 ('unresponsive_bid_da', [[retail_unit] * int(dso_market_obj.windowLength / 2)]),
                 ('responsive_bid_da', [[retail_unit] * int(dso_market_obj.windowLength / 2)]),
             ],
-            file_string='dso_ames_bid_{}_3600'.format(metrics_root),
+            file_string=f'dso_ames_bid_{metrics_root}_3600',
             collector=collector,
         )
 
@@ -479,7 +481,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                 ('bid_received', retail_unit),
                 ('bid_adjusted', retail_unit),
             ],
-            file_string='dso_ames_bid_{}_300'.format(metrics_root),
+            file_string=f'dso_ames_bid_{metrics_root}_300',
             collector=collector,
         )
 
@@ -496,7 +498,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                     ('congestion_surcharge_RT', '$/' + retail_unit),
                     ('cleared_quantity_rt_unadj', retail_unit),
                 ],
-                file_string='retail_market_{}_300'.format(metrics_root),
+                file_string=f'retail_market_{metrics_root}_300',
                 collector=collector,
             )
         else:
@@ -508,7 +510,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                     ('congestion_surcharge_RT', '$/' + retail_unit),
                     ('cleared_quantity_rt_unadj', retail_unit)
                 ],
-                file_string='retail_market_{}_300'.format(metrics_root),
+                file_string=f'retail_market_{metrics_root}_300',
                 collector=collector,
             )
 
@@ -516,7 +518,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
             name_units_pairs=[
                 ('bid_four_point_da', [[[retail_unit, '$/' + retail_unit]] * 4] * retail_market_obj.windowLength),
             ],
-            file_string='hvac_agent_{}_3600'.format(metrics_root),
+            file_string=f'hvac_agent_{metrics_root}_3600',
             collector=collector,
         )
 
@@ -536,7 +538,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                 ('DA_temp', 'F'),
                 ('DA_price', '$'),
             ],
-            file_string='hvac_agent_{}_300'.format(metrics_root),
+            file_string=f'hvac_agent_{metrics_root}_300',
             collector=collector,
         )
 
@@ -546,7 +548,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                 # ('DAOptimizedQuantities', 'kWh'),
                 # ('DAOptimizedSOHC', '%'),
             ],
-            file_string='water_heater_agent_{}_3600'.format(metrics_root),
+            file_string=f'water_heater_agent_{metrics_root}_3600',
             collector=collector,
         )
 
@@ -561,7 +563,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                 ('RT_quantity', 'kWh'),
                 ('DA_quantity', 'kWh'),
             ],
-            file_string='water_heater_agent_{}_300'.format(metrics_root),
+            file_string=f'water_heater_agent_{metrics_root}_300',
             collector=collector,
         )
 
@@ -569,7 +571,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
             name_units_pairs=[
                 ('bid_four_point_da', [[[retail_unit, '$/' + retail_unit]] * 4] * retail_market_obj.windowLength),
             ],
-            file_string='battery_agent_{}_3600'.format(metrics_root),
+            file_string=f'battery_agent_{metrics_root}_3600',
             collector=collector,
         )
 
@@ -580,7 +582,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                 ('inverter_q_setpoint', 'W'),
                 ('battery_soc', '[0-1]'),
             ],
-            file_string='battery_agent_{}_300'.format(metrics_root),
+            file_string=f'battery_agent_{metrics_root}_300',
             collector=collector,
         )
 
@@ -588,7 +590,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
             name_units_pairs=[
                 ('bid_four_point_da', [[[retail_unit, '$/' + retail_unit]] * 4] * retail_market_obj.windowLength),
             ],
-            file_string='ev_agent_{}_3600'.format(metrics_root),
+            file_string=f'ev_agent_{metrics_root}_3600',
             collector=collector,
         )
 
@@ -598,7 +600,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                 ('ev_charge', 'W'),
                 ('battery_soc', '[0-1]'),
             ],
-            file_string='ev_agent_{}_300'.format(metrics_root),
+            file_string=f'ev_agent_{metrics_root}_300',
             collector=collector,
         )
 
@@ -731,7 +733,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                         # calls function to update the value in object. For details see topicMap
                         topic_map[topic][itopic](value)
             else:
-                log.warning('Unknown topic received from FNCS ({:s}), dropping it'.format(topic))
+                log.warning(f'Unknown topic received from FNCS ({topic:s}), dropping it')
 
         # load_player sent this in MW, whereas the substation does everything in kW
         if use_ref:
@@ -886,7 +888,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
             log.info("-- retail day-ahead bidding --")
             # clean the day-ahead bids
             retail_market_obj.clean_bids_DA()
-            P_age_DA = list()
+            P_age_DA = [] # list to store DA price bidding
 
             uncntrl_hvac = []  # list to store uncontrolled hvac loads
             zip_loads = []  # list to store uncontrolled zip loads
@@ -1035,7 +1037,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
             # created pyomo models in serial, but solves in parallel
             # (sending only the pyomo model, rather than whole batter object to the processes)
             if len(P_age_DA) > 0:
-                log.info('About to solve {} parallel opts (over available processes)'.format(len(P_age_DA)))
+                log.info(f'About to solve {len(P_age_DA)} parallel opts (over available processes)')
                 results = parallel(delayed(worker)(p) for p in P_age_DA)
             else:
                 log.info('No opts need solving, skipping use of "parallel" obj!')
@@ -1057,14 +1059,14 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                     if res[2]["success"]:
                         agent_success[agent] += 1
                     else:
-                        agent_errors[agent].append(f"{p_age.name}:{res[2]["termination"]}")
+                        agent_errors[agent].append(f"{p_age.name}:{res[2]['termination']}")
                     agent_count[agent] += 1
                 else:
                     p_age.optimized_Quantity = res[0][:]
                     if res[1]["success"]:
                         agent_success[agent] += 1
                     else:
-                        agent_errors[agent].append(f"{p_age.name}:{res[1]["termination"]}")
+                        agent_errors[agent].append(f"{p_age.name}:{res[1]['termination']}")
                     agent_count[agent] += 1
 
                 # formulate the day-ahead bid
@@ -1299,7 +1301,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
 
             temp = np.array(site_da_total_quantities_uncntrl) + np.array(site_da_total_quantities_cleared)
             site_total_quantities = []
-            for idx in range(0, len(temp)):
+            for idx in range(len(temp)):
                 site_total_quantities.append(temp[idx][offset:offset+24].tolist())    # was 14:38, see line 1223
 
             timing(proc[17], True)
@@ -1945,8 +1947,8 @@ def inner_substation_loop(configfile, metrics_root, with_market):
             timing(proc[1], False)
             timing(proc[1], True)
             op = open('timing.csv', 'w')
-            print(proc_time, sep=', ', file=op, flush=True)
-            print(wall_time, sep=', ', file=op, flush=True)
+            print(proc_time, file=op, flush=True)
+            print(wall_time, file=op, flush=True)
             op.close()
 
     log.info('finalizing metrics writing')
@@ -1959,8 +1961,8 @@ def inner_substation_loop(configfile, metrics_root, with_market):
     log.info('finalizing FNCS dso federate')
     timing(proc[1], False)
     op = open('timing.csv', 'w')
-    print(proc_time, sep=', ', file=op, flush=True)
-    print(wall_time, sep=', ', file=op, flush=True)
+    print(proc_time, file=op, flush=True)
+    print(wall_time, file=op, flush=True)
     op.close()
     fncs.finalize()
 

@@ -16,5 +16,5 @@ autoconf
 if [[ $1 == "clean" ]]; then
   make clean
 fi
-make -j "$(grep -c "^processor" /proc/cpuinfo)"
+make -j "$(nproc)"
 make install
