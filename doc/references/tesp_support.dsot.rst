@@ -241,6 +241,14 @@ tesp\_support.dsot.substation\_f module
    :show-inheritance:
    :undoc-members:
 
+tesp\_support.dsot.tesp\_monitor module
+---------------------------------------
+
+.. automodule:: tesp_support.dsot.tesp_monitor
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 tesp\_support.dsot.tou module
 -----------------------------
 

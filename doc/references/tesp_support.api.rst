@@ -121,6 +121,14 @@ tesp\_support.api.player module
    :show-inheritance:
    :undoc-members:
 
+tesp\_support.api.preference\_curve module
+------------------------------------------
+
+.. automodule:: tesp_support.api.preference_curve
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 tesp\_support.api.process\_eplus module
 ---------------------------------------
 
