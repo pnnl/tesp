@@ -1,4 +1,4 @@
-# Copyright (c) 2018-2023 Battelle Memorial Institute
+# Copyright (c) 2018-2025 Battelle Memorial Institute
 # file: prep_precool.py
 """Writes the precooling agent and GridLAB-D metadata for NIST TE Challenge 2 example
  
@@ -95,10 +95,10 @@ def prep_precool(name_root):
                                          'day_end_hour': float('{:.3f}'.format(day_end)),
                                          'deadband': float('{:.3f}'.format(deadband)),
                                          'vthresh': vthresh, 'toffset': toffset}
-                    print('  ' + houseName + '#V1:', file=yp)
+                    print('  ' + houseName + '/measured_voltage:', file=yp)
                     print('    topic: gridlabdSimulator1/' + meterName + '/measured_voltage_1', file=yp)
                     print('    default: 120', file=yp)
-                    print('  ' + houseName + '#Tair:', file=yp)
+                    print('  ' + houseName + '/air_temperature:', file=yp)
                     print('    topic: gridlabdSimulator1/' + houseName + '/air_temperature', file=yp)
                     print('    default: 80', file=yp)
                     print('publish \"commit:' + meterName + '.measured_voltage_1 -> ' + meterName + '/measured_voltage_1\";', file=cp)

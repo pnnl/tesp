@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2021-2023 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # file: runh.sh
 
 declare -r TMY_PATH=$TESPDIR/data/weather
@@ -14,5 +14,5 @@ gridlabd -D TMY3_PATH="$TMY_PATH" weatherTester.glm > gridlabd_tmy3.log
 # run the text file through HELICS
 (exec helics_broker -f 3 --loglevel=warning --name=mainbroker &> broker_helics.log &)
 (exec gridlabd -D USE_HELICS weatherTester.glm &> gridlabd_helics.log &)
-(exec helics_recorder --config-file helicsRecorder.txt --period 300s --stop 86401s &> recorder_helics.log &)
+(exec helics_recorder helicsRecorder.txt --period 300s --stop 86401s &> recorder_helics.log &)
 (export WEATHER_CONFIG=HelicsWeatherConfig.json && exec python3 -c "import tesp_support.weather.weather_agent as tesp;tesp.startWeatherAgent('weather.dat')" &> weather_helics.log &)

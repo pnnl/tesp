@@ -1,5 +1,5 @@
 .. 
-    _ Copyright (c) 2021-2023 Battelle Memorial Institute
+    _ Copyright (c) 2021-2025 Battelle Memorial Institute
     _ file: Installing_Building_TESP.rst
     
 .. toctree::
@@ -7,7 +7,7 @@
 
 .. _local_build_installation:
 
-Installing and Building TESP
+Installing and Building
 ****************************
 TESP, as a software platform, provides much of its functionality through third-party software that it integrates to provide the means of performing transactive analysis. All of this software is open-source and in every case can be built on any of the three major OSs (Mac, Windows, and Linux). That said, TESP itself is only officially supported on Ubuntu Linux simply as a means of reducing the support burden and allowing us, the TESP developers, to add and improve TESP itself without spending the significant time required to ensure functionality across all three OSs. If you're comfortable with building your own software, a quick inspection of the build scripts we use to install TESP on Ubuntu Linux will be likely all you need to figure out how to get it built and installed on your OS of choice.
 
@@ -255,8 +255,8 @@ Make sure the following tools are installed.
 * Python 3 - `Windows needs to install manually <https://www.python.org/downloads/windows/>`_, Linux and macOS generally include it.
 *  (optional) An IDE (integrated development environment), `VS Code <https://code.visualstudio.com/download>`_ and `PyCharm CE <https://www.jetbrains.com/pycharm/download/?section=windows>`_ are popular but there are others.
 * Package manager - `Anaconda <https://www.anaconda.com/download>`_ or `pip <https://pip.pypa.io/en/stable/installation/>`_ (macOS and Linux generally come with pip already installed).
-* git - `Windows installer is here <https://git-scm.com/downloads/win>`_; macOS and Linux already have git installed.
-* pip - `Windows installer is here <https://pip.pypa.io/en/stable/installation/>`_; macOS and Linux already have pip installed.
+* git - `Windows git installer is here <https://git-scm.com/downloads/win>`_; macOS and Linux already have git installed.
+* pip - `Windows pip installer is here <https://pip.pypa.io/en/stable/installation/>`_; macOS and Linux already have pip installed.
 
 
 Create a Virtual Environment

@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2024 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: process_gld.py
 """Functions to plot data from GridLAB-D
@@ -7,15 +7,15 @@ Public Functions:
     :process_gld: Reads the data and metadata, then makes the plots.
 
 """
-import logging
 import json
+import logging
 import os
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 # Setting up logging
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 def read_gld_metrics(path, name_root, diction_name=''):
@@ -34,13 +34,13 @@ def read_gld_metrics(path, name_root, diction_name=''):
     if len(diction_name) > 0:
         try:
             lp = open(diction_name).read()
-        except:
-            logger.error(f'Unable to open metrics diction file {diction_name}')
+        except Exception:
+            log.error(f'Unable to open metrics diction file {diction_name}')
     else:
         try:
             lp = open(glm_dict_path).read()
-        except:
-            logger.error(f'Unable to open metrics diction file {glm_dict_path}')
+        except Exception:
+            log.error(f'Unable to open metrics diction file {glm_dict_path}')
     diction = json.loads(lp)
     fdr_keys = list(diction['feeders'].keys())
     fdr_keys.sort()
@@ -63,8 +63,8 @@ def read_gld_metrics(path, name_root, diction_name=''):
     xfMVA = diction['transformer_MVA']
     bulkBus = diction['bulkpower_bus']
 
-    # parse the substation metrics file first; there should just be one entity per time sample
-    # each metrics file should have matching time points
+    # parse the substation metrics file first; there should just be one entity
+    # per time sample. Each metrics file should have matching time points
     lp_s = open(sub_dict_path).read()
     lst_s = json.loads(lp_s)
     print('\nMetrics data starting', lst_s['StartTime'])
@@ -82,7 +82,7 @@ def read_gld_metrics(path, name_root, diction_name=''):
     time_key = str(times[0])
 
     # find the actual substation name (not a feeder name) as GridLAB-D wrote it to the metrics file
-    sub_key = list(lst_s[time_key].keys())[0]
+    sub_key = next(iter(lst_s[time_key].keys()))
     print('\n\nFile', sub_dict_path, 'has substation', sub_key, 'at bulk system bus',
           bulkBus, 'with', xfMVA, 'MVA transformer')
     print('\nFeeder Dictionary:')
@@ -170,8 +170,8 @@ def read_gld_metrics(path, name_root, diction_name=''):
             idx_h['HSE_WH_AVG_IDX'] = val['index']
             idx_h['HSE_WH_AVG_UNITS'] = val['units']
     if len(hse_keys) > 0:
-        # there may be some houses in the dictionary that we don't write metrics for,
-        # e.g., write_node_houses with default node_metrics_interval=None
+        # there may be some houses in the dictionary that we don't write metrics
+        # for, e.g., write_node_houses with default node_metrics_interval=None
         hse_keys = [x for x in hse_keys if x in lst_h[time_key]]
         print(len(hse_keys), 'houses left')
         data_h = np.empty(shape=(len(hse_keys), len(times), len(lst_h[time_key][hse_keys[0]])), dtype=float)
@@ -194,7 +194,7 @@ def read_gld_metrics(path, name_root, diction_name=''):
     lst_m.pop('StartTime')
     meta_m = lst_m.pop('Metadata')
     nBillingMeters = 0
-    if not lst_m[time_key] is None:
+    if lst_m[time_key] is not None:
         nBillingMeters = len(lst_m[time_key])
     #  print('\nBilling Meter Metadata for', nBillingMeters, 'objects')
     for key, val in meta_m.items():
@@ -258,8 +258,8 @@ def read_gld_metrics(path, name_root, diction_name=''):
             idx_m['MTR_REAL_POWER_MIN_IDX'] = val['index']
 
     if nBillingMeters > 0:
-        # there may be some meters in the dictionary that we don't write metrics for,
-        # e.g., write_node_houses with default node_metrics_interval=None
+        # there may be some meters in the dictionary that we don't write metrics
+        # for, e.g., write_node_houses with default node_metrics_interval=None
         mtr_keys = [x for x in mtr_keys if x in lst_m[time_key]]
         print(len(mtr_keys), 'meters left, expecting', nBillingMeters)
         data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m[time_key][mtr_keys[0]])), dtype=float)
@@ -396,7 +396,15 @@ def read_gld_metrics(path, name_root, diction_name=''):
 
 
 def plot_gld(diction, save_file=None, save_only=False):
-    # the feederGenerator now inserts metrics_collector objects on capacitors and regulators
+    """ The feederGenerator now inserts metrics_collector objects on capacitors
+        and regulators
+
+    Args:
+        diction (_type_): _description_
+        save_file (_type_, optional): _description_. Defaults to None.
+        save_only (bool, optional): _description_. Defaults to False.
+    """
+
     bCollectedRegCapMetrics = True
 
     hrs = diction['hrs']
@@ -467,7 +475,7 @@ def plot_gld(diction, save_file=None, save_only=False):
         ax[0, 1].plot(hrs, min2, color='red', label='Min')
         ax[0, 1].plot(hrs, avg2, color='green', label='Avg')
         ax[0, 1].set_ylabel('degF')
-        ax[0, 1].set_title('Temperature over\n {:d} Houses'.format(len(keys_h)))
+        ax[0, 1].set_title(f'Temperature over\n {len(keys_h):d} Houses')
         ax[0, 1].legend(loc='best')
     else:
         ax[0, 1].set_title('No Houses')
@@ -480,7 +488,7 @@ def plot_gld(diction, save_file=None, save_only=False):
             ax[1, 0].plot(hrs, vmax, color='blue', label='Max')
             ax[1, 0].plot(hrs, vmin, color='red', label='Min')
             ax[1, 0].plot(hrs, vavg, color='green', label='Avg')
-            ax[1, 0].set_title('Voltage over\n {:d} Meters'.format(len(keys_m)))
+            ax[1, 0].set_title(f'Voltage over\n {len(keys_m):d} Meters')
             ax[1, 0].legend(loc='best')
         else:
             ax[1, 0].plot(hrs, data_m[0, :, idx_m['MTR_VOLT_AVG_IDX']], color='blue')
@@ -590,23 +598,29 @@ def plot_gld(diction, save_file=None, save_only=False):
 def process_gld(name_root, diction_name='', save_file=None, save_only=False):
     """ Plots a summary/sample of power, air temperature and voltage
 
-    This function reads *substation_[name_root]_metrics.json*,
-    *billing_meter_[name_root]_metrics.json* and
-    *house_[name_root]_metrics.json* for the data;
-    it reads *[name_root]_glm_dict.json* for the metadata.
+    This function reads:
+        *substation_[name_root]_metrics.json*,
+        *billing_meter_[name_root]_metrics.json* and
+        *house_[name_root]_metrics.json* for the data;
+        *[name_root]_glm_dict.json* for the metadata.
+
     These must all exist in the current working directory.
     Makes one graph with 4 subplots:
 
     1. Substation real power and losses
     2. Average air temperature over all houses
-    3. Min/Max line-to-neutral voltage and Min/Max line-to-line voltage at the first billing meter
+    3. Min/Max line-to-neutral voltage and Min/Max line-to-line voltage at the
+        first billing meter
     4. Min, Max and Average air temperature at the first house
 
     Args:
-      name_root (str): name of the TESP case, not necessarily the same as the GLM case, without the extension
+      name_root (str): name of the TESP case, not necessarily the same as the
+        GLM case, without the extension
       diction_name (str): metafile name (with json extension) for a different GLM dictionary, if it's not *[name_root]_glm_dict.json*. Defaults to empty.
-      save_file (str): name of a file to save plot, should include the *png* or *pdf* extension to determine type.
-      save_only (bool): set True with *save_file* to skip the display of the plot. Otherwise, script waits for user keypress.
+      save_file (str): name of a file to save plot, should include the *png* or
+        *pdf* extension to determine type.
+      save_only (bool): set True with *save_file* to skip the display of the plot.
+        Otherwise, script waits for user keypress.
     """
     path = os.getcwd()
     diction = read_gld_metrics(path, name_root, diction_name)

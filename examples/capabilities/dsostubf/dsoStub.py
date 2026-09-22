@@ -1,10 +1,9 @@
 import json
 import logging as log
 
-import tesp_support.original.fncs as fncs
-
 from tesp_support.api.parse_helpers import parse_mva
 from tesp_support.api.tso_helpers import load_json_case
+from tesp_support.original import fncs
 
 
 def dso_make_yaml(casename):
@@ -110,11 +109,6 @@ def dso_loop(casename):
     tnext_da = (10 * 3600) - 15  # start the day ahead bid
     power_factor = 0.57  # roughly 30 deg
 
-    logger = log.getLogger()
-    # logger.setLevel(log.DEBUG)
-    logger.setLevel(log.INFO)
-    # logger.setLevel(log.WARNING)
-
     log.info('Reading configuration...')
     ppc = load_json_case(casename + '.json')
 
@@ -144,10 +138,7 @@ def dso_loop(casename):
         for topic in events:
             val = fncs.get_value(topic)
             # get voltages and LMPs from the TSO
-            if 'LMP_DT_Bus_' in topic:
-                busnum = int(topic[11:])
-                # gld_bus[busnum]['dalmp'] = float(val)
-            elif 'LMP_RT_Bus_' in topic:
+            if 'LMP_DT_Bus_' in topic or 'LMP_RT_Bus_' in topic:
                 busnum = int(topic[11:])
                 # gld_bus[busnum]['rtlmp'] = float(val)
             elif 'V_Bus_' in topic:

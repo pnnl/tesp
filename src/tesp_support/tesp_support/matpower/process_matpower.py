@@ -1,10 +1,10 @@
-# Copyright (c) 2017-2023 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # file: process_matpower.py
 
 import json
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 def process_matpower(name_root):
@@ -149,7 +149,7 @@ def process_matpower(name_root):
     ax[2, 0].set_title("Voltages at " + bus_keys[0])
     ax[2, 0].legend(loc='best')
 
-    for i in range(0, 4):
+    for i in range(4):
         ax[i, 1].plot(hrs, data_g[i, :, PGEN_IDX], color="blue", label="P")
         ax[i, 1].plot(hrs, data_g[i, :, QGEN_IDX], color="red", label="Q")
         ax[i, 1].set_ylabel(PGEN_UNITS + "/" + QGEN_UNITS)

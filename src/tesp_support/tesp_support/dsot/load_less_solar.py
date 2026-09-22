@@ -1,4 +1,4 @@
-# Copyright (C) 2020-2024 Battelle Memorial Institute
+# Copyright (c) 2020-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: load_less_solar.py
 # Created 8/20/2020
@@ -14,18 +14,19 @@ automatically after the full 200-bus load dataset has been created.
 """
 
 import argparse
+import datetime as dt
 import logging
-import pprint
 import os
+import pprint
 import sys
 from enum import Enum
 from pathlib import Path
-import datetime as dt
+
 import matplotlib.pyplot as plt
 import openpyxl as xl
 
 # Setting up logging
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 # Adding custom logging level "DATA" to use for putting
 #  all the simulation data on. "DATA" is between "DEBUG"
@@ -67,8 +68,8 @@ def _open_file(file_path, type='r'):
     """
     try:
         fh = open(file_path, type)
-    except IOError:
-       logger.error('Unable to open {}'.format(file_path))
+    except OSError:
+       log.error(f'Unable to open {file_path}')
        sys.exit()
     else:
         return fh
@@ -133,9 +134,8 @@ def parse_DSO_metadata_Excel(dso_metadata_path_Excel, worksheet_name):
                     bus_8 = item.value
             dso_meta.append({'200-bus': bus_200,
                              '8-bus': bus_8})
-    logger.info('Parsed DSO Excel metadata file {}'.format(
-        dso_metadata_path_Excel))
-    logger.info(pp.pformat(dso_meta))
+    log.info(f'Parsed DSO Excel metadata file {dso_metadata_path_Excel}')
+    log.info(pp.pformat(dso_meta))
 
     return dso_meta
 
@@ -153,7 +153,7 @@ def read_load_file(load_path):
     #   are manipulating. Skipping last column as that is a cumulative
     #   value that needs to be manually calculated.
     load_fh = _open_file(load_path)
-    logger.info(f'Reading in load data file {load_path}')
+    log.info(f'Reading in load data file {load_path}')
     load_data = []
     for idx, line in enumerate(load_fh):
         line_list = line.split(',')
@@ -161,7 +161,7 @@ def read_load_file(load_path):
         if idx > 0:
             line_list[1:] = [float(x) for x in line_list[1:]]
         load_data.append(line_list)
-    logger.info('\tLoad data read in')
+    log.info('\tLoad data read in')
     load_fh.close()
 
     return load_data
@@ -178,7 +178,7 @@ def write_out_load_file(load_data, out_path):
     Returns:
 
     """
-    logger.info(f'Writing out new load profile{out_path}')
+    log.info(f'Writing out new load profile{out_path}')
     out_fh = _open_file(out_path, 'w')
     for row in load_data:
         out_str = ''
@@ -283,7 +283,7 @@ def create_load_less_solar(input_load_filename, output_load_filename, solar_dir,
                                              f'_solar_diagnostics.csv')
             diag_fh = _open_file(file_path,'w')
             full_data = full_data + f'DSO {bus_idx}\n'
-            full_data = full_data + f'Load (MW),Distributed Solar (MW),Load less solar (MW)\n'
+            full_data = full_data + 'Load (MW),Distributed Solar (MW),Load less solar (MW)\n'
 
         # Reading the solar data for the given DSO in
         if mode == mode.HOUR:
@@ -295,7 +295,7 @@ def create_load_less_solar(input_load_filename, output_load_filename, solar_dir,
         solar_path = os.path.join(solar_dir, f'DSO_{bus_idx}', solar_filename)
         if os.path.isfile(solar_path):
             solar_fh = _open_file(solar_path)
-            logger.info(f'Reading in solar data {solar_path}')
+            log.info(f'Reading in solar data {solar_path}')
             solar_list = []
             for line_num, line in enumerate(solar_fh):
                 if mode == Mode.HOUR:
@@ -348,17 +348,17 @@ def create_load_less_solar(input_load_filename, output_load_filename, solar_dir,
                             excess_solar[bus_idx]['ts'].append(ts)
                             excess_solar[bus_idx]['excess solar'].append(
                                 abs(load_less_solar))
-                    logger.warning(
+                    log.warning(
                         f'\tSolar power of {solar_MW} MW exceeds load of '
                         f'{load:.2f} MW by {load_less_solar:.2f} MW'
                         f' at bus {bus_idx} at timestamp {ts}')
                 load_data[ts_idx + 1][bus_idx] = load_less_solar
-            logger.info('\tSubtracted distributed solar profile load.')
+            log.info('\tSubtracted distributed solar profile load.')
             if diagnostics:
                 diag_fh.write(full_data)
                 diag_fh.close()
         else:
-            logger.warning(f'No distributed solar profile found for bus '
+            log.warning(f'No distributed solar profile found for bus '
                            f'{bus_idx}')
 
     # Adding data for ERCOT total in final column
@@ -455,7 +455,7 @@ def create_8_node_load_less_solar(dso_meta, load_dir, input_load_filename, outpu
             #   Skip the last column because it is the ERCOT total
             for bus_idx, bus_load in enumerate(ts_data[:-1]):
                 if bus_idx == 0:
-                    dso_load[ts][bus_idx] = load_data[ts][0]
+                    dso_load[ts][bus_idx] = ts_data[0]
                 else:
                     eight_bus_num = dso_meta[bus_idx]['8-bus']
                     dso_load[ts][eight_bus_num] = \

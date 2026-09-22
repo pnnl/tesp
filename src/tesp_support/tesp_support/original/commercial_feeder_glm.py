@@ -1,11 +1,12 @@
-# Copyright (C) 2019-2023 Battelle Memorial Institute
+# Copyright (c) 2019-2025 Battelle Memorial Institute
 # file: commercial_feeder_glm.py
 
 import math
+
 import numpy as np
 
-from tesp_support.api.helpers import gld_strict_name, randomize_commercial_skew
-import tesp_support.dsot.residential_feeder_glm as res_FG
+from ..api.helpers import gld_strict_name, randomize_commercial_skew
+from ..dsot import residential_feeder_glm as res_FG
 
 
 def define_comm_bldg(bldg_metadata, dso_type, num_bldgs):
@@ -266,8 +267,8 @@ def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percenta
 
         # Need to create a buffer version of bldg so zip loads do not get overridden in the multi-zone for loops
         buff = bldg.copy()
-        print('// load', key, 'parent', bldg['mtr'], 'type', comm_type, 'sqft', comm_size, 'kva', '{:.3f}'.format(kva),
-              'nphs', nphs, 'phases', phases, 'vln', '{:.3f}'.format(vln), file=op)
+        print('// load', key, 'parent', bldg['mtr'], 'type', comm_type, 'sqft', comm_size, 'kva', f'{kva:.3f}',
+              'nphs', nphs, 'phases', phases, 'vln', f'{vln:.3f}', file=op)
 
         #  ---------- Subdivide into zones for large buildings  -------------------
         if bldg_size < 10000:
@@ -377,14 +378,14 @@ def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percenta
         if np.random.uniform(0, 1) <= storage_percentage:
             # TODO: Review battery results to see if one battery per 10000 sq ft. is appropriate.
             num_batt = math.floor(bldg_size / 10000) + 1
-            battery_capacity = num_batt * res_FG.get_dist(batt_metadata['capacity(kWh)']['mean'],
-                                                          batt_metadata['capacity(kWh)']['deviation_range_per']) * 1000
-            max_charge_rate = res_FG.get_dist(batt_metadata['rated_charging_power(kW)']['mean'],
-                                              batt_metadata['rated_charging_power(kW)']['deviation_range_per']) * 1000
+            battery_capacity = num_batt * res_FG.get_dist(batt_metadata['capacity']['mean'],
+                                                          batt_metadata['capacity']['deviation_range_per']) * 1000
+            max_charge_rate = res_FG.get_dist(batt_metadata['rated_charging_power']['mean'],
+                                              batt_metadata['rated_charging_power']['deviation_range_per']) * 1000
             max_discharge_rate = max_charge_rate
-            inverter_efficiency = batt_metadata['inv_efficiency(per)'] / 100
-            charging_loss = res_FG.get_dist(batt_metadata['rated_charging_loss(per)']['mean'],
-                                            batt_metadata['rated_charging_loss(per)']['deviation_range_per']) / 100
+            inverter_efficiency = batt_metadata['inv_efficiency'] / 100
+            charging_loss = res_FG.get_dist(batt_metadata['rated_charging_loss']['mean'],
+                                            batt_metadata['rated_charging_loss']['deviation_range_per']) / 100
             discharging_loss = charging_loss
             round_trip_efficiency = charging_loss * discharging_loss
             rated_power = max(max_charge_rate, max_discharge_rate)
@@ -412,23 +413,23 @@ def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percenta
                 print('    four_quadrant_control_mode', storage_inv_mode + ';', file=op)
                 print('    charge_lockout_time 1;', file=op)
                 print('    discharge_lockout_time 1;', file=op)
-                print('    rated_power', '{:.2f}'.format(rated_power) + ';', file=op)
-                print('    max_charge_rate', '{:.2f}'.format(max_charge_rate) + ';', file=op)
-                print('    max_discharge_rate', '{:.2f}'.format(max_discharge_rate) + ';', file=op)
+                print('    rated_power', f'{rated_power:.2f}' + ';', file=op)
+                print('    max_charge_rate', f'{max_charge_rate:.2f}' + ';', file=op)
+                print('    max_discharge_rate', f'{max_discharge_rate:.2f}' + ';', file=op)
                 print('    sense_object', mtr + ';', file=op)
                 # print('    charge_on_threshold -100;', file=op)
                 # print('    charge_off_threshold 0;', file=op)
                 # print('    discharge_off_threshold 2000;', file=op)
                 # print('    discharge_on_threshold 3000;', file=op)
-                print('    inverter_efficiency', '{:.2f}'.format(inverter_efficiency) + ';', file=op)
+                print('    inverter_efficiency', f'{inverter_efficiency:.2f}' + ';', file=op)
                 print('    power_factor 1.0;', file=op)
                 print('    object battery { // Tesla Powerwall 2', file=op)
                 print('      name', batname + ';', file=op)
                 print('      use_internal_battery_model true;', file=op)
                 print('      battery_type LI_ION;', file=op)
                 print('      nominal_voltage 480;', file=op)
-                print('      battery_capacity', '{:.2f}'.format(battery_capacity) + ';', file=op)
-                print('      round_trip_efficiency', '{:.2f}'.format(round_trip_efficiency) + ';', file=op)
+                print('      battery_capacity', f'{battery_capacity:.2f}' + ';', file=op)
+                print('      round_trip_efficiency', f'{round_trip_efficiency:.2f}' + ';', file=op)
                 print('      state_of_charge 0.50;', file=op)
                 print('    };', file=op)
                 if metrics_interval > 0 and "meter" in metrics:
@@ -468,10 +469,10 @@ def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percenta
                 print('    generator_status ONLINE;', file=op)
                 print('    inverter_type FOUR_QUADRANT;', file=op)
                 print('    inverter_efficiency 1;', file=op)
-                print('    rated_power', '{:.0f}'.format(inv_power) + ';', file=op)
+                print('    rated_power', f'{inv_power:.0f}' + ';', file=op)
                 print('    generator_mode', solar_inv_mode + ';', file=op)
                 print('    four_quadrant_control_mode', solar_inv_mode + ';', file=op)
-                print('    P_Out', 'P_out_inj.value * {}'.format(pv_scaling_factor), ';', file=op)
+                print('    P_Out', f'P_out_inj.value * {pv_scaling_factor}', ';', file=op)
                 if 'no_file' not in solar_Q_player:
                     print('    Q_Out Q_out_inj.value * 0.0;', file=op)
                 else:
@@ -490,15 +491,15 @@ def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percenta
         if np.random.uniform(0, 1) <= ev_percentage:
             # first lets select an ev model:
             ev_name = res_FG.selectEVmodel(ev_metadata['sale_probability'], np.random.uniform(0, 1))
-            ev_range = ev_metadata['Range (miles)'][ev_name]
-            ev_mileage = ev_metadata['Miles per kWh'][ev_name]
-            ev_charge_eff = ev_metadata['charging efficiency']
+            ev_range = ev_metadata['range_miles'][ev_name]
+            ev_mileage = ev_metadata['miles_per_kWh'][ev_name]
+            ev_charge_eff = ev_metadata['charging_efficiency']
             # check if level 1 charger is used or level 2
-            if np.random.uniform(0, 1) <= ev_metadata['Level_1_usage']:
-                ev_max_charge = ev_metadata['Level_1 max power (kW)']
+            if np.random.uniform(0, 1) <= ev_metadata['level_1_usage']:
+                ev_max_charge = ev_metadata['level_1_max_power_kW']
                 volt_conf = 'IS110'  # for level 1 charger, 110 V is good
             else:
-                ev_max_charge = ev_metadata['Level_2 max power (kW)'][ev_name]
+                ev_max_charge = ev_metadata['level_2_max_power_kW'][ev_name]
                 volt_conf = 'IS220'  # for level 2 charger, 220 V is must
             # now, let's map a random driving schedule with this vehicle ensuring daily miles
             # doesn't exceed the vehicle range and home duration is enough to charge the vehicle
@@ -526,7 +527,7 @@ def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percenta
                 print('object evcharger_det {', file=op)
                 print('    name', evname + ';', file=op)
                 print('    parent', parent_zone + ';', file=op)
-                print('    configuration', volt_conf + ';', file=op)  #
+                print('    configuration', volt_conf + ';', file=op)
                 print('    breaker_amps 1000;', file=op)
                 print('    battery_SOC 100.0; //initial soc', file=op)
                 print('    travel_distance', '{};'.format(drive_sch['daily_miles']), file=op)
@@ -535,10 +536,10 @@ def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percenta
                 print('    arrival_at_home', '{};'.format(drive_sch['home_arr_time']), file=op)
                 print('    duration_at_home', '{}; // (secs)'.format(drive_sch['home_duration']), file=op)
                 print('    work_charging_available FALSE;', file=op)
-                print('    maximum_charge_rate', '{:.2f}; //(watts)'.format(ev_max_charge * 1000), file=op)
-                print('    mileage_efficiency', '{:.3f}; // miles per kWh'.format(ev_mileage), file=op)
-                print('    mileage_classification', '{:.3f}; // range in miles'.format(ev_range), file=op)
-                print('    charging_efficiency', '{:.3f};'.format(ev_charge_eff), file=op)
+                print('    maximum_charge_rate', f'{ev_max_charge * 1000:.2f}; //(watts)', file=op)
+                print('    mileage_efficiency', f'{ev_mileage:.3f}; // miles per kWh', file=op)
+                print('    mileage_classification', f'{ev_range:.3f}; // range in miles', file=op)
+                print('    charging_efficiency', f'{ev_charge_eff:.3f};', file=op)
                 if metrics_interval > 0:
                     print('    object metrics_collector {', file=op)
                     print('      interval', str(metrics_interval) + ';', file=op)
@@ -548,27 +549,27 @@ def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percenta
         phsva = 1000.0 * kva / nphs
         print('object load { // street lights', file=op)
         print('  name {:s};'.format(key + '_streetlights'), file=op)
-        print('  parent {:s};'.format(mtr), file=op)
+        print(f'  parent {mtr:s};', file=op)
         print('  groupid STREETLIGHTS;', file=op)
-        print('  nominal_voltage {:2f};'.format(vln), file=op)
-        print('  phases {:s};'.format(phases), file=op)
+        print(f'  nominal_voltage {vln:2f};', file=op)
+        print(f'  phases {phases:s};', file=op)
         for phs in ['A', 'B', 'C']:
             if phs in phases:
-                print('  impedance_fraction_{:s} {:f};'.format(phs, c_z_frac), file=op)
-                print('  current_fraction_{:s} {:f};'.format(phs, c_i_frac), file=op)
-                print('  power_fraction_{:s} {:f};'.format(phs, c_p_frac), file=op)
-                print('  impedance_pf_{:s} {:f};'.format(phs, c_z_pf), file=op)
-                print('  current_pf_{:s} {:f};'.format(phs, c_i_pf), file=op)
-                print('  power_pf_{:s} {:f};'.format(phs, c_p_pf), file=op)
-                print('  base_power_{:s} street_lighting*{:.2f};'.format(phs, light_scalar_comm * phsva), file=op)
+                print(f'  impedance_fraction_{phs:s} {c_z_frac:f};', file=op)
+                print(f'  current_fraction_{phs:s} {c_i_frac:f};', file=op)
+                print(f'  power_fraction_{phs:s} {c_p_frac:f};', file=op)
+                print(f'  impedance_pf_{phs:s} {c_z_pf:f};', file=op)
+                print(f'  current_pf_{phs:s} {c_i_pf:f};', file=op)
+                print(f'  power_pf_{phs:s} {c_p_pf:f};', file=op)
+                print(f'  base_power_{phs:s} street_lighting*{light_scalar_comm * phsva:.2f};', file=op)
         print('};', file=op)
     else:
         print('object load { // accumulate zones', file=op)
-        print('  name {:s};'.format(key), file=op)
-        print('  parent {:s};'.format(mtr), file=op)
-        print('  groupid {:s};'.format(comm_type), file=op)
-        print('  nominal_voltage {:2f};'.format(vln), file=op)
-        print('  phases {:s};'.format(phases), file=op)
+        print(f'  name {key:s};', file=op)
+        print(f'  parent {mtr:s};', file=op)
+        print(f'  groupid {comm_type:s};', file=op)
+        print(f'  nominal_voltage {vln:2f};', file=op)
+        print(f'  phases {phases:s};', file=op)
         print('};', file=op)
 
 

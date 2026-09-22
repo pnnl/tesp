@@ -1,4 +1,5 @@
-# Copyright (C) 2021-2023 Battelle Memorial Institute
+#!/usr/bin/env python3
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # file: plots.py
 
 # usage 'python3 plots.py'

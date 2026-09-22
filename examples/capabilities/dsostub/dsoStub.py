@@ -1,13 +1,17 @@
-# Copyright (C) 2017-2023 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # file: dsoStub.py
 
 import json
-import helics
-import logging as log
+import logging
 
+import helics
 import tesp_support.api.tso_helpers as tso
-from tesp_support.api.parse_helpers import parse_mva
 from tesp_support.api.helpers import HelicsMsg
+from tesp_support.api.parse_helpers import parse_mva
+
+log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
+# log.setLevel(logging.DEBUG)
 
 
 def dso_make_stub(casename):
@@ -93,11 +97,6 @@ def dso_loop(casename):
     tnext_da = (10 * 3600) - 15  # start the day ahead bid
     power_factor = 0.57  # roughly 30 deg
 
-    logger = log.getLogger()
-    # logger.setLevel(log.INFO)
-    logger.setLevel(log.WARNING)
-    # logger.setLevel(log.DEBUG)
-
     log.info('Reading configuration...')
     ppc = tso.load_json_case(casename + '.json')
 
@@ -138,10 +137,7 @@ def dso_loop(casename):
             if helics.helicsInputIsUpdated(sub):
                 val = helics.helicsInputGetString(sub)
                 # get voltages and LMPs from the TSO
-                if 'LMP_DT_' in topic:
-                    busnum = int(topic[7:])
-                    # gld_bus[busnum]['dalmp'] = float(val)
-                elif 'LMP_RT_' in topic:
+                if 'LMP_DT_' in topic or 'LMP_RT_' in topic:
                     busnum = int(topic[7:])
                     # gld_bus[busnum]['rtlmp'] = float(val)
                 elif 'V_Bus_' in topic:

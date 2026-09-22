@@ -1,10 +1,11 @@
-# Copyright (C) 2022-2023 Battelle Memorial Institute
+# Copyright (c) 2022-2025 Battelle Memorial Institute
 # file: recs_api.py
 
-import pandas as pd
-import sqlite3 as sqlite
-import duckdb as dkdb
 import random
+import sqlite3 as sqlite
+
+import duckdb as dkdb
+import pandas as pd
 
 pd.options.mode.chained_assignment = None
 
@@ -24,12 +25,12 @@ def get_recs_data(file_name):
     try:
         t_recs_df = pd.read_excel(file_name, sheet_name=0, header=0)
         return t_recs_df
-    except:
+    except Exception:
         try:
             con = sqlite.connect(file_name)
             t_recs_df = pd.read_sql_query("SELECT * from RECSwIncomeLvl", con)
             return t_recs_df
-        except:
+        except Exception:
             return None
 class recs_data_set:
     """Class is used to access and process a file which contains RECS data."""
@@ -37,7 +38,7 @@ class recs_data_set:
     def __init__(self, file_name):
         """Function creates and initializes a new recs_data_set class object
         Args:
-        file_name (str): the name and path of the file to be read in.
+            file_name (str): the name and path of the file to be read in.
         Returns:
             dataframe: containing the RECS data read from the input file. If 
                 there is a problem reading the file, the function returns None.
@@ -49,8 +50,6 @@ class recs_data_set:
         """Function queries a list of unique date built ranges contained in the 
         dataset.
 
-        Args:
-            none
         Returns:
             dataframe: contains the list of unique date built ranges
         """
@@ -68,11 +67,11 @@ class recs_data_set:
             st_name (string): name of the state the summed weights for a 
                 building type are to be calculated
             income_level (string): income category that summed weights are to be 
-                calculate "Low","Middle", "Moderate", or "Upper"
+                calculated for a particular level "Low","Middle", "Moderate", or "Upper"
             population_density (string): population density category to be used 
                 in the summed weights ("C" = suburban, "R" = rural, "U" = urban)
             housing_type (int): housing type category to be used in the summed 
-                weights 1 = Mobile Home, 2 = Single Family Detatched,
+                weights 1 = Mobile Home, 2 = Single Family Detached,
                 3 = Single Family Attached, 4 = Apartment 2-4, 
                 5 = Apartment 5 or more 
         Returns:
@@ -165,7 +164,6 @@ class recs_data_set:
         return percentage_df
 
     def get_all_params_list(self, param_type):
-        param_list = []
         if param_type == "state_name":
             param_df = self.get_state_names()
         elif param_type == "income_cat":
@@ -180,9 +178,7 @@ class recs_data_set:
             param_id = "UATYP10"
         else:
             param_id = param_type
-        for param in param_df[param_id]:
-            param_list.append(param)
-        return param_list
+        return list(param_df[param_id])
 
     def build_key_parameter_distributions(self, state, income_level, housing_density):
         distribution_df = pd.DataFrame()
@@ -305,14 +301,14 @@ class recs_data_set:
         return sampled_values
 
     def calc_total_building_weight(self, st_name, income_level, population_density):
-        """Function calculates the sum of nweight values based upon the 
+        """Function calculates the sum of nweight values based upon the
         arguments entered as parameters to the function.
 
         Args:
             st_name (string): name of the state the summed weights for a 
                 building type are to be calculated
             income_level (string): income category that summed weights are to be
-                calculate "Low","Middle", "Moderate", or "Upper"
+                calculated for a particular level "Low","Middle", "Moderate", or "Upper"
             population_density (string): population density category to be used 
                 in the summed weights ("C" = suburban, "R" = rural, "U" = urban)
         Returns:
@@ -340,7 +336,7 @@ class recs_data_set:
             st_name (string): name of the state the summed weights for a building
                 type are to be calculated
             income_level (string): income category that summed weights are to be
-                calculate "Low","Middle", "Moderate", or "Upper"
+                calculated for "Low","Middle", "Moderate", or "Upper"
             population_density (string): population density category to be used 
                 in the summed weights ("C" = suburban, "R" = rural, "U" = urban)
             housing_type (int): housing type category to be used in the summed 
@@ -402,8 +398,6 @@ class recs_data_set:
     def get_state_names(self):
         """Function queries a list of unique state names contained in the dataset
 
-        Args:
-            none
         Returns:
             dataframe: containing the calculated summation value
         """
@@ -417,8 +411,6 @@ class recs_data_set:
     def get_income_levels(self):
         """Function queries a list of unique income categories contained in the dataset
 
-        Args:
-            none
         Returns:
             dataframe: contains the list of unique income categories
         """
@@ -432,8 +424,6 @@ class recs_data_set:
         """Function queries a list of unique population density categories 
         contained in the dataset
 
-        Args:
-            none
         Returns:
             dataframe: contains the list of unique population density categories
         """
@@ -448,8 +438,6 @@ class recs_data_set:
         """Function queries a list of unique building type categories contained 
         in the dataset
         
-        Args:
-            none
         Returns:
             dataframe: contains the list of unique building type categories
         """

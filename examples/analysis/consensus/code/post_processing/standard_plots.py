@@ -11,9 +11,9 @@ import json
 import warnings
 from copy import deepcopy
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 
 warnings.filterwarnings("ignore")
 # #####################################################start conf plot
@@ -81,10 +81,10 @@ class marketJSONpython:
         self.pre_file = pre_file
         self.pos_file = pos_file
 
-        self.fileNAMES_market = list(['dso_market_TE_Base_s1_3600_',
-                                      'retail_market_TE_Base_s1_3600_',
-                                      'dso_market_TE_Base_s1_300_',
-                                      'retail_market_TE_Base_s1_300_'])
+        self.fileNAMES_market = ['dso_market_TE_Base_s1_3600_',
+                                 'retail_market_TE_Base_s1_3600_',
+                                 'dso_market_TE_Base_s1_300_',
+                                 'retail_market_TE_Base_s1_300_']
         self.DSO3600 = self.get_market_data(0)
         self.RET3600 = self.get_market_data(1)
         self.DSO300 = self.get_market_data(2)
@@ -102,7 +102,7 @@ class marketJSONpython:
                 start_time (str): Start time of the simulation
                 Order (list of Metadata): list of matadata in proper time order
         """
-        d1 = dict()
+        d1 = {}
         for n in range(self.startDAY, self.endDAY):
             file_name = self.fileNAMES_market[index] + str(n) + '_metrics'
             file = open(self.pre_file + file_name + self.pos_file, 'r')
@@ -134,7 +134,7 @@ class marketJSONpython:
             index = meta_I_ver[i]['index']
             for t in range(len(temp[0])):
                 Order[index].append(temp[0][t][index])
-        return list([meta_I_ver, start_time, Order])
+        return [meta_I_ver, start_time, Order]
 
 
 class DERsJSON:
@@ -174,7 +174,7 @@ class DERsJSON:
                 list DERs (dataframe): metadata by DER
                 home_keys (list): home key or DER key
         """
-        d1 = dict()
+        d1 = {}
 
         if self.GLD:
             file = open(self.pre_file + self.pos_file, 'r')
@@ -203,7 +203,7 @@ class DERsJSON:
 
         temp = {}
         index = 0
-        for i in meta_I_ver.keys():
+        for i in meta_I_ver:
             if 'bid_four_point_rt' in i:
                 for i in range(4):
                     temp.update({('bid_4P_rt_Q_' + str(i)): {'units': 'kW', 'index': index}})
@@ -255,10 +255,10 @@ class DERsJSON:
                             temp.append(I_ver[t][node][p])
                     try:
                         temp = list(itertools.chain.from_iterable(temp))
-                    except:
+                    except Exception:
                         pass
                     data_I_ver[j, i, :] = temp
-                except:
+                except Exception:
                     data_I_ver[j, i, :] = I_ver[t][node]
                 i = i + 1
             j = j + 1
@@ -279,13 +279,12 @@ class DERsJSON:
 
         Ip = pd.Panel(data_I_ver, major_axis=index)
 
-        all_homes_I_ver = list()
+        all_homes_I_ver = []
         all_homes_I_ver.append(Ip.min(axis=0))  # 0
         all_homes_I_ver.append(Ip.mean(axis=0))  # 1
         all_homes_I_ver.append(Ip.max(axis=0))  # 2
         all_homes_I_ver.append(Ip.sum(axis=0))  # 3
 
-        data_individual = list()
         data_individual = [pd.DataFrame(data_I_ver[i, :, :], index=index) for i in range(x)]
 
         if self.GLD:
@@ -297,7 +296,7 @@ class DERsJSON:
             for n in range(len(data_individual)):
                 data_individual[n] = data_individual[n].loc[startD:endD]
 
-        return list([meta_I_ver, start_time, all_homes_I_ver, data_individual, home_keys])
+        return [meta_I_ver, start_time, all_homes_I_ver, data_individual, home_keys]
 
 
 # ######################################################### Function
@@ -310,11 +309,11 @@ def get_first_h(data_s):
     Returns:
         max_delta (int): worse hour in t
     """
-    price = list()
+    price = []
     for i in range(len(data_s)):
         try:
             price.append(data_s[i][0])
-        except:
+        except Exception:
             return price
     return price
 
@@ -332,11 +331,10 @@ def make_convergency_test(t, data_s, tf=47):
     """
     index = [tf - y for y in range(tf + 1)]
     price = []
-    price = list()
     for i in index:
         try:
             price.append(data_s[t][i])
-        except:
+        except Exception:
             return price
         t = t + 1
     return deepcopy(price)
@@ -567,14 +565,14 @@ def Inverter(obj_Market, obj_DER_PYT_battery, obj_DER_GLD_inverter, obj_Color):
     df = obj_DER_PYT_battery.DER_1h[2][3]
     meta = obj_DER_PYT_battery.DER_1h[0]
     indexM = meta[V_analis]['index']
-    x = list()
+    x = []
     for i in range(48):
         x.append(indexM + i * 8)
     df = df.loc[:, x]
     MEETAA = np.array(list(meta.keys()))  # [x]
     MEETAA = MEETAA[x]
 
-    row_list = list()
+    row_list = []
     for index, rows in df.iterrows():
         my_list = list(rows)
         row_list.append(my_list)
@@ -640,14 +638,14 @@ def Water_Heater(obj_Market, obj_DER_PYT_water, obj_DER_GLD_house, obj_Color):
     df = obj_DER_PYT_water.DER_1h[3][home]
     meta = obj_DER_PYT_water.DER_1h[0]
     indexM = meta[V_analis]['index']
-    x = list()
+    x = []
     for i in range(48):
         x.append(indexM + i * 8)
     df = df.loc[:, x]
     MEETAA = np.array(list(meta.keys()))  # [x]
     MEETAA = MEETAA[x]
 
-    row_list = list()
+    row_list = []
     for index, rows in df.iterrows():
         my_list = list(rows)
         row_list.append(my_list)
@@ -671,14 +669,14 @@ def Water_Heater(obj_Market, obj_DER_PYT_water, obj_DER_GLD_house, obj_Color):
     df = obj_DER_PYT_water.DER_1h[2][3]
     meta = obj_DER_PYT_water.DER_1h[0]
     indexM = meta[V_analis]['index']
-    x = list()
+    x = []
     for i in range(48):
         x.append(indexM + i * 8)
     df = df.loc[:, x]
     MEETAA = np.array(list(meta.keys()))  # [x]
     MEETAA = MEETAA[x]
 
-    row_list = list()
+    row_list = []
     for index, rows in df.iterrows():
         my_list = list(rows)
         row_list.append(my_list)
@@ -741,14 +739,14 @@ def HVAC(obj_Market, obj_DER_PYT_hvac, obj_DER_GLD_house, obj_Color):
     df = obj_DER_PYT_hvac.DER_1h[3][0]
     meta = obj_DER_PYT_hvac.DER_1h[0]
     indexM = meta[V_analis]['index']
-    x = list()
+    x = []
     for i in range(48):
         x.append(indexM + i * 8)
     df = df.loc[:, x]
     MEETAA = np.array(list(meta.keys()))  # [x]
     MEETAA = MEETAA[x]
 
-    row_list = list()
+    row_list = []
     for index, rows in df.iterrows():
         my_list = list(rows)
         row_list.append(my_list)
@@ -772,14 +770,14 @@ def HVAC(obj_Market, obj_DER_PYT_hvac, obj_DER_GLD_house, obj_Color):
     df = obj_DER_PYT_hvac.DER_1h[2][3]
     meta = obj_DER_PYT_hvac.DER_1h[0]
     indexM = meta[V_analis]['index']
-    x = list()
+    x = []
     for i in range(48):
         x.append(indexM + i * 8)
     df = df.loc[:, x]
     MEETAA = np.array(list(meta.keys()))  # [x]
     MEETAA = MEETAA[x]
 
-    row_list = list()
+    row_list = []
     for index, rows in df.iterrows():
         my_list = list(rows)
         row_list.append(my_list)
@@ -805,7 +803,7 @@ if __name__ == "__main__":
     # pre_file_out = 'TE_test/dso_1/'
     pre_file_out = 'TMG_helics_3_agent/MG_Agent_1/'
     pos_file = '.h5'
-    days = list([0, 3])
+    days = [0, 3]
     da_convergence_start = 24 * 0  # DA interaction to start looking for convergence
     N_convergence_hours = 24  # number of hours to visualize convergence (set to zero neglect)
 

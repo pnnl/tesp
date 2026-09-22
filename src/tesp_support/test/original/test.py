@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2023 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # file: test.py
 
 # import sys
@@ -22,6 +22,7 @@
 
 # step 1
 import tesp_support.original.tesp_config as tc
+
 tc.show_tesp_config()
 
 # step 2

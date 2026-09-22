@@ -1,6 +1,6 @@
-# Copyright (C) 2017-2024 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
-# Copyright (C) 2017-2023 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # file: process_eplus.py
 """Functions to plot data from the EnergyPlus agent
 
@@ -8,15 +8,15 @@ Public Functions:
         :process_eplus: Reads the data and metadata, then makes the plots.  
 
 """
-import logging
 import json
+import logging
 import os
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 # Setting up logging
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 def read_eplus_metrics(path, name_root, quiet=False):
@@ -28,8 +28,8 @@ def read_eplus_metrics(path, name_root, quiet=False):
         lst = json.loads(lp)
         if not quiet:
             print('Metrics data starting', lst['StartTime'])
-    except:
-        logger.error(f'Unable to open eplus metrics file {eplus_dict_path}')
+    except Exception:
+        log.error(f'Unable to open eplus metrics file {eplus_dict_path}')
         return
 
     # make a sorted list of the times
@@ -124,7 +124,7 @@ def read_eplus_metrics(path, name_root, quiet=False):
             idx_e['OFFER_CLEARED_DEGF_UNITS'] = val['units']
 
     # make sure we found the metric indices of interest
-    building = list(lst['3600'].keys())[0]
+    building = next(iter(lst['3600'].keys()))
     ary = lst['3600'][building]
     if not quiet:
         print('There are', len(ary), 'metrics for', building)

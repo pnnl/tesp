@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Battelle Memorial Institute
+# Copyright (c) 2024-2025 Battelle Memorial Institute
 # file: hvac_agent_standalone_demo.py
 """
 This is a simplified version of the DSO+T HVAC agent intended to demonstrate
@@ -19,7 +19,7 @@ Author: trevor.hardy@pnnl.gov
 (virutally all code lifted from hvac_agent.py with modest simplification)
 
 """
-import logging as log
+import logging
 from math import cos as cos
 from math import sin as sin
 import numpy as np
@@ -27,8 +27,7 @@ import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
 import plotly.graph_objects as go
 
-logger = log.getLogger()
-
+log = logging.getLogger(__name__)
 
 # Key parameters for investigating the controller performance
 
@@ -174,10 +173,6 @@ class HVACDSOT:
     def calc_thermostat_settings(self):
         """ Sets the ETP parameters from configuration data
 
-        Args:
-            model_diag_level (int): Specific level for logging errors; set to 11
-            sim_time (str): Current time in the simulation; should be human-readable
-
         References:
             `Table 3 -  Easy to use slider settings <http://gridlab-d.shoutwiki.com/wiki/Transactive_controls>`_
         """
@@ -224,7 +219,7 @@ class HVACDSOT:
             if self.temp_max_heat < heating_setpt:
                 self.temp_max_heat = heating_setpt
 
-    def calc_bid_quantity(self, price_curve: list, quantity_curve: list) -> None:
+    def calc_bid_quantity(self, price_curve: list, quantity_curve: list) -> float:
         """
         Uses the cleared price to define the bid quantity (maybe should
         be called cleared_quantity?). Currently only implemented for
@@ -267,7 +262,7 @@ class HVACDSOT:
             print("something went wrong with clear price")
         return self.bid_quantity
 
-    def calc_thermostat_setpoint(self, basepoint_tmp: float, bid_quantity: float) -> bool:
+    def calc_thermostat_setpoint(self, basepoint_tmp: float, bid_quantity: float) -> tuple[bool, float, float]:
         """
         Using the basepoint temperature (the default temperature, which may
         follow a customer-defined schedule), and the bid quantity (cleared
@@ -321,12 +316,12 @@ class HVACDSOT:
                             b = self.temp_curve[ipt] - a * self.quantity_curve[ipt]
                             setpoint_tmp = a * self.bid_quantity + b
                             break
-            returnflag = True
+            return_flag = True
         else:
             # If there's no variation in price, just follow the customer's
             # setpoint schedule.
             setpoint_tmp = basepoint_tmp
-            returnflag = False
+            return_flag = False
 
         if self.thermostat_mode == 'Cooling':
             self.cooling_setpoint = setpoint_tmp
@@ -339,20 +334,19 @@ class HVACDSOT:
             else:
                 # push heating_setpoint down
                 self.heating_setpoint = self.cooling_setpoint - self.deadband
-        return returnflag, self.cooling_setpoint, self.heating_setpoint
+        return return_flag, self.cooling_setpoint, self.heating_setpoint
 
-    def bid_accepted(self, bid:list) -> tuple[bool, float, float]:
+    def bid_accepted(self, bid:list) -> tuple[bool, float, float, float]:
         """ Update the thermostat setting if the last bid was accepted
 
         The last bid is always "accepted". If it wasn't high enough,
         then the thermostat could be turned up.
 
         Args:
-            model_diag_level (int): Specific level for logging errors; set to 11
-            sim_time (str): Current time in the simulation; should be human-readable
+            bid (list):
 
         Returns:
-            bool: True if the thermostat setting changes, False if not.
+            tuple[bool, float, float, float]:
         """
         # Allows a user to override the object's internal bid curve. If
         # the call is made with the parameter empty the internal one is used.
@@ -375,9 +369,9 @@ class HVACDSOT:
         quantity_curve = [self.bid_rt[0][0], self.bid_rt[1][0], self.bid_rt[2][0], self.bid_rt[3][0]]
 
         bid_quantity = self.calc_bid_quantity(price_curve, quantity_curve)
-        returnflag, cooling_setpoint, heating_setpoint = self.calc_thermostat_setpoint(basepoint_tmp, bid_quantity)
+        return_flag, cooling_setpoint, heating_setpoint = self.calc_thermostat_setpoint(basepoint_tmp, bid_quantity)
 
-        return returnflag, bid_quantity, cooling_setpoint, heating_setpoint
+        return return_flag, bid_quantity, cooling_setpoint, heating_setpoint
   
     def adj_heat_pump_capacity(self) -> tuple[float, float]:
         """
@@ -393,7 +387,7 @@ class HVACDSOT:
         
         return cooling_capacity_adj, heating_capacity_adj
 
-    def calc_ETP_model():
+    def calc_ETP_model(self):
         """
         This controller uses a simplified, single-zone model of the house 
         thermodynamics to estimate the thermal performance of the

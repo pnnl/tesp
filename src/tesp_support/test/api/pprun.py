@@ -1,12 +1,10 @@
-# Copyright (C) 2018-2023 Battelle Memorial Institute
+# Copyright (c) 2018-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: pprun.py
 from os import path
 
 import pypower.api as pp
-
 import tesp_support.api.tso_helpers as th
-
 
 dirpath = path.expandvars('$TESPDIR/examples/capabilities/pypower/')
 ppc = th.load_json_case(dirpath + '/ppcase.json')

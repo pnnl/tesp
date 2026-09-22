@@ -1,0 +1,288 @@
+import os
+from datetime import datetime, timedelta
+from os.path import abspath, dirname, isdir
+
+import tesp_support.dsot.dso_rate_making as rm
+import tesp_support.dsot.plots as pt
+from joblib import Parallel, delayed
+
+"""Run monthly case-level DSOT postprocessing.
+
+This script executes postprocessing tasks that are typically run after each
+monthly simulation, including:
+
+1. Setup and path/metadata resolution.
+2. DSO-specific postprocessing (parallelizable).
+3. Month-level aggregate plotting and statistics.
+
+Annual aggregation is intentionally not performed here; it is handled in
+run_annual_postprocessing.py once monthly products are complete.
+
+Parallel backend notes:
+- loky: default process-based backend (robust, moderate overhead).
+- multiprocessing: alternative process-based backend.
+- threading: lower overhead, limited by the GIL for Python-heavy workloads.
+"""
+_NUM_CORE = -1
+_backend = 'loky'  # 'multiprocessing'  had some problems
+_verbose = 10
+
+
+def post_process():
+    """Execute case-level postprocessing tasks for the active case.
+
+    Joblib reference:
+    https://joblib.readthedocs.io/en/latest/generated/joblib.Parallel.html#joblib.Parallel
+
+    Returns:
+        None
+    """
+
+    parallel = Parallel(n_jobs=_NUM_CORE, backend=_backend, verbose=_verbose)
+
+    def worker(arg1, arg2):
+        print("arg2->" + str(arg2))
+        worker_results = arg1(arg2)
+        # return arg2
+        return worker_results
+
+    def DSO_bldg_loads(dso_number):
+        os.chdir(config_path)
+        pt.bldg_load_stack(dso_number, day_range, case_path, agent_prefix, GLD_prefix, metadata_path)
+
+    def DSO_der_loads(dso_number):
+        os.chdir(config_path)
+        pt.der_load_stack(dso_number, day_range, case_path, GLD_prefix, metadata_path)
+
+    def Daily_market_plot(day_number):
+        os.chdir(config_path)
+        pt.dso_market_plot(dso_range, str(day_number), case_path, dso_metadata_file, metadata_path)
+
+    def DSO_specific_cost(dso_number):
+        # Load DSO-specific GLD metadata.
+        file_name = 'Substation_' + str(dso_number) + '_glm_dict.json'
+        GLD_metadata = pt.load_json(case_path + agent_prefix + str(dso_number), file_name)
+
+        dso_scaling_factor = DSOmetadata['DSO_' + str(dso_number)]['scaling_factor']
+        # Determine tariff class for each meter.
+        # TODO: move this to case preparation and read directly from metadata.
+        commdata = pt.load_json(metadata_path, 'DSOT_commercial_metadata.json')
+        commbldglist = list(commdata['building_model_specifics'])
+        residbldglist = ['SINGLE_FAMILY', 'MOBILE_HOME', 'APARTMENTS', 'MULTI_FAMILY']
+
+        for each in GLD_metadata['billingmeters']:
+            GLD_metadata['billingmeters'][each]['tariff_class'] = None
+            for bldg in commbldglist:
+                if bldg in GLD_metadata['billingmeters'][each]['building_type']:
+                    GLD_metadata['billingmeters'][each]['tariff_class'] = 'commercial'
+            for bldg in residbldglist:
+                if bldg in GLD_metadata['billingmeters'][each]['building_type']:
+                    GLD_metadata['billingmeters'][each]['tariff_class'] = 'residential'
+            if GLD_metadata['billingmeters'][each]['building_type'] == 'UNKNOWN':
+                GLD_metadata['billingmeters'][each]['tariff_class'] = 'industrial'
+            if GLD_metadata['billingmeters'][each]['tariff_class'] is None:
+                raise Exception('Tariff class was not successfully determined for meter ' + each)
+
+        # Placeholder: add participation status to customer metadata.
+        # TODO: move this to case preparation and store in GLD metadata.
+        agent_file_name = 'Substation_' + str(dso_number) + '_agent_dict.json'
+        agent_metadata = pt.load_json(case_path + agent_prefix + str(dso_number), agent_file_name)
+
+        GLD_metadata = pt.customer_meta_data(GLD_metadata, agent_metadata, metadata_path)
+
+        # Preprocess retail agent data before meter-energy calculations.
+        # This writes intermediate HDF5 outputs.
+        if read_meters:
+            pt.tic()
+            for day_number in day_range:
+                retail_data_df, retail_index_df = \
+                    pt.load_retail_data(case_path, agent_prefix, str(dso_number), str(day_number), 'retail_site')
+                if retail_data_df is None:
+                    print(f'  Skipping day {day_number}: day-ahead market data not available (incomplete simulation day).')
+            print('Retail agent data processing complete: DSO ' + str(dso_number) + ', Month ' + month_name)
+            pt.toc()
+
+        # Calculate daily customer energy consumption and persist HDF5 outputs.
+        if read_meters:
+            pt.tic()
+            meter_df, energysum_df = rm.read_meters(
+                GLD_metadata,
+                case_path,
+                GLD_prefix,
+                str(dso_number),
+                day_range,
+                dso_scaling_factor,
+                metadata_path,
+                rate_scenario=rate_scenario
+            )
+            print('Meter reading complete: DSO ' + str(dso_number) + ', Month ' + month_name)
+            pt.toc()
+        # --------------- Calculate amenity scores --------------------------------
+        # Calculates HVAC/WH unmet-service metrics and writes HDF5 outputs.
+        if calc_amenity:
+            pt.tic()
+            amenity_df = pt.amenity_loss(GLD_metadata, case_path, GLD_prefix, str(dso_number), day_range)
+            print('Amenity scores complete: DSO ' + str(dso_number) + ', Month ' + month_name)
+            pt.toc()
+
+    def determine_baseline_demand_profiles(dso_number):
+        # Build hourly demand profile per meter for this month.
+        demand_df = rm.create_demand_profiles_for_each_meter(
+            case_path,
+            dso_number,
+            list(day_range),
+            save=False,
+        )
+
+        # Build baseline profiles (weekday/weekend segmentation).
+        bl_demand_df = rm.create_baseline_demand_profiles_for_each_meter(
+           demand_df,
+           dso_number,
+           "weekdays_and_weekends",
+           save=True,
+           save_path=case_path,
+        )
+
+    def determine_demand_profiles(dso_number):
+        # Build hourly demand profile per meter and save outputs.
+        demand_df = rm.create_demand_profiles_for_each_meter(
+            case_path,
+            dso_number,
+            list(day_range),
+            save=True,
+        )
+
+    # STEP 0 --------- Setup metric toggles -----------------------------
+    # Enable or disable each postprocessing product.
+    read_meters = True
+    calc_amenity = True
+    pop_stats = True
+    gen_plots = True
+    der_stack_plots = True
+    bldg_stack_plots = True
+    forecast_plots = True
+    create_baseline_demand_profiles = True
+    create_demand_profiles = True
+    # read_meters = False
+    # calc_amenity = False
+    # pop_stats = False
+    # gen_plots = False
+    # der_stack_plots = False
+    # bldg_stack_plots = False
+    # forecast_plots = False
+    # create_baseline_demand_profiles = False
+    # create_demand_profiles = False
+
+    system_case = 'generate_case_config.json'
+    # ------------ Resolve case paths and load case config -------------
+    config_path = os.getcwd()
+    case_config = pt.load_json(config_path, system_case)
+
+    # Identify the rate scenario
+    rate_scenario = None
+    if "rate" in case_config:
+        rate_scenario = case_config["rate"]
+
+    case_path = dirname(abspath(__file__)) + '/' + case_config['caseName']
+    metadata_path = "../" + case_config['data_path']
+
+    # Select the proper population metadata file based on scenario.
+    if rate_scenario is None:
+        dso_metadata_file = case_config["population_file"]
+    else:
+        dso_metadata_file = case_config["population_file_RECS"]
+
+    agent_prefix = '/DSO_'
+    GLD_prefix = '/Substation_'
+
+    # Ensure plots output directory exists.
+    check_folder = isdir(case_path + '/plots')
+    if not check_folder:
+        os.makedirs(case_path + '/plots')
+
+    # STEP 1 --------- DSO-specific postprocessing -----------------------
+
+    # --------------- Process billing meters ------------------------------
+    DSOmetadata = pt.load_json(metadata_path, dso_metadata_file)
+
+    first_data_day = 4  # First day to analyze; earlier days are treated as run-in.
+    discard_end_days = 1  # Number of trailing simulation days to discard.
+    num_sim_days = (datetime.strptime(case_config['EndTime'], '%Y-%m-%d %H:%M:%S') -
+                    datetime.strptime(case_config['StartTime'], '%Y-%m-%d %H:%M:%S')).days
+    month_dict = {1: "January", 2: "February", 3: "March", 4: "April", 5: "May", 6: "June", 7: "July",
+                  8: "August", 9: "September", 10: "October", 11: "November", 12: "December"}
+    month_num = (
+        datetime.strptime(case_config["StartTime"], "%Y-%m-%d %H:%M:%S")
+        + timedelta(days=first_data_day)
+    ).month
+    month_name = month_dict[month_num]
+    day_range = range(first_data_day, num_sim_days - discard_end_days + 1)
+
+    dso_range = []
+    for DSO in DSOmetadata:
+        if 'DSO' in DSO and DSOmetadata[DSO]['used']:
+            dso_range.append(int(DSO.split('_')[-1]))
+
+    processlist = []
+    for dso_num in dso_range:
+        processlist.append([DSO_specific_cost, dso_num])
+
+    if der_stack_plots:
+        for dso_num in dso_range:
+            processlist.append([DSO_der_loads, dso_num])
+
+    if bldg_stack_plots:
+        for dso_num in dso_range:
+            processlist.append([DSO_bldg_loads, dso_num])
+
+    if forecast_plots:
+        for day_num in day_range:
+            processlist.append([Daily_market_plot, day_num])
+
+    # market=false corresponds to Flat/TOU baseline-demand profile workflow.
+    if create_baseline_demand_profiles and (rate_scenario == "Flat" or rate_scenario == "TOU"):
+        for dso_num in dso_range:
+            processlist.append([determine_baseline_demand_profiles, dso_num])
+    # Empty string / EandC corresponds to DSOT demand-profile workflow.
+    if create_demand_profiles and (rate_scenario == "" or rate_scenario == "RND" or rate_scenario == "EandC"):
+        for dso_num in dso_range:
+            processlist.append([determine_demand_profiles, dso_num])
+
+    if len(processlist) > 0:
+        print(f'About to parallelize {len(processlist)} processes')
+        results = parallel(delayed(worker)(p[0], p[1]) for p in processlist)
+    else:
+        print('No  process list')
+        results = []
+
+    # STEP 2 --------- Month-level postprocessing (all DSOs/TSO) ----------
+
+    # ----------- Calculate population statistics and outputs -------------
+    if pop_stats:
+        bill = False
+        rci_df = pt.RCI_analysis(dso_range, case_path, case_path, metadata_path, dso_metadata_file, bill)
+
+    # ------------ Plot TSO generation and AMES data ----------------------
+    if gen_plots:
+        pt.generation_load_profiles(case_path, metadata_path, case_path, day_range, True)
+        pt.generation_load_profiles(case_path, metadata_path, case_path, day_range, False)
+        GenAMES_df = pt.generation_statistics(case_path, config_path, system_case, day_range, False)
+        GenPYPower_df = pt.generation_statistics(case_path, config_path, system_case, day_range, True)
+
+    if der_stack_plots:
+        pt.tic()
+        pt.der_stack_plot(dso_range, day_range, metadata_path, case_path)
+        print('DER Load Stack Data Aggregation and Plot complete')
+        pt.toc()
+
+    if bldg_stack_plots:
+        pt.bldg_stack_plot(dso_range, day_range, case_path, metadata_path)
+
+    if forecast_plots:
+        pt.dso_forecast_stats(dso_range, day_range, case_path, dso_metadata_file, metadata_path)
+
+    # STEP 3 ------- Annual aggregation and analysis ----------------------
+    # Performed separately in run_annual_postprocessing.py.
+
+
+post_process()

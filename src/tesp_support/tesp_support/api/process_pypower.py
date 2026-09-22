@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2024 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: process_pypower.py
 """Functions to plot bus and generator data from PYPOWER
@@ -7,15 +7,15 @@ Public Functions:
         :process_pypower: Reads the data and metadata, then makes the plots.  
 
 """
-import logging
 import json
+import logging
 import os
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 # Setting up logging
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 def read_pypower_metrics(path, name_root):
@@ -198,7 +198,7 @@ def plot_pypower(diction, title=None, save_file=None, save_only=False):
     ax[3, 0].set_title('Generator Prices')
     ax[3, 0].legend(loc='best')
 
-    for i in range(0, 4):
+    for i in range(4):
         ax[i, 1].plot(hrs, data_g[i, :, idx_g['PGEN_IDX']], color='blue', label='P')
         ax[i, 1].plot(hrs, data_g[i, :, idx_g['QGEN_IDX']], color='red', label='Q')
         ax[i, 1].set_ylabel(idx_g['PGEN_UNITS'] + '/' + idx_g['QGEN_UNITS'])

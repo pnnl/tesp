@@ -1,6 +1,6 @@
 # consensus Python files
 
-Copyright (c) 2022-2024 Battelle Memorial Institute
+Copyright (c) 2022-2025 Battelle Memorial Institute
 See LICENSE file at https://github.com/pnnl/tesp
 
 This is the Consensus code repository for Python-based components of TESP 

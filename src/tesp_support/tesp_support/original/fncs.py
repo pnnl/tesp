@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2023 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # file: fncs.py
 """ Functions that provide access from Python to the FNCS library
 
@@ -8,7 +8,7 @@ Notes:
     wrapper functions, these pass-through library calls are always needed:
 
     - *fncs.finalize*: call after the simulation completes
-    - *fncs.time_request (long)*: request the next time step; blocks execution of this process until FNCS grants the requested time. Then, the process should check for messages from FNCS.
+    - *fncs.time_request (long long)*: request the next time step; blocks execution of this process until FNCS grants the requested time. Then, the process should check for messages from FNCS.
 
     These pass-through calls are also available, but not used in TESP:
 
@@ -163,7 +163,7 @@ try:
                              ctypes.POINTER(ctypes.c_int),
                              ctypes.POINTER(ctypes.c_int)]
     _get_version.restype = None
-except:
+except Exception:
     pass
 
 def time_request(time):

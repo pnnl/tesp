@@ -1,4 +1,4 @@
-# Copyright (C) 2019-2023 Battelle Memorial Institute
+# Copyright (c) 2019-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: forecast.py
 
@@ -170,8 +170,8 @@ class weather_forecast:
         n = len(weather)
         error = numpy.zeros(n)
         ############## sampling the error distribution
-        ENV_l = list()
-        ENV_U = list()
+        ENV_l = []
+        ENV_U = []
         for i in range(n):
             if bias[i] > 0:
                 EL = -envelope[i] + bias[i]

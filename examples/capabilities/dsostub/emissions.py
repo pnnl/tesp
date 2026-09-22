@@ -1,7 +1,7 @@
 import json
+
 from gpiq.project import Project
 from gpiq.validation.project_validation import validate_all
-
 
 infile_name = "/tesp/lean_aug_8/sample.json"
 with open(infile_name, 'r', encoding='utf-8') as infile:

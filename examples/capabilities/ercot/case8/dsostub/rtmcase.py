@@ -1,5 +1,6 @@
 from numpy import array
 
+
 def rtmcase():
     ppc = {"version": '2'}
 

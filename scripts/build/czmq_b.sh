@@ -25,5 +25,5 @@ sed -i 's:Libs.private\: -lstdc++.*:Libs.private\: -lstdc++:g' libzmq.pc
 
 cd "${REPO_DIR}/czmq-4.2.1" || exit
 ./configure --prefix="${INSTDIR}" --with-liblz4=no 'CXXFLAGS=-O2 -w -std=gnu++14' 'CFLAGS=-O2 -w'
-make -j "$(grep -c "^processor" /proc/cpuinfo)"
+make -j "$(nproc)"
 make install

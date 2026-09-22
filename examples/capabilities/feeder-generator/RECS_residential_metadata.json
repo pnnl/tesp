@@ -3147,7 +3147,7 @@
         "Middle": 0.3,
         "Upper": 0.58
     },
-    "battery_percentage": {
+    "storage_percentage": {
         "Low": 0.12,
         "Middle": 0.3,
         "Upper": 0.58

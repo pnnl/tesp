@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2024 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: schedule_server.py
 """Implements simple server for providing access to common data to many agents
@@ -16,15 +16,17 @@ provides two simple APIs for other entities to extract the data.
 """
 
 import json
-import numpy as np
-import pandas as pd
 from multiprocessing.managers import SyncManager
 
-from .data import arguments
+import numpy as np
+import pandas as pd
+from pandas import DataFrame
+
+from tesp_support.api.data import arguments
 
 # Global for storing the data to be served
-sch_df_dict = {}
-cache_output = {}
+sch_df_dict: dict[str, DataFrame] = {}
+cache_output: dict[str, DataFrame] = {}
 
 #
 # power_sch = ["pv_power", "../solar/auto_run/solar_pv_power_profiles/8-node_dist_hourly_forecast_power.csv"]
@@ -52,7 +54,7 @@ cache_output = {}
 # Don't put big data in here since that will force it to be piped to the
 # other process when instantiated there, instead just return a portion of
 # the global data when requested.
-class DataProxy(object):
+class DataProxy:
     def __init__(self):
         pass
 
@@ -69,13 +71,13 @@ class DataProxy(object):
         idx = name + str(col_num)
         try:
             cache = cache_output[idx]
-        except:
+        except Exception:
             cache_output[idx] = [0, 0]
             cache = cache_output[idx]
 
         if cache[0] != time:
             cache[0] = time
-            cache[1] = sch_df_dict[name].loc[pd.date_range(time, periods=window_length, freq='H')]
+            cache[1] = sch_df_dict[name].loc[pd.date_range(time, periods=window_length, freq='h')]
         # print(name, " ", time)
         return cache[1][col_num]
 
@@ -88,9 +90,13 @@ class DataProxy(object):
             time (any): current time at which DA optimization occurs
             len_forecast (int): length of forecast in hours
         """
-        cache = cache_output[name]
+        # Alais 'bigbox' and 'stripmall' to 'retail', schedule
+        _name = name.replace('bigbox', 'retail')
+        _name = _name.replace('stripmall', 'retail')
+
+        cache = cache_output[_name]
         if cache[0] != time:
-            dataframe = sch_df_dict[name]
+            dataframe = sch_df_dict[_name]
             # First let's make sure that the year of time_begin is same as data frame and ignore seconds
             time_begin = time.replace(year=dataframe.index[0].year, second=0)
             time_stop = time_begin + pd.Timedelta(hours=len_forecast)
@@ -120,12 +126,14 @@ class DataProxy(object):
         idx = name + str(col_num)
         try:
             cache = cache_output[idx]
-        except:
+        except Exception:
             cache_output[idx] = [0, 0]
             cache = cache_output[idx]
+
         if cache[0] != time:
             cache[0] = time
             cache[1] = sch_df_dict[name].loc[pd.to_datetime(time)]
+        # print(name, " ", time)
         return cache[1][col_num]
 
 

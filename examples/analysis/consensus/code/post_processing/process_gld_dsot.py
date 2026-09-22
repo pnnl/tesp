@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2019 Battelle Memorial Institute
+# Copyright (c) 2017-2019 Battelle Memorial Institute
 # file: process_gld_dsot.py
 """Functions to plot data from GridLAB-D
 
@@ -6,16 +6,11 @@ Public Functions:
     :process_gld: Reads the data and metadata, then makes the plots.
 
 """
-import os
-import json
-import numpy as np
 import csv
+import json
+import os
 
-try:
-    import matplotlib as mpl
-    import matplotlib.pyplot as plt
-except:
-    pass
+import numpy as np
 
 
 def get_nominal_voltage(voltage):

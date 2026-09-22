@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2023 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # file: plots.py
 
 import json
@@ -7,7 +7,6 @@ import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
-
 import tesp_support.original.prep_eplus as pe
 
 outputFolder = './'

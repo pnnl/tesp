@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Created on Mon May 25 12:03:48 2020
 @author: mukh915
@@ -9,7 +8,6 @@ import logging
 import numpy as np
 import numpy.matlib as npm
 from scipy.interpolate import interp1d
-
 
 # logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
@@ -75,9 +73,9 @@ def consensus_RT(P, Q, PD, PG_initial, Ramp_rates, is_Ramp=False):
             print(jj)
             gamma0 = gamma0 / (jj ** 0.5)
         if jj > gamma_max:
-            logging.warning('Failed to reach Consensus (Single-step) !!! On iteration {} for Gamma {}'.format(kk, jj))
+            logging.warning(f'Failed to reach Consensus (Single-step) !!! On iteration {kk} for Gamma {jj}')
             f = open("Consensus_reports.txt", "a+")
-            f.write('Failed to reach Consensus (Single-step) !!!! On iteration {} for Gamma {}'.format(jj, kk))
+            f.write(f'Failed to reach Consensus (Single-step) !!!! On iteration {jj} for Gamma {kk}')
             break
 
         # ############ Updating Lamda in each iteration ################
@@ -96,18 +94,18 @@ def consensus_RT(P, Q, PD, PG_initial, Ramp_rates, is_Ramp=False):
             PG[i, kk + 1] = f_agent(lambda_temp[i])
 
             # ######### Ramping Constraints (Temporary) ###########
-            if is_Ramp and i < 5:
-                if abs(PG[i, kk + 1]) > abs(Q_Previous[i] + Ramp_rates[i]):
-                    PG[i, kk + 1] = (Q_Previous[i] + Ramp_rates[i])
-                elif abs(PG[i, kk + 1]) < abs(Q_Previous[i] - Ramp_rates[i]):
-                    PG[i, kk + 1] = (Q_Previous[i] - Ramp_rates[i])
+            # if is_Ramp and i < 5:
+            #     if abs(PG[i, kk + 1]) > abs(Q_Previous[i] + Ramp_rates[i]):
+            #         PG[i, kk + 1] = (Q_Previous[i] + Ramp_rates[i])
+            #     elif abs(PG[i, kk + 1]) < abs(Q_Previous[i] - Ramp_rates[i]):
+            #         PG[i, kk + 1] = (Q_Previous[i] - Ramp_rates[i])
 
             # ######### Bounding Constraints (Temporary) ###########
-            if (PG[i, kk + 1]) > np.max((Q[:, i])) and i < 5:
-                PG[i, kk + 1] = np.max((Q[:, i]))
+            if (PG[i, kk + 1]) > np.max(Q[:, i]) and i < 5:
+                PG[i, kk + 1] = np.max(Q[:, i])
                 # print('hit Limit for agent',i, kk)
-            elif (PG[i, kk + 1]) < np.min((Q[:, i])) and i < 5:
-                PG[i, kk + 1] = np.min((Q[:, i]))
+            elif (PG[i, kk + 1]) < np.min(Q[:, i]) and i < 5:
+                PG[i, kk + 1] = np.min(Q[:, i])
                 # print('hit Limit for agent',i, kk)
 
         # ###### check the difference between dual variables #######
@@ -130,7 +128,7 @@ def consensus_RT(P, Q, PD, PG_initial, Ramp_rates, is_Ramp=False):
     generation = PG[:, kk]
     print(jj, kk, DeltaP[:, kk], lambda_diff2)
     if jj < gamma_max:
-        logging.info('Successfully Reached Consensus (Single-step) !!! On iteration {} for Gamma {}'.format(kk, jj))
+        logging.info(f'Successfully Reached Consensus (Single-step) !!! On iteration {kk} for Gamma {jj}')
 
     # ### Plotting Lamda convergence  ###
     # fig, ax = plt.subplots()
@@ -182,7 +180,7 @@ def consensus_DA(P_agents_Multi, Q_agents_Multi, P_uncontrol, Q_initial, Ramp_ra
     jj = 0
     gamma_max = 10
     lambda_diff = 1
-    logging.debug('Solving Multi Step Consensus for {} steps and  {} Agents'.format(time_steps, N_agents))
+    logging.debug(f'Solving Multi Step Consensus for {time_steps} steps and  {N_agents} Agents')
 
     while np.any(abs(DeltaP[:, kk]) > rela_eps):
 
@@ -194,9 +192,9 @@ def consensus_DA(P_agents_Multi, Q_agents_Multi, P_uncontrol, Q_initial, Ramp_ra
             gamma0 = gamma0 / (jj ** 0.5)
 
         if jj > gamma_max:
-            logging.warning('Failed to reach Consensus (Multi-step) !!!! On iteration {} for Gamma {}'.format(jj, kk))
+            logging.warning(f'Failed to reach Consensus (Multi-step) !!!! On iteration {jj} for Gamma {kk}')
             f = open("Consensus_reports.txt", "a+")
-            f.write('Failed to reach Consensus (Multi-step) !!!! On iteration {} for Gamma {}'.format(jj, kk))
+            f.write(f'Failed to reach Consensus (Multi-step) !!!! On iteration {jj} for Gamma {kk}')
             break
 
         # ############ Updating Lamda in each iteration ################
@@ -223,10 +221,10 @@ def consensus_DA(P_agents_Multi, Q_agents_Multi, P_uncontrol, Q_initial, Ramp_ra
                     if is_Ramp:
                         PG_max = np.min((np.max((Q_agents_Multi[t, :, n])), (PG[t - 1, n, kk + 1] + Ramp_rates[n])))
                         # PG_min = np.max((np.min((Q_agents_Multi[t,:,n])), (PG[t-1,n,kk+1] - Ramp_rates[n]) ))
-                        PG_min = np.min((Q_agents_Multi[t, :, n]))
+                        PG_min = np.min(Q_agents_Multi[t, :, n])
                     else:
-                        PG_max = np.max((Q_agents_Multi[t, :, n]))
-                        PG_min = np.min((Q_agents_Multi[t, :, n]))
+                        PG_max = np.max(Q_agents_Multi[t, :, n])
+                        PG_min = np.min(Q_agents_Multi[t, :, n])
 
                     if abs(PG[t, n, kk + 1]) > PG_max:
                         PG[t, n, kk + 1] = PG_max
@@ -248,7 +246,7 @@ def consensus_DA(P_agents_Multi, Q_agents_Multi, P_uncontrol, Q_initial, Ramp_ra
 
     print(jj, kk, DeltaP[:, kk])
     if jj < gamma_max:
-        logging.info('Successfully Reached Consensus (Multi-step) !!!! On iteration {} for Gamma {}'.format(kk, jj))
+        logging.info(f'Successfully Reached Consensus (Multi-step) !!!! On iteration {kk} for Gamma {jj}')
 
     price_Multi = lambda_c[:, :, kk]
     generation_Multi = PG[:, :, kk]

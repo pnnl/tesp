@@ -2,7 +2,7 @@ ARG DOCKER_VER
 ARG TAG=$DOCKER_VER
 
 # Build runtime image
-FROM cosim-build:tesp_$TAG AS cosim-cplex
+FROM tesp-build:tesp_$TAG AS tesp-cplex
 
 ARG SIM_USER
 ARG SIM_GRP

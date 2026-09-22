@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2023 Battelle Memorial Institute
+# Copyright (c) 2018-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: TMYtoEPW.py
 """Functions to convert Typical Meteorological Year data for EnergyPlus
@@ -220,7 +220,7 @@ def convert_tmy2_to_epw(in_file_root, out_file_root=None):
                     (drybulb + 273) * (drybulb + 273) * (drybulb + 273) * (drybulb + 273))
         #     if i==1:
         #       print ('HorzIRSky',HorzIRSky,'!')
-        temp = temp + ',{:.3f}'.format(HorzIRSky)
+        temp = temp + f',{HorzIRSky:.3f}'
         GloHorzRad = float(lines[i][17:21])
         temp = temp + ',' + str(GloHorzRad)
         DirNormRad = float(lines[i][23:27])

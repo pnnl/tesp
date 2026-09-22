@@ -5,12 +5,11 @@
 # @Last modified time: 2021-12-07T11:40:02-08:00
 
 
+import lca_standard_graphs as lsg
 import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
 import numpy as np
 import pandas as pd
-
-import lca_standard_graphs as lsg
+from matplotlib import ticker
 
 base_dir = '.'
 accounting_table_final = pd.read_csv(base_dir + '/SGIP1_accounting_table.csv')

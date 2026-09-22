@@ -43,10 +43,10 @@ for arg in $$1 ; do
 # check for subdirectories e.g. lib,include
     AS_IF([test "x$fncs_arg_parse_ok" = xno],
         [AS_IF([test "x$fncs_arg_parse_sizeof_voidp" = x8],
-            [AS_IF([test -d $arg/lib64],    [$3="$$3 -L$arg/lib64"; fncs_arg_parse_ok=yes],
-                   [test -d $arg/lib],      [$3="$$3 -L$arg/lib"; fncs_arg_parse_ok=yes])
-             AS_IF([test -d $arg/include64],[$4="$$4 -I$arg/include64"; fncs_arg_parse_ok=yes],
-                   [test -d $arg/include],  [$4="$$4 -I$arg/include"; fncs_arg_parse_ok=yes])],
+            [AS_IF([test -d $arg/lib],      [$3="$$3 -L$arg/lib"; fncs_arg_parse_ok=yes],
+                   [test -d $arg/lib64],    [$3="$$3 -L$arg/lib64"; fncs_arg_parse_ok=yes])
+             AS_IF([test -d $arg/include],  [$4="$$4 -I$arg/include"; fncs_arg_parse_ok=yes],
+                   [test -d $arg/include64],[$4="$$4 -I$arg/include64"; fncs_arg_parse_ok=yes])],
             [AS_IF([test -d $arg/lib],      [$3="$$3 -L$arg/lib"; fncs_arg_parse_ok=yes])
              AS_IF([test -d $arg/include],  [$4="$$4 -I$arg/include"; fncs_arg_parse_ok=yes])])])
 # $arg still unknown, look for "lib" and "include" anywhere...

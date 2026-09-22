@@ -58,7 +58,7 @@ def buildFNSStopology():
 
     """
     # G = nx.DiGraph()
-    nodeCoord = dict()
+    nodeCoord = {}
     distanceUnit = 'Km'
     capacityUnit = "Mbps"
     leafNum = 2
@@ -171,11 +171,11 @@ def plotTopology(topo):
     # print(wid)
     # print(list(wid))
     nx.draw_networkx_edges(topo, pos=pos1, edge_color='blue', width=list(wid), alpha=1)
-    '''
+    """
     plt.subplot(132)
     nx.draw(G, pos = nx.circular_layout(G), node_color = 'green', edge_color = 'blue', with_labels = True)
   
     plt.subplot(133)
     nx.draw(G, pos = nx.spectral_layout(G), node_color = 'magenta', edge_color = 'orange', with_labels = True)
-    '''
+    """
     plt.show()

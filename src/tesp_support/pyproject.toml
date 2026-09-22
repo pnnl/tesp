@@ -1,6 +1,6 @@
 [build-system]
-requires = ['setuptools']
-build-backend = 'setuptools.build_meta'
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "tesp_support"
@@ -15,23 +15,24 @@ maintainers = [
 ]
 description = "Python APIs for the Transactive Energy Simulation Platform"
 readme = "README.rst"
-license = {file = "LICENSE"}
+license = "BSD-3-Clause"
+license-files = ["LICEN[S]E"]
 keywords = ["power system", "transactive", "energy"]
 requires-python = ">=3.10"
 dependencies = [
-    "importlib-resources~=6.4.5",
-    "h5py>=3.12.1",
-    "helics~=3.5.3",
-    "pandas~=2.2.3",
-    "numpy~=1.26.4",
-    "scipy~=1.14.1",
-    "matplotlib~=3.9.2",
-    "networkx~=3.4.2",
-    "pyjson5~=1.6.7",
-    "PYPOWER==5.1.16",
-    "pyutilib==6.0.0",
-    "Pyomo==6.5.0",
-    "psst~=0.1.1a0"
+    "importlib-resources~=7.1.0",
+    "h5py~=3.16.0",
+    "helics~=3.6.1",
+    "numpy~=2.5.2",
+    "pandas~=3.0.5",
+    "scipy~=1.18.1",
+    "matplotlib~=3.11.1",
+    "networkx~=3.6.1",
+    "pyjson5~=2.0.1",
+    "pypower~=5.1.21",
+    "pyutilib~=6.0.0",
+    "pyomo~=6.10.1",
+#    "psst~=0.1.10"
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -39,7 +40,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "Intended Audience :: Education",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: BSD License",
     "Natural Language :: English",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
@@ -62,6 +62,7 @@ api = ["*"]
 [project.scripts]
 tesp_components = "tesp_support.api.data:tesp_component"
 schedule_server = "tesp_support.api.schedule_server:main"
+tesp_support = "tesp_support._commands:tesp_support"
 
 [tool.pytest.ini_options]
 testpaths = ["test"]

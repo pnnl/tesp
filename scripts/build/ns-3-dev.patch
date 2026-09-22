@@ -1,0 +1,45 @@
+diff --git a/src/network/utils/bit-deserializer.h b/src/network/utils/bit-deserializer.h
+index 01d5c2a15..db936cb02 100644
+--- a/src/network/utils/bit-deserializer.h
++++ b/src/network/utils/bit-deserializer.h
+@@ -23,6 +23,7 @@
+ 
+ #include <vector>
+ #include <deque>
++#include <cstdint>
+ 
+ namespace ns3 {
+ 
+diff --git a/src/network/utils/bit-serializer.h b/src/network/utils/bit-serializer.h
+index acaf1feaf..e75df51e0 100644
+--- a/src/network/utils/bit-serializer.h
++++ b/src/network/utils/bit-serializer.h
+@@ -22,6 +22,7 @@
+ #define BITSERIALIZER_H_
+ 
+ #include <vector>
++#include <cstdint>
+ 
+ namespace ns3 {
+ 
+diff --git a/src/wifi/model/block-ack-type.h b/src/wifi/model/block-ack-type.h
+index 07b21fb43..51e77d590 100644
+--- a/src/wifi/model/block-ack-type.h
++++ b/src/wifi/model/block-ack-type.h
+@@ -15,7 +15,7 @@
+  * along with this program; if not, write to the Free Software
+  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  *
+- * Author: Sébastien Deronne <sebastien.deronne@gmail.com>
++ * Author: S��bastien Deronne <sebastien.deronne@gmail.com>
+  */
+ 
+ #ifndef BLOCK_ACK_TYPE_H
+@@ -23,6 +23,7 @@
+ 
+ #include <ostream>
+ #include <vector>
++#include <cstdint>
+ 
+ namespace ns3 {
+ 

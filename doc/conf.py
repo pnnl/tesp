@@ -48,7 +48,8 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.napoleon',
               'sphinx.ext.todo',
               'sphinx-jsonschema',
-              'sphinxcontrib.bibtex'
+              'sphinxcontrib.bibtex',
+              'sphinxcontrib.mermaid'
               ]
 
 bibtex_bibfiles = ['./references/refs.bib']
@@ -68,7 +69,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'TESP'
-copyright = '2017-2023 Battelle Memorial Institute'
+copyright = '2017-2025 Battelle Memorial Institute'
 author = 'Pacific Northwest National Laboratory'
 
 # The version info for the project you're documenting, acts as replacement for

@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2023 Battelle Memorial Institute
+# Copyright (c) 2018-2025 Battelle Memorial Institute
 # file: prep_precool.py
 """Writes the precooling agent and GridLAB-D metadata for NIST TE Challenge 2 example
  
@@ -9,7 +9,7 @@ import json
 
 import numpy as np
 
-from tesp_support.api.helpers import HelicsMsg
+from ..api.helpers import HelicsMsg
 
 
 def prep_precool(name_root, time_step=15):
@@ -89,9 +89,8 @@ def prep_precool(name_root, time_step=15):
                     house_name = lst[1].strip(';')
                 if lst[0] == 'parent':
                     meter_name = lst[1].strip(';')
-                if lst[0] == 'cooling_system_type':
-                    if lst[1].strip(';') == 'ELECTRIC':
-                        isELECTRIC = True
+                if lst[0] == 'cooling_system_type' and lst[1].strip(';') == 'ELECTRIC':
+                    isELECTRIC = True
         elif len(lst) == 1:
             if inHouses:
                 inHouses = False
@@ -104,17 +103,17 @@ def prep_precool(name_root, time_step=15):
                     deadband = np.random.uniform(1, 2)
                     toffset = np.random.uniform(toffset_min, toffset_max)
                     houses[house_name] = {'meter': meter_name,
-                                          'night_set': float('{:.3f}'.format(night_set)),
-                                          'day_set': float('{:.3f}'.format(day_set)),
-                                          'day_start_hour': float('{:.3f}'.format(day_start)),
-                                          'day_end_hour': float('{:.3f}'.format(day_end)),
-                                          'deadband': float('{:.3f}'.format(deadband)),
+                                          'night_set': float(f'{night_set:.3f}'),
+                                          'day_set': float(f'{day_set:.3f}'),
+                                          'day_start_hour': float(f'{day_start:.3f}'),
+                                          'day_end_hour': float(f'{day_end:.3f}'),
+                                          'deadband': float(f'{deadband:.3f}'),
                                           'vthresh': vthresh, 'toffset': toffset}
                     # FNCS messages
-                    print('  ' + house_name + '#V1:', file=yp)
+                    print('  ' + house_name + '/measured_voltage:', file=yp)
                     print('    topic: ' + gld_federate + '/' + meter_name + '/measured_voltage_1', file=yp)
                     print('    default: 120', file=yp)
-                    print('  ' + house_name + '#Tair:', file=yp)
+                    print('  ' + house_name + '/air_temperature:', file=yp)
                     print('    topic: ' + gld_federate + '/' + house_name + '/air_temperature', file=yp)
                     print('    default: 80', file=yp)
                     print('publish \"commit:' + meter_name + '.measured_voltage_1 -> ' + meter_name + '/measured_voltage_1\";', file=cp)
@@ -124,18 +123,18 @@ def prep_precool(name_root, time_step=15):
                     print('subscribe \"precommit:' + house_name + '.thermostat_deadband <- precool/' + house_name + '_thermostat_deadband\";', file=cp)
 
                     # HELICS messages
-                    cool.subs_n(gld_federate + '/' + house_name + '#Tair', "double")
+                    cool.subs_n(gld_federate + '/' + house_name + '/air_temperature', "double")
                     cool.pubs_n(False, house_name + "/cooling_setpoint", "double")
                     cool.pubs_n(False, house_name + "/heating_setpoint", "double")
                     cool.pubs_n(False, house_name + "/thermostat_deadband", "double")
-                    gld.pubs(False, house_name + "#Tair", "double", house_name, "air_temperature")
+                    gld.pubs(False, house_name + "/air_temperature", "double", house_name, "air_temperature")
                     gld.subs(cool_federate + "/" + house_name + "/cooling_setpoint", "double", house_name, "cooling_setpoint")
                     gld.subs(cool_federate + "/" + house_name + "/heating_setpoint", "double", house_name, "heating_setpoint")
                     gld.subs(cool_federate + "/" + house_name + "/thermostat_deadband", "double", house_name, "thermostat_deadband")
                     if house_name+meter_name not in pubSubMeters:
                         pubSubMeters.add(house_name+meter_name)
-                        cool.subs_n(gld_federate + "/" + house_name + "#V1", "complex")
-                        gld.pubs(False, house_name + "#V1", "complex", meter_name, "measured_voltage_1")
+                        cool.subs_n(gld_federate + "/" + house_name + "/measured_voltage", "complex")
+                        gld.pubs(False, house_name + "/measured_voltage", "complex", meter_name, "measured_voltage_1")
 
                     isELECTRIC = False
 

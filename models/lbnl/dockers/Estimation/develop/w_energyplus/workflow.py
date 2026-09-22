@@ -132,7 +132,7 @@ def param_estimation(model_param, ADD_UNIT_EP_TZONE):
     emulation.collect_measurements(estimation_start_time, estimation_stop_time)
 
     # Add units to EnergyPlus output variables
-    if ((ADD_UNIT_EP_TZONE == True) and obs_var == 'Tzone'):
+    if ((ADD_UNIT_EP_TZONE) and obs_var == 'Tzone'):
         print("==========WARNING: When using E+FMU, if the output of E+ is the "
               "zone temperature, then the next lines will add the unit degC to the "
               "output results. This is only valid for E+ and an output which is Tzone.")

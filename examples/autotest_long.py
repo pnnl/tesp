@@ -1,12 +1,12 @@
-# Copyright (c) 2017-2023 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # file: autotest_long.py
 """Runs the longer set of tesp test cases;
 SGIP1, NIST TE Challenge 2, ERCOT 8-Bus with PSST
 """
 
 import os
-import sys
 import subprocess
+import sys
 
 import tesp_support.api.test_runner as tr
 
@@ -97,9 +97,8 @@ def dso_stub_test():
 
 if __name__ == '__main__':
     b_helics = True
-    if len(sys.argv) > 1:
-        if sys.argv[1] == "FNCS":
-            b_helics = False
+    if len(sys.argv) > 1 and sys.argv[1] == "FNCS":
+        b_helics = False
 
     tr.init_tests()
     tesp_path = os.path.expandvars('$TESPDIR/examples')

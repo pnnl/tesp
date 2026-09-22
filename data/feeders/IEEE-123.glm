@@ -50,7 +50,7 @@ object underground_line_conductor {
 	 shield_resistance 0.000000;
 }
 
-// Phase Conductor for triplex 4/0 AA
+// Phase Conductor for triplex 4/0_aa
 object triplex_line_conductor { 
      name tlc1000; 
      resistance 0.48; 

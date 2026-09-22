@@ -1,11 +1,11 @@
-# Copyright (C) 2021-2023 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # file: pptest.py
 
 import importlib.util
 import json
 import shutil
 from datetime import datetime
-from os import path, makedirs
+from os import makedirs, path
 
 ppdir = path.expandvars('$TESPDIR/models/pypower/')
 

@@ -1,39 +1,45 @@
 import os
-from os.path import dirname, abspath, isdir
-
 from datetime import datetime, timedelta
+from os.path import abspath, dirname, isdir
+
+import tesp_support.dsot.dso_rate_making as rm
+import tesp_support.dsot.plots as pt
 from joblib import Parallel, delayed
 
-import tesp_support.dsot.plots as pt
-import tesp_support.dsot.dso_rate_making as rm
-
-''' This script runs key postprocessing functions that warrant execution after every simulation run.  
+""" This script runs key postprocessing functions that warrant execution after every simulation run.  
 It has the following elements:
     0. Setup - establish locations and meta data files etc.
     1. Postprocessing that is required per DSO (and can be parallelized)
     2. Postprocessing that is required across all DSOs and is desired for every run
     3. Postprocessing that is needed over the entire year (and will likely need be executed on Constance).
     4. Postprocessing that compares cases (and will likely need to be executed on Constance).
-'''
 
-# Supported backends are:
-# “loky” used by default, can induce some communication and memory overhead when exchanging input and
-#    output data with the worker Python processes.
-# “multiprocessing” previous process-based backend based on multiprocessing.Pool. Less robust than loky.
-# “threading” is a very low-overhead backend, but it suffers from the Python Global Interpreter Lock
-#    if the called function relies a lot on Python objects. “threading” is mostly useful when the execution
-#    bottleneck is a compiled extension that explicitly releases the GIL (for instance a Cython loop
-#    wrapped in a “with nogil” block or an expensive call to a library such as NumPy).
-# finally, you can register backends by calling register_parallel_backend.
-#   This will allow you to implement a backend of your liking.
+Supported backends are:
+    - “loky” used by default, can induce some communication and memory overhead 
+    when exchanging input and output data with the worker Python processes.
+    - “multiprocessing” previous process-based backend based on multiprocessing.
+    - Pool. Less robust than loky.
+    - “threading” is a very low-overhead backend, but it suffers from the Python
+     Global Interpreter Lock if the called function relies a lot on Python 
+     objects. “threading” is mostly useful when the execution bottleneck is a 
+     compiled extension that explicitly releases the GIL (for instance a Cython 
+     loop wrapped in a “with nogil” block or an expensive call to a library such
+     as NumPy).
+    - Finally, you can register backends by calling register_parallel_backend.
+    This will allow you to implement a backend of your liking.
+"""
 _NUM_CORE = -1
 _backend = 'loky'  # 'multiprocessing'  had some problems
 _verbose = 10
 
 
 def post_process():
-    # Document on joblib
-    # https://joblib.readthedocs.io/en/latest/generated/joblib.Parallel.html#joblib.Parallel
+    """Document on joblib (Helper class for readable parallel mapping):
+
+    https://joblib.readthedocs.io/en/latest/generated/joblib.Parallel.html#joblib.Parallel
+
+    """
+
     parallel = Parallel(n_jobs=_NUM_CORE, backend=_backend, verbose=_verbose)
 
     def worker(arg1, arg2):
@@ -62,9 +68,7 @@ def post_process():
         dso_scaling_factor = DSOmetadata['DSO_' + str(dso_number)]['scaling_factor']
         # Determine tariff rate class of each meter up front ---- This won't be needed once this is done in prepare case
         commdata = pt.load_json(metadata_path, 'DSOT_commercial_metadata.json')
-        commbldglist = []
-        for bldg in commdata['building_model_specifics']:
-            commbldglist.append(bldg)
+        commbldglist = list(commdata['building_model_specifics'])
         residbldglist = ['SINGLE_FAMILY', 'MOBILE_HOME', 'APARTMENTS', 'MULTI_FAMILY']
 
         for each in GLD_metadata['billingmeters']:
@@ -217,12 +221,11 @@ def post_process():
     day_range = range(first_data_day, num_sim_days - discard_end_days + 1)
 
     dso_range = []
-    for DSO in DSOmetadata.keys():
-        if 'DSO' in DSO:
-            if DSOmetadata[DSO]['used']:
-                dso_range.append(int(DSO.split('_')[-1]))
+    for DSO in DSOmetadata:
+        if 'DSO' in DSO and DSOmetadata[DSO]['used']:
+            dso_range.append(int(DSO.split('_')[-1]))
 
-    processlist = list()
+    processlist = []
     for dso_num in dso_range:
         processlist.append([DSO_specific_cost, dso_num])
 
@@ -248,13 +251,13 @@ def post_process():
             processlist.append([determine_demand_profiles, dso_num])
 
     if len(processlist) > 0:
-        print('About to parallelize {} processes'.format(len(processlist)))
+        print(f'About to parallelize {len(processlist)} processes')
         results = parallel(delayed(worker)(p[0], p[1]) for p in processlist)
     else:
         print('No  process list')
         results = []
 
-    # STEP 2 --------- Month Specific (all DSOs/TSO) Post-Processing -------------------------
+    # STEP 2 --------- Month Specific (all DSOs/TSO) Post-Processing -----------
 
     # ----------- CALCULATE POPULATION STATISTICS AND OUTPUT ---------------------------
     if pop_stats:

@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2024 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: map_results.py
 import os
@@ -14,19 +14,14 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 
-from .plots import load_json, load_ames_data, load_gen_data
+from .plots import load_ames_data, load_gen_data, load_json
 
 
 def bulk_system_map_plot(dataPath, configPath, shapePath, case_config_path, case_config_name, day_range, hour,
                          contour_index, ercot200, realtime, showplot=False, plotdata=True, dispatchgenonly=True):
-    """ Creates a comparison of change in energy consumption and anemities for all customers:
-        case_data (str): path location for reference case with annual energy and amenity data
-        comp_data (str): path location for comparison case with annual energy and amenity data
-        case_path (str): path location for reference case with simulation metadata for agents/GLD etc.
-        comp_path (str): path location for comparison case with simulation metadata for agents/GLD etc.
-        dso_num (str): dso to be plotted
-        month (str): month of annual analysis to be plotted.  set to 'sum' to plot aggregate of all data.
-        slice (str): sub set of data to be plotted (e.g. 'residential', 'office', 'HVAC'
+    """ Creates a comparison of change in energy consumption and amenities for all customers
+
+
     Returns:
         saves plot to file.
         """
@@ -343,8 +338,8 @@ def bulk_system_map_plot(dataPath, configPath, shapePath, case_config_path, case
             i = 0
             for gen in case_config_data['gen']:
                 gen_type = case_config_data['genfuel'][i][1]
-                for key in fuel_key:
-                    if fuel_key[key] in gen_type:
+                for key, value in fuel_key.items():
+                    if value in gen_type:
                         gen_fuel = key
                 gen_id = ' ' + gen_fuel + str(case_config_data['genfuel'][i][2])
                 if gen[0] > 200:
@@ -439,7 +434,7 @@ if __name__ == '__main__':
     # keeping to integer hours allows RT and DA to be compared at same time
     hr = 14
 
-    data_path = 'C:/Users/reev057\PycharmProjects/DSO+T/Data/Simdata/DER2/v1.1-1557-gc2432db4/2016_08_pv'
+    data_path = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/v1.1-1557-gc2432db4/2016_08_pv'
     config_path = 'C:/Users/reev057/PycharmProjects/TESP/src/ercot/bulk_system/'
     shape_path = 'C:/Users/reev057/PycharmProjects/DSO+T/Texas_County_Boundaries/GOVTUNIT_Texas_State_Shape/Shape/'
     case_config_path = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/dsot_v3'
@@ -448,7 +443,7 @@ if __name__ == '__main__':
     case_config_name = '200_system_case_config.json'
 
     contour_idx = 0
-    ''' Contour Index = Title , Units
+    """ Contour Index = Title , Units
     0 = 'Wholesale LMP', 'LMP ($/MW-hr)'
     1 = 'Generation Utilization', 'Generation Fraction (-)' (Fraction of generation capacity dispatched at each bus)
     2 = 'Generation Load', 'Gen Load (MW)'  (Generator capacity dispatched at each bus)
@@ -459,13 +454,13 @@ if __name__ == '__main__':
     7 = 'Load Fraction', 'Load Fraction (-)' (fraction of total system load that resides at each bus)
     8 = 'Renewable Capacity', 'Renew Capacity (MW)' Total renewable capacity installed at each bus
     9 = 'Renewable Generation', 'Renew Gen (MW)' Total renewable generation produced at each bus
-    '''
+    """
     # index_range = range(0,6)
     # for contour_idx in index_range:
     #   bulk_system_map_plot(data_path, config_path, shape_path, case_config_path, case_config_name, dayrange, hr, contour_idx, ercot_200, real_time)
 
     contour_idx = 0
-    hr_range = range(0, 24)
+    hr_range = range(24)
     for hr in hr_range:
         real_time = True
         bulk_system_map_plot(data_path, config_path, shape_path, case_config_path, case_config_name, dayrange, hr,

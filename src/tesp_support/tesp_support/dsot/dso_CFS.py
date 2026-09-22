@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2024 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: dso_CFS.py
 """
@@ -10,8 +10,7 @@
 import numpy as np
 import pandas as pd
 
-import tesp_support.dsot.dso_helper_functions as dso_helper
-
+from ..dsot import dso_helper_functions as dso_helper
 
 # This dso_CFS function calculates cash flow statement ...
 
@@ -1129,7 +1128,7 @@ def dso_CFS(
 
 
 if __name__ == '__main__':
-    '''
+    """
     dso_numbers = [1]
     # dso_names = ['dso_1', 'dso_2', 'dso_3']
 
@@ -1158,4 +1157,4 @@ if __name__ == '__main__':
         DSO_Cash_Flows_dict, DSO_Wholesale_Energy_Purchase_Summary, DSO_Cash_Flows_composite = \
         dso_CFS(config_path, DSOmetadata, dso_num, DSO_base_case_peak_demand,
                 DSO_Cash_Flows, DSO_Revenues_and_Energy_Sales)
-    '''
+    """

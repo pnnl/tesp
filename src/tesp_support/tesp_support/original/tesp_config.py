@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2023 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # file: tesp_config.py
 """Presents a GUI to configure and package TESP cases
 
@@ -11,15 +11,12 @@ References:
 import csv
 import json
 import os
-
 import tkinter as tk
-import tkinter.ttk as ttk
-from tkinter import filedialog
-from tkinter import messagebox
+from tkinter import filedialog, messagebox, ttk
 
 import numpy as np
 
-from tesp_support.api.data import tesp_share, weather_path
+from ..api.data import tesp_share, weather_path
 
 config = {'BackboneFiles': {},
           'FeederGenerator': {},
@@ -347,38 +344,41 @@ class TespConfigGUI:
         f.columnconfigure(2, weight=1)
         return f
 
-    def ReloadFrame(self, f, vars):
+    @staticmethod
+    def ReloadFrame(f, variables):
         """ Helper function to recreate the GUI page controls and load them with values
 
         Args:
           f (Frame): the GUI page to reload
-          vars (dict): the section of case configuration with values to be loaded
+          variables (dict): the section of case configuration with values to be loaded
         """
-        for i in range(len(vars)):
+        for i in range(len(variables)):
             ent = f.grid_slaves(row=i + 1, column=1)[0]
             ent.delete(0, tk.END)
-            ent.insert(0, vars[i][1])
+            ent.insert(0, variables[i][1])
 
-    def mcSample(self, var):
+    @staticmethod
+    def mcSample(var):
         """ Return an appropriate random value for each Monte Carlo variable choice
 
         Args:
           var (str): one of ElectricCoolingParticipation, ThermostatRampMid, ThermostatOffsetLimitMid, WeekdayEveningStartMid or WeekdayEveningSetMid
         """
         if var == 'ElectricCoolingParticipation':
-            return '{:.3f}'.format(np.random.uniform(0, 100))
+            return f'{np.random.uniform(0, 100):.3f}'
         elif var == 'ThermostatRampMid':
-            return '{:.3f}'.format(np.random.uniform(1.0, 4.0))
+            return f'{np.random.uniform(1.0, 4.0):.3f}'
         elif var == 'ThermostatOffsetLimitMid':
-            return '{:.3f}'.format(np.random.uniform(0, 6.0))
+            return f'{np.random.uniform(0, 6.0):.3f}'
         elif var == 'WeekdayEveningStartMid':
-            return '{:.3f}'.format(np.random.uniform(16.5, 18.0))
+            return f'{np.random.uniform(16.5, 18.0):.3f}'
         elif var == 'WeekdayEveningSetMid':
-            return '{:.3f}'.format(np.random.uniform(68.0, 74.0))
+            return f'{np.random.uniform(68.0, 74.0):.3f}'
         else:
-            return '{:.3f}'.format(np.random.uniform(0, 1))
+            return f'{np.random.uniform(0, 1):.3f}'
 
-    def mcBand(self, var):
+    @staticmethod
+    def mcBand(var):
         """ Find the band size corresponding to each Monte Carlo variable choice
 
         Args:
@@ -390,9 +390,7 @@ class TespConfigGUI:
             return 0.5
         elif var == 'ThermostatOffsetLimitMid':
             return 2.0
-        elif var == 'WeekdayEveningStartMid':
-            return 1.0
-        elif var == 'WeekdayEveningSetMid':
+        elif var == 'WeekdayEveningStartMid' or var == 'WeekdayEveningSetMid':
             return 1.0
         else:
             return 0.0
@@ -430,7 +428,8 @@ class TespConfigGUI:
         self.SizeMonteCarlo(n)
 
     # row 0 for dropdowns, 1 for update controls, 2 for column headers, 3 for range edits
-    def SizeMonteCarloFrame(self, f):
+    @staticmethod
+    def SizeMonteCarloFrame(f):
         """ Update the Monte Carlo page to match the number of shots and variables
 
         Args:
@@ -504,36 +503,38 @@ class TespConfigGUI:
             w2.grid(row=i + 2 + startRow, column=2, sticky=tk.NSEW)
             w3.grid(row=i + 2 + startRow, column=3, sticky=tk.NSEW)
 
-    def ReadFrame(self, f, vars):
+    @staticmethod
+    def ReadFrame(f, variables):
         """ Helper function that reads values from gridded GUI controls into the local case configuration
 
         Args:
           f (Frame): the GUI page to read
-          vars (dict): the local data structure to update
+          variables (dict): the local data structure to update
         """
         for w in f.grid_slaves():
             col = int(w.grid_info()['column'])
             row = int(w.grid_info()['row'])
-            if col == 1 and row > 0 and row <= len(vars):
+            if col == 1 and 0 < row <= len(variables):
                 val = w.get()
                 try:
                     tmp = int(val)
                     val = tmp
-                except:
+                except Exception:
                     try:
                         tmp = float(val)
                         val = tmp
-                    except:
+                    except Exception:
                         pass
-                section = vars[row - 1][3]
-                attribute = vars[row - 1][4]
+                section = variables[row - 1][3]
+                attribute = variables[row - 1][4]
                 config[section][attribute] = val
 
     def UpdateEMS(self, event):
         emsFile = 'emsFNCS/ems' + self.bldg_cb.get()
         self.update_entry(self.bldg_ems, emsFile)
 
-    def update_entry(self, ctl, val):
+    @staticmethod
+    def update_entry(ctl, val):
         ctl.delete(0, tk.END)
         ctl.insert(0, val)
 
@@ -584,8 +585,8 @@ class TespConfigGUI:
         band1 = 'Mid' in col1
         band2 = 'Mid' in col2
         band3 = 'Mid' in col3
-        numCases = int(
-            self.f7.children['rows'].get())  # what if user changed entry and didn't click Update...global numCases?
+        # what if user changed entry and didn't click Update...global numCases?
+        numCases = int(self.f7.children['rows'].get())
         for w in self.f7.grid_slaves():
             row = int(w.grid_info()['row'])
             col = int(w.grid_info()['column'])
@@ -609,9 +610,8 @@ class TespConfigGUI:
                 if col == 3 and use3:
                     val = float(w.get())
                     config['MonteCarloCase']['Samples3'][row - 5] = val
-        if not os.path.exists(tesp_share):
-            if not messagebox.askyesno('Continue to Save?', 'TESP Support Directory: ' + tesp_share + ' not found.'):
-                return
+        if not os.path.exists(tesp_share) and not messagebox.askyesno('Continue to Save?', 'TESP Support Directory: ' + tesp_share + ' not found.'):
+            return
         fname = filedialog.asksaveasfilename(initialdir='~/src/examples/te30',
                                              title='Save JSON Configuration to',
                                              defaultextension='json')
@@ -620,17 +620,18 @@ class TespConfigGUI:
             json.dump(config, op, ensure_ascii=False, indent=2)
             op.close()
 
-    def JsonToSection(self, jsn, vars):
+    @staticmethod
+    def JsonToSection(jsn, variables):
         """ Helper function that transfers a JSON file segment into GUI data structures
 
         Args:
           jsn (dict): the loaded JSON file
-          vars (dict): the local data structure
+          variables (dict): the local data structure
         """
-        for i in range(len(vars)):
-            section = vars[i][3]
-            attribute = vars[i][4]
-            vars[i][1] = jsn[section][attribute]
+        for i in range(len(variables)):
+            section = variables[i][3]
+            attribute = variables[i][4]
+            variables[i][1] = jsn[section][attribute]
             config[section][attribute] = jsn[section][attribute]
 
     def OpenConfig(self):

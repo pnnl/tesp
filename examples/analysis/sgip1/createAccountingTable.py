@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2023 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # file: createAccountingTable.py
 
 # @Author: Allison Campbell <camp426>
@@ -9,11 +9,9 @@
 
 import numpy as np
 import pandas as pd
-
 import tesp_support.api.process_gld as pg
-import tesp_support.original.process_agents as pa
 import tesp_support.api.process_pypower as pp
-
+import tesp_support.original.process_agents as pa
 
 accounting_table = \
     pd.DataFrame(['Wholesale electricity purchases for test feeder (MWh/d)',

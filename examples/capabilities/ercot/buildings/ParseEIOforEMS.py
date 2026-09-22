@@ -23,10 +23,10 @@ for row in rdr:
     zones[zname] = {'zvol':zvol, 'Hsched': Hsched, 'Csched': Csched, 'Helem': Helem, 'Celem': Celem}
     nzones += 1
     volume += zvol
-    print ('{:32s} {:9.2f} {:14s} {:14s} {:14s} {:14s}'.format (zname, zvol, Hsched, Csched, Helem, Celem))
+    print (f'{zname:32s} {zvol:9.2f} {Hsched:14s} {Csched:14s} {Helem:14s} {Celem:14s}')
 fp.close()
 
-print ('{:3d} zones total {:6.2f} m3'.format(nzones,volume))
+print (f'{nzones:3d} zones total {volume:6.2f} m3')
 print ('Heating Coils:', hcoils)
 print ('Cooling Coils:', ccoils)
 

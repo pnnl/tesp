@@ -1,13 +1,14 @@
-from TransmissionMetricsProcessor import TransmissionMetricsProcessor
 import os
+
 import matplotlib.pyplot as plt
+from TransmissionMetricsProcessor import TransmissionMetricsProcessor
 
 plt.rc('xtick', labelsize=22)
 plt.rc('ytick', labelsize=22)
 plt.rc('legend', fontsize=22)
 plt.rc('axes', labelsize=22)
 
-d = r'''../SGIP1new'''
+d = '../SGIP1new'
 subdir = [os.path.join(d, o) for o in os.listdir(d) if os.path.isdir(os.path.join(d, o))]
 print(subdir)
 
@@ -26,7 +27,7 @@ all_gen_metrics_eventDay = {}
 colors = {0: 'k', 1: 'b', 2: 'r', 3: 'g', 4: 'm', 5: 'y'}
 time_interval_hours = 5 / 60
 
-for i in range(0, len(subdir)):
+for i in range(len(subdir)):
     case_path = subdir[i] + "/"
     case_name = folder_names[i]  # 'SGIP1a'
     tmp = TransmissionMetricsProcessor()

@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2023 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # file: fncsPYPOWER.py
 """ PYPOWER solutions under control of FNCS for te30 and sgip1 examples
 
@@ -277,7 +277,7 @@ def pypower_loop (casefile, rootname):
       else:
         gld_load = parse_mva (value) # actual value, may not match unresp + resp load
         feeder_load = float(gld_load[0]) * load_scale
-    if new_bid == True:
+    if new_bid:
       dummy = 2
 #      print('**Bid', ts, unresp, resp_max, resp_deg, resp_c2, resp_c1)
 
@@ -331,7 +331,7 @@ def pypower_loop (casefile, rootname):
           bus[newidx,2] += feeder_load
       gen[4][9] = -resp_max
       res = pp.runopf(ppc, ppopt_market)
-      if res['success'] == False:
+      if not res['success']:
         conv_accum = False
       opf_bus = deepcopy (res['bus'])
       opf_gen = deepcopy (res['gen'])
@@ -366,7 +366,7 @@ def pypower_loop (casefile, rootname):
     gen[4,1] = 0 # opf_gen[4, 1]
     gen[4,9] = 0
     rpf = pp.runpf(ppc, ppopt_regular)
-    if rpf[0]['success'] == False:
+    if not rpf[0]['success']:
       conv_accum = False
     bus = rpf[0]['bus']
     gen = rpf[0]['gen']

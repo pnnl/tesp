@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2023 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 import json
 
 import matplotlib.pyplot as plt
@@ -106,8 +106,8 @@ def process_pypower(name_root):
             COV = 0.0
 
         print(key, row['bus'], row['bustype'], row['genfuel'],
-              '{:.4f}'.format(CF),
-              '{:.4f}'.format(COV))
+              f'{CF:.4f}',
+              f'{COV:.4f}')
         j = j + 1
 
     # display a plot 

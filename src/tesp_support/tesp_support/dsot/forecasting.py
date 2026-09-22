@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2024 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: forecasting.py
 """Class responsible for forecasting 
@@ -17,13 +17,13 @@ from copy import deepcopy
 from datetime import datetime, timedelta
 from math import cos, sin
 
-import glm
 import numpy as np
 import pandas as pd
 import pytz
+from pyglm import glm
 
+from ..api.schedule_client import DataClient
 from .hvac_agent import HVACDSOT
-from tesp_support.api.schedule_client import *
 
 
 class Forecasting:
@@ -79,7 +79,7 @@ class Forecasting:
         self.solar_direct_forecast = [0.0] * 48
         self.solar_diffuse_forecast = [0.0] * 48
 
-        self.NOerrors = bool(True)
+        self.NOerrors = True
         self.base_run_load = np.array([0.43, 0.41, 0.40, 0.39, 0.39, 0.40, 0.45, 0.45, 0.55, 0.80, 0.90, 0.98,
                                        0.99, 1.00, 1.00, 0.99, 0.98, 0.97, 0.97, 0.90, 0.70, 0.60, 0.55, 0.45,
                                        0.43, 0.41, 0.40, 0.39, 0.39, 0.40, 0.45, 0.45, 0.55, 0.80, 0.90, 0.98,
@@ -91,11 +91,11 @@ class Forecasting:
                                                   0.6, 0.5, 0.42, 0.41, 0.4, 0.4, 0.41, 0.42, 0.43, 0.43, 0.5,
                                                   0.7, 0.8, 0.85, 0.95])
 
-        self.retail_price_forecast = list()
+        self.retail_price_forecast = []
         self.firstRun = True
         # data = pd.read_csv("C:\\Users\\sing492\\OneDrive - PNNL\\Documents\\Projects\\TESP_DSOT\\Hvac Debug Ahmad\\Qi_individual.csv",
         #                        index_col=0)
-        # date_rng = pd.date_range(start='7/1/2013', end='7/10/2013', freq='H')
+        # date_rng = pd.date_range(start='7/1/2013', end='7/10/2013', freq='h')
         # df = pd.DataFrame(date_rng, columns=['date'])
         # df['solar_gain'] = data['solar_gain'].tolist()
         # df['internal_gain'] = data['internal_gain'].tolist()
@@ -121,8 +121,8 @@ class Forecasting:
         """ Initialize the data frame for one year
 
         Args:
-            start_time (datetime, str) : time in str format - DD/MM/YYY HH:MT:SS
-            end_time (datetime, str) : time in str format - DD/MM/YYY HH:MT:SS
+            start_time (datetime | str) : time in str format - DD/MM/YYY HH:MT:SS
+            end_time (datetime | str) : time in str format - DD/MM/YYY HH:MT:SS
         """
         # convert start_time and end_time to strings if they are in datetime
         if isinstance(start_time, datetime):
@@ -147,9 +147,9 @@ class Forecasting:
 
         Args:
             filename (str): name of glm file to be loaded
-            schedule_name (str): name of the schedule to be laoded
+            schedule_name (str): name of the schedule to be loaded
         """
-        print("Reading and constructing 1 year dataframe for {} schedule from {}".format(schedule_name, filename))
+        print(f"Reading and constructing 1 year dataframe for {schedule_name} schedule from {filename}")
         ip_file = glm.load(filename)
         data = [n for n in ip_file["schedules"] if n["name"] == schedule_name]
         temp1 = []
@@ -230,7 +230,7 @@ class Forecasting:
                 dow_1 = list(map(int, dow_1))
                 ###making list of the values in the schedule for this data
                 if 0 in dow_1 or 6 in dow_1:
-                    dow_1 = dow_1
+                    pass
                 else:
                     if len(dow_1) == 2:
                         dow_1 = list(range(dow_1[0], dow_1[1] + 1))
@@ -269,9 +269,10 @@ class Forecasting:
     def add_skew_scalar(self, datafr, N_skew, N_scalar):
         """ Skew the values with given seconds and multiply by scalar in the whole year dataframe
 
-            Args:
+        Args:
             datafr (DataFrame): dataframe created with the schedule name for a year
             N_skew (int): number of seconds to skew either (+ or -)
+            N_scalar (int): scalar multiplier
        """
         df = deepcopy(datafr)
         if N_skew != 0:
@@ -295,33 +296,36 @@ class Forecasting:
         return df
 
     def forecasting_schedules(self, name, time, len_forecast=48):
-        self.DA_output = self.gProxy.forecasting_schedules(name, time, len_forecast)
+        try:
+            self.DA_output = self.gProxy.forecasting_schedules(name, time, len_forecast)
+        except Exception:
+            print(f'Did not expect name:{name} time:{time} in zipload')
         return self.DA_output
 
-    def set_solar_diffuse_forecast(self, fncs_str):
+    def set_solar_diffuse_forecast(self, message: str):
         """ Set the 48-hour solar diffuse forecast
         Args:
-            param fncs_str: solar_diffuse_forecast ([float x 48]):
+            param message: solar_diffuse_forecast ([float x 48]):
         """
-        solar_diffuse_forecast = eval(fncs_str)
-        self.solar_diffuse_forecast = [float(solar_diffuse_forecast[key]) for key in solar_diffuse_forecast.keys()]
+        solar_diffuse_forecast = eval(message)
+        self.solar_diffuse_forecast = [float(solar_diffuse_forecast[key]) for key in solar_diffuse_forecast]
 
-    def set_solar_direct_forecast(self, fncs_str):
+    def set_solar_direct_forecast(self, message: str):
         """ Set the 48-hour solar direct forecast
         Args:
-            param fncs_str: solar_direct_forecast ([float x 48]):
+            param message: solar_direct_forecast ([float x 48]):
         """
-        solar_direct_forecast = eval(fncs_str)
-        self.solar_direct_forecast = [float(solar_direct_forecast[key]) for key in solar_direct_forecast.keys()]
+        solar_direct_forecast = eval(message)
+        self.solar_direct_forecast = [float(solar_direct_forecast[key]) for key in solar_direct_forecast]
 
-    def set_temperature_forecast(self, fncs_str):
+    def set_temperature_forecast(self, message: str):
         """ Set the 48-hour temperature forecast
 
         Args:
-            fncs_str: temperature_forecast ([float x 48]): predicted temperature in F
+            message: temperature_forecast ([float x 48]): predicted temperature in F
         """
-        temperature_forecast = eval(fncs_str)
-        self.temperature_forecast = [float(temperature_forecast[key]) for key in temperature_forecast.keys()]
+        temperature_forecast = eval(message)
+        self.temperature_forecast = [float(temperature_forecast[key]) for key in temperature_forecast]
         # log.info('FORECAST AGENT ' + str(self.temperature_forecast) )
 
     def get_substation_unresponsive_load_forecast(self, peak_load=7500.0):
@@ -357,7 +361,7 @@ class Forecasting:
             dnr_i = dnr[i]
             dhr_i = dhr[i]
             solar_flux = []
-            for cpt in self.surface_angles.keys():
+            for cpt in self.surface_angles:
                 vertical_angle = math.radians(90)
                 if cpt == 'H':
                     vertical_angle = math.radians(0)
@@ -391,8 +395,7 @@ class Forecasting:
                        + cosdecl * coslat * cosslope * coshr \
                        + cosdecl * sinlat * sinslope * cosaz * coshr \
                        + cosdecl * sinslope * sinaz * sinhr
-        if cos_incident < 0:
-            cos_incident = 0
+        cos_incident = max(cos_incident, 0)
         return dnr_i * cos_incident + dhr_i
 
     def get_solar_gain_forecast(self, climate_conf, current_time):
@@ -426,12 +429,12 @@ class Forecasting:
         Args:
             skew_scalar: dictionary containing 'zip_skew', 'zip_scalar' and 'zip_heatgain_fraction' for each zip load
             'zip_skew' is a scalar and same for all type of zip loads for the given house. 'zip_scalar' and 'zip_heatgain_fraction'
-            are dictionary containing different values for each tyoe of zip load
+            are dictionary containing different values for each type of zip load
             time: Datetime format: forecast start time
             extra_forecast_hours: (int) number of hours for which forecast needs to be stored. For example if it is 24, then
             we need to get forecast for 48+24=72 hours so that there is no need to come back to this function for next 24-hours.
         Returns:
-            list of (48+extra_forecast_hours) values of total zipl loads and total internal gain due to zip loads
+            list of (48+extra_forecast_hours) values of total zip loads and total internal gain due to zip loads
         """
         len_forecast = self.windowLength + extra_forecast_hours
         zip_load = [0.0] * len_forecast
@@ -463,7 +466,7 @@ class Forecasting:
     def get_solar_forecast(self, time, dso_num):
         time = time.replace(minute=0, second=0)
         print("***** time *****", time)
-        # temp = self.solar_df.loc[pd.date_range(time, periods=self.windowLength, freq='H')][dso_num]
+        # temp = self.solar_df.loc[pd.date_range(time, periods=self.windowLength, freq='h')][dso_num]
         temp = self.gProxy.forecasting_pv_schedules('pv_power', time, self.windowLength, dso_num)
         return temp.values.tolist()
 
@@ -486,7 +489,7 @@ class Forecasting:
         else:
             deltaP = np.array(self.retail_price_forecast) - temp
             a = 0.2
-            k = np.flip((np.arange(1, 49, 1)))
+            k = np.flip(np.arange(1, 49, 1))
             alpha = a / (k ** 0.5)
             temp = np.array(self.retail_price_forecast) - alpha * deltaP
 
@@ -647,8 +650,8 @@ def test():
     t = ti.time()
     del_t = 3600
     # obj.extra_forecast_hours = 10  # give me forecast enough so that I only need to come back after this duration (hours)
-    for h in range(0, 24 * 4):
-        for i in range(0, 1):
+    for h in range(24 * 4):
+        for i in range(1):
             skew_scalar = {'zip_skew': int(-4456.0),
                            'zip_scalar': {'responsive_loads': 1.3,
                                           'unresponsive_loads': 1.14},

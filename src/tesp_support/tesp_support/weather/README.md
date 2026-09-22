@@ -1,6 +1,6 @@
 # weather Python files
 
-Copyright (c) 2019-2024 Battelle Memorial Institute
+Copyright (c) 2019-2025 Battelle Memorial Institute
 
 See LICENSE file at https://github.com/pnnl/tesp
 

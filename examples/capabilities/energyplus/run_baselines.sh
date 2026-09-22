@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2021-2023 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # file: run_baselines.sh
 
 declare -r EPLUS_PATH=$TESPDIR/data/energyplus

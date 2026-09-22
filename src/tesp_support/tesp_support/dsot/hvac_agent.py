@@ -1,15 +1,13 @@
-# Copyright (C) 2021-2024 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: hvac_dsot.py
 """HVAC agent is responsible for coordinating the activity of a single-zone
 HVAC system in a transactive system. See the class docstring for further
 details.
 """
-import logging as log
 import math
 from datetime import datetime, timedelta
-from math import cos as cos
-from math import sin as sin
+from math import cos, sin
 
 import numpy as np
 import pulp
@@ -17,12 +15,10 @@ import pyomo.environ as pyo
 import pytz
 from scipy import linalg
 
-from tesp_support.api.helpers import get_run_solver
-from tesp_support.api.parse_helpers import parse_number, parse_magnitude
+from ..api.helpers import get_run_solver, log, logging
+from ..api.parse_helpers import parse_magnitude, parse_number
 
-logger = log.getLogger()
-log.getLogger('pyomo.core').setLevel(log.ERROR)
-
+logging.getLogger('pyomo.core').setLevel(logging.ERROR)
 
 class HVACDSOT:  # TODO: update class name
     """
@@ -31,14 +27,14 @@ class HVACDSOT:  # TODO: update class name
     day-ahead energy market. There are four required functions for all agents,
     reqgardless of asset type, to fully participate in said market:
 
-    1. Asset agent model - estimates the physical behavior of the respective 
+    1. Asset agent model - estimates the physical behavior of the respective
     DER asset based on observed sensor measurements
-    2. Asset scheduler - prepares an operating plan for the respective asset 
-    considering the forecast future prices and asset constraints (e.g., 
+    2. Asset scheduler - prepares an operating plan for the respective asset
+    considering the forecast future prices and asset constraints (e.g.,
     comfort setting preferences)
-    3. Asset bidding prepares a price-quantity curve for the respective 
+    3. Asset bidding prepares a price-quantity curve for the respective
     responsive asset to participate in the retail market
-    4. Market control mapping maps the real-time price into the control 
+    4. Market control mapping maps the real-time price into the control
     settings for the given asset
     5. Managing asset operation - receiveing measurement signals from the
     asset and sending appropriate control signals to the asset.
@@ -57,45 +53,45 @@ class HVACDSOT:  # TODO: update class name
         solver (str) - The solver to be used by the agent to perform the
         optimization necessary for day-ahead bidding
         houseName (str) - Name of the house object in GridLAB-D modeling the
-        physical behavior of the residential HVAC system this agent is 
+        physical behavior of the residential HVAC system this agent is
         managing
-        meterName (str) - Billing meter name that collects energy consumption 
+        meterName (str) - Billing meter name that collects energy consumption
         information impacted by the operation of the HVAC system this agent
         is managing
         period (int) - Operational period length in seconds
-        wakeup_start (float) - Time of day for the thermostat schedule 
+        wakeup_start (float) - Time of day for the thermostat schedule
         "wake-up" period. For weekdays there are four thermostat periods:
         "wake-up", "daylight", "evening", and "night". For weekends there
         are only two periods: "day" and "night". Value expressed as decimal
         hours in the range [0  24).
-        daylight_start (float) - Time of day for the thermostat schedule 
+        daylight_start (float) - Time of day for the thermostat schedule
         "daylight" period. For weekdays there are four thermostat periods:
         "wake-up", "daylight", "evening", and "night". For weekends there
         are only two periods: "day" and "night". Value expressed as decimal
         hours in the range [0  24).
-        evening_start (float) - Time of day for the thermostat schedule 
+        evening_start (float) - Time of day for the thermostat schedule
         "evening" period. For weekdays there are four thermostat periods:
         "wake-up", "daylight", "evening", and "night". For weekends there
         are only two periods: "day" and "night". Value expressed as decimal
         hours in the range [0  24).
-        night_start (float) - Time of day for the thermostat schedule 
+        night_start (float) - Time of day for the thermostat schedule
         "night" period. For weekdays there are four thermostat periods:
         "wake-up", "daylight", "evening", and "night". For weekends there
         are only two periods: "day" and "night". Value expressed as decimal
         hours in the range [0  24).
-        weekend_day_start (float) - Time of day for the thermostat schedule 
+        weekend_day_start (float) - Time of day for the thermostat schedule
         "weekend day" period. For weekdays there are four thermostat periods:
         "wake-up", "daylight", "evening", and "night". For weekends there
         are only two periods: "day" and "night". Value expressed as decimal
         hours in the range [0  24).
-        weekend_night_start (float) - Time of day for the thermostat schedule 
+        weekend_night_start (float) - Time of day for the thermostat schedule
         "weekend night" period. For weekdays there are four thermostat periods:
         "wake-up", "daylight", "evening", and "night". For weekends there
         are only two periods: "day" and "night". Value expressed as decimal
         hours in the range [0  24).
-        T_lower_limit (float) - Absolute lower household temperature limit 
+        T_lower_limit (float) - Absolute lower household temperature limit
         in Farenheit
-        T_upper_limit (float) - Absolute upper household temperature limit 
+        T_upper_limit (float) - Absolute upper household temperature limit
         in Farenheit
         cooling_setpoint_lower (float) - Lower thermostat limit when HVAC is
         in cooling mode.
@@ -113,33 +109,33 @@ class HVACDSOT:  # TODO: update class name
         temperatures
         cooling_setpoint (float) - Current cooling setpoint for thermostat
         heating_setpoint (float) - Current heating setpoint for thermostat
-        wakeup_set_cool (float) - Cooling setpoint for "wake-up" period for 
+        wakeup_set_cool (float) - Cooling setpoint for "wake-up" period for
         thermostat
-        daylight_set_cool (float) - Cooling setpoint for "daylight" period for 
+        daylight_set_cool (float) - Cooling setpoint for "daylight" period for
         thermostat
-        evening_set_cool (float) - Cooling setpoint for "evening" period for 
+        evening_set_cool (float) - Cooling setpoint for "evening" period for
         thermostat
-        night_set_cool (float) - Cooling setpoint for "night" period for 
+        night_set_cool (float) - Cooling setpoint for "night" period for
         thermostat
-        weekend_day_set_cool (float) - Cooling setpoint for "weekend day" 
+        weekend_day_set_cool (float) - Cooling setpoint for "weekend day"
         period for thermostat
-        weekend_night_set_cool (float) - Cooling setpoint for "weekend night" 
+        weekend_night_set_cool (float) - Cooling setpoint for "weekend night"
         period for thermostat
-        wakeup_set_heat (float) - Heating setpoint for "wake-up" period for 
+        wakeup_set_heat (float) - Heating setpoint for "wake-up" period for
         thermostat
-        daylight_set_heat (float) - Heating setpoint for "daylight" period for 
+        daylight_set_heat (float) - Heating setpoint for "daylight" period for
         thermostat
-        evening_set_heat (float) - Heating setpoint for "evening" period for 
+        evening_set_heat (float) - Heating setpoint for "evening" period for
         thermostat
-        night_set_heat (float) - Heating setpoint for "night" period for 
+        night_set_heat (float) - Heating setpoint for "night" period for
         thermostat
-        weekend_day_set_heat (float) - Heating setpoint for "weekend day" 
+        weekend_day_set_heat (float) - Heating setpoint for "weekend day"
         period for thermostat
-        weekend_night_set_heat (float) - Heating setpoint for "weekend night" 
+        weekend_night_set_heat (float) - Heating setpoint for "weekend night"
         period for thermostat
         deadband (float) - Thermostat deadband in which temperature changes
         around the setpoint do not produce a change in state of the HVAC
-        price_cap (float) - Maximum price the can be bid into the energy 
+        price_cap (float) - Maximum price the can be bid into the energy
         market
         bid_delay (int) - Number of seconds into the market period when
         a bid is formed
@@ -149,10 +145,10 @@ class HVACDSOT:  # TODO: update class name
         ramp_low_limit (float) - Factor that defines the rate at which
         negative deviations in price from the historic average price will
         change the setpoint.
-        range_high_limit (float) - Factor that is used to determine the 
+        range_high_limit (float) - Factor that is used to determine the
         maximum thermostat setpoint deviation from the scheduled
         (basepoint) setpoint.
-        range_low_limit (float) - Factor that is used to determine the 
+        range_low_limit (float) - Factor that is used to determine the
         minimum thermostat setpoint deviation from the scheduled
         (basepoint) setpoint.
         slider (float) - Price-responsive control setting from 0 to 1 where
@@ -160,17 +156,17 @@ class HVACDSOT:  # TODO: update class name
         price. Influences both the rate at which price changes impact the
         thermostat setpoint as well as the maximum and minimum thermostat
         deviations from the scheduled (basepoint) setpoint.
-        cooling_participating (bool) - Flag indicating whether the HVAC is 
+        cooling_participating (bool) - Flag indicating whether the HVAC is
         participating the energy market when in cooling mode
-        heating_participating (bool) - Flag indicating whether the HVAC is 
+        heating_participating (bool) - Flag indicating whether the HVAC is
         participating the energy market when in heating mode
-        participating (flag) - Logical OR of "heating_participating" and 
+        participating (flag) - Logical OR of "heating_participating" and
         "cooling_participating".
         windowLength (int) - Number of day-ahead market periods that are
         estimated when solving the optimization problem when forming the day-
         ahead market bid
         TIME (range) - range data type of "windowLength"
-        optimized_Quantity (list) - List with "windowLength" number of 
+        optimized_Quantity (list) - List with "windowLength" number of
         elements where each element is itself a list (_e.g._ [[]]).
         range_low_cool (float) - Actual minimum thermostat cooling setpoint
         deviation from the scheduled (basepoint) cooling setpoint.
@@ -210,12 +206,12 @@ class HVACDSOT:  # TODO: update class name
         price_delta (float) - Difference between the minimum and maxmimum
         price of the current price forecast
         price_mean (float) - Mean of the current price forecast
-        temperature_forecast (list) = Outdoor temperature forecast list 48 
+        temperature_forecast (list) = Outdoor temperature forecast list 48
         elements  long (hard-coded). Needed to estimate thermal load the HVAC
         system will manage during optimization problem
-        temp_min_48hour (float) - Minimum temperature over the forecasted 
+        temp_min_48hour (float) - Minimum temperature over the forecasted
         period
-        temp_max_48hour (float) - Maximum temperature over the forecasted 
+        temp_max_48hour (float) - Maximum temperature over the forecasted
         period
         temp_delta (float) - Delta in maximum vs minimum temperature over the
         forecasted period
@@ -226,20 +222,20 @@ class HVACDSOT:  # TODO: update class name
         gain into the residential structure. Needed to estimate thermal load
         the HVAC system will manage during optimization problem
         (hard-coded)
-        internalgain_forecast (list) - Forecast list 48 elements long of 
-        internal heat gain into the residential structure. Needed to estimate 
+        internalgain_forecast (list) - Forecast list 48 elements long of
+        internal heat gain into the residential structure. Needed to estimate
         thermal load the HVAC system will manage during optimization problem
-        forecast_ziploads (list) - Forecast list 48 elements long of 
-        zip load heat gain into the residential structure. Needed to estimate 
+        forecast_ziploads (list) - Forecast list 48 elements long of
+        zip load heat gain into the residential structure. Needed to estimate
         thermal load the HVAC system will manage during optimization problem
-        full_internalgain_forecast (list) - Residential heating internal gain  
+        full_internalgain_forecast (list) - Residential heating internal gain
         forecast values provided by the Forecaster
-        full_forecast_ziploads (list) - Residential zipload heating gain   
+        full_forecast_ziploads (list) - Residential zipload heating gain
         forecast values provided by the Forecaster
         air_temp (float) - Current indoor air temperature of the residential
         strucutre. Set by GridLAB-D
         mass_temp (float) - Estimated indoor mass (e.g. furniture) temperature
-        based on agent's ETP model that is updated as part of setting the 
+        based on agent's ETP model that is updated as part of setting the
         thermostat when cleared for operation at a given price.
         hvac_kw (float) - Current real power consumption of the HVAC system as
         simulated in GridLAB-D
@@ -247,50 +243,48 @@ class HVACDSOT:  # TODO: update class name
         simulated in GridLAB-D
         house_kw (float) - Current total house real power load (?) as
         simulated in GridLAB-D
-        mtr_v (float) - Current billing meter (maybe?) line-neutral 
+        mtr_v (float) - Current billing meter (maybe?) line-neutral
         voltage as simulated in GridLAB-D
-        hvac_on (bool) - Current state of the HVAC system as simulated in 
+        hvac_on (bool) - Current state of the HVAC system as simulated in
         GridLAB-D.
         minute (int) - Current minute of the simulated hour; [0,59]
         hour (int) - Current hour of the simulated day; [0. 24]
         day (int) - Current day of the simulated week; 0=Monday, 6 = Sunday
-        Qopt_da_prev (float) - Optimal quantity for current hour from previous
-        day-ahead bidding
-        temp_da_prev (float) - Optimal indoor temperature for current hour 
+        temp_da_prev (float) - Optimal indoor temperature for current hour
         from previous day-ahead bidding.
         DA_once_flag (bool) - Hard-coded to False and unused
-        air_temp_agent (float) - Estimated indoor air temperature based on 
+        air_temp_agent (float) - Estimated indoor air temperature based on
         agent's ETP model that is updated as part of setting the thermostat
         when cleared for operation at a given price.
         bid_rt_price (float) - Hard-coded to 0.0 and unused
         Qi (float) - Heat flows into indoor residential air due to other
         electrical energy consumpation (e.g. appliances)
-        Qh (float) - Heat flows into the residential indoor air due HVAC 
+        Qh (float) - Heat flows into the residential indoor air due HVAC
         system operation
-        Qa_ON (float) - Heat flows into the residential indoor air due HVAC 
+        Qa_ON (float) - Heat flows into the residential indoor air due HVAC
         operation and heat from the indoor mass and solar radiation
         Qa_OFF (float) - Heat flows into the residential indoor air from the
         indoor mass and solar radiation
         Qm (float) - Heat flows into the residential indoor air from the
-        indoor mass and solar radiation 
+        indoor mass and solar radiation
         Qs (float) - Heat flows into the residential indoor air from solar
         radiation
-        interpolation (bool) - Flag to turn on interpolation of Qopt_DA and 
+        interpolation (bool) - Flag to turn on interpolation of Qopt_DA and
         Topt_DA when forming the real-time bid
-        RT_minute_count_interpolation (float) - Number of minutes into the 
+        RT_minute_count_interpolation (float) - Number of minutes into the
         hourly day-ahed market when the interpolation operations should take
         place.
-        previous_Q_DA (float) - Previous Qopt_DA used in calculating the 
+        previous_Q_DA (float) - Previous Qopt_DA used in calculating the
         intra-hour Qopt_DA via interpolation.
-        previous_T_DA (float) - Previous Topt_DA used in calculating the 
+        previous_T_DA (float) - Previous Topt_DA used in calculating the
         intra-hour Topt_DA via interpolation.
         delta_Q (float) - Difference between bid Q for the current hour and
         the previous_Q_DA; used in interpolating Qopt_DA
-        delta_T (float) - Difference between the expect T for the current hour 
+        delta_T (float) - Difference between the expect T for the current hour
         (based on bidding) and the previous_T_DA; used in interpolating Topt_DA
         A_ETP (list) - 2x2 matrix (list of lists) holding the thermal
         conductivity and capacitance parameters for a given structure in the
-        ETP model. This is the "A" matrix in the linear differential 
+        ETP model. This is the "A" matrix in the linear differential
         equation system of x'=Ax + B.
         AEI (list) - 2x2 matrix (list of lists) inversion of A_ETP
         B_ETP_ON (list) - 2x1 matrix (list of lists) holding the constant
@@ -301,47 +295,45 @@ class HVACDSOT:  # TODO: update class name
         factors of the linear differential equation system of x'=Ax + B. In
         this case, B holds a Qa that reflects the HVAC system in a non-running
         state.
-        bid_quantity (float) - The real-time cleared quantity calculated from 
+        bid_quantity (float) - The real-time cleared quantity calculated from
         the cleared real-time price.
         bid_quantity_rt (float) - Hard-coded to zero.
         thermostat_mode (str) -  Indicates HVAC mode 'OFF', 'Cooling' or
         'Heating'
         cleared_price (str) - Real-time cleared price
-        bid_rt (list) - Four-point bid structure as 4-element list of 
+        bid_rt (list) - Four-point bid structure as 4-element list of
         2-element (P and Q) lists
-        bid_da (list) - Four-point bid structure as 4-element list of 
+        bid_da (list) - Four-point bid structure as 4-element list of
         2-element (P and Q) lists in a 48-element list, one for every biding
         period in the day-ahead market.
         quantity_curve (list) - Holds real-time bid quantities
         temp_curve (list) - Set of temperatures centered on the optimal day-
         ahead price used to find quantity_curve
-        sqft (float) - Number of square feet of the structure modeled by agent 
+        sqft (float) - Number of square feet of the structure modeled by agent
         for use in asset model (ETP model parameter)
-        stories float) - Number of stories of the structure modeled by agent 
+        stories float) - Number of stories of the structure modeled by agent
         for use in asset model (ETP model parameter)
-        doors (float) - Number of doors of the structure modeled by agent for 
+        doors (float) - Number of doors of the structure modeled by agent for
         use in asset model (ETP model parameter)
-        thermal_integrity (enum) - Unused. Enumerated value defining the 
-        integrity of the thermal envelope of the structure modeled by agent
-        Rroof (float) - Thermal resistance of the roof of the structure 
+        Rroof (float) - Thermal resistance of the roof of the structure
         modeled by agent for use in asset model (ETP model parameter).
-        Rwall (float) - Thermal resistance of the walls of the structure 
+        Rwall (float) - Thermal resistance of the walls of the structure
         modeled by agent for use in asset model (ETP model parameter).
-        Rfloor (float) - Thermal resistance of the floors of the structure 
+        Rfloor (float) - Thermal resistance of the floors of the structure
         modeled by agent for use in asset model (ETP model parameter).
-        Rdoors (float) - Thermal resistance of the doors of the structure 
+        Rdoors (float) - Thermal resistance of the doors of the structure
         modeled by agent for use in asset model (ETP model parameter).
-        airchange_per_hour (float) - Airchanges per hour of the structure 
+        airchange_per_hour (float) - Airchanges per hour of the structure
         modeled by agent for use in asset model (ETP model parameter).
-        ceiling_height (float) - Ceiling height of the structure modeled by 
+        ceiling_height (float) - Ceiling height of the structure modeled by
         agent for use in asset model (ETP model parameter).
         thermal_mass_per_floor_area (float) - Thermal mass per unit floor aread
-        of the structure modeled by agent for use in asset model (ETP model 
+        of the structure modeled by agent for use in asset model (ETP model
         parameter).
         aspect_ratio (float) - Aspect ratio of the structure modeled by agent
         for use in asset model (ETP model parameter).
         exterior_ceiling_fraction (float) - Ratio of external ceiling to floor
-        area of the structure modeled by agent for use in asset model (ETP 
+        area of the structure modeled by agent for use in asset model (ETP
         model parameter).
         exterior_floor_fraction (float) - Fraction of floor area as a portion
         of the external thermal envelope of the structure modeled by agent for
@@ -349,29 +341,29 @@ class HVACDSOT:  # TODO: update class name
         exterior_wall_fraction (float) - Fraction of wall area as a portion
         of the external thermal envelope of the structure modeled by agent for
         use in asset model (ETP model parameter).
-        WETC (float) - Window exterior transmission coefficient of the 
-        structure modeled by agent for use in asset model (ETP model 
+        WETC (float) - Window exterior transmission coefficient of the
+        structure modeled by agent for use in asset model (ETP model
         parameter). Has to do with shading on windows.
-        glazing_layers (int) - Number of panes in windows of the 
-        structure modeled by agent for use in asset model (ETP model 
+        glazing_layers (int) - Number of panes in windows of the
+        structure modeled by agent for use in asset model (ETP model
         parameter). All windows are assumed to have the same number of panes
-        glass_type (int) - Glass type enumeration for windows of the 
-        structure modeled by agent for use in asset model (ETP model 
-        parameter). 
+        glass_type (int) - Glass type enumeration for windows of the
+        structure modeled by agent for use in asset model (ETP model
+        parameter).
         0 = Other
         1 = Normal
         2 = Low-e
-        window_frame (int) - Window frame material type enumeration for 
-        windows frames of the structure modeled by agent for use in asset 
-        model (ETP model parameter). 
+        window_frame (int) - Window frame material type enumeration for
+        windows frames of the structure modeled by agent for use in asset
+        model (ETP model parameter).
         0 = None
         1 = Aluminum
         2 = Thermal break
         3 = Wood
         4 = Insulated
-        glazing_treatment (int) - Window glazing treatment enumeration for 
-        windows frames of the structure modeled by agent for use in asset 
-        model (ETP model parameter). 
+        glazing_treatment (int) - Window glazing treatment enumeration for
+        windows frames of the structure modeled by agent for use in asset
+        model (ETP model parameter).
         1 = Clear
         2 = ABS
         3 = Refl
@@ -379,42 +371,42 @@ class HVACDSOT:  # TODO: update class name
         operating in cooling mode (ETP model parameter).
         heating_COP (float) - Coefficient of performance for HVAC unit when
         operating in heating mode (ETP model parameter).
-        cooling_cop_adj_rt (float) - Unused. adjustment to the cooling COP 
-        based on unknown factors. 
-        heating_cop_adj_rt (float) - Unused. a Adjustment to the heating COP 
+        cooling_cop_adj_rt (float) - Unused. adjustment to the cooling COP
+        based on unknown factors.
+        heating_cop_adj_rt (float) - Unused. a Adjustment to the heating COP
         based on unknown factors
         cooling_cop_adj (list) - List with "windowLength" number of elements
         all of value "cooling_COP"
         heating_cop_adj (list) - List with "windowLength" number of elements
         all of value "heating_COP"
-        cooling_COP_K0 (float) - Hard-coded constant factor used in 
+        cooling_COP_K0 (float) - Hard-coded constant factor used in
         calculating "cooling_COP_adj"
-        cooling_COP_K1 (float) - Hard-coded linear co-efficient used in  
+        cooling_COP_K1 (float) - Hard-coded linear co-efficient used in
         calculating "cooling_COP_adj"
-        cooling_COP_limit (float) - Hard-coded parameter used in calculating 
+        cooling_COP_limit (float) - Hard-coded parameter used in calculating
         "cooling_COP_adj"
-        heating_COP_K0 (float) - Hard-coded constant factor used in 
+        heating_COP_K0 (float) - Hard-coded constant factor used in
         calculating "heating_COP_adj"
-        heating_COP_K1 (float) - Hard-coded linear co-efficient used in 
+        heating_COP_K1 (float) - Hard-coded linear co-efficient used in
         calculating "heating_COP_adj"
-        heating_COP_K2 (float) - Hard-coded quadratic co-efficient used in  
+        heating_COP_K2 (float) - Hard-coded quadratic co-efficient used in
         calculating "heating_COP_adj"
-        heating_COP_K3 (float) - Hard-coded cubic co-efficient used in  
+        heating_COP_K3 (float) - Hard-coded cubic co-efficient used in
         calculating "heating_COP_adj"
-        heating_COP_limit (float) - Hard-coded parameter used in calculating 
+        heating_COP_limit (float) - Hard-coded parameter used in calculating
         "heating_COP_adj"
-        cooling_capacity_K0 (float) - Hard-coded constant factor used in 
+        cooling_capacity_K0 (float) - Hard-coded constant factor used in
         calculating "design_cooling_capacity"
-        cooling_capacity_K1 (float) - Hard-coded linear co-efficient used in 
+        cooling_capacity_K1 (float) - Hard-coded linear co-efficient used in
         calculating "design_cooling_capacity"
         latent_load_fraction (float) - Hard-coded value representing the latent
         load fraction in the thermal energy flow equations
         latent_factor (list) = List of latent factors
-        cooling_design_temperature (float) - Cooling design temperature 
+        cooling_design_temperature (float) - Cooling design temperature
         design_cooling_setpoint (float) - Design cooling setpoint
         design_internal_gains (float) - Hard-coded value representing the
         design internal heat gains used in the agent ETP model
-        design_peak_solar (float) - Hard-coded value representing the peak 
+        design_peak_solar (float) - Hard-coded value representing the peak
         solar heat flows used in the agent ETP model
         over_sizing_factor (float) - Hard-coded value used to size the HVAC system
         in the agent ETP model
@@ -422,25 +414,25 @@ class HVACDSOT:  # TODO: update class name
         are "HEAT_PUMP" and "ELECTRIC".
         cooling_system_type (str) = Flag used to indicate whether this house has
         cooling or not.
-        design_heating_setpoint (float) - Hard-coded value; nominal thermostat 
+        design_heating_setpoint (float) - Hard-coded value; nominal thermostat
         setpoint used in specifying the thermal design of the structure
-        heating_design_temperature (float) - Hard-coded value; deviation from 
+        heating_design_temperature (float) - Hard-coded value; deviation from
         "design_heating_setpoint" used in calculating "design_heating_capacity"
-        heating_capacity_K0 (float) - Hard-coded constant factor used in 
+        heating_capacity_K0 (float) - Hard-coded constant factor used in
         calculating "heating_capacity_adj"
-        heating_capacity_K1 (float) - Hard-coded linear co-efficient used in 
+        heating_capacity_K1 (float) - Hard-coded linear co-efficient used in
         calculating "heating_capacity_adj"
-        heating_capacity_K2 (float) - Hard-coded quadratic co-efficient used in  
+        heating_capacity_K2 (float) - Hard-coded quadratic co-efficient used in
         calculating "heating_capacity_adj"
-        design_heating_capacity (float) - Design capacity of HVAC system 
-        necessary to maintain reasonable indoor temperature under expected 
+        design_heating_capacity (float) - Design capacity of HVAC system
+        necessary to maintain reasonable indoor temperature under expected
         thermal load when heating.
-        design_cooling_capacity (float) - Design capacity of HVAC system 
-        necessary to maintain reasonable indoor temperature under expected  
+        design_cooling_capacity (float) - Design capacity of HVAC system
+        necessary to maintain reasonable indoor temperature under expected
         thermal load when cooling.
         solar_direct (float) - Direct solar radiation that heats the structure
         used in the agent ETP model
-        solar_diffuse (float) - Diffuse solar radiation that heats the 
+        solar_diffuse (float) - Diffuse solar radiation that heats the
         structure used in the agent ETP model
         outside_air_temperature (float) Outside air temperature
         humidity (float) - Humidity factor, unitless
@@ -448,15 +440,15 @@ class HVACDSOT:  # TODO: update class name
         hod = (int) - hour of day
         dow = (int) - day of week
         FirstTime (bool) - Unused
-        surface_angles (dict) - Constants used to calculate the solar  
+        surface_angles (dict) - Constants used to calculate the solar
         radiation on the structure based on the position of the sun in the sky
         UA (float) - Thermal conductivity between the outdoors and the indoor
         air
         CA (float) - Thermal energy capacity of the indoor air
-        HM (float) - Thermal resistivity between the indoor air and the 
+        HM (float) - Thermal resistivity between the indoor air and the
         structure mass
         CM (float) - Thermal capacity of the structure mass
-        mass_internal_gain_fraction (float) - Fraction of internal heatgains 
+        mass_internal_gain_fraction (float) - Fraction of internal heatgains
         that create the internal heatgains in the ETP model
         mass_solar_gain_fraction (float) - Fraction of solar radiation that
         create the solar heating of the structural mass in the ETP model
@@ -464,16 +456,16 @@ class HVACDSOT:  # TODO: update class name
         create the solar heating of the indoor air in the ETP model
         solar_gain (float) - Solar radiation that creates the solar heating
         of the indoor air in the ETP model
-        temp_room (list) - List of length windowLength storing indoor 
+        temp_room (list) - List of length windowLength storing indoor
         temperatures produced by the day-ahead bidding strategy estimating
         the indoor air temperature
         temp_desired_48hour_cool (list) - List of length windowLength storing
         desired cooling temperatures
-        temp_desired_48hour_heat (list) - List of length windowLength storing  
+        temp_desired_48hour_heat (list) - List of length windowLength storing
         desired heating temperatures
         temp_room_previous_cool (float) - Previous desired cooling temperature
         temp_room_previous_heat (float) - Previous desired heating temperature
-        temp_outside_init (float) - Hard-coded value used to set up the 
+        temp_outside_init (float) - Hard-coded value used to set up the
         optimization problem.
         eps (float) - Calculated from ETP parameters
         COP (float) - Unused
@@ -484,12 +476,12 @@ class HVACDSOT:  # TODO: update class name
 
     """
 
-    def __init__(self, 
-                 hvac_dict: dict, 
-                 house_properties: dict, 
-                 key: str, 
-                 model_diag_level: int, 
-                 sim_time: datetime, 
+    def __init__(self,
+                 hvac_dict: dict,
+                 house_properties: dict,
+                 key: str,
+                 model_diag_level: int,
+                 sim_time: datetime,
                  solver: str) -> None:
         """Initializes model and performs input parameter validation.
 
@@ -506,6 +498,7 @@ class HVACDSOT:  # TODO: update class name
         """
         # TODO: update attributes of class
         self.name = key
+        self.model_diag_level = model_diag_level
         self.solver = solver
         self.houseName = hvac_dict['houseName']
         self.meterName = hvac_dict['meterName']
@@ -561,7 +554,9 @@ class HVACDSOT:  # TODO: update class name
         self.slider = float(hvac_dict['slider_setting'])
         self.cooling_participating = hvac_dict['cooling_participating']
         self.heating_participating = hvac_dict['heating_participating']
-        self.participating = self.cooling_participating or self.heating_participating
+        # Initialize self.participating to True
+        # The variable is modified later based on the active thermostat mode
+        self.participating = True
         self.windowLength = 48
         self.TIME = range(self.windowLength)
         self.optimized_Quantity = [[]] * self.windowLength
@@ -584,10 +579,10 @@ class HVACDSOT:  # TODO: update class name
         self.temp_max_heat_da = 0.0
         self.temp_min_heat_da = 0.0
 
-        self.price_forecast = [0 for _ in range(48)]  # np.random.rand(1)[0]
+        self.price_forecast = [0.0 for _ in range(48)]  # np.random.rand(1)[0]
         # self.price_forecast_DA = [0 for _ in range(48)]  # np.random.rand(1)[0]
-        self.price_forecast_0 = 0
-        self.price_forecast_0_new = 0
+        self.price_forecast_0 = 0.0
+        self.price_forecast_0_new = 0.0
         self.price_std_dev = 0.0
         self.price_delta = 0.0
         self.price_mean = 0.0
@@ -604,23 +599,19 @@ class HVACDSOT:  # TODO: update class name
 
         # it is important to initialize following two variables of length less than 48
         # so that in very first run, they can be populated by actual forecast
-        self.full_internalgain_forecast = [0]
-        self.full_forecast_ziploads = [0]
+        self.full_internalgain_forecast = [0.0]
+        self.full_forecast_ziploads = [0.0]
 
         self.air_temp = 72.0
         self.mass_temp = 72.0
-        self.hvac_kw = 100.0
+        self.hvac_kw = 20.0
         self.wh_kw = 0.0
         self.house_kw = 5.0
         self.mtr_v = 120.0
         self.hvac_on = False
-        # self.hvac_demand = 1.0
         self.minute = 0
         self.hour = 0
         self.day = 0
-        self.Qopt_da_prev = 0
-        self.temp_da_prev = 75.0
-        self.DA_once_flag = False
         self.air_temp_agent = 72.0
         self.bid_rt_price = 0.0
         self.Qi = 0.0
@@ -632,12 +623,12 @@ class HVACDSOT:  # TODO: update class name
         self.BTU_PER_HR_PER_KW = 3412.1416331279
 
         # interpolation
-        self.interpolation = bool(True)
-        self.RT_minute_count_interpolation = float(0.0)
-        self.previous_Q_DA = float(0.0)
-        self.previous_T_DA = float(0.0)
-        self.delta_Q = float(0.0)
-        self.delta_T = float(0.0)
+        self.interpolation = True
+        self.RT_minute_count_interpolation = 0.0
+        self.previous_Q_DA = 0.0
+        self.previous_T_DA = 0.0
+        self.delta_Q = 0.0
+        self.delta_T = 0.0
 
         self.A_ETP = np.zeros([2, 2])
         self.AEI = np.zeros([2, 2])
@@ -657,7 +648,6 @@ class HVACDSOT:  # TODO: update class name
         self.sqft = float(house_properties['sqft'])
         self.stories = float(house_properties['stories'])
         self.doors = float(house_properties['doors'])
-        self.thermal_integrity = house_properties['thermal_integrity']
         self.Rroof = float(house_properties['Rroof'])
         self.Rwall = float(house_properties['Rwall'])
         self.Rfloor = float(house_properties['Rfloor'])
@@ -706,7 +696,7 @@ class HVACDSOT:  # TODO: update class name
         self.heating_system_type = (house_properties['heating'])
         self.cooling_system_type = (house_properties['cooling'])
         self.design_heating_setpoint = 70.0
-        self.heating_design_temperature = 0.0  # TODO: not sure where to get this (guess for now)
+        self.heating_design_temperature = 0.0  # Minimum hourly temp in weather file. Default = 0, will be set by weather data.
 
         self.heating_capacity_K0 = 0.34148808
         self.heating_capacity_K1 = 0.00894102
@@ -749,7 +739,7 @@ class HVACDSOT:  # TODO: update class name
         self.solar_heatgain_factor = 0.
         self.solar_gain = 0.0
 
-        self.calc_thermostat_settings(model_diag_level, sim_time)
+        self.calc_thermostat_settings(sim_time)
         self.calc_etp_model()
 
         self.temp_room = [78.0 for _ in range(self.windowLength)]
@@ -778,77 +768,79 @@ class HVACDSOT:  # TODO: update class name
         else:
             self.ProfitMargin_slope = 9999  # just a large value to prevent errors when slider=0
 
-        # Sanity checks:
+        self.sanity_checks()
+
+    def sanity_checks(self):
         if self.wakeup_start <= self.daylight_start:
             pass
         else:
-            log.log(model_diag_level, '{} {} -- wakeup_start ({}) is not < daylight_start ({}).'
+            log.log(self.model_diag_level, '{} {} -- wakeup_start ({}) is not < daylight_start ({}).'
                     .format(self.name, 'init', self.wakeup_start, self.daylight_start))
         if self.daylight_start <= self.evening_start:
             pass
         else:
-            log.log(model_diag_level, '{} {} -- daylight_start ({}) is not < evening_start ({}).'
+            log.log(self.model_diag_level, '{} {} -- daylight_start ({}) is not < evening_start ({}).'
                     .format(self.name, 'init', self.daylight_start, self.evening_start))
         if self.evening_start <= self.night_start:
             pass
         else:
-            log.log(model_diag_level, '{} {} -- evening_start ({}) is not < night_start ({}).'
+            log.log(self.model_diag_level, '{} {} -- evening_start ({}) is not < night_start ({}).'
                     .format(self.name, 'init', self.evening_start, self.night_start))
         if self.weekend_day_start <= self.weekend_night_start:
             pass
         else:
-            log.log(model_diag_level, '{} {} -- weekend_day_start ({}) is not < weekend_night_start ({}).'
+            log.log(self.model_diag_level, '{} {} -- weekend_day_start ({}) is not < weekend_night_start ({}).'
                     .format(self.name, 'init', self.weekend_day_start, self.weekend_night_start))
         # if self.wakeup_set_heat >= self.night_set_heat:
         #     pass
         # else:
-        #     log.log(model_diag_level, '{} {} -- wakeup_set_heat ({}) is not >= night_set_heat ({}) .'
+        #     log.log(self.model_diag_level, '{} {} -- wakeup_set_heat ({}) is not >= night_set_heat ({}) .'
         #             .format(self.name, 'init', self.wakeup_set_heat, self.night_set_heat))
         if self.daylight_set_heat <= self.night_set_heat:
             pass
         else:
-            log.log(model_diag_level, '{} {} -- daylight_set_heat ({}) is not <= night_set_heat ({}).'
+            log.log(self.model_diag_level, '{} {} -- daylight_set_heat ({}) is not <= night_set_heat ({}).'
                     .format(self.name, 'init', self.daylight_set_heat, self.night_set_heat))
         if self.daylight_set_heat <= self.wakeup_set_heat:
             pass
         else:
-            log.log(model_diag_level, '{} {} -- daylight_set_heat ({}) is not <= wakeup_set_heat ({}).'
+            log.log(self.model_diag_level, '{} {} -- daylight_set_heat ({}) is not <= wakeup_set_heat ({}).'
                     .format(self.name, 'init', self.daylight_set_heat, self.wakeup_set_heat))
         if "zone" not in self.name:
             if self.daylight_set_cool >= self.night_set_cool:
                 pass
             else:
-                log.log(model_diag_level, '{} {} -- daylight_set_cool ({}) is not >= night_set_cool ({}).'
+                log.log(self.model_diag_level, '{} {} -- daylight_set_cool ({}) is not >= night_set_cool ({}).'
                         .format(self.name, 'init', self.daylight_set_cool, self.night_set_cool))
             if self.daylight_set_cool >= self.wakeup_set_cool:
                 pass
             else:
-                log.log(model_diag_level, '{} {} -- daylight_set_cool ({}) is not >= wakeup_set_cool ({}).'
+                log.log(self.model_diag_level, '{} {} -- daylight_set_cool ({}) is not >= wakeup_set_cool ({}).'
                         .format(self.name, 'init', self.daylight_set_cool, self.wakeup_set_cool))
             # if self.evening_set_heat >= self.night_set_heat:
             #     pass
             # else:
-            #     log.log(model_diag_level, '{} {} -- evening_set_heat ({}) is not >= night_set_heat ({}).'
+            #     log.log(self.model_diag_level, '{} {} -- evening_set_heat ({}) is not >= night_set_heat ({}).'
             #             .format(self.name, 'init', self.evening_set_heat, self.night_set_heat))
             # if self.weekend_day_set_heat >= self.weekend_night_set_heat:
             #     pass
             # else:
-            #     log.log(model_diag_level, '{} {} -- weekend_day_set_heat ({}) is not >= weekend_night_set_heat ({}).'
+            #     log.log(self.model_diag_level, '{} {} -- weekend_day_set_heat ({}) is not >= weekend_night_set_heat ({}).'
             #             .format(self.name, 'init', self.weekend_day_set_heat, self.weekend_night_set_heat))
         if self.sqft > 0:
             pass
         else:
-            log.log(model_diag_level, '{} {} -- number of sqft ({}) is negative value'
+            log.log(self.model_diag_level, '{} {} -- number of sqft ({}) is negative value'
                     .format(self.name, 'init', self.sqft))
         if self.stories > 0:
             pass
         else:
-            log.log(model_diag_level, '{} {} -- number of stories ({}) is negative'
+            log.log(self.model_diag_level, '{} {} -- number of stories ({}) is negative'
                     .format(self.name, 'init', self.stories))
         if self.doors >= 0:
             pass
         else:
-            log.log(model_diag_level, '{} {} -- number of doors ({}) is negative'
+            log.log(self.model_diag_level, '{} {} -- number of doors ({}) is negative'
                     .format(self.name, 'init', self.doors))
 
         Rroof_lower = 2
@@ -856,7 +848,7 @@ class HVACDSOT:  # TODO: update class name
         if Rroof_lower <= self.Rroof < Rroof_upper:
             pass
         else:
-            log.log(model_diag_level, '{} {} --  Rroof is {}, outside of nominal range of {} to {}'
+            log.log(self.model_diag_level, '{} {} --  Rroof is {}, outside nominal range of {} to {}'
                     .format(self.name, 'init', self.Rroof, Rroof_lower, Rroof_upper))
 
         Rwall_lower = 2
@@ -864,7 +856,7 @@ class HVACDSOT:  # TODO: update class name
         if Rwall_lower <= self.Rwall < Rwall_upper:
             pass
         else:
-            log.log(model_diag_level, '{} {} -- Rwall is {}, outside of nominal range of {} to {}'
+            log.log(self.model_diag_level, '{} {} -- Rwall is {}, outside nominal range of {} to {}'
                     .format(self.name, 'init', self.Rwall, Rwall_lower, Rwall_upper))
 
         Rfloor_lower = 2
@@ -872,7 +864,7 @@ class HVACDSOT:  # TODO: update class name
         if Rfloor_lower <= self.Rfloor < Rfloor_upper:
             pass
         else:
-            log.log(model_diag_level, '{} {} -- Rfloor is {}, outside of nominal range of {} to {}'
+            log.log(self.model_diag_level, '{} {} -- Rfloor is {}, outside nominal range of {} to {}'
                     .format(self.name, 'init', self.Rfloor, Rfloor_lower, Rfloor_upper))
 
         Rdoor_lower = 1
@@ -880,7 +872,7 @@ class HVACDSOT:  # TODO: update class name
         if Rdoor_lower <= self.Rdoors < Rdoor_upper:
             pass
         else:
-            log.log(model_diag_level, '{} {} -- Rdoors is {}, outside of nominal range of {} to {}'
+            log.log(self.model_diag_level, '{} {} -- Rdoors is {}, outside nominal range of {} to {}'
                     .format(self.name, 'init', self.Rdoors, Rdoor_lower, Rdoor_upper))
 
         airchange_per_hour_lower = 0.1
@@ -888,7 +880,7 @@ class HVACDSOT:  # TODO: update class name
         if airchange_per_hour_lower <= self.airchange_per_hour < airchange_per_hour_upper:
             pass
         else:
-            log.log(model_diag_level, '{} {} -- airchange_per_hour is {}, outside of nominal range of {} to {}.'
+            log.log(self.model_diag_level, '{} {} -- airchange_per_hour is {}, outside nominal range of {} to {}.'
                     .format(self.name, 'init', self.airchange_per_hour, airchange_per_hour_lower, airchange_per_hour_upper))
 
         glazing_layers_lower = 1
@@ -896,7 +888,7 @@ class HVACDSOT:  # TODO: update class name
         if glazing_layers_lower <= self.glazing_layers <= glazing_layers_upper:
             pass
         else:
-            log.log(model_diag_level, '{} {} -- glazing_layers is (are) {}, outside of nominal range of {} to {}'
+            log.log(self.model_diag_level, '{} {} -- glazing_layers is (are) {}, outside nominal range of {} to {}'
                     .format(self.name, 'init', self.glazing_layers, glazing_layers_lower, glazing_layers_upper))
 
         cooling_COP_lower = 1
@@ -904,14 +896,13 @@ class HVACDSOT:  # TODO: update class name
         if cooling_COP_lower <= self.cooling_COP <= cooling_COP_upper:
             pass
         else:
-            log.log(model_diag_level, '{} {} -- cooling_COP is {}, outside of nominal range of {} to {}'
+            log.log(self.model_diag_level, '{} {} -- cooling_COP is {}, outside of nominal range of {} to {}'
                     .format(self.name, 'init', self.cooling_COP, cooling_COP_lower, cooling_COP_upper))
 
-    def calc_thermostat_settings(self, model_diag_level: int, sim_time: str) -> None:
+    def calc_thermostat_settings(self, sim_time):
         """ Sets the ETP parameters from configuration data
 
         Args:
-            model_diag_level (int): Specific level for logging errors; set to 11
             sim_time (str): Current time in the simulation; should be human-readable
 
         References:
@@ -952,8 +943,8 @@ class HVACDSOT:  # TODO: update class name
             #     # log.info('basepoint_cooling is within the bounds.')
             #     pass
             # else:
-            #     log.log(model_diag_level,
-            #             '{} {} -- basepoint_cooling is {}, outside of nominal range of {} to {}'
+            #     log.log(self.model_diag_level,
+            #             '{} {} -- basepoint_cooling is {}, outside nominal range of {} to {}'
             #             .format(self.name, sim_time, self.basepoint_cooling, basepoint_cooling_lower, basepoint_cooling_upper))
 
             self.basepoint_heating = mid_point - self.deadband / 2.0 - 0.5
@@ -963,8 +954,8 @@ class HVACDSOT:  # TODO: update class name
             #     # log.info('basepoint_heating is within the bounds.')
             #     pass
             # else:
-            #     log.log(model_diag_level,
-            #             '{} {} -- basepoint_heating is {}, outside of nominal range of {} to {}'
+            #     log.log(self.model_diag_level,
+            #             '{} {} -- basepoint_heating is {}, outside nominal range of {} to {}'
             #             .format(self.name, sim_time, self.basepoint_heating, basepoint_heating_lower, basepoint_heating_upper))
         # print("self.basepoint_cooling "+str(self.basepoint_cooling))
         # print("self.basepoint_heating "+str(self.basepoint_heating))
@@ -990,10 +981,8 @@ class HVACDSOT:  # TODO: update class name
             mid_point = (self.temp_min_cool + self.temp_max_heat) / 2.0
             self.temp_min_cool = mid_point + self.deadband / 2.0 + 0.5
             self.temp_max_heat = mid_point - self.deadband / 2.0 - 0.5
-            if self.temp_min_cool > cooling_setpt:
-                self.temp_min_cool = cooling_setpt
-            if self.temp_max_heat < heating_setpt:
-                self.temp_max_heat = heating_setpt
+            self.temp_min_cool = min(self.temp_min_cool, cooling_setpt)
+            self.temp_max_heat = max(self.temp_max_heat, heating_setpt)
 
     def update_temp_limits_da(self, cooling_setpt: float, heating_setpt: float) -> None:
         """Update indoor temperature limits based on current cooling and
@@ -1011,10 +1000,8 @@ class HVACDSOT:  # TODO: update class name
             mid_point = (self.temp_min_cool_da + self.temp_max_heat_da) / 2.0
             self.temp_min_cool_da = mid_point + self.deadband / 2.0 + 0.5
             self.temp_max_heat_da = mid_point - self.deadband / 2.0 - 0.5
-            if self.temp_min_cool_da > cooling_setpt:
-                self.temp_min_cool_da = cooling_setpt
-            if self.temp_max_heat_da < heating_setpt:
-                self.temp_max_heat_da = heating_setpt
+            self.temp_min_cool_da = min(self.temp_min_cool_da, cooling_setpt)
+            self.temp_max_heat_da = max(self.temp_max_heat_da, heating_setpt)
 
     def calc_etp_model(self) -> None:
         """ Calculates the ETP parameters from configuration data
@@ -1094,6 +1081,11 @@ class HVACDSOT:  # TODO: update class name
                     Rg = 1.0 / 0.34
         elif self.glass_type == 0:
             Rg = 2.0
+        try:
+            glazing = Rg
+        except UnboundLocalError:
+            log.error(f'We could not calculate Rg. Glass type = {self.glass_type}, Glazing layers = {self.glazing_layers}, Window Frame = {self.window_frame}.')
+
 
         # transmission coefficient through window due to glazing
         if self.glazing_layers == 1:
@@ -1140,6 +1132,22 @@ class HVACDSOT:  # TODO: update class name
                     Wg = 0.27
                 elif self.window_frame == 3 or self.window_frame == 4:
                     Wg = 0.22
+            elif self.glazing_treatment == 4:
+                # LOW_S
+                if self.window_frame == 0:
+                    Wg = 0.41
+                elif self.window_frame == 1 or self.window_frame == 2:
+                    Wg = 0.37
+                elif self.window_frame == 3 or self.window_frame == 4:
+                    Wg = 0.31
+            elif self.glazing_treatment == 5:
+                # HIGH_S
+                if self.window_frame == 0:
+                    Wg = 0.70
+                elif self.window_frame == 1 or self.window_frame == 2:
+                    Wg = 0.62
+                elif self.window_frame == 3 or self.window_frame == 4:
+                    Wg = 0.52
         elif self.glazing_layers == 3:
             if self.glazing_treatment == 1:
                 if self.window_frame == 0:
@@ -1148,23 +1156,36 @@ class HVACDSOT:  # TODO: update class name
                     Wg = 0.60
                 elif self.window_frame == 3 or self.window_frame == 4:
                     Wg = 0.51
-            elif self.glazing_treatment == 2:
+            elif self.glazing_treatment == 2 or self.glazing_treatment == 3:
                 if self.window_frame == 0:
                     Wg = 0.34
                 elif self.window_frame == 1 or self.window_frame == 2:
                     Wg = 0.31
                 elif self.window_frame == 3 or self.window_frame == 4:
                     Wg = 0.26
-            elif self.glazing_treatment == 3:
+            elif self.glazing_treatment == 4:
+                # LOW_S
                 if self.window_frame == 0:
-                    Wg = 0.34
+                    Wg = 0.27
                 elif self.window_frame == 1 or self.window_frame == 2:
-                    Wg = 0.31
+                    Wg = 0.25
                 elif self.window_frame == 3 or self.window_frame == 4:
-                    Wg = 0.26
+                    Wg = 0.21
+            elif self.glazing_treatment == 5:
+                # HIGH_S
+                if self.window_frame == 0:
+                    Wg = 0.62
+                elif self.window_frame == 1 or self.window_frame == 2:
+                    Wg = 0.55
+                elif self.window_frame == 3 or self.window_frame == 4:
+                    Wg = 0.46
+        try:
+            trans_coeff = Wg
+        except UnboundLocalError:
+            log.error(f'We could not calculate Wg. Glazing Treatment {self.glazing_treatment} Glazing Layers {self.glazing_layers} Window Frame {self.window_frame}')
 
         Rd = self.Rdoors
-        I = self.airchange_per_hour
+        ac_per_hr = self.airchange_per_hour
         mf = self.thermal_mass_per_floor_area
         # some hard-coded GridLAB-D defaults
         aspect = self.aspect_ratio  # footprint x/y ratio
@@ -1201,11 +1222,11 @@ class HVACDSOT:  # TODO: update class name
         Aw = (Awt - Ag - Ad) * EWR  # net exterior wall area, taking EWR as 1s
         Vterm = self.sqft * h * VHa
 
-        # airchange_per_hour = I
+        # airchange_per_hour = ac_per_hr
         # volume = ceiling_height*floor_area = 8.0*2500.0
         # air_density = 0.0735
         # air_heat_capacity = 0.2402
-        # airchange_UA = airchange_per_hour * volume * air_density * air_heat_capacity = I*;
+        # airchange_UA = airchange_per_hour * volume * air_density * air_heat_capacity = ac_per_hr*;
 
         # floor_area= 2500.0
         # exterior_ceiling_fraction = 1.0
@@ -1229,7 +1250,7 @@ class HVACDSOT:  # TODO: update class name
         def div(x, y, def_val_if_zero_denom=0):
             return x / y if y != 0 else def_val_if_zero_denom
 
-        self.UA = div(Ac, Rc) + div(Af, Rf) + div(Aw, Rw) + div(Ag, Rg) + div(Ad, Rd) + Vterm * I
+        self.UA = div(Ac, Rc) + div(Af, Rf) + div(Aw, Rw) + div(Ag, Rg) + div(Ad, Rd) + Vterm * ac_per_hr
         self.CA = 3 * Vterm
         self.HM = hs * (Aw / EWR + Awt * IWR + Ac * self.stories / ECR)
         self.CM = self.sqft * mf - 2 * Vterm
@@ -1255,20 +1276,19 @@ class HVACDSOT:  # TODO: update class name
             self.design_heating_capacity = math.ceil(round_value) * 10000.0
 
         log.debug('ETP model ' + self.name)
-        log.debug('  UA -> {:.2f}'.format(self.UA))
+        log.debug(f'  UA -> {self.UA:.2f}')
         # print('  UA -> {:.2f}'.format(self.UA))
-        log.debug('  CA -> {:.2f}'.format(self.CA))
+        log.debug(f'  CA -> {self.CA:.2f}')
         # print('  CA -> {:.2f}'.format(self.CA))
-        log.debug('  HM -> {:.2f}'.format(self.HM))
-        log.debug('  CM -> {:.2f}'.format(self.CM))
+        log.debug(f'  HM -> {self.HM:.2f}')
+        log.debug(f'  CM -> {self.CM:.2f}')
         # print('  CM -> {:.2f}'.format(self.CM))
 
     def set_price_forecast(self, price_forecast: list) -> None:
-        """ Set the 24-hour price forecast and calculate mean and std
+        """ Set the 24-hour price forecast and calculate price mean, std_dev and delta
 
         Args:
-            price_forecast (list): List of 24 floats predicting price in
-            $/kWh
+            price_forecast (list): List of 24 floats predicting price in $/kWh
         """
         self.price_forecast = price_forecast[:]
         # print("self.price_forecast")
@@ -1277,132 +1297,121 @@ class HVACDSOT:  # TODO: update class name
         self.price_std_dev = np.std(self.price_forecast)
         self.price_delta = np.max(self.price_forecast) - np.min(self.price_forecast)
 
-    def set_temperature_forecast(self, data_str: str) -> None:
-        """ Set the temperature forecast class attribute from the passed-in data
-        string
+    def set_temperature_forecast(self, message: str) -> None:
+        """ Set the 48-hour temperature forecast class attribute
 
         Min and max are stored as class attributes.
 
         Args:
-            data_str (str): floats representing predicted temperature in F
+            message (str): temperature_forecast ([float x 48]) in F
         """
-
-        temperature_forecast = eval(data_str)
-        self.temperature_forecast = [float(temperature_forecast[key]) for key in temperature_forecast.keys()]
+        temperature_forecast = eval(message)
+        self.temperature_forecast = [float(temperature_forecast[key]) for key in temperature_forecast]
         # print ("temperature forecast inside function")
         # print(self)
         # print (self.temperature_forecast)
         self.temp_min_48hour = min(self.temperature_forecast)
         self.temp_max_48hour = max(self.temperature_forecast)
 
-    def set_humidity_forecast(self, data_str: str) -> None:
-        """ Set the humidity forecast class attribute from the passed-in data
-        string
+    def set_humidity_forecast(self, message: str) -> None:
+        """ Set the 48-hour humidity_forecast class attribute so that it can be used for forcasting
 
         Args:
-            data_str (str): floats representing predicted humidity in F
+            message (str): humidity forecast ([float x 48]) in relative percent
         """
+        humidity_forecast = eval(message)
+        self.humidity_forecast = [float(humidity_forecast[key]) for key in humidity_forecast]
 
-        humidity_forecast = eval(data_str)
-        self.humidity_forecast = [float(humidity_forecast[key]) for key in humidity_forecast.keys()]
-
-    def set_solargain_forecast(self, solargain_array: list) -> None:
-        """ Set the solargain forecast class attribute from the passed-in list
+    def set_solargain_forecast(self, solargain_forecast: list) -> None:
+        """ Set the 48-hour solargain_forecast class attribute so that it can be used for forcasting
 
         Args:
-            solargain_array (list): forecasted solargain in BTu/(h*sf)
+            solargain_forecast (list): solar gain forecast ([float x 48]) in BTu/(h*sf)
         """
         # bringing solar gain to nominal for the use in different homes
         # A3 has solargain_factor of 40.548
-        self.solargain_forecast = solargain_array
+        self.solargain_forecast = solargain_forecast
 
-    def store_full_internalgain_forecast(self, forecast_internalgain: list) -> None:
-        """ Set the internal gain forecast class attribute from the passed-in
-        list 
-        
-        Args:
-            forecast_internalgain (list): internal gain forecast
-
-        """
-        self.full_internalgain_forecast = forecast_internalgain
-
-    def store_full_zipload_forecast(self, forecast_ziploads: list) -> None:
-        """Set the zipload forecast class attribute from the passed-in
-        list 
+    def store_full_internalgain_forecast(self, full_internalgain_forecast : list) -> None:
+        """ Sets the full_internalgain_forecast class attribute so that it can be used for forcasting
 
         Args:
-            forecast_ziploads: internal gain forecast to store for future
+            full_internalgain_forecast (list): internal gain forecast to store for future
         """
-        self.full_forecast_ziploads = forecast_ziploads
+        self.full_internalgain_forecast = full_internalgain_forecast
 
-    def set_internalgain_forecast(self, internalgain_array: list) -> None:
-        """Set the internal gain forecast class attribute from the passed-in
-        list 
+    def store_full_zipload_forecast(self, full_forecast_ziploads: list) -> None:
+        """ Sets the full_forecast_ziploads class attribute so that it can be used for forcasting
 
         Args:
-            internalgain_array (list): forecasted internalgain in BTu/h
+            full_forecast_ziploads: zip load forecast to store for future
         """
-        self.internalgain_forecast = internalgain_array
+        self.full_forecast_ziploads = full_forecast_ziploads
+
+    def set_internalgain_forecast(self, internalgain_forecast: list) -> None:
+        """ Set the 48-hour internalgain_forecast class attribute so that it can be used for forcasting
+
+        Args:
+            internalgain_forecast (list): internal gain forecast ([float x 48]) in BTu/h
+        """
+        self.internalgain_forecast = internalgain_forecast
 
     def set_zipload_forecast(self, forecast_ziploads: list) -> None:
-        """
-        Set the 48-hour zipload forecast class attribute from the passed-in
-        list
+        """ Set the 48-hour forecast_ziploads class attribute so that it can be used for forcasting
+
         Args:
             forecast_ziploads: array of zipload forecast
         """
         self.forecast_ziploads = forecast_ziploads
 
-    def set_temperature(self, data_str: str) -> None:
-        """ Sets the outside temperature class attribute from the passed-in
-        value
+    def set_temperature(self, message: str) -> None:
+        """ Sets the outside temperature class attribute
 
         Args:
-            data_str (str): outdoor temperature in F
+            message (str): Message with outdoor temperature in F
         """
-        val = parse_number(data_str)
+        val = parse_number(message)
         self.outside_air_temperature = val
 
-    def set_humidity(self, data_str: str) -> None:
-        """ Sets the humidity class attribute from the passed-in string
+    def set_humidity(self, message: str):
+        """ Sets the humidity class attribute
 
         Args:
-            data_str (str): relative humidity
+            message (str): Message with humidity
         """
-        val = parse_number(data_str)
+        val = parse_number(message)
         if val > 0.0:
             self.humidity = val
 
-    def set_solar_direct(self, data_str: str) -> None:
+    def set_solar_direct(self, message: str) -> None:
         """ Sets the solar irradiance attribute from the passed-in string
 
         Only updates value if the irradiance is greater than or equal to zero.
 
         Args:
-            data_str (str): solar irradiance
+            message (str): Message with solar irradiance
         """
-        val = parse_number(data_str)
+        val = parse_number(message)
         if val >= 0.0:
             self.solar_direct = val
 
-    def set_solar_diffuse(self, fncs_str):
-        """ Sets the solar diffuse attribute, if greater than zero
+    def set_solar_diffuse(self, message: str) -> None:
+        """ Sets the solar_diffuse class attribute, if greater than zero
 
         Args:
-            fncs_str (str): FNCS message with solar irradiance
+            message (str): Message with solar irradiance
         """
-        val = parse_number(fncs_str)
+        val = parse_number(message)
         if val >= 0.0:
             self.solar_diffuse = val
 
     def get_solargain(self, climate_conf: dict, current_time: datetime) -> float:
-        """Estimates the nominal solargain without solargain_factor
+        """ Estimates the nominal solargain without solargain factor
 
         Args:
-            climate_conf (dict): Holds longitude and latitude for location
+            climate_conf (dict): Holds latitude and longitude info for location
             where solar gain is being calculated
-            current_time (datetime): Current time when solar gain is being
-            calculated
+            current_time (datetime): Current time when solar gain is being calculated
 
         Returns:
             float: calculated solar gain
@@ -1425,13 +1434,13 @@ class HVACDSOT:  # TODO: update class name
         self.solar_gain = self.calc_solargain(day_of_yr, start_hour, dnr, dhr, lat, lon, tz_offset)
         return self.solar_gain
 
-    def calc_solargain(self, 
-                        day_of_yr: int, 
-                        start_hour: int, 
-                        dnr: float, 
-                        dhr: float, 
-                        lat: float, 
-                        lon: float, 
+    def calc_solargain(self,
+                        day_of_yr: int,
+                        start_hour: int,
+                        dnr: float,
+                        dhr: float,
+                        lat: float,
+                        lon: float,
                         tz_offset: float) -> float:
         """Implements GridLAB-D solargain calculation from climate.cpp and house_e.cpp
 
@@ -1456,7 +1465,7 @@ class HVACDSOT:  # TODO: update class name
         std_time = start_hour
         sol_time = std_time + eq_time + 12.0 / math.pi * (lon - std_meridian)
         solar_flux = []
-        for cpt in self.surface_angles.keys():
+        for cpt in self.surface_angles:
             vertical_angle = math.radians(90)
             if cpt == 'H':
                 vertical_angle = math.radians(0)
@@ -1465,13 +1474,13 @@ class HVACDSOT:  # TODO: update class name
         solar_gain = avg_solar_flux * 3.412  # incident_solar_radiation is now in Btu/(h*sf)
         return solar_gain
 
-    def calc_solar_flux(self, 
-                        cpt: str, 
-                        day_of_yr: int, 
-                        lat: float, 
-                        sol_time: float, 
-                        dnr_i: float, 
-                        dhr_i: float, 
+    def calc_solar_flux(self,
+                        cpt: str,
+                        day_of_yr: int,
+                        lat: float,
+                        sol_time: float,
+                        dnr_i: float,
+                        dhr_i: float,
                         vertical_angle: float) -> float:
         """Calculates solar flux based on passe-in, time, location, and
         orientation
@@ -1489,7 +1498,7 @@ class HVACDSOT:  # TODO: update class name
         Returns:
             float: Total solar flux
         """
-                                   
+
         az = math.radians(self.surface_angles[cpt])
         if cpt == 'H':
             az = math.radians(self.surface_angles['E'])
@@ -1513,8 +1522,7 @@ class HVACDSOT:  # TODO: update class name
                         cosdecl * coslat * cosslope * coshr +
                         cosdecl * sinlat * sinslope * cosaz * coshr +
                         cosdecl * sinslope * sinaz * sinhr)
-        if cos_incident < 0:
-            cos_incident = 0
+        cos_incident = max(cos_incident, 0)
         return dnr_i * cos_incident + dhr_i
 
     def inform_bid(self, price: float) -> None:
@@ -1525,14 +1533,13 @@ class HVACDSOT:  # TODO: update class name
         """
         self.cleared_price = price
 
-    def bid_accepted(self, model_diag_level: int, sim_time: datetime) -> bool:
+    def bid_accepted(self, sim_time: datetime) -> bool:
         """ Update the thermostat setting if the last bid was accepted
 
         The last bid is always "accepted". If it wasn't high enough,
         then the thermostat could be turned up.
 
         Args:
-            model_diag_level (int): Specific level for logging errors; set to 11
             sim_time (str): Current time in the simulation; should be human-readable
 
         Returns:
@@ -1591,7 +1598,7 @@ class HVACDSOT:  # TODO: update class name
             else:
                 ramp_high_tmp = 10000000000000.0
                 ramp_low_tmp = 10000000000000.0
-                log.log(model_diag_level, '{} {} -- thermostat mode not defined.'.format(self.name, sim_time))
+                log.log(self.model_diag_level, f'{self.name} {sim_time} -- thermostat mode not defined.')
             use_RT_curve = True
             use_DA_curve = False
             use_leg_clearing = False
@@ -1624,7 +1631,7 @@ class HVACDSOT:  # TODO: update class name
                 # LF = 1 + 0.1 + self.latent_load_fraction / (1 + math.exp(4 - 10 * self.humidity))
                 # eps_rt = math.exp(-self.UA / (self.CM + self.CA) * 1.0 / 12.0)
                 # setpoint_tmp_DA = eps_rt * self.air_temp + (1 - eps_rt) * (self.outside_air_temperature + (
-                #         (-self.cooling_COP * 0.98 * self.bid_quantity * 3412.1416331279 / LF +
+                #         (-self.cooling_COP * 0.98 * self.bid_quantity * self.BTU_PER_HR_PER_KW  / LF +
                 #          self.Qi + self.solar_gain * self.solar_heatgain_factor) / self.UA))
             elif use_DA_curve:
                 if self.thermostat_mode == "Cooling":
@@ -1671,29 +1678,25 @@ class HVACDSOT:  # TODO: update class name
                 elif setpoint_tmp < basepoint_tmp - abs(self.range_low_heat):
                     setpoint_tmp = basepoint_tmp - abs(self.range_low_heat)
 
-            returnflag = True
+            return_flag = True
         else:
             setpoint_tmp = basepoint_tmp
-            returnflag = False
+            return_flag = False
 
         if self.thermostat_mode == 'Cooling':
             self.cooling_setpoint = setpoint_tmp
             if self.cooling_setpoint_lower < self.cooling_setpoint < self.cooling_setpoint_upper:
                 pass
             else:
-                log.log(model_diag_level,
-                        '{} {} -- cooling_setpoint ({}), outside of nominal range {} to {}'
-                        .format(self.name, sim_time, self.cooling_setpoint, self.cooling_setpoint_lower,
-                                self.cooling_setpoint_upper))
+                log.log(self.model_diag_level,
+                        f'{self.name} {sim_time} -- cooling_setpoint ({self.cooling_setpoint}), outside of nominal range {self.cooling_setpoint_lower} to {self.cooling_setpoint_upper}')
         else:
             self.heating_setpoint = setpoint_tmp
             if self.heating_setpoint_lower < self.heating_setpoint < self.heating_setpoint_upper:
                 pass
             else:
-                log.log(model_diag_level,
-                        '{} {} -- heating_setpoint ({}), outside of nominal range of {} to {}'
-                        .format(self.name, sim_time, self.heating_setpoint, self.heating_setpoint_lower,
-                                self.heating_setpoint_upper))
+                log.log(self.model_diag_level,
+                        f'{self.name} {sim_time} -- heating_setpoint ({self.heating_setpoint}), outside of nominal range of {self.heating_setpoint_lower} to {self.heating_setpoint_upper}')
 
         if self.heating_setpoint + self.deadband / 2.0 >= self.cooling_setpoint - self.deadband / 2.0:
             if self.thermostat_mode == 'Heating':
@@ -1744,14 +1747,7 @@ class HVACDSOT:  # TODO: update class name
 
         self.air_temp_agent = x[0][0]  # this gets updated at the end
         self.mass_temp = x[1][0]  # this gets updated at the end
-
-        # if self.name == "R4_12_47_1_tn_9_hse_1":
-        #     print("RT clearing",self.name,sim_time,self.hvac_on,self.hvac_kw)
-        #     print("temp",setpoint_tmp,self.temp_room[0],self.temp_curve)
-        #     print("quan",self.bid_quantity,self.Qopt_da_prev,self.quantity_curve)
-        #     print("price",self.cleared_price,self.price_forecast_0)
-        #     print("bid",self.bid_rt)
-        return returnflag
+        return return_flag
 
     def set_time(self, minute: int , hour: int, day: int) -> None:
         """ Sets class attributes values for minute, hour, and day
@@ -1765,11 +1761,10 @@ class HVACDSOT:  # TODO: update class name
         self.hour = hour
         self.day = day
 
-    def change_basepoint(self, model_diag_level: int, sim_time: datetime) -> bool:
+    def change_basepoint(self, sim_time: datetime) ->bool:
         """ Updates the time-scheduled thermostat setting
 
         Args:
-            model_diag_level (int): Specific level for logging errors; set to 11
             sim_time (str): Current time in the simulation; should be human-readable
 
         Returns:
@@ -1800,105 +1795,115 @@ class HVACDSOT:  # TODO: update class name
                 # log.info('basepoint_cooling is within the bounds.')
                 pass
             else:
-                log.log(model_diag_level, '{} {} -- basepoint_cooling ({}) is out of bounds.'
-                        .format(self.name, sim_time, self.basepoint_cooling))
+                log.log(self.model_diag_level, f'{self.name} {sim_time} -- basepoint_cooling ({self.basepoint_cooling}) is out of bounds.')
             self.basepoint_heating = val_heat
             if 60 < self.basepoint_heating < 85:
                 # log.info('basepoint_heating is within the bounds.')
                 pass
             else:
-                log.log(model_diag_level, '{} {} -- basepoint_heating ({}) is out of bounds.'
-                        .format(self.name, sim_time, self.basepoint_heating))
-            self.calc_thermostat_settings(model_diag_level, sim_time)  # update thermostat settings
+                log.log(self.model_diag_level, f'{self.name} {sim_time} -- basepoint_heating ({self.basepoint_heating}) is out of bounds.')
+            self.calc_thermostat_settings(sim_time)  # update thermostat settings
             return True
         return False
 
-    def set_house_load(self, data_str: str) -> None:
-        """ Sets the hvac_load class attribute, if greater than zero
+    def set_house_load(self, message: str) -> None:
+        """ Sets the house_load class attribute, if greater than zero
 
         Args:
-            data_str (str): house load in kW
+            message (str): Message with house load in kW
         """
-        val = parse_number(data_str)
-        if val > 0.0:
+        log.debug(f'hvac name: {self.houseName}, house load: {message}')
+        val = parse_number(message)
+        if 0.0 < val:
             self.house_kw = val
+        else:
+            log.log(self.model_diag_level, f'hvac name: {self.houseName}, hvac load: {message}')
 
-    def set_hvac_load(self, data_str: str) -> None:
+    def set_hvac_load(self, message: str) -> None:
         """ Sets the hvac_load class attribute, if greater than zero
 
         Args:
-            data_str (str): HVAC load in kW
+            message (str): Message with HVAC load in kW
         """
-        val = parse_number(data_str)
-        if val > 0.0:
+        log.debug(f'hvac name: {self.houseName}, hvac load: {message}')
+        val = parse_number(message)
+        if 0.0 < val:  # < 99.0:
             self.hvac_kw = val
+        else:
+            log.log(self.model_diag_level, f'hvac name: {self.houseName}, hvac load: {message}')
 
-    def set_wh_load(self, data_str: str) -> None:
-        """Sets the wh_load attribute, if greater than zero
+    def set_wh_load(self, message: str) -> None:
+        """ Sets the wh_load class attribute, if greater than zero
 
         Args:
-            data_str (str): Waster heater load in kW
+            message (str): Message with water load in kW
         """
-        val = parse_number(data_str)
-        if val >= 0.0:
+        log.debug(f'hvac name: {self.houseName}, water heater load: {message}')
+        val = parse_number(message)
+        if 0.0 < val:  # < 99.0:
             self.wh_kw = val
+        else:
+            log.log(self.model_diag_level, f'hvac name: {self.houseName}, water heater load: {message}')
 
-    def set_hvac_state(self, data_str: str) -> None:
+    def set_hvac_state(self, message: str) -> None:
         """ Sets the hvac_on attribute
 
         Args:
-            data_str (str): HVAC state, "ON" or "OFF"
+            message (str): Message with state, ON or OFF
         """
-        if data_str == 'OFF':
+        log.debug(f'hvac name: {self.houseName}, hvac state: {message}')
+        if message == 'OFF':
             self.hvac_on = False
         else:
             self.hvac_on = True
 
-    def set_air_temp(self, data_str: str, model_diag_level: int, sim_time: str) -> None:
+    def set_air_temp(self, message: str, sim_time: datetime) -> None:
         """ Sets the air_temp attribute
 
         Args:
-            data_str (str): temperature in degrees Fahrenheit
-            model_diag_level (int): Specific level for logging errors
+            message (str): Message with temperature in degrees Fahrenheit
             sim_time (str): Current time in the simulation; should be human-readable
         """
-        T_air = parse_number(data_str)
+        log.debug(f'hvac load name: {self.houseName}, string: {message}')
+        T_air = parse_number(message)
         if self.T_lower_limit < T_air < self.T_upper_limit:
             pass
         else:
             # No more than 20deg swing in an hour
             if self.air_temp - 20 < T_air < self.air_temp + 20:
                 T_air = self.air_temp
-                log.log(model_diag_level,
-                        '{} Severe Warning temp {}: 20 degree swing, setting to last temperature'
-                        .format(self.name, T_air))
-            log.log(model_diag_level,
-                    '{} {} -- air_temp ({}) is out of bounds, outside of nominal range of {} to {}.'
-                    .format(self.name, sim_time, self.air_temp, self.T_lower_limit, self.T_upper_limit))
+                log.log(self.model_diag_level,
+                        f'{self.name} Severe Warning temp {T_air}: 20 degree swing, setting to last temperature')
+            log.log(self.model_diag_level,
+                    f'{self.name} {sim_time} -- air_temp ({self.air_temp}) is out of bounds, outside of nominal range of {self.T_lower_limit} to {self.T_upper_limit}.')
         self.air_temp = T_air
 
         # This is a correction within the hour for the DA prediction of thermostat mode using heating as default
-        if self.air_temp >= (self.temp_min_cool + self.temp_max_heat) / 2.0:
-            # if self.air_temp >= self.temp_min_cool + self.deadband / 2.0:
+        self.participating = False
+        self.thermostat_mode = 'OFF'
+        if self.air_temp > (self.temp_min_cool + self.temp_max_heat) / 2.0:
             self.thermostat_mode = 'Cooling'
-        else:
+            if self.cooling_system_type != "NONE":
+                self.participating = self.cooling_participating
+        elif self.air_temp < (self.temp_min_cool + self.temp_max_heat) / 2.0:
             self.thermostat_mode = 'Heating'
+            if self.heating_system_type != "GAS":
+                self.participating = self.heating_participating
 
-    def set_voltage(self, data_str: str) -> None:
+    def set_voltage(self, message: str) -> None:
         """ Sets the mtr_v class attribute
 
         Args:
-            data_str (str): FNCS message with meter line-neutral voltage
+            message (str): Message with meter line-neutral voltage
         """
-        self.mtr_v = parse_magnitude(data_str)
+        log.debug(f'hvac load name: {self.houseName}, string: {message}')
+        self.mtr_v = parse_magnitude(message)
 
-    def formulate_bid_rt(self, model_diag_level: int, sim_time: str) -> list:
-        """Bid to run the air conditioner through the next period for real-time
+    def formulate_bid_rt(self, sim_time):
+        """ Bid to run the air conditioner through the next period for real-time
 
         Args:
-            model_diag_level (int): Unused; specific level for logging errors
-            sim_time (str): Unused; current time in the simulation; should be 
-            human-readable
+            sim_time (str): Current time in the simulation; should be human-readable
 
         Returns:
             list: [bid price ($/kwh), bid quantity (kW)] x 4
@@ -1932,9 +1937,8 @@ class HVACDSOT:  # TODO: update class name
             Qh_org = 0.0
 
         # estimating the HVAC consumption based on the last reported from GLD
-        Qi = (self.house_kw - abs(Qh_org) - self.wh_kw) * 3412.1416331279
-        if Qi <= 0.0:
-            Qi = 0.0
+        Qi = (self.house_kw - abs(Qh_org) - self.wh_kw) * self.BTU_PER_HR_PER_KW
+        Qi = max(0.0, Qi)
 
         Qs = self.solar_gain * self.solar_heatgain_factor
 
@@ -1959,7 +1963,7 @@ class HVACDSOT:  # TODO: update class name
 
         if self.CA != 0.0:
             self.A_ETP[0][0] = -1.0 * (self.UA + self.HM) / self.CA
-            self.A_ETP[0][1] = self.HM / self.CA # 
+            self.A_ETP[0][1] = self.HM / self.CA
             self.B_ETP_ON[0] = (self.UA * self.outside_air_temperature / self.CA) + (Qa_ON / self.CA)
             self.B_ETP_OFF[0] = (self.UA * self.outside_air_temperature / self.CA) + (Qa_OFF / self.CA)
 
@@ -2012,7 +2016,7 @@ class HVACDSOT:  # TODO: update class name
 
             # self.temp_curve[0] = self.air_temp
             if ((self.thermostat_mode == "Cooling" and self.hvac_on) or
-                    (self.thermostat_mode != "Cooling" and not self.hvac_on)):
+                (self.thermostat_mode != "Cooling" and not self.hvac_on)):
                 self.temp_curve[0] = self.air_temp + self.deadband / 2.0
             elif ((self.thermostat_mode != "Cooling" and self.hvac_on) or
                   (self.thermostat_mode == "Cooling" and not self.hvac_on)):
@@ -2045,9 +2049,9 @@ class HVACDSOT:  # TODO: update class name
                     Q_total += 1 / 10 * self.hvac_kw
                     # self.quantity_curve[itime] = (time[itime]-last_T_off) * self.hvac_kw / T
                     if ((x[0][0] < self.temp_curve[itemp] - self.deadband / 2.0 and
-                         self.thermostat_mode == 'Cooling') or
-                            (x[0][0] > self.temp_curve[itemp] + self.deadband / 2.0 and
-                             self.thermostat_mode == 'Heating')):
+                            self.thermostat_mode == 'Cooling') or
+                        (x[0][0] > self.temp_curve[itemp] + self.deadband / 2.0 and
+                            self.thermostat_mode == 'Heating')):
                         hvac_on_tmp = False
                 else:
                     AxB = AEx + self.B_ETP_OFF
@@ -2063,9 +2067,9 @@ class HVACDSOT:  # TODO: update class name
                     # self.quantity_curve[itime] = last_T_on * self.hvac_kw / T
                     # last_T_off = time[itime]
                     if ((x[0][0] > self.temp_curve[itemp] + self.deadband / 2.0 and
-                         self.thermostat_mode == 'Cooling') or
-                            (x[0][0] < self.temp_curve[itemp] - self.deadband / 2.0 and
-                             self.thermostat_mode == 'Heating')):
+                            self.thermostat_mode == 'Cooling') or
+                        (x[0][0] < self.temp_curve[itemp] - self.deadband / 2.0 and
+                            self.thermostat_mode == 'Heating')):
                         hvac_on_tmp = True
                 # self.temp_curve[itime] = x[0][0]
                 # if self.thermostat_mode == "Cooling":
@@ -2132,10 +2136,6 @@ class HVACDSOT:  # TODO: update class name
         BID = [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]]
         P = 1
         Q = 0
-        # Qopt_DA = self.bid_da[0][1][0]*min_adj/60.0 + self.Qopt_da_prev*(1-min_adj/60.0)
-        # Qopt_DA = self.bid_da[0][1][0]
-        # self.bid_quantity_rt = Qopt_DA
-        # topt = self.temp_room[0]
         if Q_min != Q_max:
             CurveSlope = (delta_DA_price / (0 - self.hvac_kw) * (1 + self.ProfitMargin_slope / 100))
             yIntercept = self.price_forecast_0 - CurveSlope * Qopt_DA
@@ -2171,14 +2171,10 @@ class HVACDSOT:  # TODO: update class name
             BID[3][P] = min(self.price_forecast) - (self.ProfitMargin_intercept / 100) * delta_DA_price
 
         for i in range(4):
-            if BID[i][Q] > self.hvac_kw:
-                BID[i][Q] = self.hvac_kw
-            if BID[i][Q] < 0:
-                BID[i][Q] = 0
-            if BID[i][P] > self.price_cap:
-                BID[i][P] = self.price_cap
-            if BID[i][P] < 0:
-                BID[i][P] = 0
+            BID[i][Q] = min(BID[i][Q], self.hvac_kw)
+            BID[i][Q] = max(BID[i][Q], 0)
+            BID[i][P] = min(BID[i][P], self.price_cap)
+            BID[i][P] = max(BID[i][P], 0)
 
         self.RT_Q_max = Q_max
         self.RT_Q_min = Q_min
@@ -2215,7 +2211,7 @@ class HVACDSOT:  # TODO: update class name
             temp1 = ((temp_room[t] - self.eps * t_pre) / (1 - self.eps)) - self.temperature_forecast[t]
             temp2 = (temp1 * self.UA - self.internalgain_forecast[t] -
                      self.solargain_forecast[t] * self.solar_heatgain_factor)
-            quant = temp2 / (cop_adj[t] * 3412.1416331279 / self.latent_factor[t])
+            quant = temp2 / (cop_adj[t] * self.BTU_PER_HR_PER_KW  / self.latent_factor[t])
             quant_cool = max(quant, 0)
 
             # estimate required quantity for heating
@@ -2228,7 +2224,7 @@ class HVACDSOT:  # TODO: update class name
             temp1 = ((temp_room[t] - self.eps * t_pre) / (1 - self.eps)) - self.temperature_forecast[t]
             temp2 = (temp1 * self.UA - self.internalgain_forecast[t] -
                      self.solargain_forecast[t] * self.solar_heatgain_factor)
-            quant = temp2 / (cop_adj[t] * 3412.1416331279 / self.latent_factor[t])
+            quant = temp2 / (cop_adj[t] * self.BTU_PER_HR_PER_KW  / self.latent_factor[t])
             quant_heat = max(quant, 0)
 
             # Both quant_cool and quant_heat can not be positive simultaneously.
@@ -2242,7 +2238,7 @@ class HVACDSOT:  # TODO: update class name
 
         return Quantity
 
-    def formulate_bid_da(self) -> list: 
+    def formulate_bid_da(self) -> list:
         """ Formulate DA bid in the form of four-point bids, one for each hour
         in windowLength
 
@@ -2253,8 +2249,6 @@ class HVACDSOT:  # TODO: update class name
             BID (float) (windowLength X 4 X 2): DA bids to be sent to the retail DA market
         """
 
-        # save the previous bid quantity for interpolation use
-        self.Qopt_da_prev = self.bid_da[0][1][0]
         self.price_forecast_0 = self.price_forecast[0]
         BID = []
         for _ in self.TIME:
@@ -2298,17 +2292,13 @@ class HVACDSOT:  # TODO: update class name
                     self.ProfitMargin_intercept / 100) * delta_DA_price
 
             for i in range(4):
-                if BID[t][i][Q] > self.hvac_kw:
-                    BID[t][i][Q] = self.hvac_kw
-                if BID[t][i][Q] < 0:
-                    BID[t][i][Q] = 0
-                if BID[t][i][P] > self.price_cap:
-                    BID[t][i][P] = self.price_cap
-                if BID[t][i][P] < 0:
-                    BID[t][i][P] = 0
+                BID[t][i][Q] = min(BID[t][i][Q], self.hvac_kw)
+                BID[t][i][Q] = max(BID[t][i][Q], 0)
+                BID[t][i][P] = min(BID[t][i][P], self.price_cap)
+                BID[t][i][P] = max(BID[t][i][P], 0)
 
         self.bid_da = BID
-        self.RT_minute_count_interpolation = float(0.0)
+        self.RT_minute_count_interpolation = 0.0
 
         return self.bid_da
 
@@ -2383,14 +2373,10 @@ class HVACDSOT:  # TODO: update class name
 
             # making sure the desired temperature falls between min and max temp values
             # these values are used to adjust the basepoint and vice-versa
-            if val_cool > self.temp_max_cool_da:
-                val_cool = self.temp_max_cool_da
-            if val_cool < self.temp_min_cool_da:
-                val_cool = self.temp_min_cool_da
-            if val_heat > self.temp_max_heat_da:
-                val_heat = self.temp_max_heat_da
-            if val_heat < self.temp_min_heat_da:
-                val_heat = self.temp_min_heat_da
+            val_cool = min(val_cool, self.temp_max_cool_da)
+            val_cool = max(val_cool, self.temp_min_cool_da)
+            val_heat = min(val_heat, self.temp_max_heat_da)
+            val_heat = max(val_heat, self.temp_min_heat_da)
             self.temp_desired_48hour_cool[itime] = val_cool
             self.temp_desired_48hour_heat[itime] = val_heat
 
@@ -2422,8 +2408,6 @@ class HVACDSOT:  # TODO: update class name
                         self.heating_COP_K2 * self.temperature_forecast[t] ** 2 +
                         self.heating_COP_K3 * self.temperature_forecast[t] ** 3)
 
-        # temp_room_init = self.air_temp
-        self.temp_da_prev = self.temp_room[0]
         if self.thermostat_mode == "Cooling":
             self.temp_room_init = self.cooling_setpoint
         else:
@@ -2477,35 +2461,21 @@ class HVACDSOT:  # TODO: update class name
             _type_: _description_
         """
         if self.thermostat_mode == 'Cooling':
-            if t == 0:
-                # Initial SOHC state
-                return m.temp_room[0] == (self.eps * self.temp_room_init + (1 - self.eps) *
-                                          (self.temperature_forecast[0] +
-                                           ((-self.cooling_cop_adj[0] * 0.98 * m.quan_hvac[0] *
-                                             3412.1416331279 / self.latent_factor[0] + self.internalgain_forecast[0] +
-                                             self.solargain_forecast[0] * self.solar_heatgain_factor) / self.UA)))
-            else:
-                # update SOHC
-                return m.temp_room[t] == (self.eps * m.temp_room[t - 1] + (1 - self.eps) *
-                                          (self.temperature_forecast[t] +
-                                           ((-self.cooling_cop_adj[t] * 0.98 * m.quan_hvac[t] *
-                                             3412.1416331279 / self.latent_factor[t] + self.internalgain_forecast[t] +
-                                             self.solargain_forecast[t] * self.solar_heatgain_factor) / self.UA)))
+            factor = (1 - self.eps) * (self.temperature_forecast[t] +
+                      ((-self.cooling_cop_adj[t] * 0.98 * m.quan_hvac[t] *
+                        self.BTU_PER_HR_PER_KW  / self.latent_factor[t] + self.internalgain_forecast[t] +
+                        self.solargain_forecast[t] * self.solar_heatgain_factor) / self.UA))
         else:
-            if t == 0:
-                # Initial SOHC state
-                return m.temp_room[0] == (self.eps * self.temp_room_init + (1 - self.eps) *
-                                          (self.temperature_forecast[0] +
-                                           ((self.heating_cop_adj[0] * 1.02 * m.quan_hvac[0] *
-                                             3412.1416331279 / self.latent_factor[0] + self.internalgain_forecast[0] +
-                                             self.solargain_forecast[0] * self.solar_heatgain_factor) / self.UA)))
-            else:
-                # update SOHC
-                return m.temp_room[t] == (self.eps * m.temp_room[t - 1] + (1 - self.eps) *
-                                          (self.temperature_forecast[t] +
-                                           ((self.heating_cop_adj[t] * 1.02 * m.quan_hvac[t] *
-                                             3412.1416331279 / self.latent_factor[t] + self.internalgain_forecast[t] +
-                                             self.solargain_forecast[t] * self.solar_heatgain_factor) / self.UA)))
+            factor = (1 - self.eps) * (self.temperature_forecast[t] +
+                      ((self.heating_cop_adj[t] * 1.02 * m.quan_hvac[t] *
+                        self.BTU_PER_HR_PER_KW  / self.latent_factor[t] + self.internalgain_forecast[t] +
+                        self.solargain_forecast[t] * self.solar_heatgain_factor) / self.UA))
+        if t == 0:
+            # Initial SOHC state
+            return m.temp_room[t] == (self.eps * self.temp_room_init + factor)
+        else:
+            # update SOHC
+            return m.temp_room[t] == (self.eps * m.temp_room[t - 1] + factor)
 
     def temp_bound_rule(self, m: pyo.ConcreteModel, t: int) -> tuple:
         """Defines the temperature limits for the Pyomo optimization
@@ -2526,11 +2496,11 @@ class HVACDSOT:  # TODO: update class name
 
     def DA_optimal_quantities(self) -> list:
         """ Generates day-ahead optimized quantities for HVAC according
-        to the forecasted prices and water draw schedule, called by 
+        to the forecasted prices and water draw schedule, called by
         DA_formulate_bid function
 
         Returns:
-            list: (1 x windowLength) Optimized quantities for each hour in the 
+            list: (1 x windowLength) Optimized quantities for each hour in the
             DA bidding horizon, in kWh
         """
 
@@ -2543,9 +2513,18 @@ class HVACDSOT:  # TODO: update class name
         #     temp_room.insert(len(self.temp_room), temp_room.pop(0))
         #     return [Quantity, temp_room]
 
-        nonlinear = True
-        # Initialize the problem
+        # Parameters
+        params = {
+            "success": True,
+            "termination": "",
+            "hvac_kw": self.hvac_kw,
+            "temp_bounds": {}
+        }
+        Quantity = [0 for _ in self.TIME]
+        temp_room = [0 for _ in self.TIME]
 
+        # Initialize the problem, always nonlinear right now
+        nonlinear = True
         if nonlinear:
             # Create model
             model = pyo.ConcreteModel()
@@ -2556,76 +2535,79 @@ class HVACDSOT:  # TODO: update class name
             model.obj = pyo.Objective(rule=self.obj_rule, sense=pyo.minimize)
             # Constraints
             model.con1 = pyo.Constraint(self.TIME, rule=self.con_rule_eq1)
-            # Solve
-            results = get_run_solver("hvac_" + self.name, pyo, model, self.solver)
-            Quantity = [0 for _ in self.TIME]
-            temp_room = [0 for _ in self.TIME]
-            TOL = 0.00001  # Tolerance for checking bid
+            results = get_run_solver("hvac_" + self.name, pyo, model, self.solver, params)
+
+            # Pass params to the solver for logging purposes
+            temp_bounds = {}
+            for t in self.TIME:
+                temp_bounds[t] = self.temp_bound_rule(None, t)
+            params["temp_bounds"] = temp_bounds
+
+            for k, v in params.items():
+                log.debug(f"{k}:{v}")
+
             for t in self.TIME:
                 temp_room[t] = pyo.value(model.temp_room[t])
-                # if self.temp_room[t] > TOL:
+                # if self.temp_room[t] > 0.00001:  # Tolerance for checking bid
                 Quantity[t] = pyo.value(model.quan_hvac[t])
 
         else:  # for linear optimizer
             prob = pulp.LpProblem("QuantityBid", pulp.LpMinimize)
-            # Decsicion variables
+            # Decision variables
             # classmethod dicts(name, indexs, lowBound=None, upBound=None, cat=0, indexStart=[])
 
             if self.thermostat_mode == 'Cooling':
                 # to avoid problem while warming up and GridLAB-D is heating instead of cooling
-                if self.hvac_kw < 3.0:
-                    self.hvac_kw = 3.0
+                self.hvac_kw = max(self.hvac_kw, 3.0)
                 # if self.hvac_kw>6.0:
                 #    self.hvac_kw = 6.0
                 quan_hvac = pulp.LpVariable.dicts("hvac_quantity", self.TIME, 0, self.hvac_kw)
-                temp_room = pulp.LpVariable.dicts("Temparature_room", self.TIME,
+                tmp_room = pulp.LpVariable.dicts("Temperature_room", self.TIME,
                                                   self.temp_min_cool, self.temp_max_cool)
 
                 prob += (pulp.lpSum((self.price_forecast[t] * quan_hvac[t] * self.slider) +
                                     (((2 * self.range_high_cool * self.price_std_dev) / self.temp_delta) *
-                                     (temp_room[t] - self.temp_desired_48hour_cool[t])) +
+                                     (tmp_room[t] - self.temp_desired_48hour_cool[t])) +
                                     (((2 * self.range_low_cool * self.price_std_dev) / self.temp_delta) *
-                                     (self.temp_desired_48hour_cool[t] - temp_room[t])) for t in self.TIME))
+                                     (self.temp_desired_48hour_cool[t] - tmp_room[t])) for t in self.TIME))
             else:
                 quan_hvac = pulp.LpVariable.dicts("hvac_quantity", self.TIME, -self.hvac_kw, 0)
-                temp_room = pulp.LpVariable.dicts("Temparature_room", self.TIME,
+                tmp_room = pulp.LpVariable.dicts("Temperature_room", self.TIME,
                                                   self.temp_min_heat, self.temp_max_heat)
                 prob += (pulp.lpSum((self.price_forecast[t] * quan_hvac[t]) +
                                     (((-2 * self.range_high_heat * self.price_std_dev) / self.temp_delta) *
-                                     (temp_room[t] - self.temp_desired_48hour_heat[t])) +
+                                     (tmp_room[t] - self.temp_desired_48hour_heat[t])) +
                                     (((-2 * self.range_low_heat * self.price_std_dev) / self.temp_delta) *
-                                     (self.temp_desired_48hour_heat[t] - temp_room[t])) for t in self.TIME))
+                                     (self.temp_desired_48hour_heat[t] - tmp_room[t])) for t in self.TIME))
             # else:
             #    log.log('Thermostat mode is not defined.')
 
             # Constraints
-            prob += temp_room[0] == (self.eps * self.temp_room_init + (1 - self.eps) *
+            prob += tmp_room[0] == (self.eps * self.temp_room_init + (1 - self.eps) *
                                      (self.temp_outside_init +
                                       ((-self.cooling_cop_adj[0] * quan_hvac[0] *
-                                        3412.1416331279 / self.latent_factor[0] +
+                                        self.BTU_PER_HR_PER_KW  / self.latent_factor[0] +
                                         self.internalgain_forecast[0] + self.solargain_forecast[0] *
                                         self.solar_heatgain_factor) / self.UA)))  # Initial SOHC state
 
             for t in range(1, self.windowLength):  # Update SOHC
-                prob += temp_room[t] == (self.eps * temp_room[t - 1] + (1 - self.eps) *
+                prob += tmp_room[t] == (self.eps * tmp_room[t - 1] + (1 - self.eps) *
                                          (self.temperature_forecast[t] +
                                           ((-self.cooling_cop_adj[t] * quan_hvac[t] *
-                                            3412.1416331279 / self.latent_factor[t] +
+                                            self.BTU_PER_HR_PER_KW  / self.latent_factor[t] +
                                             self.internalgain_forecast[t] + self.solargain_forecast[t] *
                                             self.solar_heatgain_factor) / self.UA)))
 
             prob.solve()  # Solve optimization for one HVAC
 
-            Quantity = []
-            for _ in self.TIME:
-                Quantity.append(0)
             TOL = 0.00001  # Tolerance for checking bid
             for t in self.TIME:
-                self.temp_room[t] = temp_room[t].varValue
-                if temp_room[t].varValue > TOL:
+                temp_room[t] = tmp_room[t].varValue
+                if tmp_room[t].varValue > TOL:
                     Quantity[t] = quan_hvac[t].varValue
 
-        return [Quantity, temp_room]
+        log.info(f"DA optimal Q: {Quantity}, {temp_room}")
+        return [Quantity, temp_room, params ]
 
     def test_function(self) -> str:
         """Test function with the only purpose of returning the name of the object
@@ -2636,7 +2618,7 @@ class HVACDSOT:  # TODO: update class name
         return self.name
 
     def set_da_cleared_quantity(self, BID: list, PRICE: float) -> float:
-        """ Finds the cleared quantity based on the submitted bid and the 
+        """ Finds the cleared quantity based on the submitted bid and the
         cleared price
 
         Args:
@@ -2680,7 +2662,6 @@ def test():
          "sqft": 1040.0,
          "stories": 2,
          "doors": 4,
-         "thermal_integrity": "VERY_LITTLE",
          "cooling": "ELECTRIC",
          "heating": "GAS",
          "wh_gallons": 0,

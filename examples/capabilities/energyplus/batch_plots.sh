@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2023 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # file: batch_plots.sh
 
 ./seasonal_plots.sh "FullServiceRestaurant" "Full Service Restaurant" 

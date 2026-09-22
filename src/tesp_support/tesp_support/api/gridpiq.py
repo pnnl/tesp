@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-# Copyright (C) 2022-2024 Battelle Memorial Institute
+# Copyright (c) 2022-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: gridpiq.py
 # Created on 1/23/2023
@@ -37,7 +36,7 @@ class GridPIQ:
 
     def reset_dispatch_data(self):
         """
-
+        reset_dispatch_data
         """
         self.Zeros = []
         self.Total = []
@@ -90,8 +89,7 @@ class GridPIQ:
         Args:
             data (float):
         """
-        if data > self.max_load:
-            self.max_load = data
+        self.max_load = max(self.max_load, data)
 
     def set_datetime(self, start_datetime, end_datetime, s_offset, e_offset):
         """

@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2024 Battelle Memorial Institute
+# Copyright (c) 2017-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: process_houses.py; focus on HVAC
 """Functions to plot house data from GridLAB-D
@@ -7,15 +7,15 @@ Public Functions:
     :process_houses: Reads the data and metadata, then makes the plot.  
 
 """
-import logging
 import json
+import logging
 import os
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 # Setting up logging
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 def read_houses_metrics(path, name_root, diction_name=''):
@@ -25,13 +25,13 @@ def read_houses_metrics(path, name_root, diction_name=''):
     if len(diction_name) > 0:
         try:
             lp = open(diction_name).read()
-        except:
-            logger.error(f'Unable to open house metrics file {diction_name}')
+        except Exception:
+            log.error(f'Unable to open house metrics file {diction_name}')
     else:
         try:
             lp = open(gld_dict_path).read()
-        except:
-            logger.error(f'Unable to open house metrics file {gld_dict_path}')
+        except Exception:
+            log.error(f'Unable to open house metrics file {gld_dict_path}')
     diction = json.loads(lp)
     hse_keys = list(diction['houses'].keys())
     hse_keys.sort()
@@ -122,7 +122,7 @@ def plot_houses(diction, save_file=None, save_only=False):
     ax[0].set_ylabel('Degrees')
     ax[1].set_ylabel('kW')
     ax[1].set_xlabel('Hours')
-    ax[0].set_title('HVAC at {:d} Houses'.format(len(keys_h)))
+    ax[0].set_title(f'HVAC at {len(keys_h):d} Houses')
 
     if save_file is not None:
         plt.savefig(save_file)

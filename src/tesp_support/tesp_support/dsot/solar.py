@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2024 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: dsot_solar.py
 # Created 2/27/2020
@@ -54,15 +54,15 @@ import sys
 import time
 from pathlib import Path
 
-import PySAM.Pvwattsv7 as pv
 import matplotlib.pyplot as plt
 import numpy as np
 import openpyxl as xl
 import pandas as pd
+import PySAM.Pvwattsv7 as pv
 import requests
 
 # Setting up logging
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 # Setting up pretty printing, mostly for debugging.
 pp = pprint.PrettyPrinter(indent=4, )
@@ -79,7 +79,7 @@ def truncate(f, n=3):
     Returns:
         truc_val (string/float): Truncated value of f
     """
-    s = '{}'.format(f)
+    s = f'{f}'
     if 'e' in s or 'E' in s:
         return '{0:.{1}f}'.format(f, n)
     i, p, d = s.partition('.')
@@ -98,8 +98,8 @@ def _open_file(file_path, file_type='r'):
     """
     try:
         fh = open(file_path, file_type)
-    except IOError:
-        logger.error('Unable to open {}'.format(file_path))
+    except OSError:
+        log.error(f'Unable to open {file_path}')
     else:
         return fh
 
@@ -117,22 +117,23 @@ def parse_solar_metadata(solar_metadata_path):
     solar_fh = _open_file(solar_metadata_path)
     solar_dict = json.load(solar_fh)
     solar_fh.close()
-    logger.info('Parsed solar metadata file {}'.format(solar_metadata_path))
-    logger.info(pp.pformat(solar_dict))
+    log.info(f'Parsed solar metadata file {solar_metadata_path}')
+    log.info(pp.pformat(solar_dict))
     return solar_dict
 
 
 def _create_200_node_csv_file_and_headers(filename, output_path):
-    """ Writes out headers for solar data file where all solar data
+    """
+    Writes out headers for solar data file where all solar data
     is stored as a table (rows for each timestamp, columns for each of
     the 200 buses).
 
-        Args:
-            filename (str): name of output file
-            output_path (str): Path to location where output file will be written
-        Returns:
-            dsot_fh (File object): File handle for output file
-        """
+    Args:
+        filename (str): name of output file
+        output_path (str): Path to location where output file will be written
+    Returns:
+        dsot_fh (File object): File handle for output file
+    """
     outpath = os.path.join(output_path, filename)
     dsot_fh = _open_file(outpath, 'w')
 
@@ -155,39 +156,39 @@ def _create_200_node_csv_file_and_headers(filename, output_path):
 
 def _add_extra_days_to_hourly(profile):
     """
-        This function adds extra buffer days to the beginning of an
-        hourly profile and adds leap day to the profile.
+    This function adds extra buffer days to the beginning of an
+    hourly profile and adds leap day to the profile.
 
-        Checks are made on the incoming profile length to see what days
-        need to be added.
-            8760 - Add leap day and three warm-up days
-            8784 - Assume leap day has already been added
+    Checks are made on the incoming profile length to see what days
+    need to be added.
+        8760 - Add leap day and three warm-up days
+        8784 - Assume leap day has already been added
 
-        The added data is a replication of the first few days of Jan
-        (for the days before Jan 1) and Feb 28th (for Leap Day).
+    The added data is a replication of the first few days of Jan
+    (for the days before Jan 1) and Feb 28th (for Leap Day).
 
-        Args:
-            profile (list): hourly profile values
-        Returns:
-            profile (list): Augmented hourly profile values
-        """
+    Args:
+        profile (list): hourly profile values
+    Returns:
+        profile (list): Augmented hourly profile values
+    """
 
     if len(profile) == 8760:
         add_buffer_days = True
         add_leap_day = True
-        logger.info("\t...Adding buffer days to beginning of load profile...")
-        logger.info("\t...Adding leap day to load profile...")
+        log.info("\t...Adding buffer days to beginning of load profile...")
+        log.info("\t...Adding leap day to load profile...")
     elif len(profile) == 8784:
         add_buffer_days = True
         add_leap_day = False
-        logger.info("\t...Adding buffer days to beginning of load profile...")
+        log.info("\t...Adding buffer days to beginning of load profile...")
     elif len(profile) == 8856:
         add_buffer_days = False
         add_leap_day = False
-        logger.info("\t...No additional days need to be added...")
+        log.info("\t...No additional days need to be added...")
     else:
-        logger.error("Unsupported profile length.")
-        logger.error(f"\tProfile length:{len(profile)}")
+        log.error("Unsupported profile length.")
+        log.error(f"\tProfile length:{len(profile)}")
         raise SystemExit
     # Adjusting profile to add three buffer days at the beginning
     # (replication of Jan 1 data) and leap day (replication of
@@ -267,8 +268,8 @@ def parse_DSO_metadata_Excel(dso_metadata_path, worksheet_name):
                              '200-bus': bus_200,
                              '8-bus': bus_8,
                              'avg load': avg_load})
-    logger.info('Parsed DSO metadata file {}'.format(dso_metadata_path))
-    logger.info(pp.pformat(dso_meta))
+    log.info(f'Parsed DSO metadata file {dso_metadata_path}')
+    log.info(pp.pformat(dso_meta))
     return dso_meta
 
 
@@ -337,8 +338,8 @@ def parse_DSO_metadata_Excel_JSON(dso_metadata_path_Excel, worksheet_name, dso_m
                 if item.col_idx == header_idx['8-bus']:
                     bus_8 = item.value
             dso_meta.append({'200-bus': bus_200, '8-bus': bus_8})
-    logger.info('Parsed DSO Excel metadata file {}'.format(dso_metadata_path_Excel))
-    logger.info(pp.pformat(dso_meta))
+    log.info(f'Parsed DSO Excel metadata file {dso_metadata_path_Excel}')
+    log.info(pp.pformat(dso_meta))
 
     # Adding in the rest of the metadata from the JSON file.
     fh = _open_file(dso_metadata_path_JSON)
@@ -351,7 +352,7 @@ def parse_DSO_metadata_Excel_JSON(dso_metadata_path_Excel, worksheet_name, dso_m
         dso['long'] = json_meta[f'DSO_{dso_num}']['longitude']
         dso['avg load'] = json_meta[f'DSO_{dso_num}']['average_load_MW']
 
-    logger.info('Parsed JSON Excel metadata file {}'.format(dso_metadata_path_Excel))
+    log.info(f'Parsed JSON Excel metadata file {dso_metadata_path_Excel}')
     log_metdata(dso_meta)
 
     return dso_meta
@@ -414,14 +415,14 @@ def add_locations(dso_meta, solar_meta, nsrdb_path):
             loc_fh = _open_file(file)
             dso['solar_sites'] = json.load(loc_fh)
             loc_fh.close()
-            logger.info('Loaded in location list for DSO {}'.format(
+            log.info('Loaded in location list for DSO {}'.format(
                 dso['200-bus']))
         else:
             # Adding in primary DSO location
             # Fix azimuth and tilt to semi-optimal values for primary location
             dso['solar_sites'].append({'lat': dso['lat'], 'long': dso['long'],
                                        'azimuth': 180, 'tilt': 30, 'downloaded': 'no'})
-            logger.info('Added DSO primary location at {}, {} to solar site '
+            log.info('Added DSO primary location at {}, {} to solar site '
                         'list'.format(dso['lat'], dso['long']))
 
         # Checking to see how many points are in the location file and
@@ -457,7 +458,7 @@ def add_locations(dso_meta, solar_meta, nsrdb_path):
             min_long = base_long - long_offset
             max_long = base_long + long_offset
 
-            for site in range(0, new_site_count):
+            for site in range(new_site_count):
                 lat = random.uniform(min_lat, max_lat)
                 long = random.uniform(min_long, max_long)
                 tilt = random.uniform(
@@ -486,16 +487,15 @@ def add_locations(dso_meta, solar_meta, nsrdb_path):
                 dso['solar_sites'].append(site_data)
         # Saving out the additions to the metadata in the original data
         #   structure
-        logger.info('Added random solar site locations')
-        logger.info(pp.pformat(dso['solar_sites']))
+        log.info('Added random solar site locations')
+        log.info(pp.pformat(dso['solar_sites']))
         dso_meta[idx] = dso
 
         # Once we've created the site list dump it out to file
         json_fh = open(file_path, 'w')
         json.dump(dso['solar_sites'], json_fh)
         json_fh.close()
-        logger.info('Wrote solar site location data to file: {}'.format(
-            file_path))
+        log.info(f'Wrote solar site location data to file: {file_path}')
 
     return dso_meta
 
@@ -540,8 +540,7 @@ def generate_KML(dso_meta, output_file):
     icon_str_list = []
     for color in icon_color_list:
         for shape in icon_shape_list:
-            icon_str_list.append('{}/{}-{}.png'.format(icon_url_head, color,
-                                                       shape))
+            icon_str_list.append(f'{icon_url_head}/{color}-{shape}.png')
     # Duplicating list, so I have enough icons for all 200 DSOs
     icon_str_list = icon_str_list + icon_str_list + icon_str_list + \
                     icon_str_list + icon_str_list
@@ -550,11 +549,11 @@ def generate_KML(dso_meta, output_file):
     for idx, dso in enumerate(dso_meta):
         # Writing style information
         id = 'DSO_' + str(dso['200-bus'])
-        kml_fh.write('<Style id="{}">\n'.format(id))
+        kml_fh.write(f'<Style id="{id}">\n')
         kml_fh.write('\t<IconStyle>\n')
         kml_fh.write('\t\t<scale>0.75</scale>\n')
         kml_fh.write('\t\t<Icon>\n')
-        kml_fh.write('\t\t\t<href>{}</href>\n'.format(icon_str_list[idx]))
+        kml_fh.write(f'\t\t\t<href>{icon_str_list[idx]}</href>\n')
         kml_fh.write('\t\t</Icon>\n')
         kml_fh.write('\t</IconStyle>\n')
         kml_fh.write('</Style>\n')
@@ -562,7 +561,7 @@ def generate_KML(dso_meta, output_file):
         # Writing marker locations
         for site in dso['solar_sites']:
             kml_fh.write('<Placemark>\n')
-            kml_fh.write('\t<styleUrl>#{}</styleUrl>\n'.format(id))
+            kml_fh.write(f'\t<styleUrl>#{id}</styleUrl>\n')
             kml_fh.write('\t<Point><coordinates>{},{},'
                          '0</coordinates></Point>\n'.format(site['nsrdb_long'],
                                                             site['nsrdb_lat']))
@@ -571,8 +570,7 @@ def generate_KML(dso_meta, output_file):
     kml_fh.write('</kml>')
     kml_fh.close()
 
-    logger.info('Wrote out KML of all solar sites to file {}'.format(
-        output_file))
+    log.info(f'Wrote out KML of all solar sites to file {output_file}')
 
 
 def download_nsrdb_data(dso_meta, solar_meta, output_path):
@@ -629,8 +627,7 @@ def download_nsrdb_data(dso_meta, solar_meta, output_path):
                     lat = site['lat']
                     long = site['long']
                     year = str(2016)
-                    logger.info('Querying NSRDB for data at site {}, {} '
-                                ''.format(lat, long))
+                    log.info(f'Querying NSRDB for data at site {lat}, {long} ')
 
                     # You must request an NSRDB api key from https://developer.nrel.gov/signup/
                     api_key = 'put NSRDB API key here as a string'
@@ -656,15 +653,9 @@ def download_nsrdb_data(dso_meta, solar_meta, output_path):
                     mailing_list = 'false'
 
                     # Declare url string
-                    url = 'https://developer.nrel.gov/api/solar/nsrdb_psm3_download.csv?wkt=POINT({lon}%20{lat})&names={year}&leap_day={leap}&interval={interval}&utc={utc}&full_name={name}&email={email}&affiliation={affiliation}&mailing_list={mailing_list}&reason={reason}&api_key={api}&attributes={attr}'.format(
-                        year=year, lat=lat, lon=long, leap=leap_year,
-                        interval=interval, utc=utc, name=your_name,
-                        email=your_email, mailing_list=mailing_list,
-                        affiliation=your_affiliation, reason=reason_for_use,
-                        api=api_key, attr=attributes)
+                    url = f'https://developer.nrel.gov/api/solar/nsrdb_psm3_download.csv?wkt=POINT({long}%20{lat})&names={year}&leap_day={leap_year}&interval={interval}&utc={utc}&full_name={your_name}&email={your_email}&affiliation={your_affiliation}&mailing_list={mailing_list}&reason={reason_for_use}&api_key={api_key}&attributes={attributes}'
                     # Return just the first 2 lines to get metadata:
-                    logger.info('\tGetting headers for NSRDB data at {}, {}'
-                                ''.format(lat, long))
+                    log.info(f'\tGetting headers for NSRDB data at {lat}, {long}')
                     info = pd.read_csv(url, nrows=1)
                     # info = []
                     # r = requests.request("POST", f'{url}&{info}')
@@ -677,8 +668,7 @@ def download_nsrdb_data(dso_meta, solar_meta, output_path):
                     # Check to see if file exists (indicating we downloaded it before
                     #   and don't need to do so again). If file does exist, we load
                     #   it and add it to the list of dataframes.
-                    filename = '{}_{}_solar_data.csv'.format(nsrdb_lat,
-                                                             nsrdb_long)
+                    filename = f'{nsrdb_lat}_{nsrdb_long}_solar_data.csv'
                     output_file = os.path.join(output_path, dso_dir, filename)
 
                     r = requests.get(url, allow_redirects=True)
@@ -694,7 +684,7 @@ def download_nsrdb_data(dso_meta, solar_meta, output_path):
                     dso['solar_sites'][idx2] = site
                     files_to_download = files_to_download - 1
 
-                    logger.info('\tDownloaded and saved data for {}, '
+                    log.info('\tDownloaded and saved data for {}, '
                                 '{}'.format(
                         site['nsrdb_lat'], site['nsrdb_long']))
                     # Taking a break to not overload the NSRDB server
@@ -707,9 +697,9 @@ def download_nsrdb_data(dso_meta, solar_meta, output_path):
         json_fh = open(file_path, 'w')
         json.dump(dso['solar_sites'], json_fh)
         json_fh.close()
-        logger.info('All necessary solar data collected, saved solar data '
-                    'status for DSO {} in file: {}'.format(idx + 1, file_path))
-    logger.info('Loaded all NSRDB data for this run.')
+        log.info('All necessary solar data collected, saved solar data '
+                    f'status for DSO {idx + 1} in file: {file_path}')
+    log.info('Loaded all NSRDB data for this run.')
     return dso_meta
 
 
@@ -733,7 +723,7 @@ def calc_solarPV_power(dso_meta, output_path):
     """
     for idx, dso in enumerate(dso_meta):
         power_profiles = []
-        logger.info('Processing solar profiles for DSO {}'.format(
+        log.info('Processing solar profiles for DSO {}'.format(
             dso['200-bus']))
         for idx2, site in enumerate(dso['solar_sites']):
             filename = '{}_{}_1MW_hourly_annual_power_profile.csv'.format(
@@ -742,7 +732,7 @@ def calc_solarPV_power(dso_meta, output_path):
             outpath = os.path.join(output_path, dso_dir, filename)
             file = Path(outpath)
             if file.is_file():
-                logger.info('\tSolar profile already exists and not '
+                log.info('\tSolar profile already exists and not '
                             'recreated for {}, {}'
                             ''.format(site['nsrdb_lat'],
                                       site['nsrdb_long']))
@@ -755,7 +745,7 @@ def calc_solarPV_power(dso_meta, output_path):
                 power_profiles.append(power)
 
             else:
-                logger.info('\t\tCreating solar profile for {}, {}'.format(
+                log.info('\t\tCreating solar profile for {}, {}'.format(
                     site['nsrdb_lat'], site['nsrdb_long']))
                 pv_model = pv.default('PVWattsResidential')
                 pv_model.SolarResource.solar_resource_file = site['nsrdb_file']
@@ -783,7 +773,7 @@ def calc_solarPV_power(dso_meta, output_path):
                     site['nsrdb_lat'], site['nsrdb_long'])
                 outpath = os.path.join(output_path, dso_dir, filename)
                 write_power_profile(outpath, power_profile)
-        logger.info('Completed all solar profile power calculation for DSO {}\n'.format(dso['200-bus']))
+        log.info('Completed all solar profile power calculation for DSO {}\n'.format(dso['200-bus']))
         dso['power_profiles'] = power_profiles
         dso_meta[idx] = dso
     # TDH: My four-year-old son wants you to know he can type his own name:
@@ -802,8 +792,7 @@ def write_power_profile(output_path, power_data):
         output_path (str): Path to the location of file to write.
     """
     power_fh = open(output_path, 'w')
-    for power in power_data:
-        power_fh.write(str(truncate(power)) + '\n')
+    power_fh.writelines(str(truncate(power)) + '\n' for power in power_data)
     power_fh.close()
 
 
@@ -864,7 +853,7 @@ def aggregate_scale_solar_pv_profiles(dso_meta, solar_meta, output_path):
 
     aggreagte_dist_solar = []
     for idx, dso in enumerate(dso_meta):
-        logger.info('Calculating and applying scaling factors for DSO {}'.format(dso['200-bus']))
+        log.info('Calculating and applying scaling factors for DSO {}'.format(dso['200-bus']))
         # Initializing total power profile
         agg_power_profile = [0] * 8760
         for power in dso['power_profiles']:
@@ -892,8 +881,7 @@ def aggregate_scale_solar_pv_profiles(dso_meta, solar_meta, output_path):
         outpath = os.path.join(output_path, dso_dir, filename)
         write_power_profile(outpath, agg_power_profile)
         dso['dist power profile path'] = outpath
-        logger.info('\tDistributed scaling factor: {}'.format(
-            dist_scaling_factor))
+        log.info(f'\tDistributed scaling factor: {dist_scaling_factor}')
 
         # Utility-scale solar
         target_utility_solar = target_total_solar * solar_meta[
@@ -917,8 +905,7 @@ def aggregate_scale_solar_pv_profiles(dso_meta, solar_meta, output_path):
         outpath = os.path.join(output_path, dso_dir, filename)
         write_power_profile(outpath, agg_power_profile)
         dso['utility power profile path'] = outpath
-        logger.info('\tUtility scaling factor: {}'.format(
-            utility_scaling_factor))
+        log.info(f'\tUtility scaling factor: {utility_scaling_factor}')
 
         # Sum utilty-scale DSO solar profile profile to create 8-node
         #   profile
@@ -971,7 +958,7 @@ def aggregate_to_8_nodes(dso_meta, output_path):
         dso_meta[200 + eight_node_dso - 1]['total solar capacity'] \
             = 0
         dso_meta[200 + eight_node_dso - 1]['avg load'] = 0
-        logger.info('Initialized 8-node DSO {}'.format(eight_node_dso))
+        log.info(f'Initialized 8-node DSO {eight_node_dso}')
 
     # Summing the distributed solar PV power profiles up into 8 profiles
     for idx, dso in enumerate(dso_meta):
@@ -979,7 +966,7 @@ def aggregate_to_8_nodes(dso_meta, output_path):
         #   profiles to add to the aggregated 8-node data
         if idx < 200:
             eight_node_idx = 200 + dso['8-bus'] - 1
-            logger.info('Added solar PV power profile from 200 node DSO {}...'.format(idx))
+            log.info(f'Added solar PV power profile from 200 node DSO {idx}...')
             # Summing up distributed power profiles to create single,
             #   aggregated profile for 8-node DSO
             dso_meta[eight_node_idx]['dist power profile'] = [
@@ -1006,13 +993,12 @@ def aggregate_to_8_nodes(dso_meta, output_path):
                 + dso['total solar capacity']
             dso_meta[eight_node_idx]['avg load'] = \
                 dso_meta[eight_node_idx]['avg load'] + dso['avg load']
-            logger.info('\t... to 8-node DSO {}...'.format(dso['8-bus']))
+            log.info('\t... to 8-node DSO {}...'.format(dso['8-bus']))
 
     # Saving out results
     for eight_node_dso in range(1, 9):
         dir_name = '8-node DSO_' + str(eight_node_dso)
-        filename = '8-node DSO {} dist solar PV power profile.csv'.format(
-            eight_node_dso)
+        filename = f'8-node DSO {eight_node_dso} dist solar PV power profile.csv'
         outpath = os.path.join(output_path, dir_name, filename)
         dso_meta[200 + eight_node_dso - 1]['dist power profile path'] \
             = outpath
@@ -1020,24 +1006,22 @@ def aggregate_to_8_nodes(dso_meta, output_path):
             outpath,
             dso_meta[200 + eight_node_dso - 1]['dist power profile'])
 
-        filename = '8-node DSO {} utility solar PV power profile.csv'.format(
-            eight_node_dso)
+        filename = f'8-node DSO {eight_node_dso} utility solar PV power profile.csv'
         outpath = os.path.join(output_path, dir_name, filename)
         dso_meta[200 + eight_node_dso - 1]['utility power profile ' \
                                            'path'] = outpath
         write_power_profile(outpath, dso_meta[200 + eight_node_dso - 1][
             'utility power profile'])
 
-        logger.info('Saving output power profiles to {}'.format(
-            outpath))
-        logger.info('DSO {} 8-node solar capacities:'.format(eight_node_dso))
-        logger.info('\t Average Load (MW): {}'.format(dso_meta[200 +
+        log.info(f'Saving output power profiles to {outpath}')
+        log.info(f'DSO {eight_node_dso} 8-node solar capacities:')
+        log.info('\t Average Load (MW): {}'.format(dso_meta[200 +
                                                                eight_node_dso - 1]['avg load']))
-        logger.info('\t Total solar capacity (MW): {}'.format(dso_meta[200 +
+        log.info('\t Total solar capacity (MW): {}'.format(dso_meta[200 +
                                                                        eight_node_dso - 1]['total solar capacity']))
-        logger.info('\t Utility solar capacity (MW): {}'.format(dso_meta[200 +
+        log.info('\t Utility solar capacity (MW): {}'.format(dso_meta[200 +
                                                                          eight_node_dso - 1]['utility solar capacity']))
-        logger.info('\t Distributed solar capacity (MW): {}'.format(dso_meta[
+        log.info('\t Distributed solar capacity (MW): {}'.format(dso_meta[
                                                                         200 + eight_node_dso - 1][
                                                                         'dist solar capacity']))
 
@@ -1081,10 +1065,10 @@ def create_graphs(dso_meta, type):
                            dtype='datetime64[h]')
     for idx, dso in enumerate(dso_meta):
         if idx < 200:
-            logger.info('Collecting data to graph for DSO {}...'.format(dso[
+            log.info('Collecting data to graph for DSO {}...'.format(dso[
                                                                             '200-bus']))
         else:
-            logger.info('Collecting data to graph for 8-node DSO {}...'.format(
+            log.info('Collecting data to graph for 8-node DSO {}...'.format(
                 dso['8-node dso num']))
         month_list = [1, 4, 7, 10]
         month_name_list = ['January', 'April', 'July', 'October']
@@ -1154,7 +1138,7 @@ def create_graphs(dso_meta, type):
                                                 month_name_list[idx2]))
                 plt.savefig(filename, bbox_inches='tight')
             plt.close(fig)
-        logger.info('\t... and saving plots in {}'.format(head))
+        log.info(f'\t... and saving plots in {head}')
 
 
 def forecast_cleanup(dso_meta, idx, error, profile, forecast_profile):
@@ -1189,8 +1173,7 @@ def forecast_cleanup(dso_meta, idx, error, profile, forecast_profile):
         correction = 0
         if profile[idx2] == 0:
             forecast_profile[idx2] = 0
-        if forecast_profile[idx2] < 0:
-            forecast_profile[idx2] = 0
+        forecast_profile[idx2] = max(forecast_profile[idx2], 0)
     return forecast_profile
 
 
@@ -1218,7 +1201,7 @@ def create_hourly_solar_forecast(dso_meta, dso_type, rng_seed):
     """
 
     if dso_type == 200:
-        dso_idxs = range(0, 200)
+        dso_idxs = range(200)
         np.random.seed(rng_seed + 200)
     else:
         dso_idxs = range(200, 208)
@@ -1237,7 +1220,7 @@ def create_hourly_solar_forecast(dso_meta, dso_type, rng_seed):
     #   adjust the standard deviation so that it hits the target value
     adj_factor = 3.25
     adj_normalized_st_dev = normalized_std_dev * adj_factor
-    logger.info(f"Adjusted normalized standard deviation"
+    log.info(f"Adjusted normalized standard deviation"
                 f": {adj_normalized_st_dev}")
 
     def _add_error(capacity, profile, dso_meta, idx):
@@ -1253,7 +1236,7 @@ def create_hourly_solar_forecast(dso_meta, dso_type, rng_seed):
 
     for idx in dso_idxs:
         if idx < 200:
-            logger.info('Creating utility solar forecast profile for DSO {}...'.format(dso_meta[idx]['200-bus']))
+            log.info('Creating utility solar forecast profile for DSO {}...'.format(dso_meta[idx]['200-bus']))
             profile = _add_extra_days_to_hourly(dso_meta[idx]['utility power profile'])
             dso_meta[idx]['utility power profile'] = profile
             forecast_profile = _add_error(
@@ -1267,9 +1250,9 @@ def create_hourly_solar_forecast(dso_meta, dso_type, rng_seed):
             head, tail = os.path.split(dso_meta[idx]['utility power profile path'])
             outpath = os.path.join(head, filename)
             write_power_profile(outpath, forecast_profile)
-            logger.info('\t...and saving output forecast file to {}'.format(outpath))
+            log.info(f'\t...and saving output forecast file to {outpath}')
 
-            logger.info('Creating distributed solar forecast profile for DSO {}'.format(dso_meta[idx]['200-bus']))
+            log.info('Creating distributed solar forecast profile for DSO {}'.format(dso_meta[idx]['200-bus']))
             profile = _add_extra_days_to_hourly(dso_meta[idx]['dist power profile'])
             dso_meta[idx]['dist power profile'] = profile
             forecast_profile = _add_error(
@@ -1282,9 +1265,9 @@ def create_hourly_solar_forecast(dso_meta, dso_type, rng_seed):
             head, tail = os.path.split(dso_meta[idx]['dist power profile path'])
             outpath = os.path.join(head, filename)
             write_power_profile(outpath, forecast_profile)
-            logger.info('\t...and saving output forecast file to {}'.format(outpath))
+            log.info(f'\t...and saving output forecast file to {outpath}')
         else:
-            logger.info('Creating utility solar forecast profile for DSO {}...'.format(dso_meta[idx]['8-node dso num']))
+            log.info('Creating utility solar forecast profile for DSO {}...'.format(dso_meta[idx]['8-node dso num']))
             profile = _add_extra_days_to_hourly(dso_meta[idx]['utility power profile'])
             dso_meta[idx]['utility power profile'] = profile
             forecast_profile = _add_error(
@@ -1297,9 +1280,9 @@ def create_hourly_solar_forecast(dso_meta, dso_type, rng_seed):
             head, tail = os.path.split(dso_meta[idx]['utility power profile path'])
             outpath = os.path.join(head, filename)
             write_power_profile(outpath, forecast_profile)
-            logger.info('\t...and saving output forecast file to {}'.format(outpath))
+            log.info(f'\t...and saving output forecast file to {outpath}')
 
-            logger.info(
+            log.info(
                 'Creating distributed solar forecast profile for DSO {}'.format(dso_meta[idx]['8-node dso num']))
             profile = _add_extra_days_to_hourly(dso_meta[idx]['dist power profile'])
             dso_meta[idx]['dist power profile'] = profile
@@ -1332,7 +1315,7 @@ def create_hourly_solar_forecast(dso_meta, dso_type, rng_seed):
         ts_idx_max = len(dso_meta[0]['dist forecast profile'])
     else:
         ts_idx_max = len(dso_meta[200]['dist forecast profile'])
-    for ts_idx in range(0, ts_idx_max):
+    for ts_idx in range(ts_idx_max):
         out_str = ts.strftime('%Y-%m-%d %H:%M:%S')
         out_str = out_str + ','
         for idx in dso_idxs:
@@ -1374,7 +1357,7 @@ def create_hourly_solar_forecast(dso_meta, dso_type, rng_seed):
         #   January 1 and Leap Day. Saving the profile data, so I don't
         #   have to pull it all out again.
         profile_list = []
-        for idx in range(0, 200):
+        for idx in range(200):
             profile = _add_extra_days_to_hourly(
                 dso_meta[idx]['utility forecast profile'])
             profile_list.append(profile)
@@ -1383,10 +1366,10 @@ def create_hourly_solar_forecast(dso_meta, dso_type, rng_seed):
         # Arbitrarily picking first profile to determine the length of
         #   the profile. All profiles should be the same length.
         ts_idx_max = len(profile_list[0])
-        for ts_idx in range(0, ts_idx_max):
+        for ts_idx in range(ts_idx_max):
             out_str = ts.strftime('%Y-%m-%d %H:%M:%S')
             out_str = out_str + ','
-            for idx in range(0, 200):
+            for idx in range(200):
                 out_str = out_str + str(truncate(profile_list[idx][ts_idx]))
                 if idx == 199:
                     out_str = out_str + '\n'
@@ -1427,10 +1410,10 @@ def create_GLD_files(dso_meta):
     samples_per_hour = 12
     for idx, dso in enumerate(dso_meta):
         if idx < 200:
-            logger.info('Interpolating profile on DSO {}...'.format(
+            log.info('Interpolating profile on DSO {}...'.format(
                 dso['200-bus']))
         else:
-            logger.info('Interpolating profile on 8-node DSO {}...'.format(
+            log.info('Interpolating profile on 8-node DSO {}...'.format(
                 dso['8-node dso num']))
         profile = dso['dist power profile']
 
@@ -1466,7 +1449,7 @@ def create_GLD_files(dso_meta):
         gld_fh = _open_file(outpath, 'w')
 
         length = len(hf_profile)
-        for ts_idx in range(0, length):
+        for ts_idx in range(length):
             out_str = ts.strftime('%Y-%m-%d %H:%M:%S')
             out_str = out_str + ',' + str(truncate(hf_profile[ts_idx])) \
                       + '\n'
@@ -1475,7 +1458,7 @@ def create_GLD_files(dso_meta):
         gld_fh.close()
 
         dso_meta[idx] = dso
-        logger.info('\t...and saved interpolated file at {}'.format(outpath))
+        log.info(f'\t...and saved interpolated file at {outpath}')
     return dso_meta
 
 
@@ -1530,7 +1513,7 @@ def create_dsot_utility_solar_file(dso_meta, output_path):
 
     max_idx = num_dso - 1
     max_ts_idx = (days_per_year + buffer_days) * hours_per_day
-    for ts_idx in range(0, max_ts_idx):
+    for ts_idx in range(max_ts_idx):
         # Data structure for holding the five-minute interpolated values
         fm_data = []
 
@@ -1587,8 +1570,8 @@ def create_dsot_utility_solar_file(dso_meta, output_path):
             # Write out once we've interpolated data for all 200 DSOs.
             if idx == max_idx:
                 out_str_fm = ''
-                for time in range(0, data_length):
-                    for dso_idx in range(0, num_dso):
+                for time in range(data_length):
+                    for dso_idx in range(num_dso):
                         out_str_fm = out_str_fm + fm_data[dso_idx][time]
                 # Multi-line write to file
                 dsot_fm_fh.write(out_str_fm)

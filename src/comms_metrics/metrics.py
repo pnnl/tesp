@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Created on Fri Feb  5 08:21:30 2021
 
@@ -22,17 +21,18 @@ and/or plotting results.
 
 @author: barn553
 """
-import pandas as pd
-import numpy as np
-from sklearn.metrics import mean_squared_error
 import itertools
-import networkx as nx
-import pyproj
-import os
-from joblib import Parallel, delayed
+import json
 import logging
 import logging.config
-import json
+import os
+
+import networkx as nx
+import numpy as np
+import pandas as pd
+import pyproj
+from joblib import Parallel, delayed
+from sklearn.metrics import mean_squared_error
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
@@ -44,7 +44,7 @@ with open(config_file, 'r') as file:
     config = json.load(file)
     logging.config.dictConfig(config)
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 class EvaluateSystem:
@@ -100,14 +100,14 @@ class EvaluateSystem:
         assert 'feeder' in self.dataframe.columns, \
             'Make sure the feeder name is included in the dataframe.'
         self.feeder = self.dataframe['feeder'].unique()[0]
-        logger.info('----- An EvaluateSystem object has -----')
-        logger.info('----- been created for {} --'.format(self.feeder))
+        log.info('----- An EvaluateSystem object has -----')
+        log.info(f'----- been created for {self.feeder} --')
         self.meters = meters
-        assert pos_x in self.dataframe.columns, 'Oops! {} is not in the dataframe'.format(pos_x)
+        assert pos_x in self.dataframe.columns, f'Oops! {pos_x} is not in the dataframe'
         self.pos_x = pos_x
-        assert pos_y in self.dataframe.columns, 'Oops! {} is not in the dataframe'.format(pos_y)
+        assert pos_y in self.dataframe.columns, f'Oops! {pos_y} is not in the dataframe'
         self.pos_y = pos_y
-        assert unit == 'feet' or unit == 'geo', 'Oops! "{}" is not valid; it must be "feet" or "geo"'.format(unit)
+        assert unit == 'feet' or unit == 'geo', f'Oops! "{unit}" is not valid; it must be "feet" or "geo"'
         self.unit = unit
         # NOTE: More descriptions of these attributes
         # are provided in the functions below.
@@ -209,7 +209,7 @@ class EvaluateSystem:
                 index=range(len(perms)))
             self.perm_df = perm_df
         else:
-            logger.error('"{}" is invalid. It must be "feet" or "geo".'.format(unit))
+            log.error(f'"{unit}" is invalid. It must be "feet" or "geo".')
 
     def get_distances(self):
         """ This function calculates the distances between all
@@ -224,8 +224,8 @@ class EvaluateSystem:
             that has the calculated distance between all meters
             in a given meter network (aka model).
         """
-        logger.info('........................................')
-        logger.info('calculating the distances between all the meters')
+        log.info('........................................')
+        log.info('calculating the distances between all the meters')
         if self.unit == 'geo':
             self._modify_dataframe()
             p_df = self.perm_df
@@ -246,7 +246,7 @@ class EvaluateSystem:
             # Saving the result to be used for the different
             # metrics:
             distance_dataframe = p_df[['start', 'end', 'distance']]
-            logger.info('\tsaving the results to be used elsewhere')
+            log.info('\tsaving the results to be used elsewhere')
             self.distance_dataframe = distance_dataframe
         elif self.unit == 'feet':
             self._modify_dataframe()
@@ -258,11 +258,11 @@ class EvaluateSystem:
             # Saving the result to be used for the different
             # metrics:
             distance_dataframe = p_df[['start', 'end', 'distance']]
-            logger.info('\tsaving the results to be used elsewhere')
+            log.info('\tsaving the results to be used elsewhere')
             self.distance_dataframe = distance_dataframe
         else:
-            logger.error('{} is an invalid option. It must be "feet" or "geo".'.format(self.unit))
-        logger.info('finished calculating the distances.')
+            log.error(f'{self.unit} is an invalid option. It must be "feet" or "geo".')
+        log.info('finished calculating the distances.')
         return distance_dataframe
 
     def meter_density(self, meter, radius):
@@ -286,10 +286,10 @@ class EvaluateSystem:
             total_meters (int) - The total number of meters within
             the radius.
         """
-        logger.info('........................................')
-        logger.info('Finding all the meters within {} (ft) of {}'.format(radius, meter))
+        log.info('........................................')
+        log.info(f'Finding all the meters within {radius} (ft) of {meter}')
         assert isinstance(radius, float), \
-            'Oops, {} is not a float.'.format(radius)
+            f'Oops, {radius} is not a float.'
         # Grabbing the dataframe that has all the calculated
         # distances between all the meters:
         dd = self.distance_dataframe
@@ -298,7 +298,7 @@ class EvaluateSystem:
         # Counting the total number of meters within a certain
         # distance:
         total_meters = len(reduced_dd)
-        logger.info('The number of meters within {} (ft) of {} is {}.'.format(radius, meter, total_meters))
+        log.info(f'The number of meters within {radius} (ft) of {meter} is {total_meters}.')
         return total_meters
 
     def meter_range(self, meter):
@@ -318,8 +318,8 @@ class EvaluateSystem:
             radius (float) - The maximum distance that envelopes all
             meters with a given meter as the center.
         """
-        logger.info('........................................')
-        logger.info('Finding the largest radius where {} is the center'.format(meter))
+        log.info('........................................')
+        log.info(f'Finding the largest radius where {meter} is the center')
         # Grabbing the dataframe that has all the calculated
         # distances between all the meters:
         dd = self.distance_dataframe
@@ -327,7 +327,7 @@ class EvaluateSystem:
         reduced_dd = dd[dd.start == meter]
         # Finding the maximum distance:
         radius = np.max(reduced_dd['distance'])
-        logger.info('{} (ft) captures all meters with {} as the center'.format(radius, meter))
+        log.info(f'{radius} (ft) captures all meters with {meter} as the center')
         return radius
 
     def isolated_meter_count(self, radius):
@@ -351,9 +351,9 @@ class EvaluateSystem:
             isolated_count (int) - The total number of meters that are
             isolated from others, given a specific distance.
         """
-        assert isinstance(radius, float), 'Oops, {} is not a float.'.format(radius)
-        logger.info('........................................')
-        logger.info('Counting all the isolated meters within {} (ft)'.format(radius))
+        assert isinstance(radius, float), f'Oops, {radius} is not a float.'
+        log.info('........................................')
+        log.info(f'Counting all the isolated meters within {radius} (ft)')
         # Grabbing the dataframe that has all the calculated
         # distances between all the meters:
         dd = self.distance_dataframe.copy()
@@ -367,7 +367,7 @@ class EvaluateSystem:
         isolated_count = len(gpd_df[
                                  (gpd_df.is_isolated == 'T') &
                                  (gpd_df.total_count == len(self.meters) - 1)]['start'].values[:])
-        logger.info('{} meters are isolated within {} (ft)'.format(isolated_count, radius))
+        log.info(f'{isolated_count} meters are isolated within {radius} (ft)')
         return isolated_count
 
     def meter_continuity(self, radius):
@@ -393,10 +393,10 @@ class EvaluateSystem:
             continuity (bool) - Just whether the meters are
             connected to each other.
         """
-        logger.info('........................................')
-        logger.info('Checking to see if paths exist between any {} {} {}'.
+        log.info('........................................')
+        log.info('Checking to see if paths exist between any {} {} {}'.
                     format('two meters within', radius, 'feet.'))
-        assert isinstance(radius, float), 'Oops, {} is not a float.'.format(radius)
+        assert isinstance(radius, float), f'Oops, {radius} is not a float.'
         # Grabbing the dataframe that has all the calculated
         # distances between all meters:
         dd = self.distance_dataframe.copy()
@@ -416,11 +416,11 @@ class EvaluateSystem:
         # Otherwise, a path doesn't exist and the model
         # is not continuous.
         if dd_set1 == r_set1 and dd_set2 == r_set2:
-            logger.info('\tPaths exists between any two nodes.')
-            logger.info('\tThus, there is continuity across the network of meters.')
+            log.info('\tPaths exists between any two nodes.')
+            log.info('\tThus, there is continuity across the network of meters.')
             continuity = True
         else:
-            logger.info('\tThere must not be a path between ANY two nodes.')
+            log.info('\tThere must not be a path between ANY two nodes.')
             continuity = False
         return continuity
 
@@ -451,10 +451,10 @@ class EvaluateSystem:
             with a certain number of meters near them within a
             given distance.
         """
-        logger.info('........................................')
-        logger.info('Counting how many meters have {} meters within {}'.format(y, radius))
-        assert isinstance(radius, float), 'Oops! {} is not a float.'.format(radius)
-        assert isinstance(y, int), 'Oops! {} is not an int.'.format(y)
+        log.info('........................................')
+        log.info(f'Counting how many meters have {y} meters within {radius}')
+        assert isinstance(radius, float), f'Oops! {radius} is not a float.'
+        assert isinstance(y, int), f'Oops! {y} is not an int.'
         # Grabbing the dataframe that has all the calculated
         # distances between all meters:
         dd = self.distance_dataframe.copy()
@@ -469,9 +469,8 @@ class EvaluateSystem:
         single_hop_count = len(gpd_df[
                                    (gpd_df.within_radius == 'T') &
                                    (gpd_df.total_count >= y)]['start'].values[:])
-        logger.info(
-            'There are {} meters that have {} meters within {} feet.'.format(
-                single_hop_count, y, radius))
+        log.info(
+            f'There are {single_hop_count} meters that have {y} meters within {radius} feet.')
         return single_hop_count
 
     def island_count(self, radius):
@@ -495,7 +494,7 @@ class EvaluateSystem:
             island_count (int) - The number of islands in
             the model.
         """
-        assert isinstance(radius, float), 'Oops! {} is not a float.'.format(radius)
+        assert isinstance(radius, float), f'Oops! {radius} is not a float.'
         # Grabbing the dataframe that has all the calculated
         # distances between all meters:
         dd = self.distance_dataframe.copy()
@@ -540,14 +539,14 @@ class EvaluateSystem:
             dens (list) - List of number of meters near a given
             meter within each of the radii.
         """
-        logger.info('........................................')
-        logger.info('Counting the number of meters nearby within each radius.')
+        log.info('........................................')
+        log.info('Counting the number of meters nearby within each radius.')
         # Grabbing the dataframe that has all the calculated
         # distances between all meters:
         dd = self.distance_dataframe.copy()
         df_list = []
         for rad in radii:
-            assert isinstance(rad, float), 'Oops! {} is not a float.'.format(rad)
+            assert isinstance(rad, float), f'Oops! {rad} is not a float.'
             # Reducing the dataframe to meters with distances
             # less than or equal to the given radius:
             reduced_dd = dd[dd.distance <= rad]
@@ -570,7 +569,7 @@ class EvaluateSystem:
         # Saving the results as an attribute:
         self.dens_df = pd.DataFrame(
             density_dict, index=range(len(dens)))
-        logger.info(
+        log.info(
             'Finished counting the number of meters nearby.')
         return dens
 
@@ -591,9 +590,9 @@ class EvaluateSystem:
             capture all the meters around a given meter
             as the center.
         """
-        logger.info(
+        log.info(
             '........................................')
-        logger.info(
+        log.info(
             'Getting all the maximum radii for each meter as the center.')
         # Grabbing the dataframe that has all the calculated
         # distances between all meters:
@@ -609,7 +608,7 @@ class EvaluateSystem:
         # Saving the results as an attribute to be used
         # elsewhere:
         self.range_df = gpd_df
-        logger.info(
+        log.info(
             'Finished getting all the maximum radii for each meter.')
         return ranges
 
@@ -630,9 +629,9 @@ class EvaluateSystem:
             iso (list) - List of all the isolated meter counts
             for each of the radii.
         """
-        logger.info(
+        log.info(
             '........................................')
-        logger.info(
+        log.info(
             'Getting the isolated meter count for all radii.')
         # Getting the isolated meter count for each radius:
         iso_tuples = [
@@ -647,7 +646,7 @@ class EvaluateSystem:
         # Saving results as an attribute:
         self.iso_df = pd.DataFrame(
             isolated_dict, index=range(len(iso)))
-        logger.info(
+        log.info(
             'Finished getting the isolated meter count for all radii.')
         return iso
 
@@ -668,9 +667,9 @@ class EvaluateSystem:
             conts (list) - List of the booleans of just whether
             paths exist between any two nodes within given radii.
         """
-        logger.info(
+        log.info(
             '........................................')
-        logger.info(
+        log.info(
             'Checking to see if paths exist between any two {}'.format(
                 'nodes within each of the given radii.'))
         # Checking if the model is continuous across
@@ -688,7 +687,7 @@ class EvaluateSystem:
         # Saving the results as an attribute:
         self.cont_df = pd.DataFrame(
             continuity_dict, index=range(len(conts)))
-        logger.info(
+        log.info(
             'Finished seeing if paths exist within each of the radii.')
         return conts
 
@@ -717,8 +716,8 @@ class EvaluateSystem:
         #   reducing the amount of values to test is
         #   for better analysis and realistic results.
         y_list = [1, 2, 3, 4, 5, 10]
-        logger.info('........................................')
-        logger.info('Counting the number of meters that have {}'.format(
+        log.info('........................................')
+        log.info('Counting the number of meters that have {}'.format(
                 'a given number of meters nearby within each radius.'))
         # Grabbing the dataframe that has all the calculated
         # distances between all meters:
@@ -726,7 +725,7 @@ class EvaluateSystem:
         df_list = []
         for rad in radii:
             assert isinstance(rad, float), \
-                'Oops! {} is not a float.'.format(rad)
+                f'Oops! {rad} is not a float.'
             # Reducing the dataframe to meters with distances
             # less than or equal to the given radius:
             reduced_dd = dd[dd.distance <= rad]
@@ -740,7 +739,7 @@ class EvaluateSystem:
         df_list2 = []
         for y in y_list:
             assert isinstance(y, int), \
-                'Oops! {} is not an int.'.format(y)
+                f'Oops! {y} is not an int.'
             # Counting how many meters have at least y meters
             # nearby:
             r_df = dens_df[dens_df['total_count'] >= y]
@@ -757,7 +756,7 @@ class EvaluateSystem:
         # Saving results as an attribute:
         self.shc_df = shc_df
         shc = self.shc_df['count']
-        logger.info('Finished getting all the single hop counts.')
+        log.info('Finished getting all the single hop counts.')
         return shc
 
     def all_islands(self, radii):
@@ -780,7 +779,7 @@ class EvaluateSystem:
             the model.
         """
         for rad in radii:
-            assert isinstance(rad, float), 'Oops! {} is not a float.'.format(rad)
+            assert isinstance(rad, float), f'Oops! {rad} is not a float.'
         # Getting the island count for each radius:
         islands_tup = [
             (rad, self.island_count(rad)) for rad in radii]
@@ -943,8 +942,8 @@ class EvaluateSystem:
             for all meters for all radii. It is represented as a
             percent.
         """
-        logger.info('........................................')
-        logger.info('Calculating the composite score for the meter network.')
+        log.info('........................................')
+        log.info('Calculating the composite score for the meter network.')
         # Checking whether or the metric dataframes are empty or not:
         #   NOTE: If they are empty, then we call the functions to
         #   fill them out and grab the results. If they're not empty,
@@ -983,12 +982,12 @@ class EvaluateSystem:
         # dens_frac = (np.sum(densities) / len(densities)) / (len(meters) - 1)
         range_frac = 1 - ((np.sum(ranges) / len(ranges)) / np.max(ranges))
         island_frac = 1 - (np.mean(islands) / len(meters))
-        logger.info('\tdensity score = {}, isolated score = {}'.format(dens_frac, iso_frac))
-        logger.info('\tcontinuous score = {}, single hop score = {}'.format(cont_frac, shc_frac))
-        logger.info('\trange score = {}'.format(range_frac))
+        log.info(f'\tdensity score = {dens_frac}, isolated score = {iso_frac}')
+        log.info(f'\tcontinuous score = {cont_frac}, single hop score = {shc_frac}')
+        log.info(f'\trange score = {range_frac}')
         # For now, evenly weighting each of the fractions:
         score = (0.2 * (dens_frac + iso_frac + shc_frac + cont_frac)) + (0.1 * (range_frac + island_frac))
-        logger.info('The overall score for this network = {}{}'.format(score, '%'))
+        log.info('The overall score for this network = {}{}'.format(score, '%'))
         # Saving the scores:
         self.composite_score = score
         self.score_df = pd.DataFrame(
@@ -1002,7 +1001,7 @@ class EvaluateSystem:
              'range': range_frac,
              'island': island_frac,
              'number_of_meters': len(self.meters)},
-            index=range(0, 1))
+            index=range(1))
         return score * 100.0
 
 
@@ -1018,7 +1017,7 @@ class Results:
 
     def __init__(self):
         """ This initializes the class."""
-        logger.info('########### Created a Results object for saving data ###########')
+        log.info('########### Created a Results object for saving data ###########')
         self.systems = []
 
     def add(self, system):
@@ -1035,8 +1034,8 @@ class Results:
         Returns:
             (null)
         """
-        logger.info(
-            'Added {} to the Results object'.format(system.feeder))
+        log.info(
+            f'Added {system.feeder} to the Results object')
         self.systems.append(system)
 
     def save(self, output_path, output_name):
@@ -1059,7 +1058,7 @@ class Results:
         shcs = [s.shc_df for s in self.systems]
         islands = [s.island_df for s in self.systems]
         scores = [s.score_df for s in self.systems]
-        logger.info('\t Creating an HDF5 file')
+        log.info('\t Creating an HDF5 file')
         # Creating an HDF% store:
         #   NOTE: This will allow us to save the
         #   results from all the dataframes into
@@ -1074,7 +1073,7 @@ class Results:
         shc_df = pd.concat(shcs, axis=0, ignore_index=True)
         island_df = pd.concat(islands, axis=0, ignore_index=True)
         scores_df = pd.concat(scores, axis=0, ignore_index=True)
-        logger.info('Saving all the results to the file')
+        log.info('Saving all the results to the file')
         # Adding the dataframes to the HDF5 file:
         store['density'] = dens_df
         store['range'] = range_df
@@ -1084,8 +1083,8 @@ class Results:
         store['island'] = island_df
         store['scores'] = scores_df
         store.close()
-        logger.info('Finished saving the results to file')
-        logger.info(
+        log.info('Finished saving the results to file')
+        log.info(
             '########### Finished system evaluation calculations. ###########')
 
 
@@ -1238,7 +1237,7 @@ class Compare:
                 # Getting the "histogram" bar heights
                 # from the real density results:
                 df1 = real_dens[real_dens['radius'] == rad]
-                bins1 = pd.cut(df1['count'], list(range(0, 21)))
+                bins1 = pd.cut(df1['count'], list(range(21)))
                 gpd1 = df1.groupby(bins1)['count'].count().to_frame(name='hist_height').reset_index()
                 if gpd1['hist_height'].sum() == 0:
                     gpd1['normed'] = [0] * len(gpd1)
@@ -1248,7 +1247,7 @@ class Compare:
                 # Getting the "histogram" bar heights
                 # from the model results:
                 df2 = m[m['radius'] == rad]
-                bins2 = pd.cut(df2['count'], list(range(0, 21)))
+                bins2 = pd.cut(df2['count'], list(range(21)))
                 gpd2 = df2.groupby(bins2)['count'].count().to_frame(name='hist_height').reset_index()
                 if gpd2['hist_height'].sum() == 0:
                     gpd2['normed'] = [0] * len(gpd2)
@@ -1277,7 +1276,7 @@ class Compare:
                 # Getting the "histogram" bar heights
                 # from the real density results:
                 df1 = real_dens[(real_dens['feeder'] == f) & (real_dens['radius'] == rad)]
-                bins1 = pd.cut(df1['count'], list(range(0, 21)))
+                bins1 = pd.cut(df1['count'], list(range(21)))
                 gpd1 = df1.groupby(bins1)['count'].count().to_frame(name='hist_height').reset_index()
                 if gpd1['hist_height'].sum() == 0:
                     gpd1['normed'] = [0] * len(gpd1)
@@ -1287,7 +1286,7 @@ class Compare:
                 # Getting the "histogram" bar heights
                 # from the model results:
                 df2 = m[m['radius'] == rad]
-                bins2 = pd.cut(df2['count'], list(range(0, 21)))
+                bins2 = pd.cut(df2['count'], list(range(21)))
                 gpd2 = df2.groupby(bins2)['count'].count().to_frame(name='hist_height').reset_index()
                 if gpd2['hist_height'].sum() == 0:
                     gpd2['normed'] = [0] * len(gpd2)
@@ -1527,7 +1526,7 @@ class Compare:
                 # Getting the "histogram" bar heights
                 # from the real isolated results:
                 df1 = real_isos[real_isos['radius'] == rad]
-                bins1 = pd.cut(df1['count'], list(range(0, 601)))
+                bins1 = pd.cut(df1['count'], list(range(601)))
                 gpd1 = df1.groupby(bins1)['count'].count().to_frame(name='hist_height').reset_index()
                 if gpd1['hist_height'].sum() == 0:
                     gpd1['normed'] = [0] * len(gpd1)
@@ -1537,7 +1536,7 @@ class Compare:
                 # Getting the "histogram" bar heights
                 # from the model results:
                 df2 = m[m['radius'] == rad]
-                bins2 = pd.cut(df2['count'], list(range(0, 601)))
+                bins2 = pd.cut(df2['count'], list(range(601)))
                 gpd2 = df2.groupby(bins2)['count'].count().to_frame(name='hist_height').reset_index()
                 if gpd2['hist_height'].sum() == 0:
                     gpd2['normed'] = [0] * len(gpd2)
@@ -1568,7 +1567,7 @@ class Compare:
                 # from the real isolated results:
                 df1 = real_isos[(real_isos['feeder'] == f)
                                 & (real_isos['radius'] == rad)]
-                bins1 = pd.cut(df1['count'], list(range(0, 601)))
+                bins1 = pd.cut(df1['count'], list(range(601)))
                 gpd1 = df1.groupby(bins1)['count'].count().to_frame(name='hist_height').reset_index()
                 if gpd1['hist_height'].sum() == 0:
                     gpd1['normed'] = [0] * len(gpd1)
@@ -1578,7 +1577,7 @@ class Compare:
                 # Getting the "histogram" bar heights
                 # from the model results:
                 df2 = m[m['radius'] == rad]
-                bins2 = pd.cut(df2['count'], list(range(0, 601)))
+                bins2 = pd.cut(df2['count'], list(range(601)))
                 gpd2 = df2.groupby(bins2)['count'].count().to_frame(name='hist_height').reset_index()
                 if gpd2['hist_height'].sum() == 0:
                     gpd2['normed'] = [0] * len(gpd2)
@@ -1803,7 +1802,7 @@ class Compare:
                 df2 = m[(m['radius'] == rad) & (m['y'] == yi)]
                 # Getting the "histogram" bar heights
                 # from the real single hop results:
-                bins1 = pd.cut(df1['count'], bins=list(range(0, 2001)))
+                bins1 = pd.cut(df1['count'], bins=list(range(2001)))
                 gpd1 = df1.groupby(bins1)['count'].count().to_frame(name='hist_height').reset_index()
                 if gpd1['hist_height'].sum() == 0:
                     gpd1['normed'] = [0] * len(gpd1)
@@ -1812,7 +1811,7 @@ class Compare:
                     gpd1['normed'] = (gpd1['hist_height'] - gpd1['hist_height'].mean()) / gpd1['hist_height'].std()
                 # Getting the "histogram" bar heights
                 # from the model results:
-                bins2 = pd.cut(df2['count'], list(range(0, 2001)))
+                bins2 = pd.cut(df2['count'], list(range(2001)))
                 gpd2 = df2.groupby(bins2)['count'].count().to_frame(name='hist_height').reset_index()
                 if gpd2['hist_height'].sum() == 0:
                     gpd2['normed'] = [0] * len(gpd2)
@@ -1844,7 +1843,7 @@ class Compare:
                 df2 = m[(m['radius'] == rad) & (m['y'] == yi)]
                 # Getting the "histogram" bar heights
                 # from the real single hop results:
-                bins1 = pd.cut(df1['count'], bins=list(range(0, 2001)))
+                bins1 = pd.cut(df1['count'], bins=list(range(2001)))
                 gpd1 = df1.groupby(bins1)['count'].count().to_frame(name='hist_height').reset_index()
                 if gpd1['hist_height'].sum() == 0:
                     gpd1['normed'] = [0] * len(gpd1)
@@ -1853,7 +1852,7 @@ class Compare:
                     gpd1['normed'] = (gpd1['hist_height'] - gpd1['hist_height'].mean()) / gpd1['hist_height'].std()
                 # Getting the "histogram" bar heights
                 # from the model results:
-                bins2 = pd.cut(df2['count'], list(range(0, 2001)))
+                bins2 = pd.cut(df2['count'], list(range(2001)))
                 gpd2 = df2.groupby(bins2)['count'].count().to_frame(name='hist_height').reset_index()
                 if gpd2['hist_height'].sum() == 0:
                     gpd2['normed'] = [0] * len(gpd2)
@@ -1955,7 +1954,7 @@ class Compare:
                 # Getting the "histogram" bar heights
                 # from the real island results:
                 df1 = real_isl[real_isl['radius'] == rad]
-                bins1 = pd.cut(df1['count'], list(range(0, 2001)))
+                bins1 = pd.cut(df1['count'], list(range(2001)))
                 gpd1 = df1.groupby(bins1)['count'].count().to_frame(name='hist_height').reset_index()
                 if gpd1['hist_height'].sum() == 0:
                     gpd1['normed'] = [0] * len(gpd1)
@@ -1965,7 +1964,7 @@ class Compare:
                 # Getting the "histogram" bar heights
                 # from the model results:
                 df2 = m[m['radius'] == rad]
-                bins2 = pd.cut(df2['count'], list(range(0, 2001)))
+                bins2 = pd.cut(df2['count'], list(range(2001)))
                 gpd2 = df2.groupby(bins2)['count'].count().to_frame(name='hist_height').reset_index()
                 if gpd2['hist_height'].sum() == 0:
                     gpd2['normed'] = [0] * len(gpd2)
@@ -1994,7 +1993,7 @@ class Compare:
                 # Getting the "histogram" bar heights
                 # from the real island results:
                 df1 = real_isl[(real_isl['feeder'] == f) & (real_isl['radius'] == rad)]
-                bins1 = pd.cut(df1['count'], list(range(0, 2001)))
+                bins1 = pd.cut(df1['count'], list(range(2001)))
                 gpd1 = df1.groupby(bins1)['count'].count().to_frame(name='hist_height').reset_index()
                 if gpd1['hist_height'].sum() == 0:
                     gpd1['normed'] = [0] * len(gpd1)
@@ -2004,7 +2003,7 @@ class Compare:
                 # Getting the "histogram" bar heights
                 # from the model results:
                 df2 = m[m['radius'] == rad]
-                bins2 = pd.cut(df2['count'], list(range(0, 2001)))
+                bins2 = pd.cut(df2['count'], list(range(2001)))
                 gpd2 = df2.groupby(bins2)['count'].count().to_frame(name='hist_height').reset_index()
                 if gpd2['hist_height'].sum() == 0:
                     gpd2['normed'] = [0] * len(gpd2)

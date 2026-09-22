@@ -1,9 +1,10 @@
-# Copyright (C) 2021-2023 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # file: uutilities.py
 
-import os
 import json
-import tesp_support.api.helpers as helpers
+import os
+
+from tesp_support.api import helpers
 
 yamlFile = 'Ercot_monitor.yaml'
 jsonFile = 'tesp_monitor_ercot.json'
@@ -107,15 +108,15 @@ def write_substation_msg(fileroot, gldSimName, aucSimName, controllers, dt):
     for key, val in controllers.items():
         house_name = str(val['houseName'])
         meter_name = str(val['meterName'])
-        dso.subs_n(gldSimName + "/" + house_name + "#air_temperature", "double")
-        dso.subs_n(gldSimName + "/" + house_name + "#hvac_load", "double")
-        dso.subs_n(gldSimName + "/" + house_name + "#power_state", "string")
+        dso.subs_n(gldSimName + "/" + house_name + "/air_temperature", "double")
+        dso.subs_n(gldSimName + "/" + house_name + "/hvac_load", "double")
+        dso.subs_n(gldSimName + "/" + house_name + "/power_state", "string")
         dso.pubs_n(False, key + "/cooling_setpoint", "double")
         dso.pubs_n(False, key + "/heating_setpoint", "double")
         dso.pubs_n(False, key + "/thermostat_deadband", "double")
         if meter_name not in pubSubMeters:
             pubSubMeters.add(meter_name)
-            dso.subs_n(gldSimName + "/" + meter_name + "#measured_voltage_1", "double")
+            dso.subs_n(gldSimName + "/" + meter_name + "/measured_voltage_1", "double")
             dso.pubs_n(False, key + "/" + meter_name + "/bill_mode", "string")
             dso.pubs_n(False, key + "/" + meter_name + "/price", "double")
             dso.pubs_n(False, key + "/" + meter_name + "/monthly_fee", "double")
@@ -149,9 +150,9 @@ def write_gridlabd_msg(fileroot, weatherName, aucSimName, controllers, dt):
         house_class = val['houseClass']
         sub_key = aucSimName + "/" + key + "/"
         for prop in ['power_state']:
-            gld.pubs(False, house_name + "#" + prop, "string", house_name, prop)
+            gld.pubs(False, house_name + "/" + prop, "string", house_name, prop)
         for prop in ['air_temperature', 'hvac_load']:
-            gld.pubs(False, house_name + "#" + prop, "double", house_name, prop)
+            gld.pubs(False, house_name + "/" + prop, "double", house_name, prop)
         for prop in ['cooling_setpoint', 'heating_setpoint', 'thermostat_deadband']:
             gld.subs(sub_key + prop, "double", house_name, prop)
         if meter_name not in pubSubMeters:
@@ -159,7 +160,7 @@ def write_gridlabd_msg(fileroot, weatherName, aucSimName, controllers, dt):
             prop = 'measured_voltage_1'
             if ('BIGBOX' in house_class) or ('OFFICE' in house_class) or ('STRIPMALL' in house_class):
                 prop = 'measured_voltage_A'  # TODO: the HELICS substation always expects measured_voltage_1
-            gld.pubs(False, meter_name + "#measured_voltage_1", "complex", meter_name, prop)
+            gld.pubs(False, meter_name + "/measured_voltage_1", "complex", meter_name, prop)
             for prop in ['bill_mode']:
                 gld.subs(sub_key + meter_name + "/" + prop, "string", meter_name, prop)
             for prop in ['price', 'monthly_fee']:
@@ -195,4 +196,4 @@ def write_ercot_tso_msg(numBuses):
 
 if __name__ == "__main__":
     write_FNCS_config_yaml_file_header()
-    write_FNCS_config_yaml_file_values('abc', dict())
+    write_FNCS_config_yaml_file_values('abc', {})

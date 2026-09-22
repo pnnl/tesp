@@ -1,8 +1,8 @@
 # Build runtime image
 ARG UBUNTU=ubuntu
-ARG UBUNTU_VERSION=:22.04
+ARG UBUNTU_VERSION=24.04
 
-FROM ${UBUNTU}${UBUNTU_VERSION} AS cosim-ubuntu
+FROM ${UBUNTU}:${UBUNTU_VERSION} AS tesp-ubuntu
 
 RUN echo "===== Building TESP Ubuntu =====" && \
   export DEBIAN_FRONTEND=noninteractive && \
@@ -31,6 +31,7 @@ RUN echo "===== Building TESP Ubuntu =====" && \
   coinor-libipopt-dev \
   liblapack-dev \
   libmetis-dev \
+  libmumps-dev \
 # python support
   python3-pip \
   python3-pil.imagetk && \

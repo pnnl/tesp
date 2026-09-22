@@ -1,11 +1,12 @@
 # usage 'python ../plots.py metrics_root'
 # run it from inside the metrics_root folder
 # .json file format only
-import sys
 import os
-import matplotlib as mpl
+import sys
+
 import matplotlib.pyplot as plt
 import process_gld_dsot as pg
+
 # import tesp_support.api.process_inv as gp
 # import tesp_support.api.process_gld as gp
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2024 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: schedule_client.py
 """Client class used by entities to access schedule server
@@ -12,11 +12,12 @@ data provided by the schedule server.
 
 
 from multiprocessing.managers import BaseManager
+
 # import psutil  # 3rd party module for process info (not strictly required)
 
 
 # Grab the shared proxy class.  All methods in that class will be available here
-class DataClient(object):
+class DataClient:
     def __init__(self, port):
         # assert self._checkForProcess('DataServer.py'), 'Must have DataServer running'
 
@@ -29,9 +30,10 @@ class DataClient(object):
         self.proxy = self.mgr.DataProxy()
 
     # Verify the server is running (not required)
-    @staticmethod
-    def _checkForProcess(name):
-        for proc in psutil.process_iter():
-            if proc.name() == name:
-                return True
-        return False
+    # Uncomment for assert message above
+    # @staticmethod
+    # def _checkForProcess(name):
+    #     for proc in psutil.process_iter():
+    #         if proc.name() == name:
+    #             return True
+    #     return False

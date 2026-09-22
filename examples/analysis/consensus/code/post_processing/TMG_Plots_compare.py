@@ -1,14 +1,12 @@
-import os, glob
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits import mplot3d
-import h5py
 import json
-import seaborn as sns
-from datetime import datetime, timedelta
 import math
+import os
+from datetime import datetime, timedelta
 
+import h5py
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 
 
 def load_json(dir_path, file_name):
@@ -83,9 +81,9 @@ def get_gridlabd_outputs(case, day_num):
     
     for mg in range(No_Microgrids):
         MG_num = str(mg+1)
-        net_meter_load[str(agent_prefix)+MG_num] = np.zeros((len(time_gld)))
-        net_hvac_load[str(agent_prefix)+MG_num] = np.zeros((len(time_gld)))
-        net_wh_load[str(agent_prefix)+MG_num] = np.zeros((len(time_gld)))
+        net_meter_load[str(agent_prefix)+MG_num] = np.zeros(len(time_gld))
+        net_hvac_load[str(agent_prefix)+MG_num] = np.zeros(len(time_gld))
+        net_wh_load[str(agent_prefix)+MG_num] = np.zeros(len(time_gld))
         
         billing_meter_MG_file = open(case + agent_prefix+ MG_num + "//" + agent_prefix+ MG_num + "_glm_dict.json").read()
         billing_meter_MG = json.loads(billing_meter_MG_file)['billingmeters']
@@ -97,7 +95,7 @@ def get_gridlabd_outputs(case, day_num):
             hvac_load = 0
             wh_load = 0
             for mtr_name in gld_all_meter[str(int(time))]:
-                if mtr_name in billing_meter_MG.keys():
+                if mtr_name in billing_meter_MG:
                     meter_load += gld_all_meter[str(int(time))][mtr_name][2]/1000
                     house_name = billing_meter_MG[mtr_name]['children'][0]
                     hvac_load += gld_all_house[str(int(time))][house_name][5]
@@ -122,7 +120,7 @@ def get_gridlabd_outputs(case, day_num):
 ##################  DSO object 300 min Metrics ################################
 ###############################################################################
 def dso_DSO_price_qunatity_rt(data_path, folder_prefix, day_num):
-    """ Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
+    r""" Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
     datetime when the energy will be consumed.
     Args:
         dir_path (str): path of parent directory where DSO folders live
@@ -145,7 +143,7 @@ def dso_DSO_price_qunatity_rt(data_path, folder_prefix, day_num):
 ##################  MG object 300 min retail Metrics ##########################
 ###############################################################################
 def retail_MG_price_qunatity_rt(data_path, folder_prefix, MG_num, day_num):
-    """ Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
+    r""" Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
     datetime when the energy will be consumed.
     Args:
         dir_path (str): path of parent directory where DSO folders live
@@ -169,7 +167,7 @@ def retail_MG_price_qunatity_rt(data_path, folder_prefix, MG_num, day_num):
 ###############################################################################
     
 def dso_MG_price_qunatity_da(data_path, folder_prefix, MG_num, day_num):
-    """ Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
+    r""" Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
     datetime when the energy will be consumed.
     Args:
         dir_path (str): path of parent directory where DSO folders live
@@ -195,7 +193,7 @@ def dso_MG_price_qunatity_da(data_path, folder_prefix, MG_num, day_num):
 ####################  MG object 300 min DSO Metrics ##########################
 ###############################################################################
 def dso_MG_price_qunatity_rt(data_path, folder_prefix, MG_num, day_num):
-    """ Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
+    r""" Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
     datetime when the energy will be consumed.
     Args:
         dir_path (str): path of parent directory where DSO folders live
@@ -216,7 +214,7 @@ def dso_MG_price_qunatity_rt(data_path, folder_prefix, MG_num, day_num):
     return data_df, data_df1
 
 def hvac_quantity_price_rt(data_path, folder_prefix, MG_num, day_num):
-    """ Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
+    r""" Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
     datetime when the energy will be consumed.
     Args:
         dir_path (str): path of parent directory where DSO folders live
@@ -243,7 +241,7 @@ def hvac_quantity_price_rt(data_path, folder_prefix, MG_num, day_num):
 
 
 def water_heater_quantity_price_rt(data_path, folder_prefix, MG_num, day_num):
-    """ Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
+    r""" Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
     datetime when the energy will be consumed.
     Args:
         dir_path (str): path of parent directory where DSO folders live

@@ -10,11 +10,11 @@ import gym
 import numpy as np
 from utils import plotLearning
 
-'''
+"""
 DDPG agent  [action]
 tesp_env  (house_name,time_step,state[],reward[],next_state[])
 
-'''
+"""
 
 env = gym.make('LunarLanderContinuous-v2')
 agent = Agent(alpha=0.000025, beta=0.00025, input_dims=[8], tau=0.001, env=env,

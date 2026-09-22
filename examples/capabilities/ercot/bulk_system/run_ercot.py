@@ -1,7 +1,8 @@
-# Copyright (C) 2021-2023 Battelle Memorial Institute
+# Copyright (c) 2021-2025 Battelle Memorial Institute
 # file: run_ercot.py
 
 import sys
+
 import pypower.api as pp
 import tesp_support.api.tso_helpers as tso
 

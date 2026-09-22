@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2023 Battelle Memorial Institute
+# Copyright (c) 2018-2025 Battelle Memorial Institute
 # file: prep_substation.py
 """ Sets up the FNCS and agent configurations for te30 and sgip1 examples
 
@@ -11,12 +11,13 @@ Public Functions:
     :prep_substation: processes a GridLAB-D file for one substation and one or more feeders
 """
 
-import os
 import json
-import numpy as np
+import os
 from datetime import datetime
 
-from tesp_support.api.helpers import zoneMeterName, HelicsMsg
+import numpy as np
+
+from ..api.helpers import HelicsMsg, zoneMeterName
 
 # write yaml for substation.py to subscribe meter voltages, house temperatures, hvac load and hvac state
 # write txt for gridlabd to subscribe house setpoints and meter price; publish meter voltages
@@ -173,11 +174,7 @@ def ProcessGLM(fileroot):
             if inHouses and lst[0] == 'object' and lst[1] != 'house':
                 endedHouse = True
             if inClock:
-                if lst[0] == 'starttime':
-                    StartTime = lst[1].strip('\';')
-                    if len(lst) > 2:
-                        StartTime = StartTime + ' ' + lst[2].strip('\';')
-                elif lst[0] == 'timestamp':
+                if lst[0] == 'starttime' or lst[0] == 'timestamp':
                     StartTime = lst[1].strip('\';')
                     if len(lst) > 2:
                         StartTime = StartTime + ' ' + lst[2].strip('\';')
@@ -187,22 +184,18 @@ def ProcessGLM(fileroot):
                         EndTime = EndTime + ' ' + lst[2].strip('\';')
                 if len(StartTime) > 0 and len(EndTime) > 0:
                     inClock = False
-            if inClimate:
-                if lst[0] == 'name':
-                    climate_name = lst[1].strip(';')
-                    inClimate = False
-            if inHELICSmsg:
-                if lst[0] == 'name':
-                    gld_federate = lst[1].strip(';')
-                    inHELICSmsg = False
-            if inFNCSmsg:
-                if lst[0] == 'name':
-                    gld_federate = lst[1].strip(';')
-                    inFNCSmsg = False
-            if inTriplexMeters:
-                if lst[0] == 'name':
-                    meter_name = lst[1].strip(';')
-                    inTriplexMeters = False
+            if inClimate and lst[0] == 'name':
+                climate_name = lst[1].strip(';')
+                inClimate = False
+            if inHELICSmsg and lst[0] == 'name':
+                gld_federate = lst[1].strip(';')
+                inHELICSmsg = False
+            if inFNCSmsg and lst[0] == 'name':
+                gld_federate = lst[1].strip(';')
+                inFNCSmsg = False
+            if inTriplexMeters and lst[0] == 'name':
+                meter_name = lst[1].strip(';')
+                inTriplexMeters = False
             if inHouses:
                 if lst[0] == 'name' and not endedHouse:
                     house_name = lst[1].strip(';')
@@ -210,9 +203,8 @@ def ProcessGLM(fileroot):
                     house_parent = lst[1].strip(';')
                 if lst[0] == 'groupid':
                     house_class = lst[1].strip(';')
-                if lst[0] == 'cooling_system_type':
-                    if lst[1].strip(';') == 'ELECTRIC':
-                        isELECTRIC = True
+                if lst[0] == 'cooling_system_type' and lst[1].strip(';') == 'ELECTRIC':
+                    isELECTRIC = True
         elif len(lst) == 1:
             inHELICSmsg = False
             if inHouses:
@@ -227,7 +219,7 @@ def ProcessGLM(fileroot):
                         control_mode = 'CN_RAMP'
                     else:
                         control_mode = 'CN_NONE'  # still follows the time-of-day schedule
-                    controller_name = house_name + '_hvac'
+                    controller_name = house_name
                     wakeup_start = np.random.uniform(wakeup_start_lo, wakeup_start_hi)
                     daylight_start = np.random.uniform(daylight_start_lo, daylight_start_hi)
                     evening_start = np.random.uniform(evening_start_lo, evening_start_hi)
@@ -249,22 +241,22 @@ def ProcessGLM(fileroot):
                                                     'houseName': house_name,
                                                     'houseClass': house_class,
                                                     'period': period,
-                                                    'wakeup_start': float('{:.3f}'.format(wakeup_start)),
-                                                    'daylight_start': float('{:.3f}'.format(daylight_start)),
-                                                    'evening_start': float('{:.3f}'.format(evening_start)),
-                                                    'night_start': float('{:.3f}'.format(night_start)),
-                                                    'wakeup_set': float('{:.3f}'.format(wakeup_set)),
-                                                    'daylight_set': float('{:.3f}'.format(daylight_set)),
-                                                    'evening_set': float('{:.3f}'.format(evening_set)),
-                                                    'night_set': float('{:.3f}'.format(night_set)),
-                                                    'weekend_day_start': float('{:.3f}'.format(weekend_day_start)),
-                                                    'weekend_day_set': float('{:.3f}'.format(weekend_day_set)),
-                                                    'weekend_night_start': float('{:.3f}'.format(weekend_night_start)),
-                                                    'weekend_night_set': float('{:.3f}'.format(weekend_night_set)),
-                                                    'deadband': float('{:.3f}'.format(deadband)),
-                                                    'offset_limit': float('{:.3f}'.format(offset_limit)),
-                                                    'ramp': float('{:.4f}'.format(ramp)),
-                                                    'price_cap': float('{:.3f}'.format(ctrl_cap)),
+                                                    'wakeup_start': float(f'{wakeup_start:.3f}'),
+                                                    'daylight_start': float(f'{daylight_start:.3f}'),
+                                                    'evening_start': float(f'{evening_start:.3f}'),
+                                                    'night_start': float(f'{night_start:.3f}'),
+                                                    'wakeup_set': float(f'{wakeup_set:.3f}'),
+                                                    'daylight_set': float(f'{daylight_set:.3f}'),
+                                                    'evening_set': float(f'{evening_set:.3f}'),
+                                                    'night_set': float(f'{night_set:.3f}'),
+                                                    'weekend_day_start': float(f'{weekend_day_start:.3f}'),
+                                                    'weekend_day_set': float(f'{weekend_day_set:.3f}'),
+                                                    'weekend_night_start': float(f'{weekend_night_start:.3f}'),
+                                                    'weekend_night_set': float(f'{weekend_night_set:.3f}'),
+                                                    'deadband': float(f'{deadband:.3f}'),
+                                                    'offset_limit': float(f'{offset_limit:.3f}'),
+                                                    'ramp': float(f'{ramp:.4f}'),
+                                                    'price_cap': float(f'{ctrl_cap:.3f}'),
                                                     'bid_delay': bid_delay,
                                                     'use_predictive_bidding': use_predictive_bidding,
                                                     'use_override': use_override}
@@ -318,15 +310,15 @@ def ProcessGLM(fileroot):
     for key, val in controllers.items():
         house_name = val['houseName']
         meter_name = val['meterName']
-        dso.subs_n(gld_federate + "/" + house_name + "#air_temperature", "double")
-        dso.subs_n(gld_federate + "/" + house_name + "#hvac_load", "double")
-        dso.subs_n(gld_federate + "/" + house_name + "#power_state", "string")
+        dso.subs_n(gld_federate + "/" + house_name + "/air_temperature", "double")
+        dso.subs_n(gld_federate + "/" + house_name + "/hvac_load", "double")
+        dso.subs_n(gld_federate + "/" + house_name + "/power_state", "string")
         dso.pubs_n(False, key + "/cooling_setpoint", "double")
         dso.pubs_n(False, key + "/heating_setpoint", "double")
         dso.pubs_n(False, key + "/thermostat_deadband", "double")
         if meter_name not in pubSubMeters:
             pubSubMeters.add(meter_name)
-            dso.subs_n(gld_federate + "/" + meter_name + "#measured_voltage_1", "complex")  # V1
+            dso.subs_n(gld_federate + "/" + meter_name + "/measured_voltage_1", "complex")  # V1
             dso.pubs_n(False, key + "/" + meter_name + "/bill_mode", "string")
             dso.pubs_n(False, key + "/" + meter_name + "/price", "double")
             dso.pubs_n(False, key + "/" + meter_name + "/monthly_fee", "double")
@@ -354,16 +346,16 @@ def ProcessGLM(fileroot):
     for key, val in controllers.items():
         house_name = val['houseName']
         meter_name = val['meterName']
-        print('  ' + key + '#V1:', file=yp)
+        print('  ' + key + '/measured_voltage:', file=yp)
         print('    topic: ' + gld_federate + '/' + meter_name + '/measured_voltage_1', file=yp)
         print('    default: 120', file=yp)
-        print('  ' + key + '#Tair:', file=yp)
+        print('  ' + key + '/air_temperature:', file=yp)
         print('    topic: ' + gld_federate + '/' + house_name + '/air_temperature', file=yp)
         print('    default: 80', file=yp)
-        print('  ' + key + '#Load:', file=yp)
+        print('  ' + key + '/hvac_load:', file=yp)
         print('    topic: ' + gld_federate + '/' + house_name + '/hvac_load', file=yp)
         print('    default: 0', file=yp)
-        print('  ' + key + '#On:', file=yp)
+        print('  ' + key + '/power_state:', file=yp)
         print('    topic: ' + gld_federate + '/' + house_name + '/power_state', file=yp)
         print('    default: 0', file=yp)
     yp.close()
@@ -428,9 +420,9 @@ def ProcessGLM(fileroot):
         house_name = val['houseName']
         house_class = val['houseClass']
         sub_key = sub_federate + "/" + key + "/"
-        gld.pubs(False, house_name + "#power_state", "string", house_name, "power_state")
-        gld.pubs(False, house_name + "#air_temperature", "double", house_name, "air_temperature")
-        gld.pubs(False, house_name + "#hvac_load", "double", house_name, "hvac_load")
+        gld.pubs(False, house_name + "/power_state", "string", house_name, "power_state")
+        gld.pubs(False, house_name + "/air_temperature", "double", house_name, "air_temperature")
+        gld.pubs(False, house_name + "/hvac_load", "double", house_name, "hvac_load")
         gld.subs(sub_key + "cooling_setpoint", "double", house_name, "cooling_setpoint")
         gld.subs(sub_key + "heating_setpoint", "double", house_name, "heating_setpoint")
         gld.subs(sub_key + "thermostat_deadband", "double", house_name, "thermostat_deadband")
@@ -439,7 +431,7 @@ def ProcessGLM(fileroot):
             prop = 'measured_voltage_1'
             if ('BIGBOX' in house_class) or ('OFFICE' in house_class) or ('STRIPMALL' in house_class):
                 prop = 'measured_voltage_A'  # TODO: the HELICS substation always expects measured_voltage_1
-            gld.pubs(False, meter_name + "#measured_voltage_1", "complex", meter_name, prop)
+            gld.pubs(False, meter_name + "/measured_voltage_1", "complex", meter_name, prop)
             gld.subs(sub_key + meter_name + "/bill_mode", "string", meter_name, "bill_mode")
             gld.subs(sub_key + meter_name + "/price", "double", meter_name, "price")
             gld.subs(sub_key + meter_name + "/monthly_fee", "double", meter_name, "monthly_fee")
@@ -454,12 +446,12 @@ def ProcessGLM(fileroot):
         for wTopic in ['temperature', 'humidity', 'solar_direct', 'solar_diffuse', 'pressure', 'wind_speed']:
             print('subscribe "precommit:' + climate_name + '.' + wTopic + ' <- ' + climate_name + '/' + wTopic + '";', file=op)
     if len(Eplus_Bus) > 0:  # hard-wired names for a single building
-        print('subscribe "precommit:{:s}.constant_power_A <- eplus_agent/power_A";'.format(Eplus_Load), file=op)
-        print('subscribe "precommit:{:s}.constant_power_B <- eplus_agent/power_B";'.format(Eplus_Load), file=op)
-        print('subscribe "precommit:{:s}.constant_power_C <- eplus_agent/power_C";'.format(Eplus_Load), file=op)
-        print('subscribe "precommit:{:s}.bill_mode <- eplus_agent/bill_mode";'.format(Eplus_Meter), file=op)
-        print('subscribe "precommit:{:s}.price <- eplus_agent/price";'.format(Eplus_Meter), file=op)
-        print('subscribe "precommit:{:s}.monthly_fee <- eplus_agent/monthly_fee";'.format(Eplus_Meter), file=op)
+        print(f'subscribe "precommit:{Eplus_Load:s}.constant_power_A <- eplus_agent/power_A";', file=op)
+        print(f'subscribe "precommit:{Eplus_Load:s}.constant_power_B <- eplus_agent/power_B";', file=op)
+        print(f'subscribe "precommit:{Eplus_Load:s}.constant_power_C <- eplus_agent/power_C";', file=op)
+        print(f'subscribe "precommit:{Eplus_Meter:s}.bill_mode <- eplus_agent/bill_mode";', file=op)
+        print(f'subscribe "precommit:{Eplus_Meter:s}.price <- eplus_agent/price";', file=op)
+        print(f'subscribe "precommit:{Eplus_Meter:s}.monthly_fee <- eplus_agent/monthly_fee";', file=op)
     pubSubMeters = set()
     for key, val in controllers.items():
         meter_name = val['meterName']

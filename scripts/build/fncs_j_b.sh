@@ -39,7 +39,7 @@ if [ ${MSYSTEM_PREFIX} ]; then
 fi
 
 cmake -G "$myoption" ..
-make -j "$(grep -c "^processor" /proc/cpuinfo)"
+make -j "$(nproc)"
 
 JAVAPATH=$INSTDIR/java
 if [ -d "$JAVAPATH" ]; then
