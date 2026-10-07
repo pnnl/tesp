@@ -152,7 +152,7 @@ def customer_meta_data(glm_meta, agent_meta, dso_metadata_path):
 
     # Determine PV ratings if any
     for inverter in glm_meta['inverters']:
-        if 'isol' in inverter:
+        if 'isol' in inverter or 'solinv' in inverter:
             meter = glm_meta['inverters'][inverter]['billingmeter_id']
             glm_meta['billingmeters'][meter]['pv_capacity'] = glm_meta['inverters'][inverter]['rated_W'] / 1000
             glm_meta['billingmeters'][meter]['pv_participating'] = True
@@ -966,7 +966,10 @@ def RCI_analysis(dso_range, case, data_path, metadata_path, dso_metadata_file, e
             for ev in metadata['ev']:
                 EVcount += 1
                 EVrating += metadata['ev'][ev]['max_charge'] / 1000
-                EVcapacity += metadata['ev'][ev]['range_miles'] / metadata['ev'][ev]['miles_per_kWh']
+                try:
+                    EVcapacity += metadata['ev'][ev]['range_miles'] / metadata['ev'][ev]['miles_per_kWh']
+                except KeyError:
+                    EVcapacity += metadata['ev'][ev]['range_miles'] / metadata['ev'][ev]['miles_per_kwh']
         EVtot.append(EVcount)
         EVratingtot.append(EVrating)
         EVcapacitytot.append(EVcapacity)
@@ -1594,18 +1597,33 @@ def der_load_stack(dso, day_range, case, gld_prefix, metadata_path):
     sim_start = datetime.strptime(config['StartTime'], '%Y-%m-%d %H:%M:%S')
     ercot_df = load_ercot_data(ercot_metadata_file, sim_start, day_range)
 
-    if config['case_type']['bt'] == 1:
-        battery_case = True
-    else:
-        battery_case = False
-    if config['case_type']['fl'] == 1:
-        flexload_case = True
-    else:
-        flexload_case = False
-    if config['case_type']['pv'] == 1:
-        pv_case = True
-    else:
-        pv_case = False
+    try:
+        if config['case_type']['bt'] == 1:
+            battery_case = True
+        else:
+            battery_case = False
+        if config['case_type']['fl'] == 1:
+            flexload_case = True
+        else:
+            flexload_case = False
+        if config['case_type']['pv'] == 1:
+            pv_case = True
+        else:
+            pv_case = False
+    except KeyError: #Legacy DSOT
+        if config['caseType']['bt'] == 1:
+            battery_case = True
+        else:
+            battery_case = False
+        if config['caseType']['fl'] == 1:
+            flexload_case = True
+        else:
+            flexload_case = False
+        if config['caseType']['pv'] == 1:
+            pv_case = True
+        else:
+            pv_case = False
+        
 
     node = config["nodes"]
     scenario = config["scenario"]
@@ -1752,18 +1770,32 @@ def der_stack_plot(dso_range, day_range, metadata_path, case, comp=None, plot_re
     ames_rt_df = ames_rt_df.iloc[:min_len]
     ames_rt_df = ames_rt_df.set_index(ercot_df.index)
 
-    if config['case_type']['bt'] == 1:
-        battery_case = True
-    else:
-        battery_case = False
-    if config['case_type']['fl'] == 1:
-        flexload_case = True
-    else:
-        flexload_case = False
-    if config['case_type']['pv'] == 1:
-        pv_case = True
-    else:
-        pv_case = False
+    try:
+        if config['case_type']['bt'] == 1:
+            battery_case = True
+        else:
+            battery_case = False
+        if config['case_type']['fl'] == 1:
+            flexload_case = True
+        else:
+            flexload_case = False
+        if config['case_type']['pv'] == 1:
+            pv_case = True
+        else:
+            pv_case = False
+    except KeyError: #Legacy DSOT
+        if config['caseType']['bt'] == 1:
+            battery_case = True
+        else:
+            battery_case = False
+        if config['caseType']['fl'] == 1:
+            flexload_case = True
+        else:
+            flexload_case = False
+        if config['caseType']['pv'] == 1:
+            pv_case = True
+        else:
+            pv_case = False
 
     # Need to load data for each DSO and concatenate into one master dataframe
     for dso in dso_range:
@@ -1908,7 +1940,7 @@ def subscription_plot(dso, day_range, metadata_path, case, demand_case):
     output_df = output_df.rename(columns={'sum': 'Total Load'})
     output_df['Block Load'] = basedemand_df[['sum']]
 
-    #  Load in retail price data
+    # Load in retail price data
     # Load Tariff structure
     # TODO: read in actual rate scenario (currently hard coded to 'RandD')
     file_name = "rate_case_values_" + "RandD" + ".json"

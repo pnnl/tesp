@@ -606,7 +606,7 @@ Once you have post-processed all the month cases in a year, you can run the annu
 
 This requires a folder for the post-processing results. In the data directory (../examples/analysis/glm_dsot/data), create a directory for those results, i.e.,
 
-    ../examples/analysis/glm_dsot/data/post-processing/Flat
+    ../examples/analysis/glm_dsot/data/post_processing/Flat
 
 For a flat, base case run.
 

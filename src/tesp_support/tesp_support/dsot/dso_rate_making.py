@@ -876,6 +876,7 @@ def calculate_consumer_bills(
     num_ind_cust,
     rate_scenario,
     include_RT = True,
+    bl_demand_df_multiplier=1.0,
 ):
     """Compute per-meter and per-sector consumer bills given solved tariff prices.
 
@@ -935,6 +936,9 @@ def calculate_consumer_bills(
             `'subscription'`, `'transactive'`, or `'dsot'`.
         include_RT (bool): If True, real-time energy charges are applied to
             participating customers. Defaults to True.
+        bl_demand_df_multiplier (float): Scaling factor applied to subscription
+            baseline demand profiles before calculating subscription bills.
+            Defaults to 1.0 (no scaling).
 
     Returns:
         bill_df (pd.DataFrame): Per-meter bill components with MultiIndex
@@ -1100,6 +1104,7 @@ def calculate_consumer_bills(
                 key="demand",
                 mode="r",
             )
+            bl_demand_df = bl_demand_df * float(bl_demand_df_multiplier)
             demand_df = pd.read_hdf(
                 os.path.join(
                     case_path,
@@ -1659,6 +1664,7 @@ def calculate_tariff_prices(
     rate_scenario,
     trans_cost_balance_method=None,
     include_RT = True,
+    bl_demand_df_multiplier=1.0,
 ):
     """Solve for the tariff prices that allow the DSO to recover its annual expenses.
 
@@ -1718,6 +1724,8 @@ def calculate_tariff_prices(
             rate; `'fixed'` adjusts the connection charge. Defaults to None.
         include_RT (bool): If True, real-time energy charges contribute to
             revenue in the transactive/dsot solve. Defaults to True.
+        bl_demand_df_multiplier (float): Baseline-demand scaling factor passed
+            through to subscription bill calculations. Defaults to 1.0.
 
     Returns:
         prices (dict): Solved price components, keyed by scenario:
@@ -1978,7 +1986,7 @@ def calculate_tariff_prices(
                 "commercial",
             ]:
                 if metadata["billingmeters"][each]["cust_participating"]:
-                    for s, value in seasons_dict.items:
+                    for s in seasons_dict:
                         # Update the total revenue from energy charges for time-of-use
                         # consumers during each season
                         rev_energy_charge_tou[s] += sum(
@@ -2180,7 +2188,7 @@ def calculate_tariff_prices(
                             base_case_path,
                             matching_dir,
                             "Substation_" + dso_num,
-                            "Substation_" + dso_num + "_demand_by_meter.h5",
+                            "Substation_" + dso_num + "_baseline_demand_by_meter.h5",
                         ),
                         key="demand",
                         mode="r",
@@ -2210,7 +2218,7 @@ def calculate_tariff_prices(
                                     "Substation_" + dso_num,
                                     "Substation_"
                                     + dso_num
-                                    + "_demand_by_meter.h5",
+                                    + "_baseline_demand_by_meter.h5",
                                 ),
                                 key="demand",
                                 mode="r",
@@ -3225,6 +3233,7 @@ def DSO_rate_making(
         rate_scenario=None,
         trans_cost_balance_method=None,
         include_RT = True,
+        bl_demand_df_multiplier=1.0,
 ):
     """Compute cost-recovery tariff prices and customer bills for one DSO.
 
@@ -3287,6 +3296,9 @@ def DSO_rate_making(
         include_RT (bool): If True, real-time energy charges are included in
             participating-customer bills. Set False to exclude RT corrections.
             Defaults to True.
+        bl_demand_df_multiplier (float): Scaling factor applied to subscription
+            baseline demand profiles when calculating customer bills. Defaults
+            to 1.0 (no scaling).
 
     Returns:
         DSO_Cash_Flows (dict): Nested revenue summary dict with flat/TOU/
@@ -3319,7 +3331,7 @@ def DSO_rate_making(
     counter_factual = False
 
     # ------------------------------------------------------------------ #
-    # STEP 1 -- Load tariff structure and annual energy data              #
+    # STEP 1 -- Load tariff structure and annual energy data             #
     # ------------------------------------------------------------------ #
 
     # Tariff filename: for DSO+T legacy cases use case_name; for the Rates
@@ -3377,7 +3389,8 @@ def DSO_rate_making(
         industrial_file,
         rate_scenario,
         trans_cost_balance_method,
-        include_RT
+        include_RT,
+        bl_demand_df_multiplier=bl_demand_df_multiplier,
     )
 
     # ------------------------------------------------------------------ #
@@ -3449,7 +3462,8 @@ def DSO_rate_making(
         dso_scaling_factor,
         num_indust_cust,
         rate_scenario,
-        include_RT
+        include_RT,
+        bl_demand_df_multiplier,
     )
 
     # ------------------------------------------------------------------ #

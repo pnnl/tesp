@@ -76,31 +76,34 @@ Financial outputs (regenerated on every pass):
   Customer_CFS_Summary.csv       -- Customer cash-flow summary by group
   DSO_CFS_Summary.csv            -- DSO-level cash-flow summary
   DSO<N>_Capital_Costs.json / DSO<N>_Expenses.json
+
+
+
+Select folder locations for different cases
+-------------------------------------------
+Confirm directory paths before running the script.
+
+Expected directory layout under datapath (post-processing root):
+  Flat/     -- Base / flat-rate annual case folder
+  DSOT/     -- DSOT dynamic pricing annual case folder
+  TOU/      -- Time-of-use rate annual case folder
+  rob-don/  -- Transactive / EandC scenario annual case folder
+  sub/      -- Subscription rate scenario annual case folder
+
+Consider adding folder creation:
+Ensure plots output directory exists.
+check_folder = isdir(datapath + '/Flat')
+if not check_folder:
+   os.makedirs(datapath + '/Flat')
+
+Each folder must contain the twelve monthly simulation sub-folders
+(e.g., 8_2016_01_pv_bt_fl_ev/) before this script can be run.
+
+To use a different local path layout, add an elif branch below or set
+hayden = True to use hard-coded paths.
 """
-
-
-# --------------- Select folder locations for different cases -----------------
-# Edit this section before running the script.
-#
-# Expected directory layout under datapath (post-processing root):
-#   Flat/     -- Base / flat-rate annual case folder
-#   DSOT/     -- DSOT dynamic pricing annual case folder
-#   TOU/      -- Time-of-use rate annual case folder
-#   rob-don/  -- Transactive / EandC scenario annual case folder
-#   sub/      -- Subscription rate scenario annual case folder
-#
-# Consider adding folder creation:
-# Ensure plots output directory exists.
-# check_folder = isdir(datapath + '/Flat')
-# if not check_folder:
-#    os.makedirs(datapath + '/Flat')
-#
-# Each folder must contain the twelve monthly simulation sub-folders
-# (e.g., 8_2016_01_pv_bt_fl_ev/) before this script can be run.
-#
-# To use a different local path layout, add an elif branch below or set
-# hayden = True to use hard-coded paths.
 hayden = False
+legacy = True
 
 if hayden:
     flat_path = 'C:/Users/reev057/DSOT-DATA/Rates/Flat'
@@ -111,15 +114,21 @@ if hayden:
     metadata_path = 'C:/Users/reev057/PycharmProjects/TESP_Public/examples/analysis/dsot/data'
 else:
     # Root of the annual post-processing output tree, resolved from $TESPDIR.
-    datapath = os.path.expandvars('$TESPDIR/examples/analysis/glm_dsot/data/post_processing')
+    if legacy: 
+        datapath = os.path.expandvars('$TESPDIR/examples/analysis/dsot/data/post_processing')
+        # Shared metadata and configuration files used by all rate scenarios.
+        metadata_path = os.path.expandvars('$TESPDIR/examples/analysis/dsot/data')
+    else:
+        datapath = os.path.expandvars('$TESPDIR/examples/analysis/glm_dsot/data/post_processing')
+        metadata_path = os.path.expandvars('$TESPDIR/examples/analysis/glm_dsot/data')
     flat_path        = os.path.join(datapath, 'Flat')     # Base / flat-rate scenario
     DSOT_path        = os.path.join(datapath, 'DSOT')     # DSOT dynamic pricing
     TOU_path         = os.path.join(datapath, 'TOU')      # Time-of-use rate
     transactive_path = os.path.join(datapath, 'rob-don')  # Transactive / EandC scenario
     subscription_path = os.path.join(datapath, 'sub')     # Subscription rate scenario
     #   (create 'sub' by duplicating the 'rob-don' folder and renaming it)
-    # Shared metadata and configuration files used by all rate scenarios.
-    metadata_path = os.path.expandvars('$TESPDIR/examples/analysis/glm_dsot/data')
+    
+    
     DSOT_metadata_path = os.path.expandvars('$TESPDIR/examples/analysis/dsot/data')
 
 # ------------------- Select system-case definition ---------------------------
@@ -134,10 +143,14 @@ rcs = "RECS"
 
 # Top-level system configuration file (AMES grid topology, generator data, etc.).
 # Expected at: metadata_path/<nodes>_<scenario>_system_config.json5
-system_config_file = f'{nodes}_{scenario}_system_config.json5'
-# Rates and DSO configuration file shared across all rate scenarios.
-# Expected at: metadata_path/rates_config.json5
-case = "rates_config.json5"
+if legacy:
+    system_config_file = f'{nodes}_{scenario}_system_case_config.json'
+    case = None
+else:
+    system_config_file = f'{nodes}_{scenario}_system_config.json5'
+    # Rates and DSO configuration file shared across all rate scenarios.
+    # Expected at: metadata_path/rates_config.json5
+    case = "rates_config.json5"
 
 # case_list: annual output folders for the non-base rate scenarios to process.
 # - Do NOT include the base case (flat_path) here; it is prepended automatically
@@ -405,21 +418,28 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
         # defines DSO population file paths, generator forecast filenames, and
         # other system parameters that are common to all rate scenarios.
         # The file lives in metadata_path (glm_dsot/data/), not in case_path.
-        config_path = os.path.join(metadata_path, case)
+        if legacy:
+            config_path = os.path.expandvars('$TESPDIR/examples/analysis/dsot/code')
+            case_config = pt.load_json(config_path, system_config_file)
+            system_config = case_config
+        else:
+            config_path = os.path.join(metadata_path, case)
+            with open(config_path, 'r', encoding='utf-8') as json5_file:
+                case_config = pyjson5.load(json5_file)
 
-        with open(config_path, 'r', encoding='utf-8') as json5_file:
-            case_config = pyjson5.load(json5_file)
-
-        # Index 5 of genForecastHr is the renewable (solar/wind) forecast file;
-        # only the filename portion is needed since it lives in metadata_path.
-        system_config_path = os.path.join(metadata_path, system_config_file)
-        with open(system_config_path, 'r', encoding='utf-8') as json5_file:
-            system_config = pyjson5.load(json5_file)
+            # Index 5 of genForecastHr is the renewable (solar/wind) forecast file;
+            # only the filename portion is needed since it lives in metadata_path.
+            system_config_path = os.path.join(metadata_path, system_config_file)
+            with open(system_config_path, 'r', encoding='utf-8') as json5_file:
+                system_config = pyjson5.load(json5_file)
 
         renew_forecast_file = DSOT_metadata_path + "/" + system_config['genForecastHr'][5].split('/')[-1]
         # Load RECS-based DSO population metadata to identify which DSO nodes
         # are active in this network configuration.
-        dso_metadata_file = case_config['population_file_RECS']
+        if legacy:
+            dso_metadata_file = case_config['dsoPopulationFile']
+        else:
+            dso_metadata_file = case_config['population_file_RECS']
         DSOmetadata = pt.load_json(DSOT_metadata_path, dso_metadata_file)
 
         # Build the ordered list of active DSO indices from the population
@@ -484,22 +504,39 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
             # Monthly case folders live in glm_dsot/code/ alongside this script.
             # flat_path is in glm_dsot/data/post_processing/Flat so we cannot derive
             # the monthly folder location from it; use the script directory directly.
-            monthly_base = dirname(abspath(__file__))  # glm_dsot/code/
-            month_def = [
-                ['Jan',    os.path.join(monthly_base, '8_Flat_2016_01_pv'), 4, 31],
-                ['Feb',    os.path.join(monthly_base, '8_Flat_2016_02_pv'), 4, 32],
-                ['March',  os.path.join(monthly_base, '8_Flat_2016_03_pv'), 4, 32],
-                ['April',  os.path.join(monthly_base, '8_Flat_2016_04_pv'), 4, 33],
-                ['May',    os.path.join(monthly_base, '8_Flat_2016_05_pv'), 4, 33],
-                ['June',   os.path.join(monthly_base, '8_Flat_2016_06_pv'), 4, 33],
-                ['July',   os.path.join(monthly_base, '8_Flat_2016_07_pv'), 4, 33],
-                ['August', os.path.join(monthly_base, '8_Flat_2016_08_pv'), 4, 34],
-                ['Sept',   os.path.join(monthly_base, '8_Flat_2016_09_pv'), 4, 33],
-                ['Oct',    os.path.join(monthly_base, '8_Flat_2016_10_pv'), 4, 33],
-                ['Nov',    os.path.join(monthly_base, '8_Flat_2016_11_pv'), 4, 33],
-                ['Dec',    os.path.join(monthly_base, '8_Flat_2016_12_pv'), 4, 31],
-            ]
-        elif case_path == TOU_path:
+            if legacy:
+                monthly_base = case_path
+                month_def = [
+                    ['Jan',    os.path.join(monthly_base, '8_2016_01_pv_bt_fl_ev'), 4, 31],
+                    ['Feb',    os.path.join(monthly_base, '8_2016_02_pv_bt_fl_ev'), 4, 32],
+                    ['March',  os.path.join(monthly_base, '8_2016_03_pv_bt_fl_ev'), 4, 32],
+                    ['April',  os.path.join(monthly_base, '8_2016_04_pv_bt_fl_ev'), 4, 33],
+                    ['May',    os.path.join(monthly_base, '8_2016_05_pv_bt_fl_ev'), 4, 33],
+                    ['June',   os.path.join(monthly_base, '8_2016_06_pv_bt_fl_ev'), 4, 33],
+                    ['July',   os.path.join(monthly_base, '8_2016_07_pv_bt_fl_ev'), 4, 33],
+                    ['August', os.path.join(monthly_base, '8_2016_08_pv_bt_fl_ev'), 4, 34],
+                    ['Sept',   os.path.join(monthly_base, '8_2016_09_pv_bt_fl_ev'), 4, 33],
+                    ['Oct',    os.path.join(monthly_base, '8_2016_10_pv_bt_fl_ev'), 4, 33],
+                    ['Nov',    os.path.join(monthly_base, '8_2016_11_pv_bt_fl_ev'), 4, 33],
+                    ['Dec',    os.path.join(monthly_base, '8_2016_12_pv_bt_fl_ev'), 4, 31],
+                ]
+            else:
+                monthly_base = dirname(abspath(__file__))  # glm_dsot/code/
+                month_def = [
+                    ['Jan',    os.path.join(monthly_base, '8_Flat_2016_01_pv'), 4, 31],
+                    ['Feb',    os.path.join(monthly_base, '8_Flat_2016_02_pv'), 4, 32],
+                    ['March',  os.path.join(monthly_base, '8_Flat_2016_03_pv'), 4, 32],
+                    ['April',  os.path.join(monthly_base, '8_Flat_2016_04_pv'), 4, 33],
+                    ['May',    os.path.join(monthly_base, '8_Flat_2016_05_pv'), 4, 33],
+                    ['June',   os.path.join(monthly_base, '8_Flat_2016_06_pv'), 4, 33],
+                    ['July',   os.path.join(monthly_base, '8_Flat_2016_07_pv'), 4, 33],
+                    ['August', os.path.join(monthly_base, '8_Flat_2016_08_pv'), 4, 34],
+                    ['Sept',   os.path.join(monthly_base, '8_Flat_2016_09_pv'), 4, 33],
+                    ['Oct',    os.path.join(monthly_base, '8_Flat_2016_10_pv'), 4, 33],
+                    ['Nov',    os.path.join(monthly_base, '8_Flat_2016_11_pv'), 4, 33],
+                    ['Dec',    os.path.join(monthly_base, '8_Flat_2016_12_pv'), 4, 31],
+                ]
+        else:
             month_def = [
                 ['Jan', case_path + '/8_2016_01_pv_bt_fl_ev', 4, 31],
                 ['Feb', case_path + '/8_2016_02_pv_bt_fl_ev', 4, 32],
@@ -514,21 +551,21 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
                 ['Nov', case_path + '/8_2016_11_pv_bt_fl_ev', 4, 33],
                 ['Dec', case_path + '/8_2016_12_pv_bt_fl_ev', 4, 31]
             ]
-        else:
-            month_def = [
-                ['Jan', case_path + '/8_rnd_2016_01_pv_bt_fl_ev', 4, 31],
-                ['Feb', case_path + '/8_rnd_2016_02_pv_bt_fl_ev', 4, 32],
-                ['March', case_path + '/8_rnd_2016_03_pv_bt_fl_ev', 4, 32],
-                ['April', case_path + '/8_rnd_2016_04_pv_bt_fl_ev', 4, 33],
-                ['May', case_path + '/8_rnd_2016_05_pv_bt_fl_ev', 4, 33],
-                ['June', case_path + '/8_rnd_2016_06_pv_bt_fl_ev', 4, 33],
-                ['July', case_path + '/8_rnd_2016_07_pv_bt_fl_ev', 4, 33],
-                ['August', case_path + '/8_rnd_2016_08_pv_bt_fl_ev', 4, 34],
-                ['Sept', case_path + '/8_rnd_2016_09_pv_bt_fl_ev', 4, 33],
-                ['Oct', case_path + '/8_rnd_2016_10_pv_bt_fl_ev', 4, 33],
-                ['Nov', case_path + '/8_rnd_2016_11_pv_bt_fl_ev', 4, 33],
-                ['Dec', case_path + '/8_rnd_2016_12_pv_bt_fl_ev', 4, 31]
-            ]
+        # else:
+        #     month_def = [
+        #         ['Jan', case_path + '/8_rnd_2016_01_pv_bt_fl_ev', 4, 31],
+        #         ['Feb', case_path + '/8_rnd_2016_02_pv_bt_fl_ev', 4, 32],
+        #         ['March', case_path + '/8_rnd_2016_03_pv_bt_fl_ev', 4, 32],
+        #         ['April', case_path + '/8_rnd_2016_04_pv_bt_fl_ev', 4, 33],
+        #         ['May', case_path + '/8_rnd_2016_05_pv_bt_fl_ev', 4, 33],
+        #         ['June', case_path + '/8_rnd_2016_06_pv_bt_fl_ev', 4, 33],
+        #         ['July', case_path + '/8_rnd_2016_07_pv_bt_fl_ev', 4, 33],
+        #         ['August', case_path + '/8_rnd_2016_08_pv_bt_fl_ev', 4, 34],
+        #         ['Sept', case_path + '/8_rnd_2016_09_pv_bt_fl_ev', 4, 33],
+        #         ['Oct', case_path + '/8_rnd_2016_10_pv_bt_fl_ev', 4, 33],
+        #         ['Nov', case_path + '/8_rnd_2016_11_pv_bt_fl_ev', 4, 33],
+        #         ['Dec', case_path + '/8_rnd_2016_12_pv_bt_fl_ev', 4, 31]
+        #     ]
 
 
         # Read generate_case_config.json from each monthly simulation folder to
@@ -1049,6 +1086,6 @@ if __name__ == "__main__":
     #   one_process()         -- Single case processing (default; good for testing)
     #   batch_process()       -- All cases in case_list plus the base case
     #   base_params_process() -- Base case with Q-bid calibration forced on
-    #batch_process()
+    batch_process()
     #one_process(flat_path)
-    base_params_process()
+    #base_params_process()

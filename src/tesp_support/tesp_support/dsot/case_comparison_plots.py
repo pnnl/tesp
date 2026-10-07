@@ -1,21 +1,41 @@
-# Copyright (c) 2021-2025 Battelle Memorial Institute
+# Copyright (C) 2021-2024 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: case_comparison_plots.py
-import os
-from datetime import datetime, timedelta
+"""Build comparison plots and summary files from TESP DSOT simulation results.
 
-import matplotlib
+The helpers load existing CSV, JSON, and HDF5 results, compare cases, and save
+figures and (for selected workflows) CSV summaries. ``rates_plots`` is the
+example-configured workflow; ``DSOT_plots`` is a legacy workflow with
+hard-coded paths and optional analysis stages controlled by flags. Neither
+driver runs a simulation or creates its input result files.
+"""
+
+import os
+from datetime import datetime
+
+import waterfall_chart #distribution name: waterfallcharts
 import matplotlib.pyplot as plt
+import matplotlib
 import numpy as np
 import pandas as pd
 import seaborn as sns
-import waterfall_chart  #distribution name: waterfallcharts
+from datetime import datetime, date, timedelta
 
-from ..dsot import plots as pt
+import tesp_support.dsot.plots as pt
 
 
 def rec_diff(d1, d2):
-    diff = {}
+    """Recursively subtract corresponding numeric values in nested mappings.
+
+    Args:
+        d1: Mapping containing the minuend values.
+        d2: Mapping with the same keys and nesting as ``d1``.
+
+    Returns:
+        A new nested dictionary containing ``d1 - d2`` at each leaf. Inputs
+        must have matching structures and numeric leaf values.
+    """
+    diff = dict()
     for k,v1 in d1.items():
         if isinstance(v1, dict):
             diff[k] = rec_diff(v1, d2[k])
@@ -24,16 +44,22 @@ def rec_diff(d1, d2):
     return diff
 
 def customer_bill_component_comparison(cases, data_paths, output_path, dso_num):
-    """ Will plot key average bill components by month and duration and save to file.
+    """Compare average residential bill components across cases.
+
+    Reads each case's DSO bill summary and customer-scaling data, converts the
+    selected tariff components to a per-customer basis, and plots stacked
+    totals for April, August, December, and the annual average.
+
     Args:
-        cases (List[str]): names of the cases
-        data_paths (str): location of the data files to be used.
-        output_path (str): path of the location where output (plots, csv) should be saved
-        dso_num (str): bus number for LMP data to be plotted
+        cases (list[str]): Case labels, such as ``Flat``, ``TOU``, ``DE``,
+            ``DE+C``, or ``B&S``.
+        data_paths (list[str]): Result directory for each corresponding case.
+        output_path (str): Output root; its ``plots`` subdirectory must exist.
+        dso_num (str | int): DSO identifier used to select bill data.
 
     Returns:
-        saves customer monthly bill plots to file
-        """
+        None. Saves a PNG in ``output_path/plots``.
+    """
 
     Customer_class = 'residential'
     Cost_components = ['Fixed Charge', 'Volumetric Energy Charge', 'Volumetric Charge (Peak)',
@@ -92,7 +118,13 @@ def customer_bill_component_comparison(cases, data_paths, output_path, dso_num):
                 df.loc[(month, case), 'Volumetric Charge (Off-Peak)'] = var_df.loc[(Customer_class, 'tou_off-peak_energy_charge'), month] / cust_sf
                 df.loc[(month, case), 'Demand Charge'] = var_df.loc[(Customer_class, 'tou_demand_charge'), month] / cust_sf
 
-            elif case == 'DE' or case == 'DE+C':
+            elif case == 'DE':
+                df.loc[(month, case), 'Fixed Charge'] = var_df.loc[(Customer_class, 'transactive_fixed_charge'), month] / cust_sf
+                df.loc[(month, case), 'Volumetric Energy Charge'] = var_df.loc[(Customer_class, 'transactive_volumetric_charge'), month] / cust_sf
+                df.loc[(month, case), 'Dynamic (DA) Charge'] = var_df.loc[(Customer_class, 'transactive_DA_energy_charge'), month] / cust_sf
+                df.loc[(month, case), 'Dynamic (RT) Charge'] = var_df.loc[(Customer_class, 'transactive_RT_energy_charge'), month] / cust_sf
+
+            elif case == 'DE+C':
                 df.loc[(month, case), 'Fixed Charge'] = var_df.loc[(Customer_class, 'transactive_fixed_charge'), month] / cust_sf
                 df.loc[(month, case), 'Volumetric Energy Charge'] = var_df.loc[(Customer_class, 'transactive_volumetric_charge'), month] / cust_sf
                 df.loc[(month, case), 'Dynamic (DA) Charge'] = var_df.loc[(Customer_class, 'transactive_DA_energy_charge'), month] / cust_sf
@@ -150,16 +182,22 @@ def customer_bill_component_comparison(cases, data_paths, output_path, dso_num):
     plt.savefig(file_path_fig, bbox_inches='tight')
 
 def customer_monthly_stats(cases, data_paths, output_path, dso_num, cust_class=None):
-    """ Will plot key variables by month and duration and save to file.
+    """Compare monthly customer bills and changes from a baseline case.
+
+    Loads bill data for each case and optionally filters customers by tariff
+    class using the first case's customer-data HDF5 file. The first case is the
+    baseline for the monthly percent-change distribution.
+
     Args:
-        cases (List[str]): names of the cases
-        data_paths (str): location of the data files to be used.
-        output_path (str): path of the location where output (plots, csv) should be saved
-        dso_num (str): bus number for LMP data to be plotted
+        cases (list[str]): Case labels, with the first case as the baseline.
+        data_paths (list[str]): Result directory for each corresponding case.
+        output_path (str): Output root; its ``plots`` subdirectory must exist.
+        dso_num (str | int): DSO identifier used to select monthly bill data.
+        cust_class (str | None): Optional tariff-class filter.
 
     Returns:
-        saves customer monthly bill plots to file
-        """
+        None. Saves a dated PNG in ``output_path/plots``.
+    """
 
     title_name = 'Customer Monthly Bills ($)'
     upper_limit = 600
@@ -197,7 +235,7 @@ def customer_monthly_stats(cases, data_paths, output_path, dso_num, cust_class=N
                     is_in_class = False
                     print(f"CFS is missing: {e}")
 
-                if cust_class is None or is_in_class:
+                if cust_class == None or is_in_class:
                     for case2 in cases:
                         for month in months:
                             meters.append(meter)
@@ -213,10 +251,9 @@ def customer_monthly_stats(cases, data_paths, output_path, dso_num, cust_class=N
                     results_df.loc[(customer, case, month), 'total bill'] = var_df.loc[(customer), month].sum()
                     results_df.loc[(customer, case, month), 'month'] = month
                     results_df.loc[(customer, case, month), 'case'] = case
-                    results_df.loc[(customer, case, month), 'change'] = (100 * (
-                            results_df.loc[(customer, case, month), 'total bill'] -
-                            results_df.loc[(customer, cases[0], month), 'total bill']) /
-                            results_df.loc[(customer, cases[0], month), 'total bill'] )
+                    results_df.loc[(customer, case, month), 'change'] = 100 * (results_df.loc[(customer, case, month), 'total bill'] \
+                                                                            - results_df.loc[(customer, cases[0], month), 'total bill']) \
+                                                                            / results_df.loc[(customer, cases[0], month), 'total bill']
 
     plt.clf()
 
@@ -250,16 +287,23 @@ def customer_monthly_stats(cases, data_paths, output_path, dso_num, cust_class=N
 
 
 def load_comparison_plot(day_range, metadata_path, cases, data_paths, output_path):
-    """  For a specified day range this function will load in the required data, plot the total DSO load.
+    """Compare total system load over a selected day range.
+
+    Uses the first case's ``generate_case_config.json`` to derive timestamps,
+    then sums substation and industrial load for each case. ``metadata_path``
+    is retained for compatibility but is not currently read.
+
     Args:
-        day_range (range): the day range to plotted.
-        metadata_path (str): path of folder containing metadata
-        cases (List[str]): names of the cases
-        data_paths (str): location of the data files to be used.
-        output_path (str): path of the location where output (plots, csv) should be saved
+        day_range (range): Day numbers defining the selected time window.
+        metadata_path (str): Unused compatibility parameter.
+        cases (list[str]): Case identifiers recognized by the display-name map.
+        data_paths (list[str]): Result directory for each corresponding case.
+        output_path (str): Output root containing existing ``plots`` and
+            ``data`` subdirectories.
+
     Returns:
-        saves comparison load plot to file
-        """
+        None. Saves a load-comparison PNG and a time-series CSV.
+    """
 
     line_colors = ['#e0813e', '#062c49', '#84baa9', '#965c79']
 
@@ -340,17 +384,27 @@ def load_comparison_plot(day_range, metadata_path, cases, data_paths, output_pat
 
 
 def retail_price_comparison_plot(dso, day_range, metadata_path, cases, data_paths, rate_scenarios, Month, output_path):
-    """  For a specified dso and day range this function will load in the required data, plot the retail price.
+    """Compare retail-price time series for one DSO and day range.
+
+    Loads day-ahead LMP data for each case, applies its flat, TOU, or
+    transactive tariff calculation, then plots and exports the retail prices.
+    Tariff JSON and, for TOU, case-specific TOU parameters are read as inputs.
+
     Args:
-        dso (num): the DSO range that should be plotted.
-        day_range (range): the day range to plotted.
-        metadata_path (str): path of folder containing metadata
-        cases (List[str]): names of the cases
-        data_paths (str): location of the data files to be used.
-        output_path (str): path of the location where output (plots, csv) should be saved
+        dso (str | int): DSO identifier used to select LMP and tariff data.
+        day_range (range): Day numbers defining the selected time window.
+        metadata_path (str): Directory containing the tariff JSON files.
+        cases (list[str]): Case identifiers recognized by the display-name map.
+        data_paths (list[str]): Result directory for each corresponding case.
+        rate_scenarios (list[str]): Tariff scenario for each case.
+        Month (str): Month-specific case subdirectory used for configuration
+            and TOU date lookup.
+        output_path (str): Output root containing existing ``plots`` and
+            ``data`` subdirectories.
+
     Returns:
-        saves comparison load plot to file
-        """
+        None. Saves a retail-price PNG and a time-series CSV.
+    """
 
     # line_colors = ['green', 'red', 'blue', 'black']
     line_colors = ['#e0813e', '#062c49', '#84baa9', '#965c79']
@@ -407,19 +461,19 @@ def retail_price_comparison_plot(dso, day_range, metadata_path, cases, data_path
         file_name = "rate_case_values_" + rate_scenario + ".json"
         tariff = pt.load_json(metadata_path, file_name, False)
 
-        if rate_scenario == "flat":
+        if rate_scenario in ["flat", "Flat"]:
             DA_LMPs_df['Retail'] = tariff['DSO_'+str(dso)]['flat_rate']
         elif rate_scenario == "TOU":
             tou_params = pt.load_json(os.path.join(data_path), "time_of_use_parameters.json", False)
             for ii in DA_LMPs_df.index:
                 hour = ii.hour
-                for k in tou_params["DSO_" + dso][month_name]["periods"]:
+                for k in tou_params["DSO_" + dso][month_name]["periods"].keys():
                     for t in range(len(tou_params["DSO_" + dso][month_name]["periods"][k]["hour_start"])):
-                        if tou_params["DSO_" + dso][month_name]["periods"][k]["hour_start"][t] <= hour < \
-                                tou_params["DSO_" + dso][month_name]["periods"][k]["hour_end"][t]:
+                        if hour >= tou_params["DSO_" + dso][month_name]["periods"][k]["hour_start"][t] \
+                                and hour < tou_params["DSO_" + dso][month_name]["periods"][k]["hour_end"][t]:
                             DA_LMPs_df.loc[ii, 'Retail'] = tou_params["DSO_" + dso][month_name]["price"] \
                                 * tou_params["DSO_" + dso][month_name]["periods"][k]["ratio"]
-        elif rate_scenario == "DSOT":
+        elif rate_scenario in ["DSOT",""]:
             DA_LMPs_df['Retail'] = DA_LMPs_df['da_lmp'+str(dso)]/1000 + tariff['DSO_'+str(dso)]['transactive_dist_rate']
         elif rate_scenario in ["RandD", "EandC"]:
             # DA_LMPs_df['Retail'] = (DA_LMPs_df['da_lmp'+str(dso)])/1000 + tariff['DSO_'+str(dso)]['transactive_dist_rate']
@@ -466,17 +520,24 @@ def retail_price_comparison_plot(dso, day_range, metadata_path, cases, data_path
 
 
 def plot_annual_stats(cases, data_paths, output_path, dso_num, variable):
-    """ Will plot key variables by month and duration and save to file.
+    """Plot annual and daily distributions for a system metric across cases.
+
+    Loads the relevant annual result files, adds calendar-month and case
+    labels, and produces monthly distribution plots. Most metrics also produce
+    annual and daily-variation duration curves; ``Hybrid`` instead compares
+    total load and day-ahead LMP in monthly plots.
+
     Args:
-        cases (List[str]): names of the cases
-        data_paths (str): location of the data files to be used.
-        output_path (str): path of the location where output (plots, csv) should be saved
-        dso_num (str): bus number for LMP data to be plotted
-        variable (str): variable to be plotted: 'DA LMP', 'RT LMP', 'Total Load', 'Hybrid', 'Renewable Percent',
-        'Curtailment Percent'
+        cases (list[str]): Labels assigned to each case's observations.
+        data_paths (list[str]): Result directory for each corresponding case.
+        output_path (str): Output root; its ``plots`` subdirectory must exist.
+        dso_num (str): DSO identifier appended to an LMP column name.
+        variable (str): ``DA LMP``, ``RT LMP``, ``Total Load``, ``Hybrid``,
+            ``Renewable Percent``, or ``Curtailment Percent``.
+
     Returns:
-        saves annual monthly stats plots to file
-        """
+        None. Saves one or more dated PNG files in ``output_path/plots``.
+    """
 
     large_font = True
     if large_font:
@@ -702,7 +763,7 @@ def plot_annual_stats(cases, data_paths, output_path, dso_num, variable):
                 median = np.median(case_data[~np.isnan(case_data)])
                 text = text + case + " = " + str(round(mean, 1)) + "     " + str(round(median, 1)) + "\n"
             plt.text(0.4, 0.1, text, size=10, horizontalalignment='left',
-                     verticalalignment='center', transform=ax.transAxes, bbox={'fc': "white"})
+                     verticalalignment='center', transform=ax.transAxes, bbox=dict(fc="white"))
 
         plot_filename = datetime.now().strftime('%Y%m%d') + 'Case_Comparison_' + file_name + '_Duration_Curve.png'
         file_path_fig = os.path.join(output_path, 'plots', plot_filename)
@@ -730,7 +791,7 @@ def plot_annual_stats(cases, data_paths, output_path, dso_num, variable):
                 median = np.median(case_data[~np.isnan(case_data)])
                 text = text + case + " = " + str(round(mean,1)) + "     " + str(round(median,1)) + "\n"
             plt.text(0.4, 0.1, text, size=10, horizontalalignment='left',
-                     verticalalignment='center', transform=ax.transAxes, bbox={'fc': "white"})
+                     verticalalignment='center', transform=ax.transAxes, bbox=dict(fc="white"))
 
         plot_filename = datetime.now().strftime('%Y%m%d') + 'Case_Comparison_Daily_Variation_' + file_name + '_Duration_Curve.png'
         file_path_fig = os.path.join(output_path, 'plots', plot_filename)
@@ -784,14 +845,23 @@ def plot_annual_stats(cases, data_paths, output_path, dso_num, variable):
 
 
 def reduction_by_class(cases, data_paths, output_path,  variable):
-    """Will plot LMPS by month, duration, and versus netloads loads (for select month), and save to file.
-    Arguments:
-        data_path (str): location of the data files to be used.
-        output_path (str): path of the location where output (plots, csv) should be saved
-        dso_num (str): bus number for LMP data to be plotted
+    """Calculate a preliminary difference between two load-statistics files.
+
+    Currently reads ``DSO_load_stats.csv`` from the first two result
+    directories and subtracts their ``Max`` rows. This prototype does not yet
+    use ``cases``, ``output_path``, or ``variable`` to generate a plot or save
+    the calculated difference.
+
+    Args:
+        cases (list[str]): Reserved for the planned case comparison.
+        data_paths (list[str]): At least two result directories, each
+            containing ``DSO_load_stats.csv``.
+        output_path (str): Reserved for planned plot output.
+        variable (str): Reserved for planned metric selection.
+
     Returns:
-        saves dso lmps plots to file
-        """
+        None. The calculated difference remains local to this function.
+    """
     label_size = 17
     num_size = 14
     stats = True
@@ -834,16 +904,41 @@ def reduction_by_class(cases, data_paths, output_path,  variable):
         #     var_df = pd.read_csv(data_path + '/DSO_Total_Loads.csv', index_col='time', parse_dates=True)
 
 
+def _plot_waterfall(labels, values, output_path, net_label, y_label, sorted_value=False):
+    label_order = np.argsort(np.abs(np.asarray(values)))[::-1] if sorted_value else np.arange(len(labels))
+    waterfall_chart.plot(
+        np.arange(len(labels)), values, sorted_value=sorted_value, rotation_value=90,
+        net_label=len(labels), y_lab=y_label)
+    tick_labels = [labels[index] for index in label_order] + [net_label]
+    plt.xticks(range(len(tick_labels)), tick_labels, rotation=90)
+    plt.savefig(output_path, bbox_inches='tight')
+    plt.close()
+
+
 def dso_cfs_delta(cases_list, data_paths_list, dso_range, metadata_file, metadata_path):
-    """Will plot LMPS by month, duration, and versus netloads loads (for select month), and save to file.
-    Arguments:
-        cases
-        data_paths (list): location of the data files to be used.
-        output_path (str): path of the location where output (plots, csv) should be saved
-        dso_num (str): bus number for LMP data to be plotted
+    """Compare DSO cost-and-benefit components between baseline and result cases.
+
+    For each comparison, loads customer CFS summaries and per-DSO revenue,
+    expense, capital-cost, and wholesale-purchase JSON files. It aggregates
+    selected cost deltas, creates waterfall and benefit scatter plots, and
+    collects net-benefit totals for a final summary chart. Each path pair is
+    ordered as ``[baseline_path, result_path]``.
+
+    Args:
+        cases_list (list[list[str]]): Baseline/result case-name pairs. Result
+            names must be present in the internal display-name map.
+        data_paths_list (list[list[str]]): One ``[baseline, result]`` directory
+            pair per case comparison.
+        dso_range (iterable[int]): DSOs whose result files are included.
+        metadata_file (str): Metadata JSON filename containing DSO population
+            and utility-type information.
+        metadata_path (str | None): Directory containing ``metadata_file``;
+            when ``None``, a relative default path is used.
+
     Returns:
-        saves dso lmps plots to file
-        """
+        None. Saves comparison PNGs under each result directory's ``plots``
+        folder, which must already exist.
+    """
     assumptions = []
     cases = []
     benefits = []
@@ -860,7 +955,7 @@ def dso_cfs_delta(cases_list, data_paths_list, dso_range, metadata_file, metadat
         comp_path = data_paths_list[i][0]
         case_name = Case_name_dict[cases_list[i][1]]
 
-        if metadata_path is None:
+        if metadata_path == None:
             path = "../../../examples/dsot_data"
         else:
             path = metadata_path
@@ -995,20 +1090,17 @@ def dso_cfs_delta(cases_list, data_paths_list, dso_range, metadata_file, metadat
         net_benefit_low = sum(values_low)
         net_benefit_high = sum(values_high)
 
-        waterfall_chart.plot(labels, values, sorted_value=True, rotation_value=90, net_label='Net Benefit', y_lab='Annual Impact ($M)')
         plot_filename = datetime.now().strftime('%Y%m%d') + 'DSO_CFS_Waterfall_ranked.png'
         file_path_fig = os.path.join(results_path, 'plots', plot_filename)
-        plt.savefig(file_path_fig, bbox_inches='tight')
+        _plot_waterfall(labels, values, file_path_fig, 'Net Benefit', 'Annual Impact ($M)', sorted_value=True)
 
-        waterfall_chart.plot(labels, values, rotation_value=90, net_label='Net Benefit', y_lab='Annual Impact ($M)')
         plot_filename = datetime.now().strftime('%Y%m%d') + 'DSO_CFS_Waterfall.png'
         file_path_fig = os.path.join(results_path, 'plots', plot_filename)
-        plt.savefig(file_path_fig, bbox_inches='tight')
+        _plot_waterfall(labels, values, file_path_fig, 'Net Benefit', 'Annual Impact ($M)')
 
-        waterfall_chart.plot(labels, values_low, rotation_value=90, net_label='Net Benefit (Low)', y_lab='Annual Impact ($M)')
         plot_filename = datetime.now().strftime('%Y%m%d') + 'DSO_CFS_Waterfall_low.png'
         file_path_fig = os.path.join(results_path, 'plots', plot_filename)
-        plt.savefig(file_path_fig, bbox_inches='tight')
+        _plot_waterfall(labels, values_low, file_path_fig, 'Net Benefit (Low)', 'Annual Impact ($M)')
 
         plt.figure(figsize=(6, 4))
         sns.scatterplot(
@@ -1028,6 +1120,7 @@ def dso_cfs_delta(cases_list, data_paths_list, dso_range, metadata_file, metadat
         plot_filename = datetime.now().strftime('%Y%m%d') + 'DSO_CFS_Benefits_Load_Scatter.png'
         file_path_fig = os.path.join(results_path, 'plots', plot_filename)
         plt.savefig(file_path_fig, bbox_inches='tight')
+        plt.close()
 
         plt.figure(figsize=(6, 4))
         sns.scatterplot(
@@ -1046,6 +1139,7 @@ def dso_cfs_delta(cases_list, data_paths_list, dso_range, metadata_file, metadat
         plot_filename = datetime.now().strftime('%Y%m%d') + 'DSO_CFS_Benefits_Cust_Scatter.png'
         file_path_fig = os.path.join(results_path, 'plots', plot_filename)
         plt.savefig(file_path_fig, bbox_inches='tight')
+        plt.close()
 
         plt.figure(figsize=(6, 4))
         sns.scatterplot(
@@ -1065,6 +1159,7 @@ def dso_cfs_delta(cases_list, data_paths_list, dso_range, metadata_file, metadat
         plot_filename = datetime.now().strftime('%Y%m%d') + 'DSO_CFS_Benefits_Energy_Scatter.png'
         file_path_fig = os.path.join(results_path, 'plots', plot_filename)
         plt.savefig(file_path_fig, bbox_inches='tight')
+        plt.close()
 
         sensitivity = False
         if sensitivity:
@@ -1083,62 +1178,52 @@ def dso_cfs_delta(cases_list, data_paths_list, dso_range, metadata_file, metadat
 
     summary_benefits_df = pd.DataFrame(benefits_sum, columns = ['Assumption', 'Case', 'Annual Net Benefit ($M)'])
 
-    plt.figure(figsize=(20, 10))
     if sensitivity:
-        sns.catplot(
+        summary_plot = sns.catplot(
             data=summary_benefits_df, kind="bar",
             x="Case", y="Annual Net Benefit ($M)", hue="Assumption",
-            ci="sd", palette="dark", alpha=.6, height=4
+            errorbar="sd", palette="dark", alpha=.6, height=4
         )
     else:
         line_colors = ['#062c49', '#84baa9', '#965c79', 'red']
-        sns.catplot(
+        summary_plot = sns.catplot(
             data=summary_benefits_df, kind="bar",
-            x="Case", y="Annual Net Benefit ($M)",
-            ci="sd", palette=line_colors, alpha=.6, height=4
+            x="Case", y="Annual Net Benefit ($M)", hue="Case", legend=False,
+            errorbar="sd", palette=line_colors[:summary_benefits_df['Case'].nunique()], alpha=.6, height=4
         )
-    plt.xlabel("Case", size=12)
-    plt.ylabel("Annual Net Benefit ($M)", size=12)
+    summary_plot.set_axis_labels("Case", "Annual Net Benefit ($M)")
     plot_filename = datetime.now().strftime('%Y%m%d') + 'DSO_CFS_Benefits_Summary.png'
     file_path_fig = os.path.join(results_path, 'plots', plot_filename)
-    plt.savefig(file_path_fig, bbox_inches='tight')
+    summary_plot.savefig(file_path_fig, bbox_inches='tight')
+    plt.close(summary_plot.figure)
     # plt.despine(left=True)
     # plt.set_axis_labels("", "Body mass (g)")
 
 
 def customer_cfs_delta(cases, data_paths, metadata_file, metadata_path = None):
-    """Will plot customer population CFS savings comparisons.
-    Arguments:
-        data_paths (str): location of the data files to be used.
-    Returns:
-        saves dso lmps plots to file
-        """
+    """Compare customer costs, usage, and savings for a baseline/result pair.
 
+    Loads each case's ``Master_Customer_Dataframe.h5``, derives bill,
+    energy-cost, energy-use, and peak-load changes, then generates population
+    plots grouped by customer attributes. The first case/path is the baseline;
+    the second is the comparison case. A population-statistics CSV is written
+    to the comparison result directory; plots are saved under the respective
+    case directories used by each analysis.
+
+    Args:
+        cases (list[str]): Two labels in baseline, comparison order.
+        data_paths (list[str]): Two result directories in the same order, each
+            containing ``Master_Customer_Dataframe.h5``.
+        metadata_file (str): Metadata JSON filename used to group DSOs by type.
+        metadata_path (str | None): Metadata directory; defaults to the
+            function's relative DSOT data path.
+
+    Returns:
+        None. Writes ``Customer_pop_stats.csv`` to the comparison result
+        directory and PNGs beneath the case result directories. Their required
+        ``plots`` subdirectories must exist.
     """
-    commercial versus residential savings
-    multi-family versus single vs manufactured home
-    HR: solar versus no solar
-    HR: ev versus battery versus both.
-    Rural, Urban, Suburban
-    """
-    # dso
-    # building_type
-    # tariff_class
-    # sqft
-    # battery_capacity
-    # pv_capacity
-    # cust_participating
-    # slider_setting
-    # cooling
-    # heating
-    # wh_gallons
-    # Bills
-    # Capital Investment
-    # NetEnergyCost
-    # EnergyPurchased
-    # BlendedRate
-    # EffectiveCostEnergy
-    if metadata_path is None:
+    if metadata_path == None:
         path = "../../../examples/dsot_data"
     else:
         path = metadata_path
@@ -1199,22 +1284,23 @@ def customer_cfs_delta(cases, data_paths, metadata_file, metadata_path = None):
     subpopulation = 'Residential'
     # subpopulation = None
 
-    customer_cfs_df['building_type'].replace({'SINGLE_FAMILY': 'Single-family', 'MOBILE_HOME': 'Manufactured home', 'MULTI_FAMILY': 'Multi-family'}, inplace=True)
-    customer_comp_cfs_df['building_type'].replace(
+    customer_cfs_df['building_type'] = customer_cfs_df['building_type'].replace(
+        {'SINGLE_FAMILY': 'Single-family', 'MOBILE_HOME': 'Manufactured home', 'MULTI_FAMILY': 'Multi-family'})
+    customer_comp_cfs_df['building_type'] = customer_comp_cfs_df['building_type'].replace(
         {'SINGLE_FAMILY': 'Single-family', 'MOBILE_HOME': 'Manufactured home', 'MULTI_FAMILY': 'Multi-family'},
-        inplace=True)
-    customer_cfs_df['heating'].replace(
+        )
+    customer_cfs_df['heating'] = customer_cfs_df['heating'].replace(
         {'GAS': 'Gas', 'RESISTANCE': 'Resistance', 'HEAT_PUMP': 'Heat pump'},
-        inplace=True)
-    customer_comp_cfs_df['heating'].replace(
+        )
+    customer_comp_cfs_df['heating'] = customer_comp_cfs_df['heating'].replace(
         {'GAS': 'Gas', 'RESISTANCE': 'Resistance', 'HEAT_PUMP': 'Heat pump'},
-        inplace=True)
-    customer_cfs_df['tariff_class'].replace(
+        )
+    customer_cfs_df['tariff_class'] = customer_cfs_df['tariff_class'].replace(
         {'residential': 'Residential', 'commercial': 'Commercial'},
-        inplace=True)
-    customer_comp_cfs_df['tariff_class'].replace(
+        )
+    customer_comp_cfs_df['tariff_class'] = customer_comp_cfs_df['tariff_class'].replace(
         {'residential': 'Residential', 'commercial': 'Commercial'},
-        inplace=True)
+        )
 
     customer_cfs_df.rename(columns={"building_type": "Building Type"}, inplace=True)
     customer_comp_cfs_df.rename(columns={"building_type": "Building Type"}, inplace=True)
@@ -1238,9 +1324,10 @@ def customer_cfs_delta(cases, data_paths, metadata_file, metadata_path = None):
                 'Suburban': [],
                 'Rural': []}
 
-    for DSO in metadata():
-        if 'DSO' in DSO and metadata[DSO]['used']:
-            dso_type[metadata[DSO]['utility_type']].append(int(DSO.split('_')[-1]))
+    for DSO in metadata.keys():
+        if 'DSO' in DSO:
+            if metadata[DSO]['used']:
+                dso_type[metadata[DSO]['utility_type']].append(int(DSO.split('_')[-1]))
 
     # Determine participating DER mix for each customer:
 
@@ -1275,7 +1362,7 @@ def customer_cfs_delta(cases, data_paths, metadata_file, metadata_path = None):
             DER_list = 'None '
         customer_comp_cfs_df.loc[customer, 'DER_participating'] = DER_list[:-1]
 
-    if subpopulation is not None:
+    if subpopulation != None:
         pop_subset = customer_cfs_df[customer_cfs_df['tariff_class'] == subpopulation]
         pop_comp_subset = customer_comp_cfs_df[customer_comp_cfs_df['tariff_class'] == subpopulation]
     else:
@@ -1289,11 +1376,11 @@ def customer_cfs_delta(cases, data_paths, metadata_file, metadata_path = None):
     plt.clf()
     for cust in customer_class:
         subset = customer_comp_cfs_df[customer_comp_cfs_df['tariff_class'] == cust]
+        metric_data = pd.to_numeric(subset['EnergyPurchased'], errors='coerce').dropna()
+        if metric_data.empty:
+            continue
 
-        sns.distplot(subset['EnergyPurchased'], hist=True, kde=False,
-                     norm_hist=True,
-                     bins=200,
-                     kde_kws={'shade': True, 'linewidth': 3}, label=str(cust))
+        sns.histplot(x=metric_data, stat='density', bins=200, label=str(cust))
 
     plt.legend(prop={'size': 10}, title='Customer Class', loc='upper left')
     plt.title(cases[0] + ': Energy purchases by customer class')
@@ -1348,7 +1435,7 @@ def customer_cfs_delta(cases, data_paths, metadata_file, metadata_path = None):
     file_path_fig = os.path.join(data_paths[0], 'plots', plot_filename)
     plt.savefig(file_path_fig, bbox_inches='tight')
 
-    pop_subset = customer_cfs_df[customer_cfs_df['cust_participating']]
+    pop_subset = customer_cfs_df[customer_cfs_df['cust_participating'] == True]
 
     # Plot participating customer savings by customer class:
     plot_customer_pdf('tariff_class', customer_class, 'bill_savings_pct', pop_subset, cases[1], data_paths[1])
@@ -1358,7 +1445,7 @@ def customer_cfs_delta(cases, data_paths, metadata_file, metadata_path = None):
     # Plot participating customer savings by building type:
     plot_customer_pdf('Building Type', building_type, 'net_energy_cost_savings_pct', pop_subset, cases[1], data_paths[1])
 
-    if subpopulation is not None:
+    if subpopulation != None:
         pop_subset = customer_cfs_df[customer_cfs_df['tariff_class'] == subpopulation]
         pop_comp_subset = customer_comp_cfs_df[customer_comp_cfs_df['tariff_class'] == subpopulation]
     else:
@@ -1385,7 +1472,7 @@ def customer_cfs_delta(cases, data_paths, metadata_file, metadata_path = None):
     pop_subset = pop_subset[pop_subset['dso'] == 1]
     plot_customer_pdf('cust_participating', participation, 'bill_savings_pct', pop_subset, cases[1],
                       data_paths[1])
-    pop_subset = pop_subset[pop_subset['cust_participating']]
+    pop_subset = pop_subset[pop_subset['cust_participating'] == True]
     # plot_customer_pdf('dso', dsos, 'net_bill_savings_pct', pop_subset, cases[1], data_paths[1])
 
     # Plot residential customer bills by solar
@@ -1412,7 +1499,7 @@ def customer_cfs_delta(cases, data_paths, metadata_file, metadata_path = None):
     pop_subset = pop_subset[pop_subset['tariff_class'] == 'Residential']
     # plot_customer_pdf('cust_participating', participation, 'bill_savings_pct', pop_subset, cases[1],
     #                   data_paths[1])
-    pop_subset = pop_subset[pop_subset['cust_participating']]
+    pop_subset = pop_subset[pop_subset['cust_participating'] == True]
 
 
     plt.figure(figsize=(6, 4))
@@ -1445,16 +1532,25 @@ def customer_cfs_delta(cases, data_paths, metadata_file, metadata_path = None):
 
 
 def plot_customer_pdf(attribute, variables, metric, pop_df, case, output_path):
-    """Will plot customer population savings comparisons.
-    Arguments:
-        attribute (str): customer attribute to be studied (e.g. tariff class)
-        variables (list): list of variables possible for each attribute (e.g. ['residential', 'commercial'])
-        metric (str): metric of interest to be plotted (e.g. 'net_bill_savings_pct')
-        data_paths (str): location of the data files to be used.
-        output_path (str): path of the location where output (plots, csv) should be saved
+    """Plot grouped customer metric distributions as density and histogram PNGs.
+
+    Each value in ``variables`` selects a subset of ``pop_df`` using
+    ``attribute``. The helper saves a density plot and a normalized histogram
+    for the requested metric.
+
+    Args:
+        attribute (str): Customer-data column used to form groups.
+        variables (iterable): Group values to plot. For DSO-type groups, these
+            are keys whose corresponding DSO lists are in ``pop_df``.
+        metric (str): Numeric customer-data column to plot.
+        pop_df (pandas.DataFrame): Customer population or comparison data.
+        case (str): Case label included in plot titles.
+        output_path (str): Result directory containing an existing ``plots``
+            subdirectory.
+
     Returns:
-        saves customer pdf plots to file
-        """
+        None. Saves two dated PNG files in ``output_path/plots``.
+    """
 
     xlabel_dict = {'bill_savings_pct': 'Annual Utility Bill Savings (%)',
                    'net_energy_cost_savings_pct': 'Annual Energy Costs Savings (%)',
@@ -1531,13 +1627,11 @@ def plot_customer_pdf(attribute, variables, metric, pop_df, case, output_path):
             subset = pop_df[pop_df[attribute].isin(variables[var])]
         else:
             subset = pop_df[pop_df[attribute] == var]
+        metric_data = pd.to_numeric(subset[metric], errors='coerce').dropna()
+        if metric_data.empty:
+            continue
 
-    # TODO Address distplot deprecation
-    # sns.displot(data=pop_df, x=metric, kind='kde', hue = attribute)
-
-        sns.distplot(subset[metric], hist=False, kde=True,
-                     norm_hist=True,
-                     kde_kws={'shade': True, 'linewidth': 3}, label=str(var))
+        sns.kdeplot(x=metric_data, fill=True, linewidth=3, warn_singular=False, label=str(var))
 
     plt.legend(prop={'size': 10}, title=legend_dict[attribute])
     plt.title(case + ': ' + xlabel_dict[metric] + ' by ' + legend_dict[attribute])
@@ -1555,11 +1649,11 @@ def plot_customer_pdf(attribute, variables, metric, pop_df, case, output_path):
             subset = pop_df[pop_df[attribute].isin(variables[var])]
         else:
             subset = pop_df[pop_df[attribute] == var]
+        metric_data = pd.to_numeric(subset[metric], errors='coerce').dropna()
+        if metric_data.empty:
+            continue
 
-    # TODO Address distplot deprecation
-        sns.distplot(subset[metric], hist=True, kde=False,
-                     norm_hist=True, bins = 200,
-                     kde_kws={'shade': True, 'linewidth': 3}, label=str(var))
+        sns.histplot(x=metric_data, stat='density', bins=200, label=str(var))
 
     plt.legend(prop={'size': 10}, title=legend_dict[attribute])
     plt.title(case + ': ' + xlabel_dict[metric] + ' by ' + legend_dict[attribute])
@@ -1571,172 +1665,204 @@ def plot_customer_pdf(attribute, variables, metric, pop_df, case, output_path):
     file_path_fig = os.path.join(output_path, 'plots', plot_filename)
     plt.savefig(file_path_fig, bbox_inches='tight')
 
-# Does not run no mr_*u_path defined
-# def DSOT_plots():
-#     pd.set_option('display.max_columns', 50)
-#
-#     # ------------ Selection of DSO and Day  ---------------------------------
-#     DSO_num = '2'  # Needs to be non-zero integer
-#     day_num = '9'  # Needs to be non-zero integer
-#     # Set day range of interest (1 = day 1)
-#     day_range = range(2, 3)  # 1 = Day 1. Starting at day two as agent data is missing first hour of run.
-#     dso_range = range(1, 9)  # 1 = DSO 1 (end range should be last DSO +1)
-#
-#     #  ------------ Select folder locations for different cases ---------
-#
-#     data_path = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/V1.1-1317-gfbf326a2/MR-Batt/lean_8_bt'
-#     # data_path = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2'
-#     metadata_path = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/analysis/Dsot/Data'
-#     ercot_path = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/analysis/Dsot/Data'
-#     base_case = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/v1.1-1545-ga2893bd8'
-#     batt_case = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/v1.1-1567-g8cb140e1'
-#     Output_path = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/v1.1-1567-g8cb140e1'
-#     trans_case = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/V1.1-1317-gfbf326a2/MR-Flex/lean_8_fl'
-#     config_path = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/Dsot_v3'
-#     case_config_name = '200_system_case_config.json'
-#
-#
-#     # system_case = '8_system_case_config.json'
-#     # system_case = '8_hi_system_case_config.json'
-#     system_case = '200_system_case_config.json'
-#     # system_case = '200_hi_system_case_config.json'
-#
-#     config_path = 'C:/Users/reev057/PycharmProjects/examples/dsot_v3'
-#     case_config = pt.load_json(config_path, system_case)
-#     metadata_path = 'C:/Users/reev057/PycharmProjects/examples/dsot_data'
-#     dso_metadata_file = case_config['dsoPopulationFile']
-#     DSOmetadata = pt.load_json(metadata_path, dso_metadata_file)
-#
-#     # DSO range for 8 node case.  (for 200 node case we will need to determine active DSOs from metadata file).
-#     # dso_range = range(1, 2)
-#     dso_range = []
-#     for DSO in DSOmetadata.keys():
-#         if 'DSO' in DSO:
-#             if DSOmetadata[DSO]['used']:
-#                 dso_range.append(int(DSO.split('_')[-1]))
-#
-#     agent_prefix = '/DSO_'
-#     GLD_prefix = '/Substation_'
-#     case_config = pt.load_json(config_path, case_config_name)
-#     metadata_file = case_config['dsoPopulationFile']
-#     dso_meta_file = metadata_path + '/' + metadata_file
-#
-#     # ---------- Flags to turn on and off plot types etc
-#     DER_load_Curves = False # plot load curve comparisons
-#     Annual_whiskers = False  # plot annual box and whisker and quantity-duration curves
-#     dso_valuation_waterfall = False
-#     Customer_PDFs = True
-#
-#     compare_MR_cases = False
-#     compare_HR_cases = True
-#     compare_All_cases = False
-#     compare_MR_vs_HR_BAU = False
-#     compare_200_vs_8_BAU = False
-#
-#     if compare_MR_cases:
-#         # Cases = ['MR BAU', 'MR Batt', 'MR Flex']
-#         # Data_paths = [mr_bau_path, mr_batt_path, mr_flex_path]
-#         Data_paths = [mr_200_bau_path, mr_200_batt_path, mr_200_flex_path]
-#         # Cases = ['MR BAU', 'MR Batt']
-#         # Data_paths = [mr_bau_path, mr_batt_path]
-#         Cases = ['MR BAU', 'MR Flex']
-#         # Data_paths = [mr_bau_path, mr_flex_path]
-#         # Data_paths = [mr_200_bau_path, mr_200_flex_path]
-#         Variables = ['DA LMP', 'Total Load', 'Hybrid']
-#
-#     if compare_MR_vs_HR_BAU:
-#         Cases = ['MR BAU', 'HR BAU']
-#         Data_paths = [mr_200_bau_path, hr_200_bau_path]
-#         # Variables = ['Curtailment Percent', 'Renewable Percent', 'DA LMP', 'RT LMP', 'Total Load']
-#         Variables = ['DA LMP', 'RT LMP', 'Total Load']
-#
-#     if compare_HR_cases:
-#         # Cases = ['HR BAU', 'HR Batt', 'HR Flex']
-#         # Data_paths = [hr_200_bau_path, hr_200_batt_path, hr_200_flex_path]
-#         Cases = ['HR BAU', 'HR Flex']
-#         Data_paths = [hr_200_bau_path, hr_200_flex_path]
-#         # Cases = ['HR BAU', 'HR Batt']
-#         # Data_paths = [hr_bau_path, hr_batt_path]
-#         # Data_paths = [hr_bau_path, hr_flex_path]
-#         Variables = ['DA LMP', 'Total Load', 'Hybrid']
-#
-#     if compare_All_cases:
-#         Cases = ['MR Batt', 'MR BAU', 'HR BAU', 'HR Batt']
-#         Data_paths = [mr_batt_path, mr_bau_path, hr_bau_path, hr_batt_path]
-#         Variables = ['Renewable Percent', 'DA LMP', 'Total Load']
-#
-#     if compare_200_vs_8_BAU:
-#         Cases = ['MR BAU-200', 'MR BAU-8']
-#         Data_paths = [mr_200_bau_path, mr_bau_path]
-#         Variables = ['DA LMP', 'Total Load']
-#
-#         Cases = ['MR BAU-200', 'MR BAU-8', 'HR BAU-200', 'HR BAU-8', 'HR Batt-200', 'HR Batt-8']
-#         Data_paths = [mr_200_bau_path, mr_bau_path, hr_200_bau_path, hr_bau_path, hr_200_batt_path, hr_batt_path]
-#         Variables = ['DA LMP', 'Total Load']
-#
-#     Cases_list = [['MR BAU', 'MR Batt'], ['MR BAU', 'MR Flex'], ['HR BAU', 'HR Batt']]
-#     Data_paths_list = [[mr_bau_path, mr_batt_path], [mr_bau_path, mr_flex_path], [hr_bau_path, hr_batt_path]]
-#     Cases_list = [['MR BAU', 'MR Batt'], ['MR BAU', 'MR Flex'], ['HR BAU', 'HR Batt'], ['HR BAU', 'HR Flex']]
-#     Data_paths_list = [[mr_200_bau_path, mr_200_batt_path], [mr_200_bau_path, mr_200_flex_path], [hr_200_bau_path, hr_200_batt_path], [hr_200_bau_path, hr_200_flex_path]]
-#
-#     Output_path = Data_paths[0]
-#
-#     # DSO Market Plot
-#     # base_lean = "C:/Users/reev057/DSOT-DATA/w_lean_aug_8"
-#     # case_lean = "C:/Users/reev057/DSOT-DATA/w_lean_aug_8_bt"
-#     # pt.dso_market_plot(dso_range, "6", base_lean, dso_metadata_file, metadata_path, case_lean)
-#
-#     # Check if there is a plots folder - create if not.
-#     check_folder = os.path.isdir(data_path + '/plots')
-#     if not check_folder:
-#         os.makedirs(data_path + '/plots')
-#
-#     if DER_load_Curves:
-#         # Cycle through months and days for interest for load profiles
-#         Months = ['01', '03', '08']
-#         # Months = ['08']
-#         # Day_Ranges = [range(21, 24), range(4, 11), range(4, 33)]
-#         Day_Ranges = [range(21, 24), range(25, 28), range(13, 16)]
-#         # Day_Ranges = [range(11, 18)]
-#         for i in range(len(Months)):
-#             day_range = Day_Ranges[i]
-#             if compare_MR_cases:
-#                 # case_path = Data_paths[1] + "/8_2016_" + Months[i] + "_fl"
-#                 # comp_path = Data_paths[0] + "/8_2016_" + Months[i]
-#                 case_path = Data_paths[2] + "/200_2016_" + Months[i] + "_fl"
-#                 case2_path = Data_paths[1] + "/200_2016_" + Months[i] + "_bt"
-#                 comp_path = Data_paths[0] + "/200_2016_" + Months[i]
-#             if compare_HR_cases:
-#                 # case_path = Data_paths[1] + "/8_2016_" + Months[i] + "_pv_bt_ev"
-#                 # comp_path = Data_paths[0] + "/8_2016_" + Months[i] + "_pv"
-#                 case2_path = Data_paths[2] + "/200_2016_" + Months[i] + "_pv_fl_ev"
-#                 case_path = Data_paths[1] + "/200_2016_" + Months[i] + "_pv_bt_ev"
-#                 comp_path = Data_paths[0] + "/200_2016_" + Months[i] + "_pv"
-#             # pt.der_stack_plot(dso_range, day_range, metadata_path, case_path, comp_path)
-#             # pt.der_stack_plot(dso_range, day_range, metadata_path, comp_path)
-#             # pt.bldg_stack_plot(dso_range, day_range, comp_path, metadata_path)
-#             pt.generation_load_profiles(comp_path, metadata_path, comp_path, day_range,
-#                                                              False, comp_path)
-#             pt.generation_load_profiles(case_path, metadata_path, case_path, day_range,
-#                                                              False, comp_path)
-#             pt.generation_load_profiles(case2_path, metadata_path, case2_path, day_range,
-#                                                              False, comp_path)
-#             # pt.generation_load_profiles(comp_path, metadata_path, comp_path, day_range,
-#             #                                                  True)
-#
-#     if Annual_whiskers:
-#         for Variable in Variables:
-#             plot_annual_stats(Cases, Data_paths, Output_path, DSO_num, Variable)
-#
-#     if Customer_PDFs:
-#         customer_cfs_delta(Cases, Data_paths, Output_path, metadata_file)
-#
-#     # reduction_by_class(Cases, Data_paths, Output_path, 'Load')
-#     if dso_valuation_waterfall:
-#         dso_cfs_delta(Cases_list, Data_paths_list, dso_range, metadata_file)
-#
+
+def DSOT_plots():
+    """Run the legacy DSOT analysis workflow configured in this function.
+
+    This driver contains hard-coded simulation and metadata paths, selects
+    cases and analysis stages through local flags, and conditionally runs load
+    profiles, annual statistics, customer-population analysis, and DSO
+    cost-benefit plots. Several legacy case-path variables used by its case
+    selections are not defined here, so configure those names before enabling
+    a selection that references them.
+
+    Returns:
+        None. Enabled helpers write plots and summary data to configured result
+        directories.
+    """
+    pd.set_option('display.max_columns', 50)
+
+    # ------------ Selection of DSO and Day  ---------------------------------
+    DSO_num = '2'  # Needs to be non-zero integer
+    day_num = '9'  # Needs to be non-zero integer
+    # Set day range of interest (1 = day 1)
+    day_range = range(2, 3)  # 1 = Day 1. Starting at day two as agent data is missing first hour of run.
+    dso_range = range(1, 9)  # 1 = DSO 1 (end range should be last DSO +1)
+
+    #  ------------ Select folder locations for different cases ---------
+    hayden = True
+    if hayden: 
+        dsot_path = 'C:/Users/reev057/PycharmProjects/DSO+T/'
+        tesp_path = 'C:/Users/reev057/PycharmProjects/TESP/'
+        dsot_path = os.path.join(dsot_path, 'Data/Simdata/DER2/V1.1-1317-gfbf326a2/MR-Batt/lean_8_bt')
+        # data_path = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2'
+        metadata_path = os.path.join(tesp_path, 'src/examples/analysis/Dsot/Data')
+        ercot_path = os.path.join(tesp_path, 'src/examples/analysis/Dsot/Data')
+        base_case = os.path.join(dsot_path, 'Data/Simdata/DER2/v1.1-1545-ga2893bd8')
+        batt_case = os.path.join(dsot_path, 'Data/Simdata/DER2/v1.1-1567-g8cb140e1')
+        Output_path = os.path.join(dsot_path, 'Data/Simdata/DER2/v1.1-1567-g8cb140e1')
+        trans_case = os.path.join(dsot_path, 'Data/Simdata/DER2/V1.1-1317-gfbf326a2/MR-Flex/lean_8_fl')
+        config_path = os.path.join(tesp_path, 'src/examples/Dsot_v3')
+        case_config_name = '200_system_case_config.json'
+
+
+        # system_case = '8_system_case_config.json'
+        # system_case = '8_hi_system_case_config.json'
+        system_case = '200_system_case_config.json'
+        # system_case = '200_hi_system_case_config.json'
+
+        config_path = 'C:/Users/reev057/PycharmProjects/examples/dsot_v3'
+        case_config = pt.load_json(config_path, system_case)
+        metadata_path = 'C:/Users/reev057/PycharmProjects/examples/dsot_data'
+        dso_metadata_file = case_config['dsoPopulationFile']
+        DSOmetadata = pt.load_json(metadata_path, dso_metadata_file)
+
+    # DSO range for 8 node case.  (for 200 node case we will need to determine active DSOs from metadata file).
+    # dso_range = range(1, 2)
+    dso_range = []
+    for DSO in DSOmetadata.keys():
+        if 'DSO' in DSO:
+            if DSOmetadata[DSO]['used']:
+                dso_range.append(int(DSO.split('_')[-1]))
+
+    agent_prefix = '/DSO_'
+    GLD_prefix = '/Substation_'
+    case_config = pt.load_json(config_path, case_config_name)
+    metadata_file = case_config['dsoPopulationFile']
+    dso_meta_file = metadata_path + '/' + metadata_file
+
+    # Enable the analysis stages below as needed for this configured run.
+    DER_load_Curves = False # plot load curve comparisons
+    Annual_whiskers = False  # plot annual box and whisker and quantity-duration curves
+    dso_valuation_waterfall = False
+    Customer_PDFs = True
+
+    compare_MR_cases = False
+    compare_HR_cases = True
+    compare_All_cases = False
+    compare_MR_vs_HR_BAU = False
+    compare_200_vs_8_BAU = False
+
+    if compare_MR_cases:
+        # Cases = ['MR BAU', 'MR Batt', 'MR Flex']
+        # Data_paths = [mr_bau_path, mr_batt_path, mr_flex_path]
+        Data_paths = [mr_200_bau_path, mr_200_batt_path, mr_200_flex_path]
+        # Cases = ['MR BAU', 'MR Batt']
+        # Data_paths = [mr_bau_path, mr_batt_path]
+        Cases = ['MR BAU', 'MR Flex']
+        # Data_paths = [mr_bau_path, mr_flex_path]
+        # Data_paths = [mr_200_bau_path, mr_200_flex_path]
+        Variables = ['DA LMP', 'Total Load', 'Hybrid']
+
+    if compare_MR_vs_HR_BAU:
+        Cases = ['MR BAU', 'HR BAU']
+        Data_paths = [mr_200_bau_path, hr_200_bau_path]
+        # Variables = ['Curtailment Percent', 'Renewable Percent', 'DA LMP', 'RT LMP', 'Total Load']
+        Variables = ['DA LMP', 'RT LMP', 'Total Load']
+
+    if compare_HR_cases:
+        # Cases = ['HR BAU', 'HR Batt', 'HR Flex']
+        # Data_paths = [hr_200_bau_path, hr_200_batt_path, hr_200_flex_path]
+        Cases = ['HR BAU', 'HR Flex']
+        Data_paths = [hr_200_bau_path, hr_200_flex_path]
+        # Cases = ['HR BAU', 'HR Batt']
+        # Data_paths = [hr_bau_path, hr_batt_path]
+        # Data_paths = [hr_bau_path, hr_flex_path]
+        Variables = ['DA LMP', 'Total Load', 'Hybrid']
+
+    if compare_All_cases:
+        Cases = ['MR Batt', 'MR BAU', 'HR BAU', 'HR Batt']
+        Data_paths = [mr_batt_path, mr_bau_path, hr_bau_path, hr_batt_path]
+        Variables = ['Renewable Percent', 'DA LMP', 'Total Load']
+
+    if compare_200_vs_8_BAU:
+        Cases = ['MR BAU-200', 'MR BAU-8']
+        Data_paths = [mr_200_bau_path, mr_bau_path]
+        Variables = ['DA LMP', 'Total Load']
+
+        Cases = ['MR BAU-200', 'MR BAU-8', 'HR BAU-200', 'HR BAU-8', 'HR Batt-200', 'HR Batt-8']
+        Data_paths = [mr_200_bau_path, mr_bau_path, hr_200_bau_path, hr_bau_path, hr_200_batt_path, hr_batt_path]
+        Variables = ['DA LMP', 'Total Load']
+
+    Cases_list = [['MR BAU', 'MR Batt'], ['MR BAU', 'MR Flex'], ['HR BAU', 'HR Batt']]
+    Data_paths_list = [[mr_bau_path, mr_batt_path], [mr_bau_path, mr_flex_path], [hr_bau_path, hr_batt_path]]
+    Cases_list = [['MR BAU', 'MR Batt'], ['MR BAU', 'MR Flex'], ['HR BAU', 'HR Batt'], ['HR BAU', 'HR Flex']]
+    Data_paths_list = [[mr_200_bau_path, mr_200_batt_path], [mr_200_bau_path, mr_200_flex_path], [hr_200_bau_path, hr_200_batt_path], [hr_200_bau_path, hr_200_flex_path]]
+
+    Output_path = Data_paths[0]
+
+    # DSO Market Plot
+    # base_lean = "C:/Users/reev057/DSOT-DATA/w_lean_aug_8"
+    # case_lean = "C:/Users/reev057/DSOT-DATA/w_lean_aug_8_bt"
+    # pt.dso_market_plot(dso_range, "6", base_lean, dso_metadata_file, metadata_path, case_lean)
+
+    # Check if there is a plots folder - create if not.
+    check_folder = os.path.isdir(data_path + '/plots')
+    if not check_folder:
+        os.makedirs(data_path + '/plots')
+
+    # Stage 1: compare DER load profiles for the selected months and days.
+    if DER_load_Curves:
+        # Cycle through months and days for interest for load profiles
+        Months = ['01', '03', '08']
+        # Months = ['08']
+        # Day_Ranges = [range(21, 24), range(4, 11), range(4, 33)]
+        Day_Ranges = [range(21, 24), range(25, 28), range(13, 16)]
+        # Day_Ranges = [range(11, 18)]
+        for i in range(len(Months)):
+            day_range = Day_Ranges[i]
+            if compare_MR_cases:
+                # case_path = Data_paths[1] + "/8_2016_" + Months[i] + "_fl"
+                # comp_path = Data_paths[0] + "/8_2016_" + Months[i]
+                case_path = Data_paths[2] + "/200_2016_" + Months[i] + "_fl"
+                case2_path = Data_paths[1] + "/200_2016_" + Months[i] + "_bt"
+                comp_path = Data_paths[0] + "/200_2016_" + Months[i]
+            if compare_HR_cases:
+                # case_path = Data_paths[1] + "/8_2016_" + Months[i] + "_pv_bt_ev"
+                # comp_path = Data_paths[0] + "/8_2016_" + Months[i] + "_pv"
+                case2_path = Data_paths[2] + "/200_2016_" + Months[i] + "_pv_fl_ev"
+                case_path = Data_paths[1] + "/200_2016_" + Months[i] + "_pv_bt_ev"
+                comp_path = Data_paths[0] + "/200_2016_" + Months[i] + "_pv"
+            # pt.der_stack_plot(dso_range, day_range, metadata_path, case_path, comp_path)
+            # pt.der_stack_plot(dso_range, day_range, metadata_path, comp_path)
+            # pt.bldg_stack_plot(dso_range, day_range, comp_path, metadata_path)
+            pt.generation_load_profiles(comp_path, metadata_path, comp_path, day_range,
+                                                             False, comp_path)
+            pt.generation_load_profiles(case_path, metadata_path, case_path, day_range,
+                                                             False, comp_path)
+            pt.generation_load_profiles(case2_path, metadata_path, case2_path, day_range,
+                                                             False, comp_path)
+            # pt.generation_load_profiles(comp_path, metadata_path, comp_path, day_range,
+            #                                                  True)
+
+    # Stage 2: summarize annual metrics for the selected cases.
+    if Annual_whiskers:
+        for Variable in Variables:
+            plot_annual_stats(Cases, Data_paths, Output_path, DSO_num, Variable)
+
+    # Stage 3: compare customer-level costs, usage, and savings.
+    if Customer_PDFs:
+        customer_cfs_delta(Cases, Data_paths, Output_path, metadata_file)
+
+    # reduction_by_class(Cases, Data_paths, Output_path, 'Load')
+    # Stage 4: calculate and plot DSO cost-benefit deltas.
+    if dso_valuation_waterfall:
+        dso_cfs_delta(Cases_list, Data_paths_list, dso_range, metadata_file)
+
 
 def rates_plots():
+    """Run the example-configured retail-rate comparison workflow.
+
+    Loads the selected Flat case configuration and DSO metadata, assembles the
+    case directories, then runs a fixed sequence of load-profile, annual
+    statistics, generation-profile, DSO cost-benefit, and customer-population
+    analyses. Paths and case names are configured in this function and must
+    match the local post-processing data layout.
+
+    Returns:
+        None. The called helpers save figures and summary files to the
+        configured case and data directories.
+    """
     # ------------ Selection of DSO and Day  ---------------------------------
     dso_num = '1'  # Needs to be non-zero integer
     day_num = '4'  # Needs to be non-zero integer
@@ -1770,13 +1896,15 @@ def rates_plots():
     flat_path = os.path.join(data_path, 'Flat')
     DSOT_path = os.path.join(data_path, 'DSOT')
     TOU_path = os.path.join(data_path, 'TOU')
+    RND_path = os.path.join(data_path, 'rob-don')
+    sub_path = os.path.join(data_path, 'sub')
 
     # Check if there is a plots folder - create if not.
     check_folder = os.path.isdir(data_path + '/plots')
     if not check_folder:
         os.makedirs(data_path + '/plots')
 
-    ##  1. DER Load Plotting - Plot gets saved in case_path\plots folder.
+    print('Stage 1: compare DER load profiles for the selected August days.')
     # Provides stacked time series plots of end loads.  E.g., Figure 6, 32, 36, 37 in DSO+T Volume 1.
 
     #Flat case plot
@@ -1791,44 +1919,177 @@ def rates_plots():
     DSOT_aug_path = os.path.join(DSOT_path, '8_2016_08_pv_bt_fl_ev')
     pt.der_stack_plot(dso_range, day_range, metadata_path, DSOT_aug_path, flat_aug_path, False)
 
-    # TODO: Add Winter Peak as well as system min load (4/4/2016) plots.
+    RND_aug_path = os.path.join(DSOT_path, '8_2016_08_pv_bt_fl_ev')
+    pt.der_stack_plot(dso_range, day_range, metadata_path, RND_aug_path, flat_aug_path, False)
 
-    ##  2. Annual System Load Plotting - Plot gets saved in case_path\plots folder.
+    # Winter Peak as well as system min load (4/4/2016) plots.
+    flat_dec_path = os.path.join(flat_path, '8_2016_12_pv_bt_fl_ev')
+    day_range = range(18, 23)  # Set day range and case path around Dec 17 peak - peak load is given in load stats csv.
+    pt.der_stack_plot(dso_range, day_range, metadata_path, flat_dec_path, None, False)
+
+    TOU_dec_path = os.path.join(flat_path, '8_2016_12_pv_bt_fl_ev')
+    pt.der_stack_plot(dso_range, day_range, metadata_path, TOU_dec_path, flat_dec_path, False)
+
+    DSOT_dec_path = os.path.join(flat_path, '8_2016_12_pv_bt_fl_ev')
+    pt.der_stack_plot(dso_range, day_range, metadata_path, DSOT_dec_path, flat_dec_path, False)
+
+    RND_dec_path = os.path.join(flat_path, '8_2016_12_pv_bt_fl_ev')
+    pt.der_stack_plot(dso_range, day_range, metadata_path, RND_dec_path, flat_dec_path, False)
+
+    # Compare TOU and DSO+T to Flat (BAU case)
+    # Fall Min Load
+    flat_oct_path = os.path.join(flat_path, '8_2016_10_pv_bt_fl_ev')
+    day_range = range(27, 32)  # Set day range and case path around Oct 28 min.
+    pt.der_stack_plot(dso_range, day_range, metadata_path, flat_oct_path, None, False)
+
+    TOU_oct_path = os.path.join(flat_path, '8_2016_10_pv_bt_fl_ev')
+    pt.der_stack_plot(dso_range, day_range, metadata_path, TOU_oct_path, flat_oct_path, False)
+
+    DSOT_oct_path = os.path.join(flat_path, '8_2016_10_pv_bt_fl_ev')
+    pt.der_stack_plot(dso_range, day_range, metadata_path, DSOT_oct_path, flat_oct_path, False)
+
+    RND_oct_path = os.path.join(flat_path, '8_2016_10_pv_bt_fl_ev')
+    pt.der_stack_plot(dso_range, day_range, metadata_path, RND_oct_path, flat_oct_path, False)
+
+    # Compare TOU and DSO+T to Flat (BAU case)
+    # Fall Min Load
+    flat_nov_path = os.path.join(flat_path, '8_2016_11_pv_bt_fl_ev')
+    day_range = range(18, 23)  # Set day range and case path around Oct 28 min.
+    pt.der_stack_plot(dso_range, day_range, metadata_path, flat_nov_path, None, False)
+
+    TOU_nov_path = os.path.join(flat_path, '8_2016_11_pv_bt_fl_ev')
+    pt.der_stack_plot(dso_range, day_range, metadata_path, TOU_nov_path, flat_nov_path, False)
+
+    DSOT_nov_path = os.path.join(flat_path, '8_2016_11_pv_bt_fl_ev')
+    pt.der_stack_plot(dso_range, day_range, metadata_path, DSOT_nov_path, flat_nov_path, False)
+
+    RND_nov_path = os.path.join(flat_path, '8_2016_11_pv_bt_fl_ev')
+    pt.der_stack_plot(dso_range, day_range, metadata_path, RND_nov_path, flat_nov_path, False)
+
+    # Compare TOU and DSO+T to Flat (BAU case)
+    # Fall Min Load
+    flat_apr_path = 'C:\\Users\\reev057\\DSOT-DATA\\Rates\\Flat\\8_2016_04_pv_bt_fl_ev'
+    day_range = range(26, 31)  # Set day range and case path around Oct 28 min.
+    pt.der_stack_plot(dso_range, day_range, metadata_path, flat_apr_path, None, False)
+
+    TOU_apr_path = 'C:\\Users\\reev057\\DSOT-DATA\\Rates\\TOU\\8_2016_04_pv_bt_fl_ev'
+    pt.der_stack_plot(dso_range, day_range, metadata_path, TOU_apr_path, flat_apr_path, False)
+
+    DSOT_apr_path = 'C:\\Users\\reev057\\DSOT-DATA\\Rates\\DSOT\\8_2016_04_pv_bt_fl_ev'
+    pt.der_stack_plot(dso_range, day_range, metadata_path, DSOT_apr_path, flat_apr_path, False)
+
+    RND_apr_path = 'C:\\Users\\reev057\\DSOT-DATA\\Rates\\Transactive\\8_2016_04_pv_bt_fl_ev'
+    pt.der_stack_plot(dso_range, day_range, metadata_path, RND_apr_path, flat_apr_path, False)
+
+    print('Stage 2: compare annual distributions for selected system metrics')
     # Provides annual box and whisker like Figure 14, 16, 40 in Vol1.
-    Cases = ['Flat', 'TOU', 'DSOT']
-    Data_paths = [flat_path, TOU_path, DSOT_path]  # TODO: Add other cases as they are completed.
+    Cases = ['Flat', 'TOU', 'DE', 'DE+C']
+    Data_paths = [flat_path, TOU_path, DSOT_path, RND_path]  # TODO: Add other cases as they are completed.
     Variables = ['DA LMP', 'Total Load', 'Hybrid']
     for Variable in Variables:
         plot_annual_stats(Cases, Data_paths, data_path, dso_num, Variable)
 
-    ##  3. Generator Plotting.
+    print('2b. Annual Customer Bill Plotting - Plot gets saved in case_path\plots folder.')
+    # Provides annual box and whisker
+    Cases = ['Flat', 'TOU', 'DE', 'DE+C', 'B&S']
+    Data_paths = [flat_path, TOU_path, DSOT_path, RND_path, sub_path]
+    customer_monthly_stats(Cases, Data_paths, data_path, dso_num)
+    # Plot bill components
+    customer_bill_component_comparison(Cases, Data_paths, data_path, dso_num)
+
+    print('Stage 3: plot generation and load profiles for the baseline case')
     # Provides stacked time series plots of bulk generation.  
     # E.g., Figure 15 in DSO+T Volume 1.
     pt.generation_load_profiles(flat_aug_path, metadata_path, flat_aug_path, day_range, False)
 
-    ##  4. CFS Waterfall.
+    print('Stage 4: compare DSO cost-benefit components across rate cases.')
     # Total grid cost water fall: Figure 42 in Vol 1
-    Cases_list = [['Flat', 'TOU'], ['Flat', 'DSOT']]
-    Data_paths_list = [[flat_path, TOU_path], [flat_path, DSOT_path]]
+    Cases_list = [['Flat', 'TOU'], ['Flat', 'DE'], ['Flat', 'DE+C']]
+    Data_paths_list = [[flat_path, TOU_path], [flat_path, DSOT_path],[flat_path, RND_path]]
     dso_cfs_delta(Cases_list, Data_paths_list, dso_range, metadata_file, metadata_path)
 
-    ##  5. Customer PDFs.
+    print('Stage 5: compare customer-population distributions and savings.')
     # Probably density Functions of customer populations: e.g., Figure 45 in Vol 1
     Cases = ['Flat', 'TOU']
     Data_paths = [flat_path, TOU_path]
     customer_cfs_delta(Cases, Data_paths, metadata_file, metadata_path)
-    # TODO: Need to debug DSO+T rate making..
-    # Data_paths = [flat_path, DSOT_path]
-    # comp_pt.customer_cfs_delta(Cases, Data_paths, metadata_file, metadata_path)
 
-    ##  6. House/Customer Daily HVAC / Load Examples.
+    Cases = ['Flat', 'DE']
+    Data_paths = [flat_path, DSOT_path]
+    customer_cfs_delta(Cases, Data_paths, metadata_file, metadata_path)
+
+    Cases = ['Flat', 'DE+C']
+    Data_paths = [flat_path, RND_path]
+    customer_cfs_delta(Cases, Data_paths, metadata_file, metadata_path)
+
+    Cases = ['Flat', 'B&S']
+    Data_paths = [flat_path, sub_path]
+    customer_cfs_delta(Cases, Data_paths, metadata_file, metadata_path)
+
+    print('Stage 5b. Annual Customer Bill Plotting - Plot gets saved in case_path\plots folder.')
+    # Provides annual box and whisker
+    Cases = ['Flat', 'TOU', 'DE', 'DE+C', 'B&S']
+    Data_paths = [flat_path, TOU_path, DSOT_path, RND_path, sub_path]
+    customer_monthly_stats(Cases, Data_paths, data_path, dso_num)
+    # Plot bill components
+    customer_bill_component_comparison(Cases, Data_paths, data_path, dso_num)
+
+    print('Stage 6. House/Customer Daily HVAC / Load & Price Comparison Examples.')
+    # Probably density Functions of customer populations: e.g., Figure 45 in Vol 1
+    day_range = range(12, 15)
+    Cases = ['Flat', 'TOU', 'DE', 'DE+C']
+    Month = '8_2016_08_pv_bt_fl_ev'
+    Data_paths = [flat_path +'/' + Month, TOU_path + '/' + Month, DSOT_path+ '/' + Month, RND_path +'/' + Month]
+    load_comparison_plot(day_range, metadata_path, Cases, Data_paths, data_path)
+
+    # day_range = range(14, 17)
+    Cases = ['Flat', 'TOU', 'DE', 'DE+C']
+    Rate_Scenarios = ["flat", "TOU", "DSOT", "RandD"]
+    Data_paths = [flat_path, TOU_path, DSOT_path, RND_path]
+    retail_price_comparison_plot(dso_num, day_range, metadata_path, Cases, Data_paths, Rate_Scenarios, Month, data_path)
+
+    Month = '8_2016_12_pv_bt_fl_ev'
+    day_range = range(20, 23)
+    Data_paths = [flat_path +'/' + Month, TOU_path + '/' + Month, DSOT_path+ '/' + Month, RND_path +'/' + Month]
+    load_comparison_plot(day_range, metadata_path, Cases, Data_paths, data_path)
+    Data_paths = [flat_path, TOU_path, DSOT_path, RND_path]
+    retail_price_comparison_plot(dso_num, day_range, metadata_path, Cases, Data_paths, Rate_Scenarios, Month, data_path)
+
+    Month = '8_2016_04_pv_bt_fl_ev'
+    day_range = range(27, 30)
+    Data_paths = [flat_path +'/' + Month, TOU_path + '/' + Month, DSOT_path+ '/' + Month, RND_path +'/' + Month]
+    load_comparison_plot(day_range, metadata_path, Cases, Data_paths, data_path)
+    Data_paths = [flat_path, TOU_path, DSOT_path, RND_path]
+    retail_price_comparison_plot(dso_num, day_range, metadata_path, Cases, Data_paths, Rate_Scenarios, Month, data_path)
+
+    print('Stage 7. Population Attribute PDFs. --> no plots yet')
     # Probably density Functions of customer populations: e.g., Figure 45 in Vol 1
 
-    ##  7. Population Attribute PDFs.
-    # Probably density Functions of customer populations: e.g., Figure 45 in Vol 1
+    print('Stage 8. Subscription Plots')
+    flat_aug_path = os.path.join(flat_path, '8_2016_08_pv_bt_fl_ev')
+    sub_aug_path = os.path.join(sub_path, '8_2016_08_pv_bt_fl_ev')
+    day_range = range(14, 17)  # Set day range and case path around August 11 peak - peak load is given in load stats csv.
+    pt.subscription_plot(dso_num, day_range, metadata_path, flat_aug_path, sub_aug_path)
+    day_range = range(25, 28)  # Set day range and case path around August 11 peak - peak load is given in load stats csv.
+    pt.subscription_plot(dso_num, day_range, metadata_path, flat_aug_path, sub_aug_path)
 
+    print('Stage 9. TOU Participation Summary')
+    day_range = range(12, 15)
+    Cases = ['TOU-80', 'TOU-60', 'TOU-40', 'TOU-20']
+    Month20 = 'Aug-20TOU_pv_bt_fl_ev'
+    Month40 = 'Aug-40TOU_pv_bt_fl_ev'
+    Month60 = 'Aug-60TOU_pv_bt_fl_ev'
+    Month80 = '8_2016_08_pv_bt_fl_ev'
+    Data_paths = [TOU_path +'/' + Month80, TOU_path +'/' + Month60, TOU_path +'/' + Month40, TOU_path +'/' + Month20]
+    load_comparison_plot(day_range, metadata_path, Cases, Data_paths, data_path)
+
+    # Summer Peak - TOU Participation example
+    day_range = range(9, 14)
+    pt.der_stack_plot(dso_range, day_range, metadata_path, os.path.join(TOU_path, Month20), flat_aug_path, False)
+    pt.der_stack_plot(dso_range, day_range, metadata_path, os.path.join(TOU_path, Month40), flat_aug_path, False)
+    pt.der_stack_plot(dso_range, day_range, metadata_path, os.path.join(TOU_path, Month60), flat_aug_path, False)
 
 
 if __name__ == '__main__':
-    #DSOT_plots()
+    #DSOT_plots() # TODO - update data paths and variable assignments
     rates_plots()
