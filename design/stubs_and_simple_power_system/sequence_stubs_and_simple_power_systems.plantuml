@@ -1,0 +1,91 @@
+@startuml sequence_rt_binding
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 200
+
+title DSO and TSO Stubs with Customer Agents (HEMS)
+
+participant "DSO" as DSO
+participant "SimpleDS" as SDS
+participant "TSO" as TSO
+participant "SimpleBPS" as SBPS
+participant "Customer Agent\n(HEMS)" as CA
+participant "BPS Generator\nAgent" as BGA
+participant "Preference\nCurve" as PC
+
+loop Each Time Step
+    SDS -> SDS: update_state()
+    note right: Just pre-defined time-series data?
+    SDS -> SDS: send_state()
+    note right: Publish via HELICS
+end
+
+loop Each Time Step
+    SBPS -> SBPS: update_state()
+    note right: Just pre-defined time-series data?
+    SBPS -> SBPS: send_state()
+    note right: Publish via HELICS
+end
+
+== Customer Phase : Bidding ==
+loop For Each Customer
+    CA -> CA: get_device_state()
+    note right: Collect via HELICS from SimpleDS
+    CA -> CA: estimate_solar_generation()
+    CA -> CA: estimate_HVAC_load()
+    CA -> CA: estimate_EV_load()
+    CA -> CA: estimate_battery_load()
+    CA -> CA: estimate_inflexible_load()
+    CA -> PC: <<create>>
+    CA -> PC: add_points()
+    CA -> CA: send_bid(curve)
+    note right: Publish via HELICS
+end
+
+== BPS Generator Phase : Bidding ==
+loop For Each BPS Generator
+    BGA -> BGA: get_device_state()
+    note right: Collect via HELICS from SimpleBPS
+    BGA -> BGA: estimate_generation()
+    BGA -> PC: <<create>>
+    BGA -> PC: add_points()
+    BGA -> BGA: send_bid(curve)
+    note right: Publish via HELICS
+end
+
+== DSO Phase : Aggregating ==
+loop For Each Customer
+    DSO -> DSO: collect_bids()
+    note right: Collect via HELICS from CAs
+    DSO -> DSO: aggregate_bids()
+    DSO -> DSO: send_bids()
+    note right: Publish via HELICS
+end
+
+== TSO Phase : Clear Market ==
+loop For Each Bid
+    TSO -> TSO: collect_bids()
+    note right: Collect via HELICS from DSO
+    TSO -> TSO: clear_market()
+    TSO -> TSO: send_clearing_results()
+    note right: Publish via HELICS
+end
+
+== DSO Phase : Publish Price ==
+DSO -> DSO: collect_market_results()
+note right: Collect via HELICS from TSO
+DSO -> DSO: publish_price()
+note right: Publish via HELICS
+
+
+== BPS Generator Phase : Dispatch ==
+BGA -> BGA: collect_market_results()
+note right: Collect via HELICS from TSO
+BGA -> BGA: dispatch()
+
+== Customer Phase : Dispatch ==
+CA -> CA: collect_market_results()
+note right: Collect via HELICS from TSO
+CA -> CA: dispatch()
+note right: Publish via HELICS
+
+@enduml

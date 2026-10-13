@@ -1,0 +1,50 @@
+@startuml TSO Class Diagram
+
+skinparam classAttributeIconSize 0
+
+abstract TSO {
+    + __init__(tso_config: dict) 
+}
+
+abstract Market {
+    + __init__(model_builder_config: dict)
+    + get_demand_bids()
+    + get_supply_bids()
+    + aggregate_bids()
+    + clear_market()
+    + send_prices()
+    + send_supply_bids()
+    + send_demand_bids()
+    + get_prices()
+}
+note bottom: Anything to do with prices 
+
+abstract Planner {
+    + __init__(planner_config: dict)
+}
+note bottom: Makes decisions about physical grid composition\n for time periods 1+ years from now
+
+abstract Operator {
+    + __init__(operator_config: dict)
+    + dispatch_generation()
+    + measure_load()
+    + measure_voltage()
+    + operate_switch()
+    + change_regulator_setpoint()
+    + dispatch_repair_crew()
+    + measure_billing_meters()
+}
+note bottom: Interaction point with the physical simulator
+
+
+
+
+
+' Runner "1" *-- "1*" ModelBuilder
+' Runner "1" *-- "1*" Monitor
+' Runner "1" *-- "1*" Launcher
+' Runner "1" *-- "1" Connector
+' Runner "1" *-- "1" DataServer
+
+
+@enduml
