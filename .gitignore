@@ -96,3 +96,6 @@ examples/capabilities/feeder-generator/debug
 repository/
 tenv/
 .vscode/
+
+# macOS 
+.DS_Store
