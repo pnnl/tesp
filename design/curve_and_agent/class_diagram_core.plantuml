@@ -1,0 +1,699 @@
+@startuml class_diagram_core
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam classFontSize 11
+skinparam packageFontSize 13
+skinparam linetype ortho
+
+title Device Agent System — Core Class Diagram
+
+' ============================================================================
+' ENUMERATIONS
+' ============================================================================
+package "Enumerations" <<Rectangle>> #F5F5F5 {
+
+    enum DeviceType {
+        HVAC_HEAT_PUMP
+        HVAC_AC_ONLY
+        WATER_HEATER
+        EV_CHARGER
+        BATTERY
+    }
+
+    enum MarketType {
+        RT_ENERGY
+        DA_ENERGY
+        REGULATION
+        SPINNING_RESERVE
+    }
+
+    enum MarketPhase {
+        INACTIVE
+        ACTIVE
+        NEGOTIATION
+        MARKET_LEAD
+        ASSESSMENT
+        DELIVERY_LEAD
+        DELIVERY
+        RECONCILE
+        EXPIRED
+    }
+
+    enum OperatingMode {
+        BIDDING
+        PRICE_RESPONSIVE
+        OVERRIDE
+    }
+
+    enum IterationType {
+        INFORMATIONAL
+        BINDING
+    }
+
+    enum CommitmentStatus {
+        TENTATIVE
+        ADVISORY
+        FIRM
+        RELEASED
+    }
+}
+
+' ============================================================================
+' DEVICE AGENT (Central Orchestrator)
+' ============================================================================
+package "Agent Core" <<Rectangle>> #E8F4FD {
+
+    class DeviceAgent {
+        - agent_id : str
+        - device_type : DeviceType
+        - customer_preference_k : float
+        - current_state : DeviceState
+        - current_flexibility : FlexibilityEnvelope
+        - current_preference_curve : PreferenceCurve
+        --
+        + initialize(device_params)
+        + register_market(market_type, timing, mode, penalty, comm)
+        + spawn_market_cycle(market_type, clearing_time) : str
+        .. F1: State Observation ..
+        + observe_device_state() : DeviceState
+        .. F2: Flexibility Estimation ..
+        + estimate_flexibility(state, interval_duration) : FlexibilityEnvelope
+        .. F3: Preference Curve ..
+        + generate_preference_curve(flexibility) : PreferenceCurve
+        .. F4: Bid Formulation ..
+        + formulate_bid(market_obj, flex, pref_curve) : BidCurve
+        .. F7: Price Response ..
+        + evaluate_price_response(price, curve) : float
+        .. F8: Control Translation ..
+        + translate_to_control(target_power, state) : DeviceCommand
+        .. F12: Performance Monitoring ..
+        + log_performance(market_obj, fulfillment, time)
+        .. F13: Reconciliation ..
+        + reconcile(market_obj) : SettlementRecord
+        .. Phase Handlers ..
+        - _handle_active(market_obj)
+        - _handle_negotiation(market_obj)
+        - _handle_market_lead(market_obj)
+        - _handle_assessment(market_obj, clearing_result)
+        - _handle_delivery_lead(market_obj, clearing_result)
+        - _handle_delivery_start(market_obj)
+        - _handle_delivery_tick(timestamp)
+        - _handle_reconcile(market_obj)
+        - _handle_expired(market_obj)
+        .. F11: Main Loop ..
+        + step(current_time)
+        .. Convergence ..
+        - _compute_convergence(advisory_history) : float
+        - _compute_confidence(advisory_history) : float
+    }
+}
+
+' ============================================================================
+' MARKET STATE MACHINE
+' ============================================================================
+package "Market State Machine" <<Rectangle>> #FFF3E0 {
+
+    class MarketObject {
+        + market_id : str
+        + market_type : MarketType
+        + timing_params : MarketTimingParams
+        + operating_mode : OperatingMode
+        + current_phase : MarketPhase
+        + current_iteration : int
+        + current_iteration_type : IterationType
+        + iteration_protocol : str
+        + n_informational_planned : int
+        --
+        + submitted_bid : BidCurve
+        + cleared_price : float
+        + cleared_quantity : float
+        + target_operating_point : float
+        + control_command : DeviceCommand
+        + performance_log : List[PerformanceEntry]
+        + settlement_record : SettlementRecord
+        --
+        + advisory_history : List[AdvisoryRecord]
+        + latest_advisory : AdvisoryRecord
+        + advisory_confidence : float
+        --
+        + transition_to(new_phase)
+        + get_next_event_time(current_time) : float
+        + should_transition(current_time) : MarketPhase
+        + is_informational_iteration(result) : bool
+    }
+
+    class MarketTimingParams {
+        + t_activate : float
+        + t_negotiate : float
+        + t_market_lead : float
+        + t_clear : float
+        + t_delivery_start : float
+        + t_delivery_end : float
+        + t_reconcile_end : float
+    }
+}
+
+' ============================================================================
+' GRIDLAB-D INTERFACE
+' ============================================================================
+package "GridLAB-D Interface" <<Rectangle>> #FFEBEE {
+
+    class GridLABDInterface {
+        - connection : Any
+        - object_name : str
+        - device_type : DeviceType
+        --
+        + read_hvac_state() : HVACState
+        + read_water_heater_state() : WaterHeaterState
+        + read_ev_charger_state() : EVChargerState
+        + read_battery_state() : BatteryState
+        + write_hvac_command(cmd) : bool
+        + write_water_heater_command(cmd) : bool
+        + write_ev_charger_command(cmd) : bool
+        + write_battery_command(cmd) : bool
+        + read_simulation_time() : float
+    }
+
+    note right of GridLABDInterface
+        **ONLY** module that touches GridLAB-D.
+        All reads (F1) and writes (F9)
+        go through this interface.
+        
+        EXTERNAL: Requires GridLAB-D
+        co-sim connection (FNCS/HELICS).
+    end note
+}
+
+' ============================================================================
+' DEVICE MODELS (Internal Physics)
+' ============================================================================
+package "Device Models" <<Rectangle>> #E8F5E9 {
+
+    abstract class DeviceModelBase {
+        + estimate_flexibility(...) : FlexibilityEnvelope
+    }
+
+    class HVACModel {
+        - device_type : DeviceType
+        --
+        + predict_temperature(state, power, forecasts, duration) : List
+        + estimate_flexibility(state, forecasts, schedule, interval) : FlexibilityEnvelope
+        + power_to_setpoint(target_power, state, outdoor_temp, duration) : float
+        + setpoint_to_power(setpoint, state, outdoor_temp, duration) : float
+    }
+
+    class WaterHeaterModel {
+        + predict_tank_temperature(state, power, draws, inlet, duration) : List
+        + estimate_flexibility(state, draws, inlet, min_temp, interval) : FlexibilityEnvelope
+        + power_to_setpoint(target_power, state, duration) : float
+    }
+
+    class EVChargerModel {
+        + predict_soc(state, power, duration) : List
+        + estimate_flexibility(state, departure, preferred_soc, interval) : FlexibilityEnvelope
+        + power_to_command(target_power, state) : float
+    }
+
+    class BatteryModel {
+        - replacement_cost : float
+        - rated_cycles : int
+        - rated_dod : float
+        - wohler_exponent : float
+        - cumulative_throughput_kwh : float
+        --
+        + predict_soc(state, power, duration) : List
+        + estimate_flexibility(state, soc_reserve, soc_preferred, interval) : FlexibilityEnvelope
+        + marginal_degradation_cost(state, power) : float
+        + compute_charge_discharge_thresholds(state, V_stored, deg_cost) : Tuple
+        + update_degradation_tracking(throughput, soc, power, temp, duration) : float
+        + budget_utilization_rate : float
+    }
+
+    DeviceModelBase <|-- HVACModel
+    DeviceModelBase <|-- WaterHeaterModel
+    DeviceModelBase <|-- EVChargerModel
+    DeviceModelBase <|-- BatteryModel
+}
+
+' ============================================================================
+' PREFERENCE AND BIDDING
+' ============================================================================
+package "Preference & Bidding" <<Rectangle>> #F3E5F5 {
+
+    class PreferenceCurve {
+        - k : float
+        - P_0 : float
+        - Q_0 : float
+        - epsilon_max : float
+        - device_type : DeviceType
+        - Q_discharge_max : float
+        - degradation_cost : float
+        --
+        + epsilon : float
+        + evaluate(price) : float
+        + evaluate_with_bounds(price, Q_min, Q_max) : float
+        + get_amenity_cost(Q_actual, Q_preferred) : float
+        + sample_bid_curve(price_min, price_max, n_points, Q_min, Q_max) : List[BidPoint]
+    }
+
+    class PenaltyModel {
+        - market_type : MarketType
+        - structure_type : PenaltyStructureType
+        - params : Dict
+        --
+        + compute_penalty(committed, actual, price, duration) : float
+        + marginal_penalty(committed, price, duration) : float
+    }
+}
+
+' ============================================================================
+' FLEXIBILITY LEDGER
+' ============================================================================
+package "Flexibility Management" <<Rectangle>> #FFF8E1 {
+
+    class FlexibilityLedger {
+        - Q_min : float
+        - Q_max : float
+        - commitments : List[EconomicCommitment]
+        - tentative_weight : float
+        --
+        + hold_tentative(market_id, type, product, qty, interval, ...)
+        + update_advisory(market_id, qty, interval, confidence, price, ...)
+        + book_firm(market_id, qty, interval, price, ...)
+        + release(market_id)
+        .. Tier 1 ..
+        + hard_available(interval, excluding) : Tuple[float, float]
+        .. Tier 2 ..
+        + expected_available(interval, excluding) : Tuple[float, float]
+        .. Tier 3 ..
+        + economic_available(interval, value, penalty, excluding) : EconomicEnvelope
+        + get_commitments_overlapping(interval) : List[EconomicCommitment]
+    }
+
+    class EconomicCommitment {
+        + market_id : str
+        + market_type : MarketType
+        + product_type : ProductType
+        + quantity : float
+        + interval : Tuple[float, float]
+        + status : CommitmentStatus
+        + cleared_price : float
+        + marginal_nv : float
+        + marginal_pen : float
+        + confidence : float
+        + iteration : int
+    }
+
+    class EconomicEnvelope {
+        + hard_Q_min_avail : float
+        + hard_Q_max_avail : float
+        + displaceable_blocks : List[DisplaceableBlock]
+        + total_displaceable : float
+        + soft_Q_max_avail : float
+    }
+
+    class DisplaceableBlock {
+        + source_market : str
+        + source_status : CommitmentStatus
+        + quantity : float
+        + displacement_cost : float
+        + net_gain : float
+    }
+
+    FlexibilityLedger *-- "0..*" EconomicCommitment
+    EconomicEnvelope *-- "0..*" DisplaceableBlock
+}
+
+' ============================================================================
+' DISPATCH AND COMMAND
+' ============================================================================
+package "Dispatch & Actuation" <<Rectangle>> #E0F2F1 {
+
+    class CommandArbiter {
+        - device_type : DeviceType
+        - active_deliveries : Dict[str, DeliveryRecord]
+        --
+        + register_delivery(market_id, type, product, qty, price, penalty, interval)
+        + update_signals(signals : Dict)
+        + deregister_delivery(market_id)
+        + resolve_and_actuate(state, pref_curve, amenity_weight, time) : Dict[str, FulfillmentRecord]
+    }
+
+    class DispatchOptimizer {
+        + solve(economics, Q_min, Q_max, pref_curve, amenity_weight, signals) : DispatchSolution
+    }
+
+    class DeliveryValueCalculator {
+        + compute(market_id, product, committed, price, penalty, duration, signals, deg_cost) : DeliveryEconomics
+    }
+
+    class DeliveryRecord {
+        + market_id : str
+        + market_type : str
+        + product_type : str
+        + committed_qty : float
+        + cleared_price : float
+        + penalty_model : PenaltyModel
+        + interval : Tuple
+        + performance_log : List
+    }
+
+    class PlanningOptimizer {
+        - device_model : DeviceModelBase
+        --
+        + solve(state, prices, weather, constraints, interval_dur, horizon, k, ...) : PlanningResult
+    }
+
+    CommandArbiter --> DispatchOptimizer : uses
+    CommandArbiter --> DeliveryValueCalculator : uses
+    CommandArbiter *-- "0..*" DeliveryRecord
+}
+
+' ============================================================================
+' DATA STREAMS
+' ============================================================================
+package "Data Streams" <<Rectangle>> #ECEFF1 {
+
+    class DataStreamManager {
+        - device_type : DeviceType
+        - continuous_streams : Dict
+        - event_streams : Dict
+        - constraint_streams : Dict
+        - schedules : Dict
+        --
+        + register_continuous_stream(id, forecast)
+        + register_event_stream(id, forecast)
+        + register_constraint(id, constraint)
+        + register_schedule(id, schedule)
+        + update_stream(id, data)
+        + get_continuous(id) : ContinuousForecast
+        + get_event(id) : EventForecast
+        + get_constraint(id) : ConstraintStream
+        + get_schedule(id) : ContinuousForecast
+        + get_all_constraints(t_start, t_end) : List
+        + get_forecast_bundle(t_start, t_end) : Dict
+    }
+
+    class UncertaintyModel {
+        - model_type : str
+        - params : Dict
+        --
+        + sigma_at(lead_time) : float
+    }
+
+    class ContinuousForecast {
+        - variable_name : str
+        - unit : str
+        - series : List[ContinuousDataPoint]
+        --
+        + update(new_series)
+        + get_at(timestamp) : ContinuousDataPoint
+        + get_series(t_start, t_end, resolution) : List
+    }
+
+    class EventForecast {
+        - event_types : List[EventDefinition]
+        - intensity_function : List
+        - observed_events : List
+        --
+        + get_intensity_at(timestamp) : float
+        + get_cumulative_energy_distribution(t_start, t_end) : QuantilePoint
+        + condition_on_observation(event_type, timestamp, energy)
+        + reset_observations()
+    }
+
+    class ConstraintStream {
+        - constraint_id : str
+        - variable : str
+        - constraint_type : str
+        - continuous : bool
+        - deadline : float
+        - required_value : float
+        --
+        + is_feasible(value, time) : bool
+        + feasibility_margin(value, time) : float
+    }
+
+    class PriceForecastService {
+        - forecasts : Dict
+        --
+        + update(market_type, interval, price, confidence, source, iteration)
+        + get_forecast(market_type, interval) : PriceForecast
+        + get_price(market_type, interval, default) : float
+        + get_trajectory(market_type, t_start, t_end, resolution) : List
+    }
+
+    DataStreamManager *-- "0..*" ContinuousForecast
+    DataStreamManager *-- "0..*" EventForecast
+    DataStreamManager *-- "0..*" ConstraintStream
+    ContinuousForecast --> UncertaintyModel : uses
+}
+
+' ============================================================================
+' MARKET COMMUNICATION
+' ============================================================================
+package "Market Communication" <<Rectangle>> #FCE4EC {
+
+    class MarketCommunicationInterface {
+        - transport : Any
+        - agent_id : str
+        - market_type : MarketType
+        --
+        + submit_bid(bid, market_id, interval_id) : bool
+        + receive_clear(market_id) : ClearingResult
+        + submit_reconciliation(market_id, settlement) : bool
+        + register_clear_callback(callback)
+    }
+}
+
+' ============================================================================
+' MARKET OPERATOR
+' ============================================================================
+package "Market Operator (DSO)" <<Rectangle>> #E8EAF6 {
+
+    class MarketOperator {
+        - market_type : MarketType
+        - timing_params : MarketTimingParams
+        - iteration_protocol : str
+        - n_informational : int
+        - agent_bids : Dict[str, BidCurve]
+        - dso_bids : Dict[str, DSOInflexibleLoadBid]
+        - supply_curve : SupplyCurve
+        - current_iteration : int
+        --
+        + set_supply_curve(supply)
+        + submit_agent_bid(agent_id, bid) : bool
+        + submit_dso_inflexible_bid(feeder_id, bid) : bool
+        + aggregate_demand() : List[BidPoint]
+        + clear_market() : ClearingResult
+        + get_agent_clearing(agent_id, price) : ClearingResult
+        + propagate_results() : Dict[str, ClearingResult]
+        + get_total_flexible_committed() : float
+        + determine_iteration_type() : IterationType
+        + step(current_time) : Dict[str, ClearingResult]
+    }
+
+    class SupplyCurve {
+        + points : List[BidPoint]
+        --
+        + get_supply_at_price(price) : float
+        + get_price_at_quantity(quantity) : float
+    }
+
+    class DSOInflexibleLoadBid {
+        + feeder_id : str
+        + quantity : float
+        + interval : Tuple
+        + components : Dict
+    }
+
+    class DSOLoadEstimationEngine {
+        - feeder_id : str
+        --
+        + estimate_inflexible_load(interval, total_forecast, flexible, solar, loss) : DSOInflexibleLoadBid
+        + update_with_metering(substation_actual, flexible_actual, time)
+    }
+
+    MarketOperator --> SupplyCurve : uses
+    MarketOperator *-- "0..*" DSOInflexibleLoadBid
+    DSOLoadEstimationEngine ..> DSOInflexibleLoadBid : creates
+}
+
+' ============================================================================
+' DATA TYPES
+' ============================================================================
+package "Data Types" <<Rectangle>> #FAFAFA {
+
+    class BidCurve {
+        + points : List[BidPoint]
+        + market_id : str
+        + interval_id : str
+        + timestamp : float
+    }
+
+    class BidPoint {
+        + price : float
+        + quantity : float
+    }
+
+    class ClearingResult {
+        + market_id : str
+        + cleared_price : float
+        + cleared_quantity : float
+        + iteration : int
+        + iteration_type : IterationType
+    }
+
+    class FlexibilityEnvelope {
+        + Q_min : float
+        + Q_max : float
+        + Q_baseline : float
+        + Q_min_p50 : float
+        + Q_min_p90 : float
+        + Q_min_p99 : float
+    }
+
+    class DeviceCommand {
+        + device_type : DeviceType
+        + setpoint : float
+        + mode : str
+        + power_target : float
+    }
+
+    class DispatchSolution {
+        + Q : float
+        + allocation : Dict[str, float]
+        + displacement_chain : Dict
+        + total_net_value : float
+    }
+
+    class FulfillmentRecord {
+        + market_id : str
+        + committed : float
+        + actual : float
+        + shortfall : float
+        + revenue : float
+        + penalty : float
+        + net_value : float
+        + displaced_by : str
+    }
+
+    class SettlementRecord {
+        + market_id : str
+        + total_revenue : float
+        + total_penalty : float
+        + net_settlement : float
+        + degradation_cost : float
+    }
+
+    class AdvisoryRecord {
+        + iteration : int
+        + cleared_price : float
+        + projected_op_point : float
+        + convergence_metric : float
+    }
+
+    class PlanningResult {
+        + intervals : List
+        + V_stored : List[float]
+        + total_cost : float
+        + total_revenue : float
+        + cycles_consumed : float
+    }
+
+    class PerformanceEntry {
+        + timestamp : float
+        + committed : float
+        + actual : float
+        + shortfall : float
+        + was_displaced : bool
+        + displaced_by : str
+    }
+
+    BidCurve *-- "1..*" BidPoint
+}
+
+' ============================================================================
+' DEVICE STATE TYPES
+' ============================================================================
+package "Device States (from GridLAB-D)" <<Rectangle>> #FFEBEE {
+    class HVACState {
+        + indoor_air_temp : float
+        + outdoor_air_temp : float
+        + thermostat_setpoint : float
+        + power_draw : float
+        + hvac_on : bool
+        + thermal_mass_temp : float
+        + UA_envelope : float
+        + cooling_COP : float
+        + has_heat_pump : bool
+    }
+
+    class WaterHeaterState {
+        + tank_temp_upper : float
+        + tank_temp_lower : float
+        + thermostat_setpoint : float
+        + element_on : bool
+        + power_draw : float
+        + tank_volume : float
+        + element_power : float
+        + current_draw_rate : float
+    }
+
+    class EVChargerState {
+        + soc : float
+        + charge_rate : float
+        + battery_capacity : float
+        + max_charge_rate : float
+        + vehicle_plugged_in : bool
+    }
+
+    class BatteryState {
+        + soc : float
+        + power : float
+        + energy_capacity : float
+        + max_charge_rate : float
+        + max_discharge_rate : float
+        + round_trip_efficiency : float
+        + cell_temperature : float
+        + state_of_health : float
+    }
+}
+
+' ============================================================================
+' RELATIONSHIPS
+' ============================================================================
+
+' DeviceAgent owns/uses everything
+DeviceAgent *-- "1" GridLABDInterface : reads/writes\nGridLAB-D
+DeviceAgent *-- "1" DataStreamManager : forecasts,\nschedules,\nconstraints
+DeviceAgent *-- "0..*" MarketObject : one per\nmarket cycle
+DeviceAgent *-- "1..*" MarketCommunicationInterface : one per\nmarket type
+DeviceAgent *-- "1" FlexibilityLedger : capacity\ntracking
+DeviceAgent *-- "1" CommandArbiter : delivery\nresolution
+DeviceAgent *-- "1" PlanningOptimizer : multi-interval\nplanning
+DeviceAgent *-- "1" PriceForecastService : price\nestimates
+DeviceAgent *-- "1" DeviceModelBase : internal\nphysics
+
+' MarketObject uses timing
+MarketObject --> MarketTimingParams
+
+' CommandArbiter uses GridLAB-D for actuation
+CommandArbiter --> GridLABDInterface : F9: actuate
+
+' Market communication connects to MO
+MarketCommunicationInterface --> MarketOperator : bids &\nresults
+
+' DSO feeds MO
+DSOLoadEstimationEngine --> MarketOperator : inflexible\nbid
+
+' PenaltyModel used by multiple
+DeviceAgent --> "1..*" PenaltyModel : per market\nproduct
+CommandArbiter --> PenaltyModel
+FlexibilityLedger --> PenaltyModel : displacement\ncost calc
+
+' Planning optimizer uses device model and price service
+PlanningOptimizer --> PriceForecastService : price\ntrajectory
+PlanningOptimizer --> DataStreamManager : weather,\nconstraints
+
+@enduml

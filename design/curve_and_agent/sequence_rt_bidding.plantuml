@@ -1,0 +1,305 @@
+@startuml sequence_rt_binding
+!theme plain
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 200
+
+title RT Energy Market — Single Binding Cycle (No Informational Iterations)
+
+actor "Simulation\nHarness" as SIM
+participant "DeviceAgent" as DA
+participant "GridLAB-D\nInterface" as GLD
+participant "DataStream\nManager" as DSM
+participant "Device\nModel" as DM
+participant "Preference\nCurve" as PC
+participant "Flexibility\nLedger" as FL
+participant "Market\nObject" as MO_obj
+participant "Market\nComm" as MC
+participant "Command\nArbiter" as CA
+participant "Dispatch\nOptimizer" as DO
+participant "Market\nOperator" as MO
+participant "DSO Load\nEngine" as DSO
+
+== Phase: INACTIVE → ACTIVE (t = t_clear − 600s) ==
+
+SIM -> DA : step(current_time)
+DA -> MO_obj : should_transition(current_time)
+activate MO_obj
+MO_obj --> DA : ACTIVE
+deactivate MO_obj
+DA -> MO_obj : transition_to(ACTIVE)
+
+note over DA : **F1: Observe Device State**
+DA -> GLD : read_*_state()
+activate GLD
+GLD --> DA : DeviceState
+deactivate GLD
+note right of GLD
+  Reads from GridLAB-D:
+  HVAC: air_temp, outdoor_temp, setpoint...
+  WH: tank_temp, draw_rate...
+  EV: soc, charge_rate...
+  Battery: soc, power, cell_temp...
+end note
+
+note over DA : **F2: Estimate Flexibility**
+DA -> DSM : get_continuous('outdoor_air_temp')
+activate DSM
+DSM --> DA : ContinuousForecast
+deactivate DSM
+DA -> DSM : get_schedule('hvac_setpoint_schedule')
+activate DSM
+DSM --> DA : setpoint schedule
+deactivate DSM
+DA -> DSM : get_all_constraints(interval)
+activate DSM
+DSM --> DA : List[ConstraintStream]
+deactivate DSM
+DA -> DM : estimate_flexibility(state, forecasts, schedule, interval)
+activate DM
+DM --> DA : FlexibilityEnvelope
+deactivate DM
+
+note over DA : **F3: Generate Preference Curve**
+DA -> DSM : get_continuous('price_forecast')
+activate DSM
+DSM --> DA : price forecast (P_0)
+deactivate DSM
+DA -> PC : new PreferenceCurve(k, P_0, Q_baseline, ε_max)
+activate PC
+PC --> DA : preference_curve
+deactivate PC
+
+note over DA : **F6: Query Available Flexibility**
+DA -> FL : expected_available(delivery_interval, excluding=this_market)
+activate FL
+FL --> DA : (Q_min_avail, Q_max_avail)
+deactivate FL
+
+DA -> MO_obj : store(flexibility, preference_curve)
+
+== Phase: ACTIVE → NEGOTIATION (t = t_clear − 420s) ==
+
+SIM -> DA : step(current_time)
+DA -> MO_obj : should_transition(current_time)
+MO_obj --> DA : NEGOTIATION
+DA -> MO_obj : transition_to(NEGOTIATION)
+
+note over DA : **F4: Formulate Bid**
+DA -> FL : economic_available(interval, candidate_value, candidate_penalty)
+activate FL
+FL --> DA : EconomicEnvelope
+deactivate FL
+DA -> PC : sample_bid_curve(price_min, price_max, n_points, Q_min, Q_max)
+activate PC
+PC --> DA : List[BidPoint]
+deactivate PC
+DA -> DA : apply risk adjustment\n(displacement costs, forecast uncertainty)
+DA --> DA : BidCurve
+
+note over DA : **F5: Submit Bid**
+DA -> MC : submit_bid(bid, market_id, interval_id)
+activate MC
+MC -> MO : submit_agent_bid(agent_id, bid)
+activate MO
+MO --> MC : ack
+deactivate MO
+MC --> DA : True
+deactivate MC
+
+note over DA : **F6: Record Tentative Commitment**
+DA -> FL : hold_tentative(market_id, qty, interval, price)
+activate FL
+FL --> DA : ok
+deactivate FL
+
+DA -> MO_obj : store(submitted_bid)
+
+== Phase: NEGOTIATION → MARKET_LEAD (t = t_clear − 60s) ==
+
+SIM -> DA : step(current_time)
+DA -> MO_obj : should_transition(current_time)
+MO_obj --> DA : MARKET_LEAD
+DA -> MO_obj : transition_to(MARKET_LEAD)
+note over DA : No agent operations.\nMO is processing.
+
+== DSO Submits Inflexible Load Bid ==
+
+SIM -> DSO : estimate_inflexible_load(interval,\ntotal_forecast, flexible_committed,\nbtm_solar, loss_factor)
+activate DSO
+note right of DSO
+  EXTERNAL inputs:
+  • total_load_forecast (substation model)
+  • btm_solar_forecast (solar model)
+  • loss_factor (network model)
+  INTERNAL input:
+  • flexible_committed (from MO)
+end note
+DSO --> DSO : Q_inflexible = total − flexible\n+ losses − solar
+DSO -> MO : submit_dso_inflexible_bid(feeder_id, bid)
+activate MO
+MO --> DSO : ack
+deactivate MO
+deactivate DSO
+
+== Market Clearing (t = t_clear) ==
+
+SIM -> MO : step(current_time)
+activate MO
+MO -> MO : aggregate_demand()
+note right of MO
+  Horizontally sums:
+  • All agent flexible bids
+  • DSO inflexible bid (vertical line)
+end note
+MO -> MO : clear_market()
+note right of MO
+  Intersects aggregate demand
+  with supply curve.
+  Finds clearing price P*.
+end note
+MO -> MO : determine_iteration_type()
+note right of MO : RT market: always BINDING
+MO -> MO : propagate_results()
+MO --> SIM : Dict[agent_id → ClearingResult]
+deactivate MO
+
+== Phase: MARKET_LEAD → ASSESSMENT → DELIVERY_LEAD (binding path) ==
+
+SIM -> DA : step(current_time)
+DA -> MO_obj : should_transition(current_time)
+MO_obj --> DA : ASSESSMENT
+DA -> MO_obj : transition_to(ASSESSMENT)
+
+note over DA : **F5: Receive Clearing Result**
+DA -> MC : receive_clear(market_id)
+activate MC
+MC -> MO : get_agent_clearing(agent_id, cleared_price)
+MO --> MC : ClearingResult
+MC --> DA : ClearingResult\n(iteration_type = BINDING)
+deactivate MC
+
+DA -> MO_obj : is_informational_iteration(result)
+MO_obj --> DA : False (BINDING)
+
+note over DA : Transition directly to DELIVERY_LEAD
+DA -> MO_obj : transition_to(DELIVERY_LEAD)
+
+note over DA : **F7: Evaluate Price Response**
+DA -> DA : evaluate_price_response(\ncleared_price, submitted_bid)
+DA --> DA : Q* (target operating point)
+
+note over DA : **F8: Translate to Control**
+DA -> GLD : read_*_state()
+GLD --> DA : refreshed state
+DA -> DM : power_to_setpoint(Q*, state, outdoor_temp, interval)
+activate DM
+DM --> DA : DeviceCommand
+deactivate DM
+
+note over DA : **F6: Book Firm Commitment**
+DA -> FL : book_firm(market_id, Q*, interval, cleared_price, ...)
+activate FL
+FL --> DA : ok
+deactivate FL
+
+DA -> MO_obj : store(cleared_price, Q*, control_command)
+
+== Phase: DELIVERY_LEAD → DELIVERY (t = t_delivery_start) ==
+
+SIM -> DA : step(current_time)
+DA -> MO_obj : should_transition(current_time)
+MO_obj --> DA : DELIVERY
+DA -> MO_obj : transition_to(DELIVERY)
+
+note over DA : Register with Command Arbiter
+DA -> CA : register_delivery(market_id, type,\nproduct, qty, price, penalty, interval)
+activate CA
+CA --> DA : ok
+deactivate CA
+
+== Delivery Tick (every simulation timestep during delivery) ==
+
+SIM -> DA : step(current_time)
+DA -> DA : _handle_delivery_tick(current_time)
+
+note over DA : **F1: Observe State**
+DA -> GLD : read_*_state()
+GLD --> DA : current state
+
+note over DA : **F15: Compute Delivery Economics**
+DA -> CA : resolve_and_actuate(state, pref_curve, amenity_weight, time)
+activate CA
+
+CA -> CA : for each active delivery:\ncompute DeliveryEconomics
+CA -> DO : solve(economics, Q_min, Q_max,\npref_curve, amenity_weight, signals)
+activate DO
+note right of DO
+  Maximizes:
+  Σ revenue − Σ penalty − C_amenity
+  Subject to physical limits
+end note
+DO --> CA : DispatchSolution (Q*, allocation)
+deactivate DO
+
+note over CA : **F8 + F9: Translate & Actuate**
+CA -> DM : power_to_setpoint(Q*, state, ...)
+DM --> CA : DeviceCommand
+CA -> GLD : write_*_command(command)
+activate GLD
+note right of GLD
+  Writes to GridLAB-D:
+  HVAC: cooling_setpoint / heating_setpoint
+  WH: Tset (tank setpoint)
+  EV: charge_rate
+  Battery: power_out (inverter)
+end note
+GLD --> CA : True
+deactivate GLD
+
+CA --> DA : Dict[market_id → FulfillmentRecord]
+deactivate CA
+
+note over DA : **F12: Log Performance**
+DA -> MO_obj : performance_log.append(\nPerformanceEntry(time, committed, actual, ...))
+
+== Phase: DELIVERY → RECONCILE (t = t_delivery_end) ==
+
+SIM -> DA : step(current_time)
+DA -> MO_obj : should_transition(current_time)
+MO_obj --> DA : RECONCILE
+DA -> MO_obj : transition_to(RECONCILE)
+
+DA -> CA : deregister_delivery(market_id)
+
+note over DA : **F13: Reconciliation**
+DA -> DA : reconcile(market_obj)
+activate DA
+DA -> DA : compute total delivered vs committed
+DA -> DA : compute penalties (from performance_log)
+DA -> DA : compute net settlement
+DA --> DA : SettlementRecord
+deactivate DA
+
+note over DA : **F6: Release Commitment**
+DA -> FL : release(market_id)
+activate FL
+FL --> DA : ok
+deactivate FL
+
+note over DA : **F5: Report to MO**
+DA -> MC : submit_reconciliation(market_id, settlement)
+MC -> MO : (settlement data)
+MO --> MC : ack
+MC --> DA : True
+
+== Phase: RECONCILE → EXPIRED ==
+
+SIM -> DA : step(current_time)
+DA -> MO_obj : should_transition(current_time)
+MO_obj --> DA : EXPIRED
+DA -> MO_obj : transition_to(EXPIRED)
+DA -> DA : archive market_obj data
+DA -> DA : spawn_market_cycle(RT_ENERGY,\nnext_clearing_time)
+note over DA : New MarketObject created\nin INACTIVE state for next cycle
+
+@enduml

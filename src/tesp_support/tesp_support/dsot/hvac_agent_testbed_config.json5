@@ -1,0 +1,545 @@
+{
+    agent: {
+        name: "test agent",
+        meter_name: "test meter",
+        period: 300,
+        sim_time: "2025-01-01 00:00:00",
+        house_name: "test house"
+    },
+    temperature: {
+        name: "test temperatures",
+        T_lower_limit: 50,
+        T_upper_limit: 100,
+        cooling_setpoint_lower: 65,
+        cooling_setpoint_upper: 85,
+        heating_setpoint_lower: 60,
+        heating_setpoint_upper: 85,
+        basepoint_cooling: 85,
+        basepoint_heating: 55,
+        cooling_setpoint: 85,
+        heating_setpoint: 55,
+        wakeup_set_cool: 74,
+        daylight_set_cool: 77,
+        evening_set_cool: 75,
+        night_set_cool: 73,
+        weekend_day_set_cool: 76,
+        weekend_night_set_cool: 72,
+        wakeup_set_heat: 65,
+        daylight_set_heat: 70,
+        evening_set_heat: 69,
+        night_set_heat: 66,
+        weekend_day_set_heat: 67,
+        weekend_night_set_heat: 64,
+        deadband: 2,
+    },
+    schedule: {
+        name: "test schedule",
+        wakeup_start_hr: 7.5,
+        daylight_start_hr: 9.25,
+        evening_start_hr: 19.75,
+        night_start_hr: 20.5, 
+        weekend_day_start_hr: 20,
+        weekend_night_start_hr: 22,
+        ramp_high_limit: 2,
+        ramp_low_limit: 2
+    },
+    forecasts: { 
+        name: "test forecasts",
+// Forecasts are not part of the normal agent configuration process; none of these arrays
+// would be part of a normal agent configuration.
+        price: 
+            [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120,
+            120, 110, 100, 90, 80, 70, 60, 50, 40, 30, 20, 10,
+            10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120,
+            120, 110, 100, 90, 80, 70, 60, 50, 40, 30, 20, 10],
+        outside_air_temperature:
+            [75.56, 78.08, 80.96, 84.20, 87.80, 90.68, 92.84, 94.64, 96.08, 96.08, 94.64, 92.48,
+             88.88, 84.92, 82.04, 80.24, 79.16, 78.08, 76.64, 75.56, 74.48, 73.76, 73.40, 73.76,
+            75.56, 79.16, 83.48, 87.80, 90.68, 92.84, 94.64, 96.08, 96.08, 95.36, 92.48, 88.88, 
+            86.00, 83.84, 80.96, 79.88, 79.16, 78.08, 77.36, 77.00, 76.28, 75.56, 75.20, 75.56
+            ],
+        humidity:
+            [0.9303, 0.8758, 0.7601, 0.6423, 0.5485, 0.4742, 0.4384, 0.4098, 0.3854, 0.3843, 0.4084, 0.4404,
+             0.5652, 0.6239, 0.6360, 0.6644, 0.7080, 0.7566, 0.7682, 0.8356, 0.8586, 0.9361, 0.9563, 1.0000, 
+             0.9333, 0.8209, 0.6665, 0.5063, 0.4256, 0.3930, 0.3725, 0.3797, 0.3904, 0.3996, 0.4664, 0.5532, 
+             0.6338, 0.7065, 0.7425, 0.7380, 0.7854, 0.7931, 0.8568, 0.8744, 0.9444, 0.9563, 0.9637, 1.0000
+            ],
+        solar_direct:
+            [0.0000, 0.0000, 0.0000, 12.9135, 44.6864, 56.0205, 62.8954, 66.9831, 72.2786, 72.6502, 71.6282, 61.1302,
+             56.2063, 48.1238, 33.8167, 8.6400, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000,
+             0.0000, 0.0000, 11.6129, 45.2438, 62.7096, 71.9070, 76.9237, 79.3392, 79.4321, 79.0605, 77.3882, 32.2374, 
+             71.1637, 49.4709, 36.2322, 19.6954, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000
+            ],
+        solar_diffuse:
+            [0.0000, 0.0000, 2.2297, 10.0335, 15.2361, 17.7445, 19.3238, 20.1600, 18.0232, 17.7445, 17.0942, 20.5316,
+             18.0232, 14.5858, 10.1264, 3.6232, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 
+             0.0000, 0.0000, 2.7871, 7.2464, 9.3832, 10.6838, 11.7987, 12.6348, 13.7496, 13.9355, 13.7496, 33.7238,
+             10.5909, 7.5097, 5.5742, 3.1587, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000
+            ],
+        internal_gain:
+            [2446.6813956, 2418.4883807999995, 2469.07674, 2732.7571236000003, 3182.8918770000005, 3530.7659195999995, 
+            3712.799872800001, 3889.7608644000006, 3984.3998496000004, 4024.4430815999995, 3991.1847822, 3886.551878399999, 
+            3842.1127961999996, 3939.2114921999987, 4243.7980026, 4612.4521488, 4662.512330400001, 4650.728135399999,
+            4922.179178399999, 5078.3523894, 4486.8257208, 3492.1291140000003, 2837.5589214, 2570.8062024, 
+            2446.6813956, 2418.4883807999995, 2469.07674, 2732.7571236000003, 3182.8918770000005, 3530.7659195999995, 
+            3712.799872800001, 3889.7608644000006, 3984.3998496000004, 4024.4430815999995, 3991.1847822, 3886.551878399999,
+            3842.1127961999996, 3939.2114921999987, 4243.7980026, 4612.4521488, 4662.512330400001, 4650.728135399999, 
+            4922.179178399999, 5078.3523894, 4486.8257208, 3492.1291140000003, 2837.5589214, 2570.8062024
+            ],
+        forecast_ziploads:
+            [2446.6813956, 2418.4883807999995, 2469.07674, 2732.7571236000003, 3182.8918770000005, 3530.7659195999995, 
+            3712.799872800001, 3889.7608644000006, 3984.3998496000004, 4024.4430815999995, 3991.1847822, 3886.551878399999, 
+            3842.1127961999996, 3939.2114921999987, 4243.7980026, 4612.4521488, 4662.512330400001, 4650.728135399999,
+            4922.179178399999, 5078.3523894, 4486.8257208, 3492.1291140000003, 2837.5589214, 2570.8062024, 
+            2446.6813956, 2418.4883807999995, 2469.07674, 2732.7571236000003, 3182.8918770000005, 3530.7659195999995, 
+            3712.799872800001, 3889.7608644000006, 3984.3998496000004, 4024.4430815999995, 3991.1847822, 3886.551878399999,
+            3842.1127961999996, 3939.2114921999987, 4243.7980026, 4612.4521488, 4662.512330400001, 4650.728135399999, 
+            4922.179178399999, 5078.3523894, 4486.8257208, 3492.1291140000003, 2837.5589214, 2570.8062024
+            ]
+    },
+    asset: {
+        name: "test asset",
+        asset_model: {
+            heating_system_type: "HEAT_PUMP",
+            cooling_system_type: "ELECTRIC",
+            environment_model: {
+                name: "test environent model",
+                surface_angles: {
+                    H: 360,
+                    N: 180,
+                    NE: 135,
+                    E: 90,
+                    SE: 45,
+                    S: 0,
+                    SW: -45,
+                    W: -90,
+                    NW: -135
+                },
+                mass_internal_gain_fraction: 0.5,
+                mass_solar_gain_fraction: 0.5,
+                lat: 45,
+                lon: -100,
+            },
+            system_model: {
+                name: "test system model",
+                heating_capacity_K0: 0.34148808,
+                heating_capacity_K1: 0.00894102,
+                heating_capacity_K2: 0.00010787,
+                cooling_capacity_K0: 1.48924533,
+                cooling_capacity_K1: -0.00514995,
+                heating_COP: 2.5,
+                heating_COP_limit: 80,
+                heating_COP_K0: 2.03914613,
+                heating_COP_K1: -0.03906753,
+                heating_COP_K2: 0.00045617,
+                heating_COP_K3: -0.00000203,
+                cooling_COP: 3.5,
+                cooling_COP_limit: 40,
+                cooling_COP_K0: -0.01363961,
+                cooling_COP_K1: 0.01066989,
+                over_sizing_factor: 1.5,
+                cooling_design_temperature: 95,
+                design_cooling_setpoint: 75,
+                design_heating_setpoint: 70,
+                heating_design_temperature: 70,
+                design_internal_gains: 400,
+                design_peak_solar: 195,
+                cooling_COP_lower_limit: 1,
+                cooling_COP_upper_limit: 10
+            },
+            "structure_model": {
+                name: "test structure model",
+                sqft: 2000,
+                stories: 1,
+                doors: 2,
+                Rroof: 30,
+                Rwall: 20,
+                Rfloor: 20,
+                Rdoors: 10,
+                window_transmission_coefficient: 0.6,
+                airchange_per_hour: 0.5,
+                ceiling_height: 8,
+                thermal_mass_per_floor_area: 3,
+                aspect_ratio: 1,
+                exterior_ceiling_fraction: 1,
+                exterior_floor_fraction: 1,
+                exterior_wall_fraction: 1,
+                interior_exterior_wall_ratio: 1,
+                window_exterior_transmission_coefficient: 0.6,
+                glazing_layers: 2,
+                window_frame_type: "ALUMINUM",
+                glazing_treatment: "CLEAR",
+                glass_type: "NORMAL",
+                window_wall_ratio: 0.5,
+                gross_air_heat_capacity: 0.0177,
+                interior_heat_transfer_coefficient: 1.46,
+                Rroof_lower_limit: 2,
+                Rroof_upper_limit: 60,
+                Rwall_lower_limit: 2,
+                Rwall_upper_limit: 40,
+                Rfloor_lower_limit: 2,
+                Rfloor_upper_limit: 40,
+                Rdoor_lower_limit: 1,
+                Rdoor_upper_limit: 20,
+                airchange_per_hour_lower_limit: 0.1,
+                airchange_per_hour_upper_limit: 0.6,
+                glazing_layers_lower_limit: 1, 
+                glazing_layers_upper_limit: 3
+            }
+        },
+        // No configuration of asset state as all its properties are 
+        // set by the asset being managed
+        asset_state: {
+            name: "test asset state"
+        } 
+    },
+    rt_bidding_strategy: {
+        name: "test RT bidding strategy",
+        price_cap: 1000,
+        bid_delay: 0,
+        slider: 0.5,
+        cooling_participating: true,
+        heating_participating: true,
+        windowLength_hr: 48,
+        interpolation: true,
+        ProfitMargin_intercept: 10,
+        ProfitMargin_slope: 0,
+        RT_minute_count_interpolation: 0,
+
+    },
+    da_bidding_strategy: {
+        name: "test DA bidding strategy",
+        price_cap: 1000,
+        bid_delay: 0,
+        slider: 0.5,
+        cooling_participating: true,
+        heating_participating: true,
+        windowLength_hr: 48,
+        interpolation: true,
+        ProfitMargin_intercept: 10,
+        ProfitMargin_slope: 0,
+        RT_test_support:{
+            // index 0 = time
+            // index 1 = 0 - 3 with for the four points with 0 being
+            // the lowest quantity
+            // index 2 = 0 - 1 with 0 = quantity, 1 = price
+            bid_da: [
+                        [
+                            [0, 0],
+                            [500, 50],
+                            [500, 50],
+                            [1000, 100]
+                        ]
+                      ],
+            previous_Q_DA: 500,
+            previous_T_DA: 72,
+            temp_room_value: 78
+        }
+    },
+    da_test_info:{
+        new_asset_state: {
+            "indoor_air_temp": 73,
+            "mass_temperature": 70,
+            "hvac_kW": 1500,
+            "wh_kW": 2000,
+            "house_kW": 10000,
+            "mtr_v": 120,
+            "hvac_on": False,
+            "thermostat_mode": "ThermoStatMode.COOLING"
+        },
+        previous_da_bid :[
+            //midnight
+            [
+                [0, 500],
+                [0.5, 50],
+                [0.5], 25,
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [0.5, 50],
+                [0.5], 25,
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [0.5, 50],
+                [0.5], 25,
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [0.5, 50],
+                [0.5], 25,
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [0.5, 50],
+                [0.5], 25,
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [0.5, 50],
+                [0.5], 25,
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [0.5, 50],
+                [0.5], 25,
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [0.7, 50],
+                [0.7], 25,
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [0.7, 50],
+                [0.7], 25,
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [0.7, 50],
+                [0.7], 25,
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [0.7, 50],
+                [0.7], 25,
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [1, 50],
+                [1, 25],
+                [1, 0]
+            ],
+            //noon
+            [
+                [0, 500],
+                [1, 50],
+                [1, 25],
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [1, 50],
+                [1, 25],
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [1, 50],
+                [1, 25],
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [1.2, 50],
+                [1.2, 25],
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [1.2, 50],
+                [1.2, 25],
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [1.5, 50],
+                [1.5, 25],
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [1.5, 50],
+                [1.5, 25],
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [1.5, 50],
+                [1.5], 25,
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [1.5, 50],
+                [1.5, 25],
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [1, 50],
+                [1, 25],
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [1, 50],
+                [1, 25],
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [0.7, 50],
+                [0.7, 25],
+                [1, 0]
+            ],
+            //midnight
+            [
+                [0, 500],
+                [0.5, 50],
+                [0.5], 25,
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [0.5, 50],
+                [0.5], 25,
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [0.5, 50],
+                [0.5], 25,
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [0.5, 50],
+                [0.5], 25,
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [0.5, 50],
+                [0.5], 25,
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [0.5, 50],
+                [0.5], 25,
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [0.5, 50],
+                [0.5], 25,
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [0.7, 50],
+                [0.7], 25,
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [0.7, 50],
+                [0.7], 25,
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [0.7, 50],
+                [0.7], 25,
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [0.7, 50],
+                [0.7], 25,
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [1, 50],
+                [1, 25],
+                [1, 0]
+            ],
+            //noon
+            [
+                [0, 500],
+                [1, 50],
+                [1, 25],
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [1, 50],
+                [1, 25],
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [1, 50],
+                [1, 25],
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [1.2, 50],
+                [1.2, 25],
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [1.2, 50],
+                [1.2, 25],
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [1.5, 50],
+                [1.5, 25],
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [1.5, 50],
+                [1.5, 25],
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [1.5, 50],
+                [1.5], 25,
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [1.5, 50],
+                [1.5, 25],
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [1, 50],
+                [1, 25],
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [1, 50],
+                [1, 25],
+                [1, 0]
+            ],
+            [
+                [0, 500],
+                [0.7, 50],
+                [0.7, 25],
+                [1, 0]
+            ],
+        ]
+    }
+}

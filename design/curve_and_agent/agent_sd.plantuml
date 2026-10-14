@@ -1,0 +1,187 @@
+@startuml sequence_typical_operation
+!theme plain
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 180
+skinparam dpi 200
+
+title Device Agent — Typical Operation Across Two Market Cycles
+
+actor "Simulation\nHarness" as SIM
+participant "DeviceAgent" as DA
+participant "GridLAB-D\nInterface" as GLD
+participant "DataStream\nManager" as DSM
+participant "Market\nObject\nRT-101" as MO_RT101
+participant "Market\nObject\nRT-102" as MO_RT102
+participant "Market\nComm" as MC
+participant "Command\nArbiter" as CA
+participant "Market\nOperator" as MO
+participant "DSO Load\nEngine" as DSO
+
+== t = 0s: Simulation Start ==
+SIM -> DA : initialize(device_params)
+SIM -> DA : register_market(RT_ENERGY, ...)
+DA -> MO_RT101 : spawn_market_cycle(RT_ENERGY, clearing_time=600s)
+
+== t = 0s to 180s: Agent in ACTIVE for RT-101 ==
+loop for each timestep in [0, 180]
+    SIM -> DA : step(current_time)
+    DA -> MO_RT101 : should_transition(current_time)
+    MO_RT101 --> DA : no (still INACTIVE)
+end
+
+== t = 180s: RT-101 Enters ACTIVE Phase ==
+SIM -> DA : step(180)
+DA -> MO_RT101 : should_transition(180)
+MO_RT101 --> DA : ACTIVE
+DA -> DA : _handle_active(MO_RT101)
+activate DA
+DA -> GLD : read_*_state()
+DA -> DSM : get_forecasts, get_schedules
+DA -> DA : estimate_flexibility (F2)
+DA -> DA : generate_preference_curve (F3)
+DA -> DA : query flexibility ledger (F6)
+note right of DA
+  Agent prepares everything
+  needed for the upcoming
+  negotiation window.
+end note
+deactivate DA
+
+== t = 360s: RT-101 Enters NEGOTIATION Phase ==
+SIM -> DA : step(360)
+DA -> MO_RT101 : should_transition(360)
+MO_RT101 --> DA : NEGOTIATION
+DA -> DA : _handle_negotiation(MO_RT101)
+activate DA
+DA -> DA : formulate_bid (F4)
+DA -> MC : submit_bid("rt_101", bid)
+MC -> MO : submit_agent_bid("agent_1", bid)
+MO --> MC : ack
+deactivate DA
+
+== t = 480s: RT-102 Spawns, RT-101 in Negotiation ==
+SIM -> DA : step(480)
+note over DA #LightYellow
+  **Overlapping Cycles:**
+  RT-101 is negotiating for delivery at t=600s.
+  RT-102 (clearing at t=900s) is now entering its ACTIVE phase.
+end note
+DA -> MO_RT102 : spawn_market_cycle(RT_ENERGY, clearing_time=900s)
+DA -> MO_RT102 : should_transition(480)
+MO_RT102 --> DA : ACTIVE
+DA -> DA : _handle_active(MO_RT102)
+activate DA
+note right of DA
+  Agent re-observes state and
+  estimates flexibility for RT-102,
+  accounting for the TENTATIVE
+  commitment made for RT-101 in its
+  flexibility ledger query.
+end note
+deactivate DA
+DA -> MO_RT101 : should_transition(480)
+MO_RT101 --> DA : no (still in NEGOTIATION)
+
+== t = 540s: RT-101 Enters MARKET_LEAD ==
+SIM -> DA : step(540)
+DA -> MO_RT101 : should_transition(540)
+MO_RT101 --> DA : MARKET_LEAD
+DA -> DA : _handle_market_lead(MO_RT101)
+note over DA : Agent waits for market to clear.
+
+== t = 600s: RT-101 Clears (Binding) ==
+SIM -> MO : step(600)
+activate MO
+MO -> MO : clear_market()
+MO -> MO : propagate_results()
+deactivate MO
+
+SIM -> DA : step(600)
+DA -> MO_RT101 : should_transition(600)
+MO_RT101 --> DA : ASSESSMENT
+DA -> DA : _handle_assessment(MO_RT101, result)
+activate DA
+DA -> MC : receive_clear("rt_101")
+MC --> DA : ClearingResult(BINDING, P=0.11, Q=2.5)
+DA -> DA : _handle_delivery_lead(MO_RT101, result)
+note right of DA
+  Agent receives binding clear,
+  determines its target power (Q*=2.5 kW),
+  translates to a control command,
+  and books a FIRM commitment on the ledger.
+end note
+deactivate DA
+
+== t = 600s to 900s: RT-101 in DELIVERY, RT-102 progresses ==
+loop for each timestep in [600, 900]
+    SIM -> DA : step(current_time)
+    
+    note over DA
+      **RT-101 Delivery:**
+      Agent is now in delivery for RT-101.
+      The Command Arbiter is active.
+    end note
+    DA -> DA : _handle_delivery_tick(current_time)
+    activate DA
+    DA -> GLD : read_*_state()
+    DA -> CA : resolve_and_actuate(state, ...)
+    activate CA
+    CA -> CA : (run dispatch optimizer)
+    CA -> GLD : write_*_command(command)
+    deactivate CA
+    DA -> MO_RT101 : log_performance(fulfillment_record)
+    deactivate DA
+
+    note over DA
+      **RT-102 State Machine:**
+      Meanwhile, RT-102 is progressing
+      through its own phases:
+      t=660s: enters NEGOTIATION, submits bid
+      t=840s: enters MARKET_LEAD
+    end note
+    DA -> MO_RT102 : should_transition(current_time)
+    DA -> DA : (handle phase transition for RT-102)
+end
+
+== t = 900s: RT-101 Reconciles, RT-102 Clears ==
+SIM -> DA : step(900)
+
+note over DA : **RT-101 completes delivery**
+DA -> MO_RT101 : should_transition(900)
+MO_RT101 --> DA : RECONCILE
+DA -> DA : _handle_reconcile(MO_RT101)
+activate DA
+note right of DA
+  Agent computes settlement,
+  reports to MO, and releases
+  the FIRM commitment from the ledger.
+end note
+deactivate DA
+
+note over DA #LightBlue
+  **RT-102 is now binding**
+  (clearing at t=900s)
+end note
+DA -> MO_RT102 : should_transition(900)
+MO_RT102 --> DA : ASSESSMENT
+DA -> DA : _handle_assessment(MO_RT102, result)
+DA -> DA : _handle_delivery_lead(MO_RT102, result)
+note right of DA
+  Agent receives binding clear for RT-102,
+  books a new FIRM commitment for
+  delivery starting at t=900s.
+end note
+
+== t = 900s onwards: New Cycle Begins ==
+note over DA, MO #LightYellow
+  The process repeats:
+  - RT-102 is now in DELIVERY.
+  - A new market object, RT-103, will be spawned
+    to prepare for the t=1200s clearing.
+  - RT-101 will transition to EXPIRED and be archived.
+  
+  The agent is perpetually managing a pipeline
+  of market objects in various states of activity.
+end note
+
+@enduml

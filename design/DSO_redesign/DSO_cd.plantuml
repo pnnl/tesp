@@ -1,0 +1,121 @@
+skinparam classAttributeIconSize 0
+
+abstract DSO{
+    + __init__(dso_config: dict)
+    + fed: HelicsFederate
+    + do: dict
+    + mo: dict
+    + lse: dict
+    + agent_manager: AgentManager
+    + operations_sm: StateMachine
+    + data_from_federation: dict
+    + data_to_federation: dict
+    + run_DA_retail_iteration_operations()
+    + run_DA_wholesale_bidding_operations()
+    + run_DA_wholesale_clearing_operations()
+    + run_RT_wholesale_bidding_operations()
+    + run_RT_wholesale_clearing_operations()
+    + advance_state_machine()
+    + create_federate()
+    + enter_helics_init()
+    + enter_helics_execution()
+    + run_cosim_loop()
+    + get_data_from_federation()
+    + send_data_to_federation()
+    + calculate_next_requested_time()
+    + reset_data_to_federation()
+    + destroy_federate()
+    + record_data()
+}
+abstract DO {
+    + system_model: DistributionSystemModel
+    + meters: dict
+    + mitigations: dict
+    + __init__(do_config: dict)
+    + solve_system_state()
+    + determine_mitigation()
+    + read_meters()
+    + record_data()
+
+}
+abstract MO {
+    + price_insensitive_bids: dict
+    + price_sensitive_bids: dict
+    + supply_curve: Curve
+    + demand_curve: Curve
+    + __init__(mo_config: dict)
+    + run_RT_retail_market()
+    + form_aggregated_demand_curve()
+    + form_aggregated_supply_curve()
+    + polynomial_fit_curve()
+    + fit_demand_curve()
+    + fit_supply_curve()
+    + clear_market()
+    + get_wholesale_clearing()
+    + record_data()
+}
+note right: bid dicts contain\n Bid objects
+abstract LSE {
+    + __init__(lse_config_dict)
+    + run_RT_market_operations()
+    + adjust_curves_for_wholesale_market()
+    + submit_bids_to_wholesale_market()
+    + record_data()
+    + get_wholesale_RT_clearing()
+    + get_wholesale_DA_clearing()
+
+
+}
+abstract AgentManager {
+    + device_agents: dict
+    + __init__(agent_manager_config_dict) 
+    + create_agents()
+    + form_real_time_bids()
+    + form_day_ahead_bids()
+    + send_control_signal_to_devices()
+    + get_forecasts()
+    + get_device_states()
+    + solve_day_ahead_optimization()
+    
+}
+    note bottom: config dict contains config\n info for all agents
+    note bottom: device_agent dict contains\n references to all agent objects
+    note bottom: It is expected that most or all\n of these APIs are parallelized\n over all of the agents using \n "jobLib" (used in DSO+T for\n similar purposes)
+
+abstract TSOAgent{
+    + update_supply_curve()
+}
+
+abstract Agent{
+    + get_device_state()
+    + send_device_control_signal()
+    + generate_market_signal()
+
+}
+
+abstract HEMSAgent{
+
+}
+ 
+abstract CustomerDeviceAgent{
+
+}
+
+abstract TransformerAgent{
+
+}
+
+
+DSO "1" *-- "1*" DO
+DSO "1" *-- "1*" MO
+DSO "1" *-- "1*" LSE
+DSO "1" *-- "1" AgentManager
+MO "1" *-- "1" TSOAgent
+AgentManager "1" *-- "1*" HEMSAgent
+AgentManager "1" *-- "1*" TransformerAgent
+HEMSAgent "1" *-- "1*" CustomerDeviceAgent 
+
+
+Agent <|- HEMSAgent
+Agent <|- CustomerDeviceAgent
+Agent <|- TransformerAgent

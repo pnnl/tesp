@@ -1,0 +1,76 @@
+@startuml
+
+
+participant DSO 
+participant DO 
+participant MO 
+participant LSE
+participant MOHouse
+participant MOSecondaryTransformer
+participant MOSubstationTransformer
+participant AgentManager
+participant CustomerDeviceAgents
+participant WholesaleMarket
+participant TSOAgent
+
+note right of DSO: Hiearchical Retail Markets to Manage Device Loading
+
+DSO -> DSO: run_RT_wholesale_bidding_operations()
+
+DSO -> AgentManager: run_real_time_market()
+AgentManager -> CustomerDeviceAgents: form_real_time_bids()
+group parallel via jobLib
+CustomerDeviceAgents -> CustomerDeviceAgents: get_device_state()
+CustomerDeviceAgents -> CustomerDeviceAgents: form_rt_bid()
+CustomerDeviceAgents -> CustomerDeviceAgents: record_data()
+CustomerDeviceAgents --> AgentManager: bids
+end
+AgentManager -> AgentManager: record_data()
+AgentManager --> DSO: bids
+DSO -> TSOAgent: update_supply_curve()
+DSO <-- TSOAgent: updated suppy curve
+group parallel via jobLib
+DSO -> MOHouse: run_RT_retail_market(bids, supply curve)
+MOHouse -> MOHouse: sort_bids()
+MOHouse -> MOHouse: form_aggregated_demand_curve()
+MOHouse -> MOHouse: adjust_bids_based_on_load_priority()
+note right: May manage to other constraints such as \ntotal load, daily energy, emissions limit
+DSO <-- MOHouse: aggregated demand curve
+end
+group parallel via jobLib
+DSO -> DO: get_secondary_transformer_limits(\nMOHouse demand curves)
+DO -> DO: get_secondary_transfomer_state()
+DO -> DO: calculate_secondary_transformer_loading(\nMOHouse demand curves)
+note right: non-optimal loading, doesn't consider forecasted load\njust looks at current temperature and requested load by MOHouses
+DSO <-- DO: secondary transformer loading limits
+DSO -> MOSecondaryTransformer: run_RT_retail_market(bids, supply curve, secondary transformer loading limits)
+MOSecondaryTransformer -> MOSecondaryTransformer: sort_bids()
+MOSecondaryTransformer -> MOSecondaryTransformer: form_aggregated_demand_curve()
+MOSecondaryTransformer -> MOSecondaryTransformer: adjust_bids_based_on_loading()
+note right: May include truncating bid to avoid overloading
+DSO <-- MOSecondaryTransformer: aggregated demand curve
+end
+DSO -> DO: get_substation_transformer_limits(\nMOSecondaryTransformer demand curves)
+DO -> DO: get_substation_transfomer_state()
+DO -> DO: calculate_substation_transformer_loading(\nMOSecondaryTransformer demand curves)
+note right: non-optimal loading, doesn't consider forecasted load\njust looks at current temperature and requested load by MOSecondaryTransformers
+DSO <-- DO: substation transformer loading limits
+DSO -> MOSubstationTransformer: run_RT_retail_market(bids, supply curve, substation transformer loading limits)
+MOSubstationTransformer -> MOSubstationTransformer: sort_bids()
+MOSubstationTransformer -> MOSubstationTransformer: form_aggregated_demand_curve()
+MOSubstationTransformer -> MOSubstationTransformer: adjust_bids_based_on_loading()
+note right: May include truncating bid to avoid overloading
+DSO <-- MOSubstationTransformer: aggregated demand curve
+DSO -> DO: validate_loading()
+DO -> DO: solve_powerflow()
+DO -> DO: determine_mitigations()
+DO --> DSO: mitigations
+DSO -> LSE: run_RT_market_operations()
+LSE -> LSE: adjust_curves_for_wholesale_market()
+LSE -> LSE: submit_bids_to_wholesale_market()
+LSE -> WholesaleMarket: submit_bids()
+LSE -> LSE: record_data()
+LSE --> DSO: submitted_bids
+DSO -> DSO: record_data()
+
+@enduml

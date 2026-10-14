@@ -4,6 +4,7 @@
 *.status
 *.o
 *.ldb
+*.DS_Store
 broker_trace.txt
 __pycache__/
 tesp.xml.backup

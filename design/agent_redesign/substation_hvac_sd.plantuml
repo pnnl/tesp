@@ -1,0 +1,198 @@
+@startuml
+participant User
+
+User -> substation: <<call>>
+activate substation #LightGrey
+
+substation -> substation: inner_substation_loop()
+activate substation #Red
+
+substation -> substation: timing()
+substation -> substation: *enable_logging()*
+note right: Methods framed by "*" are imported from other modules.
+substation -> substation: !open_metadata_dicts()!
+note right: Methods framed by "!" do not exist but describe functionality present in code.
+substation -> substation: !configure_simulation()!
+
+substation -> Forecast: <<create>>
+activate Forecast #LightGrey
+
+Forecast -> Forecast: set_sch_year()
+
+loop number of markets
+    substation -> DSOMarket: <<create>>
+    activate DSOMarket #LightGrey
+    DSOMarket -> DSOMarket: update_wholesale_node_curve()
+
+    substation -> RetailMarket: <<create>>
+    activate RetailMarket #LightGrey
+end
+
+loop number of HVACDSOT
+    substation -> HVACDSOT: <<create>>
+    activate HVACDSOT #LightGrey
+    HVACDSOT -> HVACDSOT: calc_thermostat_settings()
+    HVACDSOT -> HVACDSOT: calc_etp_model()
+end
+
+substation -> substation: ! create_topics_map()!
+activate substation #Blue
+    substation -> HVACDSOT: set_temperature()
+    substation -> HVACDSOT: set_temperature_forecast()
+    substation -> HVACDSOT: set_humidity()
+    substation -> HVACDSOT: set_humidity_forecast()
+    substation -> HVACDSOT: set_solar_direct()
+    substation -> HVACDSOT: set_solar_diffuse()
+    substation -> HVACDSOT: set_air_temp()
+    substation -> HVACDSOT: set_voltage()
+    substation -> HVACDSOT: set_hvac_load()
+    substation -> HVACDSOT: set_house_load()
+    substation -> HVACDSOT: set_hvac_state()
+deactivate substation
+substation -> substation: !create_metrics_stores()!
+activate substation #Blue
+    substation -> MetricsCollector: <<create>>
+    activate MetricsCollector #LightGrey
+    loop number of metrics stores
+        substation -> MetricsStore: <<create>>
+        activate MetricsStore #LightGrey
+    end
+deactivate substation
+
+substation -> substation: !configure_market_timing()!
+substation -> substation: !initialize_bidding()!
+substation -> substation: !create_substation_federation()!
+
+loop simulation time
+    substation -> substation: !publish_HVAC_setpoints()!
+    substation -> HVACDSOT: set_time()
+    substation -> HVACDSOT: change_basepoint()
+    substation -> substation: !get_input_from_federation()!
+    substation -> DSOMarket: update_wholesale_node_curve()
+    substation -> RetailMarket: clean_bids_RT()
+    loop number of HVACDSOT
+        substation -> HVACDSOT: !hvac_rt_bidding()!
+        HVACDSOT -> HVACDSOT: get_solargain()
+        activate HVACDSOT #Red
+            HVACDSOT -> HVACDSOT: calc_solargain()
+            activate HVACDSOT #Blue
+                HVACDSOT -> HVACDSOT: calc_solar_flux()
+            return solar_flux
+        return solar_gain
+        HVACDSOT -> HVACDSOT: formulate_bid_rt()
+        substation <- HVACDSOT: HVAC_rt_bid
+        substation -> RetailMarket: curve_aggregator_RT()
+    end
+    substation -> RetailMarket: curve_aggregator_RT()
+    note right: Buyer curve aggregation
+
+    substation -> DSOMarket: update_wholesale_node_curve()
+    substation -> RetailMarket: clean_bids_DA()
+    substation -> substation: !clear_household_heatgain()!
+    loop number of HVACDSOT
+        substation -> HVACDSOT: set_solargain_forecast
+        substation -> Forecast: get_internal_gain_forecast()
+        activate Forecast
+            Forecast -> Forecast: forecasting_schedules()
+        return ZIPload, internal_gain
+        substation -> HVACDSOT: store_full_internalgain_forecast()
+        substation -> HVACDSOT: store_full_zipload_forecast()
+        substation -> HVACDSOT: set_internalgain_forecast()
+        substation -> HVACDSOT: set_zipload_forecast()
+        alt participating in market
+            substation -> HVACDSOT: DA_model_parameters()
+            activate HVACDSOT #Red
+                HVACDSOT -> HVACDSOT: get_scheduled_setpt()
+                HVACDSOT -> HVACDSOT: update_temp_limits_da()
+            return bool
+        else not participating in market
+            substation -> HVACDSOT: get_uncntrl_hvac_load()
+            activate HVACDSOT #Red
+                HVACDSOT-> HVACDSOT: DA_model_parameters()
+                activate HVACDSOT #Blue
+                    HVACDSOT -> HVACDSOT: get_scheduled_setpt()
+                    HVACDSOT -> HVACDSOT: update_temp_limits_da()
+                return bool
+            return Quantity
+    end
+    substation -> substation: !bid_uncontrollable_loads_DA()!
+    substation -> substation: !agents_optimize_bids_in_parallel()!
+    activate substation #Blue
+        substation -> HVACDSOT: DA_optimal_quantities()
+    deactivate substation
+
+    substation -> RetailMarket: curve_aggregator_DA()
+    substation -> substation: !bid_industrial_load_DA()!
+    substation -> RetailMarket: curve_aggregator_DA()
+    substation -> substation: !perform_DSO_RT_bid()!
+    activate substation #Blue
+        substation -> DSOMarket: clean_bid_rt()
+        substation -> DSOMarket: curve_aggregator_DSO_RT()
+    deactivate substation
+    substation -> substation: !perform_DSO_DA_bid()!
+    activate substation #Blue
+        substation -> DSOMarket: clean_bid_DA()
+        substation -> DSOMarket: curve_aggregator_DSO_DA()
+    deactivate substation
+    substation -> substation: !perform_wholesale_bidding_RT()!
+    activate substation #Blue
+        substation -> RetailMarket: curve_aggregator_AMES_RT()
+        substation -> substation: !send_RT_bid_to AMES()!
+    deactivate substation
+        substation -> substation: !perform_wholesale_bidding_DA()!
+        substation -> substation: !send_DA_bid_to AMES()!
+    activate substation #Blue
+    substation -> RetailMarket: curve_aggregator_AMES_DA()
+    deactivate substation #Blue
+        substation -> substation: !write_metrics()!
+        substation -> substation: !get_wholesale_RT_clearing_price()!
+    activate substation #Blue
+        substation -> substation: !write_metrics()!
+    deactivate substation
+    substation -> substation: !get_wholesale_DA_clearing_price()!
+    activate substation #Blue
+        substation -> substation: !write_metrics()!
+    deactivate substation
+    substation -> substation: !clear_DSO_RT()!
+    activate substation #Blue
+        substation -> DSOMarket: set_Pwclear_RT()
+        substation -> DSOMarket: !update_RT_supply_curve()!
+    deactivate substation
+    substation -> substation: !clear_DSO_DA()!
+    activate substation #Blue
+        substation -> DSOMarket: set_Pwclear_DA()
+        substation -> DSOMarket: !update_DA_supply_curve()!
+    deactivate substation
+    substation -> substation: !clear_retail_market_RT()!
+    activate substation #Blue
+        substation -> RetailMarket: clear_market_RT()
+        loop number of HVACDSOT
+            substation -> HVACDSOT: inform_bid()
+        end
+        substation -> substation: !write_metrics()!
+    deactivate substation
+    substation -> substation: !clear_retail_market_DA()!
+    activate substation #Blue
+        substation -> RetailMarket: clear_market_DA()
+        substation -> Forecast: set_retail_price_forecast()
+        substation -> RetailMarket: update_price_CA()
+        loop number of HVACDSOT
+            substation -> HVACDSOT: set_price_forecast()
+            substation -> HVACDSOT: set_da_cleared_quantity()
+            substation -> substation: !write_metrics()!
+        end
+        substation -> substation: !write_metrics()!
+    deactivate substation
+    substation -> substation: !adjust_agents_RT()!
+    activate substation #Blue
+        loop number of HVACDSOT
+            substation -> HVACDSOT: bid_accepted()
+            substation -> substation: !write_metrics()!
+        end
+        substation -> substation: !write_metrics()!
+    deactivate substation
+    substation -> MetricsCollector: !write_metrics_to_file()!
+end
+
+
+@enduml

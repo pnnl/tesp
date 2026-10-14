@@ -1,0 +1,26 @@
+@startuml
+
+
+participant DSO 
+participant DO 
+participant MO 
+participant LSE
+participant AgentManager
+participant CustomerDeviceAgents
+participant WholesaleMarket
+participant TSOAgent
+
+note right of DSO: DSO+T-like Retail DA Clearing Operations
+
+DSO -> DSO: run_DA_wholesale_clearing_operations()
+DSO -> LSE: get_wholesale_DA_clearing()
+LSE -> WholesaleMarket: get_DA_clearing_price()
+LSE <-- WholesaleMarket: DA clearing price
+LSE -> LSE: record_data()
+DSO <-- LSE: wholesale clearing information
+DSO -> MO: clear_retail_market(wholesale clearing information)
+DSO <- MO: retail clearing information
+DSO -> AgentManager: send_DA_clearing(retail clearing information)
+AgentManager -> CustomerDeviceAgents: send_DA_clearing()
+
+@enduml

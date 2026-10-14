@@ -1,0 +1,26 @@
+@startuml 
+
+participant DSO 
+participant DO 
+participant MO 
+participant LSE
+participant Agent_Manager
+participant generic_device_agent
+
+
+DSO -> DO: <<create>>
+DO -> DO: init(do_config_dict)
+DSO -> MO: <<create>>
+MO -> MO: init(mo_config_dict)
+DSO -> LSE: <<create>>
+LSE -> LSE: init(lse_config_dict)
+DSO -> Agent_Manager: <<create>>
+Agent_Manager -> Agent_Manager: init(agent_manager_config_dict)
+Agent_Manager -> generic_device_agent: <<create>>
+generic_device_agent -> generic_device_agent: init(device_agent_config_dict)
+
+
+
+
+
+@enduml 

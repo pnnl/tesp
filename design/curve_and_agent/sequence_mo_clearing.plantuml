@@ -1,0 +1,183 @@
+@startuml sequence_mo_clearing
+!theme plain
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 180
+
+title Market Operator — Clearing Process Detail
+
+participant "Simulation\nHarness" as SIM
+participant "Agent 1\n(HVAC)" as A1
+participant "Agent 2\n(Battery)" as A2
+participant "Agent 3\n(EV)" as A3
+participant "DSO Load\nEstimation" as DSO
+participant "Market\nOperator" as MO
+
+== Bid Collection (during Negotiation phase) ==
+
+note over MO : All agents and DSO submit during\nthe Negotiation window
+
+A1 -> MO : submit_agent_bid("hvac_1", bid_curve_1)
+note right of A1
+  HVAC bid: demand only (positive Q)
+  High price → low consumption
+  Low price → high consumption
+  Shape driven by k=0.3 (comfort-focused)
+  → relatively inelastic curve
+end note
+
+A2 -> MO : submit_agent_bid("battery_1", bid_curve_2)
+note right of A2
+  Battery bid: bidirectional
+  High price → discharge (negative Q)
+  Low price → charge (positive Q)
+  Dead band around V_stored ± C_degradation
+  Shape driven by k=0.8 (financial)
+  → elastic curve with wide range
+end note
+
+A3 -> MO : submit_agent_bid("ev_1", bid_curve_3)
+note right of A3
+  EV bid: demand only (positive Q)
+  Vehicle plugged in, SOC=0.45
+  Must reach 50% by 7am (near constraint)
+  → partially must-run (inelastic at Q_min)
+  Above Q_min: elastic with k=0.6
+end note
+
+DSO -> MO : submit_dso_inflexible_bid("feeder_1", dso_bid)
+note right of DSO
+  DSO bid: perfectly inelastic
+  Q = 850 kW (vertical line)
+  
+  Composed of:
+  • Total feeder forecast: 1100 kW
+  • Minus flexible committed: 180 kW
+  • Plus losses (5%): 55 kW
+  • Minus BTM solar: 125 kW
+  = 850 kW inflexible demand
+end note
+
+== Market Clearing ==
+
+SIM -> MO : step(current_time)
+activate MO
+
+MO -> MO : aggregate_demand()
+activate MO
+note right of MO
+  **Horizontal summation:**
+  
+  At each price level P, sum quantities:
+  Q_total(P) = Q_hvac(P) + Q_battery(P) 
+             + Q_ev(P) + Q_dso(P)
+  
+  Example at P = $0.10/kWh:
+    HVAC:    3.2 kW (consuming)
+    Battery: +1.5 kW (charging)
+    EV:      5.0 kW (charging)
+    DSO:     850 kW (inflexible)
+    Total:   859.7 kW demand
+    
+  Example at P = $0.25/kWh:
+    HVAC:    1.8 kW (reduced)
+    Battery: −3.0 kW (discharging!)
+    EV:      2.5 kW (reduced)
+    DSO:     850 kW (unchanged)
+    Total:   851.3 kW demand
+    
+  Note: Battery discharge at high prices
+  REDUCES aggregate demand (negative Q
+  acts as supply on the demand side).
+end note
+MO --> MO : aggregate_demand_curve
+deactivate MO
+
+MO -> MO : clear_market()
+activate MO
+
+note over MO #LightGreen
+  **Clearing Algorithm:**
+  
+  Find price P* where:
+  aggregate_demand(P*) = supply(P*)
+  
+  Supply curve (from DSO wholesale procurement):
+  ┌────────────────────────────────────────┐
+  │ Price  │ Cumulative Supply (kW)        │
+  │ $0.02  │    0                          │
+  │ $0.05  │  500                          │
+  │ $0.08  │ 1000                          │
+  │ $0.15  │ 1500                          │
+  │ $0.50  │ 2000                          │
+  └────────────────────────────────────────┘
+  
+  Intersection found at:
+    P* = $0.082/kWh
+    Q* = 1020 kW
+end note
+
+MO --> MO : cleared_price = $0.082
+deactivate MO
+
+MO -> MO : determine_iteration_type()
+note right of MO : RT market, fixed_count=0\n→ BINDING
+
+MO -> MO : propagate_results()
+activate MO
+
+note over MO : **Compute per-agent cleared quantities:**\nEvaluate each agent's bid curve at P*=$0.082
+
+MO -> MO : get_agent_clearing("hvac_1", $0.082)
+note right of MO
+  HVAC bid at $0.082:
+  Q_hvac = 3.1 kW (consuming)
+end note
+
+MO -> MO : get_agent_clearing("battery_1", $0.082)
+note right of MO
+  Battery bid at $0.082:
+  Price is below V_stored + C_deg
+  (in dead band) → Q_battery = 0.0 kW (idle)
+  
+  Actually below charge threshold:
+  Q_battery = +2.0 kW (charging)
+end note
+
+MO -> MO : get_agent_clearing("ev_1", $0.082)
+note right of MO
+  EV bid at $0.082:
+  Q_ev = 4.8 kW (charging)
+end note
+
+note over MO
+  **Verification:**
+  Flexible: 3.1 + 2.0 + 4.8 = 9.9 kW
+  Inflexible: 850 kW
+  Battery supply: 0 (charging, not discharging)
+  Total demand: 859.9 kW
+  
+  Losses already included in DSO bid.
+  Supply at P*=$0.082: ~860 kW ✓
+end note
+
+MO --> SIM : {\n  "hvac_1": ClearingResult(P=$0.082, Q=3.1, BINDING),\n  "battery_1": ClearingResult(P=$0.082, Q=2.0, BINDING),\n  "ev_1": ClearingResult(P=$0.082, Q=4.8, BINDING)\n}
+deactivate MO
+
+== Results Propagation to Agents ==
+
+note over A1, A3 : Agents receive results in their\nnext step() via receive_clear()
+
+A1 -> MO : (via MarketComm) receive_clear("rt_xxx")
+MO --> A1 : ClearingResult(P=$0.082, Q=3.1, BINDING)
+
+A2 -> MO : receive_clear("rt_xxx")
+MO --> A2 : ClearingResult(P=$0.082, Q=2.0, BINDING)
+
+A3 -> MO : receive_clear("rt_xxx")
+MO --> A3 : ClearingResult(P=$0.082, Q=4.8, BINDING)
+
+note over A1 : HVAC: setpoint adjusted to consume ~3.1 kW\n(slightly below baseline 3.5 kW — mild price response)
+note over A2 : Battery: charges at 2.0 kW\n(price below charge threshold — storing energy)
+note over A3 : EV: charges at 4.8 kW\n(near max — price is low, needs charge by morning)
+
+@enduml

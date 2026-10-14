@@ -63,3 +63,10 @@ api = ["*"]
 tesp_components = "tesp_support.api.data:tesp_component"
 schedule_server = "tesp_support.api.schedule_server:main"
 tesp_support = "tesp_support._commands:tesp_support"
+
+[tool.pytest.ini_options]
+testpaths = ["test"]
+pythonpath = ["."]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]

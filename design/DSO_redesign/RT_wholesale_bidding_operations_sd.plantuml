@@ -1,0 +1,46 @@
+@startuml
+
+
+participant DSO 
+participant DO 
+participant MO 
+participant LSE
+participant AgentManager
+participant CustomerDeviceAgents
+participant WholesaleMarket
+participant TSOAgent
+
+note right of DSO: DSO+T-like Retail RT Bidding into Wholesale Market
+
+DSO -> DSO: run_RT_wholesale_bidding_operations()
+
+DSO -> AgentManager: run_real_time_market()
+AgentManager -> CustomerDeviceAgents: form_real_time_bids()
+group parallel via jobLib
+CustomerDeviceAgents -> CustomerDeviceAgents: get_device_state()
+CustomerDeviceAgents -> CustomerDeviceAgents: form_rt_bid()
+CustomerDeviceAgents -> CustomerDeviceAgents: record_data()
+CustomerDeviceAgents --> AgentManager: bids
+end
+AgentManager -> AgentManager: record_data()
+AgentManager --> DSO: bids
+DSO -> TSOAgent: update_supply_curve()
+DSO <-- TSOAgent: updated suppy curve
+DSO -> MO: run_RT_retail_market(bids, supply curve)
+MO -> MO: sort_bids()
+MO -> MO: form_aggregated_demand_curve()
+MO -> MO: polynomial_fit_curve()
+MO --> DSO: must-run and \nprice-sensitive curves
+DSO -> DO: validate_loading()
+DO -> DO: solve_powerflow()
+DO -> DO: determine_mitigations()
+DO --> DSO: mitigations
+DSO -> LSE: run_RT_market_operations()
+LSE -> LSE: adjust_curves_for_wholesale_market()
+LSE -> LSE: submit_bids_to_wholesale_market()
+LSE -> WholesaleMarket: submit_bids()
+LSE -> LSE: record_data()
+LSE --> DSO: submitted_bids
+DSO -> DSO: record_data()
+
+@enduml

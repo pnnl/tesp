@@ -1,0 +1,31 @@
+@startuml
+
+
+participant DSO 
+participant DO 
+participant MO 
+participant LSE
+participant AgentManager
+participant CustomerDeviceAgents
+participant WholesaleMarket
+participant TSOAgent
+
+note right of DSO: DSO+T-like Retail RT Clearing Operations
+
+DSO -> DSO: run_RT_wholesale_clearing_operations()
+DSO -> LSE: get_wholesale_RT_clearing()
+LSE -> WholesaleMarket: get_RT_clearing_price()
+LSE <-- WholesaleMarket: RT clearing price
+LSE -> LSE: record_data()
+DSO <-- LSE: wholesale clearing information
+DSO -> MO: clear_retail_market(wholesale clearing information)
+DSO <- MO: retail clearing information
+DSO -> AgentManager: dispatch_agents(retail clearing information)
+AgentManager -> CustomerDeviceAgents: adjust_device_setpoints()
+CustomerDeviceAgents -> CustomerDeviceAgents: adjust_device_setpoints()
+CustomerDeviceAgents -> CustomerDeviceAgents: record_data()
+AgentManager <-- CustomerDeviceAgents: new setpoints
+AgentManager -> AgentManager: record_data()
+DSO <-- AgentManager: new device setpoints
+
+@enduml

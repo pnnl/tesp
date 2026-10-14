@@ -1,7 +1,7 @@
 # Copyright (c) 2018-2020 Battelle Memorial Institute
 # file: gld_feeder_generator.py
 """ This gld_feeder_generator.py is an updated feeder generator that combines 
-the functionality of the residential_feeder_glm.py, the commercial_feeder_glm.py, 
+the functionality of the residential_feeder_glm.py, the commercial_feeder_glm.py,
 and the copperplate_feeder_glm.py.
 
 Replaces ZIP loads with houses, optional storage, electric vehicles, and solar
@@ -1165,8 +1165,8 @@ class Commercial_Build:
             #"glass_type": str(bldg['glass_type']), # Unused in DSOT
             #"glazing_treatment": str(bldg['glazing_treatment']), # Unused in DSOT
             #"window_frame": str(bldg['window_frame']), # Unused in DSOT
-            "Rwindows": '{:.3f}'.format(bldg['Rwindows']), 
-            "window_shading": str(bldg['glazing_shgc']), 
+            "Rwindows": '{:.3f}'.format(bldg['Rwindows']),
+            "window_shading": str(bldg['glazing_shgc']),
             "airchange_per_hour": '{:.2f}'.format(bldg['airchange_per_hour']),
             "window_wall_ratio": '{:0.3f}'.format(bldg['window_wall_ratio']),
             "heating_system_type": '{:s}'.format(bldg['heat_type']),
@@ -1273,7 +1273,7 @@ class Commercial_Build:
         phases = ''
         vln = 0.0
 
-        # Read in commercial buildings data for full-order feeders ("full") and 
+        # Read in commercial buildings data for full-order feeders ("full") and
         # the copperplate feeder ("copp")
         if feed_type == "full":
             mtr = self.config.base.comm_loads[key][0]
@@ -1356,7 +1356,7 @@ class Commercial_Build:
 
         # Define default commercial building parameters
         else:
-            bldg_specs = self.building_model_specifics[comm_type] 
+            bldg_specs = self.building_model_specifics[comm_type]
             # Randomly determine the age (year of construction) of the building
             bldg['aspect_ratio'] = bldg_specs["aspect_ratio"] * self.config.rng.normal(1, 0.01)
             bldg['window_wall_ratio'] = bldg_specs["window-wall_ratio"] * self.config.rng.normal(1, 0.2)
@@ -1372,7 +1372,7 @@ class Commercial_Build:
             bldg['roof_type'] = Commercial_Build.rand_bin_select(roof_construction_insulation, self.config.rng.uniform(0, 1))
             wall_construction = Commercial_Build.normalize_dict_prob('wall_construction', bldg_specs['wall_construction'])
             bldg['wall_type'] = Commercial_Build.rand_bin_select(wall_construction, self.config.rng.uniform(0, 1))
-            # TODO: Confirm whether we should be using these calculated values 
+            # TODO: Confirm whether we should be using these calculated values
             # or the building specific overwrites
             bldg['Rroof'] = 1 / Commercial_Build.find_envelope_prop(bldg['roof_type'], bldg['age'],
                                                                     self.general['thermal_integrity'],
@@ -1391,7 +1391,7 @@ class Commercial_Build:
             #     bldg['window_exterior_transmission_coefficient'] = self.config.rng.normal(0.5, 0.1)
             # else:
             #     bldg['window_exterior_transmission_coefficient'] = 1
-            
+
             bldg['Rfloor'] = 22. # Value from previous study
             bldg['Rdoors'] = 3. # Value from previous study
             bldg['no_of_doors'] = 3 # Value from previous study
@@ -1415,7 +1415,7 @@ class Commercial_Build:
                                             self.general['HVAC']['oversizing_factor']['std_dev'])
             bldg['os_rand'] = min(self.general['HVAC']['oversizing_factor']['upper_bound'], max(bldg['os_rand'],
                                 self.general['HVAC']['oversizing_factor']['lower_bound']))
-            
+
             # Multi-zone buildings will adjust these adj_ values according to
             #  their number of zones. Single-zone buildings will keep the base
             #  power ZIPload schedule adjustments below.
@@ -1434,7 +1434,7 @@ class Commercial_Build:
             # Set exterior lighting to zero as plug and light parameters capture all of CBECS loads.
             adj_ext = 1 # (0.9 + 0.1 * self.config.rng.random()) * bldg['floor_area'] / 1000.
             int_gains = adj_lights + adj_plugs + adj_occ + adj_gas
-           
+
             bldg['adj_lights'] = adj_lights
             bldg['adj_plugs'] = adj_plugs
             bldg['adj_refrig'] = adj_refrig
@@ -1445,9 +1445,9 @@ class Commercial_Build:
 
             if comm_type == 'lodging':
                 bldg['skew_value'] = 0
-            else: 
+            else:
                 bldg['skew_value'] = self.glm.randomize_commercial_skew(rng=self.config.rng)
-            
+
             if comm_type == 'lodging':
                 bldg['base_schedule'] = 'alwaysocc'
             elif comm_type in ['warehouse_storage', 'education', 'office']:

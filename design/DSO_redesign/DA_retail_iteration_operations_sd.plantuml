@@ -1,0 +1,45 @@
+@startuml
+
+
+participant DSO 
+participant DO 
+participant MO 
+participant LSE
+participant AgentManager
+participant CustomerDeviceAgents
+participant WholesaleMarket
+participant TSOAgent
+
+note right of DSO: DSO+T-Like Retail DA Iteration
+
+DSO -> DSO: run_DA_retail_iteration_operations()
+
+DSO -> AgentManager: run_DA_market()
+AgentManager -> CustomerDeviceAgents: form_DA_bids()
+group parallel via jobLib
+CustomerDeviceAgents -> CustomerDeviceAgents: get_device_state()
+CustomerDeviceAgents -> CustomerDeviceAgents: get_updated_forecasts()
+note right: weather, \nprice (previous clearing results) \nammenity
+CustomerDeviceAgents -> CustomerDeviceAgents: form_DA_bid()
+CustomerDeviceAgents -> CustomerDeviceAgents: record_data()
+CustomerDeviceAgents --> AgentManager: bids
+end
+AgentManager -> AgentManager: record_data()
+AgentManager --> DSO: bids
+DSO -> TSOAgent: update_supply_curves()
+DSO -> MO: run_DA_retail_market(bids)
+MO -> MO: sort_bids()
+MO -> MO: form_aggregated_demand_curve()
+MO -> MO: polynomial_fit_curve()
+MO --> DSO: must-run and \nprice-sensitive curves
+DSO -> DO: validate_loading()
+DO -> DO: solve_powerflow()
+DO -> DO: determine_mitigations()
+DO --> DSO: mitigations
+DSO -> MO: clear_DA_market(mitigations)
+MO -> MO: clear_DA_market()
+MO -> MO: record_data()
+DSO <- MO: cleared prices
+DSO -> DSO: record_data()
+
+@enduml

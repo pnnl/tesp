@@ -1,0 +1,126 @@
+@startuml
+
+
+' participant DO
+' participant MO_RT
+' participant LSE_RT
+' participant LSE_flat
+' participant Customer_RT
+' participant Customer_flat
+' participant Wholesale_market
+
+' group jobLib parallel
+' Customer_RT -> Customer_RT: form RT bid
+' end
+' MO_RT <- Customer_RT : send RT bid
+' MO_RT -> MO_RT: aggregate customer bids
+' MO_RT -> MO_RT: find price-insensitive block
+' MO_RT -> MO_RT: fit curve to price-sensitive block
+' MO_RT -> LSE_RT: pass bid information
+' LSE_RT -> DO: pass loading estimate
+' LSE_flat -> LSE_flat: estimate fixed-price load
+' LSE_flat -> DO: pass loading estimate
+' DO -> DO: validate estimated loading
+' DO -> LSE_RT: pass loading mitigation
+' DO -> LSE_flat: pass loading mitigation
+' LSE_RT -> LSE_RT: translate retail bid to wholesale bid
+' LSE_flat -> LSE_flat: estimate load
+' LSE_flat -> LSE_flat: form wholesale bid 
+' LSE_RT -> Wholesale_market: place wholesale bid
+' LSE_flat -> Wholesale_market: place wholesale bid
+' Wholesale_market -> Wholesale_market: clear wholesale market
+' Wholesale_market -> LSE_RT: pass clearing information
+' Wholesale_market -> LSE_flat: pass clearing information
+' LSE_RT -> LSE_RT: translate wholesale price to retail price
+' LSE_flat -> LSE_flat: translate wholesale price to retail price
+' LSE_RT -> MO_RT: pass retail price
+' MO_RT -> MO_RT: clear retail market
+' MO_RT -> Customer_RT: pass retail price 
+' Customer_RT -> Customer_RT: send device control signal
+' Customer_flat -> Customer_flat: send_device control signal
+' DO -> LSE_RT: pass customers' metered energy use
+' DO -> LSE_flat: pass customers' metered energy use
+
+@startuml
+
+
+participant DSO 
+participant DO 
+participant MOFlat 
+participant LSEFlat
+participant AgentManagerFlat
+participant CustomerDeviceAgentsFlat
+participant MODynamic
+participant LSEDynamic
+participant AgentManagerDynamic
+participant CustomerDeviceAgentsDynamic
+participant WholesaleMarket
+participant TSOAgent
+
+note right of DSO: DSO+T-like Retail RT Bidding into Wholesale Market
+
+DSO -> DSO: run_RT_wholesale_bidding_operations()
+
+group parlallel via jobLib
+DSO -> AgentManagerFlat: run_real_time_market()
+AgentManagerFlat -> CustomerDeviceAgentsFlat: form_real_time_bids()
+group parallel via jobLib
+CustomerDeviceAgentsFlat -> CustomerDeviceAgentsFlat: get_device_state()
+CustomerDeviceAgentsFlat -> CustomerDeviceAgentsFlat: form_rt_bid()
+CustomerDeviceAgentsFlat -> CustomerDeviceAgentsFlat: record_data()
+CustomerDeviceAgentsFlat --> AgentManagerFlat: bids
+end
+AgentManagerFlat -> AgentManagerFlat: record_data()
+AgentManagerFlat --> DSO: bids
+DSO -> AgentManagerDyanmic: run_real_time_market()
+AgentManagerDyanmic -> CustomerDeviceAgentsDynamic: form_real_time_bids()
+group parallel via jobLib
+CustomerDeviceAgentsDynamic -> CustomerDeviceAgentsDynamic: get_device_state()
+CustomerDeviceAgentsDynamic -> CustomerDeviceAgentsDynamic: form_rt_bid()
+CustomerDeviceAgentsDynamic -> CustomerDeviceAgentsDynamic: record_data()
+CustomerDeviceAgentsDynamic --> AgentManagerDyanmic: bids
+end
+AgentManagerDyanmic -> AgentManagerDyanmic: record_data()
+AgentManagerDyanmic --> DSO: bids
+end
+
+DSO -> TSOAgent: update_supply_curve()
+DSO <-- TSOAgent: updated suppy curve
+
+
+group parallel via jobLib
+DSO -> MOFlat: run_RT_retail_market(bids, supply curve)
+MOFlat -> MOFlat: sort_bids()
+MOFlat -> MOFlat: form_aggregated_demand_curve()
+MOFlat -> MOFlat: polynomial_fit_curve()
+MOFlat --> DSO: must-run and \nprice-sensitive curves
+DSO -> MODynamic: run_RT_retail_market(bids, supply curve)
+MODynamic -> MODynamic: sort_bids()
+MODynamic -> MODynamic: form_aggregated_demand_curve()
+MODynamic -> MODynamic: polynomial_fit_curve()
+MODynamic --> DSO: must-run and \nprice-sensitive curves
+end
+DSO -> DO: validate_loading()
+DO -> DO: solve_powerflow()
+DO -> DO: determine_mitigations()
+DO --> DSO: mitigations
+group parallel via jobLib
+DSO -> LSEFlat: run_RT_market_operations()
+LSEFlat -> LSEFlat: adjust_curves_for_wholesale_market()
+LSEFlat -> LSEFlat: submit_bids_to_wholesale_market()
+LSEFlat -> WholesaleMarket: submit_bids()
+LSEFlat -> LSEFlat: record_data()
+LSEFlat --> DSO: submitted_bids
+DSO -> LSEDynamic: run_RT_market_operations()
+LSEDynamic -> LSEDynamic: adjust_curves_for_wholesale_market()
+LSEDynamic -> LSEDynamic: submit_bids_to_wholesale_market()
+LSEDynamic -> WholesaleMarket: submit_bids()
+LSEDynamic -> LSEDynamic: record_data()
+LSEDynamic --> DSO: submitted_bids
+end
+DSO -> DSO: record_data()
+
+@enduml
+
+
+@enduml
