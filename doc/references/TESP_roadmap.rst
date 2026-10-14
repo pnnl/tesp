@@ -9,7 +9,7 @@ branch in the graph. (Note that the names of the branches in this
 roadmap do not necessarily correspond to the branches in the `TESP
 Github repository <https://github.com/pnnl/tesp>`__.)The deadline for any task is
 shown by a merge back into the “main” branch prior to a
-calendar quarter end date (*e.g.* “Dec 31, 2025”). Note that
+calendar quarter end date (*e.g.* “Dec 31, 2026”). Note that
 because this is a git graph and not a Gantt chart, we show only when the
 activity is completed (the quarter it is due) and not when it began.
 
