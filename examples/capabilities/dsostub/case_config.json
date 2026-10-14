@@ -23,7 +23,7 @@
   "reserveUp": 0.15,
   "quadratic": true,
   "priceCap": 1000.0,
-  "EandC": true,
+  "EandC": false,
   "LDCurve": "../data/EandC.csv",
   "zonalReserves": false,
   "simplifiedFeeders": false,

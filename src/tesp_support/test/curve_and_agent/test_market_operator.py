@@ -445,7 +445,7 @@ class TestMarketOperatorStep:
         # Step at clearing time (t_clear=120.0)
         results = market_operator.step(current_time=120.0)
         assert results is not None
-        assert "agent_1" in results
+        assert "agent_1" in results[1]
 
     def test_step_before_clearing_time(self, market_operator):
         """step() before clearing time returns None."""

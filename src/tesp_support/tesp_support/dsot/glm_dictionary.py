@@ -328,6 +328,8 @@ def glm_dict(name_root, config=None, ercot=False):  # , te30=False):
                         inc_level = 'Middle'
                     elif 'Upper' in name:
                         inc_level = 'Upper'
+                    # else:
+                    #     print('Income level not defined')
                 if lst[0] == 'parent':
                     parent = lst[1].strip(';')
                 if lst[0] == 'floor_area':
@@ -355,13 +357,13 @@ def glm_dict(name_root, config=None, ercot=False):  # , te30=False):
                 if lst[0] == 'Rdoors':
                     Rdoors = float(lst[1].strip(';'))
                 if lst[0] == 'glazing_layers':
-                    glazing_layers = lst[1].strip(';')
+                    glazing_layers = int(lst[1].strip(';'))
                 if lst[0] == 'glass_type':
-                    glass_type = lst[1].strip(';')
+                    glass_type = int(lst[1].strip(';'))
                 if lst[0] == 'glazing_treatment':
-                    glazing_treatment = lst[1].strip(';')
+                    glazing_treatment = int(lst[1].strip(';'))
                 if lst[0] == 'window_frame':
-                    window_frame = lst[1].strip(';')
+                    window_frame = int(lst[1].strip(';'))
                 if lst[0] == 'airchange_per_hour':
                     airchange_per_hour = float(lst[1].strip(';'))
                 if lst[0] == 'cooling_COP':
@@ -454,12 +456,6 @@ def glm_dict(name_root, config=None, ercot=False):  # , te30=False):
                         ziploads[lastHouse]['heatgain_fraction'][lst[1].split('*')[0]] = hf
                         ziploads[lastHouse]['power_pf'][lst[1].split('*')[0]] = pf
                         ziploads[lastHouse]['power_fraction'][lst[1].split('*')[0]] = pfr
-                    elif len(lst) > 2:
-                        ziploads[lastHouse]['scalar'][lst[1]] = float(
-                            lst[3].strip(' ').strip(';')) * 1.0
-                        ziploads[lastHouse]['heatgain_fraction'][lst[1].split('*')[0]] = hf
-                        ziploads[lastHouse]['power_pf'][lst[1].split('*')[0]] = pf
-                        ziploads[lastHouse]['power_fraction'][lst[1].split('*')[0]] = pfr
                     else:  # if base power of zip load is constant
                         # add all the constant loads under one label 'constant'
                         ziploads[lastHouse]['scalar']['constant'] = ziploads[lastHouse]['scalar']['constant'] + float(
@@ -524,7 +520,7 @@ def glm_dict(name_root, config=None, ercot=False):  # , te30=False):
             inMessage = False
 
     for key, val in houses.items():
-        for key in waterheaters:
+        if key in waterheaters:
             val['wh_name'] = waterheaters[key]['name']
             val['wh_skew'] = waterheaters[key]['skew']
             val['wh_scalar'] = waterheaters[key]['scalar']
@@ -532,7 +528,7 @@ def glm_dict(name_root, config=None, ercot=False):  # , te30=False):
             val['wh_gallons'] = waterheaters[key]['gallons']
             val['wh_tmix'] = waterheaters[key]['tmix']
             val['wh_mlayer'] = waterheaters[key]['mlayer']
-        for key in ziploads:
+        if key in ziploads:
             val['zip_skew'] = ziploads[key]['skew']
             val['zip_heatgain_fraction'] = ziploads[key]['heatgain_fraction']
             val['zip_scalar'] = ziploads[key]['scalar']
@@ -542,7 +538,6 @@ def glm_dict(name_root, config=None, ercot=False):  # , te30=False):
         # Laurentiu Dan Marinovici 2019/10/22 -
         # turned out that the commercial buildings do not have a bill_mode field in their GLM objects,
         # which led to not have them added to the billing meters fields
-    for key, val in houses.items():    
         try:
             mtr = billingmeters[val['billingmeter_id']]
             mtr['children'].append(key)

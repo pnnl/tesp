@@ -18,18 +18,13 @@ Scenario:
 
 import sys, os, textwrap
 
-# Allow bare imports from the package directory
-sys.path.insert(
-    0, os.path.join(os.path.dirname(__file__), "tesp_support", "curve_and_agent")
-)
-
-from enums_and_constants import (
+from tesp_support.curve_and_agent.enums_and_constants import (
     DeviceType,
     MarketType,
     OperatingMode,
     PenaltyStructureType,
 )
-from data_types import (
+from tesp_support.curve_and_agent.data_types import (
     BidCurve,
     BidPoint,
     ClearingResult,
@@ -41,14 +36,14 @@ from data_types import (
     PerformanceEntry,
     SettlementRecord,
 )
-from gridlabd_interface import GridLABDInterface
-from data_streams import DataStreamManager
-from device_agent import DeviceAgent
-from market_agent import MarketCommunicationInterface
-from market_operator import MarketOperator, SupplyCurve, DSOLoadEstimationEngine
-from penalty_model import PenaltyModel
-from preference_curve import PreferenceCurve
-from market_object import MarketObject
+from tesp_support.curve_and_agent.gridlabd_interface import GridLABDInterface
+from tesp_support.curve_and_agent.data_streams import DataStreamManager
+from tesp_support.curve_and_agent.device_agent import DeviceAgent
+from tesp_support.curve_and_agent.market_agent import MarketCommunicationInterface
+from tesp_support.curve_and_agent.market_operator import MarketOperator, SupplyCurve, DSOLoadEstimationEngine
+from tesp_support.curve_and_agent.penalty_model import PenaltyModel
+from tesp_support.curve_and_agent.preference_curve import PreferenceCurve
+from tesp_support.curve_and_agent.market_object import MarketObject
 
 
 # ── helpers ────────────────────────────────────────────────────────────
