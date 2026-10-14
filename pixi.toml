@@ -1,0 +1,124 @@
+[workspace]
+name = "tesp"
+version = "0.1.0"
+channels = ["conda-forge"]
+platforms = ["linux-64", "osx-arm64"]
+
+# ---------------------------------------------------------------------------
+# Pixi-managed activation variables for the parallel workflow.
+# These provide the TESP-style compatibility variables that can be derived from
+# the workspace root and pixi environment prefix without sourcing tesp.env.
+# ---------------------------------------------------------------------------
+[activation.env]
+SIM_GID = "9002"
+SIM_GRP = "runner"
+SIM_UID = "1001"
+SIM_USER = "worker"
+SIM_HOME = "/home/$SIM_USER"
+DOCKER_DIR = "$PIXI_PROJECT_ROOT/scripts/docker"
+BUILD_DIR = "$PIXI_PROJECT_ROOT/scripts/build"
+GRID_DIR = "$PIXI_PROJECT_ROOT/.."
+REPO_DIR = "$PIXI_PROJECT_ROOT/../repo"
+INSTDIR = "$GRID_DIR/tenv"
+TESPDIR = "$PIXI_PROJECT_ROOT"
+PIXI_PREFIX = "$CONDA_PREFIX"
+JAVA_HOME = "$CONDA_PREFIX"
+PYHELICS_INSTALL = "$CONDA_PREFIX"
+PROJ_DIR = "$CONDA_PREFIX"
+GLPATH = "$CONDA_PREFIX/lib/gridlabd:$CONDA_PREFIX/share/gridlabd"
+CPLUS_INCLUDE_PATH = "/usr/include/hdf5/serial:$CONDA_PREFIX/include"
+FNCS_INCLUDE_DIR = "$CONDA_PREFIX/include"
+FNCS_LIBRARY = "$CONDA_PREFIX/lib"
+LD_LIBRARY_PATH = "$CONDA_PREFIX/lib:$LD_LIBRARY_PATH"
+LD_RUN_PATH = "$CONDA_PREFIX/lib"
+PATH = "$CONDA_PREFIX/bin:$CONDA_PREFIX/energyplus:$CONDA_PREFIX/energyplus/PreProcess:$CONDA_PREFIX/energyplus/PostProcess:$PIXI_PROJECT_ROOT/scripts/helpers:$PATH"
+PYTHONNOUSERSITE = "1"
+PYTHONPATH = "$PIXI_PROJECT_ROOT/src/tesp_support"
+PSST_SOLVER = "cbc"
+PSST_WARNING = "ignore"
+
+# ---------------------------------------------------------------------------
+# Conda-managed bootstrap packages.
+# Pixi needs Python in [dependencies] to install PyPI packages, and Java still
+# comes from conda-forge because it is not a PyPI package.
+# ---------------------------------------------------------------------------
+[dependencies]
+python          = "3.12.*"
+openjdk         = "11.*"
+coin-or-cbc     = "*"         # CBC solver used by PSST / Pyomo
+proj            = "*"
+pyproj          = "3.8.*"
+
+# ---------------------------------------------------------------------------
+# PyPI packages — either not on conda-forge or version-pinned too tightly
+# (pyutilib/Pyomo/PYPOWER must stay in lock-step).
+# tesp_support is installed editable so src/ changes take effect immediately.
+# ---------------------------------------------------------------------------
+[pypi-dependencies]
+cartopy = "~=0.25.0"
+colorama = "~=0.4.6"
+docutils = "~=0.22.4"
+duckdb = "~=1.5.5"
+future = "~=1.0.0"
+h5py = "~=3.16.0"
+helics = "~=3.6.1"
+importlib-resources = "~=7.1.0"
+jinja2 = "~=3.1.6"
+joblib = "~=1.5.3"
+matplotlib = "~=3.11.1"
+networkx = "~=3.6.1"
+nrel-pysam = "~=7.1.1.post1"
+numpy = "~=2.5.2"
+openpyxl = "~=3.1.5"
+pandas = "~=3.0.5"
+plotly = "~=6.9.0"
+pulp = "~=3.3.2"
+pyglm = "~=2.8.3"
+pyjson5 = "~=2.0.1"
+pyomo = "~=6.10.1"
+pypower = "~=5.1.21"
+pyutilib = "~=6.0.0"
+pyyaml = "~=6.0.3"
+recommonmark = "~=0.7.1"
+requests = "~=2.34.2"
+resource = "~=0.2.1"
+scikit-learn = "~=1.9.0"
+scipy = "~=1.18.1"
+seaborn = "~=0.13.2"
+sphinx-jsonschema = "~=1.19.2"
+sphinx-rtd-theme = "~=3.1.0"
+sphinxcontrib-bibtex = "~=2.7.0"
+sphinxcontrib-mermaid = "~=2.1.0"
+sphinx = "~=9.1.0"
+tables = "~=3.11.1"
+tqdm = "~=4.70.0"
+urllib3 = "~=2.7.0"
+waterfallcharts = "~=3.8"
+xarray = "~=2026.7.0"
+xlrd = "~=2.0.2"
+
+
+# ---------------------------------------------------------------------------
+# Tasks — run with: pixi run <task>
+# ---------------------------------------------------------------------------
+# [tasks]
+# test         = "pytest -q src/tesp_support/tests/curve_and_agent"
+# test-all     = "pytest -q src/tesp_support/tests"
+# dashboard    = "python examples/curve_and_agent/dashboard_scenario.py"
+
+# ---------------------------------------------------------------------------
+# Optional docs feature — activate with: pixi run -e docs build-docs
+# ---------------------------------------------------------------------------
+[feature.docs.pypi-dependencies]
+Sphinx                  = "~=9.1"
+recommonmark            = "~=0.7.1"
+sphinxcontrib-bibtex    = "~=2.7"
+sphinx-jsonschema       = "~=1.19.1"
+sphinx-rtd-theme        = "~=3.1"
+
+[feature.docs.tasks]
+build-docs = "make -C doc html"
+
+[environments]
+default = { features = [],       solve-group = "default" }
+docs    = { features = ["docs"], solve-group = "default" }
