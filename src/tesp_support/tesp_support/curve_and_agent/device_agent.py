@@ -5,40 +5,41 @@
 #          class that external code interacts with.
 # ============================================================================
 
-from typing import Dict, List, Optional, Any
-from .enums_and_constants import (
-    DeviceType,
-    MarketType,
-    MarketPhase,
-    OperatingMode,
-    IterationType,
-    ProductType,
-)
+from typing import Any
+
+from .command_arbiter import CommandArbiter
+from .data_streams import DataStreamManager
 from .data_types import (
+    AdvisoryRecord,
     BidCurve,
     ClearingResult,
+    ContinuousDataPoint,
     DeviceCommand,
     FlexibilityEnvelope,
     FulfillmentRecord,
-    SettlementRecord,
-    AdvisoryRecord,
     MarketTimingParams,
     PerformanceEntry,
-    ContinuousDataPoint,
     QuantilePoint,
+    SettlementRecord,
 )
-from .gridlabd_interface import GridLABDInterface
-from .data_streams import DataStreamManager
-from .preference_curve import PreferenceCurve
-from .penalty_model import PenaltyModel
+from .device_models import BatteryModel, EVChargerModel, HVACModel, WaterHeaterModel
+from .dispatch_optimizer import DeliveryValueCalculator, DispatchOptimizer
+from .enums_and_constants import (
+    DeviceType,
+    IterationType,
+    MarketPhase,
+    MarketType,
+    OperatingMode,
+    ProductType,
+)
 from .flexibility_ledger import FlexibilityLedger
-from .market_object import MarketObject
+from .gridlabd_interface import GridLABDInterface
 from .market_agent import MarketCommunicationInterface
-from .command_arbiter import CommandArbiter
-from .dispatch_optimizer import DispatchOptimizer, DeliveryValueCalculator
+from .market_object import MarketObject
+from .penalty_model import PenaltyModel
 from .planning_optimizer import PlanningOptimizer
+from .preference_curve import PreferenceCurve
 from .price_forecast_service import PriceForecastService
-from .device_models import HVACModel, WaterHeaterModel, EVChargerModel, BatteryModel
 
 
 class DeviceAgent:
@@ -89,20 +90,20 @@ class DeviceAgent:
         self._device_model = self._create_device_model()
 
         # Market infrastructure
-        self._market_objects: Dict[str, MarketObject] = {}
-        self._market_comms: Dict[MarketType, MarketCommunicationInterface] = {}
-        self._penalty_models: Dict[MarketType, PenaltyModel] = {}
+        self._market_objects: dict[str, MarketObject] = {}
+        self._market_comms: dict[MarketType, MarketCommunicationInterface] = {}
+        self._penalty_models: dict[MarketType, PenaltyModel] = {}
 
         # Shared components
-        self._flexibility_ledger: Optional[FlexibilityLedger] = None
-        self._command_arbiter: Optional[CommandArbiter] = None
-        self._planning_optimizer: Optional[PlanningOptimizer] = None
+        self._flexibility_ledger: FlexibilityLedger | None = None
+        self._command_arbiter: CommandArbiter | None = None
+        self._planning_optimizer: PlanningOptimizer | None = None
         self._price_forecast_service = PriceForecastService()
 
         # Current state cache
-        self._current_state: Optional[Any] = None
-        self._current_flexibility: Optional[FlexibilityEnvelope] = None
-        self._current_preference_curve: Optional[PreferenceCurve] = None
+        self._current_state: Any | None = None
+        self._current_flexibility: FlexibilityEnvelope | None = None
+        self._current_preference_curve: PreferenceCurve | None = None
 
     def _create_device_model(self) -> Any:
         """Instantiate the appropriate device physics model.
@@ -125,7 +126,7 @@ class DeviceAgent:
     # Initialization and Registration
     # ------------------------------------------------------------------
 
-    def initialize(self, device_params: Dict[str, Any]) -> None:
+    def initialize(self, device_params: dict[str, Any]) -> None:
         """Initialize the agent with device parameters and create
         shared components.
 
@@ -162,7 +163,7 @@ class DeviceAgent:
         penalty_model: PenaltyModel,
         communication: MarketCommunicationInterface,
         iteration_protocol: str = "mo_signaled",
-        n_informational: Optional[int] = None,
+        n_informational: int | None = None,
     ) -> None:
         """Register participation in a market product.
 
@@ -743,7 +744,6 @@ class DeviceAgent:
 
         No agent operations. MO is processing.
         """
-        pass
 
     def _handle_assessment(
         self, market_obj: MarketObject, clearing_result: ClearingResult
@@ -1039,7 +1039,7 @@ class DeviceAgent:
     # Convergence and Confidence (for informational iterations)
     # ------------------------------------------------------------------
 
-    def _compute_convergence(self, advisory_history: List[AdvisoryRecord]) -> float:
+    def _compute_convergence(self, advisory_history: list[AdvisoryRecord]) -> float:
         """Compute convergence metric from advisory history.
 
         Uses exponentially-weighted price volatility across iterations.
@@ -1070,7 +1070,7 @@ class DeviceAgent:
         # Map to 0-1 range: convergence = 1 / (1 + 10 * avg_delta)
         return 1.0 / (1.0 + 10.0 * avg_delta)
 
-    def _compute_confidence(self, advisory_history: List[AdvisoryRecord]) -> float:
+    def _compute_confidence(self, advisory_history: list[AdvisoryRecord]) -> float:
         """Compute advisory confidence from iteration count and convergence.
 
         Args:

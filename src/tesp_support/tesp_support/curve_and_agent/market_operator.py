@@ -11,9 +11,8 @@
 #     - Agent bids: from device agents via communication interfaces.
 # ============================================================================
 
-from typing import Dict, List, Optional, Tuple, Any
-from .data_types import BidCurve, ClearingResult, BidPoint, MarketTimingParams
-from .enums_and_constants import MarketType, IterationType
+from .data_types import BidCurve, BidPoint, ClearingResult, MarketTimingParams
+from .enums_and_constants import IterationType, MarketType
 
 
 class SupplyCurve:  # TODO: any reason to not use a more generic Curve class for all curves?
@@ -30,7 +29,7 @@ class SupplyCurve:  # TODO: any reason to not use a more generic Curve class for
             transmission charges, and capacity allocations.
     """
 
-    def __init__(self, points: Optional[List[BidPoint]] = None):
+    def __init__(self, points: list[BidPoint] | None = None):
         self.points = points or []
 
     def get_supply_at_price(self, price: float) -> float:
@@ -103,8 +102,8 @@ class DSOInflexibleLoadBid:
         self,
         feeder_id: str,
         quantity: float,
-        interval: Tuple[float, float],
-        components: Optional[Dict[str, float]] = None,
+        interval: tuple[float, float],
+        components: dict[str, float] | None = None,
     ):
         self.feeder_id = feeder_id
         self.quantity = quantity
@@ -140,7 +139,7 @@ class DSOLoadEstimationEngine:
 
     def estimate_inflexible_load(
         self,
-        interval: Tuple[float, float],
+        interval: tuple[float, float],
         total_load_forecast: float,
         flexible_committed: float,
         btm_solar_forecast: float,
@@ -250,13 +249,13 @@ class MarketOperator:
         self._n_informational = n_informational
 
         # Registered participants
-        self._agent_bids: Dict[str, BidCurve] = {}
-        self._dso_bids: Dict[str, DSOInflexibleLoadBid] = {}
-        self._supply_curve: Optional[SupplyCurve] = None
+        self._agent_bids: dict[str, BidCurve] = {}
+        self._dso_bids: dict[str, DSOInflexibleLoadBid] = {}
+        self._supply_curve: SupplyCurve | None = None
 
         # Iteration tracking
         self._current_iteration: int = 0
-        self._clearing_history: List[ClearingResult] = []
+        self._clearing_history: list[ClearingResult] = []
 
     def set_supply_curve(self, supply_curve: SupplyCurve) -> None:
         """Set the supply curve for this market cycle.
@@ -301,7 +300,7 @@ class MarketOperator:
         self._dso_bids[feeder_id] = bid
         return True
 
-    def aggregate_demand(self) -> List[BidPoint]:
+    def aggregate_demand(self) -> list[BidPoint]:
         """Aggregate all demand bids into a single demand curve.
 
         Horizontally sums:
@@ -396,8 +395,8 @@ class MarketOperator:
 
         # Sample at demand curve prices + supply curve prices
         price_levels = sorted(
-            set(pt.price for pt in demand_curve)
-            | set(pt.price for pt in self._supply_curve.points),
+            {pt.price for pt in demand_curve}
+            | {pt.price for pt in self._supply_curve.points},
         )
 
         prev_excess = None
@@ -481,7 +480,7 @@ class MarketOperator:
             iteration_type=self.determine_iteration_type(),
         )
 
-    def propagate_results(self) -> Dict[str, ClearingResult]:
+    def propagate_results(self) -> dict[str, ClearingResult]:
         """Propagate clearing results to all participants.
 
         After clearing, computes per-agent results and makes them
@@ -512,7 +511,7 @@ class MarketOperator:
             return 0.0
         last = self._clearing_history[-1]
         total = 0.0
-        for agent_id, bid in self._agent_bids.items():
+        for bid in self._agent_bids.values():
             total += self._interpolate_bid(bid, last.cleared_price)
         return total
 
@@ -538,7 +537,7 @@ class MarketOperator:
                 return IterationType.BINDING
         return IterationType.INFORMATIONAL
 
-    def step(self, current_time: float) -> Optional[Dict[str, ClearingResult]]:
+    def step(self, current_time: float) -> dict[str, ClearingResult] | None:
         """Execute one MO timestep.
 
         Called by the simulation harness. Checks if it's time to

@@ -1,0 +1,253 @@
+- Wrong assumptions
+- Add assertions?
+- Unnecessarily verbose
+- How can we verify the performance of the code?
+- Less concerned with correct logic, more concerned with structure
+- What tests do we need?
+- Define style guide the LLM can reference
+
+- Automate static checker in Pycharm
+    Mark down files are irrelevant
+        ARCHITECTURE.md
+        README.md
+
+    Error - Warning - File
+    0 - 0 - __init__.py
+    0 - 0 - battery_adapter_example.py
+    0 - 0 - device_strategy.py
+    0 - 0 - dsot_device_strategies.py
+    0 - 0 - dsot_market_protocol.py
+    0 - 0 - ev_adapter.py
+    0 - 0 - example_usage.py
+    0 - 0 - hvac_adapter.py
+    0 - 0 - hybrid_loop_runner.py
+    0 - 0 - market_protocol.py
+    0 - 0 - phase1_parallel_setup.py
+    0 - 0 - price_signal.py
+    0 - 0 - pv_adapter.py
+    0 - 0 - water_heater_adapter.py
+
+
+- Run linters
+    Running 'ruff check .'
+    Found 51 errors.
+    [*] 7 fixable with the `--fix` option (10 hidden fixes can be enabled with the `--unsafe-fixes` option).
+        6 - SIM102 Use a single `if` statement instead of nested `if` statements
+        19 - BLE001 Do not catch blind exception: `Exception`
+        2 - RUF059 Unpacked variable `market_protocol` is never used
+        7 - F841 Local variable `log` is assigned to but never used
+        6 - S110 `try`-`except`-`pass` detected, consider logging the exception
+        1 - DTZ005 `datetime.datetime.now()` called without a `tz` argument
+        1 - RUF022 `__all__` is not sorted
+        1 - F821 Undefined name `T`
+
+	Running 'mypy .'
+	Found 81 errors in 16 files (checked 14 source files)
+        2 - [assignment]
+        1 - [import-not-found]
+        2 - [var-annotated]
+        1 - [name-defined]
+        1 - [return-value]
+        15 - [import-untyped]
+        55 - [attr-defined]
+        4 - [call-overload]
+
+
+- LLM code reviewer
+    User: Given this file that descibes this architectue and modular dirertory and the code therein, look for “fixes” that are hiding problems (manually overriding tests, linters, etc) and unused code, unnecessary duplication. After that outline a proper code review tesp
+
+    GitHub Copilot: I’m reviewing the modular architecture and the code in that directory to spot hidden “fixes,” dead code, and duplication, then I’ll turn that into a concrete code review plan.
+
+    Searched for regex `noqa|pylint: disable|flake8: noqa|pragma: no cover|pytest\.mark\.(skip|xfail)|@pytest\.mark\.skip|# type: ignore|TODO|FIXME|workaround|temporary|hack|override|disable.*lint|disable.*test|ignore.*lint|ignore.*test` (`**/modular/**`), 11 results
+
+    I’ve narrowed the review to the actual modular package and am checking the concrete adapters and runners for the kinds of “we’ll patch around it later” patterns that usually hide real defects.
+
+    Searched for regex `assert .*==|assert .* is|assert .*in|pass\s*$|raise NotImplementedError|return None|placeholder|legacy|temporary|TODO|FIXME|comparison|HybridLoopRunner|parallel.*legacy|adapter.*legacy` (`**/modular/**`), 293 results
+
+    ## Findings: the “fixes” that are actually hiding problems
+
+    ### 1) Import-time breakage is hidden behind “prototype” status
+    The clearest red flag is in `dsot_market_protocol.py`: the constructor signature includes `simulation_start_time: datetime = T | None`. That is not valid Python as written; `T` is undefined and the type annotation is nonsensical.
+
+    This is exactly the sort of issue that survives if the code is never imported in CI, or if linting/test enforcement is bypassed or “not yet enabled.” In other words, a prototype is being treated as production code.
+
+    ### 2) “Phase 1 / Phase 2 / hybrid comparison” code is a compatibility bypass, not the real design
+    The package contains a large amount of staging scaffolding:
+
+    - `phase1_parallel_setup.py`
+    - `hybrid_loop_runner.py`
+    - `README.md`
+
+    These are explicitly framed as “parallel runs,” “Phase 1,” “dry-run,” and “compatibility validation.” That is not architecture; it is a workaround layered on top of the old code. It is useful as a migration harness, but it is not clean product code.
+
+    The problem is that it can mask real defects by allowing the project to say “we validated against legacy timing” without actually proving the new abstraction is correct. The tolerance logic in `hybrid_loop_runner.py` also hides drift: `price_tolerance=0.01`, `quantity_tolerance=0.001` can silently “pass” mismatches that may be large enough to matter in production.
+
+    ### 3) Exception swallowing is the classic “hide the bug” pattern
+    There are lots of cases like:
+
+    - `except Exception: pass`
+    - `if hasattr(...): pass`
+
+    Examples:
+    - `hvac_adapter.py`
+    - `ev_adapter.py`
+    - `water_heater_adapter.py`
+    - `pv_adapter.py`
+
+    This is a major review issue. It prevents callers from seeing whether the legacy agent failed, and it suppresses the exact failure modes you need to debug.
+
+    For a market simulation stack, this kind of silent failure is worse than a loud exception because it makes bad bids look like valid ones.
+
+    ### 4) Real “test code” is embedded in library modules
+    There are test-like functions living inside normal modules, such as `test_hvac_adapter()` in `hvac_adapter.py`. This is not a real test suite layout; it is a library file containing an ad hoc smoke test.
+
+    That is a smell because:
+    - it encourages non-standard execution
+    - it blurs test and production code
+    - it can be accidentally imported or run in the wrong context
+    - it avoids the project’s real CI/test discovery rules
+
+    Proper pytest/unittest layout should live under a test directory, not inside a runtime module.
+
+    ### 5) The same conversion logic is duplicated in multiple adapters
+    The 4-point bid conversion logic is effectively repeated in the adapters:
+
+    - `hvac_adapter.py`
+    - `ev_adapter.py`
+    - `water_heater_adapter.py`
+    - `battery_adapter_example.py`
+
+    This is unnecessary duplication and a very high-risk maintenance area. One bug in interpolation logic must be fixed in multiple places, and it will not stay consistent.
+
+    This is a textbook opportunity for a shared conversion helper, e.g.:
+    - `convert_legacy_bid_to_value_function()`
+    - `LegacyBidAdapterMixin`
+    - `BaseLegacyDeviceAdapter`
+
+    ### 6) Placeholder TODOs and intentionally incomplete logic are shipped as if they were implemented
+    Examples:
+    - `dsot_device_strategies.py`
+      - `# TODO: Update indoor_temperature based on cleared_qty and time dynamics`
+      - `# TODO: Update SOC based on cleared_qty and efficiency`
+
+    These are not harmless comment-only items; they indicate the strategy logic is not actually completing state updates after clearing.
+
+    That undermines the architecture claim: if the device does not update its state from clearing results, the market feedback loop is broken and the rest of the abstraction is pretending to work.
+
+    ### 7) The modular package is not cleanly separated from the legacy DSOT implementation
+    The architecture claims decoupling, but the actual implementation still depends heavily on legacy types and methods:
+
+    - adapter modules instantiate legacy agents directly
+    - adapters call `DA_optimal_quantities()`, `formulate_bid_da()`, `formulate_bid_rt()`
+    - lots of compatibility code tries to adapt legacy outputs into the new `Bid` structure
+
+    This is not a clean abstraction yet; it is a translation layer around the old model. That is legitimate as a migration step, but it should not be presented as a finished modular design.
+
+    ---
+
+    ## Unused or dead code / weakly justified code
+
+    ### High-risk dead/unused patterns
+    - `phase1_parallel_setup.py`: a staging script for an in-progress refactor, but delivered as part of the package surface.
+    - `battery_adapter_example.py`: called “example” but exports a production-like adapter and includes a large amount of migration guidance.
+    - `example_usage.py`: full demonstration code with hard-coded paths (`src.tesp_support...`) that is not package-safe and is not a real integration test.
+    - `__init__.py`: imports a large number of adapters and classes as if they are stable API surface, while many of them are still migration scaffolding.
+
+    ### Contradictory behaviors
+    - `dsot_device_strategies.py`: `PVDSOTStrategy.formulate_bid()` raises `ValueError` because PV is passive.
+    - `pv_adapter.py`: The adapter actively creates a passive supply bid instead.
+    This is not a clean contract. The abstraction intentionally says “PV is passive and does not bid,” but the adapter is effectively injecting a bid anyway. That can cause hidden behavior differences in market clearing.
+
+    ---
+
+    ## Proper TESP code review plan
+
+    ### 1) First gate: fix the correctness issues
+    Before reviewing architecture, require these to pass:
+
+    - importability of every module in the package
+    - no undefined names
+    - no `except Exception: pass`
+    - no placeholder TODOs in production logic
+    - no ad hoc smoke tests inside runtime modules
+
+    This should be a strict gate. If the package cannot be imported cleanly in CI, no architectural review is meaningful.
+
+    ### 2) Replace migration scaffolding with actual interfaces
+    The review should separate:
+    - “migration helper” code
+    - “production API” code
+    - “test harness” code
+
+    This package currently mixes them in one place. The proper structure is:
+
+    - `market_protocol.py` and `device_strategy.py` are real interfaces
+    - `dsot_market_protocol.py` and `dsot_device_strategies.py` are real implementations
+    - adapters are isolated behind one common base class
+    - phase scripts and hybrid comparison harnesses live under a `migration/` or `compat/` area, not the runtime package root
+
+    ### 3) Review against actual behavior, not intended behavior
+    The core review questions should be:
+
+    - Does each market window have a valid deadline and clearing order?
+    - Are bid quantities and prices converted consistently between MWh and kWh?
+    - Does the device state actually update on cleared prices?
+    - Do adapters fail loudly when legacy agents do not support the expected methods?
+    - Does the code preserve TESP’s existing semantics or only approximate them?
+
+    ### 4) Testing plan for TESP
+    A proper TESP review should require the following test matrix:
+
+    - Unit tests
+      - `Bid` validation: quantity bounds, metadata defaults, invalid bid type
+      - `MarketWindow` validation: ordering, deadlines
+      - `DSOTMarketProtocol.settlement_structure()` for DA/RT counts and timing
+      - conversion helpers for MWh/kWh and $/MWh vs $/kWh
+
+    - Adapter tests
+      - each adapter calls the legacy callback methods correctly
+      - each adapter fails loudly on unsupported market IDs
+      - each adapter preserves metadata and bid bounds
+
+    - Integration tests
+      - clear a small synthetic market using the DSOT clearing path
+      - compare against expected price and quantity outputs
+      - test the no-bid, one-bid, and supply/demand edge cases
+
+    - Regression tests
+      - compare new modular clearing against the existing DSOT logic on known scenarios
+      - include whole-day window generation tests, not just first-hour samples
+
+    - Static quality gates
+      - `ruff` or `flake8`
+      - `mypy` or pyright
+      - fail on `except Exception: pass`
+      - fail on TODO/FIXME in production files
+      - no packaging imports from `src.*` in library code
+
+    ### 5) Review checklist to enforce
+    A good review should require:
+    - no dead scaffolding in package root
+    - no duplicate conversion logic
+    - no silent exception swallowing
+    - no test functions inside library files
+    - no hard-coded absolute imports
+    - explicit handling of invalid/unsupported market types
+    - a clear distinction between migration code and production code
+
+    ---
+
+    ## Bottom line
+
+    This modular package is promising as an architectural direction, but as written it reads more like a migration sandbox than a production-ready integration layer. The biggest problems are not conceptual; they are execution hygiene issues:
+
+    - silent failure swallowing,
+    - duplicated adapter logic,
+    - import-level breakage,
+    - stage-1 scaffolding packaged as if it were real code,
+    - and untested placeholder behavior.
+
+    If this were reviewed in TESP, I would block it until the correctness and CI hygiene issues are fixed, then re-review the architecture as a real integration point rather than a compatibility layer.
+
+
+- Testing for performance

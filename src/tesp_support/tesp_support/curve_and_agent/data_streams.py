@@ -14,14 +14,14 @@
 #     - Event models: learned from historical meter/sensor data
 # ============================================================================
 
-from typing import Any, Dict, List, Optional, Tuple, Callable
+from typing import Any
+
 from .data_types import (
     ContinuousDataPoint,
     EventDefinition,
     QuantilePoint,
-    UncertaintyEnvelope,
 )
-from .enums_and_constants import DeviceType, ForecastParadigm, StreamType
+from .enums_and_constants import DeviceType
 
 
 class UncertaintyModel:
@@ -50,7 +50,7 @@ class UncertaintyModel:
                 lead_time_sigma_table: List of (lead_time_seconds, sigma).
     """
 
-    def __init__(self, model_type: str, params: Dict):
+    def __init__(self, model_type: str, params: dict):
         self._model_type = model_type
         self._params = params
 
@@ -116,14 +116,14 @@ class ContinuousForecast:
         variable_name: str,
         unit: str,
         uncertainty_model: UncertaintyModel,
-        series: Optional[List[ContinuousDataPoint]] = None,
+        series: list[ContinuousDataPoint] | None = None,
     ):
         self._variable_name = variable_name
         self._unit = unit
         self._uncertainty_model = uncertainty_model
         self._series = series or []
 
-    def update(self, new_series: List[ContinuousDataPoint]) -> None:
+    def update(self, new_series: list[ContinuousDataPoint]) -> None:
         """Replace the forecast series with updated data.
 
         Args:
@@ -179,8 +179,8 @@ class ContinuousForecast:
         return ContinuousDataPoint(timestamp=timestamp)
 
     def get_series(
-        self, t_start: float, t_end: float, resolution: Optional[float] = None
-    ) -> List[ContinuousDataPoint]:
+        self, t_start: float, t_end: float, resolution: float | None = None
+    ) -> list[ContinuousDataPoint]:
         """Return forecast series over an interval.
 
         Args:
@@ -226,8 +226,8 @@ class EventForecast:
 
     def __init__(
         self,
-        event_types: List[EventDefinition],
-        intensity_function: Optional[List[Tuple[float, float]]] = None,
+        event_types: list[EventDefinition],
+        intensity_function: list[tuple[float, float]] | None = None,
         daily_expected_count: float = 0.0,
         daily_expected_energy: float = 0.0,
     ):
@@ -235,7 +235,7 @@ class EventForecast:
         self._intensity_function = intensity_function or []
         self._daily_expected_count = daily_expected_count
         self._daily_expected_energy = daily_expected_energy
-        self._observed_events: List[Dict] = []
+        self._observed_events: list[dict] = []
 
     def get_intensity_at(self, timestamp: float) -> float:
         """Get event intensity (events/hour) at a specific time.
@@ -406,7 +406,7 @@ class ConstraintStream:
         variable: str,
         constraint_type: str,
         continuous: bool = False,
-        deadline: Optional[float] = None,
+        deadline: float | None = None,
         required_value: float = 0.0,
     ):
         self._constraint_id = constraint_id
@@ -475,10 +475,10 @@ class DataStreamManager:
 
     def __init__(self, device_type: DeviceType):
         self._device_type = device_type
-        self._continuous_streams: Dict[str, ContinuousForecast] = {}
-        self._event_streams: Dict[str, EventForecast] = {}
-        self._constraint_streams: Dict[str, ConstraintStream] = {}
-        self._schedules: Dict[str, ContinuousForecast] = {}
+        self._continuous_streams: dict[str, ContinuousForecast] = {}
+        self._event_streams: dict[str, EventForecast] = {}
+        self._constraint_streams: dict[str, ConstraintStream] = {}
+        self._schedules: dict[str, ContinuousForecast] = {}
 
     def register_continuous_stream(
         self, stream_id: str, forecast: ContinuousForecast
@@ -545,7 +545,7 @@ class DataStreamManager:
         else:
             raise KeyError(f"Stream '{stream_id}' not registered")
 
-    def get_continuous(self, stream_id: str) -> Optional[ContinuousForecast]:
+    def get_continuous(self, stream_id: str) -> ContinuousForecast | None:
         """Retrieve a continuous forecast stream by ID.
 
         Args:
@@ -556,21 +556,21 @@ class DataStreamManager:
         """
         return self._continuous_streams.get(stream_id)
 
-    def get_event(self, stream_id: str) -> Optional[EventForecast]:
+    def get_event(self, stream_id: str) -> EventForecast | None:
         """Retrieve an event forecast stream by ID."""
         return self._event_streams.get(stream_id)
 
-    def get_constraint(self, stream_id: str) -> Optional[ConstraintStream]:
+    def get_constraint(self, stream_id: str) -> ConstraintStream | None:
         """Retrieve a constraint stream by ID."""
         return self._constraint_streams.get(stream_id)
 
-    def get_schedule(self, stream_id: str) -> Optional[ContinuousForecast]:
+    def get_schedule(self, stream_id: str) -> ContinuousForecast | None:
         """Retrieve a schedule stream by ID."""
         return self._schedules.get(stream_id)
 
     def get_all_constraints(
         self, t_start: float, t_end: float
-    ) -> List[ConstraintStream]:
+    ) -> list[ConstraintStream]:
         """Get all constraints active over a time interval.
 
         Args:
@@ -582,15 +582,11 @@ class DataStreamManager:
         """
         result = []
         for c in self._constraint_streams.values():
-            if c._continuous:
-                result.append(c)
-            elif c._deadline is not None and t_start <= c._deadline <= t_end:
-                result.append(c)
-            elif c._deadline is not None and c._deadline >= t_start:
+            if c._continuous or c._deadline is not None and t_start <= c._deadline <= t_end or c._deadline is not None and c._deadline >= t_start:
                 result.append(c)
         return result
 
-    def get_forecast_bundle(self, t_start: float, t_end: float) -> Dict[str, Any]:
+    def get_forecast_bundle(self, t_start: float, t_end: float) -> dict[str, Any]:
         """Package all forecast streams for a time interval.
 
         Returns a dictionary of stream_id -> forecast series, suitable
@@ -603,7 +599,7 @@ class DataStreamManager:
         Returns:
             Dictionary mapping stream IDs to their data over the interval.
         """
-        bundle: Dict[str, Any] = {}
+        bundle: dict[str, Any] = {}
         for sid, forecast in self._continuous_streams.items():
             bundle[sid] = forecast.get_series(t_start, t_end)
         for sid, schedule in self._schedules.items():

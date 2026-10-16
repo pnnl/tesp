@@ -8,15 +8,14 @@
 # INTERNAL: Called during Active and Assessment phases.
 # ============================================================================
 
-from typing import Dict, List, Optional, Tuple
+
+from .data_streams import ConstraintStream
 from .data_types import (
-    PlanningResult,
-    FlexibilityEnvelope,
     ContinuousDataPoint,
     HVACState,
+    PlanningResult,
 )
-from .data_streams import ConstraintStream
-from .device_models import BatteryModel, HVACModel, _KW_TO_BTU_HR, _interp_forecast
+from .device_models import _KW_TO_BTU_HR, BatteryModel, HVACModel, _interp_forecast
 
 
 class PlanningOptimizer:
@@ -47,13 +46,13 @@ class PlanningOptimizer:
     def solve(
         self,
         current_state: any,
-        price_trajectory: List[Tuple[Tuple[float, float], float]],
-        weather_forecasts: Optional[Dict[str, List[ContinuousDataPoint]]],
-        constraints: List[ConstraintStream],
+        price_trajectory: list[tuple[tuple[float, float], float]],
+        weather_forecasts: dict[str, list[ContinuousDataPoint]] | None,
+        constraints: list[ConstraintStream],
         interval_duration: float,
         planning_horizon: float,
         customer_preference_k: float,
-        degradation_model: Optional[BatteryModel] = None,
+        degradation_model: BatteryModel | None = None,
         soc_reserve: float = 0.0,
     ) -> PlanningResult:
         """Solve the multi-interval planning optimization.
@@ -135,7 +134,7 @@ class PlanningOptimizer:
         # Sort intervals by price to find charge/discharge opportunities
         prices = []
         for i in range(min(n_intervals, len(price_trajectory))):
-            interval, price = price_trajectory[i]
+            _interval, price = price_trajectory[i]
             prices.append(price)
 
         if not prices:
@@ -284,8 +283,8 @@ class PlanningOptimizer:
     def _solve_hvac(
         self,
         state: HVACState,
-        price_trajectory: List[Tuple[Tuple[float, float], float]],
-        weather_forecasts: Optional[Dict[str, List[ContinuousDataPoint]]],
+        price_trajectory: list[tuple[tuple[float, float], float]],
+        weather_forecasts: dict[str, list[ContinuousDataPoint]] | None,
         n_intervals: int,
         ih: float,
         interval_duration: float,
@@ -327,8 +326,6 @@ class PlanningOptimizer:
 
         # Extract prices
         prices = []
-        temp_forecasts = []
-        humidity_forecasts = []
         for i in range(min(n_intervals, len(price_trajectory))):
             _, price = price_trajectory[i]
             prices.append(price)
@@ -339,8 +336,7 @@ class PlanningOptimizer:
         price_min = min(prices)
         price_max = max(prices)
         price_delta = price_max - price_min
-        if price_delta < 1e-9:
-            price_delta = 1e-9
+        price_delta = max(price_delta, 1e-9)
 
         # Extract temperature forecasts
         outdoor_temps = []
@@ -403,7 +399,7 @@ class PlanningOptimizer:
 
         # Forward-pass optimization
         # Start from current setpoint temperature
-        T_room = state.indoor_air_temp if is_cooling else state.indoor_air_temp
+        T_room = state.indoor_air_temp
 
         intervals = []
         total_cost = 0.0
@@ -449,15 +445,12 @@ class PlanningOptimizer:
                     elif T_next < T_desired - temp_range:
                         total += 10.0
                 else:
-                    if T_next < T_desired - temp_range:
-                        total += 10.0
-                    elif T_next > T_desired + temp_range:
+                    if T_next < T_desired - temp_range or T_next > T_desired + temp_range:
                         total += 10.0
 
                 if total < best_cost:
                     best_cost = total
                     best_Q = Q_cand
-                    best_T = T_next
 
             # Update state for next interval
             if is_cooling:

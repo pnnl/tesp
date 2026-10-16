@@ -8,8 +8,8 @@
 # INTERNAL: Consumed by CommandArbiter.resolve_and_actuate().
 # ============================================================================
 
-from typing import Dict, List, Optional, Tuple
-from .data_types import DeliveryEconomics, DispatchSolution, FlexibilityEnvelope
+from .data_types import DeliveryEconomics, DispatchSolution
+from .penalty_model import PenaltyModel
 from .preference_curve import PreferenceCurve
 
 
@@ -30,12 +30,12 @@ class DispatchOptimizer:
 
     def solve(
         self,
-        economics: Dict[str, DeliveryEconomics],
+        economics: dict[str, DeliveryEconomics],
         Q_min: float,
         Q_max: float,
         preference_curve: PreferenceCurve,
         amenity_weight: float,
-        current_signals: Optional[Dict[str, float]] = None,
+        current_signals: dict[str, float] | None = None,
     ) -> DispatchSolution:
         """Solve the dispatch optimization for the current timestep.
 
@@ -162,9 +162,9 @@ class DeliveryValueCalculator:
         product_type: str,
         committed_qty: float,
         cleared_price: float,
-        penalty_model: "PenaltyModel",
+        penalty_model: PenaltyModel,
         interval_duration: float,
-        signals: Optional[Dict[str, float]] = None,
+        signals: dict[str, float] | None = None,
         degradation_cost: float = 0.0,
     ) -> DeliveryEconomics:
         """Compute delivery economics for one active delivery.

@@ -11,15 +11,15 @@
 # ============================================================================
 
 import math
-from typing import List, Optional, Tuple
+
 from .data_types import (
-    HVACState,
-    WaterHeaterState,
-    EVChargerState,
     BatteryState,
-    FlexibilityEnvelope,
     ContinuousDataPoint,
+    EVChargerState,
+    FlexibilityEnvelope,
+    HVACState,
     QuantilePoint,
+    WaterHeaterState,
 )
 from .enums_and_constants import DeviceType
 
@@ -29,7 +29,7 @@ _WATER_LB_PER_GAL = 8.34  # lb/gal, specific heat ≈ 1 Btu/(lb·°F)
 
 
 def _interp_forecast(
-    forecast: Optional[List[ContinuousDataPoint]],
+    forecast: list[ContinuousDataPoint] | None,
     time_offset: float,
     default: float = 0.0,
 ) -> float:
@@ -104,8 +104,8 @@ class HVACModel:
     def __init__(self, device_type: DeviceType):
         self._device_type = device_type
         # Internal state tracking — updated after each market clearing
-        self._air_temp_agent: Optional[float] = None
-        self._mass_temp_agent: Optional[float] = None
+        self._air_temp_agent: float | None = None
+        self._mass_temp_agent: float | None = None
 
     # ------------------------------------------------------------------
     # COP and capacity adjustment (from DSOT DA_model_parameters)
@@ -254,7 +254,7 @@ class HVACModel:
         outdoor_temp: float,
         Qi: float,
         Qs: float,
-    ) -> Tuple:
+    ) -> tuple:
         """Build the A, B_ON, B_OFF matrices for the ETP model.
 
         This matches the DSOT formulation in formulate_bid_rt and
@@ -326,7 +326,7 @@ class HVACModel:
         Qs: float,
         duration_seconds: float,
         n_timesteps: int = 10,
-    ) -> Tuple[float, float, float]:
+    ) -> tuple[float, float, float]:
         """Simulate HVAC operation with deadband cycling over an interval.
 
         Integrates the ETP model forward, toggling the HVAC on/off
@@ -387,15 +387,11 @@ class HVACModel:
             if hvac_on:
                 on_count += 1
                 # Check if HVAC should turn off
-                if is_cooling and Ta < target_setpoint - deadband / 2.0:
-                    hvac_on = False
-                elif not is_cooling and Ta > target_setpoint + deadband / 2.0:
+                if is_cooling and Ta < target_setpoint - deadband / 2.0 or not is_cooling and Ta > target_setpoint + deadband / 2.0:
                     hvac_on = False
             else:
                 # Check if HVAC should turn on
-                if is_cooling and Ta > target_setpoint + deadband / 2.0:
-                    hvac_on = True
-                elif not is_cooling and Ta < target_setpoint - deadband / 2.0:
+                if is_cooling and Ta > target_setpoint + deadband / 2.0 or not is_cooling and Ta < target_setpoint - deadband / 2.0:
                     hvac_on = True
 
         duty_cycle = on_count / n_timesteps if n_timesteps > 0 else 0.0
@@ -410,12 +406,12 @@ class HVACModel:
         self,
         state: HVACState,
         hvac_power_kw: float,
-        outdoor_temp_forecast: List[ContinuousDataPoint],
-        solar_gain_forecast: Optional[List[ContinuousDataPoint]],
-        internal_gain_forecast: Optional[List[ContinuousDataPoint]],
+        outdoor_temp_forecast: list[ContinuousDataPoint],
+        solar_gain_forecast: list[ContinuousDataPoint] | None,
+        internal_gain_forecast: list[ContinuousDataPoint] | None,
         duration_seconds: float,
         timestep_seconds: float = 60.0,
-    ) -> List[Tuple[float, float]]:
+    ) -> list[tuple[float, float]]:
         """Predict indoor air temperature trajectory given HVAC power input.
 
         Integrates the ETP model forward in time using the temperature-
@@ -454,7 +450,7 @@ class HVACModel:
         Tm = state.thermal_mass_temp
         dt_hr = timestep_seconds / 3600.0
         n_steps = int(duration_seconds / timestep_seconds)
-        trajectory: List[Tuple[float, float]] = []
+        trajectory: list[tuple[float, float]] = []
 
         for i in range(n_steps):
             t = (i + 1) * timestep_seconds
@@ -480,10 +476,10 @@ class HVACModel:
     def estimate_flexibility(
         self,
         state: HVACState,
-        outdoor_temp_forecast: List[ContinuousDataPoint],
-        solar_gain_forecast: Optional[List[ContinuousDataPoint]],
-        internal_gain_forecast: Optional[List[ContinuousDataPoint]],
-        setpoint_schedule: List[ContinuousDataPoint],
+        outdoor_temp_forecast: list[ContinuousDataPoint],
+        solar_gain_forecast: list[ContinuousDataPoint] | None,
+        internal_gain_forecast: list[ContinuousDataPoint] | None,
+        setpoint_schedule: list[ContinuousDataPoint],
         interval_duration: float,
         comfort_band: float = 2.0,
     ) -> FlexibilityEnvelope:
@@ -667,7 +663,7 @@ class HVACModel:
         target_setpoint: float,
         outdoor_temp: float,
         duration_seconds: float,
-    ) -> Tuple[float, float]:
+    ) -> tuple[float, float]:
         """Predict and store the internal air and mass temperature after
         operating at the given setpoint for the specified duration.
 
@@ -729,11 +725,11 @@ class WaterHeaterModel:
         state: WaterHeaterState,
         element_power_kw: float,
         draw_forecast: QuantilePoint,
-        inlet_temp_forecast: Optional[ContinuousDataPoint],
+        inlet_temp_forecast: ContinuousDataPoint | None,
         ambient_temp: float,
         duration_seconds: float,
         timestep_seconds: float = 60.0,
-    ) -> List[Tuple[float, float, float]]:
+    ) -> list[tuple[float, float, float]]:
         """Predict tank temperature trajectory given element power.
 
         Args:
@@ -769,7 +765,7 @@ class WaterHeaterModel:
 
         Q_element = element_power_kw * _KW_TO_BTU_HR
 
-        trajectory: List[Tuple[float, float, float]] = []
+        trajectory: list[tuple[float, float, float]] = []
         n_steps = int(duration_seconds / timestep_seconds)
         dt_hr = timestep_seconds / 3600.0
 
@@ -798,7 +794,7 @@ class WaterHeaterModel:
         self,
         state: WaterHeaterState,
         draw_forecast: QuantilePoint,
-        inlet_temp_forecast: Optional[ContinuousDataPoint],
+        inlet_temp_forecast: ContinuousDataPoint | None,
         ambient_temp: float,
         min_tank_temp: float,
         interval_duration: float,
@@ -906,7 +902,7 @@ class EVChargerModel:
         charge_power_kw: float,
         duration_seconds: float,
         timestep_seconds: float = 60.0,
-    ) -> List[Tuple[float, float]]:
+    ) -> list[tuple[float, float]]:
         """Predict SOC trajectory at a given charge power.
 
         Args:
@@ -930,7 +926,7 @@ class EVChargerModel:
         max_rate = state.max_charge_rate
         taper_soc = state.soc_at_max_taper
 
-        trajectory: List[Tuple[float, float]] = []
+        trajectory: list[tuple[float, float]] = []
         n_steps = int(duration_seconds / timestep_seconds)
         dt_hr = timestep_seconds / 3600.0
 
@@ -953,10 +949,10 @@ class EVChargerModel:
     def estimate_flexibility(
         self,
         state: EVChargerState,
-        departure_constraint: Optional[Tuple[float, float]],
+        departure_constraint: tuple[float, float] | None,
         preferred_soc: float,
         interval_duration: float,
-        time_until_departure: Optional[float] = None,
+        time_until_departure: float | None = None,
     ) -> FlexibilityEnvelope:
         """Estimate feasible charging power range.
 
@@ -1106,7 +1102,7 @@ class BatteryModel:
         power_kw: float,
         duration_seconds: float,
         timestep_seconds: float = 60.0,
-    ) -> List[Tuple[float, float]]:
+    ) -> list[tuple[float, float]]:
         """Predict SOC trajectory at a given power level.
 
         Args:
@@ -1125,7 +1121,7 @@ class BatteryModel:
         capacity = state.energy_capacity
         eta = math.sqrt(state.round_trip_efficiency)
 
-        trajectory: List[Tuple[float, float]] = []
+        trajectory: list[tuple[float, float]] = []
         n_steps = int(duration_seconds / timestep_seconds)
         dt_hr = timestep_seconds / 3600.0
 
@@ -1234,7 +1230,7 @@ class BatteryModel:
 
     def compute_charge_discharge_thresholds(
         self, state: BatteryState, V_stored: float, degradation_cost: float
-    ) -> Tuple[float, float]:
+    ) -> tuple[float, float]:
         """Compute the price thresholds for charging and discharging.
 
         Charge threshold: price below which charging is profitable.

@@ -9,8 +9,7 @@
 #     provided as part of market registration by the MO.
 # ============================================================================
 
-from typing import Dict, Optional, List, Tuple, Callable
-from .enums_and_constants import PenaltyStructureType, MarketType
+from .enums_and_constants import MarketType, PenaltyStructureType
 
 
 class PenaltyModel:
@@ -45,7 +44,7 @@ class PenaltyModel:
         self,
         market_type: MarketType,
         structure_type: PenaltyStructureType,
-        params: Dict,
+        params: dict,
     ):
         self._market_type = market_type
         self._structure_type = structure_type

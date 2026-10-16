@@ -5,9 +5,7 @@
 #          isoelastic demand curve. This module is device-type-agnostic.
 # ============================================================================
 
-import math
-from typing import Optional, Tuple
-from .data_types import BidPoint, FlexibilityEnvelope
+from .data_types import BidPoint
 from .enums_and_constants import DeviceType
 
 
@@ -158,7 +156,7 @@ class PreferenceCurve:
         n_points: int,
         Q_min: float,
         Q_max: float,
-        price_focus: Optional[float] = None,
+        price_focus: float | None = None,
     ) -> list:
         """Sample the preference curve at N price points to create a bid curve.
 

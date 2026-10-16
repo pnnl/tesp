@@ -4,22 +4,22 @@
 #          One MarketObject is instantiated per market product per cycle.
 # ============================================================================
 
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Any
+
 from .data_types import (
+    AdvisoryRecord,
     BidCurve,
     ClearingResult,
-    AdvisoryRecord,
-    SettlementRecord,
-    PerformanceEntry,
-    MarketTimingParams,
     DeviceCommand,
+    MarketTimingParams,
+    PerformanceEntry,
+    SettlementRecord,
 )
 from .enums_and_constants import (
-    MarketType,
-    MarketPhase,
-    OperatingMode,
     IterationType,
-    CommitmentStatus,
+    MarketPhase,
+    MarketType,
+    OperatingMode,
 )
 
 # Legal transitions: map from current phase to set of allowed next phases
@@ -96,7 +96,7 @@ class MarketObject:
         clearing_time: float = 0.0,
         operating_mode: OperatingMode = OperatingMode.BIDDING,
         iteration_protocol: str = "mo_signaled",
-        n_informational_planned: Optional[int] = None,
+        n_informational_planned: int | None = None,
     ):
         self.market_id = market_id
         self.market_type = market_type
@@ -112,28 +112,28 @@ class MarketObject:
         self.current_iteration_type: IterationType = IterationType.INFORMATIONAL
 
         # Data populated during Active phase
-        self.available_flexibility: Optional[Any] = None
-        self.preference_curve: Optional[Any] = None
+        self.available_flexibility: Any | None = None
+        self.preference_curve: Any | None = None
 
         # Data populated during Negotiation
-        self.submitted_bid: Optional[BidCurve] = None
+        self.submitted_bid: BidCurve | None = None
         self.negotiation_round: int = 0
 
         # Data populated during Delivery Lead
         self.cleared_price: float = 0.0
         self.cleared_quantity: float = 0.0
         self.target_operating_point: float = 0.0
-        self.control_command: Optional[DeviceCommand] = None
+        self.control_command: DeviceCommand | None = None
 
         # Data populated during Delivery
-        self.performance_log: List[PerformanceEntry] = []
+        self.performance_log: list[PerformanceEntry] = []
 
         # Data populated during Reconcile
-        self.settlement_record: Optional[SettlementRecord] = None
+        self.settlement_record: SettlementRecord | None = None
 
         # Advisory history (informational iterations)
-        self.advisory_history: List[AdvisoryRecord] = []
-        self.latest_advisory: Optional[AdvisoryRecord] = None
+        self.advisory_history: list[AdvisoryRecord] = []
+        self.latest_advisory: AdvisoryRecord | None = None
         self.advisory_confidence: float = 0.0
 
     def transition_to(self, new_phase: MarketPhase) -> None:
@@ -156,7 +156,7 @@ class MarketObject:
             )
         self.current_phase = new_phase
 
-    def get_next_event_time(self, current_time: float) -> Optional[float]:
+    def get_next_event_time(self, current_time: float) -> float | None:
         """Compute when the next state transition should occur.
 
         Based on current_phase and timing_params, returns the
@@ -176,7 +176,7 @@ class MarketObject:
         # Timing params are offsets relative to cycle clearing time.
         return self.clearing_time + getattr(self.timing_params, attr)
 
-    def should_transition(self, current_time: float) -> Optional[MarketPhase]:
+    def should_transition(self, current_time: float) -> MarketPhase | None:
         """Check if a transition should occur at the current time.
 
         Args:

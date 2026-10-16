@@ -7,20 +7,17 @@
 # INTERNAL: This is the only component that calls F9 (device actuation).
 # ============================================================================
 
-from typing import Dict, List, Optional, Tuple
 from .data_types import (
-    DeviceCommand,
-    DispatchSolution,
-    FulfillmentRecord,
     DeliveryEconomics,
+    DeviceCommand,
+    FulfillmentRecord,
     PerformanceEntry,
 )
-from .dispatch_optimizer import DispatchOptimizer, DeliveryValueCalculator
-from .preference_curve import PreferenceCurve
-from .penalty_model import PenaltyModel
-from .gridlabd_interface import GridLABDInterface
-from .device_models import HVACModel, WaterHeaterModel, EVChargerModel, BatteryModel
+from .dispatch_optimizer import DeliveryValueCalculator, DispatchOptimizer
 from .enums_and_constants import DeviceType
+from .gridlabd_interface import GridLABDInterface
+from .penalty_model import PenaltyModel
+from .preference_curve import PreferenceCurve
 
 
 class DeliveryRecord:
@@ -45,7 +42,7 @@ class DeliveryRecord:
         committed_qty: float,
         cleared_price: float,
         penalty_model: PenaltyModel,
-        interval: Tuple[float, float],
+        interval: tuple[float, float],
     ):
         self.market_id = market_id
         self.market_type = market_type
@@ -54,7 +51,7 @@ class DeliveryRecord:
         self.cleared_price = cleared_price
         self.penalty_model = penalty_model
         self.interval = interval
-        self.performance_log: List[PerformanceEntry] = []
+        self.performance_log: list[PerformanceEntry] = []
 
 
 class CommandArbiter:
@@ -92,8 +89,8 @@ class CommandArbiter:
         self._device_model = device_model
         self._optimizer = optimizer
         self._value_calculator = value_calculator
-        self._active_deliveries: Dict[str, DeliveryRecord] = {}
-        self._signals: Dict[str, float] = {}
+        self._active_deliveries: dict[str, DeliveryRecord] = {}
+        self._signals: dict[str, float] = {}
 
     def register_delivery(
         self,
@@ -103,7 +100,7 @@ class CommandArbiter:
         committed_qty: float,
         cleared_price: float,
         penalty_model: PenaltyModel,
-        interval: Tuple[float, float],
+        interval: tuple[float, float],
     ) -> None:
         """Register a new active delivery.
 
@@ -131,7 +128,7 @@ class CommandArbiter:
             interval=interval,
         )
 
-    def update_signals(self, signals: Dict[str, float]) -> None:
+    def update_signals(self, signals: dict[str, float]) -> None:
         """Update real-time signals (regulation signal, reserve activation).
 
         Called every timestep with the latest market signals.
@@ -158,7 +155,7 @@ class CommandArbiter:
         preference_curve: PreferenceCurve,
         amenity_weight: float,
         current_time: float,
-    ) -> Dict[str, FulfillmentRecord]:
+    ) -> dict[str, FulfillmentRecord]:
         """Resolve all active deliveries into a single device command.
 
         This is the core method called every simulation timestep.
@@ -185,7 +182,7 @@ class CommandArbiter:
             return {}
 
         # 1. Build DeliveryEconomics for each active delivery
-        economics: Dict[str, DeliveryEconomics] = {}
+        economics: dict[str, DeliveryEconomics] = {}
         for mid, rec in self._active_deliveries.items():
             interval_duration = rec.interval[1] - rec.interval[0]
             economics[mid] = self._value_calculator.compute(
@@ -224,7 +221,7 @@ class CommandArbiter:
         self._actuate(command)
 
         # 5. Build per-market fulfillment records
-        fulfillments: Dict[str, FulfillmentRecord] = {}
+        fulfillments: dict[str, FulfillmentRecord] = {}
         for mid, rec in self._active_deliveries.items():
             actual = solution.allocation.get(mid, 0.0)
             shortfall = max(0.0, rec.committed_qty - actual)
