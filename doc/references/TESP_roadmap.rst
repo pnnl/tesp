@@ -104,11 +104,13 @@ Current Plan (Last updated Aug 2025)
      merge comm_engagement id: "Sept 30, 2026, "
 
      %% FY27 activity and deliverable
-     checkout TESP_v2
-       branch TENT
-         commit id: "Common device models with TENT"
-         commit id: "Common data service interface with TENT"
-         commit id: "Design feeder generator validator"
+    checkout TESP_v2
+      branch TENT
+        commit id: "Common device models with TENT"
+        commit id: "Common data service interface with TENT"
+        commit id: "Design feeder generator validator"
+        commit id: "Test harness instantiation"
+
        checkout TESP_v2
        merge TENT
        checkout main
