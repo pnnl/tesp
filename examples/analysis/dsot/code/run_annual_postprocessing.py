@@ -615,8 +615,8 @@ def one_process(case):
 if __name__ == "__main__":
     start_time = time.time()
     logger.info("Starting annual postprocessing script")
-    # batch_process()
-    one_process(flat_path)  # options are flat_path, TOU_path, RND_path
+    batch_process()
+    #one_process(flat_path)  # options are flat_path, TOU_path, RND_path
     end_time = time.time()
     total_time = end_time - start_time
     logger.info("Annual postprocessing script completed in %.2f minutes", total_time / 60)

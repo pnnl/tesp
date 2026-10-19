@@ -98,7 +98,8 @@ def get_date(dir_path, dso, day):
     """ Utility to return start time (datetime format) of simulation day (str) in question"""
     # Determine first day of simulation and the date of the day requested
     config = load_json(dir_path, 'case_config_' + dso + '.json')
-    sim_start = datetime.strptime(config['StartTime'], '%Y-%m-%d %H:%M:%S')
+    # Unlike generate_case_config.json, this per-DSO config nests StartTime under SimulationConfig.
+    sim_start = datetime.strptime(config['SimulationConfig']['StartTime'], '%Y-%m-%d %H:%M:%S')
     date = sim_start + timedelta(days=int(day) - 1)
     return date
 
@@ -816,7 +817,7 @@ def load_weather_data(dir_path, folder_prefix, dso_num, day_num):
     data = data.set_index(['datetime'])
     # Determine first day of simulation and resulting slice to take
     config = load_json(dir_path, 'case_config_' + dso_num + '.json')
-    sim_start = datetime.strptime(config['StartTime'], '%Y-%m-%d %H:%M:%S')
+    sim_start = datetime.strptime(config['SimulationConfig']['StartTime'], '%Y-%m-%d %H:%M:%S')
     start_time = sim_start + timedelta(days=int(day_num) - 1)
     stop_time = start_time + timedelta(days=1) - timedelta(minutes=5)
     weather_df = data.loc[start_time:stop_time, :]
@@ -1127,7 +1128,7 @@ def DSO_loadprofiles(dso_num, dso_range, day_range, case, dso_metadata_file, met
     ercot_df = load_ercot_data(ercot_metadata_file, sim_start, day_range)
 
     config = load_json(case, 'case_config_' + dso_num + '.json')
-    sim_start = datetime.strptime(config['StartTime'], '%Y-%m-%d %H:%M:%S')
+    sim_start = datetime.strptime(config['SimulationConfig']['StartTime'], '%Y-%m-%d %H:%M:%S')
 
     # Load DSO MetaData
     with open(dso_metadata_file) as json_file:
@@ -1197,7 +1198,7 @@ def DSO_loadprofiles(dso_num, dso_range, day_range, case, dso_metadata_file, met
                 '%Y%m%d') + 'Load_Profiles_DSO_' + str(dso) + '_' + dsoload_df.index[0].strftime('%m-%d') + '.png'
             file_path_fig = os.path.join(case, 'plots', plot_filename)
             fig.savefig(file_path_fig, bbox_inches='tight')
-            # fig.close()
+            fig.close()
 
 
 def find_edge_cases(dso, base_case, day_range, agent_prefix, gld_prefix):
@@ -1839,7 +1840,7 @@ def der_stack_plot(dso_range, day_range, metadata_path, case, comp=None, plot_re
     y = [temp[col].values.tolist() for col in stack_cols]
 
     # Plot Building Stacked Chart with ERCOT and Substation loads for reference
-    plt.figure(figsize=(15, 10))
+    fig = plt.figure(figsize=(15, 10))
     label_list = stack_cols.copy()
     # label_list.remove('Substation Losses')
     # if not battery_case:
@@ -1895,7 +1896,8 @@ def der_stack_plot(dso_range, day_range, metadata_path, case, comp=None, plot_re
     plot_filename = datetime.now().strftime(
         '%Y%m%d') + 'DERLoadStackGraph_All_DSOs_' + temp.index[0].strftime('%m-%d') + '.png'
     file_path_fig = os.path.join(case, 'plots', plot_filename)
-    plt.savefig(file_path_fig, bbox_inches='tight')
+    fig.savefig(file_path_fig, bbox_inches='tight')
+    plt.close(fig)
 
 
 def subscription_plot(dso, day_range, metadata_path, case, demand_case):
@@ -1917,10 +1919,10 @@ def subscription_plot(dso, day_range, metadata_path, case, demand_case):
     sim_start = datetime.strptime(config['StartTime'], '%Y-%m-%d %H:%M:%S')
     ercot_df = load_ercot_data(ercot_metadata_file, sim_start, day_range)
 
-    demand_df = pd.read_hdf(case + '/Substation_' + str(dso) + '/Substation_'
+    demand_df = pd.read_hdf(demand_case + '/Substation_' + str(dso) + '/Substation_'
                                 + str(dso) + '_demand_by_meter.h5', key='demand', mode='r')
 
-    basedemand_df = pd.read_hdf(demand_case + '/Substation_' + str(dso) + '/Substation_'
+    basedemand_df = pd.read_hdf(case + '/Substation_' + str(dso) + '/Substation_'
                                 + str(dso) + '_baseline_demand_by_meter.h5', key='demand', mode='r')
 
     start_time = sim_start + timedelta(days=day_range[0] - 1)
@@ -1946,7 +1948,7 @@ def subscription_plot(dso, day_range, metadata_path, case, demand_case):
     file_name = "rate_case_values_" + "RandD" + ".json"
     tariff = load_json(metadata_path, file_name, False)
 
-    price_path = os.path.dirname(case)
+    price_path = os.path.dirname(demand_case)
     DA_LMPs_df = pd.read_csv(price_path + '/Annual_DA_LMP_Load_data.csv', index_col=0, parse_dates=True)
     DA_LMPs_df = DA_LMPs_df.loc[start_time:stop_time, :]
     DA_LMPs_df['Retail'] = (DA_LMPs_df['da_lmp' + str(dso)] + DA_LMPs_df[' Adder']) / 1000 + tariff['DSO_' + str(dso)][
@@ -1986,6 +1988,7 @@ def subscription_plot(dso, day_range, metadata_path, case, demand_case):
         '%Y%m%d') + 'Subscription_plot_DSO_' + demand_df.index[0].strftime('%m-%d') + '.png'
     file_path_fig = os.path.join(case, 'plots', plot_filename)
     plt.savefig(file_path_fig, bbox_inches='tight')
+    plt.close(fig)
 
     output_df.to_csv(path_or_buf=case + '/plots/Subscription_plot_data_' + output_df.index[0].strftime('%m-%d') + '.csv')
 
@@ -2119,6 +2122,7 @@ def load_duration_plot(dso, system, subsystem, variable, day, case, comp, agent_
         '%Y%m%d') + system + subsystem + variable + 'Load_Duration_Curve_DSO' + dso + 'Day' + day + '.png'
     file_path_fig = os.path.join(case, 'plots', plot_filename)
     plt.savefig(file_path_fig, bbox_inches='tight')
+
 
 
 def dso_comparison_plot(dso_range, system, subsystem, variable, day, case, agent_prefix, gld_prefix):
@@ -2351,6 +2355,7 @@ def dso_market_plot(dso_range, day, case, dso_metadata_file, ercot_dir, comp_cas
                     + date.strftime("%m-%d") + '.png'
     file_path_fig = os.path.join(case, 'plots', plot_filename)
     plt.savefig(file_path_fig, bbox_inches='tight')
+    plt.close(fig)
 
     # RT and DA Q Plot
     if comp_case is not None:
@@ -2386,6 +2391,7 @@ def dso_market_plot(dso_range, day, case, dso_metadata_file, ercot_dir, comp_cas
                         + date.strftime("%m-%d") + '.png'
         file_path_fig = os.path.join(case, 'plots', plot_filename)
         fig.savefig(file_path_fig, bbox_inches='tight')
+        plt.close(fig)
 
     # Subplots of quantity for each DSO in dso_range
     if len(dso_range) == 8:
@@ -2421,6 +2427,7 @@ def dso_market_plot(dso_range, day, case, dso_metadata_file, ercot_dir, comp_cas
                     + date.strftime("%m-%d") + '.png'
     file_path_fig = os.path.join(case, 'plots', plot_filename)
     fig.savefig(file_path_fig, bbox_inches='tight')
+    plt.close(fig)
 
     # Subplots of price (LMP and retail) for each DSO in dso_range
     fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(figw, figh))
@@ -2447,6 +2454,7 @@ def dso_market_plot(dso_range, day, case, dso_metadata_file, ercot_dir, comp_cas
                     + date.strftime("%m-%d") + '.png'
     file_path_fig = os.path.join(case, 'plots', plot_filename)
     fig.savefig(file_path_fig, bbox_inches='tight')
+    plt.close(fig)
 
 
 def dso_forecast_stats(dso_range, day_range, case, dso_metadata_file, ercot_dir):
@@ -2617,6 +2625,7 @@ def dso_forecast_stats(dso_range, day_range, case, dso_metadata_file, ercot_dir)
                     + date_start.strftime("%m-%d") + '.png'
     file_path_fig = os.path.join(case, 'plots', plot_filename)
     fig.savefig(file_path_fig, bbox_inches='tight')
+    plt.close(fig)
 
     fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(figw, figh))
     fig.suptitle('Comparisons of DSO Day-ahead Quantity Relative Forecast Errors: ' + date_start.strftime(
@@ -2643,6 +2652,7 @@ def dso_forecast_stats(dso_range, day_range, case, dso_metadata_file, ercot_dir)
                     + date_start.strftime("%m-%d") + '.png'
     file_path_fig = os.path.join(case, 'plots', plot_filename)
     fig.savefig(file_path_fig, bbox_inches='tight')
+    plt.close(fig)
 
     fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(figw, figh))
     fig.suptitle('Comparisons of DSO Realtime LMP Relative Forecast Errors: ' + date_start.strftime(
@@ -2669,6 +2679,8 @@ def dso_forecast_stats(dso_range, day_range, case, dso_metadata_file, ercot_dir)
                     + date_start.strftime("%m-%d") + '.png'
     file_path_fig = os.path.join(case, 'plots', plot_filename)
     fig.savefig(file_path_fig, bbox_inches='tight')
+    plt.close(fig)
+
 
     fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(figw, figh))
     fig.suptitle('Comparisons of DSO Day-ahead LMP Relative Forecast Errors: ' + date_start.strftime(
@@ -2695,6 +2707,7 @@ def dso_forecast_stats(dso_range, day_range, case, dso_metadata_file, ercot_dir)
                     + date_start.strftime("%m-%d") + '.png'
     file_path_fig = os.path.join(case, 'plots', plot_filename)
     fig.savefig(file_path_fig, bbox_inches='tight')
+    plt.close(fig)
 
     fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(11, 6))
     fig.suptitle('Comparisons of Total Relative Load Forecast Errors: ' + date_start.strftime(
@@ -2739,6 +2752,7 @@ def dso_forecast_stats(dso_range, day_range, case, dso_metadata_file, ercot_dir)
                     + date_start.strftime("%m-%d") + '.png'
     file_path_fig = os.path.join(case, 'plots', plot_filename)
     fig.savefig(file_path_fig, bbox_inches='tight')
+    plt.close(fig)
 
 
 def dso_load_stats(dso_range, month_list, data_path, metadata_path, plot=False):
@@ -2889,6 +2903,7 @@ def dso_load_stats(dso_range, month_list, data_path, metadata_path, plot=False):
         plot_filename = datetime.now().strftime('%Y%m%d') + 'DSO_Load_Box_Plots.png'
         file_path_fig = os.path.join(data_path, 'plots', plot_filename)
         plt.savefig(file_path_fig, bbox_inches='tight')
+        plt.close(fig)
 
         #  Daily Load Range Box Plot
         fig, axes = plt.subplots(2, 1, figsize=(11, 10), sharex=True)
@@ -2911,6 +2926,7 @@ def dso_load_stats(dso_range, month_list, data_path, metadata_path, plot=False):
         plot_filename = datetime.now().strftime('%Y%m%d') + 'DSO_Daily_Load_Range_Box_Plots.png'
         file_path_fig = os.path.join(data_path, 'plots', plot_filename)
         plt.savefig(file_path_fig, bbox_inches='tight')
+        plt.close(fig)
 
         #  Daily Load Values and Range Box Plot (side-by-side comparison)
         comparison_df = dso_total_df[['Total Load', 'Month']].copy()
@@ -2952,6 +2968,7 @@ def dso_load_stats(dso_range, month_list, data_path, metadata_path, plot=False):
         plot_filename = datetime.now().strftime('%Y%m%d') + 'DSO_Daily_Load_SBS_Box_Plots.png'
         file_path_fig = os.path.join(data_path, 'plots', plot_filename)
         plt.savefig(file_path_fig, bbox_inches='tight')
+        plt.close(fig)
 
 
 def non_participating_dso_loads(dso_range, case, metadata_path):
@@ -3080,7 +3097,10 @@ def dso_lmp_stats(month_list, output_path, renew_forecast_file, dso_range):
         da_lmps_df[' Adder'] = adder_df
 
         file = '/'.join(renew_forecast_file.split('/')[:-1])
-        adder_curve_df = pd.read_csv(file +'/EandC.csv')
+        try:
+            adder_curve_df = pd.read_csv(file +'/EandC.csv')
+        except FileNotFoundError: #Legacy DSOT
+            adder_curve_df = pd.read_csv(file +'/RandD.csv')
 
         ec_curve = adder_curve_df['Load curve scaled (MWh)'].tolist()
         ec_curve.reverse()
@@ -3382,6 +3402,7 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
         '%Y%m%d') + 'ISO_DA_LMP_Annual_Box_Plots-focused-SBS.png'
     file_path_fig = os.path.join(output_path, 'plots', plot_filename)
     plt.savefig(file_path_fig, bbox_inches='tight')
+    plt.close(fig)
 
     # =========== Create RT LMP value and range plot - all cases side by side ===========================
 
@@ -3446,6 +3467,7 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
         '%Y%m%d') + 'ISO_RT_LMP_Annual_Box_Plots-focused-SBS.png'
     file_path_fig = os.path.join(output_path, 'plots', plot_filename)
     plt.savefig(file_path_fig, bbox_inches='tight')
+    plt.close(fig)
 
     # =========== Create load duration plot 1 - DA spread ===========================
 
@@ -3512,6 +3534,7 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
     plot_filename = datetime.now().strftime('%Y%m%d') + 'ISO_Daily_variation_DA_LMP_Duration_Curve.png'
     file_path_fig = os.path.join(output_path, 'plots', plot_filename)
     plt.savefig(file_path_fig, bbox_inches='tight')
+    plt.close(fig)
 
 
     # =========== Create load duration plot 2 - DA LMP ===========================
@@ -3580,6 +3603,7 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
     plot_filename = datetime.now().strftime('%Y%m%d') + 'ISO_DA_LMP_Duration_Curve.png'
     file_path_fig = os.path.join(output_path, 'plots', plot_filename)
     plt.savefig(file_path_fig, bbox_inches='tight')
+    plt.close(fig)
 
     # =========== Create load duration plot 3 - RT spread ===========================
 
@@ -3638,7 +3662,8 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
     plot_filename = datetime.now().strftime('%Y%m%d') + 'ISO_Daily_variation_RT_LMP_Duration_Curve.png'
     file_path_fig = os.path.join(output_path, 'plots', plot_filename)
     plt.savefig(file_path_fig, bbox_inches='tight')
-
+    plt.close(fig)
+    
     # =========== Create load duration plot 2 - DA LMP ===========================
 
     #  Power generation load duration curve
@@ -3696,6 +3721,7 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
     plot_filename = datetime.now().strftime('%Y%m%d') + 'ISO_RT_LMP_Duration_Curve.png'
     file_path_fig = os.path.join(output_path, 'plots', plot_filename)
     plt.savefig(file_path_fig, bbox_inches='tight')
+    plt.close(fig)
 
     # =========== Create load duration plot 1 - DA geographic spread ===========================
 
@@ -3750,6 +3776,7 @@ def plot_lmp_stats(data_path, output_path, dso_num, month_index=8):
     plot_filename = datetime.now().strftime('%Y%m%d') + 'ISO_Geographic_variation_DA_LMP_Duration_Curve.png'
     file_path_fig = os.path.join(output_path, 'plots', plot_filename)
     plt.savefig(file_path_fig, bbox_inches='tight')
+    plt.close(fig)
 
     # ------ Plot of just LMPs versus net load  -------------
 
@@ -3935,6 +3962,7 @@ def heatmap_plots(dso, system, subsystem, variable, day_range, case, agent_prefi
     # ------------Save figure to file  --------------------
     file_path_fig = os.path.join(case, 'plots', plot_filename)
     fig.savefig(file_path_fig, bbox_inches='tight')
+    plt.close(fig)
 
 
 def daily_summary_plots(dso, system, subsystem, variable, day_range, case, comp, oper, diff, denom,
@@ -4625,6 +4653,104 @@ def metadata_dist_plots(system, sys_class, variable, dso_range, case, data_path,
     plt.savefig(file_path_fig, bbox_inches='tight')
 
 
+def _hvac_temperature_deviation_counts(temperatures, cooling_schedule, heating_schedule, dead_band=1):
+    """Count samples by total F deviation outside the original comfort range.
+
+    Bins are (>1, 2), [2, 3), [3, 4), [4, 5), and [5, infinity) with
+    the default 1 F deadband. Values within or on the deadband are excluded.
+    Counts describe observations, not distinct excursion events or duration.
+    """
+    temperatures = np.asarray(temperatures, dtype=float)
+    cooling_schedule = np.asarray(cooling_schedule, dtype=float)
+    heating_schedule = np.asarray(heating_schedule, dtype=float)
+    if temperatures.shape != cooling_schedule.shape or temperatures.shape != heating_schedule.shape:
+        raise ValueError('Temperature observations and comfort schedules must have matching shapes.')
+    valid = np.isfinite(temperatures) & np.isfinite(cooling_schedule) & np.isfinite(heating_schedule)
+    valid &= heating_schedule <= cooling_schedule
+    deviation = np.maximum(temperatures[valid] - cooling_schedule[valid],
+                           heating_schedule[valid] - temperatures[valid])
+    deviation = deviation[deviation > dead_band]
+    counts = {'HVAC_temperature_samples': int(valid.sum())}
+    for threshold in range(1, 6):
+        in_bin = deviation >= threshold
+        if threshold < 5:
+            in_bin &= deviation < threshold + 1
+        counts[f'HVAC_temp_deviation_{threshold}_count'] = int(in_bin.sum())
+    return counts
+
+
+def house_temperature_incidence(gld_metadata, dir_path, folder_prefix, dso_num, day_range):
+    """Save independent monthly HVAC deviation counts without writing amenity scores.
+
+    Reads raw house temperatures and original HVAC schedules. Writes only
+    ``temperature_incidence_data.h5`` (key ``temperature_incidence``) in the
+    DSO's GLD output directory. Existing amenity files and logs are untouched.
+    Complete 288-sample days are counted; missing days/houses/schedules retain
+    zero valid observations and 288 expected observations per requested day.
+    """
+    dir_path = os.path.abspath(dir_path)
+    output_path = dir_path + folder_prefix + str(dso_num)
+    metrics = [f'HVAC_temp_deviation_{threshold}_count' for threshold in range(1, 6)] + [
+        'HVAC_temperature_samples', 'HVAC_expected_temperature_samples']
+    index = pd.MultiIndex.from_product([list(gld_metadata['houses']), metrics])
+    counts_df = pd.DataFrame(0, index=index, columns=['sum'], dtype='int64')
+    agent_metadata = load_json(dir_path + '/DSO_' + str(dso_num),
+                               'Substation_' + str(dso_num) + '_agent_dict.json')
+    original_directory = os.getcwd()
+    try:
+        for day in day_range:
+            date = get_date(dir_path, str(dso_num), str(day))
+            day_name = date.strftime('%m-%d')
+            counts_df[day_name] = 0
+            counts_df.loc[(slice(None), 'HVAC_expected_temperature_samples'), day_name] = 288
+            try:
+                _, house_df = load_system_data(dir_path, folder_prefix, str(dso_num), str(day), 'house')
+            except KeyError:
+                print(f'Temperature incidence: missing house data for DSO {dso_num}, day {day}.')
+                continue
+            for house, values in house_df.groupby('name'):
+                if house not in gld_metadata['houses'] or house not in agent_metadata.get('hvacs', {}):
+                    continue
+                values = values.sort_values('time')
+                if len(values) != 288 or values['time'].nunique() != 288:
+                    continue
+                schedules = get_house_schedules(agent_metadata, gld_metadata, house)
+                day_type = 'weekday' if date.weekday() < 5 else 'weekend'
+                cooling_schedule = schedules['cool_' + day_type]
+                heating_schedule = schedules['heat_' + day_type]
+                if cooling_schedule is None or heating_schedule is None:
+                    continue
+                counts = _hvac_temperature_deviation_counts(
+                    values['air_temperature_avg'].values, cooling_schedule, heating_schedule)
+                for metric, count in counts.items():
+                    counts_df.loc[(house, metric), day_name] = count
+        counts_df['sum'] = counts_df.drop(columns='sum').sum(axis=1).astype('int64')
+        counts_df.to_hdf(os.path.join(output_path, 'temperature_incidence_data.h5'),
+                         key='temperature_incidence', mode='w')
+    finally:
+        os.chdir(original_directory)
+    return counts_df
+
+
+def annual_temperature_incidence(month_list, folder_prefix, dso_num):
+    """Aggregate only separate monthly temperature-incidence files.
+
+    Returns per-house monthly counts and an annual sum. Missing metric rows in
+    any month yield a missing annual sum rather than an understated zero.
+    Does not read or write original monthly/annual amenity scores.
+    """
+    monthly_frames = []
+    for month in month_list:
+        filename = month[1] + folder_prefix + str(dso_num) + '/temperature_incidence_data.h5'
+        counts_df = pd.read_hdf(filename, key='temperature_incidence', mode='r')
+        monthly_frames.append(counts_df['sum'].rename(month[0]))
+    if not monthly_frames:
+        raise ValueError('Provide at least one monthly temperature-incidence file.')
+    annual_df = pd.concat(monthly_frames, axis=1)
+    annual_df['sum'] = annual_df.sum(axis=1, min_count=len(monthly_frames))
+    return annual_df
+
+
 def amenity_loss(gld_metadata, dir_path, folder_prefix, dso_num, day_range):
     """ Determines the loss of amenity metrics (aka unmet hours) for HVAC and WH.
 
@@ -4794,14 +4920,14 @@ def amenity_loss(gld_metadata, dir_path, folder_prefix, dso_num, day_range):
 
 
 def annual_amenity(metadata, month_list, folder_prefix, dso_num):
-    """ Creates a dataframe of monthly energy consumption values and annual sum based on monthly h5 files.
+    """Aggregate original monthly house amenity scores and annual totals.
     Args:
         month_list (list): list of lists.  Each sub list has month name (str), directory path (str)
         folder_prefix (str): prefix of GLD folder name (e.g. '/TE_base_s')
         dso_num (str): number of the DSO folder to be opened
     Returns:
-        year_meter_df: dataframe of energy consumption and max 15 minute power consumption for each month and total
-        year_energysum_df: dataframe of energy consumption summations by customer class (res., commercial, and indust)
+        year_amenity_df: per-house monthly and annual amenity scores with
+            selected house metadata.
         """
 
     for i in range(len(month_list)):
@@ -5418,7 +5544,7 @@ def run_plots():
         # ev_meta_df, ev_df = load_system_data(base_case, GLD_prefix, dso_num, day_num, 'evcharger_det')
 
         config = load_json(data_path, 'case_config_' + dso_num + '.json')
-        sim_start = datetime.strptime(config['StartTime'], '%Y-%m-%d %H:%M:%S')
+        sim_start = datetime.strptime(config['SimulationConfig']['StartTime'], '%Y-%m-%d %H:%M:%S')
         curve_time = sim_start + timedelta(days=int(day_num) - 1, hours=14, seconds=0)
         forecast_hour = 3
         real_time = curve_time + timedelta(hours=forecast_hour - 3, minutes=30)
@@ -6017,6 +6143,7 @@ def run_plots():
             '%Y%m%d') + '_Transmission_master_plot_' + market + '.png'
         file_path_fig = os.path.join(data_path, 'plots', plot_filename)
         fig.savefig(file_path_fig, bbox_inches='tight')
+        plt.close(fig)
 
         #  ---- OLD LMP versus load plots
 
@@ -6042,6 +6169,7 @@ def run_plots():
             '%Y%m%d') + '_TSO_LMP_and_load_profile.png'
         file_path_fig = os.path.join(data_path, 'plots', plot_filename)
         fig.savefig(file_path_fig, bbox_inches='tight')
+        plt.close(fig)
 
         # Plot key subplots together and save to file (this time including wind power)
         fig = plt.figure()
@@ -6057,6 +6185,7 @@ def run_plots():
             '%Y%m%d') + '_TSO_LMP_and_wind_profile.png'
         file_path_fig = os.path.join(data_path, 'plots', plot_filename)
         fig.savefig(file_path_fig, bbox_inches='tight')
+        plt.close(fig)
 
         # fig = plt.figure()
         # ax = plt.gca()
@@ -6075,6 +6204,7 @@ def run_plots():
                     '%Y%m%d') + '_' + fuel + '_load_profile.png'
                 file_path_fig = os.path.join(data_path, 'plots', plot_filename)
                 plt.savefig(file_path_fig, bbox_inches='tight')
+                plt.close(fig)
 
         #  Plot % of wind generation as fraction of total load
         fig = plt.figure()
@@ -6086,6 +6216,7 @@ def run_plots():
             '%Y%m%d') + '_wind_gen_percent.png'
         file_path_fig = os.path.join(data_path, 'plots', plot_filename)
         plt.savefig(file_path_fig, bbox_inches='tight')
+        plt.close(fig)
 
         #  Power generation load duration curve
         LDC_case_data = ames_df['total_wind'].values.tolist()
@@ -6110,6 +6241,7 @@ def run_plots():
             '%Y%m%d') + 'Wind_power_ Load_Duration_Curve_.png'
         file_path_fig = os.path.join(data_path, 'plots', plot_filename)
         plt.savefig(file_path_fig, bbox_inches='tight')
+        plt.close(fig)
 
     # 8b-----------  LMP Plots
     if LMP_check:
@@ -6222,6 +6354,7 @@ def run_plots():
                 '%Y%m%d') + 'ERCOT_' + scenario + '_' + place + '_LMP_Annual_Box_Plots.png'
             file_path_fig = os.path.join(data_path, 'plots', plot_filename)
             plt.savefig(file_path_fig, bbox_inches='tight')
+            plt.close(fig)
 
             #  Power generation load duration curve
             DeltaLDC_data = dailypricerange[place + ' $_mwh'].values.tolist()

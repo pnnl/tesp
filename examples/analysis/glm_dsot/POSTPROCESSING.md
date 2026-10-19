@@ -1,6 +1,6 @@
 # glm_dsot Post-Processing Workflow
 
-This guide follows the **How to run Post-Processing** section of the [glm_dsot README](README.md), and expands it using the checked-in scripts and the sample results under `examples/analysis/dsot/code/post_processing`. The archived dsot results are visual examples; they are not inputs to the glm_dsot scripts and may have been produced with different runs or configurations.
+A quick start explanation of **How to run Post-Processing** is found in the `glm_dsot` [README](README.md). This file provides further detail on the post-processing workflow and expected results.
 
 ## Workflow At A Glance
 
@@ -8,20 +8,11 @@ Post-processing has two required stages and one optional review stage:
 
 1. Run [run_case_postprocessing.py](code/run_case_postprocessing.py) once for each completed monthly simulation. It reads raw monthly GridLAB-D, agent, and AMES outputs and writes monthly meter, comfort, profile, and plot products.
 2. Run [run_annual_postprocessing.py](code/run_annual_postprocessing.py) after the monthly outputs for a case are complete. It combines the twelve months, calculates annual load and market statistics, and regenerates bills and cash-flow summaries.
-3. Optionally run and configure the comparison helpers in [case_comparison_plots.py](../../../src/tesp_support/tesp_support/dsot/case_comparison_plots.py) to compare cases and prepare review plots. This is not called automatically by either post-processing script.
+3. Optionally run and configure the comparison helpers in [case_comparison_plots.py](../../../src/tesp_support/tesp_support/dsot/case_comparison_plots.py) to compare cases and prepare review plots. This is not called automatically by either post-processing script and must be run directly.
 
-```text
-completed monthly simulation
-  -> run_case_postprocessing.py (per month)
-       -> monthly meter / amenity / profile data and plots
-  -> repeat for the other 11 months
-  -> run_annual_postprocessing.py (per annual case)
-       -> annual aggregates / market purchases / bills / cash flows
-  -> optional case_comparison_plots.py
-       -> cross-case plots and comparison summaries
-```
+### Legacy DSOT vs GLM_DSOT
 
-Install `tesp_support` in the Python environment used for the run (`pip install -e src/tesp_support` from the repository root, or follow the README's equivalent navigation), install the requirements, and set `TESPDIR` to the repository's top-level `tesp` directory. The scripts also require the shared data files under `examples/analysis/dsot/data`; glm_dsot deliberately reuses this metadata.
+The glm_dsot version of `run_annual_postprocessing.py` can be used to run legacy dsot cases. Set to `legacy = True` and the paths and processing will be adjusted to run for dsot cases. After annual post-processing, `case_comparision_plots.py` is currently *only* configured for legacy dsot runs. This should be revisited for future glm_dsot simulations.
 
 ## 1. Monthly Post-Processing
 
@@ -29,29 +20,9 @@ Install `tesp_support` in the Python environment used for the run (`pip install 
 
 The monthly script reads `generate_case_config.json` from the **current working directory**. Run it from the completed monthly case folder, not from the script's directory. For example, in a Windows terminal:
 
-```powershell
-python ..\run_case_postprocessing.py
-```
+     python3 ../run_case_postprocessing.py > postprocessing.log&
 
-From a Bash-style terminal, the equivalent is:
 
-```bash
-python3 ../run_case_postprocessing.py > postprocessing.log 2>&1
-```
-
-The script calls `post_process()` at module level, so executing the file starts the work immediately. Its configured `case_path` is built from the script directory and the `caseName` in the current folder's `generate_case_config.json`. Keep the working directory and generated case configuration consistent.
-
-### Required monthly inputs
-
-The simulation must have completed far enough to provide the outputs that the selected jobs read. In particular:
-
-- `generate_case_config.json`, including `StartTime`, `EndTime`, `caseName`, `data_path`, the population metadata filename, and references to the industrial and renewable data.
-- Active-DSO population metadata, plus the shared commercial metadata and any rate data used by the configured scenario. The script resolves these using `data_path` and the population filename in the case configuration.
-- `DSO_<N>/Substation_<N>_agent_dict.json` and the per-DSO retail-agent output (including `retail_site` data) for participation and market information.
-- `Substation_<N>/Substation_<N>_glm_dict.json` and GridLAB-D HDF5 outputs for billing meters, houses, and other monitored objects.
-- AMES / TSO output needed for generation, market, and forecast plots; reference industrial-load data; and, where used, weather data.
-
-The monthly runner chooses active DSOs from the population metadata (`used == true`). The current defaults analyze simulation days beginning at day 4 and discard one trailing day. These are run-in/incomplete-day guards, not calendar-day numbers; the derived `day_range` controls meter, amenity, profile, and plot reads.
 
 ### Function order and products
 
@@ -70,7 +41,7 @@ The runner first builds a job list and executes it with Joblib (`n_jobs=-1`, `lo
 | Aggregate DER and building plots | `pt.der_stack_plot()`; `pt.bldg_stack_plot()` | Combines the DSO stack data into case-wide plots and data files. |
 | Forecast statistics | `pt.dso_forecast_stats()` | Compares DSO quantity and price forecasts with actual market/load series; writes forecast CSVs, including `DA_Q_forecast.csv` and `DA_Q_error.csv`, plus error plots. These DA-Q files can feed annual calibration. |
 
-The job toggles near the top of `post_process()` are all enabled in the checked-in script. The baseline-demand and demand-profile jobs are additionally gated by `rate_scenario`; the corresponding toggle can be enabled without the job being scheduled if the scenario string does not match the conditions above.
+The job toggles near the top of `post_process()` are all enabled by default. The baseline-demand and demand-profile jobs are additionally gated by `rate_scenario`; the corresponding toggle can be enabled without the job being scheduled if the scenario string does not match the conditions above.
 
 ### Monthly outputs to check
 
@@ -88,14 +59,14 @@ Before proceeding, check that the expected files exist for every active DSO and 
 
 ### Inputs and folder layout
 
-Complete monthly simulations and monthly post-processing for all twelve months of each scenario first. The annual script also expects an annual output folder for each case and the shared configuration/metadata below:
+First complete monthly simulations and monthly post-processing for all twelve months of each scenario. The annual script also expects that you have created an output folder for each case and the shared configuration/metadata below:
 
-- `glm_dsot/data/rates_config.json5` and the selected system config, currently `8_hi_system_config.json5` (`nodes = 8`, `scenario = "hi"` in the script).
+- `glm_dsot/data/rates_config.json5` and the selected system config, e.g., `8_hi_system_config.json5` (`nodes = 8`, `scenario = "hi"`).
 - Shared DSO population and commercial metadata under `examples/analysis/dsot/data`.
 - Annual output folders under the configured `datapath`, currently `glm_dsot/data/post_processing/{Flat,DSOT,TOU,rob-don,sub}`.
 - The twelve monthly case directories named by the script's `month_def` lists, each with `generate_case_config.json` and the monthly products described above.
 
-The script has case-specific naming assumptions. In the checked-in version, Flat monthly folders are looked up beside the annual script under `glm_dsot/code/`; TOU uses `8_2016_<MM>_pv_bt_fl_ev`; other non-Flat/non-TOU cases use `8_rnd_2016_<MM>_pv_bt_fl_ev`. March and April TOU use shifted analysis-day ranges. Confirm these paths and names against the actual run folders before starting.
+The script has case-specific naming assumptions. In the default version, Flat monthly folders are looked up beside the annual script under `glm_dsot/code/`; TOU uses `8_2016_<MM>_pv_bt_fl_ev`; other non-Flat/non-TOU cases use `8_rnd_2016_<MM>_pv_bt_fl_ev`. March and April TOU use shifted analysis-day ranges. Confirm these paths and names against the actual run folders before starting.
 
 ### Entry points: important current behavior
 
@@ -105,7 +76,7 @@ The annual file supports three wrappers:
 - `batch_process()`: processes Flat plus the `case_list` entries (DSOT, TOU, transactive / `rob-don`, and subscription / `sub`); TOU is the demand reference.
 - `base_params_process()`: runs Flat and forces integrated Q-bid calibration on.
 
-At the bottom of the checked-in file, **`base_params_process()` is the active call**. The comments mention changing this call, but running the file unchanged does not invoke `one_process()` or `batch_process()`. To run another workflow, edit/select the corresponding active call and verify the case paths first. `TESPDIR` must resolve to the repository root.
+To calibrate a new simulation, start with **`base_params_process()`**. When all the runs are ready to be post-processed, run **`batch_process()`**. If you need to re-run a single case for any reason, use **`one_process()`** and specify the rate to re-run.
 
 ### Annual function order
 
@@ -128,16 +99,44 @@ The output existence checks currently use `energy_dso_8_data.h5` and `amenity_ds
 
 Expect annual case folders to contain some or all of the following (which steps run depends on existing files and enabled settings):
 
-- Energy / comfort: `energy_dso_<N>_data.h5`, `transactive_dso_<N>_data.h5`, `amenity_dso_<N>_data.h5`, `amenity_dso_<N>_data.csv`.
-- System / market: `DSO_Total_Loads.csv`, `DSO_load_stats.csv`, `Qmax.csv`, `Annual_DA_LMP_Load_data.csv`, `Annual_RT_LMP_Load_data.csv`, `Annual_DA_LMP_stats.csv`, `Annual_RT_LMP_stats.csv`, `opf.csv`, `generator_statistics_AMES.csv`, `DSO_quadratic_curves.json`.
-- Billing / finance: `DSO<N>_Market_Purchases.json`, `DSO<N>_Cash_Flows.json`, `DSO<N>_Revenues_and_Energy_Sales.json`, customer bill and metadata JSONs, `Master_Customer_Dataframe.h5/.csv`, `Customer_CFS_Summary.csv`, `DSO_CFS_Summary.csv`, and per-DSO capital-cost / expense JSONs.
-- Calibration, when enabled: annualized DA-Q inputs, `actual_da_q.csv`, `annual_weather/weather_dso_<N>.csv`, `Q_bid_forecast_correction_calibrated.json`, `rates_config_calibrated.json5`, and `rates_config_calibration_diff_report.json`.
+- Energy / comfort: 
+    - `energy_dso_<N>_data.h5`, 
+    - `transactive_dso_<N>_data.h5`, 
+    - `amenity_dso_<N>_data.h5`, 
+    - `amenity_dso_<N>_data.csv`.
+- System / market: 
+     - `DSO_Total_Loads.csv`, 
+     - `DSO_load_stats.csv`, 
+     - `Qmax.csv`, 
+     - `Annual_DA_LMP_Load_data.csv`, 
+     - `Annual_RT_LMP_Load_data.csv`, 
+     - `Annual_DA_LMP_stats.csv`, 
+     - `Annual_RT_LMP_stats.csv`, 
+     - `opf.csv`, 
+     - `generator_statistics_AMES.csv`, 
+     - `DSO_quadratic_curves.json`.
+- Billing / finance: 
+     - `DSO<N>_Market_Purchases.json`, 
+     - `DSO<N>_Cash_Flows.json`, 
+     - `DSO<N>_Revenues_and_Energy_Sales.json`, 
+     - customer bill and metadata JSONs, 
+     - `Master_Customer_Dataframe.h5/.csv`, 
+     - `Customer_CFS_Summary.csv`, 
+     - `DSO_CFS_Summary.csv`, and 
+     - per-DSO capital-cost / expense JSONs.
+- Calibration, when enabled: 
+     - annualized DA-Q inputs, 
+     - `actual_da_q.csv`, 
+     - `annual_weather/weather_dso_<N>.csv`, 
+     - `Q_bid_forecast_correction_calibrated.json`, 
+     - `rates_config_calibrated.json5`, and 
+     - `rates_config_calibration_diff_report.json`.
 
-In the current checked-in configuration, `integrate_q_bid_calibration = True`, `qbid_auto_discover_weather_dat = True`, and `qbid_auto_merge_to_new_config = True`. Thus the active `base_params_process()` attempts calibration and writes a **new** calibrated config (it does not overwrite `rates_config.json5`). Set the switches deliberately if this is not part of the intended run.
+To calibrate a new simulation, `integrate_q_bid_calibration = True`, `qbid_auto_discover_weather_dat = True`, and `qbid_auto_merge_to_new_config = True`. Thus the active `base_params_process()` attempts calibration and writes a **new** calibrated config (it does not overwrite `rates_config.json5`). Set the switches deliberately if this is not part of the intended run.
 
 ## 3. Optional Case Comparison And Reporting
 
-The README also describes case-comparison plots and tables. These are review products, not a prerequisite for the annual aggregation. The helper [case_comparison_plots.py](../../../src/tesp_support/tesp_support/dsot/case_comparison_plots.py) has a `rates_plots()` driver that, in order:
+The helper [case_comparison_plots.py](../../../src/tesp_support/tesp_support/dsot/case_comparison_plots.py) creates pre-configured comparison plots for the rates analysis, called `rates_plots()` that:
 
 1. Makes selected August DER load-stack plots for Flat, TOU, and DSOT.
 2. Calls `plot_annual_stats()` for DA LMP, total load, and the hybrid load/LMP view.
@@ -145,35 +144,13 @@ The README also describes case-comparison plots and tables. These are review pro
 4. Calls `dso_cfs_delta()` to compare DSO cost/benefit components, including waterfall and benefit plots.
 5. Calls `customer_cfs_delta()` to compare customer bills, energy use, and savings, and writes `Customer_pop_stats.csv` plus customer-population plots.
 
-The checked-in `rates_plots()` paths point to `examples/analysis/dsot/data/post_processing`, not glm_dsot's `data/post_processing`. Before using it for glm_dsot, configure its paths, case names, metadata, selected days, and comparison pairs for the glm_dsot results. Its `__main__` block runs `rates_plots()` when the module is executed directly.
-
-The archived figures below show representative outputs from the sibling dsot post-processing tree. They are useful for recognizing plot types; they are not expected outputs from every glm_dsot run.
-
-### Annual system-load comparison
-
-This two-panel figure compares monthly total-load distributions and daily load variation by scenario. It is produced by the annual comparison helper, not by the monthly simulation itself.
-
-![Annual total system load and daily variation by case](../dsot/code/post_processing/plots/20250615Case_Compare_Total_Load%20_Annual_Box_Plots-focused-SBS.png)
-
-### DSO cost-and-benefit waterfall
-
-This figure summarizes the annual DSO impact categories, including capacity payments, energy purchases, distribution hardware, operations, software, workspace, and customer asset investments.
-
-![DSO annual cash-flow impact waterfall](../dsot/code/post_processing/DSOT/plots/20250615DSO_CFS_Waterfall.png)
-
-### Customer bill-savings distribution
-
-This customer comparison plot groups annual bill savings by participation status. The companion `dist` image is a normalized histogram; other generated plots group by tariff class, building type, heating, income, DSO, or DER participation.
-
-![Annual customer bill savings by participation](../dsot/code/post_processing/DSOT/plots/20250615Customer_PDF_cust_participating_bill_savings_pctdist.png)
+The `rates_plots()` paths point to `examples/analysis/dsot/data/post_processing`, not glm_dsot's `data/post_processing`. Before using it for glm_dsot, configure its paths, case names, metadata, selected days, and comparison pairs for the glm_dsot results. Its `__main__` block runs `rates_plots()` when the module is executed directly.
 
 ## Validation Checklist
 
 - Confirm every monthly case has `generate_case_config.json`, expected per-DSO HDF5/JSON inputs, and completed simulation logs before running post-processing.
 - Confirm all twelve month paths and naming patterns in `month_def` resolve; check the special TOU March/April ranges.
 - Confirm monthly hand-off products exist for all active DSOs, especially `energy_metrics_data.h5`, `transactive_metrics_data.h5`, `DER_profiles.h5`, and `Building_profiles.h5`.
-- Confirm annual output and metadata paths match the current script (`post_processing` with underscore, shared metadata under `analysis/dsot/data`).
 - After annual processing, compare customer populations and date windows across cases; check that DSO revenues, expenses, and capital costs reconcile in the generated cash-flow summaries.
 - If calibration is enabled, inspect the calibration JSON, diagnostics, and diff report before using the calibrated config in another run.
-
-For common run failures, check that `TESPDIR` resolves, `tesp_support` is installed in the active environment, generated monthly folders match `month_def`, and all monthly outputs are complete. A failed simulation can cause post-processing to skip incomplete days or fail later when annual aggregation expects those inputs.
+- Note that the names of many of these rates have evolved over time, in case of a `FileNotFound` error, check first that the file dependency isn't referencing a differently named version of the same file in your post-processing directory. 

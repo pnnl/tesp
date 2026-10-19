@@ -684,7 +684,9 @@ compared.
  
 Typically, tables are created by pasting the results generated in .csv files (e.g., `DSO_loads_stats.csv` or `DSO_CSF_Summary.csv`) into excel workbooks to create bespoke table formats. 
 
-The example script `plotting.py` shows example use of the plotting functions to generate useful visual outputs. Generally, plots are saved in the plots folder of the associated target scenario or month, but plots folders will/can exist at the case comparison, case, and month levels. 
+To generate the case comparision plots, from `...tesp_support/dsot` run:
+
+    python3 case_comparison_plots.py
 
 ## Results Validation and Verification Checks
 

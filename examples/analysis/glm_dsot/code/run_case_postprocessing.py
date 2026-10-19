@@ -1,6 +1,8 @@
+import argparse
 import os
 from datetime import datetime, timedelta
 from os.path import abspath, dirname, isdir
+from pathlib import Path
 
 import tesp_support.dsot.dso_rate_making as rm
 import tesp_support.dsot.plots as pt
@@ -119,7 +121,7 @@ def post_process():
             pt.toc()
         # --------------- Calculate amenity scores --------------------------------
         # Calculates HVAC/WH unmet-service metrics and writes HDF5 outputs.
-        if calc_amenity:
+        if calc_amenity and not os.path.isfile(case_path + GLD_prefix + str(dso_number) + '/amenity_data.h5'):
             pt.tic()
             amenity_df = pt.amenity_loss(GLD_metadata, case_path, GLD_prefix, str(dso_number), day_range)
             print('Amenity scores complete: DSO ' + str(dso_number) + ', Month ' + month_name)
@@ -156,6 +158,7 @@ def post_process():
     # Enable or disable each postprocessing product.
     read_meters = True
     calc_amenity = True
+    calc_temperature_incidence = True
     pop_stats = True
     gen_plots = True
     der_stack_plots = True
@@ -285,4 +288,5 @@ def post_process():
     # Performed separately in run_annual_postprocessing.py.
 
 
-post_process()
+if __name__ == '__main__':
+    post_process()

@@ -92,6 +92,9 @@ examples/analysis/glm_dsot/data/config_dump.json5
 # Ignore debug files
 examples/capabilities/feeder-generator/debug
 
+# Ignore post-processing
+examples/analysis/dsot/code/post_processing
+
 # Ignore installation files
 repository/
 tenv/

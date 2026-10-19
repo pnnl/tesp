@@ -1077,9 +1077,10 @@ def calculate_consumer_bills(
     month_to_dir = {}
     for p in os.listdir(case_path):
         parts = p.split("_")
-        if (len(parts) > 3 and parts[3] in month_map.values() and
+        # Extract month value from expected parts: ["8", "2016", "01", "pv", "bt", "fl", "ev"]
+        if (len(parts) > 3 and parts[2] in month_map.values() and
             "zip" not in p and os.path.isdir(os.path.join(base_path, p))):
-            month_to_dir[parts[3]] = p
+            month_to_dir[parts[2]] = p
 
     # Cycle through each month for which there is energy data and calculate customer bill
     months = list(meter_df.columns[~meter_df.columns.str.contains("sum")])
@@ -1331,7 +1332,9 @@ def calculate_consumer_bills(
                     bill_df.loc[
                         (each, "transactive_fixed_charge"), m
                     ] = trans_fixed_charge  * \
-                            tariff["DSO_" + dso_num][metadata["billingmeters"][each]["tariff_class"]]["connection_charge_multiplier"]
+                            tariff["DSO_" + dso_num][metadata["billingmeters"][each]["tariff_class"]].get("connection_charge_multiplier", 1.0)
+                            # Assume 1.0 if no connection_charge_multiplier exists (EandC) 
+                            # TODO: Should this be set somewhere? Cannot find connection_charge_multiplier anywhere outside this script
 
                     # Calculate the consumer's volumetric energy charge under the
                     # transactive tariff
@@ -2106,7 +2109,8 @@ def calculate_tariff_prices(
     elif rate_scenario == "subscription":
         logger.info(f"Entering subscription rate scenario for dso_num: {dso_num}")
         # Load in necessary data for the time-of-use rate
-        tou_params = load_json(case_path, "time_of_use_parameters.json", False)
+        # TODO: revisit the need to load TOU params for subscription rate
+        tou_params = load_json(os.path.expandvars('$TESPDIR/examples/analysis/dsot/data/post_processing/TOU'), "time_of_use_parameters.json", False)
 
         # Create a mapping between month name and month number
         month_map = {
@@ -2127,9 +2131,10 @@ def calculate_tariff_prices(
         month_to_dir = {}
         for p in os.listdir(case_path):
             parts = p.split("_")
-            if (len(parts) > 3 and parts[3] in month_map.values() and
+            # Extract month value from expected parts: ["8", "2016", "01", "pv", "bt", "fl", "ev"]
+            if (len(parts) > 3 and parts[2] in month_map.values() and
                 "zip" not in p and os.path.isdir(os.path.join(base_case_path, p))):
-                month_to_dir[parts[3]] = p
+                month_to_dir[parts[2]] = p
 
         # Determine the seasons under consideration in the time-of-use rate
         seasons_dict = {}
@@ -2649,8 +2654,9 @@ def calculate_tariff_prices(
                 elif trans_cost_balance_method == "fixed":
                     # Update the total number of consumers
                     total_consumers_trans_rc += 1 * \
-                    tariff["DSO_" + dso_num][metadata["billingmeters"][each]["tariff_class"]]["connection_charge_multiplier"]
-
+                    tariff["DSO_" + dso_num][metadata["billingmeters"][each]["tariff_class"]].get("connection_charge_multiplier", 1.0)
+                    # Assume 1.0 if no connection_charge_multiplier exists (EandC)
+                    
                     # Update the total revenue from volumetric charges
                     rev_volumetric_charge_trans_rc += (
                         meter_df.loc[(each, "kw-hr"), "sum"] * trans_vol_charge
@@ -2684,7 +2690,8 @@ def calculate_tariff_prices(
             total_consumption_trans_i = energy_sum_df.loc[("industrial", "kw-hr"), "sum"]
             rev_fixed_charge_trans_i = trans_fixed_charge * len(months) * num_ind_cust
         elif trans_cost_balance_method == "fixed":
-            total_consumers_trans_i = num_ind_cust * tariff["DSO_" + dso_num]["industrial"]["connection_charge_multiplier"]
+            total_consumers_trans_i = num_ind_cust * tariff["DSO_" + dso_num]["industrial"].get("connection_charge_multiplier", 1.0)
+            # Assume 1.0 if no connection_charge_multiplier exists (EandC)
             rev_volumetric_charge_trans_i = (
                 energy_sum_df.loc[("industrial", "kw-hr"), "sum"] * trans_vol_charge
             )
@@ -2776,7 +2783,8 @@ def calculate_tariff_prices(
                             meter_df.loc[(each, "kw-hr"), "sum"] * trans_vol_charge
                         )
                         rev_fixed_charge_trans += prices["transactive_fixed_charge"] * len(months) * \
-                            tariff["DSO_" + dso_num][metadata["billingmeters"][each]["tariff_class"]]["connection_charge_multiplier"]
+                            tariff["DSO_" + dso_num][metadata["billingmeters"][each]["tariff_class"]].get("connection_charge_multiplier", 1.0)
+                            # Assume 1.0 if no connection_charge_multiplier exists (EandC)
                 else:
                     # Update total consumption for the flat rate consumers
                     total_consumption_flat_rc += meter_df.loc[(each, "kw-hr"), "sum"]
@@ -3400,30 +3408,30 @@ def DSO_rate_making(
     # The updated file is written to tariff_path so subsequent runs can    #
     # read it back (important for the two-pass reconciliation workflow).  #
     # ------------------------------------------------------------------ #
+    # Always read from TOU case folder
+    tou_path = os.path.expandvars('$TESPDIR/examples/analysis/dsot/data/post_processing/TOU')
     if rate_scenario == "flat":
         tariff["DSO_" + str(dso_num)]["flat_rate"] = prices["flat_rate"]
     elif rate_scenario == "time-of-use":
         tariff["DSO_" + str(dso_num)]["flat_rate"] = prices["flat_rate"]
-        # NOTE: data_path below is assigned but not used; retained for future reference.
-        data_path = os.path.expandvars('$TESPDIR/examples/analysis/dsot/data')
-        tou_params = load_json(case, "time_of_use_parameters.json", False)
+        tou_params = load_json(tou_path, "time_of_use_parameters.json", False)
         for m in tou_params["DSO_" + str(dso_num)]:
             tou_params["DSO_" + str(dso_num)][m]["price"] = prices[
                 "tou_rate_" + tou_params["DSO_" + str(dso_num)][m]["season"]
             ]
 
-        # Store the variables in the appropriate files, if not done later
-        with open(os.path.join(case, "time_of_use_parameters.json"), "w") as fp:
+        # Write TOU params into case-specific folder
+        with open(os.path.join(tou_path, "time_of_use_parameters.json"), "w") as fp:
             json.dump(tou_params, fp)
     elif rate_scenario == "subscription":
         tariff["DSO_" + str(dso_num)]["flat_rate"] = prices["flat_rate"]
-        tou_params = load_json(case, "time_of_use_parameters.json", False)
+        tou_params = load_json(tou_path, "time_of_use_parameters.json", False)
         for m in tou_params["DSO_" + str(dso_num)]:
             tou_params["DSO_" + str(dso_num)][m]["price"] = prices[
                 "subscription_rate_" + tou_params["DSO_" + str(dso_num)][m]["season"]
             ]
 
-        # Store the variables in the appropriate files, if not done later
+        # Write TOU params into case-specific folder
         with open(os.path.join(case, "time_of_use_parameters.json"), "w") as fp:
             json.dump(tou_params, fp)
     elif rate_scenario == "transactive":

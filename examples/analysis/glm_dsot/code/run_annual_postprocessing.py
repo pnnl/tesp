@@ -99,11 +99,17 @@ if not check_folder:
 Each folder must contain the twelve monthly simulation sub-folders
 (e.g., 8_2016_01_pv_bt_fl_ev/) before this script can be run.
 
+Note that later runs may add the rate name to the case folder name (e.g., 
+8_2016_01_rnd_pv_bt_fl_ev/). Either update the `month_def` below to reflect each
+rate or remove the `_<rate>_` from the case folder names before post-processing.
+
 To use a different local path layout, add an elif branch below or set
 hayden = True to use hard-coded paths.
 """
 hayden = False
-legacy = True
+legacy = True # this glm_dsot version of run_annual_postprocessing.py can be used
+              # to run legacy dsot cases. Set to True and paths and processing
+              # will be adjusted to run for dsot cases.
 
 if hayden:
     flat_path = 'C:/Users/reev057/DSOT-DATA/Rates/Flat'
@@ -470,16 +476,16 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
             case_name = 'Flat'
             rate_scenario = "flat"
         if case_path == DSOT_path:
-            case_name = 'DSOT'
+            case_name = 'DSOT' #aka DE
             rate_scenario = "dsot"
         if case_path == TOU_path:
             case_name = 'TOU'
             rate_scenario = "time-of-use"
         if case_path == transactive_path:
-            case_name = 'EandC'
+            case_name = 'EandC' #aka RandD, RND, DE+C --> check required data files for naming consistency
             rate_scenario = "transactive"
         if case_path == subscription_path:
-            case_name = 'Sub'
+            case_name = 'Sub' #aka B&S
             rate_scenario = "subscription"
 
         print('---------------Postprocessing ' + str(case_name), 'Case ----------------')
@@ -635,8 +641,8 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
             # --------------- AGGREGATE ANNUAL AMENITY SCORES  -----------------
             # Amenity scores quantify the comfort impact of demand-response
             # events on each customer (e.g., thermostat setpoint overrides, EV
-            # charge delays). Lower scores indicate greater disruption.
-            if annual_amenity:
+            # charge delays). Higher scores indicate greater disruption.
+            if annual_amenity and not os.path.isfile(os.path.join(case_path, 'amenity_dso_' + str(dso_num) + '_data.h5')):
                 annual_amenity_df = pt.annual_amenity(GLD_metadata, month_def, GLD_prefix, str(dso_num))
                 pt.tic()
                 annual_amenity_df.to_hdf(os.path.join(case_path, 'amenity_dso_' + str(dso_num) + '_data.h5'), key='amenity_data')
@@ -855,7 +861,7 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
                     DSOT_metadata_path,
                     dso_scaling_factor,
                     num_ind_cust,
-                    case_name,
+                    case_name, # check rate_case_values_[case_name] is "EandC" for legacy
                     rate_scenario,
                     trans_cost_balance_method,
                     include_RT

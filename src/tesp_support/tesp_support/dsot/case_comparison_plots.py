@@ -10,6 +10,7 @@ hard-coded paths and optional analysis stages controlled by flags. Neither
 driver runs a simulation or creates its input result files.
 """
 
+import calendar
 import os
 from datetime import datetime
 
@@ -119,10 +120,10 @@ def customer_bill_component_comparison(cases, data_paths, output_path, dso_num):
                 df.loc[(month, case), 'Demand Charge'] = var_df.loc[(Customer_class, 'tou_demand_charge'), month] / cust_sf
 
             elif case == 'DE':
-                df.loc[(month, case), 'Fixed Charge'] = var_df.loc[(Customer_class, 'transactive_fixed_charge'), month] / cust_sf
-                df.loc[(month, case), 'Volumetric Energy Charge'] = var_df.loc[(Customer_class, 'transactive_volumetric_charge'), month] / cust_sf
-                df.loc[(month, case), 'Dynamic (DA) Charge'] = var_df.loc[(Customer_class, 'transactive_DA_energy_charge'), month] / cust_sf
-                df.loc[(month, case), 'Dynamic (RT) Charge'] = var_df.loc[(Customer_class, 'transactive_RT_energy_charge'), month] / cust_sf
+                df.loc[(month, case), 'Fixed Charge'] = var_df.loc[(Customer_class, 'dsot_fixed_charge'), month] / cust_sf
+                df.loc[(month, case), 'Volumetric Energy Charge'] = var_df.loc[(Customer_class, 'dsot_volumetric_charge'), month] / cust_sf
+                df.loc[(month, case), 'Dynamic (DA) Charge'] = var_df.loc[(Customer_class, 'dsot_DA_energy_charge'), month] / cust_sf
+                df.loc[(month, case), 'Dynamic (RT) Charge'] = var_df.loc[(Customer_class, 'dsot_RT_energy_charge'), month] / cust_sf
 
             elif case == 'DE+C':
                 df.loc[(month, case), 'Fixed Charge'] = var_df.loc[(Customer_class, 'transactive_fixed_charge'), month] / cust_sf
@@ -135,7 +136,8 @@ def customer_bill_component_comparison(cases, data_paths, output_path, dso_num):
                 df.loc[(month, case), 'Volumetric Energy Charge'] = var_df.loc[(Customer_class, 'subscription_energy_charge'), month] / cust_sf
                 df.loc[(month, case), 'Dynamic Swing Charge'] = var_df.loc[(Customer_class, 'subscription_net_deviation_charge'), month] / cust_sf
 
-    matplotlib.style.use('seaborn-v0_8-deep')
+    matplotlib.style.use('seaborn-v0_8') # Only 6 distinct colors natively
+    component_colors = sns.color_palette("Set2", n_colors=len(Cost_components))
 
     fig, axes = plt.subplots(nrows=1, ncols=len(months), figsize=(max(11,3*len(months)), 10))
 
@@ -147,7 +149,7 @@ def customer_bill_component_comparison(cases, data_paths, output_path, dso_num):
 
         # ax = subset.plot(kind="bar", stacked=True, colormap="Blues",
         #                  ax=axes[ax_position])
-        ax = subset.plot(kind="bar", stacked=True,
+        ax = subset.plot(kind="bar", stacked=True, color=component_colors,
                          ax=axes[ax_position])
         ax.set_title(month, fontsize=14, alpha=1.0)
         ax.set_ylabel(title_name, fontsize=14),
@@ -181,6 +183,122 @@ def customer_bill_component_comparison(cases, data_paths, output_path, dso_num):
     file_path_fig = os.path.join(output_path, 'plots', plot_filename)
     plt.savefig(file_path_fig, bbox_inches='tight')
 
+def indoor_air_amenity_comparison(cases, data_paths, output_path, dso_range):
+    """Compare residential HVAC discomfort for matched households across tariffs.
+
+    Runs the flat rate as baseline case. Compares flat rate to participating
+    residential households across other tariff designs. Reads annual amenity 
+    HDF5 files and annual customer metadata JSONs. Multiple house zones on a 
+    billing meter are averaged to give each household equal weight.
+
+    Args:
+        cases (list[str]): Unique tariff labels, baseline first.
+        data_paths (list[str]): Corresponding annual result directories.
+        output_path (str): Root for the plot and household-score CSV.
+        dso_range (iterable[int]): DSOs to include, matched independently.
+
+    Returns:
+        pandas.DataFrame: Monthly and annual household HVAC scores and paired
+        changes from baseline. Positive changes mean greater discomfort.
+
+    Existing scores cannot distinguish skipped data or missing schedules from
+    genuine zero discomfort. Check simulation coverage before interpreting them.
+    """
+    if len(cases) < 2 or len(cases) != len(data_paths) or len(set(cases)) != len(cases):
+        raise ValueError('Provide at least two unique case labels and matching result paths.')
+
+    months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    periods = months + ['Annual']
+    frames = []
+    for dso in dso_range:
+        scores_by_case = []
+        eligible_by_case = []
+        for case, data_path in zip(cases, data_paths):
+            metadata = pt.load_json(data_path, 'DSO' + str(dso) + '_Customer_Metadata.json')
+            amenity_path = os.path.join(data_path, 'amenity_dso_' + str(dso) + '_data.h5')
+            amenity = pd.read_hdf(amenity_path, key='amenity_data', mode='r')
+            scores = amenity.xs('HVAC_deg-hrs', level=1).copy()
+            month_columns = {str(column)[:3]: column for column in scores.columns
+                             if str(column)[:3] in months}
+            if len(month_columns) != 12 or 'sum' not in scores.columns:
+                raise ValueError(f'{amenity_path} must contain twelve monthly HVAC scores and an annual sum.')
+            scores = scores[[month_columns[month] for month in months] + ['sum']]
+            scores.columns = periods
+            scores = scores.apply(pd.to_numeric, errors='coerce').replace([np.inf, -np.inf], np.nan)
+            house_to_meter = {house: details['billingmeter_id']
+                              for house, details in metadata['houses'].items()}
+            scores['meter ID'] = scores.index.map(house_to_meter)
+            invalid_meters = set(scores.loc[scores[periods].isna().any(axis=1), 'meter ID'].dropna())
+            missing_houses = set(house_to_meter) - set(scores.index)
+            invalid_meters.update(house_to_meter[house] for house in missing_houses)
+            household_scores = scores.groupby('meter ID')[periods].mean()
+            household_scores = household_scores.drop(index=list(invalid_meters), errors='ignore')
+            eligible = {meter for meter, details in metadata['billingmeters'].items()
+                        if details.get('tariff_class') == 'residential'
+                        and (case == cases[0] or (details.get('cust_participating', False)
+                                                 and details.get('hvac_participating', False)))}
+            eligible_by_case.append(eligible & set(household_scores.index))
+            scores_by_case.append(household_scores)
+
+        matched = sorted(set.intersection(*eligible_by_case))
+        print(f'Indoor-air amenity: DSO {dso}, {len(matched)} matched HVAC-participating households; '
+              f'eligible counts by tariff: {dict(zip(cases, map(len, eligible_by_case)))}')
+        if not matched:
+            continue
+        baseline = scores_by_case[0].loc[matched, periods]
+        for case, scores in zip(cases, scores_by_case):
+            values = scores.loc[matched, periods]
+            values.index.name = 'meter ID'
+            changes = values.subtract(baseline)
+            long_values = values.reset_index().melt(
+                id_vars='meter ID', var_name='Period', value_name='HVAC Discomfort (F-hr)')
+            long_changes = changes.reset_index().melt(
+                id_vars='meter ID', var_name='Period', value_name='Change from Baseline (F-hr)')
+            frame = long_values.merge(long_changes, on=['meter ID', 'Period'], validate='one_to_one')
+            frame['DSO'] = dso
+            frame['Case'] = case
+            frames.append(frame)
+
+    if not frames:
+        raise ValueError('No matched residential HVAC-participating households have complete amenity scores.')
+    results = pd.concat(frames, ignore_index=True)
+    annual = results[results['Period'] == 'Annual']
+    colors = sns.color_palette('colorblind', n_colors=len(cases))
+    fig, axes = plt.subplots(2, 2, figsize=(16, 10))
+    try:
+        for case, color in zip(cases, colors):
+            monthly = results[(results['Case'] == case) & (results['Period'] != 'Annual')]
+            means = monthly.groupby('Period')[['HVAC Discomfort (F-hr)', 'Change from Baseline (F-hr)']].mean().reindex(months)
+            axes[0, 0].plot(range(12), means['HVAC Discomfort (F-hr)'], label=case, color=color, marker='o')
+            axes[1, 0].plot(range(12), means['Change from Baseline (F-hr)'], label=case, color=color, marker='o')
+        for axis in axes[:, 0]:
+            axis.set_xticks(range(12), months)
+            axis.set_xlabel('Month')
+            axis.legend(title='Tariff')
+        sns.boxplot(data=annual, x='Case', y='HVAC Discomfort (F-hr)', hue='Case',
+                    order=cases, hue_order=cases, palette=colors, legend=False, ax=axes[0, 1])
+        sns.boxplot(data=annual, x='Case', y='Change from Baseline (F-hr)', hue='Case',
+                    order=cases, hue_order=cases, palette=colors, legend=False, ax=axes[1, 1])
+        axes[0, 0].set_title('Mean Monthly HVAC Discomfort')
+        axes[0, 1].set_title('Annual Household HVAC Discomfort')
+        axes[1, 0].set_title('Mean Monthly Change from ' + cases[0])
+        axes[1, 1].set_title('Annual Household Change from ' + cases[0])
+        for axis in axes[0, :]:
+            axis.set_ylabel('HVAC Discomfort (F-hr per Household)')
+        for axis in axes[1, :]:
+            axis.set_ylabel('Change from Baseline (F-hr per Household)')
+            axis.axhline(0, color='grey', linestyle='--', linewidth=1)
+        fig.tight_layout()
+        plot_path = os.path.join(output_path, 'plots')
+        data_path = os.path.join(output_path, 'data')
+        os.makedirs(plot_path, exist_ok=True)
+        os.makedirs(data_path, exist_ok=True)
+        fig.savefig(os.path.join(plot_path, 'Case_Compare_Indoor_Air_Amenity.png'), bbox_inches='tight')
+        results.to_csv(os.path.join(data_path, 'Case_Compare_Indoor_Air_Amenity.csv'), index=False)
+    finally:
+        plt.close(fig)
+    return results
+
 def customer_monthly_stats(cases, data_paths, output_path, dso_num, cust_class=None):
     """Compare monthly customer bills and changes from a baseline case.
 
@@ -213,49 +331,48 @@ def customer_monthly_stats(cases, data_paths, output_path, dso_num, cust_class=N
         var_df = var_df[var_df[var_df.columns[0]].str.contains('total')]
 
         if case == cases[0]:
-            customers = list(set(var_df.index.tolist()))
+            customers = sorted(var_df.index.unique().tolist())
 
-            cust_cfs_file = data_path + '/Master_Customer_Dataframe.h5'
-            customer_cfs_df = pd.read_hdf(cust_cfs_file, key='customer_data', mode='r')
-            customer_cfs_df = customer_cfs_df[customer_cfs_df['Customer ID'].str.contains('DSO'+dso_num, case=False)]
-            customer_cfs_df = customer_cfs_df.set_index('meter ID')
+            if cust_class is not None:
+                cust_cfs_file = data_path + '/Master_Customer_Dataframe.h5'
+                customer_cfs_df = pd.read_hdf(cust_cfs_file, key='customer_data', mode='r')
+                customer_cfs_df = customer_cfs_df[customer_cfs_df['Customer ID'].str.contains(
+                    'DSO' + str(dso_num) + r'(?!\d)', case=False, na=False)]
+                missing_meters = set(customers) - set(customer_cfs_df['meter ID'])
+                if missing_meters:
+                    print(f'CFS is missing {len(missing_meters)} billing meters for DSO {dso_num}; '
+                          f'excluding them from the {cust_class} filter.')
+                class_meters = set(customer_cfs_df.loc[
+                    customer_cfs_df['tariff_class'] == cust_class, 'meter ID'])
+                customers = [meter for meter in customers if meter in class_meters]
 
             # Create empty DataFrame for all consumer bills
             meters = []
             case_list = []
             month_list = []
             for meter in customers:
-
-                # This is needed due to inconsistencies in customer sets between CFS and customer bill data.
-                # TODO: reconcile and make consistent customer representations.
-                try:
-                    if customer_cfs_df.loc[meter, 'tariff_class'] == cust_class:
-                        is_in_class = True
-                except Exception as e:
-                    is_in_class = False
-                    print(f"CFS is missing: {e}")
-
-                if cust_class == None or is_in_class:
-                    for case2 in cases:
-                        for month in months:
-                            meters.append(meter)
-                            case_list.append(case2)
-                            month_list.append(month)
+                for case2 in cases:
+                    for month in months:
+                        meters.append(meter)
+                        case_list.append(case2)
+                        month_list.append(month)
 
             results_df = pd.DataFrame(
                 index=[meters, case_list, month_list],
-                columns=['total bill', 'month', 'case', 'change'])
+                columns=['total bill', 'month', 'case', 'change']).sort_index()
+            results_df['total bill'] = np.nan
+            results_df['change'] = np.nan
 
+        monthly_bills = var_df[months].groupby(level=0).sum()
         for customer in customers:
             for month in months:
-                    results_df.loc[(customer, case, month), 'total bill'] = var_df.loc[(customer), month].sum()
-                    results_df.loc[(customer, case, month), 'month'] = month
-                    results_df.loc[(customer, case, month), 'case'] = case
-                    results_df.loc[(customer, case, month), 'change'] = 100 * (results_df.loc[(customer, case, month), 'total bill'] \
-                                                                            - results_df.loc[(customer, cases[0], month), 'total bill']) \
-                                                                            / results_df.loc[(customer, cases[0], month), 'total bill']
-
-    plt.clf()
+                results_df.at[(customer, case, month), 'total bill'] = monthly_bills.at[customer, month]
+                results_df.at[(customer, case, month), 'month'] = month
+                results_df.at[(customer, case, month), 'case'] = case
+                baseline_bill = results_df.at[(customer, cases[0], month), 'total bill']
+                results_df.at[(customer, case, month), 'change'] = (
+                    100 * (monthly_bills.at[customer, month] - baseline_bill) / baseline_bill
+                    if baseline_bill != 0 else np.nan)
 
     fig, axes = plt.subplots(2, 1, figsize=(11, 10), sharex=True)
     # pal = ['violet'] + ['lightgreen'] + ["gold"] + ['skyblue']
@@ -263,7 +380,8 @@ def customer_monthly_stats(cases, data_paths, output_path, dso_num, cust_class=N
     # pal = sns.color_palette("Paired")
     pal = pal[0:len(cases)]
 
-    sns.boxplot(data=results_df, x='month', y='total bill', hue='case', ax=axes[0], palette=pal)
+    sns.boxplot(data=results_df, x='month', y='total bill', hue='case', ax=axes[0], palette=pal,
+                order=months, hue_order=cases)
 
     axes[0].set_ylabel(units)
     axes[0].set_title('Variation in ' + title_name + ' over the Year')
@@ -272,7 +390,8 @@ def customer_monthly_stats(cases, data_paths, output_path, dso_num, cust_class=N
     handles, labels = axes[0].get_legend_handles_labels()
     axes[0].legend(handles=handles, labels=labels, framealpha=1)
 
-    sns.boxplot(data=results_df, x='month', y='change', hue='case', ax=axes[1], palette=pal)
+    sns.boxplot(data=results_df, x='month', y='change', hue='case', ax=axes[1], palette=pal,
+                order=months, hue_order=cases)
     axes[1].set_ylabel('Percent Change (%)')
     axes[1].set_title('Change in ' + title_name + ' compared to ' + cases[0] + ' case')
     axes[1].set_xlabel('Month')
@@ -283,7 +402,8 @@ def customer_monthly_stats(cases, data_paths, output_path, dso_num, cust_class=N
     plot_filename = datetime.now().strftime(
         '%Y%m%d') + 'Case_Compare_Customer_Monthly_Bills.png'
     file_path_fig = os.path.join(output_path, 'plots', plot_filename)
-    plt.savefig(file_path_fig, bbox_inches='tight')
+    fig.savefig(file_path_fig, bbox_inches='tight')
+    plt.close(fig)
 
 
 def load_comparison_plot(day_range, metadata_path, cases, data_paths, output_path):
@@ -345,7 +465,7 @@ def load_comparison_plot(day_range, metadata_path, cases, data_paths, output_pat
             # Plot load plot
             plt.figure(figsize=(15, 10))
 
-            output_df = loads_df[['Substation']]
+            output_df = loads_df[['Substation']].copy()
             output_df['Substation'] += loads_df['Industrial Loads']
             output_df = output_df.rename(columns={'Substation': case_name})
         else:
@@ -797,6 +917,7 @@ def plot_annual_stats(cases, data_paths, output_path, dso_num, variable):
         file_path_fig = os.path.join(output_path, 'plots', plot_filename)
         plt.savefig(file_path_fig, bbox_inches='tight')
 
+    plt.close(fig)
 
 # -------------------  Plot Variable  Versus Duration Curve  --------------------
 #     pal = ['violet'] + ['lightgreen']
@@ -1919,7 +2040,7 @@ def rates_plots():
     DSOT_aug_path = os.path.join(DSOT_path, '8_2016_08_pv_bt_fl_ev')
     pt.der_stack_plot(dso_range, day_range, metadata_path, DSOT_aug_path, flat_aug_path, False)
 
-    RND_aug_path = os.path.join(DSOT_path, '8_2016_08_pv_bt_fl_ev')
+    RND_aug_path = os.path.join(RND_path, '8_2016_08_pv_bt_fl_ev')
     pt.der_stack_plot(dso_range, day_range, metadata_path, RND_aug_path, flat_aug_path, False)
 
     # Winter Peak as well as system min load (4/4/2016) plots.
@@ -1927,13 +2048,13 @@ def rates_plots():
     day_range = range(18, 23)  # Set day range and case path around Dec 17 peak - peak load is given in load stats csv.
     pt.der_stack_plot(dso_range, day_range, metadata_path, flat_dec_path, None, False)
 
-    TOU_dec_path = os.path.join(flat_path, '8_2016_12_pv_bt_fl_ev')
+    TOU_dec_path = os.path.join(TOU_path, '8_2016_12_pv_bt_fl_ev')
     pt.der_stack_plot(dso_range, day_range, metadata_path, TOU_dec_path, flat_dec_path, False)
 
-    DSOT_dec_path = os.path.join(flat_path, '8_2016_12_pv_bt_fl_ev')
+    DSOT_dec_path = os.path.join(DSOT_path, '8_2016_12_pv_bt_fl_ev')
     pt.der_stack_plot(dso_range, day_range, metadata_path, DSOT_dec_path, flat_dec_path, False)
 
-    RND_dec_path = os.path.join(flat_path, '8_2016_12_pv_bt_fl_ev')
+    RND_dec_path = os.path.join(RND_path, '8_2016_12_pv_bt_fl_ev')
     pt.der_stack_plot(dso_range, day_range, metadata_path, RND_dec_path, flat_dec_path, False)
 
     # Compare TOU and DSO+T to Flat (BAU case)
@@ -1942,13 +2063,13 @@ def rates_plots():
     day_range = range(27, 32)  # Set day range and case path around Oct 28 min.
     pt.der_stack_plot(dso_range, day_range, metadata_path, flat_oct_path, None, False)
 
-    TOU_oct_path = os.path.join(flat_path, '8_2016_10_pv_bt_fl_ev')
+    TOU_oct_path = os.path.join(TOU_path, '8_2016_10_pv_bt_fl_ev')
     pt.der_stack_plot(dso_range, day_range, metadata_path, TOU_oct_path, flat_oct_path, False)
 
-    DSOT_oct_path = os.path.join(flat_path, '8_2016_10_pv_bt_fl_ev')
+    DSOT_oct_path = os.path.join(DSOT_path, '8_2016_10_pv_bt_fl_ev')
     pt.der_stack_plot(dso_range, day_range, metadata_path, DSOT_oct_path, flat_oct_path, False)
 
-    RND_oct_path = os.path.join(flat_path, '8_2016_10_pv_bt_fl_ev')
+    RND_oct_path = os.path.join(RND_path, '8_2016_10_pv_bt_fl_ev')
     pt.der_stack_plot(dso_range, day_range, metadata_path, RND_oct_path, flat_oct_path, False)
 
     # Compare TOU and DSO+T to Flat (BAU case)
@@ -1957,28 +2078,28 @@ def rates_plots():
     day_range = range(18, 23)  # Set day range and case path around Oct 28 min.
     pt.der_stack_plot(dso_range, day_range, metadata_path, flat_nov_path, None, False)
 
-    TOU_nov_path = os.path.join(flat_path, '8_2016_11_pv_bt_fl_ev')
+    TOU_nov_path = os.path.join(TOU_path, '8_2016_11_pv_bt_fl_ev')
     pt.der_stack_plot(dso_range, day_range, metadata_path, TOU_nov_path, flat_nov_path, False)
 
-    DSOT_nov_path = os.path.join(flat_path, '8_2016_11_pv_bt_fl_ev')
+    DSOT_nov_path = os.path.join(DSOT_path, '8_2016_11_pv_bt_fl_ev')
     pt.der_stack_plot(dso_range, day_range, metadata_path, DSOT_nov_path, flat_nov_path, False)
 
-    RND_nov_path = os.path.join(flat_path, '8_2016_11_pv_bt_fl_ev')
+    RND_nov_path = os.path.join(RND_path, '8_2016_11_pv_bt_fl_ev')
     pt.der_stack_plot(dso_range, day_range, metadata_path, RND_nov_path, flat_nov_path, False)
 
     # Compare TOU and DSO+T to Flat (BAU case)
     # Fall Min Load
-    flat_apr_path = 'C:\\Users\\reev057\\DSOT-DATA\\Rates\\Flat\\8_2016_04_pv_bt_fl_ev'
+    flat_apr_path = os.path.join(flat_path, '8_2016_04_pv_bt_fl_ev')
     day_range = range(26, 31)  # Set day range and case path around Oct 28 min.
     pt.der_stack_plot(dso_range, day_range, metadata_path, flat_apr_path, None, False)
 
-    TOU_apr_path = 'C:\\Users\\reev057\\DSOT-DATA\\Rates\\TOU\\8_2016_04_pv_bt_fl_ev'
+    TOU_apr_path = os.path.join(TOU_path, '8_2016_04_pv_bt_fl_ev')
     pt.der_stack_plot(dso_range, day_range, metadata_path, TOU_apr_path, flat_apr_path, False)
 
-    DSOT_apr_path = 'C:\\Users\\reev057\\DSOT-DATA\\Rates\\DSOT\\8_2016_04_pv_bt_fl_ev'
+    DSOT_apr_path = os.path.join(DSOT_path, '8_2016_04_pv_bt_fl_ev')
     pt.der_stack_plot(dso_range, day_range, metadata_path, DSOT_apr_path, flat_apr_path, False)
 
-    RND_apr_path = 'C:\\Users\\reev057\\DSOT-DATA\\Rates\\Transactive\\8_2016_04_pv_bt_fl_ev'
+    RND_apr_path = os.path.join(RND_path, '8_2016_04_pv_bt_fl_ev')
     pt.der_stack_plot(dso_range, day_range, metadata_path, RND_apr_path, flat_apr_path, False)
 
     print('Stage 2: compare annual distributions for selected system metrics')
@@ -1989,7 +2110,12 @@ def rates_plots():
     for Variable in Variables:
         plot_annual_stats(Cases, Data_paths, data_path, dso_num, Variable)
 
-    print('2b. Annual Customer Bill Plotting - Plot gets saved in case_path\plots folder.')
+    print('Stage 2a: compare participating-household indoor-air amenity across tariffs.')
+    indoor_air_amenity_comparison(
+        ['Flat', 'TOU', 'DE', 'DE+C', 'B&S'],
+        [flat_path, TOU_path, DSOT_path, RND_path, sub_path], data_path, dso_range)
+
+    print('Stage 2b: annual Customer Bill Plotting - Plot gets saved in case_path/plots folder.')
     # Provides annual box and whisker
     Cases = ['Flat', 'TOU', 'DE', 'DE+C', 'B&S']
     Data_paths = [flat_path, TOU_path, DSOT_path, RND_path, sub_path]
@@ -2004,7 +2130,7 @@ def rates_plots():
 
     print('Stage 4: compare DSO cost-benefit components across rate cases.')
     # Total grid cost water fall: Figure 42 in Vol 1
-    Cases_list = [['Flat', 'TOU'], ['Flat', 'DE'], ['Flat', 'DE+C']]
+    Cases_list = [['Flat', 'TOU'], ['Flat', 'DSOT'], ['Flat', 'RND']] #TODO: Why DSOT and RND vs DE and DE+C?
     Data_paths_list = [[flat_path, TOU_path], [flat_path, DSOT_path],[flat_path, RND_path]]
     dso_cfs_delta(Cases_list, Data_paths_list, dso_range, metadata_file, metadata_path)
 
@@ -2026,7 +2152,7 @@ def rates_plots():
     Data_paths = [flat_path, sub_path]
     customer_cfs_delta(Cases, Data_paths, metadata_file, metadata_path)
 
-    print('Stage 5b. Annual Customer Bill Plotting - Plot gets saved in case_path\plots folder.')
+    print('Stage 5b: Annual Customer Bill Plotting - Plot gets saved in case_path/plots folder.')
     # Provides annual box and whisker
     Cases = ['Flat', 'TOU', 'DE', 'DE+C', 'B&S']
     Data_paths = [flat_path, TOU_path, DSOT_path, RND_path, sub_path]
@@ -2037,13 +2163,13 @@ def rates_plots():
     print('Stage 6. House/Customer Daily HVAC / Load & Price Comparison Examples.')
     # Probably density Functions of customer populations: e.g., Figure 45 in Vol 1
     day_range = range(12, 15)
-    Cases = ['Flat', 'TOU', 'DE', 'DE+C']
+    Cases = ['Flat', 'TOU', 'DSOT', 'RND']
     Month = '8_2016_08_pv_bt_fl_ev'
     Data_paths = [flat_path +'/' + Month, TOU_path + '/' + Month, DSOT_path+ '/' + Month, RND_path +'/' + Month]
     load_comparison_plot(day_range, metadata_path, Cases, Data_paths, data_path)
 
     # day_range = range(14, 17)
-    Cases = ['Flat', 'TOU', 'DE', 'DE+C']
+    Cases = ['Flat', 'TOU', 'DSOT', 'RND']
     Rate_Scenarios = ["flat", "TOU", "DSOT", "RandD"]
     Data_paths = [flat_path, TOU_path, DSOT_path, RND_path]
     retail_price_comparison_plot(dso_num, day_range, metadata_path, Cases, Data_paths, Rate_Scenarios, Month, data_path)
@@ -2062,7 +2188,7 @@ def rates_plots():
     Data_paths = [flat_path, TOU_path, DSOT_path, RND_path]
     retail_price_comparison_plot(dso_num, day_range, metadata_path, Cases, Data_paths, Rate_Scenarios, Month, data_path)
 
-    print('Stage 7. Population Attribute PDFs. --> no plots yet')
+    print('Stage 7. Population Attribute PDFs. --> TODO: no plots yet')
     # Probably density Functions of customer populations: e.g., Figure 45 in Vol 1
 
     print('Stage 8. Subscription Plots')

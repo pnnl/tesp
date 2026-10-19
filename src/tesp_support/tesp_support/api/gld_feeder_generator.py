@@ -41,7 +41,8 @@ Residential_Build class:
       histograms sum to one.
 
     selectSetpointBins: Randomly choose a histogram row from the cooling and
-      heating setpoints. The random number for the heating setpoint row is generated internally.
+      heating setpoints. The random number for the heating setpoint row is 
+      generated internally.
 
     add_small_loads: Write loads that are too small for a house, onto a node.
 
@@ -74,7 +75,8 @@ Commercial_Build class:
     define_comm_bldg: Randomly select a set number of buildings by type and size
       (sqft).
 
-    normalize_dict_prob: Ensure that the probability distribution of values in a dictionary effectively sums to one.
+    normalize_dict_prob: Ensure that the probability distribution of values in a 
+      dictionary effectively sums to one.
 
     rand_bin_select: Returns the element (bin) in a dictionary given a certain
       probability.
