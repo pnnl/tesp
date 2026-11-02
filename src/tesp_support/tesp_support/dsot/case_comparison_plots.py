@@ -16,6 +16,8 @@ from datetime import datetime
 
 import waterfall_chart #distribution name: waterfallcharts
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+from matplotlib.ticker import FuncFormatter
 import matplotlib
 import numpy as np
 import pandas as pd
@@ -24,6 +26,183 @@ from datetime import datetime, date, timedelta
 
 import tesp_support.dsot.plots as pt
 
+# Thermal integrity levels per building type, from DSO+T report Tables 25-27.
+# Each entry: (level index, description, population fraction, properties).
+# Properties use the metadata key names so houses can be compared directly.
+THERMAL_INTEGRITY_BY_CLASS = {
+    'SINGLE_FAMILY': [
+        (0, 'old, uninsulated', 0.05,
+         {'Rroof': 11, 'Rwall': 4, 'Rfloor': 4, 'Rdoors': 3,
+          'glazing_layers': 1, 'glass_type': 1, 'glazing_treatment': 1, 'window_frame': 1,
+          'airchange_per_hour': 1.5}),
+        (1, 'old, insulated', 0.20,
+         {'Rroof': 19, 'Rwall': 11, 'Rfloor': 4, 'Rdoors': 3,
+          'glazing_layers': 2, 'glass_type': 1, 'glazing_treatment': 1, 'window_frame': 1,
+          'airchange_per_hour': 1.5}),
+        (2, 'old, weatherized', 0.20,
+         {'Rroof': 19, 'Rwall': 11, 'Rfloor': 15, 'Rdoors': 3,
+          'glazing_layers': 2, 'glass_type': 1, 'glazing_treatment': 1, 'window_frame': 1,
+          'airchange_per_hour': 1.0}),
+        (3, 'old, retrofit upgraded', 0.40,
+         {'Rroof': 30, 'Rwall': 11, 'Rfloor': 15, 'Rdoors': 3,
+          'glazing_layers': 2, 'glass_type': 1, 'glazing_treatment': 1, 'window_frame': 2,
+          'airchange_per_hour': 1.0}),
+        (4, '2003 IECC code', 0.10,
+         {'Rroof': 38, 'Rwall': 16, 'Rfloor': 22, 'Rdoors': 5,
+          'glazing_layers': 2, 'glass_type': 2, 'glazing_treatment': 1, 'window_frame': 2,
+          'airchange_per_hour': 0.5}),
+        (5, '2009 IECC code', 0.05,
+         {'Rroof': 48, 'Rwall': 22, 'Rfloor': 30, 'Rdoors': 11,
+          'glazing_layers': 3, 'glass_type': 2, 'glazing_treatment': 2, 'window_frame': 4,
+          'airchange_per_hour': 0.5}),
+    ],
+    'APARTMENT': [
+        (0, 'old, uninsulated', 0.05,
+         {'Rroof': 11, 'Rwall': 4, 'Rfloor': 4, 'Rdoors': 3,
+          'glazing_layers': 1, 'glass_type': 1, 'glazing_treatment': 1, 'window_frame': 1,
+          'airchange_per_hour': 1.5}),
+        (1, 'old, insulated', 0.20,
+         {'Rroof': 19, 'Rwall': 11, 'Rfloor': 4, 'Rdoors': 3,
+          'glazing_layers': 2, 'glass_type': 1, 'glazing_treatment': 1, 'window_frame': 1,
+          'airchange_per_hour': 1.5}),
+        (2, 'old, weatherized', 0.25,
+         {'Rroof': 19, 'Rwall': 11, 'Rfloor': 15, 'Rdoors': 3,
+          'glazing_layers': 2, 'glass_type': 1, 'glazing_treatment': 1, 'window_frame': 1,
+          'airchange_per_hour': 1.0}),
+        (3, 'old, retrofit upgraded', 0.40,
+         {'Rroof': 30, 'Rwall': 11, 'Rfloor': 15, 'Rdoors': 3,
+          'glazing_layers': 2, 'glass_type': 1, 'glazing_treatment': 1, 'window_frame': 2,
+          'airchange_per_hour': 1.0}),
+        (4, '2003 IECC code', 0.10,
+         {'Rroof': 38, 'Rwall': 16, 'Rfloor': 22, 'Rdoors': 5,
+          'glazing_layers': 2, 'glass_type': 2, 'glazing_treatment': 1, 'window_frame': 2,
+          'airchange_per_hour': 0.5}),
+    ],
+    'MOBILE': [
+        (0, 'old (1976-1994) HUD code', 0.49,
+         {'Rroof': 13.4, 'Rwall': 9.2, 'Rfloor': 11.7, 'Rdoors': 2.2,
+          'glazing_layers': 1, 'glass_type': 1, 'glazing_treatment': 1, 'window_frame': 1,
+          'airchange_per_hour': 1.5}),
+        (1, 'new (1994-present) HUD code', 0.51,
+         {'Rroof': 24.1, 'Rwall': 11.7, 'Rfloor': 18.1, 'Rdoors': 2.2,
+          'glazing_layers': 2, 'glass_type': 2, 'glazing_treatment': 1, 'window_frame': 2,
+          'airchange_per_hour': 0.4}),
+    ],
+}
+
+# GridLAB-D house_class values map onto the three report building types.
+HOUSE_CLASS_TO_BUILDING_TYPE = {
+    'SINGLE_FAMILY': 'SINGLE_FAMILY',
+    'MOBILE': 'MOBILE',
+    'MANUFACTURED': 'MOBILE',
+    'APARTMENT': 'APARTMENT',
+    'MULTI_FAMILY': 'APARTMENT',
+}
+
+# Doors and door area per report section 6.3.1: single family and manufactured
+# homes have four solid doors of 19.5 sq-ft; apartments have one, plus a
+# sliding glass door counted as window area.
+DOORS_BY_BUILDING_TYPE = {'SINGLE_FAMILY': 4, 'MOBILE': 4, 'APARTMENT': 1}
+
+# Approximate window R-values (hr·ft²·°F/Btu) used by
+# :func:`envelope_conductance_index`. GridLAB-D derives window U-values from
+# the glazing enumerations (GridLAB-D 2017, Tables 1 and 2); these are a
+# coarse additive stand-in for that lookup, adequate because windows are a
+# modest share of total UA and only the resulting ranking is used.
+#
+# Base R by number of glazing layers (glazing_layers: 1 single, 2 double,
+# 3 triple). Roughly 1/1.04, 1/0.55, and 1/0.37 Btu/(hr·ft²·°F).
+WINDOW_R_BY_LAYERS = {1: 0.96, 2: 1.80, 3: 2.70}
+
+# Added R for low-e coating (glass_type: 1 GLASS, 2 LOW_E_GLASS).
+WINDOW_R_LOW_E_BONUS = 0.60
+
+# Added R by frame material (window_frame: 0 NONE, 1 ALUMINUM,
+# 2 THERMAL_BREAK, 3 WOOD, 4 INSULATED).
+WINDOW_R_FRAME_BONUS = {0: 0.0, 1: 0.0, 2: 0.20, 3: 0.30, 4: 0.40}
+
+# Added R for an absorptive or reflective treatment
+# (glazing_treatment: 1 CLEAR, 2+ ABSORPTIVE/REFLECTIVE/LOW_S).
+WINDOW_R_TREATMENT_BONUS = 0.10
+
+# Report building types, ordered for consistent legend grouping.
+BUILDING_TYPE_ORDER = ['SINGLE_FAMILY', 'APARTMENT', 'MOBILE']
+
+# Grouping dimensions available from Master_Customer_Dataframe.h5.
+# from_comparison_case: read from a non-baseline case, since the flat baseline
+#   enables no transactive or DER participation.
+CFS_DIMENSIONS = {
+    'tariff_class': {
+        'title': 'Customer Class', 'field': 'tariff_class',
+        'remap': {'residential': 'Residential', 'commercial': 'Commercial',
+                  'industrial': 'Industrial'},
+        'order': ['Residential', 'Commercial', 'Industrial']},
+    'building_type': {
+        'title': 'Building Type', 'field': 'building_type',
+        'remap': {'SINGLE_FAMILY': 'Single-family', 'MOBILE_HOME': 'Manufactured home',
+                  'MULTI_FAMILY': 'Multi-family'},
+        'order': ['Single-family', 'Multi-family', 'Manufactured home']},
+    'heating': {
+        'title': 'Heating Type', 'field': 'heating',
+        'remap': {'GAS': 'Gas', 'RESISTANCE': 'Resistance', 'HEAT_PUMP': 'Heat pump',
+                  'ELECTRIC': 'Electric', 'NONE': 'None'},
+        'order': ['Heat pump', 'Resistance', 'Electric', 'Gas', 'None']},
+    'cooling': {
+        'title': 'Cooling Type', 'field': 'cooling',
+        'remap': {'ELECTRIC': 'Electric', 'NONE': 'None'},
+        'order': ['Electric', 'None']},
+    'income_level': {
+        'title': 'Income Level', 'field': 'income_level',
+        'order': ['Low', 'Middle', 'Upper']},
+    'cust_participating': {
+        'title': 'Participation', 'field': 'cust_participating',
+        'remap': {True: 'Participating', False: 'Non-participating'},
+        'order': ['Participating', 'Non-participating'],
+        'from_comparison_case': True},
+    'pv_participating': {
+        'title': 'Rooftop Solar', 'field': 'pv_participating',
+        'remap': {True: 'PV', False: 'No PV'}, 'order': ['PV', 'No PV'],
+        'from_comparison_case': True},
+    'ev_participating': {
+        'title': 'EV Ownership', 'field': 'ev_participating',
+        'remap': {True: 'EV', False: 'No EV'}, 'order': ['EV', 'No EV'],
+        'from_comparison_case': True},
+    'DER_participating': {
+        'title': 'DER Participation', 'field': 'DER_participating',
+        'order': ['None', 'HVAC', 'WH', 'EV', 'Battery', 'HVAC, WH', 'HVAC, EV',
+                  'WH, EV', 'HVAC, WH, EV', 'HVAC, WH, EV, Battery'],
+        'from_comparison_case': True},
+    'wh_participating': {
+        'title': 'WH Participation', 'field': 'wh_participating',
+        'remap': {True: 'WH', False: 'No WH'}, 'order': ['WH', 'No WH'],
+        'from_comparison_case': True},
+    'batt_participating': {
+        'title': 'BESS Participation', 'field': 'batt_participating',
+        'remap': {True: 'BESS', False: 'No BESS'}, 'order': ['BESS', 'No BESS'],
+        'from_comparison_case': True},
+    'hvac': {
+        'title': 'Heating / Cooling', 'fields': ['heating', 'cooling'],
+        'combine': lambda values: f'{values[0]} heat / {values[1]} cool'},
+    'dso_type': {
+        'title': 'DSO Type', 'field': 'dso_type',
+        'order': ['Urban', 'Suburban', 'Rural']},
+    'insulation': {
+        'title': 'Insulation Level', 'field': 'Insulation Level', 'requires_metadata': True},
+}
+
+# Metrics plottable from the CFS dataframe. 'bin' sets the density-axis
+# denominator for levels, 'change_bin' for paired changes, which are typically
+# an order of magnitude smaller than the levels themselves.
+CFS_METRICS = {
+    'Bills': {'label': 'Annual Electricity Bill ($)', 'unit': '$',
+              'bin': 100, 'change_bin': 25, 'short': 'Bill'},
+    'EnergyPurchased': {'label': 'Energy Purchased (kW-hr/year)', 'unit': 'kW-hr',
+                        'bin': 1000, 'change_bin': 250, 'short': 'Energy'},
+    'PeakLoad': {'label': 'Annual Peak Load (kW)', 'unit': 'kW',
+                 'bin': 1, 'change_bin': 0.5, 'short': 'Peak Load'},
+    'NetEnergyCost': {'label': 'Net Energy Expenses ($)', 'unit': '$',
+                      'bin': 100, 'change_bin': 25, 'short': 'Net Energy Cost'},
+}
 
 def rec_diff(d1, d2):
     """Recursively subtract corresponding numeric values in nested mappings.
@@ -44,7 +223,7 @@ def rec_diff(d1, d2):
             diff[k] = v1 - d2[k]
     return diff
 
-def customer_bill_component_comparison(cases, data_paths, output_path, dso_num):
+def customer_bill_component_comparison(cases, data_paths, output_path, dso_num, customer_class='commercial'):
     """Compare average residential bill components across cases.
 
     Reads each case's DSO bill summary and customer-scaling data, converts the
@@ -57,12 +236,13 @@ def customer_bill_component_comparison(cases, data_paths, output_path, dso_num):
         data_paths (list[str]): Result directory for each corresponding case.
         output_path (str): Output root; its ``plots`` subdirectory must exist.
         dso_num (str | int): DSO identifier used to select bill data.
+        customer_class (str): Customer class, either 'residential' or 'commercial'. Defaults to 'commercial'.
 
     Returns:
         None. Saves a PNG in ``output_path/plots``.
     """
 
-    Customer_class = 'residential'
+    Customer_class = customer_class
     Cost_components = ['Fixed Charge', 'Volumetric Energy Charge', 'Volumetric Charge (Peak)',
                          'Volumetric Charge (Off-Peak)', 'Demand Charge', 'Dynamic (DA) Charge', 'Dynamic (RT) Charge', 'Dynamic Swing Charge']
 
@@ -179,7 +359,7 @@ def customer_bill_component_comparison(cases, data_paths, output_path, dso_num):
         else:
             axes[n].legend().set_visible(False)
 
-    plot_filename = 'Case_Compare_Bill_Components_DSO_' + str(dso_num) + '.png'
+    plot_filename = 'Case_Compare_Bill_Components_DSO_' + str(dso_num) + '_' + str(Customer_class) + '.png'
     file_path_fig = os.path.join(output_path, 'plots', plot_filename)
     plt.savefig(file_path_fig, bbox_inches='tight')
 
@@ -405,6 +585,755 @@ def customer_monthly_stats(cases, data_paths, output_path, dso_num, cust_class=N
     fig.savefig(file_path_fig, bbox_inches='tight')
     plt.close(fig)
 
+def load_customer_cfs_population(cases, data_paths, cust_class='residential',
+                                 attribute_case=1, insulation_options=None,
+                                 metadata_paths=None):
+    """Load per-customer annual metrics and attributes for every rate case.
+
+    Reads each case's ``Master_Customer_Dataframe.h5`` and stacks them into one
+    long frame keyed on ``Customer ID``, which already encodes the DSO and so is
+    unique across the system. Customer attributes are taken from a single
+    comparison case and broadcast to all cases, because attributes describe the
+    customer rather than the rate and the flat baseline flags no transactive or
+    DER participation.
+
+    A ``DER_participating`` label is derived from the individual device flags,
+    following the convention in :func:`customer_cfs_delta`. Insulation level is
+    joined from the customer metadata JSONs only when requested, since it is
+    not carried in the CFS dataframe.
+
+    Args:
+        cases (list[str]): Rate labels with the baseline first.
+        data_paths (list[str]): Result directory for each corresponding case,
+            each containing ``Master_Customer_Dataframe.h5``.
+        cust_class (str | None): Tariff class filter, or None for all classes.
+        attribute_case (int): Index of the case supplying customer attributes.
+            Defaults to 1, the first comparison case.
+        insulation_options (dict | None): When given, join an insulation level
+            using ``method``, ``bins``, and ``dso_range`` keys.
+        metadata_paths (list[str] | None): Directories holding the customer
+            metadata JSONs, defaulting to ``data_paths``.
+
+    Returns:
+        pandas.DataFrame: One row per customer and case, with ``Rate``,
+        ``Customer ID``, ``dso``, the attribute columns, and the CFS metrics.
+    """
+    if len(cases) != len(data_paths):
+        raise ValueError('Provide one result path per case label.')
+    if not 0 <= attribute_case < len(cases):
+        raise ValueError('attribute_case must index into cases.')
+
+    device_flags = [('hvac_participating', 'HVAC'), ('wh_participating', 'WH'),
+                    ('ev_participating', 'EV'), ('batt_participating', 'Battery')]
+    attribute_columns = ['tariff_class', 'building_type', 'heating', 'cooling',
+                         'income_level', 'sqft', 'slider_setting', 'dso',
+                         'cust_participating', 'pv_participating', 'meter ID']
+    # Device flags are kept as their own dimensions as well as feeding the
+    # combined DER_participating label.
+    attribute_columns += [column for column, _name in device_flags]
+
+    frames = {}
+    for case, data_path in zip(cases, data_paths):
+        cfs_file = os.path.join(data_path, 'Master_Customer_Dataframe.h5')
+        if not os.path.isfile(cfs_file):
+            raise FileNotFoundError(f'{cfs_file} is missing for the {case} case.')
+        frame = pd.read_hdf(cfs_file, key='customer_data', mode='r')
+        if 'Customer ID' in frame.columns:
+            frame = frame.set_index('Customer ID')
+        frame.index.name = 'Customer ID'
+        if frame.index.duplicated().any():
+            raise ValueError(f'Duplicate Customer IDs in the {case} CFS dataframe.')
+        frames[case] = frame
+
+    source = frames[cases[attribute_case]]
+    print(f'Customer attributes taken from the {cases[attribute_case]} case.')
+
+    attributes = source[[column for column in attribute_columns
+                         if column in source.columns]].copy()
+
+    # DER mix label, matching the customer_cfs_delta convention.
+    present_flags = [(column, name) for column, name in device_flags
+                     if column in source.columns]
+    if present_flags and 'cust_participating' in source.columns:
+        def der_label(row):
+            if not row['cust_participating']:
+                return 'None'
+            devices = [name for column, name in present_flags if row[column]]
+            return ', '.join(devices) if devices else 'None'
+        attributes['DER_participating'] = source.apply(der_label, axis=1)
+
+    for key, spec in CFS_DIMENSIONS.items():
+        field = spec.get('field')
+        if field in attributes.columns and spec.get('remap'):
+            attributes[field] = attributes[field].replace(spec['remap'])
+
+    if insulation_options:
+        options = dict(insulation_options)
+        dso_range = options.pop('dso_range')
+        meter_levels, _order = meter_insulation_levels(
+            metadata_paths[0] if metadata_paths else data_paths[0], dso_range,
+            cust_class, options.get('method', 'conductance'), options.get('bins', 3),
+            options.get('group_description', True))
+        if 'meter ID' not in attributes.columns:
+            raise ValueError('The CFS dataframe has no "meter ID" column to join '
+                             'insulation levels on.')
+        by_meter = {}
+        for (dso, meter), label in meter_levels.items():
+            by_meter.setdefault(meter, {})[int(dso)] = label
+        attributes['Insulation Level'] = [
+            by_meter.get(meter, {}).get(int(dso))
+            for meter, dso in zip(attributes['meter ID'], attributes['dso'])]
+
+        matched = attributes['Insulation Level'].notna().sum()
+        print(f'Joined insulation levels onto {matched} of {len(attributes)} customers.')
+
+    metric_columns = [column for column in CFS_METRICS if column in source.columns]
+    if not metric_columns:
+        raise ValueError(f'None of {sorted(CFS_METRICS)} are in the CFS dataframe.')
+
+    stacked = []
+    for case in cases:
+        frame = frames[case]
+        shared = attributes.index.intersection(frame.index)
+        if len(shared) < len(attributes):
+            print(f'{len(attributes) - len(shared)} customers are missing from the '
+                  f'{case} case and are excluded.')
+        combined = attributes.loc[shared].join(frame.loc[shared, metric_columns],
+                                               how='inner', rsuffix='_metric')
+        combined['Rate'] = case
+        stacked.append(combined.reset_index())
+
+    population = pd.concat(stacked, ignore_index=True)
+
+    if cust_class is not None:
+        wanted = CFS_DIMENSIONS['tariff_class']['remap'].get(cust_class, cust_class)
+        matches = population['tariff_class'] == wanted
+        if not matches.any():
+            available = sorted(population['tariff_class'].dropna().unique())
+            raise ValueError(f"No customers with tariff_class '{wanted}'. "
+                             f'Available: {available}.')
+        population = population[matches]
+
+    for column in metric_columns:
+        population[column] = pd.to_numeric(population[column], errors='coerce')
+
+    # Paired changes from the baseline, per customer.
+    baseline = (population[population['Rate'] == cases[0]]
+                .set_index('Customer ID')[metric_columns])
+    if baseline.index.duplicated().any():
+        raise ValueError(f'Duplicate Customer IDs in the {cases[0]} baseline.')
+    for column in metric_columns:
+        base_values = population['Customer ID'].map(baseline[column])
+        population[column + ' base'] = base_values
+        population[column + ' change'] = population[column] - base_values
+        population[column + ' change pct'] = np.where(
+            base_values > 0, 100 * (population[column] - base_values) / base_values, np.nan)
+        # Near-zero baselines (rooftop PV) make percent changes asymptotic.
+        population[column + ' change pct'] = np.clip(
+            population[column + ' change pct'], -100, 100)
+
+    print(f'Loaded {population["Customer ID"].nunique()} customers across '
+          f'{len(cases)} cases ({len(population)} rows), DSOs '
+          f'{sorted(population["dso"].dropna().unique())}.')
+    return population
+
+def resolve_cfs_groups(population, dimension, include_counts=False):
+    """Resolve a grouping dimension into a labeled column and ordered labels.
+
+    Args:
+        population (pandas.DataFrame): Output of
+            :func:`load_customer_cfs_population`.
+        dimension (str): Key in ``CFS_DIMENSIONS``.
+        include_counts (bool): Append distinct customer counts to the labels.
+
+    Returns:
+        tuple[pandas.DataFrame, list, str]: ``(frame with a 'Group' column,
+        label order, dimension title)``.
+    """
+    if dimension not in CFS_DIMENSIONS:
+        raise ValueError(f"Unknown dimension '{dimension}'. Available: "
+                         f'{sorted(CFS_DIMENSIONS)}.')
+    spec = CFS_DIMENSIONS[dimension]
+    frame = population.copy()
+
+    fields = spec.get('fields') or [spec['field']]
+    missing = [field for field in fields if field not in frame.columns]
+    if missing:
+        raise ValueError(f"Dimension '{dimension}' needs column(s) {missing}, which are "
+                         f'not in the loaded population. Available: '
+                         f'{sorted(frame.columns)}.')
+
+    if spec.get('combine'):
+        frame['Group'] = [spec['combine']([str(value) for value in values])
+                          for values in zip(*(frame[field] for field in fields))]
+    else:
+        frame['Group'] = frame[fields[0]].map(
+            lambda value: spec.get('remap', {}).get(value, value))
+    frame['Group'] = frame['Group'].astype(str).replace({'nan': np.nan, 'None': 'None'})
+    frame = frame.dropna(subset=['Group'])
+    if frame.empty:
+        raise ValueError(f"Dimension '{dimension}' produced no labeled customers.")
+
+    counts = frame.drop_duplicates('Customer ID')['Group'].value_counts()
+    preferred = spec.get('order', [])
+    order = ([label for label in preferred if label in counts.index]
+             + sorted(label for label in counts.index if label not in preferred))
+
+    if include_counts:
+        renamed = {label: f'{label} (n={int(counts[label]):,})' for label in order}
+        frame['Group'] = frame['Group'].map(renamed)
+        order = [renamed[label] for label in order]
+
+    print(f'{spec["title"]} groups: '
+          + ', '.join(f'{label}={int(counts[label])}' for label in
+                      ([entry for entry in preferred if entry in counts.index] or counts.index))
+          + f' | {int(counts.sum())} customers')
+    if len(order) == 1:
+        print(f"Warning: dimension '{dimension}' produced a single group.")
+    return frame, order, spec['title']
+
+def customer_cfs_pdf_by_group(cases, data_paths, output_path, dimension='building_type',
+                              metric='Bills', cust_class='residential', mode='level',
+                              split_by='cust_participating', options=None,
+                              include_counts=True, x_limits=None, palette_name='viridis',
+                              population=None):
+    """Plot customer metric distributions by rate and a chosen customer attribute.
+
+    Draws one density panel per rate, with a column per split group and the
+    chosen customer dimension encoded by color. Levels, paired changes from the
+    baseline, and paired percent changes are all available, so the same call
+    pattern covers both bill distributions and bill variation.
+
+    Data comes from each case's ``Master_Customer_Dataframe.h5`` via
+    :func:`load_customer_cfs_population`, which keys on ``Customer ID`` and
+    takes customer attributes from a comparison case. In ``change`` modes the
+    baseline rate is omitted, since its change is zero by construction.
+
+    Args:
+        cases (list[str]): Rate labels with the baseline first.
+        data_paths (list[str]): Result directory for each corresponding case.
+        output_path (str): Output root; ``plots`` and ``data`` subdirectories
+            are created if missing.
+        dimension (str): Grouping dimension key in ``CFS_DIMENSIONS``.
+        metric (str): Metric key in ``CFS_METRICS``.
+        cust_class (str | None): Tariff class filter, or None for all classes.
+        mode (str): ``level`` plots the metric, ``change`` plots the paired
+            change from the baseline, and ``change_pct`` the percent change.
+        split_by (str | None): Dimension used for figure columns, or None for a
+            single column.
+        options (dict | None): Loader settings, including ``attribute_case``
+            and ``insulation_options``.
+        include_counts (bool): Append customer counts to legend labels.
+        x_limits (tuple[float, float] | None): Axis limits. Derived from
+            percentiles when None, symmetric about zero in change modes.
+        palette_name (str): Seaborn palette for the group colors.
+        population (pandas.DataFrame | None): Pre-loaded population, to avoid
+            re-reading the HDF5 files across repeated calls.
+
+    Returns:
+        pandas.DataFrame: The plotted rows, with ``Rate``, ``Group``,
+        ``Split``, and the plotted value column.
+    """
+    if mode not in ('level', 'change', 'change_pct'):
+        raise ValueError("mode must be 'level', 'change', or 'change_pct'.")
+    if metric not in CFS_METRICS:
+        raise ValueError(f'Unknown metric {metric}. Available: {sorted(CFS_METRICS)}.')
+    options = options or {}
+
+    if population is None:
+        population = load_customer_cfs_population(
+            cases, data_paths, cust_class,
+            options.get('attribute_case', 1), options.get('insulation_options'),
+            options.get('metadata_paths'))
+
+    column = {'level': metric, 'change': metric + ' change',
+              'change_pct': metric + ' change pct'}[mode]
+    if column not in population.columns:
+        raise ValueError(f'Column "{column}" is not in the loaded population.')
+
+    frame, group_order, group_title = resolve_cfs_groups(population, dimension, include_counts)
+
+    if split_by:
+        frame, split_order, split_title = resolve_cfs_groups(frame, split_by)
+        frame = frame.rename(columns={'Group': 'Split'})
+        frame, group_order, group_title = resolve_cfs_groups(frame, dimension, include_counts)
+    else:
+        frame['Split'] = 'All customers'
+        split_order, split_title = ['All customers'], ''
+
+    rows = list(cases) if mode == 'level' else list(cases[1:])
+    frame = frame[frame['Rate'].isin(rows)].dropna(subset=[column])
+    if frame.empty:
+        raise ValueError(f'No rows remain for metric {metric} in mode {mode}.')
+
+    group_order = [label for label in group_order if label in set(frame['Group'])]
+    split_order = [label for label in split_order if label in set(frame['Split'])]
+
+    spec = CFS_METRICS[metric]
+    if mode == 'change_pct':
+        axis_label = f'Change in {spec["label"]} from {cases[0]} (%)'
+        bin_width, unit_suffix = 5, '%'
+        share_y = False
+    elif mode == 'change':
+        axis_label = f'Change in {spec["label"]} from {cases[0]}'
+        bin_width, unit_suffix = spec.get('change_bin', spec['bin']), spec['unit']
+        share_y = True
+    else:
+        axis_label = spec['label']
+        bin_width, unit_suffix = spec['bin'], spec['unit']
+        share_y = True
+
+    if x_limits is None:
+        low = float(frame[column].quantile(0.01))
+        high = float(frame[column].quantile(0.99))
+        if mode != 'level':
+            reach = max(abs(low), abs(high))
+            x_limits = (-reach, reach)
+        else:
+            x_limits = (low, high)
+
+    palette = sns.color_palette(palette_name, n_colors=max(len(group_order), 1))
+    colors = {label: palette[index] for index, label in enumerate(group_order)}
+
+    plot_path = os.path.join(output_path, 'plots')
+    csv_path = os.path.join(output_path, 'data')
+    os.makedirs(plot_path, exist_ok=True)
+    os.makedirs(csv_path, exist_ok=True)
+    stem = (datetime.now().strftime('%Y%m%d') + 'Case_Compare_CFS_' + metric + '_'
+            + mode + '_by_' + dimension + '_' + str(cust_class)
+            + ('_by_' + split_by if split_by else ''))
+
+    fig, axes = plt.subplots(len(rows), len(split_order),
+                             figsize=(5.6 * len(split_order), 3.2 * len(rows)),
+                             sharex=True, sharey=share_y, squeeze=False)
+    try:
+        drawn = []
+        for row, case in enumerate(rows):
+            for col, split in enumerate(split_order):
+                axis = axes[row][col]
+                subset = frame[(frame['Rate'] == case) & (frame['Split'] == split)]
+                for label in group_order:
+                    values = subset.loc[subset['Group'] == label, column].dropna()
+                    if len(values) < 2 or values.nunique() < 2:
+                        continue
+                    sns.kdeplot(x=values, color=colors[label], fill=True, alpha=0.20,
+                                linewidth=2.5, warn_singular=False, ax=axis)
+                    axis.axvline(values.median(), color=colors[label],
+                                 linestyle=':', linewidth=1.5)
+                    if label not in drawn:
+                        drawn.append(label)
+
+                if mode != 'level':
+                    axis.axvline(0, color='dimgrey', linestyle='--', linewidth=1.5)
+                heading = case if mode == 'level' else f'{case} vs {cases[0]}'
+                title = heading if not split_by else f'{heading} — {split} (n={len(subset):,})'
+                axis.set_title(title, fontsize=12, loc='left')
+                axis.set_xlabel('')
+                axis.set_xlim(*x_limits)
+                if col == 0:
+                    scale = 100 * bin_width
+                    axis.yaxis.set_major_formatter(FuncFormatter(
+                        lambda value, _position: f'{value * scale:g}'))
+                    axis.set_ylabel(f'Share of Customers\n(% per {bin_width:g} '
+                                    f'{unit_suffix})', size=10)
+                else:
+                    axis.set_ylabel('')
+
+        for axis in axes[-1]:
+            axis.set_xlabel(axis_label, size=12)
+        handles = [Line2D([], [], color=colors[label], linewidth=2.5, label=str(label))
+                   for label in group_order if label in drawn]
+        handles.append(Line2D([], [], color='dimgrey', linestyle=':', linewidth=1.5,
+                              label='Group median'))
+        if mode != 'level':
+            handles.append(Line2D([], [], color='dimgrey', linestyle='--', linewidth=1.5,
+                                  label='No change'))
+        axes[0][-1].legend(handles=handles, title=group_title, loc='best',
+                           fontsize=9, title_fontsize=10, framealpha=1)
+        fig.suptitle(f'{str(cust_class).capitalize()} {axis_label} by Rate'
+                     + (f' and {split_title}' if split_by else '')
+                     + f', grouped by {group_title}', y=1.0)
+        fig.tight_layout()
+        fig.savefig(os.path.join(plot_path, stem + '.png'), bbox_inches='tight')
+    finally:
+        plt.close(fig)
+
+    aggregations = {'customers': (column, 'count'), 'mean': (column, 'mean'),
+                    'median': (column, 'median'), 'std': (column, 'std'),
+                    'p10': (column, lambda values: values.quantile(0.10)),
+                    'p90': (column, lambda values: values.quantile(0.90))}
+    if mode != 'level':
+        aggregations['share_worse_off'] = (column, lambda values: 100 * (values > 0).mean())
+    summary = (frame.groupby(['Rate', 'Split', 'Group']).agg(**aggregations)
+               .reindex(pd.MultiIndex.from_product([rows, split_order, group_order],
+                                                   names=['Rate', 'Split', group_title]))
+               .dropna(how='all'))
+    summary['p90-p10 spread'] = summary['p90'] - summary['p10']
+    summary.to_csv(os.path.join(csv_path, stem + '_summary.csv'))
+    frame.to_csv(os.path.join(csv_path, stem + '.csv'), index=False)
+    print(summary.round(2).to_string())
+
+    return frame
+
+def classify_thermal_integrity(house, jitter=(0.8, 1.2), tables=None):
+    """Assign a thermal integrity level using the building type's own table.
+
+    Thermal integrity levels are defined per building type, with six levels for
+    single family homes, five for apartments, and two HUD-code levels for
+    manufactured homes, so candidates are restricted to the table matching the
+    house class. The population generator writes the window enumerations
+    unjittered and applies multiplicative jitter to the R-values and
+    infiltration rate, so windows filter candidates exactly and the continuous
+    attributes are ranked by mean absolute log ratio.
+
+    Args:
+        house (dict): House entry from ``DSO<N>_Customer_Metadata.json``.
+        jitter (tuple[float, float]): Generator jitter bounds.
+        tables (dict | None): Override for ``THERMAL_INTEGRITY_BY_CLASS``.
+
+    Returns:
+        tuple[str, int, str] | None: ``(building type, level index,
+        description)``, or None when the house class is unrecognized or the
+        envelope attributes are unusable.
+    """
+    tables = tables if tables is not None else THERMAL_INTEGRITY_BY_CLASS
+    house_class = str(house.get('house_class', '')).upper()
+    building_type = HOUSE_CLASS_TO_BUILDING_TYPE.get(house_class)
+    if building_type is None or building_type not in tables:
+        return None
+    table = tables[building_type]
+
+    stated = str(house.get('thermal_integrity', 'UNKNOWN')).upper()
+    if stated.isdigit():
+        for index, description, _fraction, _reference in table:
+            if int(stated) == index:
+                return building_type, index, description
+
+    continuous = ['Rroof', 'Rwall', 'Rfloor', 'airchange_per_hour']
+    values = {}
+    for attribute in continuous:
+        value = pd.to_numeric(house.get(attribute), errors='coerce')
+        if pd.isna(value) or value <= 0:
+            return None
+        values[attribute] = float(value)
+
+    # Window enumerations are unjittered, so use them as an exact filter.
+    window_keys = ['glazing_layers', 'glass_type', 'glazing_treatment', 'window_frame']
+    observed_windows = {}
+    for key in window_keys:
+        value = pd.to_numeric(house.get(key), errors='coerce')
+        if not pd.isna(value):
+            observed_windows[key] = int(value)
+
+    candidates = [entry for entry in table
+                  if all(entry[3].get(key) == value for key, value in observed_windows.items())]
+    if not candidates and 'glazing_layers' in observed_windows:
+        candidates = [entry for entry in table
+                      if entry[3].get('glazing_layers') == observed_windows['glazing_layers']]
+    if not candidates:
+        candidates = table
+
+    low, high = jitter
+    tolerance = 1.02
+    scored, feasible = [], []
+    for index, description, _fraction, reference in candidates:
+        ratios = [values[attribute] / reference[attribute] for attribute in continuous]
+        distance = float(np.mean([abs(np.log(ratio)) for ratio in ratios]))
+        scored.append((distance, index, description))
+        if all(low / tolerance <= ratio <= high * tolerance for ratio in ratios):
+            feasible.append((distance, index, description))
+
+    pool = feasible or scored
+    best = min(pool)
+    return building_type, best[1], best[2]
+
+def meter_insulation_levels(data_path, dso_range, cust_class='residential',
+                            method='conductance', bins=3, group_description=True):
+    """Map billing meters across DSOs to an insulation-level label.
+
+    Two bucketing methods are available. ``conductance`` computes the
+    :func:`envelope_conductance_index` for each house, aggregates it to the
+    meter as a floor-area-weighted mean, then cuts the pooled population into
+    equal-count groups. ``table`` matches each house to its building type's
+    thermal integrity table via :func:`classify_thermal_integrity` and labels
+    the meter with its largest house, since level indices mean different things
+    across building types and cannot be averaged.
+
+    ``conductance`` is the default because it is insensitive to the
+    multiplicative jitter the population generator applies to R-values and does
+    not assume the generator sampled the published tables. Equal-count binning
+    also guarantees comparable sample sizes per group. Bin edges and labels are
+    derived from the baseline case metadata, so groups are identical across
+    rate cases.
+
+    Args:
+        data_path (str): Directory holding the customer metadata JSONs.
+        dso_range (iterable[int] | int | str): DSOs to pool.
+        cust_class (str | None): Tariff class filter, or None for all meters.
+        method (str): ``conductance`` or ``table``.
+        bins (int | list[float]): Group count for equal-count binning, or
+            explicit UA-per-sqft edges. Ignored when ``method='table'``.
+        group_description (bool): Append UA ranges or level descriptions to
+            the group labels.
+
+    Returns:
+        tuple[dict, list]: ``((dso, meter ID) -> label, labels ordered from
+        least to best insulated)``.
+    """
+    if isinstance(dso_range, (int, str)):
+        dso_range = [dso_range]
+    dso_range = [int(dso) for dso in dso_range]
+    if method not in ('conductance', 'table'):
+        raise ValueError("method must be 'conductance' or 'table'.")
+
+    rows = []
+    skipped = 0
+    for dso in dso_range:
+        metadata = pt.load_json(data_path, 'DSO' + str(dso) + '_Customer_Metadata.json')
+        class_meters = {meter for meter, details in metadata['billingmeters'].items()
+                        if cust_class is None or details.get('tariff_class') == cust_class}
+        for house, details in metadata['houses'].items():
+            meter = details.get('billingmeter_id')
+            if meter not in class_meters:
+                continue
+            sqft = pd.to_numeric(details.get('sqft'), errors='coerce')
+            weight = 1.0 if pd.isna(sqft) or sqft <= 0 else float(sqft)
+            row = {'dso': dso, 'meter ID': meter, 'weight': weight}
+
+            if method == 'conductance':
+                score = envelope_conductance_index(details)
+                if score is None:
+                    skipped += 1
+                    continue
+                row['score'] = score
+            else:
+                level = classify_thermal_integrity(details)
+                if level is None:
+                    skipped += 1
+                    continue
+                building_type, index, description = level
+                row['building_type'] = building_type
+                row['level'] = index
+                row['description'] = description
+            rows.append(row)
+
+    if not rows:
+        raise ValueError(f'No {cust_class} houses in DSOs {dso_range} have usable envelope properties.')
+    if skipped:
+        print(f'Insulation bucketing skipped {skipped} houses with unusable or '
+              f'unrecognized envelope data.')
+
+    house_df = pd.DataFrame(rows)
+
+    if method == 'table':
+        if group_description:
+            house_df['label'] = (house_df['building_type'] + ' L'
+                                 + house_df['level'].astype(str) + ': '
+                                 + house_df['description'])
+        else:
+            house_df['label'] = (house_df['building_type'] + ' L'
+                                 + house_df['level'].astype(str))
+
+        # Level indices are type-specific, so label each meter with its largest
+        # house rather than averaging across houses.
+        mixed = house_df.groupby(['dso', 'meter ID'])['label'].nunique()
+        if int((mixed > 1).sum()):
+            print(f'{int((mixed > 1).sum())} meters host houses at differing integrity '
+                  f'levels; each is labeled by its largest house.')
+        dominant = (house_df.sort_values('weight', ascending=False)
+                    .drop_duplicates(subset=['dso', 'meter ID']))
+
+        meter_to_label = {(row['dso'], row['meter ID']): row['label']
+                          for _index, row in dominant.iterrows()}
+        groups = (dominant.drop_duplicates(subset=['label'])[['label', 'building_type', 'level']]
+                  .assign(type_rank=lambda frame: frame['building_type'].map(
+                      lambda value: BUILDING_TYPE_ORDER.index(value)
+                      if value in BUILDING_TYPE_ORDER else len(BUILDING_TYPE_ORDER)))
+                  .sort_values(['type_rank', 'level']))
+        order = groups['label'].tolist()
+        counts = dominant['label'].value_counts()
+        detail = ', '.join(f'{label.split(":")[0]}={int(counts[label])}' for label in order)
+    else:
+        house_df['weighted'] = house_df['score'] * house_df['weight']
+        meters = house_df.groupby(['dso', 'meter ID'])[['weighted', 'weight']].sum()
+        meters['score'] = meters['weighted'] / meters['weight']
+
+        if isinstance(bins, int):
+            edges = meters['score'].quantile(np.linspace(0, 1, bins + 1)).to_numpy()
+            edges[0], edges[-1] = -np.inf, np.inf
+        else:
+            edges = np.concatenate(([-np.inf], np.asarray(bins, dtype=float), [np.inf]))
+        edges = np.unique(edges)
+        count = len(edges) - 1
+
+        # Low UA per sqft means better insulation, so bin 0 is the best insulated
+        # and names are reversed to run least-to-best in the returned order.
+        name_sets = {2: ['Best', 'Least'],
+                     3: ['Best', 'Moderate', 'Least'],
+                     4: ['Best', 'Above median', 'Below median', 'Least']}
+        names = name_sets.get(count, [f'Group {index + 1}' for index in range(count)])
+
+        meters['level'] = pd.cut(meters['score'], bins=edges,
+                                 labels=False, include_lowest=True).astype(int)
+        band = meters.groupby('level')['score'].agg(['min', 'max', 'size'])
+
+        labels = {}
+        for index in range(count):
+            label = names[index]
+            if group_description and index in band.index:
+                label = (f'{label} ({band.loc[index, "min"]:.1f} UA/ft²'
+                         f'-{band.loc[index, "max"]:.1f})')
+            labels[index] = label
+
+        meter_to_label = {key: labels[row['level']] for key, row in meters.iterrows()}
+        present = sorted(set(meters['level']), reverse=True)  # least insulated first
+        order = [labels[index] for index in present]
+        detail = ', '.join(f'{labels[index].split(" (")[0]}={int(band.loc[index, "size"])}'
+                           for index in present)
+
+    return meter_to_label, order
+
+def envelope_conductance_index(house, window_wall_ratio=0.15, area_per_door=19.5):
+    """Estimate whole-house heat-loss coefficient per floor area.
+
+    Builds a simple UA from the metadata envelope description: conduction
+    through ceiling, net wall, floor, doors, and windows, plus infiltration.
+    Dividing by floor area gives a size-independent index in Btu/(hr·°F·ft²)
+    where lower values mean better-insulated buildings.
+
+    Door counts follow the report's building assumptions rather than the
+    metadata ``doors`` field: four solid 19.5 sq-ft doors for single family and
+    manufactured homes, and one for apartments with a sliding glass door
+    counted as window area. Window area itself is a fixed fraction of gross
+    wall area because the metadata does not record it, and window R-values are
+    approximated from the glazing enumerations. Both are coarse, but windows
+    are a modest share of total UA and the resulting ranking is stable.
+
+    Args:
+        house (dict): House entry from ``DSO<N>_Customer_Metadata.json``.
+        window_wall_ratio (float): Fraction of gross wall area that is glazing.
+        area_per_door (float): Area of a single solid door in square feet.
+
+    Returns:
+        float | None: UA per square foot, or None if inputs are unusable.
+    """
+    def number(key, default=None):
+        value = pd.to_numeric(house.get(key, default), errors='coerce')
+        return None if pd.isna(value) else float(value)
+
+    sqft = number('sqft')
+    r_roof, r_wall, r_floor = number('Rroof'), number('Rwall'), number('Rfloor')
+    r_door, air_changes = number('Rdoors'), number('airchange_per_hour')
+    if None in (sqft, r_roof, r_wall, r_floor, r_door, air_changes) or sqft <= 0:
+        return None
+    if min(r_roof, r_wall, r_floor, r_door) <= 0:
+        return None
+
+    house_class = str(house.get('house_class', '')).upper()
+    building_type = HOUSE_CLASS_TO_BUILDING_TYPE.get(house_class, 'SINGLE_FAMILY')
+    door_count = DOORS_BY_BUILDING_TYPE.get(building_type, 4)
+
+    stories = max(int(round(number('stories', 1) or 1)), 1)
+    height = number('ceiling_height', 8) or 8
+    aspect = number('aspect_ratio', 1.0) or 1.0
+    floor_area = sqft / stories
+    width = np.sqrt(floor_area / aspect) if aspect > 0 else np.sqrt(floor_area)
+    perimeter = 2 * (width + aspect * width)
+
+    wall_fraction = number('exterior_wall_fraction', 1.0) or 1.0
+    ceiling_fraction = number('exterior_ceiling_fraction', 1.0) or 1.0
+    floor_fraction = number('exterior_floor_fraction', 1.0) or 1.0
+
+    gross_wall = perimeter * height * stories * wall_fraction
+    window_area = gross_wall * window_wall_ratio
+    door_area = door_count * area_per_door
+    if building_type == 'APARTMENT':
+        # Second egress is a sliding glass door, counted as window area.
+        window_area += area_per_door
+    net_wall = max(gross_wall - window_area - door_area, 0.0)
+
+    layers = int(number('glazing_layers', 2) or 2)
+    r_window = WINDOW_R_BY_LAYERS.get(layers, 1.8)
+    if int(number('glass_type', 1) or 1) == 2:
+        r_window += 0.6
+    r_window += WINDOW_R_FRAME_BONUS.get(int(number('window_frame', 1) or 1), 0.0)
+    if int(number('glazing_treatment', 1) or 1) >= 2:
+        r_window += 0.1
+
+    volume = floor_area * height * stories
+    ua = (floor_area * ceiling_fraction / r_roof
+          + net_wall / r_wall
+          + floor_area * floor_fraction / r_floor
+          + door_area / r_door
+          + window_area / r_window
+          + 0.018 * air_changes * volume)
+    return ua / sqft
+
+def customer_peak_load_pdf_by_group(cases, data_paths, output_path, dimension='insulation',
+                                    cust_class='residential', mode='level',
+                                    split_by='cust_participating', dso_range=None,
+                                    population=None, **kwargs):
+    """Plot annual customer peak-load distributions by rate and a chosen attribute.
+
+    Peak load is each customer's maximum metered demand over the year, so these
+    are non-coincident peaks and do not sum to the system peak.
+
+    Args:
+        cases (list[str]): Rate labels with the baseline first.
+        data_paths (list[str]): Result directory for each corresponding case.
+        output_path (str): Output root for plots and summary CSVs.
+        dimension (str): Grouping dimension key in ``CFS_DIMENSIONS``.
+        cust_class (str | None): Tariff class filter.
+        mode (str): ``level``, ``change``, or ``change_pct``.
+        split_by (str | None): Dimension used for figure columns.
+        dso_range (iterable[int] | None): Required when ``dimension`` is
+            ``insulation`` and no population is supplied.
+        population (pandas.DataFrame | None): Pre-loaded population.
+        **kwargs: Forwarded to :func:`customer_cfs_pdf_by_group`.
+
+    Returns:
+        pandas.DataFrame: The plotted rows.
+    """
+    options = kwargs.pop('options', None)
+    if options is None and dimension == 'insulation' and population is None:
+        options = {'insulation_options': {'dso_range': dso_range}}
+    return customer_cfs_pdf_by_group(
+        cases, data_paths, output_path, dimension=dimension, metric='PeakLoad',
+        cust_class=cust_class, mode=mode, split_by=split_by, options=options,
+        population=population, **kwargs)
+
+def customer_energy_pdf_by_group(cases, data_paths, output_path, dimension='insulation',
+                                 cust_class='residential', mode='level',
+                                 split_by='cust_participating', dso_range=None,
+                                 population=None, **kwargs):
+    """Plot annual customer energy-purchase distributions by rate and a chosen attribute.
+
+    Energy purchased is net of any on-site generation, so rooftop-PV customers
+    can show very low or negative annual totals.
+
+    Args:
+        cases (list[str]): Rate labels with the baseline first.
+        data_paths (list[str]): Result directory for each corresponding case.
+        output_path (str): Output root for plots and summary CSVs.
+        dimension (str): Grouping dimension key in ``CFS_DIMENSIONS``.
+        cust_class (str | None): Tariff class filter.
+        mode (str): ``level``, ``change``, or ``change_pct``.
+        split_by (str | None): Dimension used for figure columns.
+        dso_range (iterable[int] | None): Required when ``dimension`` is
+            ``insulation`` and no population is supplied.
+        population (pandas.DataFrame | None): Pre-loaded population.
+        **kwargs: Forwarded to :func:`customer_cfs_pdf_by_group`.
+
+    Returns:
+        pandas.DataFrame: The plotted rows.
+    """
+    options = kwargs.pop('options', None)
+    if options is None and dimension == 'insulation' and population is None:
+        options = {'insulation_options': {'dso_range': dso_range}}
+    return customer_cfs_pdf_by_group(
+        cases, data_paths, output_path, dimension=dimension, metric='EnergyPurchased',
+        cust_class=cust_class, mode=mode, split_by=split_by, options=options,
+        population=population, **kwargs)
 
 def load_comparison_plot(day_range, metadata_path, cases, data_paths, output_path):
     """Compare total system load over a selected day range.
@@ -501,7 +1430,6 @@ def load_comparison_plot(day_range, metadata_path, cases, data_paths, output_pat
     plt.savefig(file_path_fig, bbox_inches='tight')
 
     output_df.to_csv(path_or_buf=output_path + '/data/Case_Compare_System_Load_' + output_df.index[0].strftime('%m-%d') + '.csv')
-
 
 def retail_price_comparison_plot(dso, day_range, metadata_path, cases, data_paths, rate_scenarios, Month, output_path):
     """Compare retail-price time series for one DSO and day range.
@@ -637,7 +1565,6 @@ def retail_price_comparison_plot(dso, day_range, metadata_path, cases, data_path
     plt.savefig(file_path_fig, bbox_inches='tight')
 
     output_df.to_csv(path_or_buf=output_path + '/data/Case_Compare_Retail_Price_' + output_df.index[0].strftime('%m-%d') + '.csv')
-
 
 def plot_annual_stats(cases, data_paths, output_path, dso_num, variable):
     """Plot annual and daily distributions for a system metric across cases.
@@ -1024,7 +1951,6 @@ def reduction_by_class(cases, data_paths, output_path,  variable):
         # elif variable == 'Total Load':
         #     var_df = pd.read_csv(data_path + '/DSO_Total_Loads.csv', index_col='time', parse_dates=True)
 
-
 def _plot_waterfall(labels, values, output_path, net_label, y_label, sorted_value=False):
     label_order = np.argsort(np.abs(np.asarray(values)))[::-1] if sorted_value else np.arange(len(labels))
     waterfall_chart.plot(
@@ -1034,7 +1960,6 @@ def _plot_waterfall(labels, values, output_path, net_label, y_label, sorted_valu
     plt.xticks(range(len(tick_labels)), tick_labels, rotation=90)
     plt.savefig(output_path, bbox_inches='tight')
     plt.close()
-
 
 def dso_cfs_delta(cases_list, data_paths_list, dso_range, metadata_file, metadata_path):
     """Compare DSO cost-and-benefit components between baseline and result cases.
@@ -1320,7 +2245,6 @@ def dso_cfs_delta(cases_list, data_paths_list, dso_range, metadata_file, metadat
     # plt.despine(left=True)
     # plt.set_axis_labels("", "Body mass (g)")
 
-
 def customer_cfs_delta(cases, data_paths, metadata_file, metadata_path = None):
     """Compare customer costs, usage, and savings for a baseline/result pair.
 
@@ -1436,7 +2360,7 @@ def customer_cfs_delta(cases, data_paths, metadata_file, metadata_path = None):
             104, 110, 115, 117, 123, 125, 127, 140, 161, 166, 197]
 
     heating = ['Gas', 'Resistance', 'Heat pump']
-    der_participation = [' None', ' EV', ' Battery', ' EV, Battery', ' HVAC', ' WH', ' HVAC, WH', ' HVAC, EV', ' WH, EV', ' HVAC, WH, EV']
+    der_participation = [' None', ' EV', ' BESS', ' EV, BESS', ' HVAC', ' WH', ' HVAC, WH', ' HVAC, EV', ' WH, EV', ' HVAC, WH, EV']
     participation = [True, False]
     hr_bau_participation = ['None', ' EV', ' PV', ' EV, PV']
     income_level = ['Low', 'Middle', 'Upper']
@@ -1616,6 +2540,12 @@ def customer_cfs_delta(cases, data_paths, metadata_file, metadata_path = None):
     plot_customer_pdf('ev_participating', participation, 'net_energy_cost_savings_pct', pop_subset, cases[1], data_paths[1])
     plot_customer_pdf('ev_participating', participation, 'bill_savings_pct', pop_subset, cases[1], data_paths[1])
 
+    plot_customer_pdf('wh_participating', participation, 'net_energy_cost_savings_pct', pop_subset, cases[1], data_paths[1])
+    plot_customer_pdf('wh_participating', participation, 'bill_savings_pct', pop_subset, cases[1], data_paths[1])
+
+    plot_customer_pdf('batt_participating', participation, 'net_energy_cost_savings_pct', pop_subset, cases[1], data_paths[1])
+    plot_customer_pdf('batt_participating', participation, 'bill_savings_pct', pop_subset, cases[1], data_paths[1])
+
     pop_subset = customer_cfs_df[customer_cfs_df['dso'] == 1]
     pop_subset = pop_subset[pop_subset['tariff_class'] == 'Residential']
     # plot_customer_pdf('cust_participating', participation, 'bill_savings_pct', pop_subset, cases[1],
@@ -1650,7 +2580,6 @@ def customer_cfs_delta(cases, data_paths, metadata_file, metadata_path = None):
     # plot_filename = datetime.now().strftime('%Y%m%d') + 'Customer_PDF_scatter.png'
     # file_path_fig = os.path.join(data_paths[0], 'plots', plot_filename)
     # plt.savefig(file_path_fig, bbox_inches='tight')
-
 
 def plot_customer_pdf(attribute, variables, metric, pop_df, case, output_path):
     """Plot grouped customer metric distributions as density and histogram PNGs.
@@ -1693,6 +2622,8 @@ def plot_customer_pdf(attribute, variables, metric, pop_df, case, output_path):
                    'Building Type': 'Building Type',
                    'pv_participating': 'Rooftop Solar',
                    'ev_participating': 'EV Ownership',
+                   'wh_participating': 'WH Participation',
+                   'batt_participating': 'BESS Participation',
                    'income_level': 'Income Level',
                    'DER_participating': 'DER Participation'}
 
@@ -1785,7 +2716,6 @@ def plot_customer_pdf(attribute, variables, metric, pop_df, case, output_path):
     plot_filename = datetime.now().strftime('%Y%m%d') + 'Customer_PDF_' + attribute + '_' + metric + 'dist.png'
     file_path_fig = os.path.join(output_path, 'plots', plot_filename)
     plt.savefig(file_path_fig, bbox_inches='tight')
-
 
 def DSOT_plots():
     """Run the legacy DSOT analysis workflow configured in this function.
@@ -1970,7 +2900,6 @@ def DSOT_plots():
     if dso_valuation_waterfall:
         dso_cfs_delta(Cases_list, Data_paths_list, dso_range, metadata_file)
 
-
 def rates_plots():
     """Run the example-configured retail-rate comparison workflow.
 
@@ -2115,105 +3044,121 @@ def rates_plots():
         ['Flat', 'TOU', 'DE', 'DE+C', 'B&S'],
         [flat_path, TOU_path, DSOT_path, RND_path, sub_path], data_path, dso_range)
 
-    print('Stage 2b: annual Customer Bill Plotting - Plot gets saved in case_path/plots folder.')
-    # Provides annual box and whisker
+    # print('Stage 3: plot generation and load profiles for the baseline case')
+    # # Provides stacked time series plots of bulk generation.  
+    # # E.g., Figure 15 in DSO+T Volume 1.
+    # pt.generation_load_profiles(flat_aug_path, metadata_path, flat_aug_path, day_range, False)
+
+    # print('Stage 4: compare DSO cost-benefit components across rate cases.')
+    # # Total grid cost water fall: Figure 42 in Vol 1
+    # Cases_list = [['Flat', 'TOU'], ['Flat', 'DSOT'], ['Flat', 'RND']] #TODO: Why DSOT and RND vs DE and DE+C?
+    # Data_paths_list = [[flat_path, TOU_path], [flat_path, DSOT_path],[flat_path, RND_path]]
+    # dso_cfs_delta(Cases_list, Data_paths_list, dso_range, metadata_file, metadata_path)
+
+    # print('Stage 5: compare customer-population distributions and savings.')
+    # # Probably density Functions of customer populations: e.g., Figure 45 in Vol 1
+    # Cases = ['Flat', 'TOU']
+    # Data_paths = [flat_path, TOU_path]
+    # customer_cfs_delta(Cases, Data_paths, metadata_file, metadata_path)
+
+    # Cases = ['Flat', 'DE']
+    # Data_paths = [flat_path, DSOT_path]
+    # customer_cfs_delta(Cases, Data_paths, metadata_file, metadata_path)
+
+    # Cases = ['Flat', 'DE+C']
+    # Data_paths = [flat_path, RND_path]
+    # customer_cfs_delta(Cases, Data_paths, metadata_file, metadata_path)
+
+    # Cases = ['Flat', 'B&S']
+    # Data_paths = [flat_path, sub_path]
+    # customer_cfs_delta(Cases, Data_paths, metadata_file, metadata_path)
+
+    # print('Stage 5b: Annual Customer Bill Plotting - Plot gets saved in case_path/plots folder.')
+    # # Provides annual box and whisker
+    # Cases = ['Flat', 'TOU', 'DE', 'DE+C', 'B&S']
+    # Data_paths = [flat_path, TOU_path, DSOT_path, RND_path, sub_path]
+    # customer_monthly_stats(Cases, Data_paths, data_path, dso_num)
+    # # Plot bill components
+    # customer_bill_component_comparison(Cases, Data_paths, data_path, dso_num)
+
+    # print('Stage 6. House/Customer Daily HVAC / Load & Price Comparison Examples.')
+    # # Probably density Functions of customer populations: e.g., Figure 45 in Vol 1
+    # day_range = range(12, 15)
+    # Cases = ['Flat', 'TOU', 'DSOT', 'RND']
+    # Month = '8_2016_08_pv_bt_fl_ev'
+    # Data_paths = [flat_path +'/' + Month, TOU_path + '/' + Month, DSOT_path+ '/' + Month, RND_path +'/' + Month]
+    # load_comparison_plot(day_range, metadata_path, Cases, Data_paths, data_path)
+
+    # # day_range = range(14, 17)
+    # Cases = ['Flat', 'TOU', 'DSOT', 'RND']
+    # Rate_Scenarios = ["flat", "TOU", "DSOT", "RandD"]
+    # Data_paths = [flat_path, TOU_path, DSOT_path, RND_path]
+    # retail_price_comparison_plot(dso_num, day_range, metadata_path, Cases, Data_paths, Rate_Scenarios, Month, data_path)
+
+    # Month = '8_2016_12_pv_bt_fl_ev'
+    # day_range = range(20, 23)
+    # Data_paths = [flat_path +'/' + Month, TOU_path + '/' + Month, DSOT_path+ '/' + Month, RND_path +'/' + Month]
+    # load_comparison_plot(day_range, metadata_path, Cases, Data_paths, data_path)
+    # Data_paths = [flat_path, TOU_path, DSOT_path, RND_path]
+    # retail_price_comparison_plot(dso_num, day_range, metadata_path, Cases, Data_paths, Rate_Scenarios, Month, data_path)
+
+    # Month = '8_2016_04_pv_bt_fl_ev'
+    # day_range = range(27, 30)
+    # Data_paths = [flat_path +'/' + Month, TOU_path + '/' + Month, DSOT_path+ '/' + Month, RND_path +'/' + Month]
+    # load_comparison_plot(day_range, metadata_path, Cases, Data_paths, data_path)
+    # Data_paths = [flat_path, TOU_path, DSOT_path, RND_path]
+    # retail_price_comparison_plot(dso_num, day_range, metadata_path, Cases, Data_paths, Rate_Scenarios, Month, data_path)
+
+    # print('Stage 7. Population Attribute PDFs.)
+    # Probably density Functions of customer populations: e.g., Figure 45 in Vol 1
     Cases = ['Flat', 'TOU', 'DE', 'DE+C', 'B&S']
     Data_paths = [flat_path, TOU_path, DSOT_path, RND_path, sub_path]
-    customer_monthly_stats(Cases, Data_paths, data_path, dso_num)
-    # Plot bill components
-    customer_bill_component_comparison(Cases, Data_paths, data_path, dso_num)
 
-    print('Stage 3: plot generation and load profiles for the baseline case')
-    # Provides stacked time series plots of bulk generation.  
-    # E.g., Figure 15 in DSO+T Volume 1.
-    pt.generation_load_profiles(flat_aug_path, metadata_path, flat_aug_path, day_range, False)
+    Population = load_customer_cfs_population(
+        Cases, Data_paths, cust_class='residential', attribute_case=1,
+        insulation_options={'dso_range': dso_range, 'method': 'conductance', 'bins': 3})
 
-    print('Stage 4: compare DSO cost-benefit components across rate cases.')
-    # Total grid cost water fall: Figure 42 in Vol 1
-    Cases_list = [['Flat', 'TOU'], ['Flat', 'DSOT'], ['Flat', 'RND']] #TODO: Why DSOT and RND vs DE and DE+C?
-    Data_paths_list = [[flat_path, TOU_path], [flat_path, DSOT_path],[flat_path, RND_path]]
-    dso_cfs_delta(Cases_list, Data_paths_list, dso_range, metadata_file, metadata_path)
+    for Dimension in ['building_type', 'heating', 'cooling', 'income_level', 'pv_participating', 'ev_participating', 'DER_participating', 'wh_participating', 'batt_participating', 'insulation']:
 
-    print('Stage 5: compare customer-population distributions and savings.')
-    # Probably density Functions of customer populations: e.g., Figure 45 in Vol 1
-    Cases = ['Flat', 'TOU']
-    Data_paths = [flat_path, TOU_path]
-    customer_cfs_delta(Cases, Data_paths, metadata_file, metadata_path)
+        # Bill levels, then paired variation from the Flat baseline
+        customer_cfs_pdf_by_group(Cases, Data_paths, data_path, dimension=Dimension,
+                                  metric='Bills', mode='level', population=Population)
+        customer_cfs_pdf_by_group(Cases, Data_paths, data_path, dimension=Dimension,
+                                  metric='Bills', mode='change_pct', population=Population)
+        customer_cfs_pdf_by_group(Cases, Data_paths, data_path, dimension=Dimension,
+                              metric='PeakLoad', mode='change_pct', population=Population)
+        customer_cfs_pdf_by_group(Cases, Data_paths, data_path, dimension=Dimension,
+                              metric='EnergyPurchased', mode='level',
+                              population=Population)
 
-    Cases = ['Flat', 'DE']
-    Data_paths = [flat_path, DSOT_path]
-    customer_cfs_delta(Cases, Data_paths, metadata_file, metadata_path)
+    Population = load_customer_cfs_population(
+        Cases, Data_paths, cust_class='residential', attribute_case=1,
+        insulation_options={'dso_range': dso_range, 'method': 'conductance', 'bins': 3})
 
-    Cases = ['Flat', 'DE+C']
-    Data_paths = [flat_path, RND_path]
-    customer_cfs_delta(Cases, Data_paths, metadata_file, metadata_path)
 
-    Cases = ['Flat', 'B&S']
-    Data_paths = [flat_path, sub_path]
-    customer_cfs_delta(Cases, Data_paths, metadata_file, metadata_path)
+    # print('Stage 8. Subscription Plots')
+    # flat_aug_path = os.path.join(flat_path, '8_2016_08_pv_bt_fl_ev')
+    # sub_aug_path = os.path.join(sub_path, '8_2016_08_pv_bt_fl_ev')
+    # day_range = range(14, 17)  # Set day range and case path around August 11 peak - peak load is given in load stats csv.
+    # pt.subscription_plot(dso_num, day_range, metadata_path, flat_aug_path, sub_aug_path)
+    # day_range = range(25, 28)  # Set day range and case path around August 11 peak - peak load is given in load stats csv.
+    # pt.subscription_plot(dso_num, day_range, metadata_path, flat_aug_path, sub_aug_path)
 
-    print('Stage 5b: Annual Customer Bill Plotting - Plot gets saved in case_path/plots folder.')
-    # Provides annual box and whisker
-    Cases = ['Flat', 'TOU', 'DE', 'DE+C', 'B&S']
-    Data_paths = [flat_path, TOU_path, DSOT_path, RND_path, sub_path]
-    customer_monthly_stats(Cases, Data_paths, data_path, dso_num)
-    # Plot bill components
-    customer_bill_component_comparison(Cases, Data_paths, data_path, dso_num)
+    # print('Stage 9. TOU Participation Summary')
+    # day_range = range(12, 15)
+    # Cases = ['TOU-80', 'TOU-60', 'TOU-40', 'TOU-20']
+    # Month20 = 'Aug-20TOU_pv_bt_fl_ev'
+    # Month40 = 'Aug-40TOU_pv_bt_fl_ev'
+    # Month60 = 'Aug-60TOU_pv_bt_fl_ev'
+    # Month80 = '8_2016_08_pv_bt_fl_ev'
+    # Data_paths = [TOU_path +'/' + Month80, TOU_path +'/' + Month60, TOU_path +'/' + Month40, TOU_path +'/' + Month20]
+    # load_comparison_plot(day_range, metadata_path, Cases, Data_paths, data_path)
 
-    print('Stage 6. House/Customer Daily HVAC / Load & Price Comparison Examples.')
-    # Probably density Functions of customer populations: e.g., Figure 45 in Vol 1
-    day_range = range(12, 15)
-    Cases = ['Flat', 'TOU', 'DSOT', 'RND']
-    Month = '8_2016_08_pv_bt_fl_ev'
-    Data_paths = [flat_path +'/' + Month, TOU_path + '/' + Month, DSOT_path+ '/' + Month, RND_path +'/' + Month]
-    load_comparison_plot(day_range, metadata_path, Cases, Data_paths, data_path)
-
-    # day_range = range(14, 17)
-    Cases = ['Flat', 'TOU', 'DSOT', 'RND']
-    Rate_Scenarios = ["flat", "TOU", "DSOT", "RandD"]
-    Data_paths = [flat_path, TOU_path, DSOT_path, RND_path]
-    retail_price_comparison_plot(dso_num, day_range, metadata_path, Cases, Data_paths, Rate_Scenarios, Month, data_path)
-
-    Month = '8_2016_12_pv_bt_fl_ev'
-    day_range = range(20, 23)
-    Data_paths = [flat_path +'/' + Month, TOU_path + '/' + Month, DSOT_path+ '/' + Month, RND_path +'/' + Month]
-    load_comparison_plot(day_range, metadata_path, Cases, Data_paths, data_path)
-    Data_paths = [flat_path, TOU_path, DSOT_path, RND_path]
-    retail_price_comparison_plot(dso_num, day_range, metadata_path, Cases, Data_paths, Rate_Scenarios, Month, data_path)
-
-    Month = '8_2016_04_pv_bt_fl_ev'
-    day_range = range(27, 30)
-    Data_paths = [flat_path +'/' + Month, TOU_path + '/' + Month, DSOT_path+ '/' + Month, RND_path +'/' + Month]
-    load_comparison_plot(day_range, metadata_path, Cases, Data_paths, data_path)
-    Data_paths = [flat_path, TOU_path, DSOT_path, RND_path]
-    retail_price_comparison_plot(dso_num, day_range, metadata_path, Cases, Data_paths, Rate_Scenarios, Month, data_path)
-
-    print('Stage 7. Population Attribute PDFs. --> TODO: no plots yet')
-    # Probably density Functions of customer populations: e.g., Figure 45 in Vol 1
-
-    print('Stage 8. Subscription Plots')
-    flat_aug_path = os.path.join(flat_path, '8_2016_08_pv_bt_fl_ev')
-    sub_aug_path = os.path.join(sub_path, '8_2016_08_pv_bt_fl_ev')
-    day_range = range(14, 17)  # Set day range and case path around August 11 peak - peak load is given in load stats csv.
-    pt.subscription_plot(dso_num, day_range, metadata_path, flat_aug_path, sub_aug_path)
-    day_range = range(25, 28)  # Set day range and case path around August 11 peak - peak load is given in load stats csv.
-    pt.subscription_plot(dso_num, day_range, metadata_path, flat_aug_path, sub_aug_path)
-
-    print('Stage 9. TOU Participation Summary')
-    day_range = range(12, 15)
-    Cases = ['TOU-80', 'TOU-60', 'TOU-40', 'TOU-20']
-    Month20 = 'Aug-20TOU_pv_bt_fl_ev'
-    Month40 = 'Aug-40TOU_pv_bt_fl_ev'
-    Month60 = 'Aug-60TOU_pv_bt_fl_ev'
-    Month80 = '8_2016_08_pv_bt_fl_ev'
-    Data_paths = [TOU_path +'/' + Month80, TOU_path +'/' + Month60, TOU_path +'/' + Month40, TOU_path +'/' + Month20]
-    load_comparison_plot(day_range, metadata_path, Cases, Data_paths, data_path)
-
-    # Summer Peak - TOU Participation example
-    day_range = range(9, 14)
-    pt.der_stack_plot(dso_range, day_range, metadata_path, os.path.join(TOU_path, Month20), flat_aug_path, False)
-    pt.der_stack_plot(dso_range, day_range, metadata_path, os.path.join(TOU_path, Month40), flat_aug_path, False)
-    pt.der_stack_plot(dso_range, day_range, metadata_path, os.path.join(TOU_path, Month60), flat_aug_path, False)
+    # # Summer Peak - TOU Participation example
+    # day_range = range(9, 14)
+    # pt.der_stack_plot(dso_range, day_range, metadata_path, os.path.join(TOU_path, Month20), flat_aug_path, False)
+    # pt.der_stack_plot(dso_range, day_range, metadata_path, os.path.join(TOU_path, Month40), flat_aug_path, False)
+    # pt.der_stack_plot(dso_range, day_range, metadata_path, os.path.join(TOU_path, Month60), flat_aug_path, False)
 
 
 if __name__ == '__main__':
