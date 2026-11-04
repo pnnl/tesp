@@ -45,6 +45,8 @@ PSST_WARNING = "ignore"
 python          = "3.12.*"
 openjdk         = "11.*"
 coin-or-cbc     = "*"         # CBC solver used by PSST / Pyomo
+numpy = ">=2.5.4,<3"
+json5 = ">=0.17.3,<0.18"
 
 # ---------------------------------------------------------------------------
 # PyPI packages — either not on conda-forge or version-pinned too tightly
