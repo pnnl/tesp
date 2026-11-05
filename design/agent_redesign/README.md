@@ -1,6 +1,7 @@
 # AgentRedesign
 
 **Author: Trevor Hardy**
+
 **Last Updated: Jan 30, 2025**
 
 This folder contains design ideas for agent architecture, design, and operation based on the experience gained during the DSO+T study and in preparation for a larger re-work of agents in TESP. None of this should be considered definitive but rather a reflection of the thinking at the time it was created. Later design work may or may not reference this or build upon on depending on how thinking at that time is consistent with the ideas expressed here.

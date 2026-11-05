@@ -1,6 +1,7 @@
 # Curve and Agent
 
 **Author: Trevor Hardy**
+
 **Last Updated: 3 March 2026**
 
 This folder captures the agent redesign work completed in FY26 to begin the work of re-architecting TESP. That work began with an extended chat between Trevor Hardy and an LLM where the requirements of the agent were progressively disclosed and the LLM produced an increasingly complex software architecture. The prompting of the LLM leveraged experience and Trevor's ideas for how to modularize the functionality of an agent. This conversation was captured in the file named ["chat-💻 Smart Device Market Agent.md"](./chat-💻%20Smart%20Device%20Market%20Agent.md)
