@@ -65,6 +65,7 @@ joblib              = "~=1.4.2"
 openpyxl            = "~=3.1.5"
 plotly              = ">=5.24"
 psst                = "~=0.1.1a0"
+pyso                = { git = "https://github.com/pnnl/pyso", extras = ["standard"] }
 PuLP                = "~=2.9.0"
 PyGLM               = ">=2.7.1"
 PyYAML              = "~=6.0.2"

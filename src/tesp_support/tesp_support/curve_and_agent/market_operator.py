@@ -16,7 +16,7 @@ from .data_types import BidCurve, ClearingResult, BidPoint, MarketTimingParams
 from .enums_and_constants import MarketType, IterationType
 
 
-class SupplyCurve:  # TODO: any reason to not use a more generic Curve class for all curves?
+class SupplyCurve:
     """Supply curve representing the cost of wholesale energy procurement.
 
     This is the DSO's cost curve for procuring energy from the wholesale
