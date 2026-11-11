@@ -1,6 +1,7 @@
 # GLD Model Population Strategies
 
 **Author: Trevor Hardy**
+
 **Last Updated: 10 Nov 2026**
 
 ## Introduction 
