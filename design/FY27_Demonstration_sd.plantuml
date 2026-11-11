@@ -1,7 +1,8 @@
-@startuml sequence_rt_binding
+@startuml FY27_Demonstration_sd
 !theme bluegray
 skinparam sequenceMessageAlign center
 skinparam maxMessageSize 200
+skinparam dpi 300
 
 title FY27 Demonstration
 
@@ -55,7 +56,7 @@ activate llm
   llm <-- mcp: federate interfaces
   deactivate llm
   deactivate mcp
-  llm -> llm: validate message-passing timing
+  llm -> llm: validate message-passing topology
   note right: CST provide support for creating interfaces?
 
 llm -> llm: physical model instantiation that needs more thinking
