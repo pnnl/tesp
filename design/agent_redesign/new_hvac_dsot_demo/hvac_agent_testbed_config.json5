@@ -193,47 +193,49 @@
             name: "test asset state"
         } 
     },
-    rt_bidding_strategy: {
-        name: "test RT bidding strategy",
-        price_cap: 1000,
-        bid_delay: 0,
-        slider: 0.5,
-        cooling_participating: true,
-        heating_participating: true,
-        windowLength_hr: 48,
-        interpolation: true,
-        ProfitMargin_intercept: 10,
-        ProfitMargin_slope: 0,
-        RT_minute_count_interpolation: 0,
+    bidding_strategy: {
+        rt_bidding_strategy: {
+            name: "test RT bidding strategy",
+            price_cap: 1000,
+            bid_delay: 0,
+            slider: 0.5,
+            cooling_participating: true,
+            heating_participating: true,
+            windowLength_hr: 48,
+            interpolation: true,
+            ProfitMargin_intercept: 10,
+            ProfitMargin_slope: 0,
+            RT_minute_count_interpolation: 0,
 
-    },
-    da_bidding_strategy: {
-        name: "test DA bidding strategy",
-        price_cap: 1000,
-        bid_delay: 0,
-        slider: 0.5,
-        cooling_participating: true,
-        heating_participating: true,
-        windowLength_hr: 48,
-        interpolation: true,
-        ProfitMargin_intercept: 10,
-        ProfitMargin_slope: 0,
-        RT_test_support:{
-            // index 0 = time
-            // index 1 = 0 - 3 with for the four points with 0 being
-            // the lowest quantity
-            // index 2 = 0 - 1 with 0 = quantity, 1 = price
-            bid_da: [
-                        [
-                            [0, 0],
-                            [500, 50],
-                            [500, 50],
-                            [1000, 100]
-                        ]
-                      ],
-            previous_Q_DA: 500,
-            previous_T_DA: 72,
-            temp_room_value: 78
+        },
+        da_bidding_strategy: {
+            name: "test DA bidding strategy",
+            price_cap: 1000,
+            bid_delay: 0,
+            slider: 0.5,
+            cooling_participating: true,
+            heating_participating: true,
+            windowLength_hr: 48,
+            interpolation: true,
+            ProfitMargin_intercept: 10,
+            ProfitMargin_slope: 0,
+            RT_test_support:{
+                // index 0 = time
+                // index 1 = 0 - 3 with for the four points with 0 being
+                // the lowest quantity
+                // index 2 = 0 - 1 with 0 = quantity, 1 = price
+                bid_da: [
+                            [
+                                [0, 0],
+                                [500, 50],
+                                [500, 50],
+                                [1000, 100]
+                            ]
+                        ],
+                previous_Q_DA: 500,
+                previous_T_DA: 72,
+                temp_room_value: 78
+            }
         }
     },
     da_test_info:{
@@ -244,7 +246,7 @@
             "wh_kW": 2000,
             "house_kW": 10000,
             "mtr_v": 120,
-            "hvac_on": False,
+            "hvac_on": false,
             "thermostat_mode": "ThermoStatMode.COOLING"
         },
         previous_da_bid :[

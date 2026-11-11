@@ -12,8 +12,8 @@ import logging
 import pprint
 import argparse
 import sys
-from tesp_support.dsot import hvac_new_agent
-from tesp_support.dsot.hvac_new_agent import ThermoStatMode
+import hvac_new_agent
+from hvac_new_agent import HVACDSOTAssetState
 import json5
 import datetime as dt
 
@@ -71,23 +71,23 @@ def _auto_run():
     sim_time_dt = dt.datetime.strptime(date_string, date_format)
     config_dict["agent"]["sim_time"] = sim_time_dt
 
-    ha = hvac_new_agent.HVACDSOTAgent(name="test_hvac_agent",
-                                      attributes=config_dict)
+    ha = hvac_new_agent.HVACDSOTAgent(attributes=config_dict)
     if args.real_time == True:
         new_asset_state = {
             "indoor_air_temp": 73,
-            "mass_temperature": 70,
+            "mass_temp": 70,
             "hvac_kW": 1500,
             "wh_kW": 2000,
             "house_kW": 10000,
             "mtr_v": 120,
             "hvac_on": False,
-            "thermostat_mode": ThermoStatMode.COOLING
+            "thermostat_mode": HVACDSOTAssetState.ThermostatMode.COOLING
         }
         ha.asset.asset_state.update_asset_state(new_asset_state)
         ha.calc_capacites_and_all_heat_flows()
-        ha.asset.asset_model.structure_model.calc_structure_ETP_parameters()
-        rt_bid = ha.rt_bidding_strategy.form_rt_bid()
+        ha.asset.structure_model.calc_structure_ETP_parameters()
+        rt_bid = ha.market.rt_bidding_strategy.form_rt_bid()
+        print(f"Real-time bid: {rt_bid}")
         dummy = 0
     
 

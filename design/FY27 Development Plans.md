@@ -1,5 +1,9 @@
 # FY27 Development Plan
 
+**Author: Trevor Hardy**
+
+**Last Updated: 13 Oct 2026**
+
 In FY27 TESP is continuing to extend the new architecture begun in FY26 to make improvements in the following ways:
 
 - Architect, design, and implement a so-called "stub" version of a transmission system operator (TSO) which implements a real-time energy market.

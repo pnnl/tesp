@@ -13,7 +13,7 @@ import logging
 import pprint
 import argparse
 import sys
-from tesp_support.dsot import hvac_new_agent
+from design.agent_redesign.new_hvac_dsot_demo import hvac_new_agent
 import json5
 import datetime as dt
 

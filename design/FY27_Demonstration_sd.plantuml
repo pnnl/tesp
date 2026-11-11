@@ -1,0 +1,144 @@
+@startuml FY27_Demonstration_sd
+!theme bluegray
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 200
+skinparam dpi 300
+
+title FY27 Demonstration
+
+actor "Analyst" as analyst
+participant "LLM" as llm
+participant "TESP skills" as skills
+participant "TESP MCP" as mcp
+participant "Co-Sim\nLauncher" as launcher
+participant "Residential\nAgent" as RA
+participant "Data\nService" as DS
+participant "DSO" as DSO
+participant "Generator\nAgent" as GA
+participant "ISO" as ISO
+participant "Monitor" as monitor
+participant "ConfigDB" as configdb
+
+== Create Co-Simulation==
+analyst -> analyst: Create document defining message-passing topology
+activate analyst
+analyst -> analyst: Create document defining message-passing timing
+analyst -> llm: provide definition an analysis scenario
+llm -> skills: read skills to learn how to set up co-simulation
+activate llm
+llm -> analyst: Ask clarifying questions
+llm <-- analyst: provide clarifications
+llm -> llm: validate message-passing topology
+activate llm
+  llm -> mcp: get agents inputs and outputs
+  note right: CST will implement\nMCP responses
+  activate mcp
+  par For each residential agent
+    mcp -> RA : request inputs and outputs
+    activate RA
+    mcp <-- RA : inputs and outputs
+    deactivate RA
+  end
+  par For each generator agent
+    mcp -> GA : request inputs and outputs
+    activate GA
+    mcp <-- GA : inputs and outputs
+    deactivate GA
+  end
+  mcp -> DSO : request inputs and outputs
+  activate DSO
+  mcp <-- DSO : inputs and outputs
+  deactivate DSO
+  mcp -> ISO : request inputs and outputs
+  activate ISO
+  mcp <-- ISO : inputs and outputs
+  deactivate ISO
+  llm <-- mcp: federate interfaces
+  deactivate llm
+  deactivate mcp
+  llm -> llm: validate message-passing topology
+  note right: CST provide support for creating interfaces?
+
+llm -> llm: physical model instantiation that needs more thinking
+
+llm -> llm: writes co-sim launcher script
+deactivate llm
+
+
+== Co-Simulation: Instantiation ==
+analyst -> launcher: Run co-simulation
+activate launcher
+launcher -> DS : start co-simulation
+activate DS
+launcher -> DSO : start co-simulation
+activate DSO
+launcher -> ISO : start co-simulation
+activate ISO
+launcher -> RA : start co-simulation
+activate RA
+launcher -> GA : start co-simulation
+activate GA
+launcher -> monitor : start co-simulation
+activate monitor
+DS -> configdb : request configuration data
+activate configdb
+configdb --> DS : configuration data  
+
+DSO -> configdb : request configuration data
+configdb --> DSO : configuration data  
+ISO -> configdb : request configuration data
+configdb --> ISO : configuration data  
+par For each residential agent
+  RA -> configdb : request configuration data
+  configdb --> RA : configuration data  
+end
+par For each generator agent
+  GA -> configdb : request configuration data
+  configdb --> GA : configuration data  
+end
+deactivate configdb
+analyst -> monitor: Open monitor
+analyst <- monitor: Monitored data
+
+== Co-Simulation: Retail Agents Bid (t = t_clear - 240s) ==
+DS -> RA : current weather state
+RA -> RA : form bid
+RA -> DSO : bid via HELICS
+RA -> monitor: send monitoring data via CST (HELICS)
+
+== Co-Simulation: Wholesale Agents Bid (Including DSO) (t = t_clear - 180s)==
+DS -> GA : current weather state
+par Generators bid
+  GA -> GA : form bid
+  GA -> ISO : bid via HELICS
+  GA -> monitor: send monitoring data via CST (HELICS)
+else DSOs bid
+  DSO -> DSO : form bid
+  DSO -> ISO : bid via HELICS
+  DSO -> monitor: send monitoring data via CST (HELICS)
+end
+
+== Co-Simulation: ISO Clears Market And Sends Cleared Price (t = t_clear − 120s) ==
+ISO -> ISO : clear market
+ISO -> GA : cleared price via HELICS
+ISO -> DSO : cleared price via HELICS
+ISO -> monitor: send monitoring data via CST (HELICS)
+
+== Co-Simulation: DSO Sends Cleared Price (t = t_clear − 60s) ==
+DSO -> RA : cleared price via HELICS
+DSO -> monitor: send monitoring data via CST (HELICS)
+
+== Co-Simulation: Cleared Price In Effect (t = t_clear) ==
+RA -> RA : adjust device settings based on cleared price
+RA -> monitor: send monitoring data via CST (HELICS)
+GA -> GA : adjust generation based on cleared price
+GA -> monitor: send monitoring data via CST (HELICS)
+
+deactivate RA
+deactivate GA
+deactivate DSO
+deactivate ISO
+deactivate DS
+deactivate monitor
+deactivate analyst
+@enduml
