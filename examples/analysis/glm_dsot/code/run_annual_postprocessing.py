@@ -61,6 +61,7 @@ Aggregation outputs (generated on pass 1 if absent):
   energy_dso_<N>_data.h5         -- Annual per-meter energy and billing data
   transactive_dso_<N>_data.h5    -- Annual transactive participation summary
   amenity_dso_<N>_data.h5 / .csv -- Annual comfort/amenity impact scores
+  temperature_incidence_dso_<N>_data.h5 -- Annual indoor-air deviation histograms
   DSO_load_stats.csv / Qmax.csv  -- System peak load and load statistics
   Annual_DA_LMP_stats.csv        -- Day-ahead LMP statistics for all DSOs
   generator_statistics_AMES.csv  -- AMES generator dispatch statistics
@@ -371,6 +372,12 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
         else:
             annual_amenity = False
 
+        if not os.path.isfile(os.path.join(case_path, 'temperature_incidence_dso_8_data.h5')):
+            print('No temperature incidence data found, running annual_temperature_incidence...')
+            annual_incidence = True
+        else:
+            annual_incidence = False
+
         if not os.path.isfile(os.path.join(case_path, 'DSO_load_stats.csv')):
             print('No load stats found, running load_stats...')
             load_stats = True
@@ -648,6 +655,17 @@ def run_annual_postprocessing(case_list: list, base_case_path: str, demand_case_
                 annual_amenity_df.to_hdf(os.path.join(case_path, 'amenity_dso_' + str(dso_num) + '_data.h5'), key='amenity_data')
                 annual_amenity_df.to_csv(path_or_buf=case_path + '/amenity_dso_' + str(dso_num) + '_data.csv')
                 print('Annual Customer amenity impact aggregation complete: DSO ' + str(dso_num))
+                pt.toc()
+
+            # --------------- AGGREGATE ANNUAL TEMPERATURE INCIDENCE  ----------
+            # Sums each house's monthly histograms of indoor-air deviation from
+            # the original HVAC schedule, by cooling and heating mode.
+            incidence_file = os.path.join(case_path, 'temperature_incidence_dso_' + str(dso_num) + '_data.h5')
+            if annual_incidence and not os.path.isfile(incidence_file):
+                pt.tic()
+                annual_incidence_df = pt.annual_temperature_incidence(GLD_metadata, month_def, GLD_prefix, str(dso_num))
+                annual_incidence_df.to_hdf(incidence_file, key='temperature_incidence')
+                print('Annual temperature incidence aggregation complete: DSO ' + str(dso_num))
                 pt.toc()
 
         # --------------- Aggregate annual DSO loads and compute Qmax ----------
@@ -1090,8 +1108,14 @@ def base_params_process():
 if __name__ == "__main__":
     # Choose the appropriate entry point for your run:
     #   one_process()         -- Single case processing (default; good for testing)
+            # flat_path 
+            # DSOT_path 
+            # TOU_path   
+            # transactive_path 
+            # subscription_path
     #   batch_process()       -- All cases in case_list plus the base case
     #   base_params_process() -- Base case with Q-bid calibration forced on
+
     batch_process()
-    #one_process(flat_path)
+    one_process(transactive_path)
     #base_params_process()

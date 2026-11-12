@@ -126,6 +126,15 @@ def post_process():
             amenity_df = pt.amenity_loss(GLD_metadata, case_path, GLD_prefix, str(dso_number), day_range)
             print('Amenity scores complete: DSO ' + str(dso_number) + ', Month ' + month_name)
             pt.toc()
+        # --------------- Calculate temperature-deviation histograms --------------
+        # Counts 5-minute readings by indoor-air deviation from the original
+        # cooling/heating schedule, split by last active HVAC mode.
+        if calc_temperature_incidence and not os.path.isfile(
+                case_path + GLD_prefix + str(dso_number) + '/temperature_incidence_data.h5'):
+            pt.tic()
+            pt.house_temperature_incidence(GLD_metadata, case_path, GLD_prefix, str(dso_number), day_range)
+            print('Temperature incidence complete: DSO ' + str(dso_number) + ', Month ' + month_name)
+            pt.toc()
 
     def determine_baseline_demand_profiles(dso_number):
         # Build hourly demand profile per meter for this month.
@@ -166,8 +175,10 @@ def post_process():
     forecast_plots = True
     create_baseline_demand_profiles = True
     create_demand_profiles = True
+    # ---------------------------------------
     # read_meters = False
     # calc_amenity = False
+    # calc_temperature_incidence = False
     # pop_stats = False
     # gen_plots = False
     # der_stack_plots = False
@@ -259,6 +270,11 @@ def post_process():
         results = []
 
     # STEP 2 --------- Month-level postprocessing (all DSOs/TSO) ----------
+
+    # ----------- Preview time beyond original HVAC setpoints -------------
+    # Uses the per-DSO temperature-incidence files written in STEP 1.
+    if calc_temperature_incidence:
+        pt.temperature_incidence_plot(dso_range, case_path, metadata_path, dimension='income_level')
 
     # ----------- Calculate population statistics and outputs -------------
     if pop_stats:

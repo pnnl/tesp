@@ -579,8 +579,7 @@ def customer_monthly_stats(cases, data_paths, output_path, dso_num, cust_class=N
     handles, labels = axes[1].get_legend_handles_labels()
     axes[1].legend(handles=handles, labels=labels, framealpha=1)
 
-    plot_filename = datetime.now().strftime(
-        '%Y%m%d') + 'Case_Compare_Customer_Monthly_Bills.png'
+    plot_filename =  'Case_Compare_Customer_Monthly_Bills.png'
     file_path_fig = os.path.join(output_path, 'plots', plot_filename)
     fig.savefig(file_path_fig, bbox_inches='tight')
     plt.close(fig)
@@ -662,10 +661,10 @@ def load_customer_cfs_population(cases, data_paths, cust_class='residential',
             return ', '.join(devices) if devices else 'None'
         attributes['DER_participating'] = source.apply(der_label, axis=1)
 
-    for key, spec in CFS_DIMENSIONS.items():
-        field = spec.get('field')
-        if field in attributes.columns and spec.get('remap'):
-            attributes[field] = attributes[field].replace(spec['remap'])
+    # for key, spec in CFS_DIMENSIONS.items():
+    #     field = spec.get('field')
+    #     if field in attributes.columns and spec.get('remap'):
+    #         attributes[field] = attributes[field].replace(spec['remap'])
 
     if insulation_options:
         options = dict(insulation_options)
@@ -706,12 +705,13 @@ def load_customer_cfs_population(cases, data_paths, cust_class='residential',
     population = pd.concat(stacked, ignore_index=True)
 
     if cust_class is not None:
-        wanted = CFS_DIMENSIONS['tariff_class']['remap'].get(cust_class, cust_class)
-        matches = population['tariff_class'] == wanted
+        remap = CFS_DIMENSIONS['tariff_class']['remap']
+        wanted = {cust_class, remap.get(cust_class, cust_class)}
+        matches = population['tariff_class'].isin(wanted)
         if not matches.any():
             available = sorted(population['tariff_class'].dropna().unique())
-            raise ValueError(f"No customers with tariff_class '{wanted}'. "
-                             f'Available: {available}.')
+            raise ValueError(f"No customers with tariff_class '{cust_class}'. "
+                            f'Available: {available}.')
         population = population[matches]
 
     for column in metric_columns:
@@ -858,8 +858,8 @@ def customer_cfs_pdf_by_group(cases, data_paths, output_path, dimension='buildin
         frame = frame.rename(columns={'Group': 'Split'})
         frame, group_order, group_title = resolve_cfs_groups(frame, dimension, include_counts)
     else:
-        frame['Split'] = 'All customers'
-        split_order, split_title = ['All customers'], ''
+        frame['Split'] = 'Participating customers'
+        split_order, split_title = ['Participating customers'], ''
 
     rows = list(cases) if mode == 'level' else list(cases[1:])
     frame = frame[frame['Rate'].isin(rows)].dropna(subset=[column])
@@ -899,7 +899,7 @@ def customer_cfs_pdf_by_group(cases, data_paths, output_path, dimension='buildin
     csv_path = os.path.join(output_path, 'data')
     os.makedirs(plot_path, exist_ok=True)
     os.makedirs(csv_path, exist_ok=True)
-    stem = (datetime.now().strftime('%Y%m%d') + 'Case_Compare_CFS_' + metric + '_'
+    stem = ('Case_Compare_CFS_' + metric + '_'
             + mode + '_by_' + dimension + '_' + str(cust_class)
             + ('_by_' + split_by if split_by else ''))
 
@@ -974,6 +974,234 @@ def customer_cfs_pdf_by_group(cases, data_paths, output_path, dimension='buildin
     print(summary.round(2).to_string())
 
     return frame
+
+def load_temperature_incidence(data_path, dso_range, hvac_mode='cooling'):
+    """Load one case's annual indoor-air deviation histograms by customer.
+
+    Reads ``temperature_incidence_dso_<N>_data.h5`` written by
+    :func:`tesp_support.dsot.plots.annual_temperature_incidence`, keeps one HVAC
+    mode, and sums the readings of houses sharing a billing meter, so each
+    customer counts by its hours of data.
+
+    Args:
+        data_path (str): Annual result directory for the case.
+        dso_range (iterable[int]): DSOs to load.
+        hvac_mode (str): ``cooling`` or ``heating``.
+
+    Returns:
+        pandas.DataFrame: Reading counts indexed by ``Customer ID``, with the
+        columns of :func:`tesp_support.dsot.plots.temperature_incidence_columns`.
+    """
+    frames = []
+    for dso in dso_range:
+        print(f'reading {data_path} - temperature_incidence_dso_{dso}_data.h5')
+        incidence_file = os.path.join(data_path, f'temperature_incidence_dso_{dso}_data.h5')
+        if not os.path.isfile(incidence_file):
+            raise FileNotFoundError(f'{incidence_file} is missing; run the temperature-incidence '
+                                    'post-processing first.')
+        incidence = pd.read_hdf(incidence_file, key='temperature_incidence', mode='r')
+        try:
+            meters = incidence.xs(hvac_mode, level='mode').groupby('meter ID').sum()
+        except KeyError:
+            print(f'Cannot find {meters.index}')
+        meters.index = 'DSO' + str(dso) + '_' + meters.index.astype(str)
+        frames.append(meters)
+    customers = pd.concat(frames)
+    customers.index.name = 'Customer ID'
+    return customers
+
+def customer_comfort_pdf_by_group(cases, data_paths, output_path, hvac_mode='cooling',
+                                  dimension='building_type', cust_class='residential',
+                                  split_by=None, options=None, include_counts=True,
+                                  normalize='mode', palette_name='viridis', population=None):
+    """Plot time spent beyond the original HVAC setpoint by rate and customer attribute.
+
+    Draws one panel per rate and the chosen customer dimension encoded by color, 
+    similar to `customer_cfs_pdf_by_group`. Each curve is the pooled histogram of
+    5-minute readings for HVAC-participating customers in the group, binned by
+    how far indoor temperature was above the original cooling setpoint or below
+    the original heating setpoint (separately) at 0.1°F resolution. Each customer 
+    counts by its hours of data.
+
+    Readings are assigned to cooling or heating by the house's last active HVAC
+    mode, and participation is taken from the attribute case so every rate,
+    including the baseline (Flat), covers the same customers.
+
+    How to read these plots: For example, a bar of 2% at 1.5°F means that 2% of 
+    that group's cooling-mode hours were spent 1.5°F warmer than the customer's
+    original setpoint (before adjusting to participate in the market or rate).
+
+    Args:
+        cases (list[str]): Rate labels with the baseline first.
+        data_paths (list[str]): Result directory for each corresponding case.
+        output_path (str): Output root; ``plots`` and ``data`` subdirectories
+            are created if missing.
+        hvac_mode (str): ``cooling`` or ``heating``.
+        dimension (str): Grouping dimension key in ``CFS_DIMENSIONS``.
+        cust_class (str | None): Tariff class filter, or None for all classes.
+        split_by (str | None): Dimension used for figure columns, or None for a
+            single column.
+        options (dict | None): Loader settings, as in
+            :func:`customer_cfs_pdf_by_group`.
+        include_counts (bool): Append customer counts to legend labels.
+        normalize (str): ``mode`` divides by all hours in the HVAC mode, so the
+            area under each curve is the share of time beyond the setpoint.
+            ``exceedance`` divides by hours beyond the setpoint only.
+        palette_name (str): Seaborn palette for the group colors.
+        population (pandas.DataFrame | None): Pre-loaded population, to avoid
+            re-reading the HDF5 files across repeated calls.
+
+    Returns:
+        pandas.DataFrame: The plotted histograms, with ``Rate``, ``Split``,
+        ``Group``, ``Deviation start (F)``, and ``Share (%)``. A summary CSV
+        also reports shares at or within the setpoint and beyond the plotted
+        range, and mean exceedance with readings past the range counted at its
+        upper edge.
+    """
+    if hvac_mode not in ('cooling', 'heating'):
+        raise ValueError("hvac_mode must be 'cooling' or 'heating'.")
+    if normalize not in ('mode', 'exceedance'):
+        raise ValueError("normalize must be 'mode' or 'exceedance'.")
+    options = options or {}
+
+    if population is None:
+        population = load_customer_cfs_population(
+            cases, data_paths, cust_class,
+            options.get('attribute_case', 1), options.get('insulation_options'),
+            options.get('metadata_paths'))
+
+    flags = ['cust_participating', 'hvac_participating']
+    missing = [flag for flag in flags if flag not in population.columns]
+    if missing:
+        raise ValueError(f'Columns {missing} are not in the loaded population.')
+    participants = population[population[flags].eq(True).all(axis=1)]
+    #dso_range = sorted({int(dso) for dso in participants['dso'].dropna()})
+    dso_range = [1,2,3,4,5,6,7,8]
+
+    frames = []
+    for case, data_path in zip(cases, data_paths):
+        print(f'Reading data from {case} case for {dso_range} dsos')
+        counts = load_temperature_incidence(data_path, dso_range, hvac_mode)
+        rows = participants[participants['Rate'] == case]
+        matched = rows.join(counts, on='Customer ID', how='inner')
+        matched = matched[matched['samples'] > 0]
+        print(f'{case}: {len(matched)} of {len(rows)} HVAC-participating customers '
+              f'have {hvac_mode}-mode readings.')
+        frames.append(matched)
+    frame = pd.concat(frames, ignore_index=True)
+    if frame.empty:
+        raise ValueError(f'No HVAC-participating customers have {hvac_mode}-mode readings.')
+    count_columns = list(counts.columns)
+
+    frame, group_order, group_title = resolve_cfs_groups(frame, dimension, include_counts)
+    if split_by:
+        frame, split_order, split_title = resolve_cfs_groups(frame, split_by)
+        frame = frame.rename(columns={'Group': 'Split'})
+        frame, group_order, group_title = resolve_cfs_groups(frame, dimension, include_counts)
+    else:
+        frame['Split'] = 'Participating customers'
+        split_order, split_title = ['Participating customers'], ''
+
+    edges, _share, _stats = pt.deviation_histogram(frame[count_columns].sum(), normalize)
+    bin_width = edges[1] - edges[0]
+
+    mode_title = hvac_mode.capitalize()
+    direction = 'Above' if hvac_mode == 'cooling' else 'Below'
+    axis_label = f'Indoor Temperature {direction} Original {mode_title} Setpoint (°F)'
+    hours_label = (f'{mode_title}-Mode Hours' if normalize == 'mode'
+                   else f'Hours {direction} Setpoint')
+
+    palette = sns.color_palette(palette_name, n_colors=max(len(group_order), 1))
+    colors = {label: palette[index] for index, label in enumerate(group_order)}
+
+    plot_path = os.path.join(output_path, 'plots')
+    csv_path = os.path.join(output_path, 'data')
+    os.makedirs(plot_path, exist_ok=True)
+    os.makedirs(csv_path, exist_ok=True)
+    stem = ('Case_Compare_Comfort_' + hvac_mode + '_'
+            + normalize + '_by_' + dimension + '_' + str(cust_class)
+            + ('_by_' + split_by if split_by else ''))
+
+    rows = list(cases)
+    panel_axes = {}                      # (case, split) -> axis, in plotting order
+    ylabel_axes, xlabel_axes = set(), set()
+    # Baseline in its own full-height column with an independent y-axis;
+    # comparison rates wrap into a grid that shares one y-axis among themselves.
+    compare_cases = list(cases[1:])
+    n_cols = max(1, min(2, len(compare_cases)))
+    n_rows = -(-len(compare_cases) // n_cols)          # ceiling division
+    fig = plt.figure(figsize=(5.6 * (n_cols + 1), 3.2 * n_rows))
+    grid = fig.add_gridspec(n_rows, n_cols + 1)
+    base_axis = fig.add_subplot(grid[:, 0])
+    panel_axes[(cases[0], split_order[0])] = base_axis
+    ylabel_axes.add(base_axis)
+    xlabel_axes.add(base_axis)
+
+    shared_y = None
+    for index, case in enumerate(compare_cases):
+        row, col = divmod(index, n_cols)
+        axis = fig.add_subplot(grid[row, col + 1], sharex=base_axis, sharey=shared_y)
+        shared_y = shared_y or axis
+        panel_axes[(case, split_order[0])] = axis
+        if col == 0:
+            ylabel_axes.add(axis)                      # comparison scale differs from Flat
+        else:
+            axis.tick_params(labelleft=False)
+        if index + n_cols >= len(compare_cases):       # nothing below it in this column
+            xlabel_axes.add(axis)
+        else:
+            axis.tick_params(labelbottom=False)
+    legend_axis = panel_axes[(compare_cases[n_cols - 1], split_order[0])]
+    histograms, summaries = [], []
+    try:
+        drawn = []
+        for (case, split), axis in panel_axes.items():
+            subset = frame[(frame['Rate'] == case) & (frame['Split'] == split)]
+            for label in group_order:
+                    members = subset[subset['Group'] == label]
+                    _edges, share, stats = pt.deviation_histogram(
+                        members[count_columns].sum(), normalize)
+                    if share is None:
+                        continue
+                    axis.stairs(share, edges, color=colors[label], fill=True, alpha=0.20)
+                    axis.stairs(share, edges, color=colors[label], linewidth=2.5)
+                    if label not in drawn:
+                        drawn.append(label)
+
+                    histograms.append(pd.DataFrame({
+                        'Rate': case, 'Split': split, 'Group': label,
+                        'Deviation start (F)': edges[:-1], 'Share (%)': share}))
+                    stats[f'{hvac_mode} hours'] = stats.pop('hours')
+                    stats['F-hrs per customer'] = stats.pop('F-hrs') / len(members)
+                    summaries.append({'Rate': case, 'Split': split, group_title: label,
+                                      'customers': len(members), **stats})
+            title = case if not split_by else f'{case} — {split} (n={len(subset):,})'
+            axis.set_title(title, fontsize=12, loc='left')
+            axis.set_xlim(0, edges[-1])
+            axis.set_ylabel(f'Share of {hours_label}\n(% per {bin_width:g} °F)'
+                            if axis in ylabel_axes else '', size=10)
+            axis.set_xlabel(axis_label if axis in xlabel_axes else '', size=12)
+
+        handles = [Line2D([], [], color=colors[label], linewidth=2.5, label=str(label))
+                   for label in group_order if label in drawn]
+        legend_axis.legend(handles=handles, title=group_title, loc='best',
+                           fontsize=9, title_fontsize=10, framealpha=1)
+        fig.suptitle(f'Participating {str(cust_class).capitalize()} Customers: Time {direction} '
+                     f'Original {mode_title} Setpoint by Rate'
+                     + (f' and {split_title}' if split_by else '')
+                     + f', grouped by {group_title}', y=1.0)
+        fig.tight_layout()
+        fig.savefig(os.path.join(plot_path, stem + '.png'), bbox_inches='tight')
+    finally:
+        plt.close(fig)
+
+    histogram = pd.concat(histograms, ignore_index=True)
+    summary = pd.DataFrame(summaries).set_index(['Rate', 'Split', group_title])
+    summary.to_csv(os.path.join(csv_path, stem + '_summary.csv'))
+    histogram.to_csv(os.path.join(csv_path, stem + '.csv'), index=False)
+    print(summary.round(2).to_string())
+
+    return histogram
 
 def classify_thermal_integrity(house, jitter=(0.8, 1.2), tables=None):
     """Assign a thermal integrity level using the building type's own table.
@@ -1812,7 +2040,7 @@ def plot_annual_stats(cases, data_paths, output_path, dso_num, variable):
             plt.text(0.4, 0.1, text, size=10, horizontalalignment='left',
                      verticalalignment='center', transform=ax.transAxes, bbox=dict(fc="white"))
 
-        plot_filename = datetime.now().strftime('%Y%m%d') + 'Case_Comparison_' + file_name + '_Duration_Curve.png'
+        plot_filename =  'Case_Comparison_' + file_name + '_Duration_Curve.png'
         file_path_fig = os.path.join(output_path, 'plots', plot_filename)
         plt.savefig(file_path_fig, bbox_inches='tight')
 
@@ -1840,7 +2068,7 @@ def plot_annual_stats(cases, data_paths, output_path, dso_num, variable):
             plt.text(0.4, 0.1, text, size=10, horizontalalignment='left',
                      verticalalignment='center', transform=ax.transAxes, bbox=dict(fc="white"))
 
-        plot_filename = datetime.now().strftime('%Y%m%d') + 'Case_Comparison_Daily_Variation_' + file_name + '_Duration_Curve.png'
+        plot_filename =  'Case_Comparison_Daily_Variation_' + file_name + '_Duration_Curve.png'
         file_path_fig = os.path.join(output_path, 'plots', plot_filename)
         plt.savefig(file_path_fig, bbox_inches='tight')
 
@@ -2136,15 +2364,15 @@ def dso_cfs_delta(cases_list, data_paths_list, dso_range, metadata_file, metadat
         net_benefit_low = sum(values_low)
         net_benefit_high = sum(values_high)
 
-        plot_filename = datetime.now().strftime('%Y%m%d') + 'DSO_CFS_Waterfall_ranked.png'
+        plot_filename =  'DSO_CFS_Waterfall_ranked.png'
         file_path_fig = os.path.join(results_path, 'plots', plot_filename)
         _plot_waterfall(labels, values, file_path_fig, 'Net Benefit', 'Annual Impact ($M)', sorted_value=True)
 
-        plot_filename = datetime.now().strftime('%Y%m%d') + 'DSO_CFS_Waterfall.png'
+        plot_filename =  'DSO_CFS_Waterfall.png'
         file_path_fig = os.path.join(results_path, 'plots', plot_filename)
         _plot_waterfall(labels, values, file_path_fig, 'Net Benefit', 'Annual Impact ($M)')
 
-        plot_filename = datetime.now().strftime('%Y%m%d') + 'DSO_CFS_Waterfall_low.png'
+        plot_filename =  'DSO_CFS_Waterfall_low.png'
         file_path_fig = os.path.join(results_path, 'plots', plot_filename)
         _plot_waterfall(labels, values_low, file_path_fig, 'Net Benefit (Low)', 'Annual Impact ($M)')
 
@@ -2163,7 +2391,7 @@ def dso_cfs_delta(cases_list, data_paths_list, dso_range, metadata_file, metadat
         plt.ylabel("Annual DSO Savings (%)", size=12)
         # plt.xlim(0, 11)
         # plt.ylim(0, 11)
-        plot_filename = datetime.now().strftime('%Y%m%d') + 'DSO_CFS_Benefits_Load_Scatter.png'
+        plot_filename =  'DSO_CFS_Benefits_Load_Scatter.png'
         file_path_fig = os.path.join(results_path, 'plots', plot_filename)
         plt.savefig(file_path_fig, bbox_inches='tight')
         plt.close()
@@ -2182,7 +2410,7 @@ def dso_cfs_delta(cases_list, data_paths_list, dso_range, metadata_file, metadat
         plt.ylabel("Annual DSO Savings (%)", size=12)
         # plt.xlim(0, 11)
         # plt.ylim(0, 11)
-        plot_filename = datetime.now().strftime('%Y%m%d') + 'DSO_CFS_Benefits_Cust_Scatter.png'
+        plot_filename =  'DSO_CFS_Benefits_Cust_Scatter.png'
         file_path_fig = os.path.join(results_path, 'plots', plot_filename)
         plt.savefig(file_path_fig, bbox_inches='tight')
         plt.close()
@@ -2202,7 +2430,7 @@ def dso_cfs_delta(cases_list, data_paths_list, dso_range, metadata_file, metadat
         plt.ylabel("Annual DSO Savings (%)", size=12)
         # plt.xlim(0, 11)
         # plt.ylim(0, 11)
-        plot_filename = datetime.now().strftime('%Y%m%d') + 'DSO_CFS_Benefits_Energy_Scatter.png'
+        plot_filename =  'DSO_CFS_Benefits_Energy_Scatter.png'
         file_path_fig = os.path.join(results_path, 'plots', plot_filename)
         plt.savefig(file_path_fig, bbox_inches='tight')
         plt.close()
@@ -2238,7 +2466,7 @@ def dso_cfs_delta(cases_list, data_paths_list, dso_range, metadata_file, metadat
             errorbar="sd", palette=line_colors[:summary_benefits_df['Case'].nunique()], alpha=.6, height=4
         )
     summary_plot.set_axis_labels("Case", "Annual Net Benefit ($M)")
-    plot_filename = datetime.now().strftime('%Y%m%d') + 'DSO_CFS_Benefits_Summary.png'
+    plot_filename =  'DSO_CFS_Benefits_Summary.png'
     file_path_fig = os.path.join(results_path, 'plots', plot_filename)
     summary_plot.savefig(file_path_fig, bbox_inches='tight')
     plt.close(summary_plot.figure)
@@ -2432,7 +2660,7 @@ def customer_cfs_delta(cases, data_paths, metadata_file, metadata_path = None):
     plt.xlabel('Energy Purchased (kw-hrs/year)')
     plt.ylabel('Density')
     plt.xlim(0, 0.2e6)
-    plot_filename = datetime.now().strftime('%Y%m%d') + 'Customer_PDF_tariff_class_EnergyPurchased.png'
+    plot_filename =  'Customer_PDF_tariff_class_EnergyPurchased.png'
     file_path_fig = os.path.join(data_paths[0], 'plots', plot_filename)
     plt.savefig(file_path_fig, bbox_inches='tight')
 
@@ -2476,7 +2704,7 @@ def customer_cfs_delta(cases, data_paths, metadata_file, metadata_path = None):
     plt.ylabel("Energy Purchased (kw-hrs/year)", size=12)
     plt.xlim(100, 6500)
     # plt.ylim(0, 11)
-    plot_filename = datetime.now().strftime('%Y%m%d') + 'House_sqft_energy_Scatter.png'
+    plot_filename =  'House_sqft_energy_Scatter.png'
     file_path_fig = os.path.join(data_paths[0], 'plots', plot_filename)
     plt.savefig(file_path_fig, bbox_inches='tight')
 
@@ -2567,7 +2795,7 @@ def customer_cfs_delta(cases, data_paths, metadata_file, metadata_path = None):
     plt.ylabel("Annual Bill Savings (%)", size=12)
     plt.ylim(10, 30)
     # plt.ylim(0, 11)
-    plot_filename = datetime.now().strftime('%Y%m%d') + 'Customer_Slider_Scatter.png'
+    plot_filename =  'Customer_Slider_Scatter.png'
     file_path_fig = os.path.join(data_paths[1], 'plots', plot_filename)
     plt.savefig(file_path_fig, bbox_inches='tight')
 
@@ -2577,7 +2805,7 @@ def customer_cfs_delta(cases, data_paths, metadata_file, metadata_path = None):
     # plt.scatter(customer_cfs_df['sqft'], customer_cfs_df['net_energy_cost_savings_pct'])
     # fig = customer_cfs_df.plot.scatter(x='slider_setting', y='net_energy_cost_savings_pct')
     # plt.show()
-    # plot_filename = datetime.now().strftime('%Y%m%d') + 'Customer_PDF_scatter.png'
+    # plot_filename =  'Customer_PDF_scatter.png'
     # file_path_fig = os.path.join(data_paths[0], 'plots', plot_filename)
     # plt.savefig(file_path_fig, bbox_inches='tight')
 
@@ -2691,7 +2919,7 @@ def plot_customer_pdf(attribute, variables, metric, pop_df, case, output_path):
     plt.xlim(x_low, x_high)
     plt.ylim(y_low, y_high)
     plt.ylabel('Population Fraction (-)')
-    plot_filename = datetime.now().strftime('%Y%m%d') + 'Customer_PDF_' + attribute + '_' + metric + '.png'
+    plot_filename =  'Customer_PDF_' + attribute + '_' + metric + '.png'
     file_path_fig = os.path.join(output_path, 'plots', plot_filename)
     plt.savefig(file_path_fig, bbox_inches='tight')
 
@@ -2713,7 +2941,7 @@ def plot_customer_pdf(attribute, variables, metric, pop_df, case, output_path):
     plt.xlim(x_low, x_high)
     plt.ylim(y_low, y_high)
     plt.ylabel('Population Fraction (-)')
-    plot_filename = datetime.now().strftime('%Y%m%d') + 'Customer_PDF_' + attribute + '_' + metric + 'dist.png'
+    plot_filename =  'Customer_PDF_' + attribute + '_' + metric + 'dist.png'
     file_path_fig = os.path.join(output_path, 'plots', plot_filename)
     plt.savefig(file_path_fig, bbox_inches='tight')
 
@@ -3118,23 +3346,41 @@ def rates_plots():
         Cases, Data_paths, cust_class='residential', attribute_case=1,
         insulation_options={'dso_range': dso_range, 'method': 'conductance', 'bins': 3})
 
-    for Dimension in ['building_type', 'heating', 'cooling', 'income_level', 'pv_participating', 'ev_participating', 'DER_participating', 'wh_participating', 'batt_participating', 'insulation']:
+    # for Dimension in ['building_type', 'heating', 'cooling', 'income_level', 'pv_participating', 'ev_participating', 'DER_participating', 'wh_participating', 'batt_participating', 'insulation']:
 
-        # Bill levels, then paired variation from the Flat baseline
-        customer_cfs_pdf_by_group(Cases, Data_paths, data_path, dimension=Dimension,
-                                  metric='Bills', mode='level', population=Population)
-        customer_cfs_pdf_by_group(Cases, Data_paths, data_path, dimension=Dimension,
-                                  metric='Bills', mode='change_pct', population=Population)
-        customer_cfs_pdf_by_group(Cases, Data_paths, data_path, dimension=Dimension,
-                              metric='PeakLoad', mode='change_pct', population=Population)
-        customer_cfs_pdf_by_group(Cases, Data_paths, data_path, dimension=Dimension,
-                              metric='EnergyPurchased', mode='level',
-                              population=Population)
+        # # Bill levels, then paired variation from the Flat baseline
+        # customer_cfs_pdf_by_group(Cases, Data_paths, data_path, dimension=Dimension,
+        #                           metric='Bills', mode='level', population=Population)
+        # customer_cfs_pdf_by_group(Cases, Data_paths, data_path, dimension=Dimension,
+        #                           metric='Bills', mode='change_pct', population=Population)
+        # customer_cfs_pdf_by_group(Cases, Data_paths, data_path, dimension=Dimension,
+        #                       metric='PeakLoad', mode='change_pct', population=Population)
+        # customer_cfs_pdf_by_group(Cases, Data_paths, data_path, dimension=Dimension,
+        #                       metric='EnergyPurchased', mode='level',
+        #                       population=Population)
+        # customer_comfort_pdf_by_group(Cases, Data_paths, data_path, hvac_mode='cooling',
+        #                           dimension=Dimension, cust_class='residential',
+        #                           split_by=None, options=None, include_counts=True,
+        #                           normalize='mode', palette_name='viridis', population=None)
 
-    Population = load_customer_cfs_population(
-        Cases, Data_paths, cust_class='residential', attribute_case=1,
-        insulation_options={'dso_range': dso_range, 'method': 'conductance', 'bins': 3})
+    for Dimension in ['building_type', 'heating', 'income_level', 'insulation']:
+    
+        Cases_no_flat = ['TOU', 'DE', 'DE+C', 'B&S']
+        Data_paths_no_flat = [TOU_path, DSOT_path, RND_path, sub_path]
 
+        Population_no_flat = load_customer_cfs_population(
+            Cases, Data_paths, cust_class='residential', attribute_case=1,
+            insulation_options={'dso_range': dso_range, 'method': 'conductance', 'bins': 3})
+        
+        customer_comfort_pdf_by_group(Cases, Data_paths, data_path, hvac_mode='cooling',
+                                            dimension=Dimension, cust_class='residential',
+                                            split_by=None, options=None, include_counts=True,
+                                            normalize='mode', palette_name='viridis', population=Population_no_flat)
+
+        customer_comfort_pdf_by_group(Cases, Data_paths, data_path, hvac_mode='heating',
+                                            dimension=Dimension, cust_class='residential',
+                                            split_by=None, options=None, include_counts=True,
+                                            normalize='mode', palette_name='viridis', population=Population_no_flat)
 
     # print('Stage 8. Subscription Plots')
     # flat_aug_path = os.path.join(flat_path, '8_2016_08_pv_bt_fl_ev')

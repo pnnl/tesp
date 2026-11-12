@@ -118,6 +118,16 @@ def post_process():
             pt.toc()
         # --------------- CALCULATE AMENITY SCORES  ------------------------------
 
+        # --------------- Calculate temperature-deviation histograms --------------
+        # Counts 5-minute readings by indoor-air deviation from the original
+        # cooling/heating schedule, split by last active HVAC mode.
+        if calc_temperature_incidence and not os.path.isfile(
+                case_path + GLD_prefix + str(dso_number) + '/temperature_incidence_data.h5'):
+            pt.tic()
+            pt.house_temperature_incidence(GLD_metadata, case_path, GLD_prefix, str(dso_number), day_range)
+            print('Temperature incidence complete: DSO ' + str(dso_number) + ', Month ' + month_name)
+            pt.toc()
+
         # This function calculates the amenity scores (HVAC and WH unmet hours or gallons) and saves it to a h5 file.
         if calc_amenity:
             pt.tic()
@@ -154,24 +164,25 @@ def post_process():
 
     #  STEP 0 ---------  STEP UP ------------------------------
     #  Determine which metrics to post-process
-    read_meters = True
-    calc_amenity = True
-    pop_stats = True
-    gen_plots = True
-    der_stack_plots = True
-    bldg_stack_plots = True
-    forecast_plots = True
-    create_baseline_demand_profiles = True
-    create_demand_profiles = True
-    # read_meters = False
-    # calc_amenity = False
-    # pop_stats = False
-    # gen_plots = False
-    # der_stack_plots = False
-    # bldg_stack_plots = False
-    # forecast_plots = False
-    # create_baseline_demand_profiles = False
-    # create_demand_profiles = False
+    # read_meters = True
+    # calc_amenity = True
+    # pop_stats = True
+    # gen_plots = True
+    # der_stack_plots = True
+    # bldg_stack_plots = True
+    # forecast_plots = True
+    # create_baseline_demand_profiles = True
+    # create_demand_profiles = True
+    calc_temperature_incidence = True
+    read_meters = False
+    calc_amenity = False
+    pop_stats = False
+    gen_plots = False
+    der_stack_plots = False
+    bldg_stack_plots = False
+    forecast_plots = False
+    create_baseline_demand_profiles = False
+    create_demand_profiles = False
 
     system_case = 'generate_case_config.json'
     # ------------ Select folder locations for different cases ---------
@@ -258,6 +269,11 @@ def post_process():
         results = []
 
     # STEP 2 --------- Month Specific (all DSOs/TSO) Post-Processing -----------
+    
+    # ----------- Preview time beyond original HVAC setpoints -------------
+    # Uses the per-DSO temperature-incidence files written in STEP 1.
+    if calc_temperature_incidence:
+        pt.temperature_incidence_plot(dso_range, case_path, metadata_path, dimension='income_level')
 
     # ----------- CALCULATE POPULATION STATISTICS AND OUTPUT ---------------------------
     if pop_stats:

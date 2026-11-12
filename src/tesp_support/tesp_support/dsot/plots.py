@@ -4653,102 +4653,295 @@ def metadata_dist_plots(system, sys_class, variable, dso_range, case, data_path,
     plt.savefig(file_path_fig, bbox_inches='tight')
 
 
-def _hvac_temperature_deviation_counts(temperatures, cooling_schedule, heating_schedule, dead_band=1):
-    """Count samples by total F deviation outside the original comfort range.
+# GridLAB-D house system_mode enumeration: 0 UNKNOWN, 1 OFF, 2 HEAT, 3 AUX, 4 COOL.
+HVAC_ACTIVE_MODES = {2: 'heating', 3: 'heating', 4: 'cooling'}
+HVAC_MODES = ['cooling', 'heating', 'unclassified']
 
-    Bins are (>1, 2), [2, 3), [3, 4), [4, 5), and [5, infinity) with
-    the default 1 F deadband. Values within or on the deadband are excluded.
-    Counts describe observations, not distinct excursion events or duration.
+
+def temperature_incidence_columns(bin_width=0.1, max_deviation=5):
+    """Column labels for the per-house temperature-deviation histograms.
+
+    ``within`` counts readings at or on the comfortable side of the original
+    setpoint, ``dev_<x>`` counts deviations in ``[x, x + bin_width)`` (the
+    first bin excludes zero), and ``dev_<max>+`` counts deviations of
+    ``max_deviation`` F or more.
+    
+    TODO: Cooling deviation exceeds 5F in many incidences, and is not currently
+     captured by how this is written. To investigate this, ALL rates and ALL 
+     months would need to be re-postprocessed at the case level, and then the 
+     annual level, to recreate all temperature_incidence_dso_<N>.h5 files before 
+     re-running case_comparison_plots.py. To do this, set `max_deviation` to >=6.
     """
-    temperatures = np.asarray(temperatures, dtype=float)
-    cooling_schedule = np.asarray(cooling_schedule, dtype=float)
-    heating_schedule = np.asarray(heating_schedule, dtype=float)
-    if temperatures.shape != cooling_schedule.shape or temperatures.shape != heating_schedule.shape:
-        raise ValueError('Temperature observations and comfort schedules must have matching shapes.')
-    valid = np.isfinite(temperatures) & np.isfinite(cooling_schedule) & np.isfinite(heating_schedule)
-    valid &= heating_schedule <= cooling_schedule
-    deviation = np.maximum(temperatures[valid] - cooling_schedule[valid],
-                           heating_schedule[valid] - temperatures[valid])
-    deviation = deviation[deviation > dead_band]
-    counts = {'HVAC_temperature_samples': int(valid.sum())}
-    for threshold in range(1, 6):
-        in_bin = deviation >= threshold
-        if threshold < 5:
-            in_bin &= deviation < threshold + 1
-        counts[f'HVAC_temp_deviation_{threshold}_count'] = int(in_bin.sum())
-    return counts
+    edges = np.round(np.arange(0, max_deviation, bin_width), 6)
+    return (['samples', 'within'] + [f'dev_{edge:g}' for edge in edges]
+            + [f'dev_{max_deviation:g}+'])
 
 
-def house_temperature_incidence(gld_metadata, dir_path, folder_prefix, dso_num, day_range):
-    """Save independent monthly HVAC deviation counts without writing amenity scores.
+def _hvac_temperature_deviation_counts(deviation, bin_width=0.1, max_deviation=5):
+    """Histogram one mode's deviations from the original setpoint.
 
-    Reads raw house temperatures and original HVAC schedules. Writes only
-    ``temperature_incidence_data.h5`` (key ``temperature_incidence``) in the
-    DSO's GLD output directory. Existing amenity files and logs are untouched.
-    Complete 288-sample days are counted; missing days/houses/schedules retain
-    zero valid observations and 288 expected observations per requested day.
+    Args:
+        deviation (array-like): Deviation in F, positive meaning warmer than the
+            original cooling setpoint or colder than the original heating setpoint.
+        bin_width (float): Bin width in F.
+        max_deviation (float): Upper edge of the last finite bin in F.
+    Returns:
+        numpy.ndarray: Counts ordered as `temperature_incidence_columns`.
+    """
+    deviation = np.asarray(deviation, dtype=float)
+    deviation = deviation[np.isfinite(deviation)]
+    edges = np.append(np.round(np.arange(0, max_deviation, bin_width), 6), max_deviation)
+    exceeding = deviation[(deviation > 0) & (deviation < max_deviation)]
+    binned, _ = np.histogram(exceeding, bins=edges)
+    return np.concatenate([[len(deviation), np.sum(deviation <= 0)], binned,
+                           [np.sum(deviation >= max_deviation)]]).astype('int64')
+
+
+def _classify_hvac_mode(system_mode, last_mode=None):
+    """Label each reading with the house's most recent active HVAC mode.
+
+    ``system_mode`` is sampled at each recording and reads OFF between
+    compressor cycles, so OFF readings inherit the last COOL or HEAT/AUX
+    reading (carried across days via ``last_mode``). Readings before any
+    activity are ``unclassified``.
+
+    Returns:
+        tuple[numpy.ndarray, str | None]: Mode label per reading and the last
+        active mode to carry into the next day.
+    """
+    modes = pd.Series(pd.to_numeric(system_mode, errors='coerce')).map(HVAC_ACTIVE_MODES).astype('string')
+    if last_mode is not None and pd.isna(modes.iloc[0]):
+        modes.iloc[0] = last_mode
+    modes = modes.ffill()
+    carried = modes.iloc[-1] if modes.notna().any() else last_mode
+    return modes.fillna('unclassified').to_numpy(), carried
+
+
+def house_temperature_incidence(gld_metadata, dir_path, folder_prefix, dso_num, day_range,
+                                bin_width=0.1, max_deviation=5):
+    """Histogram indoor temperature deviation from the original HVAC schedule.
+
+    For every house with an HVAC agent, each 5-minute reading is assigned to the
+    cooling or heating mode by `_classify_hvac_mode`. Cooling deviation is
+    indoor temperature minus the original cooling schedule; heating deviation is
+    the original heating schedule minus indoor temperature. Original schedules
+    come from the agent dictionary, as in `amenity_loss`. Only complete
+    288-reading days are counted, so missing data reduces ``samples`` rather
+    than adding zeros. Participation is filtered when plotting.
+
+    Args:
+        gld_metadata (dict): gld metadata structure for the DSO to be analyzed
+        dir_path (str): directory path for the case to be analyzed
+        folder_prefix (str): prefix of GLD folder name (e.g. '/Substation_')
+        dso_num (str): number of the DSO folder to be opened
+        day_range (range): range of days to be summed (for example a month).
+        bin_width (float): histogram bin width in F
+        max_deviation (float): upper edge of the last finite bin in F
+    Returns:
+        counts_df: reading counts indexed by (house, mode), with columns from
+        `temperature_incidence_columns`. Also written to
+        ``temperature_incidence_data.h5`` (key ``temperature_incidence``) in
+        the DSO's GLD output directory.
     """
     dir_path = os.path.abspath(dir_path)
     output_path = dir_path + folder_prefix + str(dso_num)
-    metrics = [f'HVAC_temp_deviation_{threshold}_count' for threshold in range(1, 6)] + [
-        'HVAC_temperature_samples', 'HVAC_expected_temperature_samples']
-    index = pd.MultiIndex.from_product([list(gld_metadata['houses']), metrics])
-    counts_df = pd.DataFrame(0, index=index, columns=['sum'], dtype='int64')
     agent_metadata = load_json(dir_path + '/DSO_' + str(dso_num),
                                'Substation_' + str(dso_num) + '_agent_dict.json')
+    houses = [house for house in gld_metadata['houses'] if house in agent_metadata.get('hvacs', {})]
+    schedules = {house: get_house_schedules(agent_metadata, gld_metadata, house) for house in houses}
+    houses = [house for house in houses if schedules[house]['cool_weekday'] is not None]
+    columns = temperature_incidence_columns(bin_width, max_deviation)
+    counts = {house: np.zeros((len(HVAC_MODES), len(columns)), dtype='int64') for house in houses}
+    last_mode = {}
+    skipped_days = 0
     original_directory = os.getcwd()
     try:
         for day in day_range:
             date = get_date(dir_path, str(dso_num), str(day))
-            day_name = date.strftime('%m-%d')
-            counts_df[day_name] = 0
-            counts_df.loc[(slice(None), 'HVAC_expected_temperature_samples'), day_name] = 288
+            day_type = 'weekday' if date.weekday() < 5 else 'weekend'
             try:
                 _, house_df = load_system_data(dir_path, folder_prefix, str(dso_num), str(day), 'house')
             except KeyError:
                 print(f'Temperature incidence: missing house data for DSO {dso_num}, day {day}.')
+                skipped_days += 1
                 continue
+            house_df = house_df[house_df['name'].isin(houses)]
             for house, values in house_df.groupby('name'):
-                if house not in gld_metadata['houses'] or house not in agent_metadata.get('hvacs', {}):
-                    continue
                 values = values.sort_values('time')
                 if len(values) != 288 or values['time'].nunique() != 288:
                     continue
-                schedules = get_house_schedules(agent_metadata, gld_metadata, house)
-                day_type = 'weekday' if date.weekday() < 5 else 'weekend'
-                cooling_schedule = schedules['cool_' + day_type]
-                heating_schedule = schedules['heat_' + day_type]
-                if cooling_schedule is None or heating_schedule is None:
-                    continue
-                counts = _hvac_temperature_deviation_counts(
-                    values['air_temperature_avg'].values, cooling_schedule, heating_schedule)
-                for metric, count in counts.items():
-                    counts_df.loc[(house, metric), day_name] = count
-        counts_df['sum'] = counts_df.drop(columns='sum').sum(axis=1).astype('int64')
+                modes, last_mode[house] = _classify_hvac_mode(values['system_mode'].values,
+                                                              last_mode.get(house))
+                temperature = values['air_temperature_avg'].to_numpy(dtype=float)
+                deviation = {
+                    'cooling': temperature - np.asarray(schedules[house]['cool_' + day_type], dtype=float),
+                    'heating': np.asarray(schedules[house]['heat_' + day_type], dtype=float) - temperature}
+                for row, mode in enumerate(HVAC_MODES):
+                    in_mode = modes == mode
+                    if mode == 'unclassified':
+                        counts[house][row, 0] += in_mode.sum()
+                    else:
+                        counts[house][row] += _hvac_temperature_deviation_counts(
+                            deviation[mode][in_mode], bin_width, max_deviation)
+        index = pd.MultiIndex.from_product([houses, HVAC_MODES], names=['house', 'mode'])
+        counts_df = pd.DataFrame(np.vstack([counts[house] for house in houses])
+                                 if houses else np.zeros((0, len(columns)), dtype='int64'),
+                                 index=index, columns=columns)
         counts_df.to_hdf(os.path.join(output_path, 'temperature_incidence_data.h5'),
                          key='temperature_incidence', mode='w')
     finally:
         os.chdir(original_directory)
+    print(f'Temperature incidence: DSO {dso_num}, {len(houses)} HVAC houses, '
+          f'{skipped_days} of {len(day_range)} days missing.')
     return counts_df
 
 
-def annual_temperature_incidence(month_list, folder_prefix, dso_num):
-    """Aggregate only separate monthly temperature-incidence files.
+def annual_temperature_incidence(metadata, month_list, folder_prefix, dso_num):
+    """Sum monthly temperature-deviation histograms into annual totals.
 
-    Returns per-house monthly counts and an annual sum. Missing metric rows in
-    any month yield a missing annual sum rather than an understated zero.
-    Does not read or write original monthly/annual amenity scores.
+    Months are summed reading by reading, so a house missing data in a month
+    simply contributes fewer readings. A ``meter ID`` column is added from
+    ``metadata`` so houses can be joined to customers.
+
+    Args:
+        metadata (dict): gld metadata structure for the DSO
+        month_list (list): [month name, monthly case path] pairs
+        folder_prefix (str): prefix of GLD folder name (e.g. '/Substation_')
+        dso_num (str): number of the DSO folder to be opened
+    Returns:
+        annual_df: annual reading counts indexed by (house, mode)
     """
     monthly_frames = []
     for month in month_list:
         filename = month[1] + folder_prefix + str(dso_num) + '/temperature_incidence_data.h5'
-        counts_df = pd.read_hdf(filename, key='temperature_incidence', mode='r')
-        monthly_frames.append(counts_df['sum'].rename(month[0]))
+        monthly_frames.append(pd.read_hdf(filename, key='temperature_incidence', mode='r'))
     if not monthly_frames:
         raise ValueError('Provide at least one monthly temperature-incidence file.')
-    annual_df = pd.concat(monthly_frames, axis=1)
-    annual_df['sum'] = annual_df.sum(axis=1, min_count=len(monthly_frames))
+    columns = monthly_frames[0].columns
+    if any(not frame.columns.equals(columns) for frame in monthly_frames):
+        raise ValueError('Monthly temperature-incidence files use different deviation bins.')
+    annual_df = pd.concat(monthly_frames).groupby(level=['house', 'mode']).sum()
+    try:
+        annual_df['meter ID'] = annual_df.index.get_level_values('house').map(
+            lambda house: metadata['houses'][house]['billingmeter_id'])
+    except KeyError:
+        print(f'Something is wrong with DSO {dso_num} for month {month}')
     return annual_df
+
+
+def deviation_histogram(totals, normalize='mode'):
+    """Turn summed temperature-incidence counts into a plottable histogram.
+
+    Args:
+        totals (pandas.Series): Reading counts indexed by 
+            `temperature_incidence_columns` labels, summed over customers.
+        normalize (str): ``mode`` divides by all readings in the HVAC mode, so
+            the histogram area is the share of time beyond the setpoint multiplied
+            by the bin width (0.1F).
+            ``exceedance`` divides by readings beyond the setpoint only.
+    Returns:
+        tuple: ``(edges, share, stats)`` with bin edges in F, the percent of
+        readings per bin (None when there is nothing to normalize by), and a
+        dict of summary statistics. Mean exceedance counts readings past the
+        last bin at its upper edge, so it is a lower bound.
+    """
+    bin_columns = [column for column in totals.index
+                   if column.startswith('dev_') and not column.endswith('+')]
+    over_column = next(column for column in totals.index if column.endswith('+'))
+    edges = np.append([float(column[4:]) for column in bin_columns], float(over_column[4:-1]))
+    binned = totals[bin_columns].to_numpy(dtype=float)
+    samples = float(totals['samples'])
+    exceeding = binned.sum() + totals[over_column]
+    denominator = samples if normalize == 'mode' else exceeding
+    share = 100 * binned / denominator if denominator > 0 else None
+    degree_readings = binned @ ((edges[:-1] + edges[1:]) / 2) + totals[over_column] * edges[-1]
+    stats = {'hours': samples / 12,
+             '% hours within setpoint': 100 * totals['within'] / samples if samples else np.nan,
+             f'% hours 0-{edges[-1]:g} F': 100 * binned.sum() / samples if samples else np.nan,
+             f'% hours >= {edges[-1]:g} F': 100 * totals[over_column] / samples if samples else np.nan,
+             'mean exceedance (F)': degree_readings / exceeding if exceeding else np.nan,
+             'F-hrs': degree_readings / 12}
+    return edges, share, stats
+
+
+def temperature_incidence_plot(dso_range, case_path, metadata_path, dimension='income_level',
+                               normalize='mode', cust_class='residential',
+                               folder_prefix='/Substation_', agent_prefix='/DSO_'):
+    """Indoor air temperature deviation from original HVAC setpoint by customer group.
+
+    Reads each DSO's ``temperature_incidence_data.h5`` for participating 
+    customers. Plots deviation from cooling and heating setpoint side by side,
+    with one curve per customer attribute, and saves the PNG in ``case_path/plots``.
+
+    Args:
+        dso_range (list): DSO numbers to include
+        case_path (str): monthly case directory
+        metadata_path (str): location of DSOT_commercial_metadata.json
+        dimension (str): billing-meter metadata field to group by (e.g.
+            'income_level', 'building_type', 'heating', 'slider_setting'), or 'dso'
+        normalize (str): 'mode' or 'exceedance', see `deviation_histogram`
+        cust_class (str | None): tariff class to include, or None for all
+        folder_prefix (str): prefix of GLD folder name
+        agent_prefix (str): prefix of agent folder name
+    """
+    frames = []
+    for dso in dso_range:
+        incidence_file = case_path + folder_prefix + str(dso) + '/temperature_incidence_data.h5'
+        if not os.path.isfile(incidence_file):
+            print(f'Temperature incidence preview: no file for DSO {dso}, skipping.')
+            continue
+        gld_metadata = load_json(case_path + agent_prefix + str(dso), 'Substation_' + str(dso) + '_glm_dict.json')
+        agent_metadata = load_json(case_path + agent_prefix + str(dso), 'Substation_' + str(dso) + '_agent_dict.json')
+        meters = customer_meta_data(gld_metadata, agent_metadata, metadata_path)['billingmeters']
+        incidence = pd.read_hdf(incidence_file, key='temperature_incidence', mode='r')
+        houses = incidence.index.get_level_values('house')
+        incidence['meter'] = [gld_metadata['houses'][house]['billingmeter_id'] for house in houses]
+        incidence = incidence.groupby(['meter', 'mode']).sum().reset_index()
+        keep = [meter for meter, details in meters.items()
+                if details['cust_participating'] and details['hvac_participating']
+                and (cust_class is None or details['tariff_class'] == cust_class)]
+        incidence = incidence[incidence['meter'].isin(keep)]
+        incidence['Group'] = (str(dso) if dimension == 'dso' else
+                              incidence['meter'].map(lambda meter: str(meters[meter].get(dimension))))
+        frames.append(incidence)
+    if not frames:
+        print('Temperature incidence preview: no DSO files found, nothing plotted.')
+        return
+    frame = pd.concat(frames, ignore_index=True)
+    count_columns = [column for column in frame.columns if column not in ('meter', 'mode', 'Group')]
+    groups = sorted(frame['Group'].unique())
+    palette = sns.color_palette('viridis', n_colors=max(len(groups), 1))
+    case_name = os.path.basename(os.path.normpath(case_path))
+
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4), sharey=True)
+    try:
+        for axis, mode in zip(axes, ['cooling', 'heating']):
+            in_mode = frame[(frame['mode'] == mode) & (frame['samples'] > 0)]
+            for group, color in zip(groups, palette):
+                members = in_mode[in_mode['Group'] == group]
+                if members.empty:
+                    continue
+                edges, share, _stats = deviation_histogram(members[count_columns].sum(), normalize)
+                if share is not None:
+                    label = f'{group} (n={len(members)})'
+                    axis.stairs(share, edges, color=color, fill=True, alpha=0.20)
+                    axis.stairs(share, edges, color=color, linewidth=2.5, label=label)
+            direction = 'Above' if mode == 'cooling' else 'Below'
+            axis.set_title(f'{mode.capitalize()} mode', loc='left')
+            axis.set_xlabel(f'Indoor Temperature {direction} Original {mode.capitalize()} Setpoint (°F)')
+            axis.set_xlim(0, 5)
+            if axis.get_legend_handles_labels()[0]:
+                axis.legend(title=dimension, fontsize=9)
+        axes[0].set_ylabel(('Share of HVAC-Mode Hours' if normalize == 'mode'
+                            else 'Share of Hours Beyond Setpoint') + '\n(% per 0.1 °F)')
+        fig.suptitle(f'{case_name}: participating {cust_class or "all"} customers, '
+                     f'deviation from original setpoint {dimension}')
+        fig.tight_layout()
+        os.makedirs(os.path.join(case_path, 'plots'), exist_ok=True)
+        fig.savefig(os.path.join(case_path, 'plots', f'Temperature_Incidence_{normalize}_by_{dimension}.png'),
+                    bbox_inches='tight')
+    finally:
+        plt.close(fig)
 
 
 def amenity_loss(gld_metadata, dir_path, folder_prefix, dso_num, day_range):
