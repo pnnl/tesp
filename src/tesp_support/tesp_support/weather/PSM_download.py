@@ -171,7 +171,7 @@ def download_nsrdb_data(dso_meta, output_path):
 
         # We've already moved to the correct folder at the top of this
         #   function and all that is needed is the filename.
-        file, ext = os.path.splitext(filename)
+        file, _ext = os.path.splitext(filename)
         PSM.weatherdat(file,
                        f'Bus_{dso_num + 1}',
                        f'{lat}_{long}')

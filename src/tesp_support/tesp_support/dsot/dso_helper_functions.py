@@ -318,7 +318,7 @@ def get_customer_df(dso_range, case_path, metadata_path, rate_scenario):
             if GLD_metadata['billingmeters'][customer]['tariff_class'] != 'industrial':
                 customer_bill = rm.get_cust_bill(customer, cust_bills, GLD_metadata, cust_energy, rate_scenario)
                 customer_metadata = GLD_metadata['billingmeters'][customer]
-                Customer_Cash_Flows_dict, Customer_Cash_Flows_csv = ccfs.customer_CFS(GLD_metadata, metadata_path,
+                _Customer_Cash_Flows_dict, Customer_Cash_Flows_csv = ccfs.customer_CFS(GLD_metadata, metadata_path,
                                                                                 customer, customer_bill, rate_scenario)
                 customer_row = {
                     "Customer ID": 'DSO' + str(dso_num) + '_' + customer,
@@ -399,7 +399,7 @@ def get_DSO_df(
             Expenses_dict,
             Revenues_dict,
             DSO_Cash_Flows_dict,
-            DSO_Wholesale_Energy_Purchase_Summary,
+            _DSO_Wholesale_Energy_Purchase_Summary,
             DSO_Cash_Flows_composite,
         ) = cfs.dso_CFS(
             case_config,

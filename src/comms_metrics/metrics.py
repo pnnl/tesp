@@ -1118,7 +1118,7 @@ class Compare:
         """ This function loads the real data from file.
         It will be used for comparing the model(s)
         """
-        head, tail = os.path.split(os.getcwd())
+        head, _tail = os.path.split(os.getcwd())
         # self.real_density = pd.read_hdf(os.path.join(head, 'results', 'santa_fe', 'santa_fe_results.h5'), key='density')
         # self.real_range = pd.read_hdf(os.path.join(head, 'results', 'santa_fe', 'santa_fe_results.h5'), key='range')
         # self.real_isolated = pd.read_hdf(os.path.join(head, 'results', 'santa_fe', 'santa_fe_results.h5'), key='isolated')

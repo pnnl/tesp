@@ -9,7 +9,7 @@ from tesp_support.valuation.TransmissionMetricsProcessor import (
     TransmissionMetricsProcessor,
 )
 
-d = tesp_path + '/examples/analysis/SGIP1'
+d = tesp_path + '/examples/analysis/sgip1'
 subdir = [os.path.join(d, o) for o in os.listdir(d) if os.path.isdir(os.path.join(d, o))]
 print(subdir)
 
