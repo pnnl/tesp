@@ -2427,7 +2427,7 @@ class HVACDSOT:  # TODO: update class name
 
         return True
 
-    def obj_rule(self, m: ConcreteModel) -> float:
+    def obj_rule(self, m: pyo.ConcreteModel) -> float:
         """Defines the Pyomo object function based on HVAC mode
 
         Args:
@@ -2449,7 +2449,7 @@ class HVACDSOT:  # TODO: update class name
         else:
             return 0
 
-    def con_rule_eq1(self, m: ConcreteModel, t: int) -> None:  # initialize SOHC state
+    def con_rule_eq1(self, m: pyo.ConcreteModel, t: int) -> None:  # initialize SOHC state
         """Constraint equation for Pyomo optimzation formulation based on the
         HVAC mode and the index in the list of times being estimated
 

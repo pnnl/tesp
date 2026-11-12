@@ -56,9 +56,9 @@ def synch_series_lengths(time_series):
         list<dataframe>: a list containing the clipped time series data frames
     """
     synchronized_series = []
-    synch_start, synch_end = get_synch_date_range(time_series)
+    _synch_start, _synch_end = get_synch_date_range(time_series)
     for tseries in time_series:
-        _synch_series = tseries.query('index > @synch_start and index < @synch_end')
+        _synch_series = tseries.query('index > @_synch_start and index < @_synch_end')
         synchronized_series.append(_synch_series)
     return synchronized_series
 

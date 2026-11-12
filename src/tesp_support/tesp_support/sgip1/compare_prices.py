@@ -60,9 +60,9 @@ def compare_prices(root):
     tmax = 48.0
     xticks = [0, 6, 12, 18, 24, 30, 36, 42, 48]
 
-    fig, ax = plt.subplots(1, 1, sharex='col')
+    _fig, ax = plt.subplots(1, 1, sharex='col')
 
-    hrs, lmp, lmp1, lmp2, lmp3, lmp4, lmp5 = MakePlotData(root)
+    hrs, lmp, _lmp1, _lmp2, _lmp3, _lmp4, lmp5 = MakePlotData(root)
     # ax.plot(hrs, lmp1, color='blue', label='LMP1')
     # ax.plot(hrs, lmp2, color='green', label='LMP2')
     # ax.plot(hrs, lmp3, color='magenta', label='LMP3')

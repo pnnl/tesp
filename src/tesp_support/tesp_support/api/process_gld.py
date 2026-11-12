@@ -430,7 +430,7 @@ def plot_gld(diction, save_file=None, save_only=False):
     battery_kw = diction['battery_kw']
 
     # display a plot
-    fig, ax = plt.subplots(2, 5, sharex='col')
+    _fig, ax = plt.subplots(2, 5, sharex='col')
 
     total2 = None
     hvac2 = None

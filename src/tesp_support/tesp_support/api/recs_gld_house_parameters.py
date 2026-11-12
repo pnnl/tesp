@@ -618,7 +618,7 @@ def get_RECS_jsons(bldg_in, bldg_out, hvac_out,
                 # Check if bin size is less than threshold.
                 # If it is, use census region, then climate zone, and then finally widen income level input if needed.
                 sample_df, total = bin_size_check(sample_df, recs, st, hd, il, bin_size_thres, climate_zone, inc_str)
-                res_metadata, total_dict = get_residential_metadata(res_metadata, sample_df, st, hd_str, il, total, wh_shift)
+                res_metadata, _total_dict = get_residential_metadata(res_metadata, sample_df, st, hd_str, il, total, wh_shift)
                 hvac_setpoints = get_hvac_setpoints(hvac_setpoints, sample_df, st, hd_str, il, total)
 
     # Add distributions from bldg_in file

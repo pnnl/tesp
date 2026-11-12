@@ -113,7 +113,7 @@ def plot_voltages(diction, save_file=None, save_only=False):
     keys_m = diction['keys_m']
     idx_m = diction['idx_m']
     # display a plot
-    fig, ax = plt.subplots(2, 1, sharex='col')
+    _fig, ax = plt.subplots(2, 1, sharex='col')
     i = 0
     for _ in keys_m:
         ax[0].plot(hrs, data_m[i, :, idx_m['MTR_VOLT_MIN_IDX']], color='blue')

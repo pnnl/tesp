@@ -313,7 +313,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
         #     )
 
     # initialize HELICS
-    fed, fed_name = register_federate(metrics_root + '.json')
+    fed, _fed_name = register_federate(metrics_root + '.json')
     status = h.helicsFederateEnterInitializingMode(fed)
     status = h.helicsFederateEnterExecutingMode(fed)
     # flag to determine if billing is to be set
