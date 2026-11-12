@@ -3273,69 +3273,69 @@ def rates_plots():
         [flat_path, TOU_path, DSOT_path, RND_path, sub_path], data_path, dso_range)
 
     # print('Stage 3: plot generation and load profiles for the baseline case')
-    # # Provides stacked time series plots of bulk generation.  
-    # # E.g., Figure 15 in DSO+T Volume 1.
-    # pt.generation_load_profiles(flat_aug_path, metadata_path, flat_aug_path, day_range, False)
+    # Provides stacked time series plots of bulk generation.  
+    # E.g., Figure 15 in DSO+T Volume 1.
+    pt.generation_load_profiles(flat_aug_path, metadata_path, flat_aug_path, day_range, False)
 
     # print('Stage 4: compare DSO cost-benefit components across rate cases.')
-    # # Total grid cost water fall: Figure 42 in Vol 1
-    # Cases_list = [['Flat', 'TOU'], ['Flat', 'DSOT'], ['Flat', 'RND']] #TODO: Why DSOT and RND vs DE and DE+C?
-    # Data_paths_list = [[flat_path, TOU_path], [flat_path, DSOT_path],[flat_path, RND_path]]
-    # dso_cfs_delta(Cases_list, Data_paths_list, dso_range, metadata_file, metadata_path)
+    # Total grid cost water fall: Figure 42 in Vol 1
+    Cases_list = [['Flat', 'TOU'], ['Flat', 'DSOT'], ['Flat', 'RND']] #TODO: Why DSOT and RND vs DE and DE+C?
+    Data_paths_list = [[flat_path, TOU_path], [flat_path, DSOT_path],[flat_path, RND_path]]
+    dso_cfs_delta(Cases_list, Data_paths_list, dso_range, metadata_file, metadata_path)
 
     # print('Stage 5: compare customer-population distributions and savings.')
-    # # Probably density Functions of customer populations: e.g., Figure 45 in Vol 1
-    # Cases = ['Flat', 'TOU']
-    # Data_paths = [flat_path, TOU_path]
-    # customer_cfs_delta(Cases, Data_paths, metadata_file, metadata_path)
+    # Probably density Functions of customer populations: e.g., Figure 45 in Vol 1
+    Cases = ['Flat', 'TOU']
+    Data_paths = [flat_path, TOU_path]
+    customer_cfs_delta(Cases, Data_paths, metadata_file, metadata_path)
 
-    # Cases = ['Flat', 'DE']
-    # Data_paths = [flat_path, DSOT_path]
-    # customer_cfs_delta(Cases, Data_paths, metadata_file, metadata_path)
+    Cases = ['Flat', 'DE']
+    Data_paths = [flat_path, DSOT_path]
+    customer_cfs_delta(Cases, Data_paths, metadata_file, metadata_path)
 
-    # Cases = ['Flat', 'DE+C']
-    # Data_paths = [flat_path, RND_path]
-    # customer_cfs_delta(Cases, Data_paths, metadata_file, metadata_path)
+    Cases = ['Flat', 'DE+C']
+    Data_paths = [flat_path, RND_path]
+    customer_cfs_delta(Cases, Data_paths, metadata_file, metadata_path)
 
-    # Cases = ['Flat', 'B&S']
-    # Data_paths = [flat_path, sub_path]
-    # customer_cfs_delta(Cases, Data_paths, metadata_file, metadata_path)
+    Cases = ['Flat', 'B&S']
+    Data_paths = [flat_path, sub_path]
+    customer_cfs_delta(Cases, Data_paths, metadata_file, metadata_path)
 
     # print('Stage 5b: Annual Customer Bill Plotting - Plot gets saved in case_path/plots folder.')
-    # # Provides annual box and whisker
-    # Cases = ['Flat', 'TOU', 'DE', 'DE+C', 'B&S']
-    # Data_paths = [flat_path, TOU_path, DSOT_path, RND_path, sub_path]
-    # customer_monthly_stats(Cases, Data_paths, data_path, dso_num)
-    # # Plot bill components
-    # customer_bill_component_comparison(Cases, Data_paths, data_path, dso_num)
+    # Provides annual box and whisker
+    Cases = ['Flat', 'TOU', 'DE', 'DE+C', 'B&S']
+    Data_paths = [flat_path, TOU_path, DSOT_path, RND_path, sub_path]
+    customer_monthly_stats(Cases, Data_paths, data_path, dso_num)
+    # Plot bill components
+    customer_bill_component_comparison(Cases, Data_paths, data_path, dso_num)
 
     # print('Stage 6. House/Customer Daily HVAC / Load & Price Comparison Examples.')
-    # # Probably density Functions of customer populations: e.g., Figure 45 in Vol 1
-    # day_range = range(12, 15)
-    # Cases = ['Flat', 'TOU', 'DSOT', 'RND']
-    # Month = '8_2016_08_pv_bt_fl_ev'
-    # Data_paths = [flat_path +'/' + Month, TOU_path + '/' + Month, DSOT_path+ '/' + Month, RND_path +'/' + Month]
-    # load_comparison_plot(day_range, metadata_path, Cases, Data_paths, data_path)
+    # Probably density Functions of customer populations: e.g., Figure 45 in Vol 1
+    day_range = range(12, 15)
+    Cases = ['Flat', 'TOU', 'DSOT', 'RND']
+    Month = '8_2016_08_pv_bt_fl_ev'
+    Data_paths = [flat_path +'/' + Month, TOU_path + '/' + Month, DSOT_path+ '/' + Month, RND_path +'/' + Month]
+    load_comparison_plot(day_range, metadata_path, Cases, Data_paths, data_path)
 
-    # # day_range = range(14, 17)
-    # Cases = ['Flat', 'TOU', 'DSOT', 'RND']
-    # Rate_Scenarios = ["flat", "TOU", "DSOT", "RandD"]
-    # Data_paths = [flat_path, TOU_path, DSOT_path, RND_path]
-    # retail_price_comparison_plot(dso_num, day_range, metadata_path, Cases, Data_paths, Rate_Scenarios, Month, data_path)
+    # day_range = range(14, 17)
+    Cases = ['Flat', 'TOU', 'DSOT', 'RND']
+    Rate_Scenarios = ["flat", "TOU", "DSOT", "RandD"]
+    Data_paths = [flat_path, TOU_path, DSOT_path, RND_path]
+    retail_price_comparison_plot(dso_num, day_range, metadata_path, Cases, Data_paths, Rate_Scenarios, Month, data_path)
 
-    # Month = '8_2016_12_pv_bt_fl_ev'
-    # day_range = range(20, 23)
-    # Data_paths = [flat_path +'/' + Month, TOU_path + '/' + Month, DSOT_path+ '/' + Month, RND_path +'/' + Month]
-    # load_comparison_plot(day_range, metadata_path, Cases, Data_paths, data_path)
-    # Data_paths = [flat_path, TOU_path, DSOT_path, RND_path]
-    # retail_price_comparison_plot(dso_num, day_range, metadata_path, Cases, Data_paths, Rate_Scenarios, Month, data_path)
+    Month = '8_2016_12_pv_bt_fl_ev'
+    day_range = range(20, 23)
+    Data_paths = [flat_path +'/' + Month, TOU_path + '/' + Month, DSOT_path+ '/' + Month, RND_path +'/' + Month]
+    load_comparison_plot(day_range, metadata_path, Cases, Data_paths, data_path)
+    Data_paths = [flat_path, TOU_path, DSOT_path, RND_path]
+    retail_price_comparison_plot(dso_num, day_range, metadata_path, Cases, Data_paths, Rate_Scenarios, Month, data_path)
 
-    # Month = '8_2016_04_pv_bt_fl_ev'
-    # day_range = range(27, 30)
-    # Data_paths = [flat_path +'/' + Month, TOU_path + '/' + Month, DSOT_path+ '/' + Month, RND_path +'/' + Month]
-    # load_comparison_plot(day_range, metadata_path, Cases, Data_paths, data_path)
-    # Data_paths = [flat_path, TOU_path, DSOT_path, RND_path]
-    # retail_price_comparison_plot(dso_num, day_range, metadata_path, Cases, Data_paths, Rate_Scenarios, Month, data_path)
+    Month = '8_2016_04_pv_bt_fl_ev'
+    day_range = range(27, 30)
+    Data_paths = [flat_path +'/' + Month, TOU_path + '/' + Month, DSOT_path+ '/' + Month, RND_path +'/' + Month]
+    load_comparison_plot(day_range, metadata_path, Cases, Data_paths, data_path)
+    Data_paths = [flat_path, TOU_path, DSOT_path, RND_path]
+    retail_price_comparison_plot(dso_num, day_range, metadata_path, Cases, Data_paths, Rate_Scenarios, Month, data_path)
 
     # print('Stage 7. Population Attribute PDFs.)
     # Probably density Functions of customer populations: e.g., Figure 45 in Vol 1
@@ -3346,65 +3346,54 @@ def rates_plots():
         Cases, Data_paths, cust_class='residential', attribute_case=1,
         insulation_options={'dso_range': dso_range, 'method': 'conductance', 'bins': 3})
 
-    # for Dimension in ['building_type', 'heating', 'cooling', 'income_level', 'pv_participating', 'ev_participating', 'DER_participating', 'wh_participating', 'batt_participating', 'insulation']:
+    for Dimension in ['building_type', 'heating', 'cooling', 'income_level', 'pv_participating', 'ev_participating', 'DER_participating', 'wh_participating', 'batt_participating', 'insulation']:
 
-        # # Bill levels, then paired variation from the Flat baseline
-        # customer_cfs_pdf_by_group(Cases, Data_paths, data_path, dimension=Dimension,
-        #                           metric='Bills', mode='level', population=Population)
-        # customer_cfs_pdf_by_group(Cases, Data_paths, data_path, dimension=Dimension,
-        #                           metric='Bills', mode='change_pct', population=Population)
-        # customer_cfs_pdf_by_group(Cases, Data_paths, data_path, dimension=Dimension,
-        #                       metric='PeakLoad', mode='change_pct', population=Population)
-        # customer_cfs_pdf_by_group(Cases, Data_paths, data_path, dimension=Dimension,
-        #                       metric='EnergyPurchased', mode='level',
-        #                       population=Population)
-        # customer_comfort_pdf_by_group(Cases, Data_paths, data_path, hvac_mode='cooling',
-        #                           dimension=Dimension, cust_class='residential',
-        #                           split_by=None, options=None, include_counts=True,
-        #                           normalize='mode', palette_name='viridis', population=None)
+        # Bill levels, then paired variation from the Flat baseline
+        customer_cfs_pdf_by_group(Cases, Data_paths, data_path, dimension=Dimension,
+                                  metric='Bills', mode='level', population=Population)
+        customer_cfs_pdf_by_group(Cases, Data_paths, data_path, dimension=Dimension,
+                                  metric='Bills', mode='change_pct', population=Population)
+        customer_cfs_pdf_by_group(Cases, Data_paths, data_path, dimension=Dimension,
+                              metric='PeakLoad', mode='change_pct', population=Population)
+        customer_cfs_pdf_by_group(Cases, Data_paths, data_path, dimension=Dimension,
+                              metric='EnergyPurchased', mode='level',
+                              population=Population)
 
-    for Dimension in ['building_type', 'heating', 'income_level', 'insulation']:
+    for Dimensions in ['building_type', 'heating', 'income_level', 'insulation']:
     
-        Cases_no_flat = ['TOU', 'DE', 'DE+C', 'B&S']
-        Data_paths_no_flat = [TOU_path, DSOT_path, RND_path, sub_path]
-
-        Population_no_flat = load_customer_cfs_population(
-            Cases, Data_paths, cust_class='residential', attribute_case=1,
-            insulation_options={'dso_range': dso_range, 'method': 'conductance', 'bins': 3})
-        
         customer_comfort_pdf_by_group(Cases, Data_paths, data_path, hvac_mode='cooling',
-                                            dimension=Dimension, cust_class='residential',
+                                            dimension=Dimensions, cust_class='residential',
                                             split_by=None, options=None, include_counts=True,
-                                            normalize='mode', palette_name='viridis', population=Population_no_flat)
+                                            normalize='mode', palette_name='viridis', population=Population)
 
         customer_comfort_pdf_by_group(Cases, Data_paths, data_path, hvac_mode='heating',
-                                            dimension=Dimension, cust_class='residential',
+                                            dimension=Dimensions, cust_class='residential',
                                             split_by=None, options=None, include_counts=True,
-                                            normalize='mode', palette_name='viridis', population=Population_no_flat)
+                                            normalize='mode', palette_name='viridis', population=Population)
 
     # print('Stage 8. Subscription Plots')
-    # flat_aug_path = os.path.join(flat_path, '8_2016_08_pv_bt_fl_ev')
-    # sub_aug_path = os.path.join(sub_path, '8_2016_08_pv_bt_fl_ev')
-    # day_range = range(14, 17)  # Set day range and case path around August 11 peak - peak load is given in load stats csv.
-    # pt.subscription_plot(dso_num, day_range, metadata_path, flat_aug_path, sub_aug_path)
-    # day_range = range(25, 28)  # Set day range and case path around August 11 peak - peak load is given in load stats csv.
-    # pt.subscription_plot(dso_num, day_range, metadata_path, flat_aug_path, sub_aug_path)
+    flat_aug_path = os.path.join(flat_path, '8_2016_08_pv_bt_fl_ev')
+    sub_aug_path = os.path.join(sub_path, '8_2016_08_pv_bt_fl_ev')
+    day_range = range(14, 17)  # Set day range and case path around August 11 peak - peak load is given in load stats csv.
+    pt.subscription_plot(dso_num, day_range, metadata_path, flat_aug_path, sub_aug_path)
+    day_range = range(25, 28)  # Set day range and case path around August 11 peak - peak load is given in load stats csv.
+    pt.subscription_plot(dso_num, day_range, metadata_path, flat_aug_path, sub_aug_path)
 
     # print('Stage 9. TOU Participation Summary')
-    # day_range = range(12, 15)
-    # Cases = ['TOU-80', 'TOU-60', 'TOU-40', 'TOU-20']
-    # Month20 = 'Aug-20TOU_pv_bt_fl_ev'
-    # Month40 = 'Aug-40TOU_pv_bt_fl_ev'
-    # Month60 = 'Aug-60TOU_pv_bt_fl_ev'
-    # Month80 = '8_2016_08_pv_bt_fl_ev'
-    # Data_paths = [TOU_path +'/' + Month80, TOU_path +'/' + Month60, TOU_path +'/' + Month40, TOU_path +'/' + Month20]
-    # load_comparison_plot(day_range, metadata_path, Cases, Data_paths, data_path)
+    day_range = range(12, 15)
+    Cases = ['TOU-80', 'TOU-60', 'TOU-40', 'TOU-20']
+    Month20 = 'Aug-20TOU_pv_bt_fl_ev'
+    Month40 = 'Aug-40TOU_pv_bt_fl_ev'
+    Month60 = 'Aug-60TOU_pv_bt_fl_ev'
+    Month80 = '8_2016_08_pv_bt_fl_ev'
+    Data_paths = [TOU_path +'/' + Month80, TOU_path +'/' + Month60, TOU_path +'/' + Month40, TOU_path +'/' + Month20]
+    load_comparison_plot(day_range, metadata_path, Cases, Data_paths, data_path)
 
     # # Summer Peak - TOU Participation example
-    # day_range = range(9, 14)
-    # pt.der_stack_plot(dso_range, day_range, metadata_path, os.path.join(TOU_path, Month20), flat_aug_path, False)
-    # pt.der_stack_plot(dso_range, day_range, metadata_path, os.path.join(TOU_path, Month40), flat_aug_path, False)
-    # pt.der_stack_plot(dso_range, day_range, metadata_path, os.path.join(TOU_path, Month60), flat_aug_path, False)
+    day_range = range(9, 14)
+    pt.der_stack_plot(dso_range, day_range, metadata_path, os.path.join(TOU_path, Month20), flat_aug_path, False)
+    pt.der_stack_plot(dso_range, day_range, metadata_path, os.path.join(TOU_path, Month40), flat_aug_path, False)
+    pt.der_stack_plot(dso_range, day_range, metadata_path, os.path.join(TOU_path, Month60), flat_aug_path, False)
 
 
 if __name__ == '__main__':
