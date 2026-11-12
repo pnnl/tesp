@@ -15,7 +15,6 @@ numpy~=2.5.2
 openpyxl~=3.1.5
 pandas~=3.0.5
 plotly~=6.9.0
-#psst
 pulp~=3.3.2
 pyglm~=2.8.3
 pyjson5~=2.0.1
@@ -34,7 +33,6 @@ sphinx-rtd-theme~=3.1.0
 sphinxcontrib-bibtex~=2.7.0
 sphinxcontrib-mermaid~=2.1.0
 sphinx~=9.1.0
-#tesp_support
 tables~=3.11.1
 tqdm~=4.70.0
 urllib3~=2.7.0
