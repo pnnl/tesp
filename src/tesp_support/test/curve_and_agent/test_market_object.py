@@ -15,18 +15,15 @@ Key properties:
 """
 
 import pytest
-
-from tesp_support.curve_and_agent.enums_and_constants import (
-    MarketType,
-    MarketPhase,
-    OperatingMode,
-    IterationType,
-)
 from tesp_support.curve_and_agent.data_types import (
-    BidCurve,
     ClearingResult,
     MarketTimingParams,
-    BidPoint,
+)
+from tesp_support.curve_and_agent.enums_and_constants import (
+    IterationType,
+    MarketPhase,
+    MarketType,
+    OperatingMode,
 )
 from tesp_support.curve_and_agent.market_object import MarketObject
 

@@ -11,7 +11,9 @@
 #     The specific transport is injected at construction time.
 # ============================================================================
 
-from typing import Any, Optional, Callable
+from collections.abc import Callable
+from typing import Any
+
 from .data_types import BidCurve, ClearingResult, SettlementRecord
 from .enums_and_constants import MarketType
 
@@ -36,7 +38,7 @@ class MarketCommunicationInterface:
         self._transport = transport
         self._agent_id = agent_id
         self._market_type = market_type
-        self._on_clear_callback: Optional[Callable] = None
+        self._on_clear_callback: Callable | None = None
 
     def submit_bid(self, bid: BidCurve, market_id: str, interval_id: str) -> bool:
         """Submit a bid curve to the Market Operator.
@@ -60,7 +62,7 @@ class MarketCommunicationInterface:
             )
         )
 
-    def receive_clear(self, market_id: str) -> Optional[ClearingResult]:
+    def receive_clear(self, market_id: str) -> ClearingResult | None:
         """Receive a clearing result from the Market Operator.
 
         This may be blocking (poll) or non-blocking (check for

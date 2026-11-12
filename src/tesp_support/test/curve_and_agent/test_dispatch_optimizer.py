@@ -9,17 +9,20 @@ Ground truth:
 """
 
 import pytest
-
 from tesp_support.curve_and_agent.data_types import (
     DeliveryEconomics,
     DispatchSolution,
-    FlexibilityEnvelope,
-    BidPoint,
 )
-from tesp_support.curve_and_agent.dispatch_optimizer import DispatchOptimizer, DeliveryValueCalculator
+from tesp_support.curve_and_agent.dispatch_optimizer import (
+    DeliveryValueCalculator,
+    DispatchOptimizer,
+)
+from tesp_support.curve_and_agent.enums_and_constants import (
+    DeviceType,
+    PenaltyStructureType,
+    ProductType,
+)
 from tesp_support.curve_and_agent.preference_curve import PreferenceCurve
-from tesp_support.curve_and_agent.enums_and_constants import DeviceType, ProductType, PenaltyStructureType
-
 
 # ===================================================================
 # Fixtures

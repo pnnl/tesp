@@ -20,12 +20,10 @@ Author: trevor.hardy@pnnl.gov
 
 """
 import logging
-from math import cos as cos
-from math import sin as sin
-import numpy as np
+
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.widgets import Slider
-import plotly.graph_objects as go
 
 log = logging.getLogger(__name__)
 
@@ -115,12 +113,12 @@ class HVACDSOT:
         self.Qs = 0.0
 
         # interpolation
-        self.interpolation = bool(True)
-        self.RT_minute_count_interpolation = float(0.0)
-        self.previous_Q_DA = float(0.0)
-        self.previous_T_DA = float(0.0)
-        self.delta_Q = float(0.0)
-        self.delta_T = float(0.0)
+        self.interpolation = True
+        self.RT_minute_count_interpolation = 0.0
+        self.previous_Q_DA = 0.0
+        self.previous_T_DA = 0.0
+        self.delta_Q = 0.0
+        self.delta_T = 0.0
         self.delta_DA_price = 0
 
         self.max_price_forecast = 50
@@ -214,10 +212,8 @@ class HVACDSOT:
             mid_point = (self.temp_min_cool + self.temp_max_heat) / 2.0
             self.temp_min_cool = mid_point + self.deadband / 2.0 + 0.5
             self.temp_max_heat = mid_point - self.deadband / 2.0 - 0.5
-            if self.temp_min_cool > cooling_setpt:
-                self.temp_min_cool = cooling_setpt
-            if self.temp_max_heat < heating_setpt:
-                self.temp_max_heat = heating_setpt
+            self.temp_min_cool = min(self.temp_min_cool, cooling_setpt)
+            self.temp_max_heat = max(self.temp_max_heat, heating_setpt)
 
     def calc_bid_quantity(self, price_curve: list, quantity_curve: list) -> float:
         """
@@ -403,7 +399,6 @@ class HVACDSOT:
         thermal performance of the building as it is only estimating the
         parameters of the model (by some undefined means _a la_ Nest). 
         """
-        pass
 
     def populate_rt_four_point_bid(self, Q_min: float, Qopt_DA: float, Q_max: float) -> list[list, list, list, list]:
         """
@@ -449,14 +444,10 @@ class HVACDSOT:
             BID[3][P] = self.max_price_forecast - (self.ProfitMargin_intercept / 100) * self.delta_DA_price
 
         for i in range(4):
-            if BID[i][Q] > self.hvac_kw:
-                BID[i][Q] = self.hvac_kw
-            if BID[i][Q] < 0:
-                BID[i][Q] = 0
-            if BID[i][P] > self.price_cap:
-                BID[i][P] = self.price_cap
-            if BID[i][P] < 0:
-                BID[i][P] = 0
+            BID[i][Q] = min(BID[i][Q], self.hvac_kw)
+            BID[i][Q] = max(BID[i][Q], 0)
+            BID[i][P] = min(BID[i][P], self.price_cap)
+            BID[i][P] = max(BID[i][P], 0)
 
         self.RT_Q_max = Q_max
         self.RT_Q_min = Q_min
@@ -536,7 +527,7 @@ class HVACDSOT:
         curve
         """
         clearing_quantity_x = [self.bid_quantity, self.bid_quantity]
-        fig, axs = plt.subplots(2)
+        _fig, axs = plt.subplots(2)
         axs[0].set_title("Bid Curve")
         axs[0].set_xlabel(f"Bid Quantity (kW) - Cleared Quantity = {self.bid_quantity:0.2f}")
         axs[0].set_ylabel(f"Bid Price ($/kW) - Cleared Price = {self.cleared_price:0.2f}")
@@ -599,7 +590,7 @@ if __name__ == "__main__":
         hvac_agent.delta_DA_price = delta_DA_price
         hvac_agent.ProfitMargin_intercept = ProfitMargin_intercept
         rt_bid = hvac_agent.formulate_bid_rt()
-        status_flag, bid_quantity, heating_setpoint, cooling_setpoint = hvac_agent.bid_accepted(rt_bid)
+        _status_flag, bid_quantity, _heating_setpoint, _cooling_setpoint = hvac_agent.bid_accepted(rt_bid)
         hvac_agent.collect_bid_curve_data()
         return bid_quantity, hvac_agent.cooling_setpoint, hvac_agent.heating_setpoint
 
@@ -620,7 +611,7 @@ if __name__ == "__main__":
         setpoint_curve_y = []
         for clearing_price in range(min_price, max_price, 1):
             setpoint_curve_x.append(clearing_price)
-            bid_quantity, cooling_setpoint, heating_setpoint = run_agent_rt_market(slider, 
+            _bid_quantity, cooling_setpoint, _heating_setpoint = run_agent_rt_market(slider,
                                                                     clearing_price, 
                                                                     delta_DA_price,
                                                                     ProfitMargin_intercept)
@@ -630,14 +621,14 @@ if __name__ == "__main__":
 
     # The function to be called anytime a slider's value changes
     def update(val):
-        setpoint_curve_x, setpoint_curve_y  = create_setpoint_vs_price_data(slider_setting.val,
+        _setpoint_curve_x, setpoint_curve_y  = create_setpoint_vs_price_data(slider_setting.val,
                                                                             delta_DA_price_setting.val,
                                                                             ProfitMargin_intercept_setting.val,
                                                                             min_price=1, 
                                                                             max_price=100)
 
         # Run the model at the actual clearing price
-        bid_quantity, cooling_setpoint, heating_setpoint = run_agent_rt_market(slider_setting.val, 
+        bid_quantity, cooling_setpoint, _heating_setpoint = run_agent_rt_market(slider_setting.val,
                                                                     cleared_price_setting.val, 
                                                                     delta_DA_price_setting.val,
                                                                     ProfitMargin_intercept_setting.val)

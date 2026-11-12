@@ -10,18 +10,15 @@ Ground truth:
 """
 
 import pytest
-
-from tesp_support.curve_and_agent.planning_optimizer import PlanningOptimizer
 from tesp_support.curve_and_agent.data_types import (
-    PlanningResult,
     BatteryState,
-    HVACState,
     ContinuousDataPoint,
+    HVACState,
+    PlanningResult,
 )
-from tesp_support.curve_and_agent.data_streams import ConstraintStream
 from tesp_support.curve_and_agent.device_models import BatteryModel, HVACModel
 from tesp_support.curve_and_agent.enums_and_constants import DeviceType
-
+from tesp_support.curve_and_agent.planning_optimizer import PlanningOptimizer
 
 # ===================================================================
 # Fixtures

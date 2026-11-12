@@ -35,45 +35,48 @@ Design invariants tested:
 """
 
 import random
+from typing import ClassVar
 
 import pytest
-
-from tesp_support.curve_and_agent.enums_and_constants import (
-    DeviceType,
-    MarketType,
-    MarketPhase,
-    OperatingMode,
-    IterationType,
-    PenaltyStructureType,
+from tesp_support.curve_and_agent.data_streams import (
+    ConstraintStream,
+    ContinuousForecast,
+    DataStreamManager,
+    EventForecast,
+    UncertaintyModel,
 )
 from tesp_support.curve_and_agent.data_types import (
     BidCurve,
     BidPoint,
-    ClearingResult,
-    FlexibilityEnvelope,
-    MarketTimingParams,
-    PerformanceEntry,
-    SettlementRecord,
     DeviceCommand,
+    EventDefinition,
+    FlexibilityEnvelope,
     FulfillmentRecord,
     HVACState,
+    MarketTimingParams,
+    PerformanceEntry,
+    QuantilePoint,
+    SettlementRecord,
+    WaterHeaterState,
 )
-from tesp_support.curve_and_agent.gridlabd_interface import GridLABDInterface
-from tesp_support.curve_and_agent.data_streams import (
-    DataStreamManager,
-    ContinuousForecast,
-    EventForecast,
-    ConstraintStream,
-    UncertaintyModel,
-)
-from tesp_support.curve_and_agent.data_types import EventDefinition, QuantilePoint, WaterHeaterState
 from tesp_support.curve_and_agent.device_agent import DeviceAgent
 from tesp_support.curve_and_agent.device_models import WaterHeaterModel
+from tesp_support.curve_and_agent.enums_and_constants import (
+    DeviceType,
+    IterationType,
+    MarketType,
+    OperatingMode,
+    PenaltyStructureType,
+)
+from tesp_support.curve_and_agent.gridlabd_interface import GridLABDInterface
 from tesp_support.curve_and_agent.market_agent import MarketCommunicationInterface
-from tesp_support.curve_and_agent.market_operator import MarketOperator, SupplyCurve, DSOLoadEstimationEngine
+from tesp_support.curve_and_agent.market_operator import (
+    DSOLoadEstimationEngine,
+    MarketOperator,
+    SupplyCurve,
+)
 from tesp_support.curve_and_agent.penalty_model import PenaltyModel
 from tesp_support.curve_and_agent.preference_curve import PreferenceCurve
-
 
 # =====================================================================
 # Shared helpers — real objects, no mocks
@@ -83,7 +86,7 @@ from tesp_support.curve_and_agent.preference_curve import PreferenceCurve
 class MockConnection:
     """Minimal stand-in for a GridLAB-D HELICS connection."""
 
-    BASE = {
+    BASE: ClassVar[dict] = {
         "outdoor_temperature": "95.2",
         "cooling_setpoint": "72.0",
         "heating_setpoint": "68.0",
@@ -248,7 +251,7 @@ class TestRTBindingCycleEndToEnd:
         for i in range(10):
             indoor = round(random.uniform(73.0, 79.0), 1)
             k = round(random.uniform(0.15, 0.85), 2)
-            ag, conn, comm, _ = _make_agent(
+            ag, conn, comm, _penalty = _make_agent(
                 f"hvac_{i + 1}",
                 k,
                 indoor,
@@ -366,7 +369,7 @@ class TestRTBindingCycleEndToEnd:
                 amenity_weight=ag._k,
                 current_time=tick * 60.0,
             )
-            for m_id, fr in frs.items():
+            for fr in frs.values():
                 mobj.performance_log.append(
                     PerformanceEntry(
                         timestamp=tick * 60.0,
@@ -426,7 +429,7 @@ class TestClearingAlgorithm:
         for i in range(50):
             indoor = round(random.uniform(73.0, 79.0), 1)
             k = round(random.uniform(0.15, 0.85), 2)
-            ag, _, comm, _ = _make_agent(
+            ag, _conn, comm, _penalty = _make_agent(
                 f"hvac_{i + 1}",
                 k,
                 indoor,
@@ -469,7 +472,7 @@ class TestClearingAlgorithm:
             for i in range(10):
                 indoor = round(random.uniform(73.0, 79.0), 1)
                 k = round(random.uniform(0.15, 0.85), 2)
-                ag, _, comm, _ = _make_agent(
+                ag, _conn, comm, _penalty = _make_agent(
                     f"hvac_{i + 1}",
                     k,
                     indoor,
@@ -735,7 +738,7 @@ class TestAggregateDemandHorizontalSum:
         for i in range(20):
             indoor = round(random.uniform(73.0, 79.0), 1)
             k = round(random.uniform(0.15, 0.85), 2)
-            ag, _, comm, _ = _make_agent(
+            ag, _conn, comm, _penalty = _make_agent(
                 f"hvac_{i + 1}",
                 k,
                 indoor,
@@ -786,14 +789,14 @@ class TestSetpointResponseToPrice:
         transport = MockTransport(mo)
 
         # Financial agent (k=0.8) with known setpoint at 72°F
-        ag, conn, comm, _ = _make_agent(
+        ag, _conn, comm, _penalty = _make_agent(
             "hvac_1",
             0.8,
             76.0,
             mo,
             transport,
         )
-        state, flex, pref, bid, mid, mobj = _run_f1_through_f5(ag, comm)
+        state, _flex, pref, _bid, _mid, _mobj = _run_f1_through_f5(ag, comm)
 
         clearing = mo.clear_market()
         target_q = ag.evaluate_price_response(clearing.cleared_price, pref)
@@ -827,14 +830,14 @@ class TestSetpointResponseToPrice:
         mo.submit_dso_inflexible_bid("feeder_1", dso_bid)
         transport = MockTransport(mo)
 
-        ag, conn, comm, _ = _make_agent(
+        ag, _conn, comm, _penalty = _make_agent(
             "hvac_1",
             0.5,
             76.0,
             mo,
             transport,
         )
-        state, flex, pref, bid, mid, mobj = _run_f1_through_f5(ag, comm)
+        state, _flex, pref, _bid, _mid, _mobj = _run_f1_through_f5(ag, comm)
 
         clearing = mo.clear_market()
         target_q = ag.evaluate_price_response(clearing.cleared_price, pref)
@@ -960,14 +963,14 @@ class TestDeliveryFulfillment:
         mo.submit_dso_inflexible_bid("feeder_1", dso_bid)
         transport = MockTransport(mo)
 
-        ag, conn, comm, penalty = _make_agent(
+        ag, _conn, comm, penalty = _make_agent(
             "hvac_1",
             0.5,
             76.0,
             mo,
             transport,
         )
-        state, flex, pref, bid, mid, mobj = _run_f1_through_f5(ag, comm)
+        state, _flex, pref, _bid, mid, _mobj = _run_f1_through_f5(ag, comm)
 
         clearing = mo.clear_market()
         per_agent = mo.propagate_results()
@@ -991,7 +994,7 @@ class TestDeliveryFulfillment:
         )
 
         assert len(frs) > 0
-        for m_id, fr in frs.items():
+        for fr in frs.values():
             assert isinstance(fr, FulfillmentRecord)
             assert fr.committed >= 0.0
             assert fr.actual >= 0.0
@@ -1037,14 +1040,14 @@ class TestPopulationLevelBehaviors:
         agents_data = []
         # Create agents with identical indoor temp but varying k
         for k in [0.15, 0.30, 0.50, 0.70, 0.85]:
-            ag, _, comm, _ = _make_agent(
+            ag, _conn, comm, _ = _make_agent(
                 f"hvac_k{k}",
                 k,
                 76.0,
                 mo,
                 transport,
             )
-            state, flex, pref, bid, mid, mobj = _run_f1_through_f5(ag, comm)
+            _state, flex, pref, _bid, _mid, _mobj = _run_f1_through_f5(ag, comm)
             agents_data.append(
                 {
                     "k": k,
@@ -1259,7 +1262,9 @@ class TestMultiAgentReproducibility:
                 n_informational=0,
             )
             mo.set_supply_curve(_make_supply())
-            from tesp_support.curve_and_agent.market_operator import DSOInflexibleLoadBid
+            from tesp_support.curve_and_agent.market_operator import (
+                DSOInflexibleLoadBid,
+            )
 
             dso_bid = DSOInflexibleLoadBid(
                 feeder_id="feeder_1",
@@ -1299,7 +1304,7 @@ class TestMultiAgentReproducibility:
 class _MockConnectionMultiDevice:
     """Dict-based GLD connection supporting all device types."""
 
-    DEFAULTS = {
+    DEFAULTS: ClassVar[dict] = {
         # HVAC cooling house
         "power_state": "COOL",
         "air_temperature": "76.0",
@@ -1751,7 +1756,7 @@ class TestWaterHeaterRTCycle:
                 amenity_weight=self.agent._k,
                 current_time=tick * 60.0,
             )
-            for m_id, fr in frs.items():
+            for fr in frs.values():
                 self.mobj.performance_log.append(
                     PerformanceEntry(
                         timestamp=tick * 60.0,
@@ -1871,7 +1876,7 @@ class TestEVChargerRTCycle:
                 amenity_weight=self.agent._k,
                 current_time=tick * 60.0,
             )
-            for m_id, fr in frs.items():
+            for fr in frs.values():
                 self.mobj.performance_log.append(
                     PerformanceEntry(
                         timestamp=tick * 60.0,
@@ -1991,7 +1996,7 @@ class TestBatteryRTCycle:
                 amenity_weight=self.agent._k,
                 current_time=tick * 60.0,
             )
-            for m_id, fr in frs.items():
+            for fr in frs.values():
                 self.mobj.performance_log.append(
                     PerformanceEntry(
                         timestamp=tick * 60.0,
@@ -2114,7 +2119,7 @@ class TestMixedDeviceTypesMarket:
         self.bids = []
         for dtype, aid, k in device_configs:
             overrides = {"SOC": "0.75"} if dtype == DeviceType.BATTERY else None
-            ag, _, comm, penalty = _make_device_agent(
+            ag, _, comm, _penalty = _make_device_agent(
                 dtype,
                 aid,
                 k,
@@ -2122,7 +2127,7 @@ class TestMixedDeviceTypesMarket:
                 self.transport,
                 conn_overrides=overrides,
             )
-            state, flex, pref, bid, mid, mobj = _run_device_f1_through_f5(ag, comm)
+            _state, flex, _pref, bid, _mid, _mobj = _run_device_f1_through_f5(ag, comm)
             self.agents.append(ag)
             self.flexes.append(flex)
             self.bids.append(bid)
@@ -2265,7 +2270,7 @@ class TestDAMarketAllDeviceTypes:
             state = agent.observe_device_state()
             flex = agent.estimate_flexibility(state, 3600.0)
             pref = agent.generate_preference_curve(flex)
-            mid = list(agent._market_objects.keys())[0]
+            mid = next(iter(agent._market_objects.keys()))
             mobj = agent._market_objects[mid]
             bid = agent.formulate_bid(mobj, flex, pref)
             comm.submit_bid(bid, market_id=mid, interval_id=f"int_{mid}")
@@ -2295,7 +2300,7 @@ class TestEstimateFlexibilityAllDeviceTypes:
     branch passed only (state, interval_duration) to all non-HVAC models.
     """
 
-    DEVICE_CONFIGS = [
+    DEVICE_CONFIGS: ClassVar[list[tuple]] = [
         (DeviceType.HVAC_AC_ONLY, None),
         (DeviceType.HVAC_HEAT_PUMP, None),
         (DeviceType.WATER_HEATER, None),

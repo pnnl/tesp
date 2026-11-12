@@ -9,10 +9,14 @@ Ground truth for three-tier availability queries:
 """
 
 import pytest
-
-from tesp_support.curve_and_agent.enums_and_constants import CommitmentStatus, MarketType, ProductType
-from tesp_support.curve_and_agent.data_types import EconomicCommitment, FlexibilityEnvelope
-from tesp_support.curve_and_agent.flexibility_ledger import FlexibilityLedger, EconomicEnvelope
+from tesp_support.curve_and_agent.enums_and_constants import (
+    MarketType,
+    ProductType,
+)
+from tesp_support.curve_and_agent.flexibility_ledger import (
+    EconomicEnvelope,
+    FlexibilityLedger,
+)
 
 RT = MarketType.RT_ENERGY
 
@@ -154,7 +158,7 @@ class TestHardAvailable:
             cleared_price=0.12,
             penalty_model_id="pen_1",
         )
-        q_min, q_max = load_ledger.hard_available((100.0, 400.0))
+        _q_min, q_max = load_ledger.hard_available((100.0, 400.0))
         assert q_max == pytest.approx(4.0, abs=0.1)
 
     def test_excluding_market(self, load_ledger):
@@ -170,7 +174,7 @@ class TestHardAvailable:
             cleared_price=0.12,
             penalty_model_id="pen_1",
         )
-        q_min, q_max = load_ledger.hard_available((100.0, 400.0), excluding="RT_100")
+        _q_min, q_max = load_ledger.hard_available((100.0, 400.0), excluding="RT_100")
         assert q_max == pytest.approx(10.0, abs=0.1)
 
     def test_battery_bidirectional(self, battery_ledger):
@@ -206,7 +210,7 @@ class TestExpectedAvailable:
             cleared_price=0.12,
             penalty_model_id="pen_1",
         )
-        q_min, q_max = load_ledger.expected_available((100.0, 400.0))
+        _q_min, q_max = load_ledger.expected_available((100.0, 400.0))
         assert q_max == pytest.approx(4.0, abs=0.1)
 
     def test_advisory_weighted_by_confidence(self, load_ledger):
@@ -223,7 +227,7 @@ class TestExpectedAvailable:
             penalty_model_id="pen_da",
             iteration=1,
         )
-        q_min, q_max = load_ledger.expected_available((0.0, 3600.0))
+        _q_min, q_max = load_ledger.expected_available((0.0, 3600.0))
         assert q_max == pytest.approx(7.2, abs=0.3)
 
     def test_tentative_at_baseline_weight(self, load_ledger):
@@ -238,7 +242,7 @@ class TestExpectedAvailable:
             quantity=5.0,
             interval=(300.0, 600.0),
         )
-        q_min, q_max = load_ledger.expected_available((300.0, 600.0))
+        _q_min, q_max = load_ledger.expected_available((300.0, 600.0))
         assert q_max == pytest.approx(8.0, abs=0.3)
 
 
@@ -309,5 +313,5 @@ class TestNonOverlappingIntervals:
             cleared_price=0.12,
             penalty_model_id="pen_1",
         )
-        q_min, q_max = load_ledger.hard_available((500.0, 800.0))
+        _q_min, q_max = load_ledger.hard_available((500.0, 800.0))
         assert q_max == pytest.approx(10.0, abs=0.1)

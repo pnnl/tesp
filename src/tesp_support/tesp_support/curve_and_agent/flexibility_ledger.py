@@ -5,8 +5,7 @@
 #          Provides three-tier availability: hard, expected, economic.
 # ============================================================================
 
-from typing import Dict, List, Optional, Tuple
-from .data_types import EconomicCommitment, FlexibilityEnvelope
+from .data_types import EconomicCommitment
 from .enums_and_constants import CommitmentStatus, MarketType, ProductType
 
 
@@ -54,7 +53,7 @@ class EconomicEnvelope:
         self,
         hard_Q_min_avail: float,
         hard_Q_max_avail: float,
-        displaceable_blocks: Optional[List[DisplaceableBlock]] = None,
+        displaceable_blocks: list[DisplaceableBlock] | None = None,
         total_displaceable: float = 0.0,
         soft_Q_max_avail: float = 0.0,
     ):
@@ -88,7 +87,7 @@ class FlexibilityLedger:
     def __init__(self, Q_min_device: float, Q_max_device: float):
         self._Q_min = Q_min_device
         self._Q_max = Q_max_device
-        self._commitments: List[EconomicCommitment] = []
+        self._commitments: list[EconomicCommitment] = []
         self._tentative_weight: float = 0.4
 
     def hold_tentative(
@@ -97,7 +96,7 @@ class FlexibilityLedger:
         market_type: MarketType,
         product_type: ProductType,
         quantity: float,
-        interval: Tuple[float, float],
+        interval: tuple[float, float],
         cleared_price: float = 0.0,
         penalty_model_id: str = "",
     ) -> None:
@@ -132,7 +131,7 @@ class FlexibilityLedger:
         self,
         market_id: str,
         quantity: float,
-        interval: Tuple[float, float],
+        interval: tuple[float, float],
         confidence: float,
         cleared_price: float,
         penalty_model_id: str,
@@ -177,7 +176,7 @@ class FlexibilityLedger:
         self,
         market_id: str,
         quantity: float,
-        interval: Tuple[float, float],
+        interval: tuple[float, float],
         cleared_price: float,
         penalty_model_id: str,
         marginal_nv: float = 0.0,
@@ -218,8 +217,8 @@ class FlexibilityLedger:
         self._commitments = [c for c in self._commitments if c.market_id != market_id]
 
     def hard_available(
-        self, time_interval: Tuple[float, float], excluding: Optional[str] = None
-    ) -> Tuple[float, float]:
+        self, time_interval: tuple[float, float], excluding: str | None = None
+    ) -> tuple[float, float]:
         """TIER 1: Hard availability. Deducts ALL commitments.
 
         Args:
@@ -236,8 +235,8 @@ class FlexibilityLedger:
         return (self._Q_min, self._Q_max - committed)
 
     def expected_available(
-        self, time_interval: Tuple[float, float], excluding: Optional[str] = None
-    ) -> Tuple[float, float]:
+        self, time_interval: tuple[float, float], excluding: str | None = None
+    ) -> tuple[float, float]:
         """TIER 2: Expected availability. Weights advisory by confidence.
 
         Args:
@@ -259,10 +258,10 @@ class FlexibilityLedger:
 
     def economic_available(
         self,
-        time_interval: Tuple[float, float],
+        time_interval: tuple[float, float],
         candidate_value: float,
         candidate_penalty: float,
-        excluding: Optional[str] = None,
+        excluding: str | None = None,
     ) -> EconomicEnvelope:
         """TIER 3: Economic availability including displaceable capacity.
 
@@ -305,8 +304,8 @@ class FlexibilityLedger:
         )
 
     def get_commitments_overlapping(
-        self, time_interval: Tuple[float, float]
-    ) -> List[EconomicCommitment]:
+        self, time_interval: tuple[float, float]
+    ) -> list[EconomicCommitment]:
         """Get all commitments that overlap a time interval.
 
         Args:
@@ -318,8 +317,8 @@ class FlexibilityLedger:
         return self._overlapping(time_interval)
 
     def _overlapping(
-        self, time_interval: Tuple[float, float], excluding: Optional[str] = None
-    ) -> List[EconomicCommitment]:
+        self, time_interval: tuple[float, float], excluding: str | None = None
+    ) -> list[EconomicCommitment]:
         """Internal: commitments overlapping interval, optionally excluding one."""
         t_start, t_end = time_interval
         result = []

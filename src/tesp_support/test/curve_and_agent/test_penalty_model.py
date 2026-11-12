@@ -14,10 +14,11 @@ Penalty calculation conventions
 """
 
 import pytest
-
-from tesp_support.curve_and_agent.enums_and_constants import MarketType, PenaltyStructureType
+from tesp_support.curve_and_agent.enums_and_constants import (
+    MarketType,
+    PenaltyStructureType,
+)
 from tesp_support.curve_and_agent.penalty_model import PenaltyModel
-
 
 # ===================================================================
 # Fixtures

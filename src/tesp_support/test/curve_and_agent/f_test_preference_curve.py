@@ -23,10 +23,8 @@ Amenity cost:
 """
 
 import pytest
-
 from tesp_support.curve_and_agent.enums_and_constants import DeviceType
 from tesp_support.curve_and_agent.preference_curve import PreferenceCurve
-
 
 # ===================================================================
 # Fixtures

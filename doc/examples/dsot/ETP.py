@@ -64,7 +64,6 @@ Tm - Temperature of the mass of the house
 Cm - Thermal mass/inertia of the mass of the house 
 """
 
-import argparse
 import logging
 import math
 import pprint
@@ -88,16 +87,13 @@ def _open_file(file_path: str, file_type='r'):
     """
     try:
         fh = open(file_path, file_type)
-    except IOError:
-        log.error('Unable to open {}'.format(file_path))
+    except OSError:
+        log.error(f'Unable to open {file_path}')
     else:
         return fh
 
 
-class ETP():
-    """
-
-    """
+class ETP:
 
     def __init__(self, house_properties):
         # TODO: update inputs for class
@@ -467,16 +463,7 @@ class ETP():
                     Wg = 0.51
                 else:
                     log.error(f"window_frame defined as {window_frame}; valid values are '0', '1', '2', '3', or '4'.")
-            elif glazing_treatment == 2:
-                if window_frame == 0:
-                    Wg = 0.34
-                elif window_frame == 1 or window_frame == 2:
-                    Wg = 0.31
-                elif window_frame == 3 or window_frame == 4:
-                    Wg = 0.26
-                else:
-                    log.error(f"window_frame defined as {window_frame}; valid values are '0', '1', '2', '3', or '4'.")
-            elif glazing_treatment == 3:
+            elif glazing_treatment == 2 or glazing_treatment == 3:
                 if window_frame == 0:
                     Wg = 0.34
                 elif window_frame == 1 or window_frame == 2:
@@ -554,13 +541,13 @@ class ETP():
 
         log.setLevel(logging.DEBUG)
         log.debug('ETP model ' + self.name)
-        log.debug('  UA -> {:.2f}'.format(self.UA))
+        log.debug(f'  UA -> {self.UA:.2f}')
 #        print('  UA -> {:.2f}'.format(self.UA))
-        log.debug('  CA -> {:.2f}'.format(self.CA))
+        log.debug(f'  CA -> {self.CA:.2f}')
 #        print('  CA -> {:.2f}'.format(self.CA))
-        log.debug('  HM -> {:.2f}'.format(self.HM))
+        log.debug(f'  HM -> {self.HM:.2f}')
 #        print('  HM -> {:.2f}'.format(self.HM))
-        log.debug('  CM -> {:.2f}'.format(self.CM))
+        log.debug(f'  CM -> {self.CM:.2f}')
 #        print('  CM -> {:.2f}'.format(self.CM))
             
     def _auto_run(args):

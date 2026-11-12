@@ -4,14 +4,17 @@
 #          These are plain data containers (dataclasses) with no business logic.
 # ============================================================================
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Callable, Tuple, Any
-from .enums_and_constants import (
-    MarketType, MarketPhase, OperatingMode, IterationType,
-    CommitmentStatus, DeviceType, ProductType, ForecastParadigm,
-    StreamType, PenaltyStructureType
-)
+from typing import Any
 
+from .enums_and_constants import (
+    CommitmentStatus,
+    DeviceType,
+    IterationType,
+    MarketType,
+    ProductType,
+)
 
 # ---------------------------------------------------------------------------
 # Device State Structures
@@ -230,7 +233,7 @@ class BidCurve:  # TODO: any reason to not use a more generic Curve class for al
         interval_id: ID of the delivery interval this bid covers.
         timestamp: Time the bid was formulated.
     """
-    points: List[BidPoint] = field(default_factory=list)
+    points: list[BidPoint] = field(default_factory=list)
     market_id: str = ""
     interval_id: str = ""
     timestamp: float = 0.0
@@ -260,8 +263,8 @@ class ClearingResult:
     iteration: int = 0
     iteration_type: IterationType = IterationType.BINDING
     timestamp: float = 0.0
-    aggregate_demand: Optional[float] = None
-    aggregate_supply: Optional[float] = None
+    aggregate_demand: float | None = None
+    aggregate_supply: float | None = None
 
 
 @dataclass
@@ -347,7 +350,7 @@ class EconomicCommitment:
     market_type: MarketType = MarketType.RT_ENERGY
     product_type: ProductType = ProductType.ENERGY_BASE
     quantity: float = 0.0
-    interval: Tuple[float, float] = (0.0, 300.0)
+    interval: tuple[float, float] = (0.0, 300.0)
     status: CommitmentStatus = CommitmentStatus.TENTATIVE
     cleared_price: float = 0.0
     penalty_model_id: str = ""
@@ -355,7 +358,7 @@ class EconomicCommitment:
     marginal_pen: float = 0.0
     confidence: float = 0.0
     iteration: int = 0
-    displacement_plan: List[Dict[str, Any]] = field(default_factory=list)
+    displacement_plan: list[dict[str, Any]] = field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -378,7 +381,7 @@ class ContinuousDataPoint:
     lead_time: float = 0.0
     value: float = 0.0
     sigma: float = 0.0
-    quantiles: Dict[float, float] = field(default_factory=dict)
+    quantiles: dict[float, float] = field(default_factory=dict)
 
 
 @dataclass
@@ -417,7 +420,7 @@ class QuantilePoint:
     """
     timestamp: float = 0.0
     lead_time: float = 0.0
-    quantiles: Dict[float, float] = field(default_factory=dict)
+    quantiles: dict[float, float] = field(default_factory=dict)
     expected: float = 0.0
     variance: float = 0.0
 
@@ -434,7 +437,7 @@ class UncertaintyEnvelope:
     """
     expected: float = 0.0
     sigma: float = 0.0
-    quantiles: Dict[float, float] = field(default_factory=dict)
+    quantiles: dict[float, float] = field(default_factory=dict)
     distribution_type: str = "gaussian"
 
 
@@ -463,7 +466,7 @@ class FulfillmentRecord:
     revenue: float = 0.0
     penalty: float = 0.0
     net_value: float = 0.0
-    displaced_by: Optional[str] = None
+    displaced_by: str | None = None
 
 
 @dataclass
@@ -489,7 +492,7 @@ class PerformanceEntry:
     penalty: float = 0.0
     net_value: float = 0.0
     was_displaced: bool = False
-    displaced_by: Optional[str] = None
+    displaced_by: str | None = None
 
 
 @dataclass
@@ -540,9 +543,9 @@ class AdvisoryRecord:
     timestamp: float = 0.0
     cleared_price: float = 0.0
     cleared_quantity: float = 0.0
-    submitted_bid: Optional[BidCurve] = None
+    submitted_bid: BidCurve | None = None
     projected_op_point: float = 0.0
-    projected_command: Optional[Any] = None
+    projected_command: Any | None = None
     price_delta: float = float('inf')
     quantity_delta: float = float('inf')
     convergence_metric: float = 0.0
@@ -567,9 +570,9 @@ class DeliveryEconomics:
     product_type: ProductType = ProductType.ENERGY_BASE
     committed_qty: float = 0.0
     cleared_price: float = 0.0
-    revenue_fn: Optional[Callable[[float], float]] = None
-    penalty_fn: Optional[Callable[[float], float]] = None
-    net_value_fn: Optional[Callable[[float], float]] = None
+    revenue_fn: Callable[[float], float] | None = None
+    penalty_fn: Callable[[float], float] | None = None
+    net_value_fn: Callable[[float], float] | None = None
     marginal_value_full: float = 0.0
     marginal_penalty_zero: float = 0.0
 
@@ -587,10 +590,10 @@ class DispatchSolution:
         binding_constraints: List of constraints that are binding.
     """
     Q: float = 0.0
-    allocation: Dict[str, float] = field(default_factory=dict)
-    displacement_chain: Dict[str, str] = field(default_factory=dict)
+    allocation: dict[str, float] = field(default_factory=dict)
+    displacement_chain: dict[str, str] = field(default_factory=dict)
     total_net_value: float = 0.0
-    binding_constraints: List[str] = field(default_factory=list)
+    binding_constraints: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -613,7 +616,7 @@ class DeviceCommand:
     setpoint: float = 72.0
     mode: str = ""
     power_target: float = 0.0
-    auxiliary: Dict[str, Any] = field(default_factory=dict)
+    auxiliary: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -628,9 +631,9 @@ class PlanningResult:
         total_revenue: Expected total revenue ($).
         cycles_consumed: For batteries, equivalent full cycles used.
     """
-    intervals: List[Tuple[float, float, float, float]] = field(
+    intervals: list[tuple[float, float, float, float]] = field(
         default_factory=list)
-    V_stored: List[float] = field(default_factory=list)
+    V_stored: list[float] = field(default_factory=list)
     total_cost: float = 0.0
     total_revenue: float = 0.0
     cycles_consumed: float = 0.0

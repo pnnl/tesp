@@ -19,13 +19,14 @@
 #     This abstraction works with HELICS, FNCS, or direct-API adapters.
 # ============================================================================
 
-from typing import Any, Optional
+from typing import Any
+
 from .data_types import (
-    HVACState,
-    WaterHeaterState,
-    EVChargerState,
     BatteryState,
     DeviceCommand,
+    EVChargerState,
+    HVACState,
+    WaterHeaterState,
 )
 from .enums_and_constants import DeviceType
 

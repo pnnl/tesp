@@ -15,19 +15,18 @@ Testing strategy:
   method should translate a DeviceCommand into co-sim property writes.
 """
 
-import pytest
 from unittest.mock import MagicMock
 
-from tesp_support.curve_and_agent.gridlabd_interface import GridLABDInterface
+import pytest
 from tesp_support.curve_and_agent.data_types import (
-    HVACState,
-    WaterHeaterState,
-    EVChargerState,
     BatteryState,
     DeviceCommand,
+    EVChargerState,
+    HVACState,
+    WaterHeaterState,
 )
 from tesp_support.curve_and_agent.enums_and_constants import DeviceType
-
+from tesp_support.curve_and_agent.gridlabd_interface import GridLABDInterface
 
 # ===================================================================
 # Fixtures

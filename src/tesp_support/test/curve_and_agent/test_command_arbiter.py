@@ -20,28 +20,26 @@ Testing strategy:
   and tested, so we can use real instances or mocks depending on the test.
 """
 
-import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
+import pytest
 from tesp_support.curve_and_agent.command_arbiter import CommandArbiter, DeliveryRecord
 from tesp_support.curve_and_agent.data_types import (
-    DeviceCommand,
-    DispatchSolution,
-    FulfillmentRecord,
-    DeliveryEconomics,
     FlexibilityEnvelope,
+    FulfillmentRecord,
     HVACState,
 )
-from tesp_support.curve_and_agent.dispatch_optimizer import DispatchOptimizer, DeliveryValueCalculator
-from tesp_support.curve_and_agent.preference_curve import PreferenceCurve
-from tesp_support.curve_and_agent.penalty_model import PenaltyModel
+from tesp_support.curve_and_agent.dispatch_optimizer import (
+    DeliveryValueCalculator,
+    DispatchOptimizer,
+)
 from tesp_support.curve_and_agent.enums_and_constants import (
     DeviceType,
     MarketType,
-    ProductType,
     PenaltyStructureType,
 )
-
+from tesp_support.curve_and_agent.penalty_model import PenaltyModel
+from tesp_support.curve_and_agent.preference_curve import PreferenceCurve
 
 # ===================================================================
 # Fixtures

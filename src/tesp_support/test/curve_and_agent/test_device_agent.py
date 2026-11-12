@@ -21,38 +21,37 @@ Testing strategy:
   All stub methods are xfail until implemented.
 """
 
-import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, patch
 
-from tesp_support.curve_and_agent.device_agent import DeviceAgent
+import pytest
+from tesp_support.curve_and_agent.data_streams import DataStreamManager
 from tesp_support.curve_and_agent.data_types import (
-    HVACState,
-    WaterHeaterState,
-    EVChargerState,
+    AdvisoryRecord,
     BatteryState,
     BidCurve,
     BidPoint,
     ClearingResult,
-    FlexibilityEnvelope,
     DeviceCommand,
-    MarketTimingParams,
+    EVChargerState,
+    FlexibilityEnvelope,
     FulfillmentRecord,
+    HVACState,
+    MarketTimingParams,
     SettlementRecord,
-    AdvisoryRecord,
+    WaterHeaterState,
 )
+from tesp_support.curve_and_agent.device_agent import DeviceAgent
 from tesp_support.curve_and_agent.enums_and_constants import (
     DeviceType,
-    MarketType,
-    MarketPhase,
-    OperatingMode,
     IterationType,
+    MarketPhase,
+    MarketType,
+    OperatingMode,
+    PenaltyStructureType,
 )
 from tesp_support.curve_and_agent.market_object import MarketObject
 from tesp_support.curve_and_agent.penalty_model import PenaltyModel
-from tesp_support.curve_and_agent.enums_and_constants import PenaltyStructureType
 from tesp_support.curve_and_agent.preference_curve import PreferenceCurve
-from tesp_support.curve_and_agent.data_streams import DataStreamManager
-
 
 # ===================================================================
 # Fixtures
@@ -182,11 +181,11 @@ def rt_timing():
 
 def _make_market_object(market_id="RT_1000", **kwargs):
     """Helper to create a MarketObject with sensible defaults."""
-    defaults = dict(
-        market_type=MarketType.RT_ENERGY,
-        timing_params=MarketTimingParams(),
-        operating_mode=OperatingMode.BIDDING,
-    )
+    defaults = {
+        'market_type': MarketType.RT_ENERGY,
+        'timing_params': MarketTimingParams(),
+        'operating_mode': OperatingMode.BIDDING
+    }
     defaults.update(kwargs)
     return MarketObject(market_id=market_id, **defaults)
 

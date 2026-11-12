@@ -16,18 +16,17 @@ Testing strategy:
   - Callback registration stores and (future) invokes the callback
 """
 
-import pytest
 from unittest.mock import MagicMock
 
-from tesp_support.curve_and_agent.market_agent import MarketCommunicationInterface
+import pytest
 from tesp_support.curve_and_agent.data_types import (
-    BidPoint,
     BidCurve,
+    BidPoint,
     ClearingResult,
     SettlementRecord,
 )
-from tesp_support.curve_and_agent.enums_and_constants import MarketType, IterationType
-
+from tesp_support.curve_and_agent.enums_and_constants import IterationType, MarketType
+from tesp_support.curve_and_agent.market_agent import MarketCommunicationInterface
 
 # ===================================================================
 # Fixtures

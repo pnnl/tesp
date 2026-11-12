@@ -1,6 +1,7 @@
-from tesp_support.dsot.hvac_agent import HVACDSOT
 import logging as log
 from datetime import datetime, timedelta
+
+from tesp_support.dsot.hvac_agent import HVACDSOT
 
 logger = log.getLogger()
 log.getLogger('pyomo.core').setLevel(log.ERROR)

@@ -5,7 +5,6 @@
 
 import os
 
-
 tesp_inc = os.path.expandvars('$TESPDIR/doc/references/tesp_supports.inc')
 tesp_api = os.path.expandvars('$TESPDIR/src/tesp_support/tesp_support')
 
@@ -25,17 +24,17 @@ with open(tesp_inc, "w", encoding='utf-8') as fle:
         name1 = name.replace("_", r"\_") + " package"
         print(name1, file=fle)
         print("=" * len(name1), file=fle)
-        print("", file=fle)
+        print(file=fle)
 
         print(".. automodule:: " + name, file=fle)
         print("   :members:", file=fle)
         print("   :undoc-members:", file=fle)
         print("   :show-inheritance:", file=fle)
-        print("", file=fle)
+        print(file=fle)
 
         print("Submodules", file=fle)
         print("----------", file=fle)
-        print("", file=fle)
+        print(file=fle)
 
         files.sort()
         for filename in files:
@@ -52,10 +51,10 @@ with open(tesp_inc, "w", encoding='utf-8') as fle:
                 name1 = name.replace("_", r"\_") + " module"
                 print(name1, file=fle)
                 print("-" * len(name1), file=fle)
-                print("", file=fle)
+                print(file=fle)
 
                 print(".. automodule:: " + name, file=fle)
                 print("   :members:", file=fle)
                 print("   :undoc-members:", file=fle)
                 print("   :show-inheritance:", file=fle)
-                print("", file=fle)
+                print(file=fle)

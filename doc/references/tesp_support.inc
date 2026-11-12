@@ -14,6 +14,7 @@ Subpackages
 
    tesp_support.api
    tesp_support.consensus
+   tesp_support.curve_and_agent
    tesp_support.dsot
    tesp_support.matpower
    tesp_support.original

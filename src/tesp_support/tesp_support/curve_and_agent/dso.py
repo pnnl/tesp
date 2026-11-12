@@ -7,7 +7,6 @@
 #          Run directly for a demo:  python -m ...curve_and_agent.dso
 # ============================================================================
 
-from typing import Dict
 
 from .data_types import BidCurve, BidPoint, ClearingResult, MarketTimingParams
 from .enums_and_constants import MarketType
@@ -45,7 +44,7 @@ class DSO:
         )
         self.tso.submit_demand(self.dso_id, BidCurve(self.mo.aggregate_demand()))
 
-    def receive_price(self, result: ClearingResult) -> Dict[str, ClearingResult]:
+    def receive_price(self, result: ClearingResult) -> dict[str, ClearingResult]:
         """Evaluate each agent's bid at the TSO price; returns per-agent results."""
         return {a: self.mo.get_agent_clearing(a, result.cleared_price) for a in self.mo._agent_bids}
 

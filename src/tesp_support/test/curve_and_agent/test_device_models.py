@@ -23,18 +23,21 @@ UA_env = UA_envelope (Btu/hr·°F), UA_mass = UA_mass (Btu/hr·°F)
 import math
 
 import pytest
-
-from tesp_support.curve_and_agent.enums_and_constants import DeviceType
 from tesp_support.curve_and_agent.data_types import (
+    BatteryState,
+    ContinuousDataPoint,
+    EVChargerState,
+    FlexibilityEnvelope,
     HVACState,
     WaterHeaterState,
-    EVChargerState,
-    BatteryState,
-    FlexibilityEnvelope,
-    ContinuousDataPoint,
 )
-from tesp_support.curve_and_agent.device_models import HVACModel, WaterHeaterModel, EVChargerModel, BatteryModel
-
+from tesp_support.curve_and_agent.device_models import (
+    BatteryModel,
+    EVChargerModel,
+    HVACModel,
+    WaterHeaterModel,
+)
+from tesp_support.curve_and_agent.enums_and_constants import DeviceType
 
 # ===================================================================
 # HVAC Model Fixtures
@@ -243,7 +246,10 @@ class TestWaterHeaterModel:
 
     def test_flexibility_range(self, wh_model, wh_state_hot):
         """Q_min=0 (element off), Q_max=element_power (4.5 kW)."""
-        from tesp_support.curve_and_agent.data_types import QuantilePoint, ContinuousDataPoint
+        from tesp_support.curve_and_agent.data_types import (
+            ContinuousDataPoint,
+            QuantilePoint,
+        )
 
         flex = wh_model.estimate_flexibility(
             state=wh_state_hot,
@@ -571,10 +577,10 @@ class TestWaterHeaterActiveHeating:
         dT/dt ≈ (15354 - 116) / 417 ≈ 36.5 °F/hr (net of standby loss).
         After 5 min: ΔT ≈ 36.5 × (5/60) ≈ 3.04 °F.
         """
-        from tesp_support.curve_and_agent.data_types import QuantilePoint
-
         # Start from a cool tank to see clear heating
         import dataclasses
+
+        from tesp_support.curve_and_agent.data_types import QuantilePoint
 
         cool_state = dataclasses.replace(
             wh_state_hot, tank_temp_upper=120.0, tank_temp_lower=115.0

@@ -4,8 +4,7 @@
 #          informational market clears and external sources.
 # ============================================================================
 
-from typing import Dict, List, Optional, Tuple
-from .data_types import ContinuousDataPoint
+
 from .enums_and_constants import MarketType
 
 
@@ -25,7 +24,7 @@ class PriceForecast:
     def __init__(
         self,
         market_type: MarketType,
-        interval: Tuple[float, float],
+        interval: tuple[float, float],
         price_estimate: float = 0.0,
         confidence: float = 0.0,
         source: str = "prior",
@@ -37,7 +36,7 @@ class PriceForecast:
         self.confidence = confidence
         self.source = source
         self.iteration = iteration
-        self.history: List[Tuple[int, float]] = []
+        self.history: list[tuple[int, float]] = []
 
 
 class PriceForecastService:
@@ -49,14 +48,14 @@ class PriceForecastService:
     """
 
     def __init__(self):
-        self._forecasts: Dict[
-            Tuple[MarketType, Tuple[float, float]], PriceForecast
+        self._forecasts: dict[
+            tuple[MarketType, tuple[float, float]], PriceForecast
         ] = {}
 
     def update(
         self,
         market_type: MarketType,
-        interval: Tuple[float, float],
+        interval: tuple[float, float],
         price: float,
         confidence: float,
         source: str,
@@ -101,8 +100,8 @@ class PriceForecastService:
             self._forecasts[key] = fc
 
     def get_forecast(
-        self, market_type: MarketType, interval: Tuple[float, float]
-    ) -> Optional[PriceForecast]:
+        self, market_type: MarketType, interval: tuple[float, float]
+    ) -> PriceForecast | None:
         """Get the price forecast for a specific market and interval.
 
         Args:
@@ -117,7 +116,7 @@ class PriceForecastService:
     def get_price(
         self,
         market_type: MarketType,
-        interval: Tuple[float, float],
+        interval: tuple[float, float],
         default: float = 0.0,
     ) -> float:
         """Convenience: get the point estimate price.
@@ -141,7 +140,7 @@ class PriceForecastService:
         t_start: float,
         t_end: float,
         resolution: float = 3600.0,
-    ) -> List[Tuple[Tuple[float, float], float]]:
+    ) -> list[tuple[tuple[float, float], float]]:
         """Get a price trajectory over a planning horizon.
 
         Used by the planning optimizer to optimize battery schedules
