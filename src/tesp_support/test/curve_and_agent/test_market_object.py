@@ -25,7 +25,7 @@ from tesp_support.curve_and_agent.enums_and_constants import (
     MarketType,
     OperatingMode,
 )
-from tesp_support.curve_and_agent.market_object import MarketObject
+from tesp_support.tesp_support.curve_and_agent.markets.market_object import MarketObject
 
 RT = MarketType.RT_ENERGY
 DA = MarketType.DA_ENERGY

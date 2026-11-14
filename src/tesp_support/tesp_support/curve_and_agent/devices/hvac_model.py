@@ -1,27 +1,114 @@
 # ============================================================================
-# FILE: device_models.py
-# PURPOSE: Internal physics models used by device agents for flexibility
-#          estimation and control translation. These are simplified models
-#          representing the agent's BELIEF about device physics. The ground
-#          truth lives in GridLAB-D; these models need not be high fidelity.
+# FILE: devices/hvac_model.py
+# PURPOSE: Concrete device model for HVAC systems (both heat-pump and
+#          air-conditioner-only configurations).
 #
-# INTERNAL: These models are used by agent functions F2 (flexibility
-#           estimation) and F8 (control signal translation). They do NOT
-#           read from or write to GridLAB-D.
+# Implements the AbstractDeviceModel contract using a 2-node Equivalent
+# Thermal Parameter (ETP) model of the building and HVAC system.  This
+# is the agent's internal belief about how the building responds to
+# HVAC operation and weather — it need not match the GridLAB-D model
+# exactly.
+#
+# THE ETP MODEL:
+#     The building is represented as two coupled thermal nodes:
+#
+#         Node 1 — Indoor air (temperature T_a, capacitance C_a):
+#             C_a · dT_a/dt = UA_env·(T_out − T_a)
+#                           + UA_mass·(T_m − T_a)
+#                           + Q_hvac
+#                           + Q_solar
+#                           + Q_internal
+#
+#         Node 2 — Thermal mass (temperature T_m, capacitance C_m):
+#             C_m · dT_m/dt = UA_mass·(T_a − T_m)
+#
+#     Where:
+#         T_a         = indoor air temperature (°F)
+#         T_m         = thermal mass temperature (°F, walls/furniture)
+#         T_out       = outdoor air temperature (°F)
+#         C_a         = air thermal capacitance (Btu/°F)
+#         C_m         = mass thermal capacitance (Btu/°F)
+#         UA_env      = envelope conductance (Btu/hr·°F)
+#         UA_mass     = mass-to-air conductance (Btu/hr·°F)
+#         Q_hvac      = HVAC thermal output (Btu/hr, negative for cooling)
+#                       = electrical_power_kW × COP × 3412.14
+#         Q_solar     = solar heat gain (Btu/hr)
+#         Q_internal  = internal heat gain from occupants, appliances (Btu/hr)
+#
+#     The electrical-to-thermal conversion depends on mode:
+#         Cooling: Q_hvac = −P_elec × cooling_COP × 3412.14
+#         Heating (heat pump): Q_hvac = +P_elec × heating_COP × 3412.14
+#         Heating (AC-only / resistive backup): Q_hvac = +P_elec × 3412.14
+#
+# GRIDLAB-D INTERFACE:
+#     This model does NOT read from or write to GridLAB-D.  All GridLAB-D
+#     interaction is through the simulator interface (F1 reads HVACState,
+#     F9 writes DeviceCommand).  The ETP parameters are initialized from
+#     the first HVACState observation and may be periodically recalibrated.
+#
+# RELATIONSHIP TO ABSTRACTIONS:
+#     Inherits from: abstractions.device_model.AbstractDeviceModel
+#     Uses:          abstractions.device_state.AbstractDeviceState
+#                    (concretely expects devices.states.ConcreteHVACState)
+#
+# RELATIONSHIP TO OTHER CONCRETE MODULES:
+#     - devices/states.py: Provides ConcreteHVACState consumed by this model.
+#     - forecasting/continuous_forecast.py: Outdoor temp, solar irradiance,
+#       and internal gain forecasts are passed in via the forecasts dict.
+#     - forecasting/data_stream_manager.py: Packages forecast data into
+#       the bundle that the agent passes to estimate_flexibility().
+#     - economics/planning_optimizer.py: May call predict_temperature()
+#       for multi-interval pre-conditioning optimization.
+#     - agent.py (DeviceAgent): Calls estimate_flexibility() during the
+#       Active phase and translate_power_to_command() via the Command
+#       Arbiter during delivery.
+#
+# CONSUMED FORECAST STREAMS (via forecasts dict):
+#     'outdoor_air_temp'   — ContinuousForecast, EXTERNAL from weather service
+#     'solar_irradiance'   — ContinuousForecast, EXTERNAL from weather service
+#     'internal_heat_gain' — ContinuousForecast, EXTERNAL from learned model
+#     'humidity'           — ContinuousForecast, EXTERNAL from weather service
+#                            (optional, for latent load estimation)
+#
+# CONSUMED SCHEDULE STREAMS (via forecasts dict):
+#     'hvac_setpoint_schedule' — ContinuousForecast with low uncertainty,
+#                                EXTERNAL from customer thermostat program.
+#                                Defines the baseline T_setpoint that
+#                                determines Q_baseline in the flexibility
+#                                envelope.
+#
+# CONSUMED CONSTRAINT STREAMS (via constraints list):
+#     None strictly required.  HVAC comfort bounds are soft (preference-
+#     driven via the amenity cost function) rather than hard constraints.
+#     However, if a hard temperature bound is configured (e.g., "never
+#     below 65°F"), it would appear here.
 # ============================================================================
 
-import math
+"""Concrete HVAC device model — 2-node ETP thermal model.
 
-from .data_types import (
-    BatteryState,
+Supports both heat-pump and AC-only configurations.  The device type
+is determined from the ``has_heat_pump`` field of the observed
+HVACState: when True, heating uses the heat pump COP; when False,
+heating uses resistive backup (COP = 1.0).
+
+Key methods:
+    estimate_flexibility()        — F2: feasible power range for a market interval.
+    translate_power_to_command()  — F8: convert target power to thermostat setpoint.
+    predict_temperature()         — Forward integration of the ETP model.
+    power_to_setpoint()           — Inverse mapping: power → setpoint.
+    setpoint_to_power()           — Forward mapping: setpoint → power.
+"""
+
+from typing import Any, Dict, List, Optional, Tuple
+
+from abstractions.device_model import AbstractDeviceModel
+from abstractions.device_state import AbstractDeviceState
+from data_types import (
     ContinuousDataPoint,
-    EVChargerState,
+    DeviceCommand,
     FlexibilityEnvelope,
-    HVACState,
-    QuantilePoint,
-    WaterHeaterState,
 )
-from .enums_and_constants import DeviceType
+from enums_and_constants import DeviceType
 
 # Unit conversion
 _KW_TO_BTU_HR = 3412.14
@@ -51,7 +138,7 @@ def _interp_forecast(
     return forecast[-1].value
 
 
-class HVACModel:
+class HVACModel(AbstractDeviceModel):
     """Thermal model of a building with HVAC system, ported from DSOT.
 
     Implements a 2-node (air + thermal mass) equivalent thermal
@@ -705,609 +792,3 @@ class HVACModel:
         """
         self._air_temp_agent = state.indoor_air_temp
         self._mass_temp_agent = state.thermal_mass_temp
-
-
-class WaterHeaterModel:
-    """Simplified thermal model of a stratified electric water heater.
-
-    Models the tank as two thermal zones (upper and lower) with:
-    - Heat loss to ambient through tank insulation
-    - Cold water inlet mixing during draws
-    - Electric element heating
-    - Natural convection between zones
-
-    Args:
-        None. Physical parameters come from WaterHeaterState.
-    """
-
-    def predict_tank_temperature(
-        self,
-        state: WaterHeaterState,
-        element_power_kw: float,
-        draw_forecast: QuantilePoint,
-        inlet_temp_forecast: ContinuousDataPoint | None,
-        ambient_temp: float,
-        duration_seconds: float,
-        timestep_seconds: float = 60.0,
-    ) -> list[tuple[float, float, float]]:
-        """Predict tank temperature trajectory given element power.
-
-        Args:
-            state: Current water heater state from GridLAB-D.
-                INTERNAL: From F1.
-            element_power_kw: Heating element electrical power (kW).
-                0 = element off, element_power = element at rated capacity.
-            draw_forecast: Cumulative hot water draw distribution.
-                INTERNAL: From DataStreamManager event forecast.
-            inlet_temp_forecast: Inlet cold water temperature.
-                INTERNAL: From DataStreamManager.
-            ambient_temp: Ambient temperature around the tank (°F).
-            duration_seconds: Prediction horizon.
-            timestep_seconds: Integration timestep.
-
-        Returns:
-            List of (time_offset, upper_temp, lower_temp) tuples.
-        """
-        vol_upper = state.tank_volume / 2.0
-        vol_lower = state.tank_volume / 2.0
-        mass_upper = vol_upper * _WATER_LB_PER_GAL  # Btu/°F
-        mass_lower = vol_lower * _WATER_LB_PER_GAL
-        UA_mixing = 10.0  # Btu/hr·°F between zones
-
-        T_upper = state.tank_temp_upper
-        T_lower = state.tank_temp_lower
-        T_inlet = state.inlet_water_temp
-        if inlet_temp_forecast is not None:
-            T_inlet = inlet_temp_forecast.value
-
-        total_draw_gal = draw_forecast.expected if draw_forecast else 0.0
-        draw_rate_gph = total_draw_gal / (duration_seconds / 3600.0)
-
-        Q_element = element_power_kw * _KW_TO_BTU_HR
-
-        trajectory: list[tuple[float, float, float]] = []
-        n_steps = int(duration_seconds / timestep_seconds)
-        dt_hr = timestep_seconds / 3600.0
-
-        for i in range(n_steps):
-            t = (i + 1) * timestep_seconds
-
-            Q_loss_upper = state.tank_UA * 0.5 * (T_upper - ambient_temp)
-            Q_loss_lower = state.tank_UA * 0.5 * (T_lower - ambient_temp)
-            Q_mixing = UA_mixing * (T_upper - T_lower)
-
-            gal_this_step = draw_rate_gph * dt_hr
-            if gal_this_step > 0 and vol_lower > 0:
-                draw_frac = min(gal_this_step / vol_lower, 1.0)
-                T_lower = T_lower * (1.0 - draw_frac) + T_inlet * draw_frac
-
-            dT_upper = (Q_element - Q_loss_upper - Q_mixing) / mass_upper * dt_hr
-            dT_lower = (Q_mixing - Q_loss_lower) / mass_lower * dt_hr
-
-            T_upper += dT_upper
-            T_lower += dT_lower
-            trajectory.append((t, T_upper, T_lower))
-
-        return trajectory
-
-    def estimate_flexibility(
-        self,
-        state: WaterHeaterState,
-        draw_forecast: QuantilePoint,
-        inlet_temp_forecast: ContinuousDataPoint | None,
-        ambient_temp: float,
-        min_tank_temp: float,
-        interval_duration: float,
-    ) -> FlexibilityEnvelope:
-        """Estimate feasible power range for the upcoming interval.
-
-        Q_min: minimum power to keep tank above min_tank_temp given
-            worst-case draws (high quantile of draw forecast).
-        Q_max: element rated power (or 0 if tank is already at max).
-        Q_baseline: power needed to maintain current setpoint temp.
-
-        Args:
-            state: Current water heater state.
-                INTERNAL: From F1.
-            draw_forecast: Hot water draw energy distribution.
-                INTERNAL: From DataStreamManager event forecast.
-            inlet_temp_forecast: Inlet water temperature.
-                INTERNAL: From DataStreamManager.
-            ambient_temp: Ambient air temperature around tank (°F).
-            min_tank_temp: Hard minimum tank temperature constraint (°F).
-                INTERNAL: From DataStreamManager constraint stream.
-            interval_duration: Market interval length (seconds).
-
-        Returns:
-            FlexibilityEnvelope.
-        """
-        max_temp = state.thermostat_setpoint + 10.0
-        Q_max = 0.0 if state.tank_temp_upper >= max_temp else state.element_power
-
-        avg_temp = (state.tank_temp_upper + state.tank_temp_lower) / 2.0
-        standby_loss = state.tank_UA * (avg_temp - ambient_temp)
-        Q_standby = standby_loss / _KW_TO_BTU_HR
-
-        # --- Draw-forecast contribution (design: draws parameter) ---
-        interval_hr = max(interval_duration / 3600.0, 1e-6)
-
-        # Q_baseline: standby losses + expected draw power
-        draw_kw = 0.0
-        if draw_forecast is not None and draw_forecast.expected > 0:
-            draw_kw = draw_forecast.expected / interval_hr
-        Q_baseline = max(0.0, min(Q_standby + draw_kw, Q_max))
-
-        # Q_min: thermal energy balance — minimum power to keep the
-        # average tank temperature above min_tank_temp at end of
-        # interval, accounting for draws + standby losses offset by
-        # the tank's stored thermal energy above the minimum.
-        tank_mass_btu_f = state.tank_volume * _WATER_LB_PER_GAL
-        thermal_buffer_btu = tank_mass_btu_f * max(avg_temp - min_tank_temp, 0.0)
-        loss_btu = standby_loss * interval_hr
-
-        draw_safety_btu = 0.0
-        if draw_forecast is not None and draw_forecast.expected > 0:
-            sigma = math.sqrt(max(draw_forecast.variance, 0.0))
-            draw_safety_btu = (draw_forecast.expected + sigma) * _KW_TO_BTU_HR
-
-        shortfall_btu = draw_safety_btu + loss_btu - thermal_buffer_btu
-        Q_min = max(0.0, min(shortfall_btu / (interval_hr * _KW_TO_BTU_HR), Q_max))
-
-        return FlexibilityEnvelope(
-            Q_min=Q_min,
-            Q_max=Q_max,
-            Q_baseline=Q_baseline,
-            interval_start=0.0,
-            interval_end=interval_duration,
-        )
-
-    def power_to_setpoint(
-        self, target_power_kw: float, state: WaterHeaterState, interval_duration: float
-    ) -> float:
-        """Convert target power to tank thermostat setpoint.
-
-        Args:
-            target_power_kw: Desired power (kW). 0 = off,
-                state.element_power = full on.
-                INTERNAL: From F7.
-            state: Current water heater state.
-                INTERNAL: From F1.
-            interval_duration: Market interval (seconds).
-
-        Returns:
-            Tank thermostat setpoint (°F).
-        """
-        if target_power_kw >= state.element_power * 0.95:
-            return state.tank_temp_upper + 5.0
-        elif target_power_kw <= 0:
-            return state.tank_temp_lower - 30.0
-        else:
-            frac = target_power_kw / state.element_power
-            low_sp = state.tank_temp_lower - 30.0
-            high_sp = state.tank_temp_upper + 5.0
-            return low_sp + frac * (high_sp - low_sp)
-
-
-class EVChargerModel:
-    """Model of EV charging behavior including SOC-dependent taper.
-
-    Models the charging process as constant-power up to the taper
-    SOC, then linearly decreasing power above the taper point
-    (CCCV charging profile approximation).
-    """
-
-    def predict_soc(
-        self,
-        state: EVChargerState,
-        charge_power_kw: float,
-        duration_seconds: float,
-        timestep_seconds: float = 60.0,
-    ) -> list[tuple[float, float]]:
-        """Predict SOC trajectory at a given charge power.
-
-        Args:
-            state: Current EV charger state from GridLAB-D.
-                INTERNAL: From F1.
-            charge_power_kw: Target charging power (kW).
-                Applied as min(charge_power_kw, BMS-limited max at
-                current SOC).
-            duration_seconds: Prediction horizon.
-            timestep_seconds: Integration timestep.
-
-        Returns:
-            List of (time_offset_seconds, predicted_soc).
-        """
-        if not state.vehicle_plugged_in:
-            return [(0.0, state.soc)]
-
-        soc = state.soc
-        capacity = state.battery_capacity
-        efficiency = state.charger_efficiency
-        max_rate = state.max_charge_rate
-        taper_soc = state.soc_at_max_taper
-
-        trajectory: list[tuple[float, float]] = []
-        n_steps = int(duration_seconds / timestep_seconds)
-        dt_hr = timestep_seconds / 3600.0
-
-        for i in range(n_steps):
-            t = (i + 1) * timestep_seconds
-            if soc >= taper_soc:
-                taper_factor = max(0.0, (1.0 - soc) / (1.0 - taper_soc))
-                effective_max = max_rate * taper_factor
-            else:
-                effective_max = max_rate
-
-            actual_power = max(0.0, min(charge_power_kw, effective_max))
-            dc_power = actual_power * efficiency
-            delta_soc = dc_power * dt_hr / capacity
-            soc = min(1.0, soc + delta_soc)
-            trajectory.append((t, soc))
-
-        return trajectory
-
-    def estimate_flexibility(
-        self,
-        state: EVChargerState,
-        departure_constraint: tuple[float, float] | None,
-        preferred_soc: float,
-        interval_duration: float,
-        time_until_departure: float | None = None,
-    ) -> FlexibilityEnvelope:
-        """Estimate feasible charging power range.
-
-        Q_min: minimum charge rate to meet departure SOC constraint
-            in the remaining time (may be > 0 if deadline is close).
-        Q_max: maximum charge rate allowed by EVSE and BMS.
-        Q_baseline: charge rate to reach preferred SOC by departure.
-
-        Args:
-            state: Current EV charger state.
-                INTERNAL: From F1.
-            departure_constraint: (departure_time, min_soc) tuple.
-                INTERNAL: From DataStreamManager constraint stream.
-                EXTERNAL origin: Customer EV app input.
-            preferred_soc: Customer's desired SOC (fraction).
-                INTERNAL: From DataStreamManager schedule stream.
-                EXTERNAL origin: Customer setting.
-            interval_duration: Market interval (seconds).
-            time_until_departure: Seconds until departure. If None,
-                no departure constraint is applied.
-
-        Returns:
-            FlexibilityEnvelope. Q_min = 0 if no vehicle plugged in.
-        """
-        if not state.vehicle_plugged_in:
-            return FlexibilityEnvelope(
-                Q_min=0.0,
-                Q_max=0.0,
-                Q_baseline=0.0,
-                interval_start=0.0,
-                interval_end=interval_duration,
-            )
-
-        max_rate = state.max_charge_rate
-        if state.soc >= state.soc_at_max_taper:
-            taper = max(0.0, (1.0 - state.soc) / (1.0 - state.soc_at_max_taper))
-            Q_max = max_rate * taper
-        else:
-            Q_max = max_rate
-
-        Q_min = 0.0
-        if (
-            departure_constraint is not None
-            and time_until_departure is not None
-            and time_until_departure > 0
-        ):
-            _, target_soc = departure_constraint
-            soc_needed = target_soc - state.soc
-            if soc_needed > 0:
-                energy_needed = (
-                    soc_needed * state.battery_capacity / state.charger_efficiency
-                )
-                min_power = energy_needed / (time_until_departure / 3600.0)
-                Q_min = min(min_power, Q_max)
-
-        soc_gap = preferred_soc - state.soc
-        if soc_gap > 0:
-            energy = soc_gap * state.battery_capacity / state.charger_efficiency
-            if time_until_departure and time_until_departure > 0:
-                Q_baseline = min(energy / (time_until_departure / 3600.0), Q_max)
-            else:
-                Q_baseline = min(energy / (interval_duration / 3600.0), Q_max)
-        else:
-            Q_baseline = 0.0
-        Q_baseline = max(Q_baseline, Q_min)
-
-        return FlexibilityEnvelope(
-            Q_min=Q_min,
-            Q_max=Q_max,
-            Q_baseline=Q_baseline,
-            interval_start=0.0,
-            interval_end=interval_duration,
-        )
-
-    def power_to_command(self, target_power_kw: float, state: EVChargerState) -> float:
-        """Convert target power to actual charge rate command.
-
-        Applies BMS taper limits and EVSE min/max constraints.
-
-        Args:
-            target_power_kw: Desired power (kW).
-                INTERNAL: From F7.
-            state: Current state.
-                INTERNAL: From F1.
-
-        Returns:
-            Actual charge rate to command (kW). May differ from
-            target due to BMS limits.
-        """
-        if not state.vehicle_plugged_in:
-            return 0.0
-
-        if state.soc >= state.soc_at_max_taper:
-            taper = max(0.0, (1.0 - state.soc) / (1.0 - state.soc_at_max_taper))
-            effective_max = state.max_charge_rate * taper
-        else:
-            effective_max = state.max_charge_rate
-
-        command = max(0.0, min(target_power_kw, effective_max))
-        if 0 < command < state.min_charge_rate:
-            command = 0.0
-        return command
-
-
-class BatteryModel:
-    """Model of a home battery storage system with degradation tracking.
-
-    Handles:
-    - SOC dynamics with charge/discharge efficiency
-    - SOC-dependent power limits (BMS taper)
-    - Degradation cost calculation (throughput-based with stress factors)
-    - Marginal value of stored energy (from planning optimizer)
-    """
-
-    def __init__(
-        self,
-        replacement_cost: float = 10000.0,
-        rated_cycles: int = 5000,
-        rated_dod: float = 0.80,
-        wohler_exponent: float = 1.5,
-    ):
-        """Initialize battery model with degradation parameters.
-
-        Args:
-            replacement_cost: Cost to replace the battery ($).
-                EXTERNAL: From battery specifications / installer quote.
-            rated_cycles: Cycle life at rated DoD.
-                EXTERNAL: From manufacturer datasheet.
-            rated_dod: Depth of discharge for rated cycle life (fraction).
-                EXTERNAL: From manufacturer datasheet.
-            wohler_exponent: Fatigue curve exponent for cycle depth
-                adjustment. Higher values mean shallow cycles are
-                disproportionately cheaper.
-                EXTERNAL: From battery characterization data.
-        """
-        self._replacement_cost = replacement_cost
-        self._rated_cycles = rated_cycles
-        self._rated_dod = rated_dod
-        self._wohler_exponent = wohler_exponent
-        self._cumulative_throughput_kwh: float = 0.0
-        self._cumulative_degradation_cost: float = 0.0
-        self._energy_capacity: float = 13.5  # default; updated from state
-
-    def predict_soc(
-        self,
-        state: BatteryState,
-        power_kw: float,
-        duration_seconds: float,
-        timestep_seconds: float = 60.0,
-    ) -> list[tuple[float, float]]:
-        """Predict SOC trajectory at a given power level.
-
-        Args:
-            state: Current battery state from GridLAB-D.
-                INTERNAL: From F1.
-            power_kw: Power flow (kW). Positive = charging,
-                negative = discharging.
-            duration_seconds: Prediction horizon.
-            timestep_seconds: Integration timestep.
-
-        Returns:
-            List of (time_offset_seconds, predicted_soc).
-        """
-        self._energy_capacity = state.energy_capacity
-        soc = state.soc
-        capacity = state.energy_capacity
-        eta = math.sqrt(state.round_trip_efficiency)
-
-        trajectory: list[tuple[float, float]] = []
-        n_steps = int(duration_seconds / timestep_seconds)
-        dt_hr = timestep_seconds / 3600.0
-
-        for i in range(n_steps):
-            t = (i + 1) * timestep_seconds
-            if power_kw >= 0:
-                energy_stored = power_kw * eta * dt_hr
-            else:
-                energy_stored = power_kw / eta * dt_hr
-            soc += energy_stored / capacity
-            soc = max(state.soc_min_bms, min(state.soc_max_bms, soc))
-            trajectory.append((t, soc))
-
-        return trajectory
-
-    def estimate_flexibility(
-        self,
-        state: BatteryState,
-        soc_reserve: float,
-        soc_preferred: float,
-        interval_duration: float,
-    ) -> FlexibilityEnvelope:
-        """Estimate feasible charge/discharge power range.
-
-        Returns a bidirectional envelope where Q_min is negative
-        (maximum discharge) and Q_max is positive (maximum charge).
-
-        Args:
-            state: Current battery state.
-                INTERNAL: From F1.
-            soc_reserve: Hard minimum SOC (backup reserve).
-                INTERNAL: From DataStreamManager constraint stream.
-                EXTERNAL origin: Customer setting, dynamic outage risk.
-            soc_preferred: Customer's comfortable SOC level.
-                INTERNAL: From DataStreamManager schedule stream.
-                EXTERNAL origin: Customer setting.
-            interval_duration: Market interval (seconds).
-
-        Returns:
-            FlexibilityEnvelope. Q_min < 0 (discharge), Q_max > 0 (charge).
-        """
-        self._energy_capacity = state.energy_capacity
-        eta = math.sqrt(state.round_trip_efficiency)
-        ih = interval_duration / 3600.0
-        capacity = state.energy_capacity
-
-        dischargeable = (state.soc - soc_reserve) * capacity
-        if dischargeable > 0:
-            max_discharge = min(state.max_discharge_rate, dischargeable / ih * eta)
-        else:
-            max_discharge = 0.0
-        Q_min = -max_discharge
-
-        chargeable = (state.soc_max_bms - state.soc) * capacity
-        if chargeable > 0:
-            max_charge = min(state.max_charge_rate, chargeable / (ih * eta))
-        else:
-            max_charge = 0.0
-        Q_max = max_charge
-
-        if abs(state.soc - soc_preferred) < 0.01:
-            Q_baseline = 0.0
-        elif state.soc < soc_preferred:
-            needed = (soc_preferred - state.soc) * capacity
-            Q_baseline = min(Q_max, needed / (ih * eta))
-        else:
-            excess = (state.soc - soc_preferred) * capacity
-            Q_baseline = max(Q_min, -(excess * eta / ih))
-
-        return FlexibilityEnvelope(
-            Q_min=Q_min,
-            Q_max=Q_max,
-            Q_baseline=Q_baseline,
-            interval_start=0.0,
-            interval_end=interval_duration,
-        )
-
-    def marginal_degradation_cost(self, state: BatteryState, power_kw: float) -> float:
-        """Compute the marginal degradation cost of cycling at given power.
-
-        Accounts for:
-        - Base throughput cost (replacement_cost / lifetime_throughput)
-        - SOC stress factor (elevated at extreme SOC)
-        - C-rate stress factor (elevated at high power)
-        - Temperature stress factor (elevated at temperature extremes)
-
-        Args:
-            state: Current battery state (SOC, temperature).
-                INTERNAL: From F1.
-            power_kw: Absolute power magnitude (kW).
-
-        Returns:
-            Marginal degradation cost ($/kWh of throughput).
-        """
-        self._energy_capacity = state.energy_capacity
-        capacity = state.energy_capacity
-        lifetime_throughput = self._rated_cycles * self._rated_dod * capacity * 2.0
-        base_cost = self._replacement_cost / lifetime_throughput
-
-        soc_stress = 1.0 + 2.0 * (state.soc - 0.5) ** 2
-        c_rate = abs(power_kw) / capacity
-        crate_stress = 1.0 + 0.5 * c_rate
-        temp_stress = 1.0 + 0.05 * abs(state.cell_temperature - 25.0)
-
-        return base_cost * soc_stress * crate_stress * temp_stress
-
-    def compute_charge_discharge_thresholds(
-        self, state: BatteryState, V_stored: float, degradation_cost: float
-    ) -> tuple[float, float]:
-        """Compute the price thresholds for charging and discharging.
-
-        Charge threshold: price below which charging is profitable.
-        Discharge threshold: price above which discharging is profitable.
-        The gap between them is the degradation-driven dead band.
-
-        Args:
-            state: Current battery state.
-                INTERNAL: From F1.
-            V_stored: Marginal value of stored energy ($/kWh).
-                INTERNAL: From PlanningOptimizer output.
-            degradation_cost: Current marginal degradation cost ($/kWh).
-                INTERNAL: From self.marginal_degradation_cost().
-
-        Returns:
-            (charge_threshold, discharge_threshold) in $/kWh.
-        """
-        charge_threshold = V_stored - degradation_cost
-        discharge_threshold = V_stored + degradation_cost
-        return (charge_threshold, discharge_threshold)
-
-    def update_degradation_tracking(
-        self,
-        throughput_kwh: float,
-        avg_soc: float,
-        avg_power_kw: float,
-        avg_temperature: float,
-        duration_seconds: float,
-    ) -> float:
-        """Update cumulative degradation tracking after delivery.
-
-        Called during reconciliation (F13) to track actual battery
-        life consumption.
-
-        Args:
-            throughput_kwh: Total energy throughput in the period.
-            avg_soc: Average SOC during the period.
-            avg_power_kw: Average absolute power during the period.
-            avg_temperature: Average cell temperature (°C).
-            duration_seconds: Length of the period.
-
-        Returns:
-            Degradation cost incurred in this period ($).
-        """
-        capacity = self._energy_capacity
-        lifetime_throughput = self._rated_cycles * self._rated_dod * capacity * 2.0
-        base_cost_per_kwh = self._replacement_cost / lifetime_throughput
-
-        soc_stress = 1.0 + 2.0 * (avg_soc - 0.5) ** 2
-        c_rate = avg_power_kw / capacity
-        crate_stress = 1.0 + 0.5 * c_rate
-        temp_stress = 1.0 + 0.05 * abs(avg_temperature - 25.0)
-
-        cost = (
-            base_cost_per_kwh * soc_stress * crate_stress * temp_stress * throughput_kwh
-        )
-
-        self._cumulative_throughput_kwh += throughput_kwh
-        self._cumulative_degradation_cost += cost
-        return cost
-
-    @property
-    def budget_utilization_rate(self) -> float:
-        """Ratio of actual degradation rate to planned rate.
-
-        > 1.0 means cycling faster than expected (raise costs).
-        < 1.0 means cycling slower than expected (could lower costs).
-
-        Returns:
-            Budget utilization ratio.
-        """
-        if self._cumulative_throughput_kwh == 0.0:
-            return 0.0
-        capacity = self._energy_capacity
-        lifetime_throughput = self._rated_cycles * self._rated_dod * capacity * 2.0
-        base_cost_per_kwh = self._replacement_cost / lifetime_throughput
-        actual_rate = (
-            self._cumulative_degradation_cost / self._cumulative_throughput_kwh
-        )
-        return actual_rate / base_cost_per_kwh

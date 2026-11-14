@@ -8,7 +8,7 @@
 
 from .data_types import BidCurve, BidPoint, ClearingResult, MarketTimingParams
 from .enums_and_constants import MarketType
-from .market_operator import DSOInflexibleLoadBid, MarketOperator, SupplyCurve
+from .markets.market_operator import DSOInflexibleLoadBid, MarketOperator, SupplyCurve
 from .market_state_machine import RT_TIMING, MarketStateMachine
 
 

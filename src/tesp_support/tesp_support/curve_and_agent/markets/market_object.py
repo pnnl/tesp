@@ -6,7 +6,9 @@
 
 from typing import Any
 
-from .data_types import (
+from tesp_support.tesp_support.curve_and_agent.abstractions.abstract_bases import AbstractMarketObject
+
+from ..data_types import (
     AdvisoryRecord,
     BidCurve,
     ClearingResult,
@@ -15,7 +17,7 @@ from .data_types import (
     PerformanceEntry,
     SettlementRecord,
 )
-from .enums_and_constants import (
+from ..enums_and_constants import (
     IterationType,
     MarketPhase,
     MarketType,
@@ -58,7 +60,7 @@ _PHASE_TO_NEXT_PHASE = {
 }
 
 
-class MarketObject:
+class MarketObject(AbstractMarketObject):
     """State machine and data container for one market cycle.
 
     Each market product the agent participates in is represented by

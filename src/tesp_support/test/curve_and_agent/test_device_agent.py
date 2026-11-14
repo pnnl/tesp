@@ -49,9 +49,9 @@ from tesp_support.curve_and_agent.enums_and_constants import (
     OperatingMode,
     PenaltyStructureType,
 )
-from tesp_support.curve_and_agent.market_object import MarketObject
+from tesp_support.tesp_support.curve_and_agent.markets.market_object import MarketObject
 from tesp_support.curve_and_agent.penalty_model import PenaltyModel
-from tesp_support.curve_and_agent.preference_curve import PreferenceCurve
+from tesp_support.tesp_support.curve_and_agent.economics.preference_curves import PreferenceCurve
 
 # ===================================================================
 # Fixtures

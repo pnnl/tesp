@@ -16,7 +16,7 @@ from pyso.engine import DataProvider, EnergyMarket
 from pyso.marketmodels.market import BasicMarket, MarketTiming
 
 from .data_types import BidCurve, BidPoint, ClearingResult
-from .market_operator import SupplyCurve
+from .markets.market_operator import SupplyCurve
 
 # Real-time energy market in PySO's native timing form: bid for 4 min, then clear.
 RT_TIMING = {

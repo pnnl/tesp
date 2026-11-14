@@ -21,7 +21,7 @@ from tesp_support.curve_and_agent.enums_and_constants import IterationType, Mark
 
 RT = MarketType.RT_ENERGY
 
-from tesp_support.curve_and_agent.market_operator import (
+from tesp_support.tesp_support.curve_and_agent.markets.market_operator import (
     DSOInflexibleLoadBid,
     DSOLoadEstimationEngine,
     MarketOperator,

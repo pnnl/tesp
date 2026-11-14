@@ -13,7 +13,7 @@ from tesp_support.curve_and_agent.data_types import (
     DeliveryEconomics,
     DispatchSolution,
 )
-from tesp_support.curve_and_agent.dispatch_optimizer import (
+from tesp_support.tesp_support.curve_and_agent.economics.dispatch_optimizer import (
     DeliveryValueCalculator,
     DispatchOptimizer,
 )
@@ -22,7 +22,7 @@ from tesp_support.curve_and_agent.enums_and_constants import (
     PenaltyStructureType,
     ProductType,
 )
-from tesp_support.curve_and_agent.preference_curve import PreferenceCurve
+from tesp_support.tesp_support.curve_and_agent.economics.preference_curves import PreferenceCurve
 
 # ===================================================================
 # Fixtures

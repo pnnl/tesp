@@ -7,7 +7,7 @@
 
 from typing import Any
 
-from .command_arbiter import CommandArbiter
+from .economics.command_arbiter import CommandArbiter
 from .data_streams import DataStreamManager
 from .data_types import (
     AdvisoryRecord,
@@ -23,7 +23,7 @@ from .data_types import (
     SettlementRecord,
 )
 from .device_models import BatteryModel, EVChargerModel, HVACModel, WaterHeaterModel
-from .dispatch_optimizer import DeliveryValueCalculator, DispatchOptimizer
+from .economics.dispatch_optimizer import DeliveryValueCalculator, DispatchOptimizer
 from .enums_and_constants import (
     DeviceType,
     IterationType,
@@ -32,14 +32,14 @@ from .enums_and_constants import (
     OperatingMode,
     ProductType,
 )
-from .flexibility_ledger import FlexibilityLedger
-from .gridlabd_interface import GridLABDInterface
+from .economics.flexibility_ledger import FlexibilityLedger
+from .simulators.gridlabd_interface import GridLABDInterface
 from .market_agent import MarketCommunicationInterface
-from .market_object import MarketObject
+from .markets.market_object import MarketObject
 from .penalty_model import PenaltyModel
-from .planning_optimizer import PlanningOptimizer
-from .preference_curve import PreferenceCurve
-from .price_forecast_service import PriceForecastService
+from .economics.planning_optimizer import PlanningOptimizer
+from .economics.preference_curves import PreferenceCurve
+from .forecasting.price_forecast_service import PriceForecastService
 
 
 class DeviceAgent:

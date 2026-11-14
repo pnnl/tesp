@@ -68,15 +68,15 @@ from tesp_support.curve_and_agent.enums_and_constants import (
     OperatingMode,
     PenaltyStructureType,
 )
-from tesp_support.curve_and_agent.gridlabd_interface import GridLABDInterface
+from tesp_support.tesp_support.curve_and_agent.simulators.gridlabd_interface import GridLABDInterface
 from tesp_support.curve_and_agent.market_agent import MarketCommunicationInterface
-from tesp_support.curve_and_agent.market_operator import (
+from tesp_support.tesp_support.curve_and_agent.markets.market_operator import (
     DSOLoadEstimationEngine,
     MarketOperator,
     SupplyCurve,
 )
 from tesp_support.curve_and_agent.penalty_model import PenaltyModel
-from tesp_support.curve_and_agent.preference_curve import PreferenceCurve
+from tesp_support.tesp_support.curve_and_agent.economics.preference_curves import PreferenceCurve
 
 # =====================================================================
 # Shared helpers — real objects, no mocks
@@ -682,7 +682,7 @@ class TestAggregateDemandHorizontalSum:
         )
         mo.set_supply_curve(_make_supply())
         inflex_qty = 200.0
-        from tesp_support.curve_and_agent.market_operator import DSOInflexibleLoadBid
+        from tesp_support.tesp_support.curve_and_agent.markets.market_operator import DSOInflexibleLoadBid
 
         dso_bid = DSOInflexibleLoadBid(
             feeder_id="feeder_1",
@@ -725,7 +725,7 @@ class TestAggregateDemandHorizontalSum:
             n_informational=0,
         )
         mo.set_supply_curve(_make_supply())
-        from tesp_support.curve_and_agent.market_operator import DSOInflexibleLoadBid
+        from tesp_support.tesp_support.curve_and_agent.markets.market_operator import DSOInflexibleLoadBid
 
         dso_bid = DSOInflexibleLoadBid(
             feeder_id="feeder_1",
@@ -778,7 +778,7 @@ class TestSetpointResponseToPrice:
             n_informational=0,
         )
         mo.set_supply_curve(_make_supply())
-        from tesp_support.curve_and_agent.market_operator import DSOInflexibleLoadBid
+        from tesp_support.tesp_support.curve_and_agent.markets.market_operator import DSOInflexibleLoadBid
 
         dso_bid = DSOInflexibleLoadBid(
             feeder_id="feeder_1",
@@ -819,7 +819,7 @@ class TestSetpointResponseToPrice:
             n_informational=0,
         )
         mo.set_supply_curve(_make_supply())
-        from tesp_support.curve_and_agent.market_operator import DSOInflexibleLoadBid
+        from tesp_support.tesp_support.curve_and_agent.markets.market_operator import DSOInflexibleLoadBid
 
         # Very low inflexible demand → low clearing price
         dso_bid = DSOInflexibleLoadBid(
@@ -872,7 +872,7 @@ class TestIterationProtocol:
             n_informational=2,
         )
         mo.set_supply_curve(_make_supply())
-        from tesp_support.curve_and_agent.market_operator import DSOInflexibleLoadBid
+        from tesp_support.tesp_support.curve_and_agent.markets.market_operator import DSOInflexibleLoadBid
 
         dso_bid = DSOInflexibleLoadBid(
             feeder_id="feeder_1",
@@ -912,7 +912,7 @@ class TestIterationProtocol:
             n_informational=0,
         )
         mo.set_supply_curve(_make_supply())
-        from tesp_support.curve_and_agent.market_operator import DSOInflexibleLoadBid
+        from tesp_support.tesp_support.curve_and_agent.markets.market_operator import DSOInflexibleLoadBid
 
         dso_bid = DSOInflexibleLoadBid(
             feeder_id="feeder_1",
@@ -953,7 +953,7 @@ class TestDeliveryFulfillment:
             n_informational=0,
         )
         mo.set_supply_curve(_make_supply())
-        from tesp_support.curve_and_agent.market_operator import DSOInflexibleLoadBid
+        from tesp_support.tesp_support.curve_and_agent.markets.market_operator import DSOInflexibleLoadBid
 
         dso_bid = DSOInflexibleLoadBid(
             feeder_id="feeder_1",
@@ -1026,7 +1026,7 @@ class TestPopulationLevelBehaviors:
             n_informational=0,
         )
         mo.set_supply_curve(_make_supply())
-        from tesp_support.curve_and_agent.market_operator import DSOInflexibleLoadBid
+        from tesp_support.tesp_support.curve_and_agent.markets.market_operator import DSOInflexibleLoadBid
 
         # High inflexible demand to push price up
         dso_bid = DSOInflexibleLoadBid(
@@ -1262,7 +1262,7 @@ class TestMultiAgentReproducibility:
                 n_informational=0,
             )
             mo.set_supply_curve(_make_supply())
-            from tesp_support.curve_and_agent.market_operator import (
+            from tesp_support.tesp_support.curve_and_agent.markets.market_operator import (
                 DSOInflexibleLoadBid,
             )
 
@@ -1682,7 +1682,7 @@ class TestWaterHeaterRTCycle:
             n_informational=0,
         )
         self.mo.set_supply_curve(_make_supply())
-        from tesp_support.curve_and_agent.market_operator import DSOInflexibleLoadBid
+        from tesp_support.tesp_support.curve_and_agent.markets.market_operator import DSOInflexibleLoadBid
 
         dso_bid = DSOInflexibleLoadBid(
             feeder_id="feeder_1",
@@ -1799,7 +1799,7 @@ class TestEVChargerRTCycle:
             n_informational=0,
         )
         self.mo.set_supply_curve(_make_supply())
-        from tesp_support.curve_and_agent.market_operator import DSOInflexibleLoadBid
+        from tesp_support.tesp_support.curve_and_agent.markets.market_operator import DSOInflexibleLoadBid
 
         dso_bid = DSOInflexibleLoadBid(
             feeder_id="feeder_1",
@@ -1919,7 +1919,7 @@ class TestBatteryRTCycle:
             n_informational=0,
         )
         self.mo.set_supply_curve(_make_supply())
-        from tesp_support.curve_and_agent.market_operator import DSOInflexibleLoadBid
+        from tesp_support.tesp_support.curve_and_agent.markets.market_operator import DSOInflexibleLoadBid
 
         dso_bid = DSOInflexibleLoadBid(
             feeder_id="feeder_1",
@@ -2035,7 +2035,7 @@ class TestHVACHeatPumpRTCycle:
             n_informational=0,
         )
         self.mo.set_supply_curve(_make_supply())
-        from tesp_support.curve_and_agent.market_operator import DSOInflexibleLoadBid
+        from tesp_support.tesp_support.curve_and_agent.markets.market_operator import DSOInflexibleLoadBid
 
         dso_bid = DSOInflexibleLoadBid(
             feeder_id="feeder_1",
@@ -2096,7 +2096,7 @@ class TestMixedDeviceTypesMarket:
             n_informational=0,
         )
         self.mo.set_supply_curve(_make_supply())
-        from tesp_support.curve_and_agent.market_operator import DSOInflexibleLoadBid
+        from tesp_support.tesp_support.curve_and_agent.markets.market_operator import DSOInflexibleLoadBid
 
         dso_bid = DSOInflexibleLoadBid(
             feeder_id="feeder_1",
@@ -2185,7 +2185,7 @@ class TestDAMarketAllDeviceTypes:
             n_informational=1,
         )
         mo.set_supply_curve(_make_supply())
-        from tesp_support.curve_and_agent.market_operator import DSOInflexibleLoadBid
+        from tesp_support.tesp_support.curve_and_agent.markets.market_operator import DSOInflexibleLoadBid
 
         dso_bid = DSOInflexibleLoadBid(
             feeder_id="feeder_1",

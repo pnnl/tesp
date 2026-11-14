@@ -13,7 +13,7 @@ pytest.importorskip("pyso")
 pytest.importorskip("egret")
 
 from tesp_support.curve_and_agent.data_types import BidCurve, BidPoint
-from tesp_support.curve_and_agent.market_operator import SupplyCurve
+from tesp_support.tesp_support.curve_and_agent.markets.market_operator import SupplyCurve
 from tesp_support.curve_and_agent.pyso_dso import PySODSO
 from tesp_support.curve_and_agent.pyso_tso import PySOTSO
 

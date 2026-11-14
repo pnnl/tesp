@@ -13,7 +13,7 @@ from tesp_support.curve_and_agent.enums_and_constants import (
     MarketType,
     ProductType,
 )
-from tesp_support.curve_and_agent.flexibility_ledger import (
+from tesp_support.tesp_support.curve_and_agent.economics.flexibility_ledger import (
     EconomicEnvelope,
     FlexibilityLedger,
 )

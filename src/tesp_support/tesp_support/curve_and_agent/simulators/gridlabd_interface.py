@@ -21,17 +21,19 @@
 
 from typing import Any
 
-from .data_types import (
+from tesp_support.tesp_support.curve_and_agent.abstractions.simulator_interface import AbstractSimulatorInterface
+
+from ..data_types import (
     BatteryState,
     DeviceCommand,
     EVChargerState,
     HVACState,
     WaterHeaterState,
 )
-from .enums_and_constants import DeviceType
+from ..enums_and_constants import DeviceType
 
 
-class GridLABDInterface:
+class GridLABDInterface(AbstractSimulatorInterface):
     """Abstraction layer for reading device state from and writing control
     commands to GridLAB-D simulation objects.
 

@@ -23,13 +23,13 @@ Testing strategy:
 from unittest.mock import MagicMock
 
 import pytest
-from tesp_support.curve_and_agent.command_arbiter import CommandArbiter, DeliveryRecord
+from tesp_support.tesp_support.curve_and_agent.economics.command_arbiter import CommandArbiter, DeliveryRecord
 from tesp_support.curve_and_agent.data_types import (
     FlexibilityEnvelope,
     FulfillmentRecord,
     HVACState,
 )
-from tesp_support.curve_and_agent.dispatch_optimizer import (
+from tesp_support.tesp_support.curve_and_agent.economics.dispatch_optimizer import (
     DeliveryValueCalculator,
     DispatchOptimizer,
 )
@@ -39,7 +39,7 @@ from tesp_support.curve_and_agent.enums_and_constants import (
     PenaltyStructureType,
 )
 from tesp_support.curve_and_agent.penalty_model import PenaltyModel
-from tesp_support.curve_and_agent.preference_curve import PreferenceCurve
+from tesp_support.tesp_support.curve_and_agent.economics.preference_curves import PreferenceCurve
 
 # ===================================================================
 # Fixtures

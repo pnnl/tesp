@@ -637,3 +637,38 @@ class PlanningResult:
     total_cost: float = 0.0
     total_revenue: float = 0.0
     cycles_consumed: float = 0.0
+
+
+@dataclass
+class DSOInflexibleLoadBid:
+    """Represents the DSO's bid for all inflexible load on a feeder.
+
+    This is a perfectly inelastic demand bid (vertical line) at the
+    estimated aggregate inflexible load.
+
+    The DSO constructs this by:
+    1. Forecasting total feeder gross load
+    2. Subtracting expected flexible device consumption (from agent
+    bids and advisory commitments)
+    3. Adding distribution losses
+    4. Subtracting aggregate BTM solar export
+
+    Attributes:
+        feeder_id: Which distribution feeder this bid covers.
+        quantity: Perfectly inelastic demand (kW).
+            EXTERNAL: From DSO's load estimation engine.
+        interval: Time interval this bid covers.
+        components: Breakdown of the bid quantity.
+    """
+
+    def __init__(
+        self,
+        feeder_id: str,
+        quantity: float,
+        interval: tuple[float, float],
+        components: dict[str, float] | None = None,
+    ):
+        self.feeder_id = feeder_id
+        self.quantity = quantity
+        self.interval = interval
+        self.components = components or {}

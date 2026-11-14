@@ -10,7 +10,7 @@ Ground truth:
 
 import pytest
 from tesp_support.curve_and_agent.enums_and_constants import MarketType
-from tesp_support.curve_and_agent.price_forecast_service import (
+from tesp_support.tesp_support.curve_and_agent.forecasting.price_forecast_service import (
     PriceForecastService,
 )
 

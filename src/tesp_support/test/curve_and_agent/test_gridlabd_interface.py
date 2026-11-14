@@ -26,7 +26,7 @@ from tesp_support.curve_and_agent.data_types import (
     WaterHeaterState,
 )
 from tesp_support.curve_and_agent.enums_and_constants import DeviceType
-from tesp_support.curve_and_agent.gridlabd_interface import GridLABDInterface
+from tesp_support.tesp_support.curve_and_agent.simulators.gridlabd_interface import GridLABDInterface
 
 # ===================================================================
 # Fixtures
