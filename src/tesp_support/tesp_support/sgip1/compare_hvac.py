@@ -99,7 +99,7 @@ def compare_hvac():
     tmax = 48.0
     xticks = [0, 6, 12, 18, 24, 30, 36, 42, 48]
 
-    fig, ax = plt.subplots(3, 1, sharex='col')
+    _fig, ax = plt.subplots(3, 1, sharex='col')
 
     for root in casefiles:
         print('Processing', root[0])

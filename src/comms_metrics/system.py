@@ -107,7 +107,7 @@ class MeterNetwork:
         else:
             head1, tail1 = os.path.split(excel_file)
             feeder = tail1
-            head2, tail2 = os.path.split(head1)
+            _head2, tail2 = os.path.split(head1)
             model_name = tail2
         # Grabbing the metadata we care about:
         #   NOTE: This function assumes that the order of the
@@ -174,7 +174,7 @@ class MeterNetwork:
         else:
             head1, tail1 = os.path.split(csv_file)
             feeder = tail1
-            head2, tail2 = os.path.split(head1)
+            _head2, tail2 = os.path.split(head1)
             model_name = tail2
         # Grabbing the metadata we care about:
         #   NOTE: This function assumes that the order of the
@@ -246,7 +246,7 @@ class MeterNetwork:
         else:
             head1, tail1 = os.path.split(json_file)
             feeder = tail1[0:-5]
-            head2, tail2 = os.path.split(head1)
+            _head2, tail2 = os.path.split(head1)
             model_name = tail2
         # Grabbing the data we care about:
         #   NOTE: This function assumes the first

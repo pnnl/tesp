@@ -19,13 +19,11 @@
 #
 import os
 import sys
-#sys.path.insert(0, os.path.abspath('.'))
-sys.path.insert(0, os.path.abspath('../src/tesp_support'))
-#sys.path.insert(0, os.path.abspath('../../install/Linux'))
-#sys.path.insert(0, os.path.abspath('../../install/MacOSX'))
-#sys.path.insert(0, os.path.abspath('../../install/Windows'))
-#sys.path.insert(0, os.path.abspath('../examples/capabilities'))
 
+sys.path.insert(0, os.path.abspath('../src/tesp_support'))
+
+#cmd = "./make_apidoc.sh"
+#subprocess.Popen(cmd, shell=True).wait()
 
 # -- General configuration ------------------------------------------------
 
@@ -33,15 +31,13 @@ sys.path.insert(0, os.path.abspath('../src/tesp_support'))
 from recommonmark.parser import CommonMarkParser
 
 # If your documentation needs a minimal Sphinx version, state it here.
-#
-needs_sphinx = '3.5.1'
+needs_sphinx = '8.2.3'
+# Old '3.5.1'
 
 # Add any Sphinx extension module names here, as strings. They can be
-# extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
-# ones.
+# extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 
 numfig = True
-
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.imgmath',
               'sphinx.ext.githubpages',

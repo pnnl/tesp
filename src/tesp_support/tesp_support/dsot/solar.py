@@ -82,7 +82,7 @@ def truncate(f, n=3):
     s = f'{f}'
     if 'e' in s or 'E' in s:
         return '{0:.{1}f}'.format(f, n)
-    i, p, d = s.partition('.')
+    i, _p, d = s.partition('.')
     trunc_val = '.'.join([i, (d + '0' * n)[:n]])
     return trunc_val
 
@@ -615,7 +615,7 @@ def download_nsrdb_data(dso_meta, solar_meta, output_path):
         # Doing the quick and dirty for thing for now...
         downloaded_count = 0
         for file in file_list:
-            name, ext = os.path.splitext(file)
+            _name, ext = os.path.splitext(file)
             if ext == '.csv':
                 downloaded_count = downloaded_count + 1
         files_to_download = total_count - downloaded_count
@@ -842,7 +842,7 @@ def aggregate_scale_solar_pv_profiles(dso_meta, solar_meta, output_path):
         each DSO, updated to include the scaled and aggregated
         utility-scale and dsitributed solar profiles.
     """
-    head, tail = os.path.split(output_path)
+    head, _tail = os.path.split(output_path)
     filename = 'DSOT solar PV capacities.csv'
     outpath = os.path.join(head, filename)
     dso_cap_fh = _open_file(outpath, 'w')
@@ -1093,11 +1093,11 @@ def create_graphs(dso_meta, type):
                 plt.xlabel('Date')
                 plt.ylabel('Output Power (MW)')
                 if idx < 200:
-                    head, tail = os.path.split(dso['utility power profile path'])
+                    head, _tail = os.path.split(dso['utility power profile path'])
                     filename = os.path.join(head, 'DSO {} {} Solar PV Profile'
                                                   ''.format(dso['200-bus'], month_name_list[idx2]))
                 else:
-                    head, tail = os.path.split(dso['dist power profile '
+                    head, _tail = os.path.split(dso['dist power profile '
                                                    'path'])
                     filename = os.path.join(head, '8-node DSO {} {} Solar PV Profile'
                                                   ''.format(['8-node dso num'], month_name_list[idx2]))
@@ -1123,13 +1123,13 @@ def create_graphs(dso_meta, type):
                 plt.xlabel('Date')
                 plt.ylabel('Output Power (MW)')
                 if idx < 200:
-                    head, tail = os.path.split(
+                    head, _tail = os.path.split(
                         dso['utility power profile path'])
                     filename = os.path.join(head, 'DSO {} {} Solar PV '
                                                   'Forecast Comparison'.format(
                         dso['200-bus'], month_name_list[idx2]))
                 else:
-                    head, tail = os.path.split(dso['dist power profile '
+                    head, _tail = os.path.split(dso['dist power profile '
                                                    'path'])
                     filename = os.path.join(head,
                                             '8-node DSO {} {} Solar PV '
@@ -1247,7 +1247,7 @@ def create_hourly_solar_forecast(dso_meta, dso_type, rng_seed):
             dso_meta[idx]['utility forecast profile'] = forecast_profile
 
             filename = 'DSO_{}_utility_hourly_forecast_power_profile.csv'.format(dso_meta[idx]['200-bus'])
-            head, tail = os.path.split(dso_meta[idx]['utility power profile path'])
+            head, _tail = os.path.split(dso_meta[idx]['utility power profile path'])
             outpath = os.path.join(head, filename)
             write_power_profile(outpath, forecast_profile)
             log.info(f'\t...and saving output forecast file to {outpath}')
@@ -1262,7 +1262,7 @@ def create_hourly_solar_forecast(dso_meta, dso_type, rng_seed):
                 idx)
             dso_meta[idx]['dist forecast profile'] = forecast_profile
             filename = 'DSO_{}_dist_hourly_forecast_power_profile.csv'.format(dso_meta[idx]['200-bus'])
-            head, tail = os.path.split(dso_meta[idx]['dist power profile path'])
+            head, _tail = os.path.split(dso_meta[idx]['dist power profile path'])
             outpath = os.path.join(head, filename)
             write_power_profile(outpath, forecast_profile)
             log.info(f'\t...and saving output forecast file to {outpath}')
@@ -1277,7 +1277,7 @@ def create_hourly_solar_forecast(dso_meta, dso_type, rng_seed):
                 idx)
             dso_meta[idx]['utility forecast profile'] = forecast_profile
             filename = '8-node DSO_{}_utility_hourly_forecast_power_profile.csv'.format(dso_meta[idx]['8-node dso num'])
-            head, tail = os.path.split(dso_meta[idx]['utility power profile path'])
+            head, _tail = os.path.split(dso_meta[idx]['utility power profile path'])
             outpath = os.path.join(head, filename)
             write_power_profile(outpath, forecast_profile)
             log.info(f'\t...and saving output forecast file to {outpath}')
@@ -1296,11 +1296,11 @@ def create_hourly_solar_forecast(dso_meta, dso_type, rng_seed):
     # Creating single file for all distributed DSO solar PV forecasts
     if dso_type == 200:
         filename = '200-node_dist_hourly_forecast_power.csv'
-        head, tail = os.path.split(dso_meta[idx]['dist power profile path'])
+        head, _tail = os.path.split(dso_meta[idx]['dist power profile path'])
     else:
         filename = '8-node_dist_hourly_forecast_power.csv'
-        head, tail = os.path.split(dso_meta[idx]['dist power profile path'])
-    head, tail = os.path.split(head)
+        head, _tail = os.path.split(dso_meta[idx]['dist power profile path'])
+    head, _tail = os.path.split(head)
     outpath = os.path.join(head, filename)
     dso_fh = _open_file(outpath, 'w')
     ts = dt.datetime(2015, 12, 29, 0, 0, 0)
@@ -1342,8 +1342,8 @@ def create_hourly_solar_forecast(dso_meta, dso_type, rng_seed):
 
         # Finding path based on previously generated files. The path I need
         #   is one level up from where the DSO-specific data is written
-        head, tail = os.path.split(dso_meta[0]['utility power profile path'])
-        head, tail = os.path.split(head)
+        head, _tail = os.path.split(dso_meta[0]['utility power profile path'])
+        head, _tail = os.path.split(head)
         all_dso_fh = _create_200_node_csv_file_and_headers(filename, head)
 
         # Setting up timestamp for the file
@@ -1437,7 +1437,7 @@ def create_GLD_files(dso_meta):
         time_inc = dt.timedelta(seconds=300)
 
         # Getting the file open and ready for writing...
-        head, tail = os.path.split(dso['dist power profile path'])
+        head, _tail = os.path.split(dso['dist power profile path'])
         if idx < 200:
             filename = 'DSO_{}_5_minute_dist_power.csv'.format(
                 dso['200-bus'])

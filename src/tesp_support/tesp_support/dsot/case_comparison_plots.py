@@ -105,7 +105,7 @@ def customer_bill_component_comparison(cases, data_paths, output_path, dso_num):
 
     matplotlib.style.use('seaborn-v0_8-deep')
 
-    fig, axes = plt.subplots(nrows=1, ncols=len(months), figsize=(max(11,3*len(months)), 10))
+    _fig, axes = plt.subplots(nrows=1, ncols=len(months), figsize=(max(11,3*len(months)), 10))
 
     ax_position = 0
     for month in months:
@@ -126,7 +126,7 @@ def customer_bill_component_comparison(cases, data_paths, output_path, dso_num):
         #                    minor=False, fontsize=28)
         ax.set_xticklabels(labels=cases, rotation=90,
                            minor=False, fontsize=10)
-        handles, labels = ax.get_legend_handles_labels()
+        _handles, _labels = ax.get_legend_handles_labels()
         # ax.legend(Cost_components,
         #           loc='upper right', fontsize=28)
         ax_position += 1
@@ -220,7 +220,7 @@ def customer_monthly_stats(cases, data_paths, output_path, dso_num, cust_class=N
 
     plt.clf()
 
-    fig, axes = plt.subplots(2, 1, figsize=(11, 10), sharex=True)
+    _fig, axes = plt.subplots(2, 1, figsize=(11, 10), sharex=True)
     # pal = ['violet'] + ['lightgreen'] + ["gold"] + ['skyblue']
     pal = ['#e0813e'] + ['#062c49'] + ['#84baa9'] + ['#965c79'] + ["gold"]
     # pal = sns.color_palette("Paired")
@@ -604,7 +604,7 @@ def plot_annual_stats(cases, data_paths, output_path, dso_num, variable):
             else:
                 var2_comparison_df = pd.concat([var2_comparison_df, var2_df])
 
-        fig, axes = plt.subplots(2, 1, figsize=(11, 10), sharex=True)
+        _fig, axes = plt.subplots(2, 1, figsize=(11, 10), sharex=True)
 
         sns.boxplot(data=var_comparison_df, x='Month', y=variable, hue='Case', ax=axes[0], palette=pal)
         axes[0].set_ylabel(units, fontsize=label_size)
@@ -631,9 +631,9 @@ def plot_annual_stats(cases, data_paths, output_path, dso_num, variable):
 
     else:
         if include_stdev:
-            fig, axes = plt.subplots(3, 1, figsize=(11, 10), sharex=True)
+            _fig, axes = plt.subplots(3, 1, figsize=(11, 10), sharex=True)
         else:
-            fig, axes = plt.subplots(2, 1, figsize=(11, 10), sharex=True)
+            _fig, axes = plt.subplots(2, 1, figsize=(11, 10), sharex=True)
 
         if box_plot:
             sns.boxplot(data=var_comparison_df, x='Month', y=variable, hue='Case', ax=axes[0], palette=pal)

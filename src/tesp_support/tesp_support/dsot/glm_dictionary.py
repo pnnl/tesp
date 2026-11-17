@@ -585,7 +585,7 @@ def glm_diction(case_name, feed_key):
     from tesp_support.api.modify_GLM import GLMModifier
 
     glmMod = GLMModifier()
-    glm, success = glmMod.read_model(case_name + '/' + feed_key + '/' + feed_key + '.glm')
+    glm, _success = glmMod.read_model(case_name + '/' + feed_key + '/' + feed_key + '.glm')
 
     billingmeters = {}
     houses = {}

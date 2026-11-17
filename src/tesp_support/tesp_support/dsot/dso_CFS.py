@@ -438,12 +438,12 @@ def dso_CFS(
 
     if TransactiveCaseFlag or SubscriptionCaseFlag:
         (
-            MktOpsLev1Fte,
+            _MktOpsLev1Fte,
             MktOpsFte,
-            MktOpsLev1Cost,
-            MktOpsLeaderRatio,
+            _MktOpsLev1Cost,
+            _MktOpsLeaderRatio,
             MktOpsLabor,
-            MktOpsLeaderLevel,
+            _MktOpsLeaderLevel,
         ) = dso_helper.labor_transactive(
             "market_operations",
             metadata_general,
@@ -453,12 +453,12 @@ def dso_CFS(
             (TransactiveCaseFlag or SubscriptionCaseFlag),
         )
         (
-            DerRecruiterLev1Fte,
+            _DerRecruiterLev1Fte,
             DerRecruiterFte,
-            DerRecruiterLev1Cost,
-            DerRecruiterLeaderRatio,
+            _DerRecruiterLev1Cost,
+            _DerRecruiterLeaderRatio,
             AssetR_R,
-            DerRecruiterLeaderLevel,
+            _DerRecruiterLeaderLevel,
         ) = dso_helper.labor_transactive(
             "DER_recruiter",
             metadata_general,
@@ -469,7 +469,7 @@ def dso_CFS(
         )
 
         (
-            DerNetLev1Fte,
+            _DerNetLev1Fte,
             DerNetFte,
             DerNetLev1Cost,
             DerNetLeaderRatio,
@@ -486,7 +486,7 @@ def dso_CFS(
         )
 
         (
-            DerCyberLev1Fte,
+            _DerCyberLev1Fte,
             DerCyberFte,
             DerCyberLev1Cost,
             DerCyberLeaderRatio,
@@ -503,23 +503,23 @@ def dso_CFS(
         )
     else:
         (
-            MktOpsLev1Fte,
+            _MktOpsLev1Fte,
             MktOpsFte,
-            MktOpsLev1Cost,
-            MktOpsLeaderRatio,
+            _MktOpsLev1Cost,
+            _MktOpsLeaderRatio,
             MktOpsLabor,
-            MktOpsLeaderLevel,
+            _MktOpsLeaderLevel,
         ) = (0, 0, 0, 0, 0, 0)
         (
-            DerRecruiterLev1Fte,
+            _DerRecruiterLev1Fte,
             DerRecruiterFte,
-            DerRecruiterLev1Cost,
-            DerRecruiterLeaderRatio,
+            _DerRecruiterLev1Cost,
+            _DerRecruiterLeaderRatio,
             AssetR_R,
-            DerRecruiterLeaderLevel,
+            _DerRecruiterLeaderLevel,
         ) = (0, 0, 0, 0, 0, 0)
         (
-            DerNetLev1Fte,
+            _DerNetLev1Fte,
             DerNetFte,
             DerNetLev1Cost,
             DerNetLeaderRatio,
@@ -527,7 +527,7 @@ def dso_CFS(
             DerNetworkLeaderLevel,
         ) = (0, 0, 0, 0, 0, 0)
         (
-            DerCyberLev1Fte,
+            _DerCyberLev1Fte,
             DerCyberFte,
             DerCyberLev1Cost,
             DerCyberLeaderRatio,
@@ -535,49 +535,49 @@ def dso_CFS(
             DerCyberLeaderLevel,
         ) = (0, 0, 0, 0, 0, 0)
 
-    CustomerServiceAgentLev1Fte, CustomerServiceAgentFte, CustomerServiceAgentLev1Cost, \
+    _CustomerServiceAgentLev1Fte, CustomerServiceAgentFte, CustomerServiceAgentLev1Cost, \
         CustomerServiceAgentLeaderRatio, CustomerServiceAgent, CustomerServiceAgentLeaderLevel = \
         dso_helper.labor('customer_service_agent', metadata_general, metadata_dso, utility_type, NoSubstations)
 
     LinemenLev1Fte, LinemenFte, LinemenLev1Cost, LinemenLeaderRatio, Linemen, LinemenLeaderLevel = \
         dso_helper.labor('linemen', metadata_general, metadata_dso, utility_type, NoSubstations)
-    OperatorLev1Fte, OperatorFte, OperatorLev1Cost, OperatorLeaderRatio, Operators, OperatorLeaderLevel = \
+    _OperatorLev1Fte, OperatorFte, _OperatorLev1Cost, _OperatorLeaderRatio, Operators, _OperatorLeaderLevel = \
         dso_helper.labor('operator', metadata_general, metadata_dso, utility_type, NoSubstations)
-    PlanningLev1Fte, PlanningFte, PlanningLev1Cost, PlanningLeaderRatio, Planning, PlanningLeaderLevel = \
+    _PlanningLev1Fte, PlanningFte, _PlanningLev1Cost, _PlanningLeaderRatio, Planning, _PlanningLeaderLevel = \
         dso_helper.labor('planning', metadata_general, metadata_dso, utility_type, NoSubstations)
 
-    MeteringLev1Fte, MeteringFte, MeteringLev1Cost, MeteringLeaderRatio, Metering, MeteringLeaderLevel = \
+    _MeteringLev1Fte, _MeteringFte, _MeteringLev1Cost, _MeteringLeaderRatio, Metering, _MeteringLeaderLevel = \
         dso_helper.labor('metering', metadata_general, metadata_dso, utility_type, NoSubstations)
 
-    DmsNetLev1Fte, DmsNetFte, DmsNetLev1Cost, DmsNetLeaderRatio, DmsNetworkLabor, DmsNetLeaderLevel = \
+    _DmsNetLev1Fte, DmsNetFte, DmsNetLev1Cost, DmsNetLeaderRatio, DmsNetworkLabor, DmsNetLeaderLevel = \
         dso_helper.labor_network_admin('DMS_network_labor_ratios', 'network_admin_hourly_rate',
                                        metadata_general, metadata_dso, utility_type, NoSubstations)
-    DmsCyberLev1Fte, DmsCyberFte, DmsCyberLev1Cost, DmsCyberLeaderRatio, DmsCyberLabor, DmsCyberLeaderLevel = \
+    _DmsCyberLev1Fte, DmsCyberFte, DmsCyberLev1Cost, DmsCyberLeaderRatio, DmsCyberLabor, DmsCyberLeaderLevel = \
         dso_helper.labor_network_admin('DMS_cyber_labor_ratios', 'cyber_analyst_hourly_rate',
                                        metadata_general, metadata_dso, utility_type, NoSubstations)
 
     BusinessNetworkTotalLabor = DmsNetworkLabor + DmsCyberLabor
     BusinessNetworkFte = DmsNetFte + DmsCyberFte
 
-    LegalLev1Fte, LegalFte, LawyerLev1Cost, LawyerLeaderRatio, LegalLabor, LawyerLeaderLevel = \
+    _LegalLev1Fte, LegalFte, LawyerLev1Cost, LawyerLeaderRatio, LegalLabor, LawyerLeaderLevel = \
         dso_helper.labor('corporate_lawyer', metadata_general, metadata_dso, utility_type, NoSubstations)
 
-    HRLev1Fte, HRFte, HRLev1Cost, HRLeaderRatio, HRLabor, HRLeaderLevel = \
+    _HRLev1Fte, HRFte, HRLev1Cost, HRLeaderRatio, HRLabor, HRLeaderLevel = \
         dso_helper.labor('human_resources', metadata_general, metadata_dso, utility_type, NoSubstations)
 
-    AccountingLev1Fte, AccountingFte, AccountingLev1Cost, AccountingLeaderRatio, AccountingLabor, AccountingLeaderLevel = \
+    _AccountingLev1Fte, AccountingFte, AccountingLev1Cost, AccountingLeaderRatio, AccountingLabor, AccountingLeaderLevel = \
         dso_helper.labor('accounting', metadata_general, metadata_dso, utility_type, NoSubstations)
 
-    EconomicsLev1Fte, EconomicsFte, EconomicsLev1Cost, EconomicsLeaderRatio, EconomicsLabor, EconomicsLeaderLevel = \
+    _EconomicsLev1Fte, EconomicsFte, EconomicsLev1Cost, EconomicsLeaderRatio, EconomicsLabor, EconomicsLeaderLevel = \
         dso_helper.labor('economist', metadata_general, metadata_dso, utility_type, NoSubstations)
 
     (
-        BillingLev1Fte,
+        _BillingLev1Fte,
         BillingFte,
-        BillingLev1Cost,
-        BillingLeaderRatio,
+        _BillingLev1Cost,
+        _BillingLeaderRatio,
         Billing,
-        BillingLeaderLevel,
+        _BillingLeaderLevel,
     ) = dso_helper.labor_increase(
         "billing",
         metadata_general,
@@ -588,7 +588,7 @@ def dso_CFS(
     )
 
     (
-        AmiCyberLev1Fte,
+        _AmiCyberLev1Fte,
         AmiCyberFte,
         AmiCyberLev1Cost,
         AmiCyberLeaderRatio,
@@ -605,7 +605,7 @@ def dso_CFS(
     )
 
     (
-        AmiNetLev1Fte,
+        _AmiNetLev1Fte,
         AmiNetFte,
         AmiNetLev1Cost,
         AmiNetLeaderRatio,
@@ -621,10 +621,10 @@ def dso_CFS(
         NonFlatCaseFlag,
     )
 
-    AdminLev1Fte, AdminFte, AdminLev1Cost, AdminLeaderRatio, AdminLabor, AdminLeaderLevel = \
+    _AdminLev1Fte, AdminFte, _AdminLev1Cost, _AdminLeaderRatio, AdminLabor, _AdminLeaderLevel = \
         dso_helper.labor('admin', metadata_general, metadata_dso, utility_type, NoSubstations)
 
-    PRLev1Fte, PRFte, PRLev1Cost, PRLeaderRatio, PRLabor, PRLeaderLevel = \
+    _PRLev1Fte, PRFte, _PRLev1Cost, _PRLeaderRatio, PRLabor, _PRLeaderLevel = \
         dso_helper.labor('public_relations', metadata_general, metadata_dso, utility_type, NoSubstations)
 
     team_salary_escalation_1 = metadata_general['labor']['team_salary_escalation_1']

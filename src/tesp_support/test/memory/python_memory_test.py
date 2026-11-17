@@ -6,12 +6,13 @@ Experiments to test various parallelization libraries in Python.
 In TESP, there are lots of processes we have to manage and 
 
 """
-from pympler import asizeof
 import sys
-import numpy as np
-from multiprocessing import Process, current_process
 import time
+from multiprocessing import Process
+
 from joblib import Parallel, delayed
+from pympler import asizeof
+
 
 class MemoryTests:
 

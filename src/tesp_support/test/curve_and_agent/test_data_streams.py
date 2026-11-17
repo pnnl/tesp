@@ -11,18 +11,21 @@ Ground truth for:
 """
 
 import math
+
 import pytest
-
-from tesp_support.curve_and_agent.enums_and_constants import DeviceType
-from tesp_support.curve_and_agent.data_types import ContinuousDataPoint, EventDefinition, QuantilePoint
 from tesp_support.curve_and_agent.data_streams import (
-    UncertaintyModel,
-    ContinuousForecast,
-    EventForecast,
     ConstraintStream,
+    ContinuousForecast,
     DataStreamManager,
+    EventForecast,
+    UncertaintyModel,
 )
-
+from tesp_support.curve_and_agent.data_types import (
+    ContinuousDataPoint,
+    EventDefinition,
+    QuantilePoint,
+)
+from tesp_support.curve_and_agent.enums_and_constants import DeviceType
 
 # ===================================================================
 # UncertaintyModel Fixtures & Tests

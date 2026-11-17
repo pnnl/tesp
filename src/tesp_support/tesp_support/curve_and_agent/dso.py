@@ -7,11 +7,10 @@
 #          Run directly for a demo:  python -m ...curve_and_agent.dso
 # ============================================================================
 
-from typing import Dict
 
 from .data_types import BidCurve, BidPoint, ClearingResult, MarketTimingParams
 from .enums_and_constants import MarketType
-from .market_operator import DSOInflexibleLoadBid, MarketOperator
+from .markets.market_operator import DSOInflexibleLoadBid, MarketOperator
 from .market_state_machine import RT_TIMING, MarketStateMachine
 from .tso import TSO
 
@@ -45,7 +44,7 @@ class DSO:
         )
         self.tso.submit_demand(self.dso_id, BidCurve(self.mo.aggregate_demand()))
 
-    def receive_price(self, result: ClearingResult) -> Dict[str, ClearingResult]:
+    def receive_price(self, result: ClearingResult) -> dict[str, ClearingResult]:
         """Evaluate each agent's bid at the TSO price; returns per-agent results."""
         return {a: self.mo.get_agent_clearing(a, result.cleared_price) for a in self.mo._agent_bids}
 
@@ -55,7 +54,7 @@ class DSO:
 
 if __name__ == "__main__":
     from .data_types import BidPoint
-    from .market_operator import SupplyCurve
+    from .markets.market_operator import SupplyCurve
 
     tso = TSO()
     tso.submit_supply(SupplyCurve([BidPoint(0.02, 20), BidPoint(0.10, 120), BidPoint(0.20, 200)]))

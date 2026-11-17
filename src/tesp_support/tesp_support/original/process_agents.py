@@ -171,7 +171,7 @@ def plot_agents(diction, save_file=None, save_only=False):
     cidx = diction['high_bid_idx']
 
     # display a plot
-    fig, ax = plt.subplots(2, 2, sharex='col')
+    _fig, ax = plt.subplots(2, 2, sharex='col')
 
     ax[0, 0].plot(hrs, data_a[0, :, idx_a['CLEAR_PRICE_IDX']], color='blue', label='Cleared')
     ax[0, 0].plot(hrs, data_c[cidx, :, idx_c['BID_P_IDX']], color='red', label='Bid')

@@ -952,7 +952,7 @@ def test():
         # soc_opt.append(soc[0])
         B_obj1.optimized_Quantity = quantity
         # B_obj1.set_SOC(str(soc[0]*100),11,sim_time)
-    fig, (ax1, ax2, ax3) = plt.subplots(3, 1, sharex=True)
+    _fig, (ax1, ax2, ax3) = plt.subplots(3, 1, sharex=True)
     ax1.plot(quantity)
     ax1.set_ylabel('kW')
     # ax2.plot(soc)

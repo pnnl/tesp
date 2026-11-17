@@ -269,7 +269,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num,
             continue
         # DSO agent retail values are used for congestion and AMES price LMPs used for quantity billing.
         RT_price_df = load_ames_data(dir_path, range(int(day), int(day) + 1))
-        RT_retail_df, RT_bid_df = load_agent_data(dir_path, '/DSO_', dso_num, str(day), 'retail_market')
+        RT_retail_df, _RT_bid_df = load_agent_data(dir_path, '/DSO_', dso_num, str(day), 'retail_market')
         RT_retail_df = RT_retail_df.droplevel(level=1)
         # DA LMP data is also written at the 10 AM day-ahead clearing. If that clearance did not happen
         # (e.g. simulation stopped at 9:55 AM on the last day), load_gen_data raises ValueError because
@@ -285,10 +285,10 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num,
         DA_price_df.columns = DA_price_df.columns.droplevel()
         DA_retail_df = load_da_retail_price(dir_path, '/DSO_', dso_num, str(day))
         # Load meter data
-        substation_meta_df, substation_data_df = load_system_data(dir_path, folder_prefix, dso_num, str(day), 'substation')
+        _substation_meta_df, substation_data_df = load_system_data(dir_path, folder_prefix, dso_num, str(day), 'substation')
         substation_data_df = substation_data_df.set_index(['time'])
 
-        meter_meta_df, meter_data_df = load_system_data(dir_path, folder_prefix, dso_num, str(day), 'billing_meter')
+        _meter_meta_df, meter_data_df = load_system_data(dir_path, folder_prefix, dso_num, str(day), 'billing_meter')
         meter_data_df['date'] = meter_data_df['date'].str.replace('CDT', '', regex=True)
         meter_data_df['date'] = meter_data_df['date'].str.replace('CST', '', regex=True)
         meter_data_df['date'] = pd.to_datetime(meter_data_df['date'])  #, infer_datetime_format=True)
@@ -3960,10 +3960,10 @@ def _testing():
             logger.info('Starting meter reading: DSO %s', dso_num)
             for i in range(len(month_def)):
                 for day_num in range(month_def[i][2], month_def[i][3]):
-                    retail_data_df, retail_index_df = load_retail_data(month_def[i][1], agent_prefix, str(dso_num),
+                    _retail_data_df, _retail_index_df = load_retail_data(month_def[i][1], agent_prefix, str(dso_num),
                                                                        str(day_num), 'retail_site')
                 tic()
-                meter_df, energysum_df = read_meters(metadata, month_def[i][1], GLD_prefix, str(dso_num),
+                _meter_df, _energysum_df = read_meters(metadata, month_def[i][1], GLD_prefix, str(dso_num),
                                                      list(range(month_def[i][2], month_def[i][3])), dso_scaling_factor,
                                                      metadata_path)
                 logger.info('Meter reading complete: DSO %s, Month %s', dso_num, month_def[i][0])
@@ -3980,7 +3980,7 @@ def _testing():
 
         required_revenue = 10000000
 
-        DSO_Cash_Flows, DSO_Revenues_and_Energy_Sales, tariff, surplus = DSO_rate_making(data_path, dso_num, metadata,
+        DSO_Cash_Flows, DSO_Revenues_and_Energy_Sales, _tariff, surplus = DSO_rate_making(data_path, dso_num, metadata,
                                                                                          required_revenue,
                                                                                          tariff_path,
                                                                                          dso_scaling_factor)

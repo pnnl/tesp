@@ -7,7 +7,7 @@
 #          single-bus Egret model for pyso's EnergyMarket to solve.
 #          Run directly for a demo:  python -m ...curve_and_agent.pyso_tso
 # ============================================================================
-
+import itertools
 import os
 
 import pandas as pd
@@ -16,7 +16,7 @@ from pyso.engine import DataProvider, EnergyMarket
 from pyso.marketmodels.market import BasicMarket, MarketTiming
 
 from .data_types import BidCurve, BidPoint, ClearingResult
-from .market_operator import SupplyCurve
+from .markets.market_operator import SupplyCurve
 
 # Real-time energy market in PySO's native timing form: bid for 4 min, then clear.
 RT_TIMING = {
@@ -111,7 +111,7 @@ class PySOTSO(BasicMarket, DataProvider):
             pts = sorted(curve.points, key=lambda p: -p.price)
             if pts:
                 loads[dso] = {"bus": BUS, "in_service": True, "p_load": {"data_type": "time_series", "values": [pts[-1].quantity] * n}}
-            for i, (hi, lo) in enumerate(zip(pts, pts[1:])):
+            for i, (hi, lo) in enumerate(itertools.pairwise(pts, pts[1:])):
                 offer(f"{dso}:curtail_{i}", lo.quantity - hi.quantity, 0.5 * (hi.price + lo.price))
 
         return ModelData({

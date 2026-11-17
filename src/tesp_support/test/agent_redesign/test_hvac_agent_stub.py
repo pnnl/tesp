@@ -14,7 +14,6 @@ import math
 
 import numpy as np
 import pytest
-
 from tesp_support.agent_redesign.hvac_agent_stub import (
     AmenityMetric,
     ComfortBand,

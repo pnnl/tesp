@@ -118,7 +118,7 @@ object node {
     
     try:
         # Test reading model
-        glm_obj, success = modifier.read_model(input_file)
+        _glm_obj, success = modifier.read_model(input_file)
         assert success
         assert "test_node" in modifier.model.model["node"]
         

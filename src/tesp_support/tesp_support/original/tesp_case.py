@@ -141,7 +141,7 @@ def write_tesp_case(config, cfgfile, freshdir=True):
     WeatherYear = dt1.year
     print('run', days, 'days or', seconds, 'seconds in weather year', WeatherYear)
 
-    (rootweather, weatherext) = os.path.splitext(config['WeatherPrep']['DataSource'])
+    (rootweather, _weatherext) = os.path.splitext(config['WeatherPrep']['DataSource'])
     EpRef = config['EplusConfiguration']['ReferencePrice']
     EpRamp = config['EplusConfiguration']['Slope']
     EpLimHi = config['EplusConfiguration']['OffsetLimitHi']

@@ -5,7 +5,7 @@
 #          names (bidding -> clearing) but is dependency-free.
 # ============================================================================
 
-from typing import Callable, Dict, List, Tuple
+from collections.abc import Callable
 
 
 class MarketTiming:
@@ -16,7 +16,7 @@ class MarketTiming:
         states: Ordered (name, start_offset) pairs. The first must start at 0.
     """
 
-    def __init__(self, interval: float, states: List[Tuple[str, float]]):
+    def __init__(self, interval: float, states: list[tuple[str, float]]):
         starts = [s for _, s in states]
         if starts[0] != 0 or starts != sorted(starts) or starts[-1] >= interval:
             raise ValueError("states must start at 0, be ordered, and fit in interval")
@@ -39,7 +39,7 @@ class MarketStateMachine:
         self.timing = timing
         self.cycle_start = start_time
         self._index = -1  # nothing entered yet
-        self._callbacks: Dict[str, List[Callable[[float], None]]] = {}
+        self._callbacks: dict[str, list[Callable[[float], None]]] = {}
 
     @property
     def state(self) -> str:

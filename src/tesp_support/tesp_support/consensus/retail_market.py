@@ -978,7 +978,7 @@ def test():
     #     y2.append(market.AMES_DA[hr][2]*(i**2) + market.AMES_DA[hr][3]*i + market.AMES_DA[hr][4])
     #
 
-    fig, ax = plt.subplots(2, 1, figsize=(8, 8))
+    _fig, ax = plt.subplots(2, 1, figsize=(8, 8))
     #    ax[0].plot(Q_range, P_range, label='Aggregate demand curve',marker='x')
     ax[0].plot(new_Q / 1000, 1000 * new_P / 1.25, label='New Aggregate demand curve', marker='x')
     ax[0].plot(old_Q / 1000, 1000 * old_P / 1.25, label='Old Aggregate demand curve', marker='x')

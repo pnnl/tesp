@@ -796,7 +796,7 @@ class GLMModel:
                     intobj += 1
                     if name is None:
                         raise RuntimeError("nested object defined before parent name")
-                    line, counter, lname = self.glm_object(name, line, itr, oidh, counter)
+                    line, counter, _lname = self.glm_object(name, line, itr, oidh, counter)
                 else:
                     # found a parameter val
                     if val == "$":

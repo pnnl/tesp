@@ -200,7 +200,7 @@ def glm_merge(target, sources, xfmva, plot: bool, pos_data: dict):
     inFirstFile = True
     for fdr in sources:
         glm = GLMModifier()
-        i_glm, success = glm.read_model(workdir + '/' + fdr + '/' + fdr + '.glm')
+        i_glm, _success = glm.read_model(workdir + '/' + fdr + '/' + fdr + '.glm')
         # Rename inherited taxonomy components based on feeder names
         rename(glm, 'line_configuration', i_glm.line_configuration, fdr)
         rename(glm, 'regulator_configuration', i_glm.regulator_configuration, fdr)
@@ -262,7 +262,7 @@ def glm_merge(target, sources, xfmva, plot: bool, pos_data: dict):
             print(glm.model.glm_merge(), file=op)
     op.close()
     # Now re-read the merged .glm and re-write it all in the proper order
-    i_glm, success = glm.read_model(target)
+    i_glm, _success = glm.read_model(target)
     import os
     os.remove(target)
     glm.write_model(target)

@@ -6,22 +6,21 @@ All enums are fully implemented (no stubs). Every test here should
 pass immediately and serves as a regression guard against accidental
 enum changes.
 """
+from typing import ClassVar
 
 import pytest
-
 from tesp_support.curve_and_agent.enums_and_constants import (
-    MarketType,
-    MarketPhase,
-    OperatingMode,
-    IterationType,
     CommitmentStatus,
     DeviceType,
-    ProductType,
     ForecastParadigm,
-    StreamType,
+    IterationType,
+    MarketPhase,
+    MarketType,
+    OperatingMode,
     PenaltyStructureType,
+    ProductType,
+    StreamType,
 )
-
 
 # ===================================================================
 # Enum Membership Tests
@@ -54,7 +53,7 @@ class TestMarketType:
 class TestMarketPhase:
     """MarketPhase should have exactly 9 members in lifecycle order."""
 
-    EXPECTED_ORDER = [
+    EXPECTED_ORDER: ClassVar[list] = [
         "INACTIVE",
         "ACTIVE",
         "NEGOTIATION",
@@ -107,7 +106,7 @@ class TestIterationType:
 
 
 class TestCommitmentStatus:
-    EXPECTED = ["TENTATIVE", "ADVISORY", "FIRM", "RELEASED"]
+    EXPECTED: ClassVar[list] = ["TENTATIVE", "ADVISORY", "FIRM", "RELEASED"]
 
     def test_member_count(self):
         assert len(CommitmentStatus) == 4
@@ -122,7 +121,7 @@ class TestCommitmentStatus:
 
 
 class TestDeviceType:
-    EXPECTED = [
+    EXPECTED: ClassVar[list] = [
         "HVAC_HEAT_PUMP",
         "HVAC_AC_ONLY",
         "WATER_HEATER",
@@ -139,7 +138,7 @@ class TestDeviceType:
 
 
 class TestProductType:
-    EXPECTED = [
+    EXPECTED: ClassVar[list] = [
         "ENERGY_BASE",
         "REGULATION_UP",
         "REGULATION_DOWN",

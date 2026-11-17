@@ -466,9 +466,9 @@ def read_inv_metrics(path, name_root, diction_name=''):
     plt.rc('figure', titlesize=SMALL_SIZE)  # fontsize of the figure title
 
     if have_caps or have_regs:
-        fig, ax = plt.subplots(2, 5, sharex='col', figsize=(14, 7))
+        _fig, ax = plt.subplots(2, 5, sharex='col', figsize=(14, 7))
     else:
-        fig, ax = plt.subplots(2, 4, sharex='col', figsize=(14, 6))
+        _fig, ax = plt.subplots(2, 4, sharex='col', figsize=(14, 6))
 
     if have_invs:
         ax[0, 0].plot(hrs, pavg2, color="blue", label="P")

@@ -2253,9 +2253,9 @@ class Feeder:
         # Plot the model using the networkx package:
         if self.config.make_plot:
             if hasattr(config, 'out_file_glm'):
-                i_glm, success = self.glm.read_model(os.path.join(self.config.data_path, self.config.out_file_glm))
+                _i_glm, _success = self.glm.read_model(os.path.join(self.config.data_path, self.config.out_file_glm))
             else:
-                i_glm, success = self.glm.read_model(self.config.outputPath)
+                _i_glm, _success = self.glm.read_model(self.config.outputPath)
             if self.config.gis_file:
                 # Before the feeders are merged via case_merge, the substation
                 # (network_node) and substation transformer have no connections

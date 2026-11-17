@@ -72,7 +72,7 @@ def parse_json_file(json_file, out_path, out_file_name):
     # parts of the path to save that information in our dataframe.
     head1, tail1 = os.path.split(json_file)
     feeder = tail1[:-5]
-    head2, tail2 = os.path.split(head1)
+    _head2, tail2 = os.path.split(head1)
     model_name = tail2
     # Creating the dataframe after collecting all the necessary
     # data:
@@ -164,7 +164,7 @@ def parse_dss_file(load_file, coord_file, out_path, out_file_name):
     # We need this information for making comparisons across
     # feeders and different power distribution models. So, we grab
     # parts of the path to save that information in our dataframe.
-    head, tail = os.path.split(out_path)
+    _head, tail = os.path.split(out_path)
     model_name = tail
     feeder = out_file_name
     # Creating a dataframe of the location data:

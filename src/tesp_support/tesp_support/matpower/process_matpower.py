@@ -127,7 +127,7 @@ def process_matpower(name_root):
         j = j + 1
 
     # display a plot - hard-wired assumption of 3 generators from Case 9
-    fig, ax = plt.subplots(4, 2, sharex='col')
+    _fig, ax = plt.subplots(4, 2, sharex='col')
 
     ax[0, 0].plot(hrs, data_b[0, :, PD_IDX], color="blue", label="Real")
     ax[0, 0].plot(hrs, data_b[0, :, QD_IDX], color="red", label="Reactive")

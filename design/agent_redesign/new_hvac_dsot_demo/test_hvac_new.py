@@ -25,7 +25,7 @@ pp = pprint.PrettyPrinter(indent=4)
 
 
 def _open_file(file_path: str, type="r"):
-    """Utilty function to open file with reasonable error handling.
+    """Utility function to open file with reasonable error handling.
 
     Args:
         file_path (str) - Path to the file to be opened
@@ -82,7 +82,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-c",
         "--config_json_file",
-        help="configuration JSON for the HVAC agnet",
+        help="configuration JSON for the HVAC agent",
         nargs="?",
         default="hvac_agent_testbed_config.json5",
     )

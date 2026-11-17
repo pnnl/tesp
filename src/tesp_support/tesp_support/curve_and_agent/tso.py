@@ -5,11 +5,10 @@
 #          Run directly for a small demo:  python -m ...curve_and_agent.tso
 # ============================================================================
 
-from typing import Dict
 
 from .data_types import BidCurve, BidPoint, ClearingResult, MarketTimingParams
 from .enums_and_constants import MarketType
-from .market_operator import DSOInflexibleLoadBid, MarketOperator, SupplyCurve
+from .markets.market_operator import DSOInflexibleLoadBid, MarketOperator, SupplyCurve
 from .market_state_machine import RT_TIMING, MarketStateMachine
 
 
@@ -23,7 +22,7 @@ class TSO:
         self._new_operator()
         self.supply = SupplyCurve()
         self.last_result: ClearingResult = ClearingResult()
-        self.published: Dict[str, ClearingResult] = {}
+        self.published: dict[str, ClearingResult] = {}
 
     def _new_operator(self) -> None:
         self.mo = MarketOperator(MarketType.RT_ENERGY, MarketTimingParams())

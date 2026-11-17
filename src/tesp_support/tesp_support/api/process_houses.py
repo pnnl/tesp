@@ -113,7 +113,7 @@ def plot_houses(diction, save_file=None, save_only=False):
     keys_h = diction['keys_h']
 
     # display a plot
-    fig, ax = plt.subplots(2, 1, sharex='col')
+    _fig, ax = plt.subplots(2, 1, sharex='col')
     i = 0
     for _ in keys_h:
         ax[0].plot(hrs, data_h[i, :, idx_h['HSE_AIR_AVG_IDX']], color='blue')

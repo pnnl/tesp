@@ -10,40 +10,32 @@ types, and equality semantics. Every test should pass immediately.
 import copy
 from dataclasses import replace
 
-import pytest
-
 from tesp_support.curve_and_agent.data_types import (
-    HVACState,
-    WaterHeaterState,
-    EVChargerState,
-    BatteryState,
-    BidPoint,
-    BidCurve,
-    ClearingResult,
-    MarketTimingParams,
-    FlexibilityEnvelope,
-    EconomicCommitment,
-    ContinuousDataPoint,
-    EventDefinition,
-    QuantilePoint,
-    UncertaintyEnvelope,
-    FulfillmentRecord,
-    PerformanceEntry,
-    SettlementRecord,
     AdvisoryRecord,
-    DeliveryEconomics,
-    DispatchSolution,
+    BatteryState,
+    BidCurve,
+    BidPoint,
+    ClearingResult,
+    ContinuousDataPoint,
     DeviceCommand,
+    DispatchSolution,
+    EconomicCommitment,
+    EVChargerState,
+    EventDefinition,
+    FlexibilityEnvelope,
+    FulfillmentRecord,
+    HVACState,
     PlanningResult,
+    QuantilePoint,
+    SettlementRecord,
+    UncertaintyEnvelope,
+    WaterHeaterState,
 )
 from tesp_support.curve_and_agent.enums_and_constants import (
-    IterationType,
     CommitmentStatus,
-    MarketType,
-    ProductType,
     DeviceType,
+    IterationType,
 )
-
 
 # ===================================================================
 # Device State Defaults
