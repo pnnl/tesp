@@ -1,9 +1,9 @@
 # Copyright (C) 2026 Battelle Memorial Institute
 # See LICENSE file at https://github.com/pnnl/tesp
 # file: hvac_agent_stub.py
-"""HVAC device agent: Observe and Define Flexibility.
+"""HVAC device agent: Observe, Define Flexibility, and Control.
 
-The agent performs only two tasks:
+The agent performs the device-specific tasks:
 
 1. Observe - retrieve the current physical state of the HVAC system.
    Interchangeable observers provide the state:
@@ -28,16 +28,47 @@ The agent performs only two tasks:
    The flexibility model always uses its own light physics model, regardless
    of which observer produced the state.
 
+Control translation (after market clearing) - ``HVACSetpointController``
+converts a cleared quantity (average HVAC power over a market interval) into
+thermostat setpoints using the same physics as Define Flexibility, and an
+``HVACActuator`` writes them to the device:
+
+   - ``GridLABDHVACActuator``: writes the GridLAB-D house setpoints.
+   - ``PhysicsStubHVACObserver``: also acts as the actuator for the stub house.
+
 Market horizons: the day-ahead case is 48 hourly intervals, re-forecast every
 hour with the latest observation (``MarketHorizon.day_ahead``). The same code
 handles a single 5-minute real-time interval (``MarketHorizon.real_time``).
 
-Not part of the agent: customer preference curves and bid curves (formed by
-device-agnostic scripts from ``HVACFlexibility``), and control translation
-from a cleared quantity back to a thermostat setpoint.
+Not part of the agent: customer preference curves (``preference_curve.py``)
+and bid curves (``bid_formulation.py``) are device-agnostic and formed from
+``HVACFlexibility.market_flexibility()``. The agent places no limit on the
+number of bid points; the bid structure is set in ``bid_formulation.BidConfig``.
 
 Physics are ported from the original DSO+T agent (``dsot/hvac_agent.py``),
 including air infiltration in UA and the original design-capacity formula.
+
+---
+Implementation:
+
+from tesp_support.dsot import bid_formulation as bidding
+from tesp_support.dsot import preference_curve as pc
+
+definition = HVACDefinition.config(house_config, hvac_config)
+bidder = bidding.PreferenceBidder(
+    pc.PreferenceParameters.from_config(hvac_config, default_k=definition.slider),
+    bidding.BidConfig.from_config(hvac_config))          # BidConfig sets the number of bid points
+stub = PhysicsStubHVACObserver(definition, weather, house, start_time,
+                               initial_air_temp=76.0, substep=dt.timedelta(seconds=10))
+agent = HVACAgentStub("house_1", definition, stub, bidder=bidder)
+
+t = start_time
+for _ in range(24):
+    agent.formulate_bid_da(t, weather, house, price_forecast_at(t))     # your 48-h forecast
+    for _ in range(12):
+        bid = agent.formulate_bid_rt(t, weather, house)
+        command = agent.clear_rt(clear_rt_market(t, bid))                # your RT clearing
+        t += dt.timedelta(minutes=5)
 
 ---
 Unit conventions (matching DSO+T):
@@ -56,6 +87,7 @@ import datetime as dt
 import logging
 import math
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from dataclasses import dataclass, field, fields, replace
 from enum import Enum
 from typing import Any, Protocol
@@ -64,6 +96,7 @@ import numpy as np
 from scipy.linalg import expm
 
 from tesp_support.api.parse_helpers import parse_number
+from tesp_support.dsot import bid_formulation as bidding  # adjust to the package holding bid_formulation.py
 
 logger = logging.getLogger(__name__)
 
@@ -464,6 +497,8 @@ class ThermostatSchedule:
 
 # ---------------------------------------------------------------------------
 # Exogenous inputs: weather and house forecasts
+# WeatherForecast and HouseForecast must cover 48 hours from t every time
+# formulate_bid_da runs, or mean_over will raise an error.
 # ---------------------------------------------------------------------------
 
 class _StepForecast:
@@ -651,6 +686,10 @@ class ETPModel:
             self._discretizations[key] = (Ad, Gd)
         return self._discretizations[key]
 
+    def step_matrices(self, dt_h: float) -> tuple[np.ndarray, np.ndarray]:
+        """Returns (Ad, Gd) for a step of dt_h hours: x(t + dt) = Ad x(t) + Gd b."""
+        return self._discretize(dt_h)
+
     def forcing(self, outdoor_air_temp: float, internal_gain: float, solar_flux: float) -> np.ndarray:
         """Returns b for the given conditions with the HVAC off."""
         d = self.definition
@@ -786,9 +825,9 @@ class ComfortBand:
     lower: float
     upper: float
 
-    def excursion(self, temps: np.ndarray) -> np.ndarray:
-        """Distance outside the band, zero inside it [F]."""
-        return np.maximum(temps - self.upper, 0.0) + np.maximum(self.lower - temps, 0.0)
+def excursion(self, temps: np.ndarray) -> np.ndarray:
+    """Distance outside the band, zero inside it [F]."""
+    return np.maximum(temps - self.upper, 0.0) + np.maximum(self.lower - temps, 0.0)
 
 
 def comfort_bands(cooling_setpoint: float,
@@ -897,6 +936,46 @@ class AmenityPoint:
     amenity: float
 
 
+@dataclass(frozen=True, eq=False)
+class IntervalResponse:
+    """Thermal response of the house over one interval, kept so a cleared
+    quantity can be converted back into a thermostat setpoint with the same
+    physics used to define flexibility.
+
+    Attributes:
+        x0: State [air, mass] at the interval start [F]. For intervals after
+            the first, this assumes all earlier intervals ran at baseline.
+        forcing_off: ETP forcing b with the HVAC off.
+        heat_per_kw: Sensible heat added to the air per kW [Btu/h per kW];
+            0 when the interval has no electric equipment.
+        q_capacity_kw: Electric power at full output [kW].
+        duration_h: Interval length [h].
+        cooling_setpoint: Customer cooling setpoint after the bands are
+            pushed apart [F].
+        heating_setpoint: Customer heating setpoint after the bands are
+            pushed apart [F].
+        hvac_on: Whether the equipment was running in this mode at the
+            interval start. Known only for the first interval; None otherwise.
+        free_end_temp: End-of-interval air temperature with the HVAC off [F].
+        unit_end_temp: Change in end-of-interval air temperature per kW of
+            average power [F/kW].
+    """
+    x0: np.ndarray
+    forcing_off: np.ndarray
+    heat_per_kw: float
+    q_capacity_kw: float
+    duration_h: float
+    cooling_setpoint: float
+    heating_setpoint: float
+    hvac_on: bool | None
+    free_end_temp: float
+    unit_end_temp: float
+
+    def end_temp(self, q_kw: float) -> float:
+        """End-of-interval air temperature at an average power [F]."""
+        return self.free_end_temp + q_kw * self.unit_end_temp
+
+
 @dataclass
 class IntervalFlexibility:
     """Flexibility of the HVAC system over one market interval.
@@ -922,6 +1001,8 @@ class IntervalFlexibility:
         comfort_feasible: Whether some power level keeps the comfort
             violation at zero. When False, the range collapses onto the power
             levels that minimize the violation.
+        response: Thermal response used to convert a cleared quantity back
+            into a setpoint (see HVACSetpointController).
     """
     start: dt.datetime
     end: dt.datetime
@@ -935,11 +1016,24 @@ class IntervalFlexibility:
     baseline_amenity: float
     baseline_end_temp: float
     comfort_feasible: bool
+    response: IntervalResponse | None = None
+
+    def is_transactive(self, tol: float = 1e-9) -> bool:
+        """Whether the interval offers electric flexibility."""
+        return (self.mode != HVACMode.OFF and self.q_capacity_kw > 0.0
+                and self.q_max_kw - self.q_min_kw > tol)
+
+    def amenity_at(self, q_kw: float) -> float:
+        """Amenity at any power level, interpolated from the amenity map.
+        Exact for end_of_interval_deviation (linear in power); approximate
+        for other metrics."""
+        return float(np.interp(q_kw, [p.q_kw for p in self.amenity_map],
+                               [p.amenity for p in self.amenity_map]))
 
 
 @dataclass
 class HVACFlexibility:
-    """Flexibility of the HVAC system over a market horizon (Task 2 output)."""
+    """Flexibility of the HVAC system over a market horizon."""
     observation: HVACObservation
     horizon: MarketHorizon
     amenity_metric: str
@@ -957,6 +1051,21 @@ class HVACFlexibility:
     @property
     def q_baseline_kw(self) -> list[float]:
         return [i.q_baseline_kw for i in self.intervals]
+
+    def interval_at(self, time: dt.datetime) -> IntervalFlexibility:
+        for interval in self.intervals:
+            if interval.start <= time < interval.end:
+                return interval
+        raise ValueError(f"{time} is outside the flexibility horizon")
+
+    def market_flexibility(self, tol: float = 1e-9) -> list[bidding.Flexibility]:
+        """Device-agnostic view of this flexibility for preference and bid
+        formulation. Intervals with no electric equipment (OFF, gas) or an
+        empty range are marked non-transactive."""
+        return [bidding.Flexibility(q_min=i.q_min_kw, q_max=i.q_max_kw, q_base=i.q_baseline_kw,
+                                    transactive=i.is_transactive(tol),
+                                    q_capacity=i.q_capacity_kw, start=i.start, end=i.end)
+                for i in self.intervals]
 
 
 # ---------------------------------------------------------------------------
@@ -978,7 +1087,9 @@ class HVACFlexibilityModel:
        amenity metric's violation, the baseline as the power that ends the
        interval at the setpoint, and samples the amenity map over
        [0, capacity].
-    4. Carries the state at the end of the interval under the baseline power
+    4. Stores the interval's thermal response so control can convert a
+       cleared quantity back into a setpoint.
+    5. Carries the state at the end of the interval under the baseline power
        into the next interval.
 
     Each interval's flexibility is therefore conditional on all earlier
@@ -990,6 +1101,9 @@ class HVACFlexibilityModel:
             or "degree_minutes_outside_band") or an AmenityMetric instance.
         substep: Simulation step within an interval. Only affects metrics
             that look inside the interval; the end state is exact.
+            Model and plant agree best when the stub substep equals the 
+            controller's control_step, or when GridLAB-D's minimum timestep
+            is close to it.
         n_map_points: Number of evenly spaced points in each interval's
             amenity map, before adding q_min, q_baseline, and q_max.
         n_search_points: Grid size for locating the feasible range before
@@ -1033,11 +1147,13 @@ class HVACFlexibilityModel:
         x = np.array([observation.indoor_air_temp, mass_temp], dtype=float)
 
         intervals = []
+        initial = (observation.hvac_on, observation.hvac_mode)  # equipment state, first interval only
         for t0, t1 in horizon.intervals():
             interval, x = self._define_interval(etp, definition, x,
                                                 weather.mean_over(t0, t1),
                                                 house.mean_over(t0, t1),
-                                                t0, t1, dt_h, n_substeps)
+                                                t0, t1, dt_h, n_substeps, initial)
+            initial = None
             intervals.append(interval)
         return HVACFlexibility(observation=observation,
                                horizon=horizon,
@@ -1045,25 +1161,42 @@ class HVACFlexibilityModel:
                                amenity_unit=self.metric.unit,
                                intervals=intervals)
 
-    def _define_interval(self, etp, definition, x, weather, house, t0, t1, dt_h, n_substeps):
+    def _define_interval(self, etp, definition, x, weather, house, t0, t1, dt_h, n_substeps, initial):
         substep_minutes = dt_h * 60.0
-        free = etp.simulate(x, etp.forcing(weather.outdoor_air_temp, house.internal_gain, weather.solar_flux),
-                            dt_h, n_substeps)
+        b_free = etp.forcing(weather.outdoor_air_temp, house.internal_gain, weather.solar_flux)
+        free = etp.simulate(x, b_free, dt_h, n_substeps)
         bands = comfort_bands(house.cooling_setpoint, house.heating_setpoint, definition)
         midpoint = (bands[HVACMode.COOLING].lower + bands[HVACMode.HEATING].upper) / 2.0
         mode = HVACMode.COOLING if free[-1, 0] >= midpoint else HVACMode.HEATING
         band = bands[mode]
         equipment = equipment_performance(definition, mode, weather.outdoor_air_temp, weather.humidity)
+        hvac_on = None if initial is None else bool(initial[0] and initial[1] == mode)
+
+        def response(heat_per_kw: float, q_cap: float, unit_end: float) -> IntervalResponse:
+            return IntervalResponse(x0=np.array(x, dtype=float),
+                                    forcing_off=b_free,
+                                    heat_per_kw=float(heat_per_kw),
+                                    q_capacity_kw=float(q_cap),
+                                    duration_h=dt_h * n_substeps,
+                                    cooling_setpoint=bands[HVACMode.COOLING].setpoint,
+                                    heating_setpoint=bands[HVACMode.HEATING].setpoint,
+                                    hvac_on=hvac_on,
+                                    free_end_temp=float(free[-1, 0]),
+                                    unit_end_temp=float(unit_end))
 
         if equipment is None:
-            return self._fixed_interval(t0, t1, HVACMode.OFF, band, free, 0.0, 0.0, substep_minutes), free[-1]
+            interval = self._fixed_interval(t0, t1, HVACMode.OFF, band, free, 0.0, 0.0,
+                                            substep_minutes, response(0.0, 0.0, 0.0))
+            return interval, free[-1]
 
         if not equipment.electric:
             # Gas heat tracks the setpoint but offers no electric flexibility
             unit = etp.simulate(np.zeros(2), etp.hvac_forcing(1.0), dt_h, n_substeps)
             heat = _track(band.setpoint, free[-1, 0], unit[-1, 0], 0.0, equipment.thermal_capacity)
             trajectory = free + heat * unit
-            return self._fixed_interval(t0, t1, mode, band, trajectory, 0.0, 0.0, substep_minutes), trajectory[-1]
+            interval = self._fixed_interval(t0, t1, mode, band, trajectory, 0.0, 0.0,
+                                            substep_minutes, response(0.0, 0.0, 0.0))
+            return interval, trajectory[-1]
 
         unit = etp.simulate(np.zeros(2), etp.hvac_forcing(equipment.heat_per_kw), dt_h, n_substeps)
         q_cap = equipment.q_capacity_kw
@@ -1091,7 +1224,8 @@ class HVACFlexibilityModel:
             amenity_map=[AmenityPoint(float(q), float(a)) for q, a in zip(q_map, amenity)],
             baseline_amenity=float(self.metric.evaluate(temps(q_base), band, substep_minutes)[0]),
             baseline_end_temp=float(end_state[0]),
-            comfort_feasible=bool(feasible))
+            comfort_feasible=bool(feasible),
+            response=response(equipment.heat_per_kw, q_cap, unit[-1, 0]))
         return interval, end_state
 
     def _feasible_range(self, temps, q_cap, band, substep_minutes) -> tuple[float, float, bool]:
@@ -1132,7 +1266,8 @@ class HVACFlexibilityModel:
         q_max = edge(np.flatnonzero(grid > q_best))
         return float(q_min), float(q_max), v_best <= 1e-9
 
-    def _fixed_interval(self, t0, t1, mode, band, trajectory, q, q_cap, substep_minutes) -> IntervalFlexibility:
+    def _fixed_interval(self, t0, t1, mode, band, trajectory, q, q_cap, substep_minutes,
+                        response: IntervalResponse) -> IntervalFlexibility:
         """Interval with no electrical flexibility: one operating point."""
         temps = trajectory[None, :, 0]
         amenity = float(self.metric.evaluate(temps, band, substep_minutes)[0])
@@ -1143,7 +1278,8 @@ class HVACFlexibilityModel:
             amenity_map=[AmenityPoint(q, amenity)],
             baseline_amenity=amenity,
             baseline_end_temp=float(trajectory[-1, 0]),
-            comfort_feasible=bool(self.metric.violation(temps, band, substep_minutes)[0] <= 0.0))
+            comfort_feasible=bool(self.metric.violation(temps, band, substep_minutes)[0] <= 0.0),
+            response=response)
 
 
 def _track(target: float, free_end: float, unit_end: float, low: float, high: float) -> float:
@@ -1185,7 +1321,192 @@ def _golden_section_min(f, low: float, high: float, iterations: int = 60) -> flo
 
 
 # ---------------------------------------------------------------------------
-# Task 1: observers
+# Control translation: cleared quantity -> thermostat setpoint
+# ---------------------------------------------------------------------------
+
+class SetpointMethod(Enum):
+    THERMOSTAT_SIMULATION = "thermostat_simulation"
+    END_TEMPERATURE = "end_temperature"
+
+
+@dataclass(frozen=True)
+class HVACSetpointCommand:
+    """Thermostat setpoints to apply for one market interval.
+
+    Attributes:
+        start: Interval start.
+        end: Interval end.
+        mode: Mode whose setpoint is controlled (OFF if none).
+        cooling_setpoint: Cooling setpoint to write [F].
+        heating_setpoint: Heating setpoint to write [F].
+        cleared_kw: Cleared average power [kW].
+        expected_kw: Average power the model predicts at these setpoints [kW].
+        expected_end_temp: Predicted air temperature at the interval end [F].
+        override: False when the customer setpoints are written unchanged
+            (no electric flexibility in the interval, or a release).
+        method: Translation method used.
+    """
+    start: dt.datetime
+    end: dt.datetime
+    mode: HVACMode
+    cooling_setpoint: float
+    heating_setpoint: float
+    cleared_kw: float
+    expected_kw: float
+    expected_end_temp: float
+    override: bool
+    method: SetpointMethod
+
+
+class HVACSetpointController:
+    """Converts a cleared quantity into thermostat setpoints.
+
+    The cleared quantity is the average HVAC power over the interval. The
+    controller finds the setpoint for the interval's mode at which the house
+    model draws that average power, using the IntervalResponse stored by
+    HVACFlexibilityModel. The other mode's setpoint stays at the customer
+    value, pushed away if needed so the two deadbands do not overlap.
+
+    Methods:
+        THERMOSTAT_SIMULATION: simulates the deadband thermostat every
+            control_step from the interval's start state (including whether
+            the equipment is running) and bisects for the setpoint whose
+            average power is closest to the cleared quantity without
+            exceeding it. Suited to real-time intervals, where deadband
+            cycling dominates the response.
+        END_TEMPERATURE: exact inverse of the flexibility model's baseline;
+            the setpoint is the end-of-interval air temperature at the cleared
+            average power. Ignores deadband cycling.
+
+    Args:
+        definition: Device definition (must match the flexibility model's).
+        method: Translation method.
+        control_step: Thermostat simulation step. Average power is resolved
+            to about q_capacity * control_step / interval length.
+        search_margin: How far beyond the comfort band the setpoint search
+            may go [F].
+        setpoint_limits: Absolute (min, max) setpoint per mode [F].
+        tolerance: Setpoint search tolerance [F].
+    """
+
+    def __init__(self,
+                 definition: HVACDefinition,
+                 method: SetpointMethod = SetpointMethod.THERMOSTAT_SIMULATION,
+                 control_step: dt.timedelta = dt.timedelta(seconds=10),
+                 search_margin: float = 5.0,
+                 setpoint_limits: dict[HVACMode, tuple[float, float]] | None = None,
+                 tolerance: float = 0.01):
+        if control_step <= dt.timedelta(0):
+            raise ValueError("control_step must be positive")
+        self.definition = definition
+        self.method = method
+        self.control_step = control_step
+        self.search_margin = search_margin
+        self.setpoint_limits = setpoint_limits or {HVACMode.COOLING: (60.0, 90.0),
+                                                   HVACMode.HEATING: (50.0, 85.0)}
+        self.tolerance = tolerance
+        self._etp = ETPModel(definition)
+
+    def setpoints(self, interval: IntervalFlexibility, cleared_kw: float) -> HVACSetpointCommand:
+        """Returns the setpoints that realize a cleared quantity in an interval."""
+        resp = interval.response
+        if resp is None:
+            raise ValueError("interval has no response; it was not produced by HVACFlexibilityModel")
+        mode = interval.mode
+        if mode == HVACMode.OFF or resp.heat_per_kw == 0.0 or resp.q_capacity_kw <= 0.0:
+            # No electric flexibility (no equipment, or gas heat): follow the customer
+            return HVACSetpointCommand(interval.start, interval.end, mode,
+                                       resp.cooling_setpoint, resp.heating_setpoint,
+                                       cleared_kw=float(cleared_kw), expected_kw=0.0,
+                                       expected_end_temp=interval.baseline_end_temp,
+                                       override=False, method=self.method)
+
+        q = min(max(float(cleared_kw), 0.0), resp.q_capacity_kw)
+        if self.method == SetpointMethod.END_TEMPERATURE:
+            setpoint, expected_kw, end_temp = self._end_temperature(resp, mode, q)
+        else:
+            setpoint, expected_kw, end_temp = self._thermostat_search(resp, interval.comfort_band, mode, q)
+        cooling, heating = self._pair(mode, setpoint, resp)
+        return HVACSetpointCommand(interval.start, interval.end, mode, cooling, heating,
+                                   cleared_kw=float(cleared_kw), expected_kw=float(expected_kw),
+                                   expected_end_temp=float(end_temp), override=True,
+                                   method=self.method)
+
+    def _end_temperature(self, resp: IntervalResponse, mode: HVACMode, q: float) -> tuple[float, float, float]:
+        lo, hi = self.setpoint_limits[mode]
+        setpoint = min(max(resp.end_temp(q), lo), hi)
+        if abs(resp.unit_end_temp) > 1e-12:  # if clamped, report the power the clamped setpoint gives
+            q = min(max((setpoint - resp.free_end_temp) / resp.unit_end_temp, 0.0), resp.q_capacity_kw)
+        return setpoint, q, resp.end_temp(q)
+
+    def _simulate(self, resp: IntervalResponse, mode: HVACMode, setpoint: float) -> tuple[float, float]:
+        """Deadband thermostat over the interval -> (average kW, end air temp)."""
+        n = max(1, round(resp.duration_h * 3600.0 / self.control_step.total_seconds()))
+        Ad, Gd = self._etp.step_matrices(resp.duration_h / n)
+        inc_off = Gd @ resp.forcing_off
+        inc_on = Gd @ (resp.forcing_off + self._etp.hvac_forcing(resp.q_capacity_kw * resp.heat_per_kw))
+        half = self.definition.deadband / 2.0
+        cooling = mode == HVACMode.COOLING
+        x = np.array(resp.x0, dtype=float)
+        on = resp.hvac_on if resp.hvac_on is not None else (x[0] > setpoint if cooling else x[0] < setpoint)
+        on_steps = 0
+        for _ in range(n):
+            t = x[0]
+            if cooling:
+                if on and t < setpoint - half:
+                    on = False
+                elif not on and t > setpoint + half:
+                    on = True
+            else:
+                if on and t > setpoint + half:
+                    on = False
+                elif not on and t < setpoint - half:
+                    on = True
+            x = Ad @ x + (inc_on if on else inc_off)
+            on_steps += on
+        return resp.q_capacity_kw * on_steps / n, float(x[0])
+
+    def _thermostat_search(self, resp: IntervalResponse, band: ComfortBand,
+                           mode: HVACMode, q: float) -> tuple[float, float, float]:
+        lo, hi = self.setpoint_limits[mode]
+        lo = max(lo, band.lower - self.search_margin)
+        hi = max(min(hi, band.upper + self.search_margin), lo)
+        # a: setpoint end with the most power, b: end with the least
+        a, b = (lo, hi) if mode == HVACMode.COOLING else (hi, lo)
+        p_a, end_a = self._simulate(resp, mode, a)
+        if p_a <= q:
+            return a, p_a, end_a
+        p_b, end_b = self._simulate(resp, mode, b)
+        if p_b > q:
+            return b, p_b, end_b
+        while abs(a - b) > self.tolerance:
+            m = 0.5 * (a + b)
+            p_m, end_m = self._simulate(resp, mode, m)
+            if p_m > q:
+                a = m
+            else:
+                b, p_b, end_b = m, p_m, end_m
+        return b, p_b, end_b  # side that does not exceed the cleared quantity
+
+    def _pair(self, mode: HVACMode, setpoint: float, resp: IntervalResponse) -> tuple[float, float]:
+        """(cooling, heating) setpoints with the uncontrolled mode kept clear
+        of the controlled one by the deadband plus 1 F."""
+        separation = self.definition.deadband + 1.0
+        if mode == HVACMode.COOLING:
+            return setpoint, min(resp.heating_setpoint, setpoint - separation)
+        return max(resp.cooling_setpoint, setpoint + separation), setpoint
+
+
+class HVACActuator(ABC):
+    """Writes thermostat setpoints to a device."""
+
+    @abstractmethod
+    def apply(self, command: HVACSetpointCommand) -> None:
+        """Writes the command's cooling and heating setpoints."""
+
+
+# ---------------------------------------------------------------------------
+# Task 1: observers (and actuators)
 # ---------------------------------------------------------------------------
 
 class HVACObserver(ABC):
@@ -1203,6 +1524,11 @@ class GridLABDConnection(Protocol):
     Keys use the TESP "object#property" convention.
     """
     def get_value(self, key: str) -> Any: ...
+
+
+class GridLABDWriter(Protocol):
+    """Co-simulation connection that can write GridLAB-D properties."""
+    def set_value(self, key: str, value: Any) -> None: ...
 
 
 class GridLABDHVACObserver(HVACObserver):
@@ -1286,13 +1612,53 @@ class GridLABDHVACObserver(HVACObserver):
                                source=self.source)
 
 
-class PhysicsStubHVACObserver(HVACObserver):
+class GridLABDHVACActuator(HVACActuator):
+    """Writes cooling_setpoint and heating_setpoint to the GridLAB-D house.
+
+    GridLAB-D keeps written setpoints until they are written again, so the
+    agent should send a command every market interval (or call release()).
+
+    The two setpoints are written in an order that never leaves the cooling
+    setpoint below the heating setpoint between writes: heating first when
+    cooling is moving down, cooling first otherwise.
+
+    Args:
+        connection (GridLABDWriter): Co-simulation connection.
+        house_name (str): Name of the GridLAB-D house object.
+        min_change (float): Skip writes that change a setpoint by no more
+            than this [F].
+    """
+
+    def __init__(self, connection: GridLABDWriter, house_name: str, min_change: float = 0.0):
+        self.connection = connection
+        self.house_name = house_name
+        self.min_change = min_change
+        self._last: dict[str, float] = {}
+
+    def apply(self, command: HVACSetpointCommand) -> None:
+        cool = ("cooling_setpoint", command.cooling_setpoint)
+        heat = ("heating_setpoint", command.heating_setpoint)
+        last_cool = self._last.get("cooling_setpoint")
+        cooling_moves_down = last_cool is not None and command.cooling_setpoint < last_cool
+        for prop, value in ((heat, cool) if cooling_moves_down else (cool, heat)):
+            last = self._last.get(prop)
+            if last is not None and abs(value - last) <= self.min_change:
+                continue
+            self.connection.set_value(f"{self.house_name}#{prop}", float(value))
+            self._last[prop] = float(value)
+
+
+class PhysicsStubHVACObserver(HVACObserver, HVACActuator):
     """Stub observation from a light physics model (agent-based approximation).
 
     Stands in for a GridLAB-D house: evolves its own two-node ETP model with
     thermostat deadband cycling, driven by weather and house forecasts that are
     treated as ground truth. The thermostat follows the house forecast
-    setpoints.
+    setpoints unless a setpoint command is active.
+
+    Also acts as the actuator for the stub house: apply() overrides the
+    thermostat setpoints for the command's interval (or until the next
+    command if hold_commands is True, which mimics GridLAB-D).
 
     By default the stub house is identical to the agent's definition, which
     gives the flexibility model a perfect model of the device. Use
@@ -1310,6 +1676,9 @@ class PhysicsStubHVACObserver(HVACObserver):
         substep (dt.timedelta): Thermostat and integration step.
         parameter_scaling (dict, optional): Multipliers for numeric
             HVACDefinition fields of the stub house.
+        hold_commands (bool): Keep a command's setpoints after its interval
+            ends, until the next command (GridLAB-D behavior). If False, the
+            stub reverts to the house forecast setpoints at command.end.
     """
     source = ObservationMode.PHYSICS_STUB
 
@@ -1321,7 +1690,8 @@ class PhysicsStubHVACObserver(HVACObserver):
                  initial_air_temp: float,
                  initial_mass_temp: float | None = None,
                  substep: dt.timedelta = dt.timedelta(minutes=1),
-                 parameter_scaling: dict[str, float] | None = None):
+                 parameter_scaling: dict[str, float] | None = None,
+                 hold_commands: bool = False):
         scaled = {}
         for name, factor in (parameter_scaling or {}).items():
             value = getattr(definition, name)  # raises AttributeError for unknown names
@@ -1332,6 +1702,7 @@ class PhysicsStubHVACObserver(HVACObserver):
         self.weather = weather
         self.house = house
         self.substep = substep
+        self.hold_commands = hold_commands
         self._etp = ETPModel(self.definition)
         self._time = start_time
         mass_temp = initial_air_temp if initial_mass_temp is None else initial_mass_temp
@@ -1339,18 +1710,31 @@ class PhysicsStubHVACObserver(HVACObserver):
         self._hvac_on = False
         self._mode = HVACMode.OFF
         self._hvac_kw = 0.0
+        self._command: HVACSetpointCommand | None = None
 
+    # ---- actuator ---------------------------------------------------------
+    def apply(self, command: HVACSetpointCommand) -> None:
+        """Overrides the stub thermostat setpoints (see hold_commands)."""
+        self._command = command
+
+    def _setpoints(self, time: dt.datetime, house: HousePoint) -> tuple[float, float]:
+        """Active (cooling, heating) setpoints at a time."""
+        c = self._command
+        if c is not None and c.start <= time and (self.hold_commands or time < c.end):
+            return c.cooling_setpoint, c.heating_setpoint
+        return house.cooling_setpoint, house.heating_setpoint
+
+    # ---- observer ---------------------------------------------------------
     def observe(self, sim_time: dt.datetime) -> HVACObservation:
         self.advance_to(sim_time)
-        house = self.house.at(sim_time)
-        mode = self._mode if self._hvac_on else infer_mode(self._x[0], house.cooling_setpoint,
-                                                            house.heating_setpoint)
+        cooling_setpoint, heating_setpoint = self._setpoints(sim_time, self.house.at(sim_time))
+        mode = self._mode if self._hvac_on else infer_mode(self._x[0], cooling_setpoint, heating_setpoint)
         return HVACObservation(timestamp=sim_time,
                                indoor_air_temp=float(self._x[0]),
                                hvac_mode=mode,
                                hvac_on=self._hvac_on,
-                               cooling_setpoint=house.cooling_setpoint,
-                               heating_setpoint=house.heating_setpoint,
+                               cooling_setpoint=cooling_setpoint,
+                               heating_setpoint=heating_setpoint,
                                hvac_kw=self._hvac_kw,
                                mass_temp=float(self._x[1]),
                                source=self.source)
@@ -1368,17 +1752,18 @@ class PhysicsStubHVACObserver(HVACObserver):
         d = self.definition
         weather = self.weather.at(self._time)
         house = self.house.at(self._time)
+        cooling_setpoint, heating_setpoint = self._setpoints(self._time, house)
         air_temp = self._x[0]
         half_band = d.deadband / 2.0
 
         if self._hvac_on and (
-                (self._mode == HVACMode.COOLING and air_temp < house.cooling_setpoint - half_band)
-                or (self._mode == HVACMode.HEATING and air_temp > house.heating_setpoint + half_band)):
+                (self._mode == HVACMode.COOLING and air_temp < cooling_setpoint - half_band)
+                or (self._mode == HVACMode.HEATING and air_temp > heating_setpoint + half_band)):
             self._hvac_on = False
         if not self._hvac_on:
-            if d.has_cooling and air_temp > house.cooling_setpoint + half_band:
+            if d.has_cooling and air_temp > cooling_setpoint + half_band:
                 self._hvac_on, self._mode = True, HVACMode.COOLING
-            elif d.heating_fuel != HeatingFuel.NONE and air_temp < house.heating_setpoint - half_band:
+            elif d.heating_fuel != HeatingFuel.NONE and air_temp < heating_setpoint - half_band:
                 self._hvac_on, self._mode = True, HVACMode.HEATING
 
         heat, self._hvac_kw = 0.0, 0.0
@@ -1424,12 +1809,31 @@ class StatisticalStubHVACObserver(HVACObserver):
 # Agent
 # ---------------------------------------------------------------------------
 
-class HVACAgentStub:
-    """HVAC agent performing only Observe and Define Flexibility.
+@dataclass(frozen=True)
+class ClearedInterval:
+    """Day-ahead cleared quantity for one interval."""
+    start: dt.datetime
+    end: dt.datetime
+    cleared_kw: float
 
-    For the day-ahead market, call update() every hour with refreshed
-    forecasts covering the next 48 hours; for a real-time market, pass
-    MarketHorizon.real_time(sim_time).
+
+class HVACAgentStub:
+    """HVAC agent: Observe (Task 1), Define Flexibility (Task 2), and control.
+
+    Customer preference and bid formulation are device-agnostic and done by a
+    bidding.PreferenceBidder; this agent only passes it market_flexibility().
+    After clearing, the agent converts the cleared quantity (average HVAC kW
+    over the interval) into thermostat setpoints with an HVACSetpointController
+    and writes them through an HVACActuator.
+
+    Market cycles:
+        Real-time:      formulate_bid_rt() -> clear_rt(price), every interval.
+        Day-ahead only: formulate_bid_da() hourly -> clear_da(prices) when the
+                        DA market clears -> dispatch_da() every control step.
+        Quantity-only:  apply_cleared_quantity(interval, kW) directly.
+
+    The agent places no limit on the number of bid points: cleared bids are
+    read only through quantity_at().
 
     Args:
         name (str): Agent name.
@@ -1437,25 +1841,47 @@ class HVACAgentStub:
         observer (HVACObserver): Source of device state (GridLAB-D or stub).
         flexibility_model (HVACFlexibilityModel, optional): Defaults to the
             end-of-interval deviation metric.
+        bidder (bidding.PreferenceBidder, optional): Required for bidding.
+        controller (HVACSetpointController, optional): Defaults to the
+            thermostat-simulation method.
+        actuator (HVACActuator, optional): Defaults to the observer if it can
+            act (PhysicsStubHVACObserver). Required to apply commands.
     """
 
     def __init__(self,
                  name: str,
                  definition: HVACDefinition,
                  observer: HVACObserver,
-                 flexibility_model: HVACFlexibilityModel | None = None):
+                 flexibility_model: HVACFlexibilityModel | None = None,
+                 bidder: bidding.PreferenceBidder | None = None,
+                 controller: HVACSetpointController | None = None,
+                 actuator: HVACActuator | None = None):
         self.name = name
         self.definition = definition
         self.observer = observer
         self.flexibility_model = flexibility_model or HVACFlexibilityModel()
-        self.observation: HVACObservation | None = None
-        self.flexibility: HVACFlexibility | None = None
+        self.bidder = bidder
+        self.controller = controller or HVACSetpointController(definition)
+        if actuator is None and isinstance(observer, HVACActuator):
+            actuator = observer
+        self.actuator = actuator
 
+        self.observation: HVACObservation | None = None
+        self.flexibility: HVACFlexibility | None = None   # latest, any horizon
+        self.da_flexibility: HVACFlexibility | None = None
+        self.da_bids: list[bidding.Bid] | None = None
+        self.da_schedule: list[ClearedInterval] = []
+        self.rt_flexibility: HVACFlexibility | None = None
+        self.rt_bid: bidding.Bid | None = None
+        self.last_command: HVACSetpointCommand | None = None
+
+    # ---- Task 1 -----------------------------------------------------------
     def observe(self, sim_time: dt.datetime) -> HVACObservation:
         """Task 1: retrieves the current device state."""
         self.observation = self.observer.observe(sim_time)
         return self.observation
 
+    # ---- Task 2 -----------------------------------------------------------
     def define_flexibility(self,
                            weather: WeatherForecast,
                            house: HouseForecast,
@@ -1476,3 +1902,140 @@ class HVACAgentStub:
         48-hour day-ahead horizon starting at sim_time)."""
         self.observe(sim_time)
         return self.define_flexibility(weather, house, horizon or MarketHorizon.day_ahead(sim_time))
+
+    # ---- Bidding (hand-off to preference_curve + bid_formulation) --------
+    def formulate_bid_da(self,
+                         sim_time: dt.datetime,
+                         weather: WeatherForecast,
+                         house: HouseForecast,
+                         price_forecast: Sequence[float],
+                         hours: int = 48) -> list[bidding.Bid]:
+        """Tasks 1-2 over the day-ahead horizon, then the bidder. One bid per
+        hour. Does not change the cleared DA schedule."""
+        flexibility = self.update(sim_time, weather, house, MarketHorizon.day_ahead(sim_time, hours))
+        self.da_flexibility = flexibility
+        self.da_bids = self._require_bidder().bid_da(flexibility.market_flexibility(), price_forecast)
+        return self.da_bids
+
+    def formulate_bid_rt(self,
+                         sim_time: dt.datetime,
+                         weather: WeatherForecast,
+                         house: HouseForecast,
+                         minutes: int = 5,
+                         price_forecast: Sequence[float] | None = None) -> bidding.Bid:
+        """Tasks 1-2 over one real-time interval, then the bidder."""
+        flexibility = self.update(sim_time, weather, house, MarketHorizon.real_time(sim_time, minutes))
+        self.rt_flexibility = flexibility
+        self.rt_bid = self._require_bidder().bid_rt(flexibility.market_flexibility()[0], price_forecast)
+        return self.rt_bid
+
+    @staticmethod
+    def quantity_at(bid: bidding.Bid, price: float) -> float:
+        """Cleared quantity of a bid at a price [kW]. The only place the agent
+        reads a bid; works for any number of bid points."""
+        return bidding.bid_to_quantity(bid, price)
+
+    def bid_amenity(self, bid: bidding.Bid, interval: IntervalFlexibility) -> list[float]:
+        """Amenity value at each point of a bid (any number of points)."""
+        return [interval.amenity_at(point[bidding.Q]) for point in bid]
+
+    # ---- Clearing -> setpoints --------------------------------------------
+    def clear_rt(self, price: float, apply: bool = True) -> HVACSetpointCommand:
+        """Real-time clearing: price -> cleared kW -> setpoints for this interval."""
+        if self.rt_bid is None or self.rt_flexibility is None:
+            raise RuntimeError(f"{self.name}: formulate_bid_rt() must be called before clear_rt()")
+        cleared_kw = self.quantity_at(self.rt_bid, price)
+        return self.apply_cleared_quantity(self.rt_flexibility.intervals[0], cleared_kw, apply=apply)
+
+    def clear_da(self, prices: Sequence[float]) -> list[ClearedInterval]:
+        """Day-ahead clearing: one cleared price per DA interval -> cleared
+        schedule. Replaces any earlier schedule. Nothing is applied until
+        dispatch_da()."""
+        if self.da_bids is None or self.da_flexibility is None:
+            raise RuntimeError(f"{self.name}: formulate_bid_da() must be called before clear_da()")
+        if len(prices) != len(self.da_bids):
+            raise ValueError(f"{self.name}: {len(prices)} prices for {len(self.da_bids)} DA bids")
+        self.da_schedule = [ClearedInterval(iv.start, iv.end, self.quantity_at(bid, p))
+                            for iv, bid, p in zip(self.da_flexibility.intervals, self.da_bids, prices)]
+        return self.da_schedule
+
+    def dispatch_da(self,
+                    sim_time: dt.datetime,
+                    weather: WeatherForecast,
+                    house: HouseForecast,
+                    control_interval: dt.timedelta | None = None,
+                    apply: bool = True) -> HVACSetpointCommand:
+        """Applies the cleared DA quantity for the hour containing sim_time.
+
+        Re-observes the house and redefines flexibility from the current state
+        over the next control_interval (default: the rest of the DA hour), so
+        the setpoint uses fresh state instead of the DA assumption that every
+        earlier hour ran at baseline. The cleared hourly average power is the
+        target for each control interval.
+        """
+        entry = next((c for c in self.da_schedule if c.start <= sim_time < c.end), None)
+        if entry is None:
+            raise RuntimeError(f"{self.name}: no cleared DA quantity covers {sim_time}")
+        remaining = entry.end - sim_time
+        length = remaining if control_interval is None else min(control_interval, remaining)
+        self.observe(sim_time)
+        flexibility = self.define_flexibility(weather, house, MarketHorizon(sim_time, length, 1))
+        return self.apply_cleared_quantity(flexibility.intervals[0], entry.cleared_kw, apply=apply)
+
+    def apply_cleared_quantity(self,
+                               interval: IntervalFlexibility,
+                               cleared_kw: float,
+                               apply: bool = True) -> HVACSetpointCommand:
+        """Converts a cleared quantity into setpoints and (optionally) writes
+        them. Intervals with no electric flexibility get the customer setpoints."""
+        if interval.is_transactive():
+            command = self.controller.setpoints(interval, cleared_kw)
+        else:
+            command = self._customer_command(interval, cleared_kw)
+            if abs(cleared_kw - interval.q_baseline_kw) > 1e-6:
+                logger.warning("%s: cleared %.3f kW in a non-transactive interval (baseline %.3f kW); "
+                               "applying customer setpoints", self.name, cleared_kw, interval.q_baseline_kw)
+        if apply:
+            if self.actuator is None:
+                raise RuntimeError(f"{self.name}: no actuator configured; pass apply=False to only "
+                                   f"compute the command")
+            self.actuator.apply(command)
+        self.last_command = command
+        return command
+
+    def release(self, apply: bool = True) -> HVACSetpointCommand:
+        """Returns the thermostat to the customer setpoints of the latest
+        flexibility interval (e.g. when leaving the market)."""
+        if self.flexibility is None:
+            raise RuntimeError(f"{self.name}: define_flexibility() must be called before release()")
+        interval = self.flexibility.intervals[0]
+        command = self._customer_command(interval, interval.q_baseline_kw)
+        if apply:
+            if self.actuator is None:
+                raise RuntimeError(f"{self.name}: no actuator configured")
+            self.actuator.apply(command)
+        self.last_command = command
+        return command
+
+    def cleared_quantity(self, price: float, interval: int = 0) -> float:
+        """Average power the customer accepts at a cleared price for the
+        bidder's latest bids [kW]."""
+        return self._require_bidder().cleared_quantity(price, interval)
+
+    # ---- helpers ----------------------------------------------------------
+    def _customer_command(self, interval: IntervalFlexibility, cleared_kw: float) -> HVACSetpointCommand:
+        resp = interval.response
+        if resp is None:
+            raise ValueError(f"{self.name}: interval has no response; it was not produced by "
+                             f"HVACFlexibilityModel")
+        return HVACSetpointCommand(interval.start, interval.end, interval.mode,
+                                   resp.cooling_setpoint, resp.heating_setpoint,
+                                   cleared_kw=float(cleared_kw),
+                                   expected_kw=interval.q_baseline_kw,
+                                   expected_end_temp=interval.baseline_end_temp,
+                                   override=False, method=self.controller.method)
+
+    def _require_bidder(self) -> bidding.PreferenceBidder:
+        if self.bidder is None:
+            raise RuntimeError(f"{self.name}: no bidder configured")
+        return self.bidder
