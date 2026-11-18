@@ -1,0 +1,44 @@
+{
+    "inputs":[
+        {
+            "name": "thermostat setpoint",
+            "type": "float",
+            "units": "F",
+            "required": true,
+            "description": "Desired HVAC thermostat setpoint"
+        }
+
+    ],
+    "outputs":[
+        {
+            "name": "indoor air temperature",
+            "type": "float",
+            "units": "F",
+            "description": "Measured indoor air temperature by the thermostat"
+        },
+        {
+            "name": "fan speed",
+            "type": "float",
+            "units": "RPM",
+            "description": "Measured HVAC fan speed for the forced air system."
+        },
+        {
+            "name": "outdoor air temperature",
+            "type": "float",
+            "units": "F",
+            "description": "Measured outdoor air temperature used by the HVAC system with its own dedicated sensor. This temperature is local for this installation using a sensor that may not be within calibration."
+        },
+        {
+            "name": "indoor air humidity",
+            "type": "float",
+            "units": "%",
+            "description": "Measured indoor air humidity at the thermostat"
+        },
+        {
+            "name": "HVAC state",
+            "type": "string",
+            "units": "enumeration",
+            "description": "Current state of the HVAC system taking on the values of 'heating', 'emergency heating', 'cooling', or 'off'."
+        }
+    ]
+}

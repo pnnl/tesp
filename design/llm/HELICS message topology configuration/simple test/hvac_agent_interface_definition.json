@@ -1,0 +1,42 @@
+{
+    "inputs":[
+        {
+            "name": "temp",
+            "type": "float",
+            "units": "F",
+            "required": true,
+            "description": "Measured indoor air temperature"
+            
+        },
+        {
+            "name": "running",
+            "type": "string",
+            "units": "none",
+            "required": true,
+            "description": "Whether the climate control system is currently running and if so, in what mode it is running in. Mode is communicated by a string. Expected values are 'heat', 'cool', or 'off'."
+        },
+        {
+            "name": "humidity",
+            "type": "float",
+            "units": "none",
+            "required": true,
+            "description": "indoor air humidity"
+        },
+        {
+            "name": "outside_temp",
+            "type": "float",
+            "units": "C",
+            "required": false,
+            "description": "Current outside temperature."
+        }
+
+    ],
+    "outputs":[
+        {
+            "name": "setpnt",
+            "type": "float",
+            "units": "F",
+            "description": "Command setpoint for the houses climate control system"
+        }
+    ]
+}

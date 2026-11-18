@@ -1,0 +1,6 @@
+[
+    {
+        "src name": "source_interface_name",
+        "dst": "destination_interface_name"
+    }
+]
