@@ -52,10 +52,37 @@ Amenity mapping |	A function or table mapping each feasible power level to an am
 Baseline operating point |	The power level the device would consume if it were simply tracking the customer's desired amenity setpoint with no price consideration.
 
 
+## Separate from Agents: Define Customer Preference
+*Parameterized isoelastic curve function*
+
+**Called by device agents, but lives in a separate `preference_curve.py`**
+
+Inputs:
+* Customer preference factor $k ∈ [0, 1]$ (0 = full amenity preference, 1 = full financial preference).
+* Reference price $P₀$ (e.g., expected/historical average retail price).
+* Baseline quantity $Q₀$ from Function 2.
+
+Outputs: A parameterized isoelastic curve function:
+
+$Q(P)=Q_0 (P/P_0 )^(−ε)$
+
+where the elasticity ε is derived from k. The mapping k → ε must satisfy:
+* $k = 0 ⟹ ε ≈ 0$ (perfectly inelastic; device tracks amenity setpoint regardless of price)
+* $k = 1 ⟹ ε = ε_max$ (highly elastic; device aggressively curtails when price is high)
+
+A reasonable mapping is $ε = ε_max · f(k)$ where $f$ is monotonically increasing (linear, exponential, or logistic depending on desired sensitivity).
+
+## Separate from Agents: Bid Formulation
+*Create price-quantity bid curve for market submission, based on defined flexibility and customer preference curve*
+
+**Called by device agents, but lives in a separate `bid_formulation.py`**
+
+This can take place in a separate script, as bid formulation is device-agnostic. This also allows easy modification or implementation of a new bid formulation strategy, without having to modify each agent individually. 
+
 
 ## Previous Work
 
-Looking first at the HVAC agent, we have a few agent designs to compare and build from as a foundation. They are 1. the original DSOT agent, 2. Trevor's redesign from last FY, and 3. Nathan's AI-agent redesign of the full TESP functionality. 
+Looking first at the HVAC agent, we have a few agent designs to compare and build from as a foundation. They are 1. the original DSOT agent, 2. Trevor's redesign from last FY, and 3. Nathan's AI-agent redesign of the full TESP functionality based on Trevor's curve_and_agent redesign architecture. 
 
 *An AI-summary of the comparison between the original DSOT agent and Trevor's redesign:*
 
@@ -218,4 +245,78 @@ power_state is only ON/OFF, so the mode it derives is always "off". system_mode 
 * The capacitance and conductance properties are actually named air_heat_capacity, mass_heat_capacity, mass_heat_coeff and UA, so its reads always fall back to defaults.
 
 
+## Bid Formualtion Comparison
 
+| | Battery | EV | HVAC | Water heater |
+|---|---|---|---|---|
+| **DA Q range** | `[-Rd, Rc]` | `[-Rd, Rc]` (Rd = 0 for V1G) | `[0, hvac_kw]` | `[0, Phw]` |
+| **DA anchor** | `(Q_opt[t], f_DA[t])` | same | `(Q_opt[t], price_forecast[t])` | `(Q_opt[t], f_DA_price[t])` |
+| **Slope** | `ΔP_fcst / -(Rd+Rc) / slider` | same | `ΔP_fcst / -hvac_kw × (1 + ProfitMargin_slope/100)` | DA: `ΔP_fcst / -(Phw·slider)`; RT: `ΔP_fcst / -Phw × (1 + ProfitMargin_slope/100)` |
+| **Deadband (±)** | `degrad_factor × (1 + profit_margin)` | same formula, different units (see §2) | `(ProfitMargin_intercept/100) × ΔP_fcst` | none (code commented out) |
+| **Inflexible case** | slider = 0 → vertical bid | slider = 0 or hour in `non_trans_hours` → vertical | Q_min = Q_max → step at max/min forecast prices | Q_min = Q_max → step |
+| **Clipping** | none | none | Q to `[0, hvac_kw]`, P to `[0, price_cap]` | Q to `[0, Phw]`, P to `[0, PriceCap]` |
+| **RT Q range** | DA range, trimmed by SoC check, then ±Rd around Q_opt | same, ±Rd | Q_min/Q_max from a 5-minute thermal-model (ETP) simulation | from tank-temperature (SOHC) bounds |
+| **RT anchor** | line through the DA point; deadband slides to the interpolated Q | same | line through the interpolated Q | line through the DA point; deadband slides to the interpolated Q |
+| **Price → quantity** | `from_P_to_Q_battery` (returns discharge as positive) | identical copy, but negated (returns charge as positive) | inline in `bid_accepted` + `set_da_cleared_quantity` | `from_P_to_Q_WH` + `set_da_cleared_quantity` |
+
+
+### 2. Bugs and inconsistencies to settle before refactoring
+These affect whether a straight refactor reproduces old results, so you'll want to decide which ones to keep and which to fix.
+
+* EV divides by zero when slider = 0. EV has interpolation = True, and the RT slope divides by self.slider without checking for zero `ev_agent.py`. Battery has the same expression but interpolation = False, so it never runs it 
+battery_agent.py
+* V1G EVs never bid flexibly in RT. excursion = self.Rd * 1.0 is 0 for V1G, so RT_fix_four_points_range(bid, Q1-0, Q1+0) shrinks every RT bid to a vertical line `ev_agent.py`. Rc (or Rd + Rc) was probably intended.
+* EV Rd can be undefined. If ev_mode is neither 'V1G' nor 'V2G', Rd is never set `ev_agent.py`
+* The HVAC slider has no effect on the bid slope. ProfitMargin_slope is computed once in __init__, while price_forecast is still all zeros. The result is 0 for any slider > 0, and 9999 when slider = 0, which multiplies the slope by about 101 
+`hvac_agent.py`. 
+* Water heater DA and RT curves disagree. The DA slope uses slider; the RT slope ignores it and uses ProfitMargin_slope instead `water_heater_agent.py`.
+* Water heater price-to-quantity conversion is broken. from_P_to_Q_WH loops from index 1, so it skips the first segment. It reads BID[idx + 1], which can raise an IndexError at idx = 3. It returns a change in Q rather than the Q itself (it never adds BID[idx][Q]). And because the comparisons are strict, a price exactly on a breakpoint gives 0 
+`water_heater_agent.py`. This feeds RT_cleared_quantity, which drives the setpoints in bid_accepted.
+* Deadband units don't match.
+    * Battery: degrad_factor × 0.001 × (1 + raw profit_margin), about 1.9e-4 $/kWh with the test values `battery_agent.py`
+    * EV: fixed 0.008 × (1 + profit_margin/100), about 0.009 $/kWh `ev_agent.py`
+    * HVAC: 10% of the forecast price spread `hvac_agent.py`
+    * Water heater: 0 `water_heater_agent.py`
+* Sign conventions differ. The battery's price-to-quantity function returns discharge as positive, while the EV's returns charge as positive `battery_agent.py` and `ev_agent.py`. The bids themselves all treat consumption (charging) as positive.
+* Battery and EV bids aren't clipped, so they can go below $0 or above the price cap. HVAC and the water heater clip both 
+`hvac_agent.py` and `water_heater_agent.py`.
+
+### Things to check with the isoelastic approach
+* Q₀ = 0 breaks the curve. An HVAC that's off or an EV that's full has Q₀ = 0, and Q₀(P/P₀)^-ε is then 0 at every price. You'll need a floor value or a rule to fall back to a vertical bid.
+* Batteries and V2G go negative. The isoelastic form only works for positive quantities. You could shift the axis (Q' = Q + Rd) or model charging and discharging as separate curves.
+* Four points is a coarse fit. I couldn't see the retail market code, so I don't know whether it requires exactly 4 points. If it accepts N points, isoelastic_bid(n_points=...) will follow the curve much more closely.
+
+### Existing Public Methods (Signatures Unchanged)
+
+| Agent | Method (unchanged signature) | New body calls |
+|---|---|---|
+| Battery | `formulate_bid_da(self)`, `formulate_bid_rt(self)` | `formulate_bid_da` / `build_bid` |
+| | `bid_accepted(self, current_time)` → `RT_gridlabd_set_P` | `-bid_to_quantity(self.bid_rt, self.RTprice)`, negated to inverter output (discharge positive) |
+| | `from_P_to_Q_battery(self, BID, PRICE)` | kept as a wrapper: `-bid_to_quantity(BID, PRICE)` |
+| EV | `formulate_bid_da(self)`, `formulate_bid_rt(self)` | `formulate_bid_da` / `build_bid` |
+| | `bid_accepted(self, current_time)` | `bid_to_quantity(...)`, charge positive, no negation |
+| | `from_P_to_Q_battery(self, BID, PRICE)` | kept as a wrapper: `bid_to_quantity(BID, PRICE)` |
+| HVAC | `formulate_bid_da(self)`, `formulate_bid_rt(self, sim_time)` | `formulate_bid_da` / `build_bid` (or `zero_bid`) |
+| | `bid_accepted(self, sim_time)` | the inline price-curve block becomes `bid_to_quantity(self.bid_rt, self.cleared_price)` |
+| | `set_da_cleared_quantity(self, BID, PRICE)` | wrapper: `bid_to_quantity` |
+| WH | `formulate_bid_da(self)`, `formulate_bid_rt(self, sim_time)` | `formulate_bid_da` / `build_bid` |
+| | `inform_bid_rt(self, RTprice)`, `inform_bid_da(self, DAprices)` | `bid_to_quantity` (fix #6) |
+| | `from_P_to_Q_WH(self, BID, PRICE)`, `set_da_cleared_quantity(self, BID, PRICE)` | wrappers: `bid_to_quantity` |
+
+If anything outside the agents reads `RT_minute_count_interpolation` or `previous_Q_RT` directly, keep them as properties that point at `self.rt_interp`.
+
+### Behavior Changes and Checks
+
+These bug fixes change results on purpose, so a regression run won't match the old output exactly:
+
+* HVAC slope (fix #4): the slope now depends on the slider. Before, it was effectively -ΔP/hvac_kw for any slider above 0, so low-slider houses will now bid more steeply.
+* Battery deadband (fix #7): profit_margin is now divided by 100 to match the EV. With your test values, the battery deadband grows about 1.5× (×1.07 instead of ×8.2 on a 0.001-scaled factor), so it's still small. If you'd rather keep the battery's raw units, drop the /100.
+* V1G EVs (fix #2): they now bid flexibly in RT. Before, every RT bid collapsed to a vertical line.
+* Flat forecasts and slider = 0: both now produce an explicit vertical bid. Before, they gave a near-vertical line (WH used a 0.001 slider) or a division by zero (EV).
+* Water heater interpolation: the interpolator now advances every interval. Before, it only advanced when the DA quantity was inside `(Q_min, Q_max]`, so the ramp will look slightly different after the tank hits a bound.
+
+The checks I'd run first:
+
+* Call validate_bid on every DA and RT bid in a 24-hour run for each agent (build_bid already raises on a bad bid).
+* For each agent, confirm that bid_to_quantity(bid, P_ref) returns q_base when there's no deadband.
+* Compare the old and new DA bids with the HVAC slider set to 1.0 and the battery profit_margin fix turned off. Those two settings undo the main intended changes, so if anything else differs, it's an unintended regression.
