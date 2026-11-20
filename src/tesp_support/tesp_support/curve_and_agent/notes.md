@@ -1,0 +1,2 @@
+- deviceAgent.observber_device_state should just call Devicemodel.get_state
+- anything in device_agent that is a switch for each device type should be moved to the device_model
